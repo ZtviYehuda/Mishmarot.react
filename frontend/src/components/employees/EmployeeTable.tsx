@@ -72,6 +72,12 @@ export const EmployeeTable = ({ employees, loading }: EmployeeTableProps) => {
       }
     }
 
+    if (activeFilters.teams && activeFilters.teams.length > 0) {
+      if (!emp.team_name || !activeFilters.teams.includes(emp.team_name)) {
+        return false;
+      }
+    }
+
     if (activeFilters.roles && activeFilters.roles.length > 0) {
       if (!emp.role_name || !activeFilters.roles.includes(emp.role_name)) {
         return false;
