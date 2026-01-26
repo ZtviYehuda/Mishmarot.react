@@ -132,22 +132,41 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
       
       setLoading(true);
 
-      // Copy to clipboard
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(report);
+      // Encode the message for URL
+      const encodedMessage = encodeURIComponent(report);
+      
+      // If phone number provided, send directly to that number
+      if (phoneNumber.trim()) {
+        // Format phone number (remove non-digits, add country code if needed)
+        let formattedPhone = phoneNumber.replace(/\D/g, "");
+        if (!formattedPhone.startsWith("1")) {
+          // Assume Israeli number if doesn't start with country code
+          if (formattedPhone.startsWith("0")) {
+            formattedPhone = "972" + formattedPhone.substring(1);
+          } else if (!formattedPhone.startsWith("972")) {
+            formattedPhone = "972" + formattedPhone;
+          }
+        }
+        // Open WhatsApp with the message for this contact
+        window.open(`https://wa.me/${formattedPhone}?text=${encodedMessage}`, "_blank");
       } else {
-        // Fallback for older browsers
-        const textarea = document.createElement("textarea");
-        textarea.value = report;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
+        // No phone number - just copy to clipboard and open WhatsApp Web
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(report);
+        } else {
+          // Fallback for older browsers
+          const textarea = document.createElement("textarea");
+          textarea.value = report;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+        }
+        
+        // Open WhatsApp Web
+        window.open("https://web.whatsapp.com", "_blank");
+        alert(`✅ הדוח הועתק להעתקה!\n\nוואטסאפ ווב נפתח בחלונית חדשה.\n\nעכשיו אתה יכול להדביק את הדוח בצ'אט שלך.`);
       }
-
-      alert(
-        `✅ הדוח הועתק להעתקה בהצלחה!\n\n${report}\n\n👉 עכשיו אתה יכול להדביק בוואטסאפ`
-      );
       
       // Reset form
       setPhoneNumber("");
@@ -163,7 +182,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
       onOpenChange(false);
     } catch (error) {
       console.error("Error:", error);
-      alert("❌ שגיאה בהעתקת הדוח. אנא נסה שוב.");
+      alert("❌ שגיאה בשליחת הדוח. אנא נסה שוב.");
     } finally {
       setLoading(false);
     }
@@ -312,7 +331,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
           {/* Phone Number Input */}
           <div className="space-y-2 text-right border-t border-slate-200 dark:border-slate-700 pt-4">
             <Label htmlFor="phone" className="text-sm font-medium text-right block">
-              מספר טלפון (לא חובה)
+              📱 מספר טלפון של התמונה (לא חובה)
             </Label>
             <Input
               id="phone"
@@ -324,7 +343,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
               disabled={loading}
             />
             <p className="text-xs text-slate-500 dark:text-slate-400 text-right">
-              אם תזין מספר, הדוח יישלח אליו דרך וואטסאפ (כאשר זה יתבצע בעתיד)
+              אם תזין מספר - הדוח ישלח ישירות לוואטסאפ שלהם. אם תתיכו ריק - וואטסאפ ווב יפתח והדוח יהיה בלוח
             </p>
           </div>
 
