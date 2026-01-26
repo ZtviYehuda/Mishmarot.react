@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import {
   EmployeeDetailsModal,
   FilterModal,
+  WhatsAppReportDialog,
 } from "./modals";
 import type { EmployeeFilters } from "./modals/FilterModal";
 
@@ -32,6 +33,8 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
   const [currentPage, setCurrentPage] = useState(1);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [whatsappEmployees, setWhatsappEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [activeFilters, setActiveFilters] = useState<EmployeeFilters>({});
   const itemsPerPage = 10;
@@ -415,6 +418,16 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
         onOpenChange={setFilterModalOpen}
         onApply={handleApplyFilters}
         employees={employees}
+        filteredEmployees={filteredEmployees}
+        onWhatsAppClick={(emps) => {
+          setWhatsappEmployees(emps);
+          setWhatsappDialogOpen(true);
+        }}
+      />
+      <WhatsAppReportDialog
+        open={whatsappDialogOpen}
+        onOpenChange={setWhatsappDialogOpen}
+        filteredEmployees={whatsappEmployees}
       />
     </div>
   );

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, MessageCircle } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 
 interface FilterModalProps {
@@ -19,6 +19,8 @@ interface FilterModalProps {
   onOpenChange: (open: boolean) => void;
   onApply: (filters: EmployeeFilters) => void;
   employees: Employee[];
+  filteredEmployees?: Employee[];
+  onWhatsAppClick?: (employees: Employee[]) => void;
 }
 
 export interface EmployeeFilters {
@@ -39,6 +41,8 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   onOpenChange,
   onApply,
   employees,
+  filteredEmployees,
+  onWhatsAppClick,
 }) => {
   const [filters, setFilters] = useState<EmployeeFilters>({
     statuses: [],
@@ -465,6 +469,17 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             className="bg-[#0074ff] hover:bg-[#0060d5] text-white"
           >
             החל סינון
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              handleApply();
+              onWhatsAppClick?.(filteredEmployees || employees);
+            }}
+            className="bg-[#25D366] hover:bg-[#1fa857] text-white flex items-center gap-2"
+          >
+            <MessageCircle className="w-4 h-4" />
+            דוח לוואטסאפ
           </Button>
           <Button
             type="button"
