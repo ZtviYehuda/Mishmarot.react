@@ -11,12 +11,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, ChevronRight, ChevronLeft, Filter, User, Plus } from "lucide-react";
+import { Search, ChevronRight, ChevronLeft, Filter, User, Plus, MessageCircle } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn } from "@/lib/utils";
 import {
   EmployeeDetailsModal,
   FilterModal,
+  WhatsAppReportDialog,
 } from "./modals";
 import type { EmployeeFilters } from "./modals/FilterModal";
 
@@ -32,6 +33,7 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
   const [currentPage, setCurrentPage] = useState(1);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [activeFilters, setActiveFilters] = useState<EmployeeFilters>({});
   const itemsPerPage = 10;
@@ -209,6 +211,15 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
                 ({Object.keys(activeFilters).length})
               </span>
             )}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 bg-[#25D366] hover:bg-[#1fa857] text-white border-[#25D366] dark:border-[#25D366]"
+            onClick={() => setWhatsappDialogOpen(true)}
+          >
+            <MessageCircle className="w-4 h-4 ml-2" />
+            דוח לוואטסאפ
           </Button>
           <Button
             className="h-10 bg-[#0074ff] hover:bg-[#0060d5] text-white shadow-md shadow-blue-500/20"
@@ -415,6 +426,11 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
         onOpenChange={setFilterModalOpen}
         onApply={handleApplyFilters}
         employees={employees}
+      />
+      <WhatsAppReportDialog
+        open={whatsappDialogOpen}
+        onOpenChange={setWhatsappDialogOpen}
+        filteredEmployees={filteredEmployees}
       />
     </div>
   );
