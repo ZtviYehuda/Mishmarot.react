@@ -17,11 +17,11 @@ def create_app():
     app.json = CustomJSONProvider(app)
 
     # --- תיקון CORS קריטי ---
-    # מאפשר גישה מהפרונט (5173) לכל הנתיבים
+    # מאפשר גישה מהפרונט לכל הנתיבים
     CORS(
         app,
         resources={r"/api/*": {
-            "origins": "http://localhost:5173",
+            "origins": ["http://localhost:5173", "http://localhost:5174"],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"],
             "expose_headers": ["Content-Type"],
