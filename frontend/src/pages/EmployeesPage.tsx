@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 export default function EmployeesPage() {
   const { employees, loading } = useEmployees();
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [filteredEmployees, setFilteredEmployees] = useState<any[]>([]);
 
   return (
     <div className="space-y-6 pb-6">
@@ -43,13 +44,17 @@ export default function EmployeesPage() {
       </div>
 
       {/* Table Section */}
-      <EmployeeTable employees={employees} loading={loading} />
+      <EmployeeTable 
+        employees={employees} 
+        loading={loading}
+        onFilteredEmployeesChange={setFilteredEmployees}
+      />
 
       {/* WhatsApp Report Dialog */}
       <WhatsAppReportDialog
         open={whatsappDialogOpen}
         onOpenChange={setWhatsappDialogOpen}
-        filteredEmployees={employees}
+        filteredEmployees={filteredEmployees.length > 0 ? filteredEmployees : employees}
       />
     </div>
   );

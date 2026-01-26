@@ -23,9 +23,10 @@ import type { EmployeeFilters } from "./modals/FilterModal";
 interface EmployeeTableProps {
   employees: Employee[];
   loading: boolean;
+  onFilteredEmployeesChange?: (employees: Employee[]) => void;
 }
 
-export const EmployeeTable = ({ employees, loading }: EmployeeTableProps) => {
+export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }: EmployeeTableProps) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -129,6 +130,48 @@ export const EmployeeTable = ({ employees, loading }: EmployeeTableProps) => {
   const handleApplyFilters = (filters: EmployeeFilters) => {
     setActiveFilters(filters);
     setCurrentPage(1);
+    // Notify parent component of filtered employees
+    const filtered = employees.filter((emp) => {
+      const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
+      const searchMatch =
+        fullName.includes(searchTerm.toLowerCase()) ||
+        emp.personal_number.includes(searchTerm);
+
+      if (!searchMatch) return false;
+
+      if (filters.statuses && filters.statuses.length > 0) {
+        if (!filters.statuses.includes(emp.status_name)) return false;
+      }
+      if (filters.departments && filters.departments.length > 0) {
+        if (!emp.department_name || !filters.departments.includes(emp.department_name)) {
+          return false;
+        }
+      }
+      if (filters.sections && filters.sections.length > 0) {
+        if (!emp.section_name || !filters.sections.includes(emp.section_name)) {
+          return false;
+        }
+      }
+      if (filters.teams && filters.teams.length > 0) {
+        if (!emp.team_name || !filters.teams.includes(emp.team_name)) {
+          return false;
+        }
+      }
+      if (filters.roles && filters.roles.length > 0) {
+        if (!emp.role_name || !filters.roles.includes(emp.role_name)) {
+          return false;
+        }
+      }
+      if (filters.isCommander && !emp.is_commander) return false;
+      if (filters.isAdmin && !emp.is_admin) return false;
+      if (filters.hasSecurityClearance && emp.security_clearance === 0) return false;
+      if (filters.hasPoliceRicense && !emp.police_license) return false;
+
+      return true;
+    });
+    if (onFilteredEmployeesChange) {
+      onFilteredEmployeesChange(filtered);
+    }
   };
 
   return (

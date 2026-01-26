@@ -120,26 +120,50 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
   };
 
   const handleSend = async () => {
-    const employees = getEmployeesToReport();
-    const report = generateReport(employees);
-
-    if (!phoneNumber.trim()) {
-      alert("אנא הזן מספר טלפון");
-      return;
-    }
-
-    setLoading(true);
     try {
-      // For now, just copy to clipboard and show a message
-      // In production, this would call a backend API
-      await navigator.clipboard.writeText(report);
+      const employees = getEmployeesToReport();
+      
+      if (employees.length === 0) {
+        alert("אנא בחר עובדים להכללה בדוח");
+        return;
+      }
+
+      const report = generateReport(employees);
+      
+      setLoading(true);
+
+      // Copy to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(report);
+      } else {
+        // Fallback for older browsers
+        const textarea = document.createElement("textarea");
+        textarea.value = report;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+
       alert(
-        `✅ הדוח הועתק להעתקה!\n\nנתונים:\n${report}\n\nעכשיו אתה יכול להדביק בוואטסאפ`
+        `✅ הדוח הועתק להעתקה בהצלחה!\n\n${report}\n\n👉 עכשיו אתה יכול להדביק בוואטסאפ`
       );
+      
+      // Reset form
+      setPhoneNumber("");
+      setSendOption("current");
+      setCustomFilters({
+        departments: [],
+        sections: [],
+        statuses: [],
+        roles: [],
+      });
+      
+      // Close dialog
       onOpenChange(false);
     } catch (error) {
-      console.error("Error copying report:", error);
-      alert("שגיאה בהעתקת הדוח");
+      console.error("Error:", error);
+      alert("❌ שגיאה בהעתקת הדוח. אנא נסה שוב.");
     } finally {
       setLoading(false);
     }
@@ -288,7 +312,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
           {/* Phone Number Input */}
           <div className="space-y-2 text-right border-t border-slate-200 dark:border-slate-700 pt-4">
             <Label htmlFor="phone" className="text-sm font-medium text-right block">
-              מספר טלפון (optional)
+              מספר טלפון (לא חובה)
             </Label>
             <Input
               id="phone"
@@ -297,7 +321,11 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
               onChange={(e) => setPhoneNumber(e.target.value)}
               className="text-right border-slate-200 dark:border-slate-700"
               dir="rtl"
+              disabled={loading}
             />
+            <p className="text-xs text-slate-500 dark:text-slate-400 text-right">
+              אם תזין מספר, הדוח יישלח אליו דרך וואטסאפ (כאשר זה יתבצע בעתיד)
+            </p>
           </div>
 
           {/* Summary */}
@@ -313,15 +341,16 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
             type="button"
             onClick={handleSend}
             disabled={loading || employeesToReport.length === 0}
-            className="bg-[#25D366] hover:bg-[#1fa857] text-white"
+            className="bg-[#25D366] hover:bg-[#1fa857] text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "שוליח..." : "📱 שלח לוואטסאפ"}
+            {loading ? "⏳ בתהליך..." : "📱 העתק לוואטסאפ"}
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="border-slate-200 dark:border-slate-700"
+            disabled={loading}
           >
             ביטול
           </Button>
