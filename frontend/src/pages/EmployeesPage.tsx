@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { EmployeeTable } from "@/components/employees/EmployeeTable";
-import { Users, ChevronRight } from "lucide-react";
+import { WhatsAppReportDialog } from "@/components/employees/modals/WhatsAppReportDialog";
+import { Users, ChevronRight, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function EmployeesPage() {
   const { employees, loading } = useEmployees();
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
 
   return (
     <div className="space-y-6 pb-6">
@@ -15,23 +18,39 @@ export default function EmployeesPage() {
           <ChevronRight className="w-3 h-3" />
           <span className="text-[#0074ff]">Personnel Management</span>
         </div>
-        <div className="flex items-center gap-4 text-right">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#eff6ff] to-[#dbeafe] border border-blue-200 dark:border-blue-900/30 flex items-center justify-center dark:from-slate-800 dark:to-slate-800/50 shadow-sm">
-            <Users className="w-7 h-7 text-[#0074ff]" />
-          </div>
-          <div className="text-right">
-            <h1 className="text-3xl font-semibold text-[#001e30] dark:text-white tracking-tight leading-none mb-1.5">
-              ניהול מצבת כוח אדם
-            </h1>
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-none">
-              מערך ניהול וצפייה בנתוני המשרתים ביחידה
-            </p>
+        <div className="flex items-center justify-between gap-4">
+          <Button
+            onClick={() => setWhatsappDialogOpen(true)}
+            className="bg-[#25D366] hover:bg-[#1fa857] text-white flex items-center gap-2"
+          >
+            <MessageCircle className="w-4 h-4" />
+            שליחת דוח לוואטסאפ
+          </Button>
+          <div className="flex items-center gap-4 text-right flex-1">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#eff6ff] to-[#dbeafe] border border-blue-200 dark:border-blue-900/30 flex items-center justify-center dark:from-slate-800 dark:to-slate-800/50 shadow-sm">
+              <Users className="w-7 h-7 text-[#0074ff]" />
+            </div>
+            <div className="text-right">
+              <h1 className="text-3xl font-semibold text-[#001e30] dark:text-white tracking-tight leading-none mb-1.5">
+                ניהול מצבת כוח אדם
+              </h1>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-none">
+                מערך ניהול וצפייה בנתוני המשרתים ביחידה
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Table Section */}
       <EmployeeTable employees={employees} loading={loading} />
+
+      {/* WhatsApp Report Dialog */}
+      <WhatsAppReportDialog
+        open={whatsappDialogOpen}
+        onOpenChange={setWhatsappDialogOpen}
+        filteredEmployees={employees}
+      />
     </div>
   );
 }
