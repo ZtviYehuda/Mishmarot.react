@@ -8,19 +8,20 @@ interface AuthContextType {
   error: string | null;
   login: (personal_number: string, password: string) => Promise<boolean>;
   logout: () => void;
+  changePassword: (newPassword: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user, loading, error, login, logout, fetchUser } = useAuth();
+  const { user, loading, error, login, logout, fetchUser, changePassword } = useAuth();
 
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, error, login, logout, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

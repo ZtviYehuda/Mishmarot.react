@@ -53,7 +53,7 @@ def setup_database():
                 last_name VARCHAR(50) NOT NULL,
                 phone_number VARCHAR(20),
                 password_hash VARCHAR(255),
-                must_change_password BOOLEAN DEFAULT FALSE,
+                must_change_password BOOLEAN DEFAULT TRUE,
                 is_admin BOOLEAN DEFAULT FALSE,
                 is_commander BOOLEAN DEFAULT FALSE,
                 is_active BOOLEAN DEFAULT TRUE,

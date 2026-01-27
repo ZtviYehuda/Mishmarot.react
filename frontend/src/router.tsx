@@ -2,6 +2,7 @@ import {
   createBrowserRouter,
   RouterProvider,
   Navigate,
+  Outlet,
 } from "react-router-dom";
 import { useAuthContext } from "@/context/AuthContext";
 
@@ -13,11 +14,14 @@ import CreateEmployeePage from "@/pages/CreateEmployeePage";
 import EditEmployeePage from "@/pages/EditEmployeePage";
 import EmployeeViewPage from "@/pages/EmployeeViewPage";
 import TransfersPage from "@/pages/TransfersPage";
+import ChangePasswordPage from "@/pages/ChangePasswordPage";
 import MainLayout from "@/components/layout/MainLayout";
 import { Loader2 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 const ProtectedRoute = () => {
   const { user, loading } = useAuthContext();
+  const location = useLocation();
 
   if (loading)
     return (
@@ -31,7 +35,24 @@ const ProtectedRoute = () => {
       </div>
     );
 
-  return user ? <MainLayout /> : <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace />;
+
+  // Redirect to change-password if required
+  if (user.must_change_password && location.pathname !== "/change-password") {
+    return <Navigate to="/change-password" replace />;
+  }
+
+  // Prevent going to change-password if not required
+  if (!user.must_change_password && location.pathname === "/change-password") {
+    return <Navigate to="/" replace />;
+  }
+
+  // If on change-password, don't show the sidebar/layout
+  if (location.pathname === "/change-password") {
+    return <Outlet />;
+  }
+
+  return <MainLayout />;
 };
 
 export const router = createBrowserRouter([
@@ -43,6 +64,7 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       { path: "/", element: <DashboardPage /> },
+      { path: "/change-password", element: <ChangePasswordPage /> },
       { path: "/employees", element: <EmployeesPage /> },
       { path: "/employees/new", element: <CreateEmployeePage /> },
       { path: "/employees/:id", element: <EmployeeViewPage /> },

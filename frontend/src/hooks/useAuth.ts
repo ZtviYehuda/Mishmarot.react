@@ -34,7 +34,7 @@ export const useAuth = () => {
   // Load user on mount
   useEffect(() => {
     if (!localStorage.getItem("token")) return;
-    
+
     fetchUser();
   }, []); // Empty dependency array - run only once on mount
 
@@ -73,5 +73,28 @@ export const useAuth = () => {
     window.location.href = "/login";
   };
 
-  return { user, loading, error, login, logout, fetchUser };
+  // Change Password Function
+  const changePassword = async (newPassword: string) => {
+    setLoading(true);
+    try {
+      const { data } = await apiClient.post(endpoints.AUTH_CHANGE_PASSWORD_ENDPOINT, {
+        new_password: newPassword,
+      });
+
+      if (data.success) {
+        // Refresh user data to update must_change_password flag
+        await fetchUser();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      const msg = err.response?.data?.error || "Failed to change password";
+      setError(msg);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { user, loading, error, login, logout, fetchUser, changePassword };
 };

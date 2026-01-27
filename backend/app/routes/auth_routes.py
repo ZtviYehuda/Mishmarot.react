@@ -22,6 +22,13 @@ def login():
 
     user = EmployeeModel.login_check(p_num, password)
     if user:
+        # Check if user has management permissions
+        if not user.get("is_admin") and not user.get("is_commander"):
+            return jsonify({
+                "success": False, 
+                "error": "גישה למערכת מורשית למפקדים ומנהלים בלבד"
+            }), 403
+
         # Create JWT Token - pass identity as JSON string
         identity_data = {
             "id": user["id"],
