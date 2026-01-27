@@ -228,48 +228,56 @@ class EmployeeModel:
             return False
         try:
             cur = conn.cursor()
-            query = """
-                UPDATE employees 
-                SET first_name = %s, last_name = %s, personal_number = %s, national_id = %s,
-                    phone_number = %s, city = %s, 
-                    birth_date = %s, enlistment_date = %s, discharge_date = %s, assignment_date = %s,
-                    team_id = %s, section_id = %s, department_id = %s,
-                    role_id = %s, service_type_id = %s,
-                    security_clearance = %s, police_license = %s, emergency_contact = %s,
-                    is_commander = %s, is_admin = %s
-                WHERE id = %s
-            """
-            cur.execute(
-                query,
-                (
-                    data["first_name"],
-                    data["last_name"],
-                    data["personal_number"],
-                    data["national_id"],
-                    data["phone_number"],
-                    data.get("city"),
-                    data.get("birth_date"),
-                    data.get("enlistment_date"),
-                    data.get("discharge_date"),
-                    data.get("assignment_date"),
-                    data.get("team_id"),
-                    data.get("section_id"),
-                    data.get("department_id"),
-                    data.get("role_id"),
-                    data.get("service_type_id"),
-                    data.get("security_clearance"),
-                    data.get("police_license"),
-                    data.get("emergency_contact"),
-                    data.get("is_commander"),
-                    data.get("is_admin"),
-                    emp_id,
-                ),
-            )
+            
+            # Map of allowed fields to their DB column names
+            # (In this case they mostly match, but good for security checking)
+            allowed_fields = {
+                "first_name": "first_name",
+                "last_name": "last_name", 
+                "personal_number": "personal_number", 
+                "national_id": "national_id",
+                "phone_number": "phone_number", 
+                "city": "city", 
+                "birth_date": "birth_date", 
+                "enlistment_date": "enlistment_date", 
+                "discharge_date": "discharge_date", 
+                "assignment_date": "assignment_date",
+                "team_id": "team_id", 
+                "section_id": "section_id", 
+                "department_id": "department_id",
+                "role_id": "role_id", 
+                "service_type_id": "service_type_id",
+                "security_clearance": "security_clearance", 
+                "police_license": "police_license", 
+                "emergency_contact": "emergency_contact",
+                "is_commander": "is_commander", 
+                "is_admin": "is_admin",
+                "is_active": "is_active"
+            }
+
+            set_clauses = []
+            params = []
+
+            for key, value in data.items():
+                if key in allowed_fields:
+                    set_clauses.append(f"{allowed_fields[key]} = %s")
+                    params.append(value)
+            
+            if not set_clauses:
+                return True # Nothing to update
+            
+            params.append(emp_id)
+            
+            query = f"UPDATE employees SET {', '.join(set_clauses)} WHERE id = %s"
+            
+            cur.execute(query, tuple(params))
             conn.commit()
             return True
         except Exception as e:
             conn.rollback()
             print(f"Error updating: {e}")
+            import traceback
+            print(traceback.format_exc())
             return False
         finally:
             conn.close()

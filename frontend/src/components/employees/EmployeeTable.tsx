@@ -122,8 +122,7 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
   );
 
   const handleViewDetails = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setDetailsModalOpen(true);
+    navigate(`/employees/${employee.id}`);
   };
 
   const handleEditEmployee = (employee: Employee) => {

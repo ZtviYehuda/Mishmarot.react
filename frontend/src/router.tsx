@@ -11,6 +11,7 @@ import DashboardPage from "@/pages/DashboardPage";
 import EmployeesPage from "@/pages/EmployeesPage";
 import CreateEmployeePage from "@/pages/CreateEmployeePage";
 import EditEmployeePage from "@/pages/EditEmployeePage";
+import EmployeeViewPage from "@/pages/EmployeeViewPage";
 import TransfersPage from "@/pages/TransfersPage";
 import MainLayout from "@/components/layout/MainLayout";
 import { Loader2 } from "lucide-react";
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
       { path: "/", element: <DashboardPage /> },
       { path: "/employees", element: <EmployeesPage /> },
       { path: "/employees/new", element: <CreateEmployeePage /> },
+      { path: "/employees/:id", element: <EmployeeViewPage /> },
       { path: "/employees/edit/:id", element: <EditEmployeePage /> },
       { path: "/transfers", element: <TransfersPage /> },
     ],
