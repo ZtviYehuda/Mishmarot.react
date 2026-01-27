@@ -15,7 +15,6 @@ import { Search, ChevronRight, ChevronLeft, Filter, User, Plus, MessageCircle } 
 import type { Employee } from "@/types/employee.types";
 import { cn } from "@/lib/utils";
 import {
-  EmployeeDetailsModal,
   FilterModal,
   WhatsAppReportDialog,
 } from "./modals";
@@ -32,10 +31,8 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [activeFilters, setActiveFilters] = useState<EmployeeFilters>({});
   const itemsPerPage = 10;
 
@@ -247,18 +244,34 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
               paginatedEmployees.map((emp) => (
                 <TableRow
                   key={emp.id}
-                  className="group transition-all duration-200 hover:bg-slate-50/80 dark:hover:bg-slate-700/30 border-b border-slate-100 dark:border-slate-700/50"
+                  className={cn(
+                    "group transition-all duration-200 hover:bg-slate-50/80 dark:hover:bg-slate-700/30 border-b border-slate-100 dark:border-slate-700/50",
+                    !emp.is_active && "bg-red-50/30 opacity-75 grayscale-[0.2] border-r-2 border-r-red-400"
+                  )}
                 >
                   <TableCell className="px-6 py-4 text-right">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0074ff] to-[#0060d5] flex items-center justify-center text-white font-semibold text-xs shadow-md shadow-blue-500/20">
+                      <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center text-white font-semibold text-xs shadow-md transition-colors",
+                        emp.is_active
+                          ? "bg-gradient-to-br from-[#0074ff] to-[#0060d5] shadow-blue-500/20"
+                          : "bg-slate-400 shadow-slate-400/20"
+                      )}>
                         {emp.first_name[0]}
                         {emp.last_name[0]}
                       </div>
                       <div className="flex flex-col text-right">
-                        <span className="font-semibold text-slate-800 dark:text-white text-sm">
+                        <span className={cn(
+                          "font-semibold text-sm transition-colors",
+                          emp.is_active ? "text-slate-800 dark:text-white" : "text-slate-500"
+                        )}>
                           {emp.first_name} {emp.last_name}
                         </span>
+                        {!emp.is_active && (
+                          <span className="text-[10px] text-red-500 font-bold uppercase tracking-tight">
+                            משרת לא פעיל
+                          </span>
+                        )}
                         <span className="text-[10px] text-slate-400 font-medium">
                           Clearance: {emp.security_clearance}
                         </span>
@@ -273,9 +286,9 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
                       variant="outline"
                       className={cn(
                         "font-medium text-[10px] border-none px-2.5 py-1",
-                        emp.is_commander
-                          ? "bg-blue-50 text-[#0074ff] dark:bg-[#0074ff]/10"
-                          : "bg-slate-100 text-slate-500 dark:bg-slate-700",
+                        emp.is_active
+                          ? (emp.is_commander ? "bg-blue-50 text-[#0074ff] dark:bg-[#0074ff]/10" : "bg-slate-100 text-slate-500 dark:bg-slate-700")
+                          : "bg-red-50 text-red-600 dark:bg-red-900/20"
                       )}
                     >
                       {getProfessionalTitle(emp)}
@@ -300,11 +313,14 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
                   <TableCell className="px-6 py-4 text-right">
                     <div className="flex items-center gap-2 flex-row-reverse">
                       <div
-                        className="w-2 h-2 rounded-full shadow-sm"
-                        style={{ backgroundColor: emp.status_color }}
+                        className={cn("w-2 h-2 rounded-full shadow-sm", !emp.is_active && "bg-red-500")}
+                        style={emp.is_active ? { backgroundColor: emp.status_color } : {}}
                       />
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                        {emp.status_name}
+                      <span className={cn(
+                        "text-xs font-medium transition-colors",
+                        emp.is_active ? "text-slate-600 dark:text-slate-400" : "text-red-500 font-bold"
+                      )}>
+                        {emp.is_active ? emp.status_name : "לא פעיל"}
                       </span>
                     </div>
                   </TableCell>
@@ -391,11 +407,6 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
       </div>
 
       {/* Modals */}
-      <EmployeeDetailsModal
-        open={detailsModalOpen}
-        onOpenChange={setDetailsModalOpen}
-        employee={selectedEmployee}
-      />
       <FilterModal
         open={filterModalOpen}
         onOpenChange={setFilterModalOpen}

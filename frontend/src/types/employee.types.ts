@@ -36,9 +36,10 @@ export interface Employee {
   service_type_id?: number | null;
   assignment_date?: string | null;
 
-  // Current Status
+  // Status fields
   status_name: string;
   status_color: string;
+  is_active: boolean;
 }
 
 export interface CreateEmployeePayload {
@@ -62,6 +63,7 @@ export interface CreateEmployeePayload {
   security_clearance?: number;
   police_license?: boolean;
   emergency_contact?: string;
+  is_active?: boolean;
 }
 
 // Hierarchy Tree Structure

@@ -122,19 +122,19 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
   const handleSend = async () => {
     try {
       const employees = getEmployeesToReport();
-      
+
       if (employees.length === 0) {
         alert("אנא בחר עובדים להכללה בדוח");
         return;
       }
 
       const report = generateReport(employees);
-      
+
       setLoading(true);
 
       // Encode the message for URL
       const encodedMessage = encodeURIComponent(report);
-      
+
       // If phone number provided, send directly to that number
       if (phoneNumber.trim()) {
         // Format phone number (remove non-digits, add country code if needed)
@@ -162,12 +162,12 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
           document.execCommand("copy");
           document.body.removeChild(textarea);
         }
-        
+
         // Open WhatsApp Web
         window.open("https://web.whatsapp.com", "_blank");
         alert(`✅ הדוח הועתק להעתקה!\n\nוואטסאפ ווב נפתח בחלונית חדשה.\n\nעכשיו אתה יכול להדביק את הדוח בצ'אט שלך.`);
       }
-      
+
       // Reset form
       setPhoneNumber("");
       setSendOption("current");
@@ -177,7 +177,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
         statuses: [],
         roles: [],
       });
-      
+
       // Close dialog
       onOpenChange(false);
     } catch (error) {
@@ -248,15 +248,15 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                   <Label className="text-sm font-medium text-right block">מחלקות</Label>
                   <div className="grid grid-cols-2 gap-2 pr-2">
                     {uniqueValues.departments.map((dept) => (
-                      <div key={dept} className="flex items-center gap-2 justify-end">
-                        <label htmlFor={`dept-${dept}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                          {dept}
-                        </label>
+                      <div key={dept} className="flex items-center gap-2 justify-start">
                         <Checkbox
                           id={`dept-${dept}`}
                           checked={customFilters.departments.includes(dept)}
                           onCheckedChange={() => handleToggleFilter("departments", dept)}
                         />
+                        <label htmlFor={`dept-${dept}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                          {dept}
+                        </label>
                       </div>
                     ))}
                   </div>
@@ -269,15 +269,15 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                   <Label className="text-sm font-medium text-right block">מדורים</Label>
                   <div className="grid grid-cols-2 gap-2 pr-2">
                     {uniqueValues.sections.map((section) => (
-                      <div key={section} className="flex items-center gap-2 justify-end">
-                        <label htmlFor={`section-${section}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                          {section}
-                        </label>
+                      <div key={section} className="flex items-center gap-2 justify-start">
                         <Checkbox
                           id={`section-${section}`}
                           checked={customFilters.sections.includes(section)}
                           onCheckedChange={() => handleToggleFilter("sections", section)}
                         />
+                        <label htmlFor={`section-${section}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                          {section}
+                        </label>
                       </div>
                     ))}
                   </div>
@@ -290,15 +290,15 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                   <Label className="text-sm font-medium text-right block">סטטוסים</Label>
                   <div className="grid grid-cols-2 gap-2 pr-2">
                     {uniqueValues.statuses.map((status) => (
-                      <div key={status} className="flex items-center gap-2 justify-end">
-                        <label htmlFor={`status-${status}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                          {status}
-                        </label>
+                      <div key={status} className="flex items-center gap-2 justify-start">
                         <Checkbox
                           id={`status-${status}`}
                           checked={customFilters.statuses.includes(status)}
                           onCheckedChange={() => handleToggleFilter("statuses", status)}
                         />
+                        <label htmlFor={`status-${status}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                          {status}
+                        </label>
                       </div>
                     ))}
                   </div>
@@ -311,15 +311,15 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                   <Label className="text-sm font-medium text-right block">תפקידים</Label>
                   <div className="grid grid-cols-2 gap-2 pr-2">
                     {uniqueValues.roles.map((role) => (
-                      <div key={role} className="flex items-center gap-2 justify-end">
-                        <label htmlFor={`role-${role}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                          {role}
-                        </label>
+                      <div key={role} className="flex items-center gap-2 justify-start">
                         <Checkbox
                           id={`role-${role}`}
                           checked={customFilters.roles.includes(role)}
                           onCheckedChange={() => handleToggleFilter("roles", role)}
                         />
+                        <label htmlFor={`role-${role}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                          {role}
+                        </label>
                       </div>
                     ))}
                   </div>

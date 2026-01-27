@@ -42,7 +42,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f6f9] flex flex-col font-sans text-[#2c3e50]">
+    <div className="min-h-screen bg-[#f3f6f9] flex flex-col font-sans text-[#2c3e50]" dir="rtl">
       {/* Official Top Bar */}
       <div className="w-full bg-[#003d7e] h-1.5" />
       <header className="w-full bg-white border-b border-slate-200 py-3 px-6 md:px-12 flex items-center justify-between shadow-sm">

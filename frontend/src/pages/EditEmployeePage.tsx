@@ -151,6 +151,7 @@ export default function EditEmployeePage() {
         security_clearance: 0,
         police_license: false,
         emergency_contact: "",
+        is_active: true,
     });
 
     // Cascading & UI state
@@ -193,6 +194,7 @@ export default function EditEmployeePage() {
                     security_clearance: data.security_clearance || 0,
                     police_license: data.police_license || false,
                     emergency_contact: data.emergency_contact || "",
+                    is_active: data.is_active ?? true,
                 });
 
                 if (data.department_id) setSelectedDeptId(data.department_id.toString());
@@ -525,6 +527,16 @@ export default function EditEmployeePage() {
                                                             onChange={(v) => setFormData({ ...formData, is_commander: v })}
                                                             icon={Settings2}
                                                         />
+
+                                                        <div className="mt-4">
+                                                            <ToggleCard
+                                                                label="משרת פעיל"
+                                                                description="האם המשרת נכלל כרגע במצבת הפעילה"
+                                                                checked={formData.is_active ?? true}
+                                                                onChange={(v) => setFormData({ ...formData, is_active: v })}
+                                                                icon={User}
+                                                            />
+                                                        </div>
 
                                                         {formData.is_commander && (
                                                             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-xl text-sm border border-blue-100 flex items-start gap-3">

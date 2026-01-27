@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEmployees } from '@/hooks/useEmployees';
 import apiClient from '@/config/api.client';
 import type { Employee } from '@/types/employee.types';
 import {
@@ -16,7 +15,8 @@ import {
     UserX,
     BadgeCheck,
     MapPin,
-    AlertTriangle
+    AlertTriangle,
+    X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,14 +51,15 @@ export default function EmployeeViewPage() {
         fetchEmployee();
     }, [id]);
 
-    const handleDeactivate = async () => {
-        if (!confirm("האם אתה בטוח שברצונך להפוך משרת זה ללא פעיל?")) return;
+    const handleToggleActiveStatus = async () => {
+        const newStatus = !employee?.is_active;
 
         setActionLoading(true);
         try {
-            await apiClient.put(endpoints.updateEmployeeEndpoint(parseInt(id!)), { is_active: false });
-            toast.success("המשרת הועבר לסטטוס לא פעיל");
-            navigate('/employees');
+            await apiClient.put(endpoints.updateEmployeeEndpoint(parseInt(id!)), { is_active: newStatus });
+            toast.success(newStatus ? "המשרת הוחזר למצב פעיל" : "המשרת הועבר לסטטוס לא פעיל");
+            // Refresh local state instead of navigating away if we want to stay on page
+            setEmployee(prev => prev ? { ...prev, is_active: newStatus } : null);
         } catch (error) {
             console.error(error);
             toast.error("שגיאה בביצוע הפעולה");
@@ -98,8 +99,18 @@ export default function EmployeeViewPage() {
     return (
         <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20 animate-in fade-in duration-300" dir="rtl">
 
+            {/* Inactive Banner */}
+            {!employee.is_active && (
+                <div className="bg-red-500 text-white py-2 px-6 text-center font-bold text-sm shadow-md animate-in slide-in-from-top duration-500 sticky top-0 z-50">
+                    <div className="flex items-center justify-center gap-2">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span>משרת זה מוגדר כלא פעיל במערכת</span>
+                    </div>
+                </div>
+            )}
+
             {/* Header / Nav */}
-            <div className="sticky top-4 z-30 px-6 pointer-events-none mb-8">
+            <div className={cn("sticky top-4 z-30 px-6 pointer-events-none mb-8", !employee.is_active && "top-12")}>
                 <div className="max-w-7xl mx-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-white/20 shadow-2xl shadow-slate-200/50 dark:shadow-black/50 rounded-2xl p-4 flex items-center justify-between ring-1 ring-slate-900/5 pointer-events-auto">
                     <div className="flex items-center gap-4">
                         <div onClick={() => navigate('/employees')} className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center cursor-pointer hover:bg-blue-50 hover:text-blue-600 transition-all group">
@@ -124,22 +135,48 @@ export default function EmployeeViewPage() {
                             <ArrowLeftRight className="w-4 h-4" />
                             <span>העברה</span>
                         </Button>
-                        <Button onClick={handleDeactivate} variant="destructive" className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 rounded-xl px-5 gap-2 shadow-none">
-                            <UserX className="w-4 h-4" />
-                            <span className="hidden md:inline">הפוך ללא פעיל</span>
+                        <Button
+                            onClick={handleToggleActiveStatus}
+                            variant={employee.is_active ? "destructive" : "default"}
+                            className={cn(
+                                "rounded-xl px-5 gap-2 shadow-none",
+                                employee.is_active
+                                    ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-100"
+                                    : "bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20"
+                            )}
+                            disabled={actionLoading}
+                        >
+                            {actionLoading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <UserX className="w-4 h-4" />
+                            )}
+                            <span className="hidden md:inline">
+                                {employee.is_active ? "הפוך ללא פעיל" : "הפוך לפעיל"}
+                            </span>
                         </Button>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className={cn("max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8", !employee.is_active && "opacity-80 grayscale-[0.3]")}>
 
                 {/* Right Column: Profile Card & Quick Stats */}
                 <div className="lg:col-span-4 space-y-6">
-                    <Card className="border-none shadow-lg shadow-slate-200/40 dark:shadow-none bg-white dark:bg-slate-800 rounded-3xl overflow-hidden ring-1 ring-slate-100 dark:ring-slate-700">
+                    <Card className={cn(
+                        "border-none shadow-lg shadow-slate-200/40 dark:shadow-none bg-white dark:bg-slate-800 rounded-3xl overflow-hidden ring-1 ring-slate-100 dark:ring-slate-700",
+                        !employee.is_active && "ring-red-100 dark:ring-red-900/30"
+                    )}>
                         <div className="p-8 flex flex-col items-center text-center">
-                            <div className="w-32 h-32 rounded-full bg-slate-50 dark:bg-slate-700/50 flex items-center justify-center text-4xl font-black text-slate-500/50 dark:text-slate-400 mb-6 ring-8 ring-slate-50 dark:ring-slate-800">
-                                {employee.first_name[0]}{employee.last_name[0]}
+                            <div className="relative">
+                                <div className="w-32 h-32 rounded-full bg-slate-50 dark:bg-slate-700/50 flex items-center justify-center text-4xl font-black text-slate-500/50 dark:text-slate-400 mb-6 ring-8 ring-slate-50 dark:ring-slate-800">
+                                    {employee.first_name[0]}{employee.last_name[0]}
+                                </div>
+                                {!employee.is_active && (
+                                    <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-red-500 border-4 border-white dark:border-slate-800 flex items-center justify-center text-white shadow-lg">
+                                        <X className="w-4 h-4 mr-0" />
+                                    </div>
+                                )}
                             </div>
 
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-1">
@@ -155,8 +192,13 @@ export default function EmployeeViewPage() {
                                         <BadgeCheck className="w-3 h-3 mr-1.5" /> מפקד
                                     </Badge>
                                 )}
-                                <Badge className={cn("border-none px-3 py-1 rounded-lg", employee.status_name ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600")}>
-                                    {employee.status_name || "פעיל"}
+                                <Badge className={cn(
+                                    "border-none px-3 py-1 rounded-lg",
+                                    !employee.is_active
+                                        ? "bg-red-100 text-red-700"
+                                        : (employee.status_name ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600")
+                                )}>
+                                    {!employee.is_active ? "לא פעיל" : (employee.status_name || "פעיל")}
                                 </Badge>
                             </div>
                         </div>
