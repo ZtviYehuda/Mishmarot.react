@@ -11,12 +11,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, ChevronRight, ChevronLeft, Filter, User, Plus, MessageCircle } from "lucide-react";
+import { Search, ChevronRight, ChevronLeft, Filter, User, Plus, MessageCircle, ClipboardList } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn } from "@/lib/utils";
 import {
   FilterModal,
   WhatsAppReportDialog,
+  StatusUpdateModal,
 } from "./modals";
 import type { EmployeeFilters } from "./modals/FilterModal";
 
@@ -33,6 +34,8 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
   const [currentPage, setCurrentPage] = useState(1);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedEmployeeForStatus, setSelectedEmployeeForStatus] = useState<Employee | null>(null);
   const [activeFilters, setActiveFilters] = useState<EmployeeFilters>({});
   const itemsPerPage = 10;
 
@@ -123,8 +126,9 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
     navigate(`/employees/${employee.id}`);
   };
 
-  const handleEditEmployee = (employee: Employee) => {
-    navigate(`/employees/edit/${employee.id}`);
+  const handleOpenStatusModal = (employee: Employee) => {
+    setSelectedEmployeeForStatus(employee);
+    setStatusModalOpen(true);
   };
 
   const handleApplyFilters = (filters: EmployeeFilters) => {
@@ -339,12 +343,10 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
                         variant="ghost"
                         size="icon"
                         className="w-9 h-9 text-slate-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                        onClick={() => handleEditEmployee(emp)}
-                        title="ערוך"
+                        onClick={() => handleOpenStatusModal(emp)}
+                        title="עדכון סטטוס"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        <ClipboardList className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -417,6 +419,12 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
         open={whatsappDialogOpen}
         onOpenChange={setWhatsappDialogOpen}
         filteredEmployees={filteredEmployees}
+      />
+      <StatusUpdateModal
+        open={statusModalOpen}
+        onOpenChange={setStatusModalOpen}
+        employee={selectedEmployeeForStatus}
+        onSuccess={() => fetchEmployees && fetchEmployees()}
       />
     </div>
   );

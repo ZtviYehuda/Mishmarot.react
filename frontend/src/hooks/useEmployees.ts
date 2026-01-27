@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/config/api.client';
 import * as endpoints from '@/config/employees.endpoints';
+import * as attEndpoints from '@/config/attendance.endpoints';
 import type { CreateEmployeePayload, Employee } from '@/types/employee.types';
 
 export const useEmployees = () => {
@@ -96,6 +97,38 @@ export const useEmployees = () => {
     }
   }, []);
 
+  // Get Status Types (Attendance)
+  const getStatusTypes = useCallback(async () => {
+    try {
+      const { data } = await apiClient.get(attEndpoints.ATTENDANCE_STATUS_TYPES_ENDPOINT);
+      return data;
+    } catch (err: any) {
+      console.error("Failed to fetch status types", err);
+      return [];
+    }
+  }, []);
+
+  // Log Attendance Status
+  const logStatus = async (payload: {
+    employee_id: number;
+    status_type_id: number;
+    note?: string;
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    setLoading(true);
+    try {
+      await apiClient.post(attEndpoints.ATTENDANCE_LOG_ENDPOINT, payload);
+      await fetchEmployees(); // Refresh list to see updated status
+      return true;
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to log status');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Initial fetch
   useEffect(() => {
     fetchEmployees();
@@ -110,6 +143,8 @@ export const useEmployees = () => {
     updateEmployee,
     deleteEmployee,
     getStructure,
-    getServiceTypes
+    getServiceTypes,
+    getStatusTypes,
+    logStatus
   };
 };
