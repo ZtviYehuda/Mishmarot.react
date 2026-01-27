@@ -32,6 +32,7 @@ export interface EmployeeFilters {
   hasSecurityClearance?: boolean;
   hasPoliceRicense?: boolean;
   searchText?: string;
+  showInactive?: boolean;
 }
 
 export const FilterModal: React.FC<FilterModalProps> = ({
@@ -51,6 +52,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
     hasSecurityClearance: false,
     hasPoliceRicense: false,
     searchText: "",
+    showInactive: false,
   });
 
   const [expandedSections, setExpandedSections] = useState({
@@ -95,14 +97,14 @@ export const FilterModal: React.FC<FilterModalProps> = ({
 
     return {
       statuses: Array.from(statuses).sort(),
-      departments: new Map(
+      departments: new Map<string, string[]>(
         Array.from(departments.entries())
-          .map(([dept, sects]) => [dept, Array.from(sects).sort()])
+          .map(([dept, sects]) => [dept, Array.from(sects).sort()] as [string, string[]])
           .sort()
       ),
-      sections: new Map(
+      sections: new Map<string, string[]>(
         Array.from(sections.entries())
-          .map(([sect, tms]) => [sect, Array.from(tms).sort()])
+          .map(([sect, tms]) => [sect, Array.from(tms).sort()] as [string, string[]])
           .sort()
       ),
       teams: Array.from(teams).sort(),
@@ -196,6 +198,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
       hasSecurityClearance: filters.hasSecurityClearance || undefined,
       hasPoliceRicense: filters.hasPoliceRicense || undefined,
       searchText: filters.searchText || undefined,
+      showInactive: filters.showInactive || undefined,
     });
     onOpenChange(false);
   };
@@ -212,6 +215,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
       hasSecurityClearance: false,
       hasPoliceRicense: false,
       searchText: "",
+      showInactive: false,
     });
     setExpandedSections({
       departments: false,
@@ -260,15 +264,15 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               </Label>
               <div className="grid grid-cols-2 gap-3 pr-2">
                 {hierarchyData.statuses.map((status) => (
-                  <div key={status} className="flex items-center gap-2 justify-end">
-                    <label htmlFor={`status-${status}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                      {status}
-                    </label>
+                  <div key={status} className="flex items-center gap-2 justify-start">
                     <Checkbox
                       id={`status-${status}`}
                       checked={filters.statuses?.includes(status) || false}
                       onCheckedChange={() => handleStatusToggle(status)}
                     />
+                    <label htmlFor={`status-${status}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                      {status}
+                    </label>
                   </div>
                 ))}
               </div>
@@ -279,29 +283,29 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           {Array.from(hierarchyData.departments.keys()).length > 0 && (
             <div className="space-y-3 text-right border-t border-slate-200 dark:border-slate-700 pt-4">
               <button
-                onClick={() => setExpandedSections(prev => ({...prev, departments: !prev.departments}))}
-                className="flex items-center gap-2 justify-end w-full p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors"
+                onClick={() => setExpandedSections(prev => ({ ...prev, departments: !prev.departments }))}
+                className="flex items-center gap-2 justify-between w-full p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors"
               >
                 <span className="text-sm font-semibold text-right text-[#001e30] dark:text-white">
                   מחלקה
                 </span>
-                <ChevronDown 
+                <ChevronDown
                   className={`w-4 h-4 transition-transform ${expandedSections.departments ? 'rotate-180' : ''}`}
                 />
               </button>
-              
+
               {expandedSections.departments && (
                 <div className="grid grid-cols-2 gap-3 pr-4">
                   {Array.from(hierarchyData.departments.keys()).map((dept) => (
-                    <div key={dept} className="flex items-center gap-2 justify-end">
-                      <label htmlFor={`dept-${dept}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                        {dept}
-                      </label>
+                    <div key={dept} className="flex items-center gap-2 justify-start">
                       <Checkbox
                         id={`dept-${dept}`}
                         checked={filters.departments?.includes(dept) || false}
                         onCheckedChange={() => handleDepartmentToggle(dept)}
                       />
+                      <label htmlFor={`dept-${dept}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                        {dept}
+                      </label>
                     </div>
                   ))}
                 </div>
@@ -313,29 +317,29 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           {filters.departments?.length! > 0 && availableSections.length > 0 && (
             <div className="space-y-3 text-right border-t border-slate-200 dark:border-slate-700 pt-4">
               <button
-                onClick={() => setExpandedSections(prev => ({...prev, sections: !prev.sections}))}
-                className="flex items-center gap-2 justify-end w-full p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors"
+                onClick={() => setExpandedSections(prev => ({ ...prev, sections: !prev.sections }))}
+                className="flex items-center gap-2 justify-between w-full p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors"
               >
                 <span className="text-sm font-semibold text-right text-[#001e30] dark:text-white">
                   מדור
                 </span>
-                <ChevronDown 
+                <ChevronDown
                   className={`w-4 h-4 transition-transform ${expandedSections.sections ? 'rotate-180' : ''}`}
                 />
               </button>
-              
+
               {expandedSections.sections && (
                 <div className="grid grid-cols-2 gap-3 pr-4">
                   {availableSections.map((section) => (
-                    <div key={section} className="flex items-center gap-2 justify-end">
-                      <label htmlFor={`section-${section}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                        {section}
-                      </label>
+                    <div key={section} className="flex items-center gap-2 justify-start">
                       <Checkbox
                         id={`section-${section}`}
                         checked={filters.sections?.includes(section) || false}
                         onCheckedChange={() => handleSectionToggle(section)}
                       />
+                      <label htmlFor={`section-${section}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                        {section}
+                      </label>
                     </div>
                   ))}
                 </div>
@@ -347,29 +351,29 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           {filters.sections?.length! > 0 && availableTeams.length > 0 && (
             <div className="space-y-3 text-right border-t border-slate-200 dark:border-slate-700 pt-4">
               <button
-                onClick={() => setExpandedSections(prev => ({...prev, teams: !prev.teams}))}
-                className="flex items-center gap-2 justify-end w-full p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors"
+                onClick={() => setExpandedSections(prev => ({ ...prev, teams: !prev.teams }))}
+                className="flex items-center gap-2 justify-between w-full p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors"
               >
                 <span className="text-sm font-semibold text-right text-[#001e30] dark:text-white">
                   צוות
                 </span>
-                <ChevronDown 
+                <ChevronDown
                   className={`w-4 h-4 transition-transform ${expandedSections.teams ? 'rotate-180' : ''}`}
                 />
               </button>
-              
+
               {expandedSections.teams && (
                 <div className="grid grid-cols-2 gap-3 pr-4">
                   {availableTeams.map((team) => (
-                    <div key={team} className="flex items-center gap-2 justify-end">
-                      <label htmlFor={`team-${team}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                        {team}
-                      </label>
+                    <div key={team} className="flex items-center gap-2 justify-start">
                       <Checkbox
                         id={`team-${team}`}
                         checked={filters.teams?.includes(team) || false}
                         onCheckedChange={() => handleTeamToggle(team)}
                       />
+                      <label htmlFor={`team-${team}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                        {team}
+                      </label>
                     </div>
                   ))}
                 </div>
@@ -385,15 +389,15 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               </Label>
               <div className="grid grid-cols-2 gap-3 pr-2">
                 {hierarchyData.roles.map((role) => (
-                  <div key={role} className="flex items-center gap-2 justify-end">
-                    <label htmlFor={`role-${role}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                      {role}
-                    </label>
+                  <div key={role} className="flex items-center gap-2 justify-start">
                     <Checkbox
                       id={`role-${role}`}
                       checked={filters.roles?.includes(role) || false}
                       onCheckedChange={() => handleRoleToggle(role)}
                     />
+                    <label htmlFor={`role-${role}`} className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                      {role}
+                    </label>
                   </div>
                 ))}
               </div>
@@ -406,10 +410,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               הרשאות ודרגות
             </Label>
             <div className="space-y-2 pr-2">
-              <div className="flex items-center gap-2 justify-end">
-                <label htmlFor="commander" className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                  מפקד
-                </label>
+              <div className="flex items-center gap-2 justify-start">
                 <Checkbox
                   id="commander"
                   checked={filters.isCommander || false}
@@ -417,11 +418,11 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                     setFilters({ ...filters, isCommander: checked === true })
                   }
                 />
-              </div>
-              <div className="flex items-center gap-2 justify-end">
-                <label htmlFor="admin" className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                  מנהל מערכת
+                <label htmlFor="commander" className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                  מפקד
                 </label>
+              </div>
+              <div className="flex items-center gap-2 justify-start">
                 <Checkbox
                   id="admin"
                   checked={filters.isAdmin || false}
@@ -429,11 +430,11 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                     setFilters({ ...filters, isAdmin: checked === true })
                   }
                 />
-              </div>
-              <div className="flex items-center gap-2 justify-end">
-                <label htmlFor="clearance" className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                  בעל סודיות
+                <label htmlFor="admin" className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                  מנהל מערכת
                 </label>
+              </div>
+              <div className="flex items-center gap-2 justify-start">
                 <Checkbox
                   id="clearance"
                   checked={filters.hasSecurityClearance || false}
@@ -441,11 +442,11 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                     setFilters({ ...filters, hasSecurityClearance: checked === true })
                   }
                 />
-              </div>
-              <div className="flex items-center gap-2 justify-end">
-                <label htmlFor="license" className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
-                  רישיון משטרה
+                <label htmlFor="clearance" className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                  בעל סודיות
                 </label>
+              </div>
+              <div className="flex items-center gap-2 justify-start">
                 <Checkbox
                   id="license"
                   checked={filters.hasPoliceRicense || false}
@@ -453,10 +454,27 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                     setFilters({ ...filters, hasPoliceRicense: checked === true })
                   }
                 />
+                <label htmlFor="license" className="text-sm cursor-pointer text-slate-700 dark:text-slate-300">
+                  רישיון משטרה
+                </label>
               </div>
+            </div>
+            <div className="flex items-center gap-2 justify-start border-t border-slate-100 dark:border-slate-800 pt-2 mt-2">
+              <Checkbox
+                id="inactive"
+                checked={filters.showInactive || false}
+                onCheckedChange={(checked) =>
+                  setFilters({ ...filters, showInactive: checked === true })
+                }
+                className="data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500"
+              />
+              <label htmlFor="inactive" className="text-sm cursor-pointer text-slate-700 dark:text-slate-300 font-bold text-red-500">
+                הצג משרתים לא פעילים
+              </label>
             </div>
           </div>
         </div>
+
 
         <DialogFooter className="gap-2 sm:gap-0 mt-6 flex-row-reverse">
           <Button
@@ -476,6 +494,6 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 };

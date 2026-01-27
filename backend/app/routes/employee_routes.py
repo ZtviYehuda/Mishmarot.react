@@ -38,6 +38,7 @@ def get_employees():
         filters = {
             "search": request.args.get("search"),
             "dept_id": request.args.get("dept_id"),
+            "include_inactive": request.args.get("include_inactive") == "true",
         }
         employees = EmployeeModel.get_all_employees(filters)
         return jsonify(employees)

@@ -88,6 +88,7 @@ class EmployeeModel:
             query = """
                 SELECT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number,
                        e.birth_date, e.is_commander, e.security_clearance, e.police_license,
+                       e.is_active,
                        COALESCE(t.name, 'מטה') as team_name, 
                        COALESCE(s.name, s_dir.name, 'מטה') as section_name, 
                        COALESCE(d.name, d_dir.name, 'מטה') as department_name,
@@ -111,9 +112,14 @@ class EmployeeModel:
                     ORDER BY start_datetime DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
-                WHERE e.is_active = TRUE
+                WHERE 1=1
             """
             params = []
+            
+            # Default to active only unless specified otherwise
+            if not filters or not filters.get("include_inactive"):
+                query += " AND e.is_active = TRUE"
+            
             if filters:
                 if filters.get("search"):
                     term = f"%{filters['search']}%"

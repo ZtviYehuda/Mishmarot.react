@@ -9,12 +9,13 @@ export const useEmployees = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch all employees
-  const fetchEmployees = useCallback(async (search?: string, dept_id?: number) => {
+  const fetchEmployees = useCallback(async (search?: string, dept_id?: number, include_inactive?: boolean) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.append('search', search);
       if (dept_id) params.append('dept_id', dept_id.toString());
+      if (include_inactive) params.append('include_inactive', 'true');
 
       const { data } = await apiClient.get<Employee[]>(`${endpoints.EMPLOYEES_BASE_ENDPOINT}?${params}`);
       setEmployees(data);

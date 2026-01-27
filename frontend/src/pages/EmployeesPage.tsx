@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { EmployeeTable } from "@/components/employees/EmployeeTable";
 import { Users, ChevronRight } from "lucide-react";
 
 export default function EmployeesPage() {
-  const { employees, loading } = useEmployees();
-  const [filteredEmployees, setFilteredEmployees] = useState<any[]>([]);
+  const { employees, loading, fetchEmployees } = useEmployees();
 
   return (
     <div className="space-y-6 pb-6">
@@ -34,10 +33,10 @@ export default function EmployeesPage() {
       </div>
 
       {/* Table Section */}
-      <EmployeeTable 
-        employees={employees} 
+      <EmployeeTable
+        employees={employees}
         loading={loading}
-        onFilteredEmployeesChange={setFilteredEmployees}
+        fetchEmployees={fetchEmployees}
       />
     </div>
   );
