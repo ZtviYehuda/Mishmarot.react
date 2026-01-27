@@ -58,8 +58,8 @@ export const useEmployees = () => {
 
   // Delete Employee
   const deleteEmployee = async (id: number) => {
-    if(!confirm("Are you sure?")) return;
-    
+    if (!confirm("Are you sure?")) return;
+
     setLoading(true);
     try {
       await apiClient.delete(endpoints.deleteEmployeeEndpoint(id));
@@ -73,18 +73,42 @@ export const useEmployees = () => {
     }
   };
 
+  // Get Organization Structure
+  const getStructure = useCallback(async () => {
+    try {
+      const { data } = await apiClient.get(endpoints.EMPLOYEES_STRUCTURE_ENDPOINT);
+      return data;
+    } catch (err: any) {
+      console.error("Failed to fetch structure", err);
+      return [];
+    }
+  }, []);
+
+  // Get Service Types
+  const getServiceTypes = useCallback(async () => {
+    try {
+      const { data } = await apiClient.get(endpoints.EMPLOYEES_SERVICE_TYPES_ENDPOINT);
+      return data;
+    } catch (err: any) {
+      console.error("Failed to fetch service types", err);
+      return [];
+    }
+  }, []);
+
   // Initial fetch
   useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  return { 
-    employees, 
-    loading, 
-    error, 
-    fetchEmployees, 
-    createEmployee, 
-    updateEmployee, 
-    deleteEmployee 
+  return {
+    employees,
+    loading,
+    error,
+    fetchEmployees,
+    createEmployee,
+    updateEmployee,
+    deleteEmployee,
+    getStructure,
+    getServiceTypes
   };
 };

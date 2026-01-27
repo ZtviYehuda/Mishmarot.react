@@ -114,6 +114,12 @@ def update_employee(emp_id):
         return jsonify({"success": False, "error": "Unauthorized"}), 403
 
     data = request.get_json()
+    
+    # Convert empty strings to None for optional fields to avoid DB errors (e.g. invalid date syntax)
+    for key in ["phone_number", "city", "birth_date", "enlistment_date", "discharge_date", "assignment_date", "team_id", "section_id", "department_id", "role_id", "service_type_id", "emergency_contact"]:
+        if key in data and data[key] == "":
+            data[key] = None
+
     if EmployeeModel.update_employee(emp_id, data):
         return jsonify({"success": True, "message": "User updated"})
     return jsonify({"success": False, "error": "Update failed"}), 500
@@ -178,3 +184,27 @@ def export_excel():
         as_attachment=True,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+
+
+@emp_bp.route("/service-types", methods=["GET"])
+@jwt_required()
+def get_service_types():
+    """Get all service types for dropdown"""
+    try:
+        from app.utils.db import get_db_connection
+        from psycopg2.extras import RealDictCursor
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
+        
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute("SELECT id, name FROM service_types ORDER BY name")
+            service_types = cur.fetchall()
+            return jsonify(service_types)
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f"Error fetching service types: {e}")
+        return jsonify({"error": str(e)}), 500

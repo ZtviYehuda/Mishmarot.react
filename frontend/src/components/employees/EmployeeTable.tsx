@@ -42,8 +42,9 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
   const getProfessionalTitle = (emp: Employee) => {
     if (emp.is_admin && emp.is_commander) return "מנהל מערכת בכיר";
     if (emp.is_commander) {
-      if (emp.department_name && emp.section_name) return "ראש מדור";
-      if (emp.department_name) return "ראש מחלקה";
+      if (emp.team_name && emp.team_name !== 'מטה') return "ראש חולייה";
+      if (emp.section_name && emp.section_name !== 'מטה') return "ראש מדור";
+      if (emp.department_name && emp.department_name !== 'מטה') return "ראש מחלקה";
       return "מפקד יחידה";
     }
     return "משרת";
@@ -249,6 +250,9 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
                 שיוך ארגוני
               </TableHead>
               <TableHead className="text-right font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6">
+                סוג שירות
+              </TableHead>
+              <TableHead className="text-right font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6">
                 סטטוס
               </TableHead>
               <TableHead className="text-right font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6"></TableHead>
@@ -258,7 +262,7 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="h-32 text-center text-right text-slate-400"
                 >
                   טוען נתונים...
@@ -267,7 +271,7 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
             ) : paginatedEmployees.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="h-32 text-center text-right text-slate-400"
                 >
                   לא נמצאו משרתים התואמים את החיפוש והסינון
@@ -314,13 +318,18 @@ export const EmployeeTable = ({ employees, loading, onFilteredEmployeesChange }:
                   <TableCell className="px-6 py-4 text-right">
                     <div className="flex flex-col text-right">
                       <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        {emp.department_name || "ללא מחלקה"}
+                        {emp.department_name && emp.department_name !== 'מטה' ? emp.department_name : "ללא מחלקה"}
                       </span>
                       <span className="text-[10px] text-slate-400 font-medium">
-                        {emp.section_name || "ללא מדור"} •{" "}
-                        {emp.team_name || "ללא צוות"}
+                        {(emp.section_name && emp.section_name !== 'מטה') ? emp.section_name : "ללא מדור"} •{" "}
+                        {(emp.team_name && emp.team_name !== 'מטה') ? emp.team_name : "ללא חולייה"}
                       </span>
                     </div>
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-right">
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                      {emp.service_type_name || "לא הוגדר"}
+                    </span>
                   </TableCell>
                   <TableCell className="px-6 py-4 text-right">
                     <div className="flex items-center gap-2 flex-row-reverse">

@@ -1,18 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEmployees } from "@/hooks/useEmployees";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import type { CreateEmployeePayload } from "@/types/employee.types";
-import { Loader2, ArrowRight, UserPlus, User, Calendar, MapPin, Phone, Shield, Building2, Save, X } from "lucide-react";
-import { ChevronRight } from "lucide-react";
+import { Loader2, UserPlus, User, Calendar, Phone, Shield, Building2, Save, ChevronLeft, Check } from "lucide-react";
+
+interface Team { id: number; name: string; section_id: number }
+interface Section { id: number; name: string; department_id: number; teams: Team[] }
+interface Department { id: number; name: string; sections: Section[] }
 
 export default function CreateEmployeePage() {
   const navigate = useNavigate();
-  const { createEmployee } = useEmployees();
+  const { createEmployee, getStructure, getServiceTypes } = useEmployees();
   const [loading, setLoading] = useState(false);
+  const [structure, setStructure] = useState<Department[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<{ id: number; name: string }[]>([]);
+
+  // Selection States
+  const [selectedDeptId, setSelectedDeptId] = useState<string>("");
+  const [selectedSectionId, setSelectedSectionId] = useState<string>("");
+
   const [formData, setFormData] = useState<CreateEmployeePayload>({
     first_name: "",
     last_name: "",
@@ -23,8 +34,12 @@ export default function CreateEmployeePage() {
     birth_date: "",
     enlistment_date: "",
     discharge_date: "",
+    assignment_date: "",
     team_id: undefined,
+    section_id: undefined,
+    department_id: undefined,
     role_id: undefined,
+    service_type_id: undefined,
     is_commander: false,
     is_admin: false,
     security_clearance: 0,
@@ -32,384 +47,483 @@ export default function CreateEmployeePage() {
     emergency_contact: "",
   });
 
+  // Fetch structure and service types on mount
+  useEffect(() => {
+    getStructure().then((data) => {
+      if (data) setStructure(data);
+    });
+    getServiceTypes().then((data) => {
+      if (data) setServiceTypes(data);
+    });
+  }, [getStructure, getServiceTypes]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await createEmployee(formData);
+
+    // Prepare payload with organizational IDs for commander logic
+    const payload = {
+      ...formData,
+      section_id: selectedSectionId ? parseInt(selectedSectionId) : undefined,
+      department_id: selectedDeptId ? parseInt(selectedDeptId) : undefined,
+    };
+
+    const success = await createEmployee(payload);
     setLoading(false);
     if (success) {
       navigate("/employees");
     }
   };
 
+  // Derived Options
+  const sections = structure.find(d => d.id.toString() === selectedDeptId)?.sections || [];
+  const teams = sections.find(s => s.id.toString() === selectedSectionId)?.teams || [];
+
   return (
-    <div className="space-y-6 pb-6">
+    <div className="max-w-5xl mx-auto space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Page Header */}
-      <div className="flex flex-col gap-1.5 border-b border-slate-200 dark:border-slate-700 pb-6">
-        <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-widest leading-none mb-1 text-right">
-          <span>Core Hub</span>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-[#0074ff]">Personnel Management</span>
-          <ChevronRight className="w-3 h-3" />
-          <span>הוספת משרת חדש</span>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+          <span>ניהול כח אדם</span>
+          <ChevronLeft className="w-3 h-3 text-slate-300" />
+          <span className="text-[#0074ff]">הוספת משרת חדש</span>
         </div>
-        <div className="flex items-center gap-4 text-right">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#eff6ff] to-[#dbeafe] border border-blue-200 dark:border-blue-900/30 flex items-center justify-center dark:from-slate-800 dark:to-slate-800/50 shadow-sm">
-            <UserPlus className="w-7 h-7 text-[#0074ff]" />
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-100 flex items-center justify-center dark:from-blue-900/20 dark:to-blue-900/10 dark:border-blue-900/30 shadow-sm">
+              <UserPlus className="w-8 h-8 text-[#0074ff]" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                הוספת משרת חדש
+              </h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">
+                מלא את פרטי המשרת בטופס למטה כדי לצרפו ליחידה.
+              </p>
+            </div>
           </div>
-          <div className="text-right">
-            <h1 className="text-3xl font-semibold text-[#001e30] dark:text-white tracking-tight leading-none mb-1.5">
-              הוספת משרת חדש
-            </h1>
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-none">
-              מלא את הפרטים הבאים כדי להוסיף משרת חדש למערכת
-            </p>
+
+          <div className="hidden sm:flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/employees")}
+              className="border-slate-200 hover:bg-slate-50 h-10 px-5"
+            >
+              ביטול
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="bg-[#0074ff] hover:bg-[#0060d5] text-white h-10 px-6 shadow-md shadow-blue-500/20"
+            >
+              {loading ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Save className="w-4 h-4 ml-2" />}
+              שמור משרת
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Personal Information Section */}
-        <Card className="border-slate-200 dark:border-slate-700">
-          <CardHeader className="border-b border-slate-200 dark:border-slate-700">
-            <CardTitle className="text-right flex items-center gap-2 flex-row-reverse text-lg font-semibold">
-              <User className="w-5 h-5 text-[#0074ff]" />
-              פרטים אישיים
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2 text-right">
-                <Label htmlFor="first_name" className="text-sm font-medium text-right">
-                  שם פרטי *
-                </Label>
-                <Input
-                  id="first_name"
-                  value={formData.first_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, first_name: e.target.value })
-                  }
-                  required
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
-                />
-              </div>
-              <div className="space-y-2 text-right">
-                <Label htmlFor="last_name" className="text-sm font-medium text-right">
-                  שם משפחה *
-                </Label>
-                <Input
-                  id="last_name"
-                  value={formData.last_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, last_name: e.target.value })
-                  }
-                  required
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
-                />
-              </div>
-              <div className="space-y-2 text-right">
-                <Label htmlFor="personal_number" className="text-sm font-medium text-right">
-                  מספר אישי *
-                </Label>
-                <Input
-                  id="personal_number"
-                  value={formData.personal_number}
-                  onChange={(e) =>
-                    setFormData({ ...formData, personal_number: e.target.value })
-                  }
-                  required
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11 font-mono"
-                />
-              </div>
-              <div className="space-y-2 text-right">
-                <Label htmlFor="national_id" className="text-sm font-medium text-right">
-                  תעודת זהות *
-                </Label>
-                <Input
-                  id="national_id"
-                  value={formData.national_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, national_id: e.target.value })
-                  }
-                  required
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11 font-mono"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-        {/* Contact Information Section */}
-        <Card className="border-slate-200 dark:border-slate-700">
-          <CardHeader className="border-b border-slate-200 dark:border-slate-700">
-            <CardTitle className="text-right flex items-center gap-2 flex-row-reverse text-lg font-semibold">
-              <Phone className="w-5 h-5 text-[#0074ff]" />
-              פרטי יצירת קשר
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2 text-right">
-                <Label htmlFor="phone_number" className="text-sm font-medium text-right">
-                  מספר טלפון
-                </Label>
+        {/* Main Column */}
+        <div className="lg:col-span-8 space-y-8">
+
+          {/* Personal Information */}
+          <SectionCard
+            icon={User}
+            title="פרטים אישיים"
+            description="פרטי זיהוי בסיסיים של המשרת"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <FormField label="שם פרטי" required>
                 <Input
-                  id="phone_number"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  placeholder="לדוגמה: ישראל"
+                />
+              </FormField>
+              <FormField label="שם משפחה" required>
+                <Input
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  placeholder="לדוגמה: ישראלי"
+                />
+              </FormField>
+              <FormField label="מספר אישי" required>
+                <Input
+                  value={formData.personal_number}
+                  onChange={(e) => setFormData({ ...formData, personal_number: e.target.value })}
+                  className="font-mono text-left ltr"
+                  placeholder="1234567"
+                />
+              </FormField>
+              <FormField label="תעודת זהות" required>
+                <Input
+                  value={formData.national_id}
+                  onChange={(e) => setFormData({ ...formData, national_id: e.target.value })}
+                  className="font-mono text-left ltr"
+                  placeholder="000000000"
+                />
+              </FormField>
+            </div>
+          </SectionCard>
+
+          {/* Contact Information */}
+          <SectionCard
+            icon={Phone}
+            title="פרטי קשר"
+            description="כתובת, טלפון ואנשי קשר"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <FormField label="מספר טלפון">
+                <Input
                   type="tel"
                   value={formData.phone_number}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone_number: e.target.value })
-                  }
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  className="font-mono text-left ltr"
+                  placeholder="050-0000000"
                 />
-              </div>
-              <div className="space-y-2 text-right">
-                <Label htmlFor="city" className="text-sm font-medium text-right">
-                  עיר
-                </Label>
+              </FormField>
+              <FormField label="עיר מגורים">
                 <Input
-                  id="city"
                   value={formData.city}
-                  onChange={(e) =>
-                    setFormData({ ...formData, city: e.target.value })
-                  }
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="לדוגמה: תל אביב"
                 />
-              </div>
-              <div className="space-y-2 text-right md:col-span-2">
-                <Label htmlFor="emergency_contact" className="text-sm font-medium text-right">
-                  איש קשר לחירום
-                </Label>
-                <Input
-                  id="emergency_contact"
-                  value={formData.emergency_contact}
-                  onChange={(e) =>
-                    setFormData({ ...formData, emergency_contact: e.target.value })
-                  }
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
-                />
+              </FormField>
+              <div className="sm:col-span-2">
+                <FormField label="איש קשר לחירום">
+                  <Input
+                    value={formData.emergency_contact}
+                    onChange={(e) => setFormData({ ...formData, emergency_contact: e.target.value })}
+                    placeholder="שם ומספר טלפון"
+                  />
+                </FormField>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </SectionCard>
 
-        {/* Dates Section */}
-        <Card className="border-slate-200 dark:border-slate-700">
-          <CardHeader className="border-b border-slate-200 dark:border-slate-700">
-            <CardTitle className="text-right flex items-center gap-2 flex-row-reverse text-lg font-semibold">
-              <Calendar className="w-5 h-5 text-[#0074ff]" />
-              תאריכים
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2 text-right">
-                <Label htmlFor="birth_date" className="text-sm font-medium text-right">
-                  תאריך לידה
-                </Label>
+          {/* Organizational */}
+          <SectionCard
+            icon={Building2}
+            title="שיוך ארגוני"
+            description="הגדר את מיקום המשרת במבנה הארגון"
+          >
+            {/* Hierarchical Structure */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+                  מבנה היררכי
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Department Select */}
+                  <FormField label="מחלקה">
+                    <Select
+                      value={selectedDeptId}
+                      onValueChange={(val) => {
+                        setSelectedDeptId(val);
+                        setSelectedSectionId("");
+                        setFormData({ ...formData, team_id: undefined });
+                      }}
+                    >
+                      <SelectTrigger className="text-right">
+                        <SelectValue placeholder="בחר מחלקה..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {structure.map((dept) => (
+                          <SelectItem key={dept.id} value={dept.id.toString()}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+
+                  {/* Section Select */}
+                  <FormField label="מדור">
+                    <Select
+                      value={selectedSectionId}
+                      onValueChange={(val) => {
+                        setSelectedSectionId(val);
+                        setFormData({ ...formData, team_id: undefined });
+                      }}
+                      disabled={!selectedDeptId}
+                    >
+                      <SelectTrigger className="text-right">
+                        <SelectValue placeholder={!selectedDeptId ? "בחר מחלקה קודם..." : "בחר מדור..."} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sections.map((sec) => (
+                          <SelectItem key={sec.id} value={sec.id.toString()}>
+                            {sec.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+
+                  {/* Team Select */}
+                  <FormField label="חולייה">
+                    <Select
+                      value={formData.team_id?.toString() || ""}
+                      onValueChange={(val) => setFormData({ ...formData, team_id: parseInt(val) })}
+                      disabled={!selectedSectionId}
+                    >
+                      <SelectTrigger className="text-right">
+                        <SelectValue placeholder={!selectedSectionId ? "בחר מדור קודם..." : "בחר חולייה..."} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teams.map((t) => (
+                          <SelectItem key={t.id} value={t.id.toString()}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                </div>
+              </div>
+
+              {/* Role and Service Type */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+                  תפקיד ושירות
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField label="סוג שירות">
+                    <Select
+                      value={formData.service_type_id?.toString() || ""}
+                      onValueChange={(val) => setFormData({ ...formData, service_type_id: parseInt(val) })}
+                    >
+                      <SelectTrigger className="text-right">
+                        <SelectValue placeholder="בחר סוג שירות..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {serviceTypes.map((st) => (
+                          <SelectItem key={st.id} value={st.id.toString()}>
+                            {st.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+
+                  <FormField label="מזהה תפקיד">
+                    <Input
+                      type="number"
+                      value={formData.role_id || ""}
+                      onChange={(e) => setFormData({ ...formData, role_id: e.target.value ? parseInt(e.target.value) : undefined })}
+                      placeholder="הזן מזהה תפקיד"
+                    />
+                  </FormField>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                </div>
+              </div>
+
+              {/* Command Position Toggle */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
+                  סטטוס פיקוד
+                </h3>
+                <ToggleCard
+                  label="תפקיד פיקודי"
+                  checked={formData.is_commander || false}
+                  onChange={(v) => setFormData({ ...formData, is_commander: v })}
+                />
+                {formData.is_commander && (
+                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-lg">
+                    <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                      <span className="text-base">💡</span>
+                      <span>
+                        המשרת יוגדר כמפקד של <strong>{formData.team_id ? 'החולייה' : selectedSectionId ? 'המדור' : selectedDeptId ? 'המחלקה' : 'היחידה הנבחרת'}</strong>
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* Sidebar Column */}
+        <div className="lg:col-span-4 space-y-8">
+
+          {/* Dates */}
+          <SectionCard
+            icon={Calendar}
+            title="תאריכים"
+            compact
+          >
+            <div className="space-y-4">
+              <FormField label="תאריך לידה">
                 <Input
-                  id="birth_date"
                   type="date"
                   value={formData.birth_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, birth_date: e.target.value })
-                  }
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
+                  onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
                 />
-              </div>
-              <div className="space-y-2 text-right">
-                <Label htmlFor="enlistment_date" className="text-sm font-medium text-right">
-                  תאריך גיוס
-                </Label>
+              </FormField>
+              <FormField label="תאריך גיוס">
                 <Input
-                  id="enlistment_date"
                   type="date"
                   value={formData.enlistment_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, enlistment_date: e.target.value })
-                  }
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
+                  onChange={(e) => setFormData({ ...formData, enlistment_date: e.target.value })}
                 />
-              </div>
-              <div className="space-y-2 text-right">
-                <Label htmlFor="discharge_date" className="text-sm font-medium text-right">
-                  תאריך שחרור
-                </Label>
+              </FormField>
+              <FormField label="תאריך הצבה">
                 <Input
-                  id="discharge_date"
+                  type="date"
+                  value={formData.assignment_date}
+                  onChange={(e) => setFormData({ ...formData, assignment_date: e.target.value })}
+                />
+              </FormField>
+              <FormField label="תאריך שחרור">
+                <Input
                   type="date"
                   value={formData.discharge_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, discharge_date: e.target.value })
-                  }
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
+                  onChange={(e) => setFormData({ ...formData, discharge_date: e.target.value })}
                 />
-              </div>
+              </FormField>
             </div>
-          </CardContent>
-        </Card>
+          </SectionCard>
 
-        {/* Security & Permissions Section */}
-        <Card className="border-slate-200 dark:border-slate-700">
-          <CardHeader className="border-b border-slate-200 dark:border-slate-700">
-            <CardTitle className="text-right flex items-center gap-2 flex-row-reverse text-lg font-semibold">
-              <Shield className="w-5 h-5 text-[#0074ff]" />
-              אבטחה והרשאות
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2 text-right">
-                <Label htmlFor="security_clearance" className="text-sm font-medium text-right">
-                  רמת סיווג
-                </Label>
-                <Input
-                  id="security_clearance"
-                  type="number"
-                  min="0"
-                  max="5"
-                  value={formData.security_clearance}
-                  onChange={(e) =>
-                    setFormData({ ...formData, security_clearance: parseInt(e.target.value) || 0 })
-                  }
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
-                />
-              </div>
-              <div className="space-y-2 text-right">
-                <Label htmlFor="police_license" className="text-sm font-medium text-right">
-                  רישיון משטרה
-                </Label>
-                <div className="flex items-center gap-3 flex-row-reverse mt-2">
-                  <input
-                    type="checkbox"
-                    id="police_license"
-                    checked={formData.police_license}
-                    onChange={(e) =>
-                      setFormData({ ...formData, police_license: e.target.checked })
-                    }
-                    className="w-4 h-4 rounded border-slate-300 text-[#0074ff] focus:ring-[#0074ff]"
-                  />
-                  <Label htmlFor="police_license" className="text-sm font-medium cursor-pointer">
-                    יש רישיון משטרה
-                  </Label>
-                </div>
-              </div>
-              <div className="space-y-2 text-right">
-                <Label htmlFor="is_commander" className="text-sm font-medium text-right">
-                  מפקד
-                </Label>
-                <div className="flex items-center gap-3 flex-row-reverse mt-2">
-                  <input
-                    type="checkbox"
-                    id="is_commander"
-                    checked={formData.is_commander}
-                    onChange={(e) =>
-                      setFormData({ ...formData, is_commander: e.target.checked })
-                    }
-                    className="w-4 h-4 rounded border-slate-300 text-[#0074ff] focus:ring-[#0074ff]"
-                  />
-                  <Label htmlFor="is_commander" className="text-sm font-medium cursor-pointer">
-                    מפקד יחידה
-                  </Label>
-                </div>
-              </div>
-              <div className="space-y-2 text-right">
-                <Label htmlFor="is_admin" className="text-sm font-medium text-right">
-                  מנהל מערכת
-                </Label>
-                <div className="flex items-center gap-3 flex-row-reverse mt-2">
-                  <input
-                    type="checkbox"
-                    id="is_admin"
-                    checked={formData.is_admin}
-                    onChange={(e) =>
-                      setFormData({ ...formData, is_admin: e.target.checked })
-                    }
-                    className="w-4 h-4 rounded border-slate-300 text-[#0074ff] focus:ring-[#0074ff]"
-                  />
-                  <Label htmlFor="is_admin" className="text-sm font-medium cursor-pointer">
-                    מנהל מערכת
-                  </Label>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Organizational Section */}
-        <Card className="border-slate-200 dark:border-slate-700">
-          <CardHeader className="border-b border-slate-200 dark:border-slate-700">
-            <CardTitle className="text-right flex items-center gap-2 flex-row-reverse text-lg font-semibold">
-              <Building2 className="w-5 h-5 text-[#0074ff]" />
-              שיוך ארגוני
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2 text-right">
-                <Label htmlFor="team_id" className="text-sm font-medium text-right">
-                  מזהה צוות
-                </Label>
-                <Input
-                  id="team_id"
-                  type="number"
-                  value={formData.team_id || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, team_id: e.target.value ? parseInt(e.target.value) : undefined })
-                  }
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
-                />
-              </div>
-              <div className="space-y-2 text-right">
-                <Label htmlFor="role_id" className="text-sm font-medium text-right">
-                  מזהה תפקיד
-                </Label>
-                <Input
-                  id="role_id"
-                  type="number"
-                  value={formData.role_id || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, role_id: e.target.value ? parseInt(e.target.value) : undefined })
-                  }
-                  className="border-slate-200 focus:border-[#0074ff] text-right h-11"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-4 justify-end pt-4 border-t border-slate-200 dark:border-slate-700">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/employees")}
-            disabled={loading}
-            className="border-slate-200 dark:border-slate-700 h-11 px-6"
+          {/* Security & Permissions */}
+          <SectionCard
+            icon={Shield}
+            title="הגדרות ואבטחה"
+            compact
           >
-            <X className="w-4 h-4 ml-2" />
+            <div className="space-y-6">
+              <FormField label="רמת סיווג (0-5)">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      step="1"
+                      value={formData.security_clearance}
+                      onChange={(e) => setFormData({ ...formData, security_clearance: parseInt(e.target.value) || 0 })}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0074ff]"
+                    />
+                  </div>
+                  <div className="w-8 h-8 rounded-md bg-blue-50 text-[#0074ff] font-bold flex items-center justify-center border border-blue-100">
+                    {formData.security_clearance}
+                  </div>
+                </div>
+              </FormField>
+
+              <div className="space-y-3 pt-2">
+                <ToggleCard
+                  label="רישיון משטרה"
+                  checked={formData.police_license || false}
+                  onChange={(v) => setFormData({ ...formData, police_license: v })}
+                />
+              </div>
+            </div>
+          </SectionCard>
+
+        </div>
+
+        {/* Mobile Action Buttons */}
+        <div className="lg:hidden col-span-1 flex gap-3 pt-4 border-t border-slate-200">
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => navigate("/employees")}
+            className="flex-1 h-11"
+          >
             ביטול
           </Button>
           <Button
             type="submit"
             disabled={loading}
-            className="bg-[#0074ff] hover:bg-[#0060d5] text-white h-11 px-6 shadow-md shadow-blue-500/20"
+            className="flex-1 bg-[#0074ff] text-white h-11"
           >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                מוסיף...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 ml-2" />
-                שמור משרת
-              </>
-            )}
+            {loading ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Save className="w-4 h-4 ml-2" />}
+            שמור
           </Button>
         </div>
+
       </form>
+    </div>
+  );
+}
+
+// --- Helper Components ---
+
+function SectionCard({ icon: Icon, title, description, children, compact }: { icon: any, title: string, description?: string, children: React.ReactNode, compact?: boolean }) {
+  return (
+    <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 overflow-hidden">
+      <CardHeader className={`bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 ${compact ? 'p-4' : 'p-6'}`}>
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-100 dark:ring-slate-700 ${compact ? 'w-8 h-8' : 'w-10 h-10'} flex items-center justify-center`}>
+            <Icon className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-[#0074ff]`} />
+          </div>
+          <div>
+            <CardTitle className={`${compact ? 'text-base' : 'text-lg'} font-bold text-slate-900 dark:text-white`}>{title}</CardTitle>
+            {description && <CardDescription className="text-slate-500 mt-1">{description}</CardDescription>}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className={`${compact ? 'p-4' : 'p-6'}`}>
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
+
+function FormField({ label, required, children }: { label: string, required?: boolean, children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+        {label}
+        {required && <span className="text-red-500">*</span>}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
+function ToggleCard({ label, checked, onChange, danger }: { label: string, checked: boolean, onChange: (v: boolean) => void, danger?: boolean }) {
+  return (
+    <div
+      onClick={() => onChange(!checked)}
+      className={`
+        flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200
+        ${checked
+          ? (danger ? 'bg-red-50 border-red-200 ring-1 ring-red-200' : 'bg-blue-50 border-blue-200 ring-1 ring-blue-200')
+          : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'}
+      `}
+    >
+      <span className={`text-sm font-medium ${checked ? (danger ? 'text-red-700' : 'text-blue-700') : 'text-slate-600'}`}>
+        {label}
+      </span>
+      <div className={`
+        w-5 h-5 rounded flex items-center justify-center transition-colors
+        ${checked
+          ? (danger ? 'bg-red-500' : 'bg-[#0074ff]')
+          : 'bg-slate-200'}
+      `}>
+        {checked && <Check className="w-3.5 h-3.5 text-white" />}
+      </div>
     </div>
   );
 }

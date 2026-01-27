@@ -59,14 +59,18 @@ def setup_database():
                 is_active BOOLEAN DEFAULT TRUE,
                 
                 team_id INTEGER,
+                section_id INTEGER,
+                department_id INTEGER,
                 role_id INTEGER,
                 service_type_id INTEGER,
                 
                 birth_date DATE,
                 enlistment_date DATE,
                 discharge_date DATE,
+                assignment_date DATE,
                 city VARCHAR(100),
                 security_clearance INTEGER DEFAULT 0,
+                police_license BOOLEAN DEFAULT FALSE,
                 emergency_contact VARCHAR(100),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );""",
@@ -125,6 +129,32 @@ def setup_database():
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, ('Admin', 'System', 'admin', '000000000', pw_hash, True, True, False))
             print("✅ Default Admin created: User: admin, Pass: 123456")
+
+
+        # 2b. הזרקת נתוני Service Types
+        # 2b. הזרקת נתוני Service Types
+        cur.execute("SELECT COUNT(*) FROM service_types")
+        if cur.fetchone()[0] == 0:
+            service_types = [
+                'קבע - קצין',
+                'קבע - נגד',
+                'שמ"ז',
+                'שירות לאומי',
+                'שח"מ',
+                'שח"מ חרדי',
+                'שירות אזרחי ביטחוני',
+                'מתנדב'
+            ]
+
+            for st in service_types:
+                cur.execute("""
+                    INSERT INTO service_types (name)
+                    VALUES (%s)
+                    ON CONFLICT (name) DO NOTHING
+                """, (st,))
+
+            print("✅ Service Types inserted successfully.")
+
 
         conn.commit()
         print("✅ Database setup completed successfully.")

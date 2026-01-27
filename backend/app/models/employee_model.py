@@ -87,16 +87,24 @@ class EmployeeModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
                 SELECT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number,
-                       e.birth_date, e.is_commander,
+                       e.birth_date, e.is_commander, e.security_clearance, e.police_license,
                        COALESCE(t.name, 'מטה') as team_name, 
-                       COALESCE(s.name, 'מטה') as section_name, 
-                       COALESCE(d.name, 'מטה') as department_name,
+                       COALESCE(s.name, s_dir.name, 'מטה') as section_name, 
+                       COALESCE(d.name, d_dir.name, 'מטה') as department_name,
                        COALESCE(st.name, 'משרד') as status_name,
-                       COALESCE(st.color, '#22c55e') as status_color
+                       COALESCE(st.color, '#22c55e') as status_color,
+                       srv.name as service_type_name
                 FROM employees e
+                -- Direct Path Joins (via team_id)
                 LEFT JOIN teams t ON e.team_id = t.id
                 LEFT JOIN sections s ON t.section_id = s.id
                 LEFT JOIN departments d ON s.department_id = d.id
+                -- Direct Unit Links (for section/dept commanders or HQ)
+                LEFT JOIN sections s_dir ON e.section_id = s_dir.id
+                LEFT JOIN departments d_dir ON e.department_id = d_dir.id
+                -- Service Type
+                LEFT JOIN service_types srv ON e.service_type_id = srv.id
+                -- Status Joins
                 LEFT JOIN LATERAL (
                     SELECT status_type_id FROM attendance_logs 
                     WHERE employee_id = e.id AND end_datetime IS NULL
@@ -137,10 +145,11 @@ class EmployeeModel:
             query = """
                 INSERT INTO employees (
                     first_name, last_name, personal_number, national_id, phone_number,
-                    city, birth_date, enlistment_date, discharge_date,
-                    team_id, role_id, is_commander, is_admin, 
+                    city, birth_date, enlistment_date, discharge_date, assignment_date,
+                    team_id, section_id, department_id, role_id, service_type_id, 
+                    is_commander, is_admin, 
                     password_hash, must_change_password, security_clearance, police_license
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """
             cur.execute(
@@ -155,8 +164,12 @@ class EmployeeModel:
                     data.get("birth_date") or None,
                     data.get("enlistment_date") or None,
                     data.get("discharge_date") or None,
+                    data.get("assignment_date") or None,
                     data.get("team_id") or None,
+                    data.get("section_id") or None,
+                    data.get("department_id") or None,
                     data.get("role_id") or None,
+                    data.get("service_type_id") or None,
                     data.get("is_commander", False),
                     data.get("is_admin", False),
                     pw_hash,
@@ -166,6 +179,37 @@ class EmployeeModel:
                 ),
             )
             new_id = cur.fetchone()[0]
+            
+            # If commander, update the appropriate organizational level
+            if data.get("is_commander", False):
+                team_id = data.get("team_id")
+                
+                if team_id:
+                    # Commander of team
+                    cur.execute("UPDATE teams SET commander_id = %s WHERE id = %s", (new_id, team_id))
+                    # Get section_id for possible section command
+                    cur.execute("SELECT section_id FROM teams WHERE id = %s", (team_id,))
+                    result = cur.fetchone()
+                    section_id = result[0] if result else None
+                else:
+                    # Need to find section_id from frontend selection
+                    # This will be passed as a separate field
+                    section_id = data.get("section_id")
+                
+                # If no team but has section, commander of section
+                if not team_id and section_id:
+                    cur.execute("UPDATE sections SET commander_id = %s WHERE id = %s", (new_id, section_id))
+                    # Get department_id for possible department command
+                    cur.execute("SELECT department_id FROM sections WHERE id = %s", (section_id,))
+                    result = cur.fetchone()
+                    department_id = result[0] if result else None
+                else:
+                    department_id = data.get("department_id")
+                
+                # If no team and no section but has department, commander of department
+                if not team_id and not section_id and department_id:
+                    cur.execute("UPDATE departments SET commander_id = %s WHERE id = %s", (new_id, department_id))
+            
             conn.commit()
             return new_id
         except Exception as e:
@@ -186,10 +230,12 @@ class EmployeeModel:
             cur = conn.cursor()
             query = """
                 UPDATE employees 
-                SET first_name = %s, last_name = %s, phone_number = %s, 
-                    city = %s, birth_date = %s, enlistment_date = %s,
-                    discharge_date = %s, team_id = %s, role_id = %s,
-                    security_clearance = %s, emergency_contact = %s,
+                SET first_name = %s, last_name = %s, personal_number = %s, national_id = %s,
+                    phone_number = %s, city = %s, 
+                    birth_date = %s, enlistment_date = %s, discharge_date = %s, assignment_date = %s,
+                    team_id = %s, section_id = %s, department_id = %s,
+                    role_id = %s, service_type_id = %s,
+                    security_clearance = %s, police_license = %s, emergency_contact = %s,
                     is_commander = %s, is_admin = %s
                 WHERE id = %s
             """
@@ -198,14 +244,21 @@ class EmployeeModel:
                 (
                     data["first_name"],
                     data["last_name"],
+                    data["personal_number"],
+                    data["national_id"],
                     data["phone_number"],
                     data.get("city"),
                     data.get("birth_date"),
                     data.get("enlistment_date"),
                     data.get("discharge_date"),
+                    data.get("assignment_date"),
                     data.get("team_id"),
+                    data.get("section_id"),
+                    data.get("department_id"),
                     data.get("role_id"),
+                    data.get("service_type_id"),
                     data.get("security_clearance"),
+                    data.get("police_license"),
                     data.get("emergency_contact"),
                     data.get("is_commander"),
                     data.get("is_admin"),
