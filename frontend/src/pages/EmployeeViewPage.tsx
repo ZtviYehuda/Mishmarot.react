@@ -238,9 +238,15 @@ export default function EmployeeViewPage() {
                             </h3>
                         </div>
                         <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <DetailItem icon={Building2} label="מחלקה" value={employee.department_name} />
-                            <DetailItem icon={Building2} label="מדור" value={employee.section_name} />
-                            <DetailItem icon={Building2} label="חולייה / צוות" value={employee.team_name} />
+                            {employee.department_name && employee.department_name !== 'מטה' && (
+                                <DetailItem icon={Building2} label="מחלקה" value={employee.department_name} />
+                            )}
+                            {employee.section_name && employee.section_name !== 'מטה' && (
+                                <DetailItem icon={Building2} label="מדור" value={employee.section_name} />
+                            )}
+                            {employee.team_name && employee.team_name !== 'מטה' && (
+                                <DetailItem icon={Building2} label="חולייה / צוות" value={employee.team_name} />
+                            )}
                             <DetailItem icon={BadgeCheck} label="תפקיד" value={employee.role_name} />
                         </CardContent>
                     </Card>

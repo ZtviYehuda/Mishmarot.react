@@ -300,13 +300,25 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
                   </TableCell>
                   <TableCell className="px-6 py-4 text-right">
                     <div className="flex flex-col text-right">
-                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        {emp.department_name && emp.department_name !== 'מטה' ? emp.department_name : "ללא מחלקה"}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-medium">
-                        {(emp.section_name && emp.section_name !== 'מטה') ? emp.section_name : "ללא מדור"} •{" "}
-                        {(emp.team_name && emp.team_name !== 'מטה') ? emp.team_name : "ללא חולייה"}
-                      </span>
+                      {emp.department_name && emp.department_name !== 'מטה' && (
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          מחלקת {emp.department_name}
+                        </span>
+                      )}
+                      <div className="flex flex-wrap items-center gap-1.5 flex-row-reverse justify-end text-[10px] text-slate-400 font-medium">
+                        {emp.team_name && emp.team_name !== 'מטה' && (
+                          <span>חוליית {emp.team_name}</span>
+                        )}
+                        {emp.team_name && emp.team_name !== 'מטה' && emp.section_name && emp.section_name !== 'מטה' && (
+                          <span className="opacity-50">•</span>
+                        )}
+                        {emp.section_name && emp.section_name !== 'מטה' && (
+                          <span>מדור {emp.section_name}</span>
+                        )}
+                        {(!emp.department_name || emp.department_name === 'מטה') && (!emp.section_name || emp.section_name === 'מטה') && (!emp.team_name || emp.team_name === 'מטה') && (
+                          <span className="italic opacity-50">לא משויך</span>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-4 text-right">
