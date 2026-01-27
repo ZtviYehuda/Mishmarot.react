@@ -54,7 +54,10 @@ class EmployeeModel:
                        COALESCE(t.name, t_cmd.name) as team_name,
                        st.name as status_name, 
                        st.color as status_color,
-                       r.name as role_name
+                       r.name as role_name,
+                       d_cmd.id as commands_department_id,
+                       s_cmd.id as commands_section_id,
+                       t_cmd.id as commands_team_id
                 FROM employees e
                 -- Structure Joins
                 LEFT JOIN teams t ON e.team_id = t.id
@@ -79,14 +82,14 @@ class EmployeeModel:
             conn.close()
 
     @staticmethod
-    def get_all_employees(filters=None):
+    def get_all_employees(filters=None, requesting_user=None):
         conn = get_db_connection()
         if not conn:
             return []
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
-                SELECT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number,
+                SELECT DISTINCT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number,
                        e.birth_date, e.is_commander, e.security_clearance, e.police_license,
                        e.is_active,
                        COALESCE(t.name, 'מטה') as team_name, 
@@ -115,6 +118,23 @@ class EmployeeModel:
                 WHERE 1=1
             """
             params = []
+
+            # Scoping for commanders
+            if requesting_user and not requesting_user.get("is_admin"):
+                if requesting_user.get("commands_department_id"):
+                    query += " AND (d.id = %s OR d_dir.id = %s)"
+                    params.extend([requesting_user["commands_department_id"], requesting_user["commands_department_id"]])
+                elif requesting_user.get("commands_section_id"):
+                    query += " AND (s.id = %s OR s_dir.id = %s)"
+                    params.extend([requesting_user["commands_section_id"], requesting_user["commands_section_id"]])
+                elif requesting_user.get("commands_team_id"):
+                    query += " AND t.id = %s"
+                    params.append(requesting_user["commands_team_id"])
+                else:
+                    # Case for a commander who isn't linked to a specific unit command in the DB yet
+                    # or just for security - they only see themselves if no scope found
+                    query += " AND e.id = %s"
+                    params.append(requesting_user["id"])
             
             # Default to active only unless specified otherwise
             if not filters or not filters.get("include_inactive"):
@@ -126,8 +146,8 @@ class EmployeeModel:
                     query += " AND (e.first_name ILIKE %s OR e.last_name ILIKE %s OR e.personal_number ILIKE %s)"
                     params.extend([term, term, term])
                 if filters.get("dept_id"):
-                    query += " AND d.id = %s"
-                    params.append(filters["dept_id"])
+                    query += " AND (d.id = %s OR d_dir.id = %s)"
+                    params.extend([filters["dept_id"], filters["dept_id"]])
 
             query += " ORDER BY e.first_name ASC"
             cur.execute(query, tuple(params))

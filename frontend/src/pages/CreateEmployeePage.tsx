@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import type { CreateEmployeePayload } from "@/types/employee.types";
 import { Loader2, UserPlus, User, Calendar, Phone, Shield, Building2, Save, ChevronLeft, Check } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
 
 interface Team { id: number; name: string; section_id: number }
 interface Section { id: number; name: string; department_id: number; teams: Team[] }
@@ -15,6 +16,7 @@ interface Department { id: number; name: string; sections: Section[] }
 
 export default function CreateEmployeePage() {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
   const { createEmployee, getStructure, getServiceTypes } = useEmployees();
   const [loading, setLoading] = useState(false);
   const [structure, setStructure] = useState<Department[]>([]);
@@ -49,13 +51,51 @@ export default function CreateEmployeePage() {
 
   // Fetch structure and service types on mount
   useEffect(() => {
-    getStructure().then((data) => {
-      if (data) setStructure(data);
-    });
-    getServiceTypes().then((data) => {
-      if (data) setServiceTypes(data);
-    });
-  }, [getStructure, getServiceTypes]);
+    const fetchData = async () => {
+      const structData = await getStructure();
+      if (structData) setStructure(structData);
+
+      const srvData = await getServiceTypes();
+      if (srvData) setServiceTypes(srvData);
+
+      // Apply scoping if user is commander
+      if (user && !user.is_admin && structData) {
+        // This assumes the user object in context has the commands_* fields 
+        // which we updated in AuthContext/Backend earlier
+        const anyUser = user as any;
+
+        if (anyUser.commands_department_id) {
+          setSelectedDeptId(anyUser.commands_department_id.toString());
+        } else if (anyUser.commands_section_id) {
+          const secId = anyUser.commands_section_id;
+          // Find which dept this section belongs to
+          for (const dept of structData) {
+            const sec = dept.sections.find((s: any) => s.id === secId);
+            if (sec) {
+              setSelectedDeptId(dept.id.toString());
+              setSelectedSectionId(secId.toString());
+              break;
+            }
+          }
+        } else if (anyUser.commands_team_id) {
+          const teamId = anyUser.commands_team_id;
+          // Find dept and section for this team
+          for (const dept of structData) {
+            for (const sec of dept.sections) {
+              const team = sec.teams.find((t: any) => t.id === teamId);
+              if (team) {
+                setSelectedDeptId(dept.id.toString());
+                setSelectedSectionId(sec.id.toString());
+                setFormData(prev => ({ ...prev, team_id: teamId }));
+                break;
+              }
+            }
+          }
+        }
+      }
+    };
+    fetchData();
+  }, [getStructure, getServiceTypes, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,6 +268,7 @@ export default function CreateEmployeePage() {
                         setSelectedSectionId("");
                         setFormData({ ...formData, team_id: undefined });
                       }}
+                      disabled={Boolean(user && !user.is_admin && ((user as any).commands_department_id || (user as any).commands_section_id || (user as any).commands_team_id))}
                     >
                       <SelectTrigger className="text-right">
                         <SelectValue placeholder="בחר מחלקה..." />
@@ -250,7 +291,7 @@ export default function CreateEmployeePage() {
                         setSelectedSectionId(val);
                         setFormData({ ...formData, team_id: undefined });
                       }}
-                      disabled={!selectedDeptId}
+                      disabled={!selectedDeptId || Boolean(user && !user.is_admin && ((user as any).commands_section_id || (user as any).commands_team_id))}
                     >
                       <SelectTrigger className="text-right">
                         <SelectValue placeholder={!selectedDeptId ? "בחר מחלקה קודם..." : "בחר מדור..."} />
@@ -270,7 +311,7 @@ export default function CreateEmployeePage() {
                     <Select
                       value={formData.team_id?.toString() || ""}
                       onValueChange={(val) => setFormData({ ...formData, team_id: parseInt(val) })}
-                      disabled={!selectedSectionId}
+                      disabled={!selectedSectionId || Boolean(user && !user.is_admin && (user as any).commands_team_id)}
                     >
                       <SelectTrigger className="text-right">
                         <SelectValue placeholder={!selectedSectionId ? "בחר מדור קודם..." : "בחר חולייה..."} />

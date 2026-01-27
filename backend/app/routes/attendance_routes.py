@@ -51,8 +51,11 @@ def get_stats():
         
         print(f"[DEBUG] user_id: {user_id}")
         
-        stats = AttendanceModel.get_dashboard_stats()
-        birthdays = AttendanceModel.get_birthdays()
+        from app.models.employee_model import EmployeeModel
+        requester = EmployeeModel.get_employee_by_id(user_id)
+        
+        stats = AttendanceModel.get_dashboard_stats(requesting_user=requester)
+        birthdays = AttendanceModel.get_birthdays(requesting_user=requester)
         return jsonify({"stats": stats, "birthdays": birthdays})
     except Exception as e:
         print(f"❌ Error in /stats: {e}")

@@ -50,6 +50,9 @@ def login():
                     "must_change_password": user["must_change_password"],
                     "is_admin": user["is_admin"],
                     "is_commander": user["is_commander"],
+                    "commands_department_id": user.get("commands_department_id"),
+                    "commands_section_id": user.get("commands_section_id"),
+                    "commands_team_id": user.get("commands_team_id"),
                 },
             }
         )
@@ -75,6 +78,9 @@ def get_current_user():
                 "must_change_password": user["must_change_password"],
                 "is_admin": user["is_admin"],
                 "is_commander": user["is_commander"],
+                "commands_department_id": user.get("commands_department_id"),
+                "commands_section_id": user.get("commands_section_id"),
+                "commands_team_id": user.get("commands_team_id"),
             }
         )
     return jsonify({"error": "User not found"}), 404

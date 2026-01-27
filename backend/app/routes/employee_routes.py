@@ -35,12 +35,15 @@ def get_employees():
         
         print(f"[DEBUG] Employee GET - user_id: {user_id}")
         
+        # Get requester profile to check their organizational scope
+        requester = EmployeeModel.get_employee_by_id(user_id)
+        
         filters = {
             "search": request.args.get("search"),
             "dept_id": request.args.get("dept_id"),
             "include_inactive": request.args.get("include_inactive") == "true",
         }
-        employees = EmployeeModel.get_all_employees(filters)
+        employees = EmployeeModel.get_all_employees(filters, requesting_user=requester)
         return jsonify(employees)
     except Exception as e:
         print(f"❌ Error in GET /employees: {e}")
