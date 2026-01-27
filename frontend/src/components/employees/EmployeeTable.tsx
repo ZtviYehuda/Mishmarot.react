@@ -222,7 +222,9 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
               <TableHead className="text-right font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6">
                 סטטוס
               </TableHead>
-              <TableHead className="text-right font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6"></TableHead>
+              <TableHead className="text-center font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6">
+                פעולות
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -327,38 +329,38 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
                     </span>
                   </TableCell>
                   <TableCell className="px-6 py-4 text-right">
-                    <div className="flex items-center gap-2 flex-row-reverse">
+                    <div className="flex items-center justify-start gap-2">
                       <div
-                        className={cn("w-2 h-2 rounded-full shadow-sm", !emp.is_active && "bg-red-500")}
+                        className={cn("w-2 h-2 rounded-full shadow-sm shrink-0", !emp.is_active && "bg-red-500")}
                         style={emp.is_active ? { backgroundColor: emp.status_color } : {}}
                       />
                       <span className={cn(
-                        "text-xs font-medium transition-colors",
+                        "text-xs font-medium transition-colors whitespace-nowrap",
                         emp.is_active ? "text-slate-600 dark:text-slate-400" : "text-red-500 font-bold"
                       )}>
                         {emp.is_active ? emp.status_name : "לא פעיל"}
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-4 text-right">
-                    <div className="flex items-center gap-2 flex-row-reverse">
+                  <TableCell className="px-6 py-4">
+                    <div className="flex items-center justify-center gap-2">
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="w-9 h-9 text-slate-400 hover:text-[#0074ff] hover:bg-blue-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                        size="sm"
+                        className="h-8 px-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-lg transition-all flex items-center gap-1.5 font-bold text-[10px]"
                         onClick={() => handleViewDetails(emp)}
-                        title="צפה בפרטים"
                       >
-                        <User className="w-4 h-4" />
+                        <User className="w-3.5 h-3.5" />
+                        פרופיל
                       </Button>
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="w-9 h-9 text-slate-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                        size="sm"
+                        className="h-8 px-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 rounded-lg transition-all flex items-center gap-1.5 font-bold text-[10px]"
                         onClick={() => handleOpenStatusModal(emp)}
-                        title="עדכון סטטוס"
                       >
-                        <ClipboardList className="w-4 h-4" />
+                        <ClipboardList className="w-3.5 h-3.5" />
+                        סטטוס
                       </Button>
                     </div>
                   </TableCell>
