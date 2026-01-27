@@ -268,19 +268,28 @@ export default function EditEmployeePage() {
         <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20 animate-in fade-in duration-500" dir="rtl">
 
             {/* Top Bar / Breadcrumbs */}
-            <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-sm/50 backdrop-blur-md bg-white/80">
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-                        <span className="hover:text-blue-600 cursor-pointer transition-colors" onClick={() => navigate('/employees')}>מצבת כוח אדם</span>
-                        <ChevronRight className="w-4 h-4 text-slate-300 rotate-180" />
-                        <span className="text-slate-800 dark:text-white font-bold">עריכת תיק אישי</span>
+            {/* Premium Floating Top Bar */}
+            <div className="sticky top-4 z-30 px-6 pointer-events-none">
+                <div className="max-w-7xl mx-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-white/20 shadow-2xl shadow-slate-200/50 dark:shadow-black/50 rounded-2xl p-4 flex items-center justify-between ring-1 ring-slate-900/5 pointer-events-auto">
+                    <div className="flex items-center gap-4">
+                        <div onClick={() => navigate('/employees')} className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center cursor-pointer hover:bg-blue-50 hover:text-blue-600 transition-all group">
+                            <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg font-black text-slate-800 dark:text-white leading-none">עריכת תיק אישי</h1>
+                            <div className="flex items-center gap-2 text-xs font-medium text-slate-500 mt-1">
+                                <span>מצבת כוח אדם</span>
+                                <ChevronRight className="w-3 h-3 text-slate-300 rotate-180" />
+                                <span className="text-blue-600">עריכה</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => navigate("/employees")} className="text-slate-500 hover:text-red-500 hover:bg-red-50">
+                    <div className="flex items-center gap-3">
+                        <Button variant="ghost" onClick={() => navigate("/employees")} className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl">
                             ביטול
                         </Button>
-                        <Button size="sm" onClick={() => handleSubmit()} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 rounded-lg px-6">
+                        <Button onClick={() => handleSubmit()} disabled={loading} className="bg-slate-900 hover:bg-black text-white shadow-lg shadow-slate-900/20 rounded-xl px-6 h-10 font-bold transition-all hover:scale-105 active:scale-95">
                             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "שמור שינויים"}
                         </Button>
                     </div>
@@ -292,49 +301,53 @@ export default function EditEmployeePage() {
                 {/* Visual Sidebar Profile Summary - Positioned for Logic RTL (Col 1) */}
                 <div className="lg:col-span-3 space-y-6">
                     <div className="lg:sticky lg:top-24 space-y-6">
-                        <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden bg-white dark:bg-slate-800 rounded-3xl relative group">
-                            <div className="absolute top-0 w-full h-32 bg-gradient-to-br from-blue-600 to-indigo-600 -z-0"></div>
-
-                            <div className="relative z-10 pt-16 px-6 pb-6 text-center">
-                                <div className="w-28 h-28 rounded-3xl bg-white p-1 mx-auto shadow-xl rotate-3 group-hover:rotate-0 transition-all duration-500 ease-out">
-                                    <div className="w-full h-full bg-slate-100 rounded-2xl flex items-center justify-center text-4xl font-black text-blue-600 overflow-hidden">
-                                        {formData.first_name?.[0]}{formData.last_name?.[0]}
-                                    </div>
+                        <Card className="border-none shadow-lg shadow-slate-200/40 dark:shadow-none bg-white dark:bg-slate-800 rounded-3xl overflow-hidden ring-1 ring-slate-100 dark:ring-slate-700">
+                            <div className="p-8 flex flex-col items-center text-center">
+                                {/* Minimal Avatar */}
+                                <div className="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-3xl font-bold text-slate-600 dark:text-slate-300 mb-5 ring-4 ring-white dark:ring-slate-800 shadow-sm">
+                                    {formData.first_name?.[0]}{formData.last_name?.[0]}
                                 </div>
 
-                                <div className="mt-4 space-y-1">
-                                    <h2 className="text-2xl font-black text-slate-800 dark:text-white">
-                                        {formData.first_name} {formData.last_name}
-                                    </h2>
-                                    <p className="font-mono text-slate-400 font-bold tracking-wider">{formData.personal_number || "-------"}</p>
-                                </div>
+                                {/* User Info */}
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                                    {formData.first_name} {formData.last_name}
+                                </h2>
+                                <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-xs font-mono font-medium text-slate-500 tracking-wide">
+                                    {formData.personal_number || "-------"}
+                                </span>
 
-                                <div className="mt-6 flex flex-col gap-2">
-                                    <div className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl flex items-center justify-between">
-                                        <span className="text-xs font-bold text-slate-400">דרגה/תפקיד</span>
-                                        <BadgeCheck className="w-5 h-5 text-blue-500" />
+                                {/* Divider */}
+                                <div className="w-full h-px bg-slate-100 dark:bg-slate-700 my-6" />
+
+                                {/* Stats List - Clean */}
+                                <div className="w-full space-y-4">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-500">דרגה/תפקיד</span>
+                                        <div className="flex items-center gap-2 font-medium text-slate-900 dark:text-white">
+                                            {/* Role Name would go here if available */}
+                                            <span>--</span>
+                                            <BadgeCheck className="w-4 h-4 text-blue-500" />
+                                        </div>
                                     </div>
-                                    <div className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl flex items-center justify-between">
-                                        <span className="text-xs font-bold text-slate-400">סיווג</span>
-                                        <div className="flex gap-0.5">
+
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-500">סיווג אבטחתי</span>
+                                        <div className="flex gap-1">
                                             {[...Array(5)].map((_, i) => (
-                                                <div key={i} className={cn("w-1.5 h-1.5 rounded-full", i < (formData.security_clearance || 0) ? "bg-amber-500" : "bg-slate-200")} />
+                                                <div key={i} className={cn("w-2 h-2 rounded-full", i < (formData.security_clearance || 0) ? "bg-amber-500" : "bg-slate-200 dark:bg-slate-700")} />
                                             ))}
                                         </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-500">סטטוס ניהולי</span>
+                                        <span className={cn("font-medium", formData.is_commander ? "text-blue-600" : "text-slate-400")}>
+                                            {formData.is_commander ? "מפקד" : "רגיל"}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </Card>
-
-                        <div className="bg-blue-50 border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800 p-4 rounded-2xl">
-                            <h4 className="flex items-center gap-2 font-bold text-blue-700 dark:text-blue-300 text-sm mb-2">
-                                <Settings2 className="w-4 h-4" /> סטטוס ניהולי
-                            </h4>
-                            <p className="text-xs text-blue-600/80 leading-relaxed text-right">
-                                {formData.is_commander ? "מוגדר כמפקד במערכת." : "אינו מוגדר כמפקד."}
-                                {formData.is_admin ? " בעל הרשאות ניהול מלאות." : ""}
-                            </p>
-                        </div>
                     </div>
                 </div>
 
