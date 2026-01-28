@@ -20,7 +20,8 @@ import {
   FileCheck,
   Siren,
   Users,
-  ArrowLeft
+  ArrowLeft,
+
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -449,6 +450,8 @@ export default function EmployeeViewPage() {
                       <DetailItem icon={Briefcase} label="תפקיד נוכחי" value={employee.role_name} />
                       <DetailItem icon={FileCheck} label="סוג שירות" value={employee.service_type_name} />
                     </div>
+
+
                   </CardContent>
                 </Card>
               </div>

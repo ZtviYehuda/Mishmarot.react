@@ -19,6 +19,7 @@ import {
   BadgeCheck,
   AlertTriangle,
   ArrowRight,
+  ArrowLeftRight,
 } from "lucide-react";
 import {
   Select,
@@ -734,6 +735,27 @@ export default function EditEmployeePage() {
                           </FormField>
                         </div>
 
+                        <div className="mt-3 bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex flex-row items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-blue-100/50 text-blue-600 flex items-center justify-center shrink-0">
+                              <ArrowLeftRight className="w-4 h-4" />
+                            </div>
+                            <div className="text-xs">
+                              <span className="font-bold text-blue-900 block">מעוניין להעביר את השוטר יחידה?</span>
+                              <span className="text-blue-700/80">השינוי הידני נועד למעברים פנימיים (מדור/חוליה). למעבר יחידה מלא יש להגיש בקשה.</span>
+                            </div>
+                          </div>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            type="button"
+                            className="bg-white hover:bg-white/80 text-blue-700 border border-blue-200 shadow-sm font-bold text-xs h-8"
+                            onClick={() => navigate(`/transfers?employeeId=${id}`)}
+                          >
+                            צור בקשת העברה
+                          </Button>
+                        </div>
+
                         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                           <FormField label="סוג שירות">
                             <Select
@@ -826,6 +848,8 @@ export default function EditEmployeePage() {
                               </motion.div>
                             )}
                           </div>
+
+
                         </div>
                       </CardContent>
                     </Card>
