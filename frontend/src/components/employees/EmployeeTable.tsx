@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "@/context/AuthContext";
 import {
   Table,
   TableBody,
@@ -30,6 +31,7 @@ interface EmployeeTableProps {
 
 export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTableProps) => {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
@@ -52,6 +54,9 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
   };
 
   const filteredEmployees = employees.filter((emp) => {
+    // Hide current user
+    if (user && emp.id === user.id) return false;
+
     // Search filter
     const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
     const searchMatch =

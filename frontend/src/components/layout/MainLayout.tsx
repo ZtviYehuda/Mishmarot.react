@@ -39,7 +39,7 @@ export default function MainLayout() {
       {/* Sidebar - Official White Style */}
       <aside
         className={cn(
-          "bg-white border-l border-slate-200 transition-all duration-300 flex flex-col z-50 dark:bg-card dark:border-border shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
+          "bg-white border-l border-slate-200 transition-all duration-300 flex flex-col z-50 dark:bg-card dark:border-border shadow-[4px_0_24px_rgba(0,0,0,0.02)] sticky top-0 h-screen overflow-hidden",
           isSidebarOpen ? "w-64" : "w-16",
         )}
       >
@@ -63,7 +63,7 @@ export default function MainLayout() {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-grow p-2.5 space-y-1">
+        <nav className="flex-grow p-2.5 space-y-1 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -104,7 +104,10 @@ export default function MainLayout() {
         <div className="p-3 border-t border-slate-100 dark:border-border/50 space-y-3">
           {/* User Profile Area */}
           {isSidebarOpen ? (
-            <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 border border-slate-100 dark:bg-muted/30 dark:border-border/50">
+            <Link
+              to={`/employees/${user?.id}`}
+              className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 border border-slate-100 dark:bg-muted/30 dark:border-border/50 hover:bg-slate-100 dark:hover:bg-muted/50 transition-colors"
+            >
               <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[#0074ff] font-black text-[10px] shrink-0 dark:bg-slate-800 dark:border-slate-700">
                 {user?.first_name?.[0]}
                 {user?.last_name?.[0]}
@@ -117,13 +120,13 @@ export default function MainLayout() {
                   {user?.is_admin ? "Administrator" : "User"}
                 </span>
               </div>
-            </div>
+            </Link>
           ) : (
-            <div className="flex justify-center">
-              <div className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-[#0074ff] font-black text-[10px] dark:bg-slate-800 dark:border-slate-700">
+            <Link to={`/employees/${user?.id}`} className="flex justify-center transition-transform hover:scale-105">
+              <div className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-[#0074ff] font-black text-[10px] dark:bg-slate-800 dark:border-slate-700 shadow-sm">
                 {user?.first_name?.[0]}
               </div>
-            </div>
+            </Link>
           )}
 
           {/* Quick Actions Row */}
@@ -174,7 +177,7 @@ export default function MainLayout() {
                 {location.pathname === "/"
                   ? "לוח בקרה מרכזי"
                   : navItems.find((n) => n.path === location.pathname)?.name ||
-                    "דף מערכת"}
+                  "דף מערכת"}
               </h2>
             </div>
           </div>

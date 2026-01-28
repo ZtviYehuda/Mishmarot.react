@@ -146,6 +146,11 @@ class AttendanceModel:
                     query += " AND t.id = %s"
                     params.append(filters['team_id'])
 
+            # Exclude requesting user (Commander) from stats
+            if requesting_user and requesting_user.get('is_commander'):
+                query += " AND e.id != %s"
+                params.append(requesting_user['id'])
+
             query += " GROUP BY st.name, st.color"
             
             # Debug SQL
@@ -194,6 +199,11 @@ class AttendanceModel:
                 else:
                     query += " AND e.id = %s"
                     params.append(requesting_user['id'])
+
+            # Exclude requesting user from birthdays
+            if requesting_user and requesting_user.get('is_commander'):
+                query += " AND e.id != %s"
+                params.append(requesting_user['id'])
 
             query += """
                 AND (
