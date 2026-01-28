@@ -19,7 +19,8 @@ import {
   Briefcase,
   FileCheck,
   Siren,
-  Users
+  Users,
+  ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -184,29 +185,15 @@ export default function EmployeeViewPage() {
 
         {/* Header Profile Section */}
         <div className="relative mt-8 mb-8">
-          <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-l from-primary/10 via-primary/5 to-transparent rounded-3xl -z-10" />
-
-          <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8 px-6 pb-6 pt-10">
-            {/* Avatar */}
-            <div className="relative">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-card border-4 border-background shadow-2xl flex items-center justify-center text-5xl md:text-6xl font-black text-primary/80 select-none transition-transform duration-300">
-                {employee.first_name[0]}{employee.last_name[0]}
-              </div>
-              <div className={cn(
-                "absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl border-4 border-background flex items-center justify-center shadow-lg z-10",
-                employee.is_active ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
-              )}>
-                {employee.is_active ? <BadgeCheck className="w-6 h-6" /> : <UserX className="w-6 h-6" />}
-              </div>
-            </div>
+          <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 md:gap-8 px-6 pb-6 pt-2">
 
             {/* Info */}
-            <div className="flex-1 text-center md:text-right mb-2">
+            <div className="flex-1 text-right mb-2 w-full">
               <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
                 <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">
                   {employee.first_name} {employee.last_name}
                 </h1>
-                <div className="flex gap-2 justify-center md:justify-start">
+                <div className="flex gap-2 justify-start">
                   {employee.is_commander && (
                     <Badge className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs rounded-lg shadow-md shadow-blue-500/20 border-0">
                       <Siren className="w-3 h-3 mr-1.5" /> מפקד
@@ -217,10 +204,15 @@ export default function EmployeeViewPage() {
                       <Shield className="w-3 h-3 mr-1.5" /> מנהל מערכת
                     </Badge>
                   )}
+                  {!employee.is_active && (
+                    <Badge className="bg-muted text-muted-foreground px-3 py-1 text-xs rounded-lg border-0">
+                      <UserX className="w-3 h-3 mr-1.5" /> לא פעיל
+                    </Badge>
+                  )}
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-2 text-muted-foreground font-medium text-sm md:text-base">
+              <div className="flex flex-wrap items-center justify-start gap-x-6 gap-y-2 text-muted-foreground font-medium text-sm md:text-base">
                 <div className="flex items-center gap-2">
                   <BadgeCheck className="w-4 h-4 text-primary" />
                   <span>מספר אישי: <span className="text-foreground font-bold font-mono">{employee.personal_number}</span></span>
@@ -239,7 +231,7 @@ export default function EmployeeViewPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
               <Button
                 onClick={() => navigate(`/employees/edit/${employee.id}`)}
                 className="h-12 rounded-2xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all text-sm md:text-base px-8"
@@ -411,15 +403,13 @@ export default function EmployeeViewPage() {
                             מפקד מחלקה
                           </div>
                         )}
-                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center mb-3 text-lg font-black transition-colors", employee.commands_department_id ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary")}>
-                          {employee.department_name?.[0]}
-                        </div>
+
                         <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">מחלקה</span>
                         <span className="font-black text-lg text-foreground">{employee.department_name || "—"}</span>
                       </div>
 
-                      <div className="hidden md:flex w-12 h-12 bg-muted rounded-full items-center justify-center text-muted-foreground z-10 border-4 border-background mx-4">
-                        <Users className="w-4 h-4" />
+                      <div className="hidden md:flex w-8 h-8 rounded-full items-center justify-center text-muted-foreground/50 z-10 mx-2">
+                        <ArrowLeft className="w-5 h-5" />
                       </div>
 
                       <div className={cn(
@@ -431,15 +421,13 @@ export default function EmployeeViewPage() {
                             מפקד מדור
                           </div>
                         )}
-                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center mb-3 text-lg font-black transition-colors", employee.commands_section_id ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary")}>
-                          {employee.section_name?.[0]}
-                        </div>
+
                         <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">מדור</span>
                         <span className="font-black text-lg text-foreground">{employee.section_name || "—"}</span>
                       </div>
 
-                      <div className="hidden md:flex w-12 h-12 bg-muted rounded-full items-center justify-center text-muted-foreground z-10 border-4 border-background mx-4">
-                        <Users className="w-4 h-4" />
+                      <div className="hidden md:flex w-8 h-8 rounded-full items-center justify-center text-muted-foreground/50 z-10 mx-2">
+                        <ArrowLeft className="w-5 h-5" />
                       </div>
 
                       <div className={cn(
@@ -451,9 +439,7 @@ export default function EmployeeViewPage() {
                             מפקד חוליה
                           </div>
                         )}
-                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center mb-3 text-lg font-black transition-colors", employee.commands_team_id ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary")}>
-                          {employee.team_name?.[0]}
-                        </div>
+
                         <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">צוות/חוליה</span>
                         <span className="font-black text-lg text-foreground">{employee.team_name || "—"}</span>
                       </div>

@@ -57,7 +57,7 @@ class EmployeeModel:
                        e.enlistment_date, e.discharge_date, e.assignment_date,
                        e.security_clearance, e.police_license, e.is_active,
                        e.must_change_password, e.is_admin, e.is_commander,
-                       e.service_type_id,
+                       e.service_type_id, svt.name as service_type_name,
                        COALESCE(d.name, d_s_dir.name, d_dir.name) as department_name, 
                        COALESCE(s.name, s_dir.name) as section_name, 
                        t.name as team_name,
@@ -83,6 +83,7 @@ class EmployeeModel:
                 LEFT JOIN departments d_s_dir ON s_dir.department_id = d_s_dir.id
                 LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                 LEFT JOIN roles r ON e.role_id = r.id
+                LEFT JOIN service_types svt ON e.service_type_id = svt.id
                 -- Active Status
                 LEFT JOIN attendance_logs al ON al.employee_id = e.id AND al.end_datetime IS NULL
                 LEFT JOIN status_types st ON al.status_type_id = st.id
