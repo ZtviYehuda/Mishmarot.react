@@ -42,6 +42,11 @@ export interface Employee {
   status_color?: string | null;
   last_status_update?: string | null;
   is_active: boolean;
+
+  // Command Hierarchy
+  commands_department_id?: number | null;
+  commands_section_id?: number | null;
+  commands_team_id?: number | null;
 }
 
 export interface CreateEmployeePayload {

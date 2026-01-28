@@ -15,17 +15,23 @@ import {
   MapPin,
   AlertTriangle,
   X,
+  History as HistoryIcon,
+  Briefcase,
+  FileCheck,
+  Siren,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import * as endpoints from "@/config/employees.endpoints";
 import { PageHeader } from "@/components/layout/PageHeader";
 import StatusHistoryList from "@/components/employees/StatusHistoryList";
-import { History as HistoryIcon } from "lucide-react";
+import { format, differenceInYears } from "date-fns";
+import { he } from "date-fns/locale";
 
 export default function EmployeeViewPage() {
   const { id } = useParams<{ id: string }>();
@@ -38,8 +44,6 @@ export default function EmployeeViewPage() {
     const fetchEmployee = async () => {
       if (!id) return;
       try {
-        // Using the edit endpoint to get full details including scalar IDs if needed,
-        // but usually a 'get by id' endpoint is best.
         const { data } = await apiClient.get<Employee>(
           endpoints.updateEmployeeEndpoint(parseInt(id)),
         );
@@ -65,12 +69,9 @@ export default function EmployeeViewPage() {
       toast.success(
         newStatus ? "השוטר הוחזר למצב פעיל" : "השוטר הועבר לסטטוס לא פעיל",
       );
-      // Refresh local state instead of navigating away if we want to stay on page
-      // Refresh local state and clear status if reactivating
       setEmployee((prev) => {
         if (!prev) return null;
         if (newStatus) {
-          // If returning to active, clear previous status fields
           return {
             ...prev,
             is_active: true,
@@ -100,27 +101,48 @@ export default function EmployeeViewPage() {
 
   if (!employee) return null;
 
+  const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return "לא מוגדר";
+    try {
+      return format(new Date(dateStr), "dd/MM/yyyy");
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  const calculateAge = (dateStr?: string | null) => {
+    if (!dateStr) return "";
+    try {
+      const age = differenceInYears(new Date(), new Date(dateStr));
+      return `(גיל ${age})`;
+    } catch (e) {
+      return "";
+    }
+  };
+
   const DetailItem = ({
     icon: Icon,
     label,
     value,
     subValue,
+    className
   }: {
     icon: any;
     label: string;
-    value: string | null | undefined;
+    value: React.ReactNode;
     subValue?: string;
+    className?: string;
   }) => (
-    <div className="flex items-start gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-card transition-all border border-transparent hover:border-border hover:shadow-sm">
-      <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+    <div className={cn("flex items-start gap-4 p-4 rounded-2xl bg-muted/30 hover:bg-card transition-all border border-transparent hover:border-border hover:shadow-sm", className)}>
+      <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-sm border border-primary/5">
         <Icon className="w-5 h-5" />
       </div>
-      <div>
+      <div className="flex-1 min-w-0">
         <p className="text-xs font-bold text-muted-foreground/80 mb-0.5">{label}</p>
-        <p className="font-bold text-foreground">
+        <div className="font-bold text-foreground truncate text-sm sm:text-base">
           {value || "—"}
-        </p>
-        {subValue && <p className="text-xs text-muted-foreground/60 mt-1">{subValue}</p>}
+        </div>
+        {subValue && <p className="text-xs text-muted-foreground/80 mt-1 font-medium">{subValue}</p>}
       </div>
     </div>
   );
@@ -133,308 +155,397 @@ export default function EmployeeViewPage() {
       {/* Inactive Banner */}
       {!employee.is_active && (
         <div className="sticky top-0 z-50 px-6 py-3">
-          <div className="max-w-4xl mx-auto bg-destructive/10 backdrop-blur-md border border-destructive/20 rounded-2xl p-4 shadow-xl shadow-destructive/5 animate-in slide-in-from-top-4 duration-700">
+          <div className="max-w-7xl mx-auto bg-destructive/95 backdrop-blur-md text-white rounded-2xl p-4 shadow-xl shadow-destructive/20 animate-in slide-in-from-top-4 duration-500 border border-destructive/50">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-destructive/20 text-destructive flex items-center justify-center animate-pulse">
-                  <AlertTriangle className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center animate-pulse">
+                  <UserX className="w-6 h-6" />
                 </div>
-                <div className="flex flex-col text-right">
-                  <span className="text-sm font-black text-destructive leading-tight">
-                    שוטר בסטטוס לא פעיל
-                  </span>
-                  <span className="text-[11px] font-bold text-destructive/70">
-                    השוטר אינו מופיע במצבת כוח האדם הפעילה של היחידה ואינו יכול לדווח נוכחות
-                  </span>
+                <div>
+                  <p className="font-black text-sm md:text-base">תיק שוטר לא פעיל</p>
+                  <p className="text-xs md:text-sm opacity-90 font-medium">השוטר אינו פעיל במערכת ואינו נכלל בדיווחי הנוכחות השוטפים</p>
                 </div>
               </div>
               <Button
                 size="sm"
+                variant="secondary"
                 onClick={handleToggleActiveStatus}
                 disabled={actionLoading}
-                className="bg-destructive text-white hover:bg-destructive/90 rounded-lg h-9 px-4 font-black shadow-lg shadow-destructive/20 border-none shrink-0"
+                className="font-black whitespace-nowrap shadow-lg"
               >
-                {actionLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "החזר לפעילות"
-                )}
+                {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "החזר לפעילות"}
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      <div className={cn("px-6 mb-8", !employee.is_active && "mt-12")}>
-        <div className="max-w-7xl mx-auto">
-          <PageHeader
-            icon={User}
-            title={`${employee.first_name} ${employee.last_name}`}
-            subtitle={`צפייה בתיק אישי מורחב • מספר אישי: ${employee.personal_number}`}
-            category="ניהול שוטרים"
-            categoryLink="/employees"
-            iconClassName={cn(
-              "from-primary/10 to-primary/5 border-primary/20",
-              !employee.is_active && "from-destructive/10 to-destructive/5 border-destructive/20",
-            )}
-            badge={
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => navigate(`/employees/edit/${employee.id}`)}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 rounded-xl px-6 h-11 font-black transition-all"
-                >
-                  <div className="flex items-center gap-2">
-                    <Edit className="w-5 h-5 ml-2" />
-                    <span>עריכה</span>
-                  </div>
-                </Button>
-                <Button
-                  onClick={handleToggleActiveStatus}
-                  variant={employee.is_active ? "destructive" : "default"}
-                  className={cn(
-                    "rounded-xl px-5 h-11 gap-2 shadow-none font-bold",
-                    employee.is_active
-                      ? "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/10"
-                      : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20",
-                  )}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <UserX className="w-5 h-5" />
-                  )}
-                  <span>
-                    {employee.is_active ? "הפוך ללא פעיל" : "הפוך לפעיל"}
-                  </span>
-                </Button>
+      <div className={cn("px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto", !employee.is_active && "mt-6 grayscale-[0.5] opacity-90")}>
+
+        {/* Header Profile Section */}
+        <div className="relative mt-8 mb-8">
+          <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-l from-primary/10 via-primary/5 to-transparent rounded-3xl -z-10" />
+
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8 px-6 pb-6 pt-10">
+            {/* Avatar */}
+            <div className="relative">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-card border-4 border-background shadow-2xl flex items-center justify-center text-5xl md:text-6xl font-black text-primary/80 select-none transition-transform duration-300">
+                {employee.first_name[0]}{employee.last_name[0]}
               </div>
-            }
-          />
-        </div>
-      </div>
-
-      <div
-        className={cn(
-          "max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8",
-          !employee.is_active && "opacity-80 grayscale-[0.3]",
-        )}
-      >
-        {/* Right Column: Profile Card & Quick Stats */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card
-            className={cn(
-              "border-none shadow-lg bg-card rounded-3xl overflow-hidden ring-1 ring-border",
-              !employee.is_active && "ring-destructive/20",
-            )}
-          >
-            <div className="p-8 flex flex-col items-center text-center">
-              <div className="relative">
-                <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center text-4xl font-black text-foreground/40 mb-6 ring-8 ring-background shadow-sm">
-                  {employee.first_name[0]}
-                  {employee.last_name[0]}
-                </div>
-                {!employee.is_active && (
-                  <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-destructive border-4 border-background flex items-center justify-center text-destructive-foreground shadow-lg">
-                    <X className="w-4 h-4 mr-0" />
-                  </div>
-                )}
-              </div>
-
-              <h2 className="text-2xl font-black text-foreground mb-1">
-                {employee.first_name} {employee.last_name}
-              </h2>
-              <span className="font-mono text-lg font-medium text-muted-foreground tracking-wider">
-                {employee.personal_number}
-              </span>
-
-              <div className="flex gap-2 mt-6">
-                {employee.is_commander && (
-                  <Badge className="bg-primary/20 text-primary hover:bg-primary/30 border-none px-3 py-1 rounded-lg">
-                    <BadgeCheck className="w-3 h-3 mr-1.5" /> מפקד
-                  </Badge>
-                )}
-                <Badge
-                  className={cn(
-                    "border-none px-3 py-1 rounded-lg",
-                    !employee.is_active
-                      ? "bg-destructive/10 text-destructive"
-                      : employee.status_name
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {!employee.is_active
-                    ? "לא פעיל"
-                    : employee.status_name || "פעיל"}
-                </Badge>
+              <div className={cn(
+                "absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl border-4 border-background flex items-center justify-center shadow-lg z-10",
+                employee.is_active ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
+              )}>
+                {employee.is_active ? <BadgeCheck className="w-6 h-6" /> : <UserX className="w-6 h-6" />}
               </div>
             </div>
-          </Card>
 
-          <div className="bg-card rounded-3xl p-6 shadow-sm border border-border space-y-4">
-            <h3 className="font-bold text-foreground flex items-center gap-2">
-              <Shield className="w-4 h-4 text-primary" /> אבטחה והרשאות
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-muted/50 rounded-xl">
-                <span className="text-sm text-muted-foreground font-medium">
-                  סיווג אבטחתי
-                </span>
-                <div className="flex gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "w-2 h-2 rounded-full",
-                        i < (employee.security_clearance || 0)
-                          ? "bg-primary"
-                          : "bg-muted-foreground/30",
-                      )}
-                    />
-                  ))}
+            {/* Info */}
+            <div className="flex-1 text-center md:text-right mb-2">
+              <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
+                <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">
+                  {employee.first_name} {employee.last_name}
+                </h1>
+                <div className="flex gap-2 justify-center md:justify-start">
+                  {employee.is_commander && (
+                    <Badge className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs rounded-lg shadow-md shadow-blue-500/20 border-0">
+                      <Siren className="w-3 h-3 mr-1.5" /> מפקד
+                    </Badge>
+                  )}
+                  {employee.is_admin && (
+                    <Badge className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 text-xs rounded-lg shadow-md shadow-purple-500/20 border-0">
+                      <Shield className="w-3 h-3 mr-1.5" /> מנהל מערכת
+                    </Badge>
+                  )}
                 </div>
               </div>
-              <div className="flex justify-between items-center p-3 bg-muted/50 rounded-xl">
-                <span className="text-sm text-muted-foreground font-medium">
-                  רישיון משטרתי
-                </span>
-                <span
-                  className={cn(
-                    "text-sm font-bold",
-                    employee.police_license
-                      ? "text-emerald-600"
-                      : "text-muted-foreground/60",
-                  )}
-                >
-                  {employee.police_license ? "יש רישיון" : "אין רישיון"}
-                </span>
+
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-2 text-muted-foreground font-medium text-sm md:text-base">
+                <div className="flex items-center gap-2">
+                  <BadgeCheck className="w-4 h-4 text-primary" />
+                  <span>מספר אישי: <span className="text-foreground font-bold font-mono">{employee.personal_number}</span></span>
+                </div>
+                <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-border" />
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-primary" />
+                  <span>{employee.department_name || 'ללא מחלקה'}</span>
+                </div>
+                <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-border" />
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-primary" />
+                  <span>{employee.role_name || 'תפקיד כללי'}</span>
+                </div>
               </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <Button
+                onClick={() => navigate(`/employees/edit/${employee.id}`)}
+                className="h-12 rounded-2xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all text-sm md:text-base px-8"
+              >
+                <Edit className="w-4 h-4 ml-2" />
+                עריכת כרטיס
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleToggleActiveStatus}
+                disabled={actionLoading}
+                className={cn(
+                  "h-12 rounded-2xl border-2 font-bold hover:scale-105 transition-all text-sm md:text-base px-6",
+                  employee.is_active ? "bg-background hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20" : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                )}
+              >
+                {employee.is_active ? "השבתת שוטר" : "הפעלה מחדש"}
+              </Button>
             </div>
           </div>
         </div>
 
-        {/* Left Column: Details Grid */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Organization Section */}
-          <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
-            <div className="bg-muted/30 border-b border-border p-6">
-              <h3 className="font-bold text-lg flex items-center gap-2 text-foreground">
-                <Building2 className="w-5 h-5 text-primary" />
-                מיקום ארגוני
-              </h3>
-            </div>
-            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {employee.department_name &&
-                employee.department_name !== "מטה" && (
-                  <DetailItem
-                    icon={Building2}
-                    label="מחלקה"
-                    value={employee.department_name}
-                  />
-                )}
-              {employee.section_name && employee.section_name !== "מטה" && (
-                <DetailItem
-                  icon={Building2}
-                  label="מדור"
-                  value={employee.section_name}
-                />
-              )}
-              {employee.team_name && employee.team_name !== "מטה" && (
-                <DetailItem
-                  icon={Building2}
-                  label="חולייה / צוות"
-                  value={employee.team_name}
-                />
-              )}
-              <DetailItem
-                icon={BadgeCheck}
-                label="תפקיד"
-                value={employee.role_name}
-              />
-            </CardContent>
-          </Card>
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="overview" className="w-full space-y-8" dir="rtl">
 
-          {/* Contact & Personal */}
-          <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
-            <div className="bg-muted/30 border-b border-border p-6">
-              <h3 className="font-bold text-lg flex items-center gap-2 text-foreground">
-                <User className="w-5 h-5 text-primary" />
-                פרטים אישיים וקשר
-              </h3>
+          {/* Tabs List */}
+          <div className="flex justify-center md:justify-start">
+            <TabsList className="bg-muted/40 p-1.5 h-auto rounded-2xl border border-border/50 inline-flex">
+              <TabsTrigger value="overview" className="rounded-xl h-11 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md font-bold text-sm md:text-base transition-all">
+                <User className="w-4 h-4 ml-2" />
+                פרטים אישיים
+              </TabsTrigger>
+              <TabsTrigger value="service" className="rounded-xl h-11 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md font-bold text-sm md:text-base transition-all">
+                <Shield className="w-4 h-4 ml-2" />
+                שירות ותפקיד
+              </TabsTrigger>
+              <TabsTrigger value="history" className="rounded-xl h-11 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md font-bold text-sm md:text-base transition-all">
+                <HistoryIcon className="w-4 h-4 ml-2" />
+                נוכחות והיסטוריה
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* TAB: PERSONAL INFO */}
+          <TabsContent value="overview" className="space-y-6 focus-visible:outline-none animate-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+              {/* Identification */}
+              <Card className="rounded-3xl shadow-sm border-border overflow-hidden">
+                <CardHeader className="bg-muted/30 border-b border-border pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <User className="w-5 h-5 text-primary" />
+                    זיהוי ופרטים כלליים
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <DetailItem icon={User} label="שם מלא" value={`${employee.first_name} ${employee.last_name}`} />
+                  <DetailItem icon={BadgeCheck} label="תעודת זהות" value={employee.national_id} />
+                  <DetailItem icon={Calendar} label="תאריך לידה" value={formatDate(employee.birth_date)} subValue={calculateAge(employee.birth_date)} />
+                  <DetailItem icon={MapPin} label="עיר מגורים" value={employee.city} />
+                </CardContent>
+              </Card>
+
+              {/* Contact */}
+              <Card className="rounded-3xl shadow-sm border-border overflow-hidden">
+                <CardHeader className="bg-muted/30 border-b border-border pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Phone className="w-5 h-5 text-primary" />
+                    יצירת קשר וחירום
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <DetailItem icon={Phone} label="טלפון נייד" value={employee.phone_number} className="bg-emerald-50/50 border-emerald-100/50" />
+                  <div className="my-2 h-px bg-border/50" />
+                  <div className="bg-red-50/50 rounded-2xl p-4 border border-red-100/50">
+                    <div className="flex items-center gap-2 mb-3">
+                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                      <span className="font-black text-xs text-red-600 uppercase tracking-wider">מקרה חירום בלבד</span>
+                    </div>
+                    <DetailItem
+                      icon={Phone}
+                      label="איש קשר לחירום"
+                      value={employee.emergency_contact}
+                      className="bg-white shadow-sm border-red-100"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* System Info */}
+              <Card className="rounded-3xl shadow-sm border-border overflow-hidden">
+                <CardHeader className="bg-muted/30 border-b border-border pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Shield className="w-5 h-5 text-primary" />
+                    הגדרות מערכת
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border/50">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", employee.is_active ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600")}>
+                        <BadgeCheck className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-foreground">סטטוס משתמש</p>
+                        <p className="text-xs text-muted-foreground">{employee.is_active ? "פעיל במערכת" : "מושבת זמנית"}</p>
+                      </div>
+                    </div>
+                    <Badge className={cn("px-3 py-1 text-xs", employee.is_active ? "bg-emerald-500" : "bg-red-500")}>
+                      {employee.is_active ? "פעיל" : "חסום"}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border/50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center">
+                        <Shield className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-foreground">הרשאות ניהול</p>
+                        <p className="text-xs text-muted-foreground ml-2">{employee.is_admin ? "מנהל מערכת מלא" : "משתמש רגיל"}</p>
+                      </div>
+                    </div>
+                    {employee.is_admin && <Badge className="bg-violet-500">Admin</Badge>}
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border/50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                        <Siren className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-foreground">פיקוד</p>
+                        <p className="text-xs text-muted-foreground ml-2">{employee.is_commander ? "מפקד (יכול לנהל אחרים)" : "ללא סמכויות פיקוד"}</p>
+                      </div>
+                    </div>
+                    {employee.is_commander && <Badge className="bg-blue-500">מפקד</Badge>}
+                  </div>
+                </CardContent>
+              </Card>
+
             </div>
-            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DetailItem
-                icon={Phone}
-                label="טלפון נייד"
-                value={employee.phone_number}
-              />
-              <DetailItem
-                icon={MapPin}
-                label="עיר מגורים"
-                value={employee.city}
-              />
-              <DetailItem
-                icon={User}
-                label="תעודת זהות"
-                value={employee.national_id}
-              />
-              <div className="md:col-span-2">
-                <DetailItem
-                  icon={AlertTriangle}
-                  label="איש קשר לחירום"
-                  value={employee.emergency_contact}
-                  subValue="במקרה חירום בלבד"
-                />
+          </TabsContent>
+
+          {/* TAB: SERVICE INFO */}
+          <TabsContent value="service" className="space-y-6 focus-visible:outline-none animate-in slide-in-from-bottom-4 duration-500 delay-100">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+              {/* Organization Hierarchy */}
+              <div className="lg:col-span-8">
+                <Card className="rounded-3xl shadow-sm border-border overflow-hidden h-full">
+                  <CardHeader className="bg-muted/30 border-b border-border pb-4">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Building2 className="w-5 h-5 text-primary" />
+                      מיקום ארגוני והיררכיה
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8">
+                    <div className="relative flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0">
+                      {/* Line connector for desktop */}
+                      <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-gradient-to-l from-transparent via-border to-transparent -translate-y-1/2 z-0" />
+
+                      <div className={cn(
+                        "relative z-10 flex flex-col items-center border p-4 rounded-2xl shadow-sm w-full md:w-48 text-center transition-all",
+                        employee.commands_department_id ? "bg-amber-50 md:-translate-y-2 border-amber-300 shadow-amber-100" : "bg-card border-border hover:border-primary/30"
+                      )}>
+                        {employee.commands_department_id && (
+                          <div className="absolute -top-3 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
+                            מפקד מחלקה
+                          </div>
+                        )}
+                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center mb-3 text-lg font-black transition-colors", employee.commands_department_id ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary")}>
+                          {employee.department_name?.[0]}
+                        </div>
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">מחלקה</span>
+                        <span className="font-black text-lg text-foreground">{employee.department_name || "—"}</span>
+                      </div>
+
+                      <div className="hidden md:flex w-12 h-12 bg-muted rounded-full items-center justify-center text-muted-foreground z-10 border-4 border-background mx-4">
+                        <Users className="w-4 h-4" />
+                      </div>
+
+                      <div className={cn(
+                        "relative z-10 flex flex-col items-center border p-4 rounded-2xl shadow-sm w-full md:w-48 text-center transition-all",
+                        employee.commands_section_id ? "bg-amber-50 md:-translate-y-2 border-amber-300 shadow-amber-100" : "bg-card border-border hover:border-primary/30"
+                      )}>
+                        {employee.commands_section_id && (
+                          <div className="absolute -top-3 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
+                            מפקד מדור
+                          </div>
+                        )}
+                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center mb-3 text-lg font-black transition-colors", employee.commands_section_id ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary")}>
+                          {employee.section_name?.[0]}
+                        </div>
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">מדור</span>
+                        <span className="font-black text-lg text-foreground">{employee.section_name || "—"}</span>
+                      </div>
+
+                      <div className="hidden md:flex w-12 h-12 bg-muted rounded-full items-center justify-center text-muted-foreground z-10 border-4 border-background mx-4">
+                        <Users className="w-4 h-4" />
+                      </div>
+
+                      <div className={cn(
+                        "relative z-10 flex flex-col items-center border p-4 rounded-2xl shadow-sm w-full md:w-48 text-center transition-all",
+                        employee.commands_team_id ? "bg-amber-50 md:-translate-y-2 border-amber-300 shadow-amber-100" : "bg-card border-border hover:border-primary/30"
+                      )}>
+                        {employee.commands_team_id && (
+                          <div className="absolute -top-3 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
+                            מפקד חוליה
+                          </div>
+                        )}
+                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center mb-3 text-lg font-black transition-colors", employee.commands_team_id ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary")}>
+                          {employee.team_name?.[0]}
+                        </div>
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">צוות/חוליה</span>
+                        <span className="font-black text-lg text-foreground">{employee.team_name || "—"}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <DetailItem icon={Briefcase} label="תפקיד נוכחי" value={employee.role_name} />
+                      <DetailItem icon={FileCheck} label="סוג שירות" value={employee.service_type_name} />
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Service Timeline */}
-          <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
-            <div className="bg-muted/30 border-b border-border p-6">
-              <h3 className="font-bold text-lg flex items-center gap-2 text-foreground">
-                <Calendar className="w-5 h-5 text-primary" />
-                שירות וזמנים
-              </h3>
-            </div>
-            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <DetailItem
-                icon={Calendar}
-                label="תאריך גיוס"
-                value={employee.enlistment_date?.split("T")[0]}
-              />
-              <DetailItem
-                icon={Calendar}
-                label="כניסה לתפקיד"
-                value={employee.assignment_date?.split("T")[0]}
-              />
-              <DetailItem
-                icon={Calendar}
-                label="שחרור צפוי (תש''ש)"
-                value={employee.discharge_date?.split("T")[0]}
-              />
-            </CardContent>
-          </Card>
+              {/* Timeline & Security */}
+              <div className="lg:col-span-4 space-y-6">
+                <Card className="rounded-3xl shadow-sm border-border overflow-hidden">
+                  <CardHeader className="bg-muted/30 border-b border-border pb-4">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Calendar className="w-5 h-5 text-primary" />
+                      צירי זמן
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-4">
+                    <div className="relative border-r-2 border-primary/20 pr-4 py-2 space-y-8">
+                      <div className="relative">
+                        <div className="absolute -right-[23px] top-1 w-3.5 h-3.5 bg-primary rounded-full ring-4 ring-background" />
+                        <p className="text-xs font-bold text-primary mb-0.5">תאריך גיוס</p>
+                        <p className="font-black text-foreground">{formatDate(employee.enlistment_date)}</p>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute -right-[23px] top-1 w-3.5 h-3.5 bg-primary/60 rounded-full ring-4 ring-background" />
+                        <p className="text-xs font-bold text-muted-foreground mb-0.5">כניסה לתפקיד</p>
+                        <p className="font-bold text-foreground">{formatDate(employee.assignment_date)}</p>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute -right-[23px] top-1 w-3.5 h-3.5 bg-muted-foreground/30 rounded-full ring-4 ring-background" />
+                        <p className="text-xs font-bold text-muted-foreground mb-0.5">שחרור צפוי (תש"ש)</p>
+                        <p className="font-bold text-foreground">{formatDate(employee.discharge_date)}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-          {/* Attendance History */}
-          <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
-            <div className="bg-muted/30 border-b border-border p-6">
-              <h3 className="font-bold text-lg flex items-center gap-2 text-foreground">
-                <HistoryIcon className="w-5 h-5 text-primary" />
-                היסטוריית נוכחות וסטטוסים
-              </h3>
+                <Card className="rounded-3xl shadow-sm border-border overflow-hidden">
+                  <CardContent className="p-6 space-y-4 pt-6">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-muted-foreground">סיווג אבטחתי</span>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5, 6].map(lvl => (
+                          <div key={lvl} className={cn("w-1.5 h-4 rounded-full", lvl <= (employee.security_clearance || 0) ? "bg-primary" : "bg-muted")} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-border pt-4">
+                      <span className="text-sm font-bold text-muted-foreground">רישיון משטרתי</span>
+                      <Badge className={cn("px-2", employee.police_license ? "bg-emerald-500" : "bg-muted text-muted-foreground")}>
+                        {employee.police_license ? "בתוקף" : "ללא רישיון"}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-            <CardContent className="p-6">
-              <StatusHistoryList employeeId={employee.id} limit={5} />
-              <div className="mt-4 pt-4 border-t border-border flex justify-center">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/attendance')} className="text-primary font-bold text-xs hover:bg-primary/5">
-                  למעקב נוכחות מלא
+          </TabsContent>
+
+          {/* TAB: HISTORY */}
+          <TabsContent value="history" className="focus-visible:outline-none animate-in slide-in-from-bottom-4 duration-500 delay-200">
+            <Card className="rounded-3xl shadow-sm border-border overflow-hidden">
+              <CardHeader className="bg-muted/30 border-b border-border pb-4 flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <HistoryIcon className="w-5 h-5 text-primary" />
+                  היסטוריית דיווחים מלאה
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/attendance')}
+                  className="bg-background"
+                >
+                  מעבר ללוח בקרה ראשי
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {/* We pass limit={20} to show more but not infinite, or remove limit for all */}
+                <div className="p-6 max-h-[600px] overflow-y-auto custom-scrollbar">
+                  <StatusHistoryList employeeId={employee.id} />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+        </Tabs>
       </div>
     </div>
   );

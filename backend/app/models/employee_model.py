@@ -58,8 +58,8 @@ class EmployeeModel:
                        e.security_clearance, e.police_license, e.is_active,
                        e.must_change_password, e.is_admin, e.is_commander,
                        e.service_type_id,
-                       d.name as department_name, 
-                       s.name as section_name, 
+                       COALESCE(d.name, d_s_dir.name, d_dir.name) as department_name, 
+                       COALESCE(s.name, s_dir.name) as section_name, 
                        t.name as team_name,
                        st.id as status_id,
                        st.name as status_name, 
@@ -80,6 +80,7 @@ class EmployeeModel:
                 LEFT JOIN departments d ON d.id = s.department_id
                 -- Direct Unit Links (if they are assigned directly to a section/dept instead of a team)
                 LEFT JOIN sections s_dir ON e.section_id = s_dir.id
+                LEFT JOIN departments d_s_dir ON s_dir.department_id = d_s_dir.id
                 LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                 LEFT JOIN roles r ON e.role_id = r.id
                 -- Active Status
