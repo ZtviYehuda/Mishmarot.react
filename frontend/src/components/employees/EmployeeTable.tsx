@@ -332,13 +332,13 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
                     <div className="flex items-center justify-start gap-2">
                       <div
                         className={cn("w-2 h-2 rounded-full shadow-sm shrink-0", !emp.is_active && "bg-red-500")}
-                        style={emp.is_active ? { backgroundColor: emp.status_color } : {}}
+                        style={emp.is_active ? { backgroundColor: emp.status_color || "#94a3b8" } : {}}
                       />
                       <span className={cn(
                         "text-xs font-medium transition-colors whitespace-nowrap",
                         emp.is_active ? "text-slate-600 dark:text-slate-400" : "text-red-500 font-bold"
                       )}>
-                        {emp.is_active ? emp.status_name : "לא פעיל"}
+                        {emp.is_active ? (emp.status_name || "ללא סטטוס") : "לא פעיל"}
                       </span>
                     </div>
                   </TableCell>

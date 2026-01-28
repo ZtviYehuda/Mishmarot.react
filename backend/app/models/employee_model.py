@@ -138,8 +138,8 @@ class EmployeeModel:
                        COALESCE(t.name, 'מטה') as team_name, 
                        COALESCE(s.name, s_dir.name, 'מטה') as section_name, 
                        COALESCE(d.name, d_dir.name, 'מטה') as department_name,
-                       COALESCE(st.name, 'משרד') as status_name,
-                       COALESCE(st.color, '#22c55e') as status_color,
+                       st.name as status_name,
+                       st.color as status_color,
                        srv.name as service_type_name
                 FROM employees e
                 -- Direct Path Joins (via team_id)
