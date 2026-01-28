@@ -54,7 +54,7 @@ body {
 }
 
 :root {
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     --background: #ffffff;
     --foreground: #001e30;
     --card: #ffffff;
@@ -64,15 +64,15 @@ body {
     --primary: #0074ff;
     --primary-foreground: #ffffff;
     --secondary: #eff6ff;
-    --secondary-foreground: #0074ff;
+    --secondary-foreground: var(--primary);
     --muted: #f8fafc;
     --muted-foreground: #64748b;
     --accent: #eff6ff;
-    --accent-foreground: #0074ff;
+    --accent-foreground: var(--primary);
     --destructive: #df1b12;
     --border: #e2e8f0;
     --input: #e2e8f0;
-    --ring: #0074ff;
+    --ring: var(--primary);
 }
 
 .dark {
@@ -89,11 +89,28 @@ body {
     --muted: #001e30;
     --muted-foreground: #94a3b8;
     --accent: #001e30;
-    --accent-foreground: #0074ff;
+    --accent-foreground: var(--primary);
     --destructive: #7f1d1d;
     --border: #001e30;
     --input: #001e30;
-    --ring: #0074ff;
+    --ring: var(--primary);
+}
+
+/* Accent Color Overrides - Highest Specificity */
+:root {
+  &.accent-indigo { --primary: #6366f1; --secondary: #eef2ff; --accent: #eef2ff; }
+  &.accent-emerald { --primary: #10b981; --secondary: #ecfdf5; --accent: #ecfdf5; }
+  &.accent-rose { --primary: #f43f5e; --secondary: #fff1f2; --accent: #fff1f2; }
+  &.accent-amber { --primary: #f59e0b; --secondary: #fffbeb; --accent: #fffbeb; }
+  &.accent-blue { --primary: #0074ff; --secondary: #eff6ff; --accent: #eff6ff; }
+}
+
+.dark {
+  &.accent-indigo { --primary: #818cf8; --secondary: #1e1b4b; --accent: #1e1b4b; }
+  &.accent-emerald { --primary: #34d399; --secondary: #064e3b; --accent: #064e3b; }
+  &.accent-rose { --primary: #fb7185; --secondary: #4c0519; --accent: #4c0519; }
+  &.accent-amber { --primary: #fbbf24; --secondary: #451a03; --accent: #451a03; }
+  &.accent-blue { --primary: #0074ff; --secondary: #001e30; --accent: #001e30; }
 }
 
 @layer base {

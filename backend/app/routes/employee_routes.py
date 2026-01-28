@@ -24,25 +24,30 @@ def get_employees():
     try:
         identity_str = get_jwt_identity()
         try:
-            identity = json.loads(identity_str) if isinstance(identity_str, str) else identity_str
+            identity = (
+                json.loads(identity_str)
+                if isinstance(identity_str, str)
+                else identity_str
+            )
             user_id = identity.get("id") if isinstance(identity, dict) else identity
         except (json.JSONDecodeError, AttributeError):
             user_id = identity_str
-        
+
         requester = EmployeeModel.get_employee_by_id(user_id)
-        
+
         filters = {
             "search": request.args.get("search"),
             "dept_id": request.args.get("dept_id"),
             "status_id": request.args.get("status_id"),
             "include_inactive": request.args.get("include_inactive") == "true",
         }
-        
+
         employees = EmployeeModel.get_all_employees(filters, requesting_user=requester)
         return jsonify(employees)
     except Exception as e:
         print(f"❌ Error in GET /employees: {e}")
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -59,15 +64,21 @@ def get_employee(emp_id):
 @emp_bp.route("/", methods=["POST"])
 @jwt_required()
 def create_employee():
-    identity_str = get_jwt_identity()
-    identity = json.loads(identity_str)
-    user_id = identity["id"]
-    claims = identity
-    
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+    claims = identity if isinstance(identity, dict) else {}
+
     current_user = EmployeeModel.get_employee_by_id(user_id)
     if not current_user:
         return jsonify({"success": False, "error": "User not found"}), 404
-    
+
     is_admin = claims.get("is_admin", False)
     is_commander = claims.get("is_commander", False)
     if not (is_admin or is_commander):
@@ -76,20 +87,29 @@ def create_employee():
     data = request.get_json()
     if not data:
         return jsonify({"success": False, "error": "No data provided"}), 400
-    
+
     # Convert empty strings to None for optional fields
-    for key in ["phone_number", "city", "birth_date", "enlistment_date", "discharge_date", "team_id", "role_id"]:
+    for key in [
+        "phone_number",
+        "city",
+        "birth_date",
+        "enlistment_date",
+        "discharge_date",
+        "team_id",
+        "role_id",
+    ]:
         if key in data and data[key] == "":
             data[key] = None
-    
+
     try:
         new_id = EmployeeModel.create_employee(data)
         return (
-            jsonify({"success": True, "id": new_id, "message": "העובד נוצר בהצלחה"}),
+            jsonify({"success": True, "id": new_id, "message": "השוטר נוצר בהצלחה"}),
             201,
         )
     except Exception as e:
         import traceback
+
         print(f"Error creating employee: {e}")
         print(traceback.format_exc())
         return jsonify({"success": False, "error": str(e)}), 500
@@ -98,24 +118,43 @@ def create_employee():
 @emp_bp.route("/<int:emp_id>", methods=["PUT"])
 @jwt_required()
 def update_employee(emp_id):
-    identity_str = get_jwt_identity()
-    identity = json.loads(identity_str)
-    user_id = identity["id"]
-    claims = identity
-    
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+    claims = identity if isinstance(identity, dict) else {}
+
     current_user = EmployeeModel.get_employee_by_id(user_id)
     if not current_user:
         return jsonify({"success": False, "error": "User not found"}), 404
-    
+
     is_admin = claims.get("is_admin", False)
     is_commander = claims.get("is_commander", False)
     if not (is_admin or is_commander):
         return jsonify({"success": False, "error": "Unauthorized"}), 403
 
     data = request.get_json()
-    
+
     # Convert empty strings to None for optional fields to avoid DB errors (e.g. invalid date syntax)
-    for key in ["phone_number", "city", "birth_date", "enlistment_date", "discharge_date", "assignment_date", "team_id", "section_id", "department_id", "role_id", "service_type_id", "emergency_contact"]:
+    for key in [
+        "phone_number",
+        "city",
+        "birth_date",
+        "enlistment_date",
+        "discharge_date",
+        "assignment_date",
+        "team_id",
+        "section_id",
+        "department_id",
+        "role_id",
+        "service_type_id",
+        "emergency_contact",
+    ]:
         if key in data and data[key] == "":
             data[key] = None
 
@@ -127,15 +166,21 @@ def update_employee(emp_id):
 @emp_bp.route("/<int:emp_id>", methods=["DELETE"])
 @jwt_required()
 def delete_employee(emp_id):
-    identity_str = get_jwt_identity()
-    identity = json.loads(identity_str)
-    user_id = identity["id"]
-    claims = identity
-    
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+    claims = identity if isinstance(identity, dict) else {}
+
     current_user = EmployeeModel.get_employee_by_id(user_id)
     if not current_user:
         return jsonify({"success": False, "error": "User not found"}), 404
-    
+
     is_admin = claims.get("is_admin", False)
     if not is_admin:
         return jsonify({"success": False, "error": "Admins only"}), 403
@@ -192,11 +237,11 @@ def get_service_types():
     try:
         from app.utils.db import get_db_connection
         from psycopg2.extras import RealDictCursor
-        
+
         conn = get_db_connection()
         if not conn:
             return jsonify({"error": "Database connection failed"}), 500
-        
+
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute("SELECT id, name FROM service_types ORDER BY name")

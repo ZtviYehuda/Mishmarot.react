@@ -4,15 +4,51 @@ import { useEmployees } from "@/hooks/useEmployees";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import type { CreateEmployeePayload } from "@/types/employee.types";
-import { Loader2, UserPlus, User, Calendar, Phone, Shield, Building2, Save, ChevronLeft, Check } from "lucide-react";
+import {
+  Loader2,
+  UserPlus,
+  User,
+  Calendar,
+  Phone,
+  Shield,
+  Building2,
+  Save,
+  ChevronLeft,
+  Check,
+} from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 
-interface Team { id: number; name: string; section_id: number }
-interface Section { id: number; name: string; department_id: number; teams: Team[] }
-interface Department { id: number; name: string; sections: Section[] }
+interface Team {
+  id: number;
+  name: string;
+  section_id: number;
+}
+interface Section {
+  id: number;
+  name: string;
+  department_id: number;
+  teams: Team[];
+}
+interface Department {
+  id: number;
+  name: string;
+  sections: Section[];
+}
 
 export default function CreateEmployeePage() {
   const navigate = useNavigate();
@@ -20,7 +56,9 @@ export default function CreateEmployeePage() {
   const { createEmployee, getStructure, getServiceTypes } = useEmployees();
   const [loading, setLoading] = useState(false);
   const [structure, setStructure] = useState<Department[]>([]);
-  const [serviceTypes, setServiceTypes] = useState<{ id: number; name: string }[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<
+    { id: number; name: string }[]
+  >([]);
 
   // Selection States
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
@@ -55,7 +93,7 @@ export default function CreateEmployeePage() {
     const fetchData = async () => {
       const [structData, srvData] = await Promise.all([
         getStructure(),
-        getServiceTypes()
+        getServiceTypes(),
       ]);
 
       if (structData) setStructure(structData);
@@ -68,7 +106,10 @@ export default function CreateEmployeePage() {
   useEffect(() => {
     if (!user || user.is_admin || structure.length === 0) return;
 
-    console.log("[DEBUG] Scoping Effect Triggered", { user, structureLoaded: structure.length > 0 });
+    console.log("[DEBUG] Scoping Effect Triggered", {
+      user,
+      structureLoaded: structure.length > 0,
+    });
 
     if (user.commands_team_id) {
       const teamId = user.commands_team_id;
@@ -78,7 +119,7 @@ export default function CreateEmployeePage() {
           if (team) {
             setSelectedDeptId(dept.id.toString());
             setSelectedSectionId(sec.id.toString());
-            setFormData(prev => ({ ...prev, team_id: teamId }));
+            setFormData((prev) => ({ ...prev, team_id: teamId }));
             return;
           }
         }
@@ -123,8 +164,10 @@ export default function CreateEmployeePage() {
   };
 
   // Derived Options
-  const sections = structure.find(d => d.id.toString() === selectedDeptId)?.sections || [];
-  const teams = sections.find(s => s.id.toString() === selectedSectionId)?.teams || [];
+  const sections =
+    structure.find((d) => d.id.toString() === selectedDeptId)?.sections || [];
+  const teams =
+    sections.find((s) => s.id.toString() === selectedSectionId)?.teams || [];
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -133,7 +176,7 @@ export default function CreateEmployeePage() {
         <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
           <span>ניהול כח אדם</span>
           <ChevronLeft className="w-3 h-3 text-slate-300" />
-          <span className="text-[#0074ff]">הוספת משרת חדש</span>
+          <span className="text-[#0074ff]">הוספת שוטר חדש</span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -143,10 +186,10 @@ export default function CreateEmployeePage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-                הוספת משרת חדש
+                הוספת שוטר חדש
               </h1>
               <p className="text-slate-500 dark:text-slate-400 mt-1">
-                מלא את פרטי המשרת בטופס למטה כדי לצרפו ליחידה.
+                מלא את פרטי השוטר בטופס למטה כדי לצרפו ליחידה.
               </p>
             </div>
           </div>
@@ -164,44 +207,58 @@ export default function CreateEmployeePage() {
               disabled={loading}
               className="bg-[#0074ff] hover:bg-[#0060d5] text-white h-10 px-6 shadow-md shadow-blue-500/20"
             >
-              {loading ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Save className="w-4 h-4 ml-2" />}
-              שמור משרת
+              {loading ? (
+                <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 ml-2" />
+              )}
+              שמור שוטר
             </Button>
           </div>
         </div>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+      >
         {/* Main Column */}
         <div className="lg:col-span-8 space-y-8">
-
           {/* Personal Information */}
           <SectionCard
             icon={User}
             title="פרטים אישיים"
-            description="פרטי זיהוי בסיסיים של המשרת"
+            description="פרטי זיהוי בסיסיים של השוטר"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <FormField label="שם פרטי" required>
                 <Input
                   value={formData.first_name}
-                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, first_name: e.target.value })
+                  }
                   placeholder="לדוגמה: ישראל"
                 />
               </FormField>
               <FormField label="שם משפחה" required>
                 <Input
                   value={formData.last_name}
-                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, last_name: e.target.value })
+                  }
                   placeholder="לדוגמה: ישראלי"
                 />
               </FormField>
               <FormField label="מספר אישי" required>
                 <Input
                   value={formData.personal_number}
-                  onChange={(e) => setFormData({ ...formData, personal_number: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      personal_number: e.target.value,
+                    })
+                  }
                   className="font-mono text-left ltr"
                   placeholder="1234567"
                 />
@@ -209,7 +266,9 @@ export default function CreateEmployeePage() {
               <FormField label="תעודת זהות" required>
                 <Input
                   value={formData.national_id}
-                  onChange={(e) => setFormData({ ...formData, national_id: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, national_id: e.target.value })
+                  }
                   className="font-mono text-left ltr"
                   placeholder="000000000"
                 />
@@ -228,7 +287,9 @@ export default function CreateEmployeePage() {
                 <Input
                   type="tel"
                   value={formData.phone_number}
-                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone_number: e.target.value })
+                  }
                   className="font-mono text-left ltr"
                   placeholder="050-0000000"
                 />
@@ -236,7 +297,9 @@ export default function CreateEmployeePage() {
               <FormField label="עיר מגורים">
                 <Input
                   value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, city: e.target.value })
+                  }
                   placeholder="לדוגמה: תל אביב"
                 />
               </FormField>
@@ -244,7 +307,12 @@ export default function CreateEmployeePage() {
                 <FormField label="איש קשר לחירום">
                   <Input
                     value={formData.emergency_contact}
-                    onChange={(e) => setFormData({ ...formData, emergency_contact: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        emergency_contact: e.target.value,
+                      })
+                    }
                     placeholder="שם ומספר טלפון"
                   />
                 </FormField>
@@ -256,7 +324,7 @@ export default function CreateEmployeePage() {
           <SectionCard
             icon={Building2}
             title="שיוך ארגוני"
-            description="הגדר את מיקום המשרת במבנה הארגון"
+            description="הגדר את מיקום השוטר במבנה הארגון"
           >
             {/* Hierarchical Structure */}
             <div className="space-y-4">
@@ -275,7 +343,14 @@ export default function CreateEmployeePage() {
                         setSelectedSectionId("");
                         setFormData({ ...formData, team_id: undefined });
                       }}
-                      disabled={!user?.is_admin && !!(user?.commands_department_id || user?.commands_section_id || user?.commands_team_id)}
+                      disabled={
+                        !user?.is_admin &&
+                        !!(
+                          user?.commands_department_id ||
+                          user?.commands_section_id ||
+                          user?.commands_team_id
+                        )
+                      }
                     >
                       <SelectTrigger className="text-right">
                         <SelectValue placeholder="בחר מחלקה..." />
@@ -298,10 +373,22 @@ export default function CreateEmployeePage() {
                         setSelectedSectionId(val);
                         setFormData({ ...formData, team_id: undefined });
                       }}
-                      disabled={!selectedDeptId || (!user?.is_admin && !!(user?.commands_section_id || user?.commands_team_id))}
+                      disabled={
+                        !selectedDeptId ||
+                        (!user?.is_admin &&
+                          !!(
+                            user?.commands_section_id || user?.commands_team_id
+                          ))
+                      }
                     >
                       <SelectTrigger className="text-right">
-                        <SelectValue placeholder={!selectedDeptId ? "בחר מחלקה קודם..." : "בחר מדור..."} />
+                        <SelectValue
+                          placeholder={
+                            !selectedDeptId
+                              ? "בחר מחלקה קודם..."
+                              : "בחר מדור..."
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {sections.map((sec) => (
@@ -317,11 +404,22 @@ export default function CreateEmployeePage() {
                   <FormField label="חולייה">
                     <Select
                       value={formData.team_id?.toString() || ""}
-                      onValueChange={(val) => setFormData({ ...formData, team_id: parseInt(val) })}
-                      disabled={!selectedSectionId || (!user?.is_admin && !!user?.commands_team_id)}
+                      onValueChange={(val) =>
+                        setFormData({ ...formData, team_id: parseInt(val) })
+                      }
+                      disabled={
+                        !selectedSectionId ||
+                        (!user?.is_admin && !!user?.commands_team_id)
+                      }
                     >
                       <SelectTrigger className="text-right">
-                        <SelectValue placeholder={!selectedSectionId ? "בחר מדור קודם..." : "בחר חולייה..."} />
+                        <SelectValue
+                          placeholder={
+                            !selectedSectionId
+                              ? "בחר מדור קודם..."
+                              : "בחר חולייה..."
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {teams.map((t) => (
@@ -352,7 +450,12 @@ export default function CreateEmployeePage() {
                   <FormField label="סוג שירות">
                     <Select
                       value={formData.service_type_id?.toString() || ""}
-                      onValueChange={(val) => setFormData({ ...formData, service_type_id: parseInt(val) })}
+                      onValueChange={(val) =>
+                        setFormData({
+                          ...formData,
+                          service_type_id: parseInt(val),
+                        })
+                      }
                     >
                       <SelectTrigger className="text-right">
                         <SelectValue placeholder="בחר סוג שירות..." />
@@ -371,7 +474,14 @@ export default function CreateEmployeePage() {
                     <Input
                       type="number"
                       value={formData.role_id || ""}
-                      onChange={(e) => setFormData({ ...formData, role_id: e.target.value ? parseInt(e.target.value) : undefined })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          role_id: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
                       placeholder="הזן מזהה תפקיד"
                     />
                   </FormField>
@@ -394,14 +504,25 @@ export default function CreateEmployeePage() {
                 <ToggleCard
                   label="תפקיד פיקודי"
                   checked={formData.is_commander || false}
-                  onChange={(v) => setFormData({ ...formData, is_commander: v })}
+                  onChange={(v) =>
+                    setFormData({ ...formData, is_commander: v })
+                  }
                 />
                 {formData.is_commander && (
                   <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-lg">
                     <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
                       <span className="text-base">💡</span>
                       <span>
-                        המשרת יוגדר כמפקד של <strong>{formData.team_id ? 'החולייה' : selectedSectionId ? 'המדור' : selectedDeptId ? 'המחלקה' : 'היחידה הנבחרת'}</strong>
+                        השוטר יוגדר כמפקד של{" "}
+                        <strong>
+                          {formData.team_id
+                            ? "החולייה"
+                            : selectedSectionId
+                              ? "המדור"
+                              : selectedDeptId
+                                ? "המחלקה"
+                                : "היחידה הנבחרת"}
+                        </strong>
                       </span>
                     </p>
                   </div>
@@ -413,51 +534,56 @@ export default function CreateEmployeePage() {
 
         {/* Sidebar Column */}
         <div className="lg:col-span-4 space-y-8">
-
           {/* Dates */}
-          <SectionCard
-            icon={Calendar}
-            title="תאריכים"
-            compact
-          >
+          <SectionCard icon={Calendar} title="תאריכים" compact>
             <div className="space-y-4">
               <FormField label="תאריך לידה">
                 <Input
                   type="date"
                   value={formData.birth_date}
-                  onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, birth_date: e.target.value })
+                  }
                 />
               </FormField>
               <FormField label="תאריך גיוס">
                 <Input
                   type="date"
                   value={formData.enlistment_date}
-                  onChange={(e) => setFormData({ ...formData, enlistment_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      enlistment_date: e.target.value,
+                    })
+                  }
                 />
               </FormField>
               <FormField label="תאריך הצבה">
                 <Input
                   type="date"
                   value={formData.assignment_date}
-                  onChange={(e) => setFormData({ ...formData, assignment_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      assignment_date: e.target.value,
+                    })
+                  }
                 />
               </FormField>
               <FormField label="תאריך שחרור">
                 <Input
                   type="date"
                   value={formData.discharge_date}
-                  onChange={(e) => setFormData({ ...formData, discharge_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, discharge_date: e.target.value })
+                  }
                 />
               </FormField>
             </div>
           </SectionCard>
 
           {/* Security & Permissions */}
-          <SectionCard
-            icon={Shield}
-            title="הגדרות ואבטחה"
-            compact
-          >
+          <SectionCard icon={Shield} title="הגדרות ואבטחה" compact>
             <div className="space-y-6">
               <FormField label="רמת סיווג (0-5)">
                 <div className="flex items-center gap-3">
@@ -468,7 +594,12 @@ export default function CreateEmployeePage() {
                       max="5"
                       step="1"
                       value={formData.security_clearance}
-                      onChange={(e) => setFormData({ ...formData, security_clearance: parseInt(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          security_clearance: parseInt(e.target.value) || 0,
+                        })
+                      }
                       className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0074ff]"
                     />
                   </div>
@@ -482,12 +613,13 @@ export default function CreateEmployeePage() {
                 <ToggleCard
                   label="רישיון משטרה"
                   checked={formData.police_license || false}
-                  onChange={(v) => setFormData({ ...formData, police_license: v })}
+                  onChange={(v) =>
+                    setFormData({ ...formData, police_license: v })
+                  }
                 />
               </div>
             </div>
           </SectionCard>
-
         </div>
 
         {/* Mobile Action Buttons */}
@@ -505,11 +637,14 @@ export default function CreateEmployeePage() {
             disabled={loading}
             className="flex-1 bg-[#0074ff] text-white h-11"
           >
-            {loading ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Save className="w-4 h-4 ml-2" />}
+            {loading ? (
+              <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 ml-2" />
+            )}
             שמור
           </Button>
         </div>
-
       </form>
     </div>
   );
@@ -517,28 +652,62 @@ export default function CreateEmployeePage() {
 
 // --- Helper Components ---
 
-function SectionCard({ icon: Icon, title, description, children, compact }: { icon: any, title: string, description?: string, children: React.ReactNode, compact?: boolean }) {
+function SectionCard({
+  icon: Icon,
+  title,
+  description,
+  children,
+  compact,
+}: {
+  icon: any;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  compact?: boolean;
+}) {
   return (
     <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 overflow-hidden">
-      <CardHeader className={`bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 ${compact ? 'p-4' : 'p-6'}`}>
+      <CardHeader
+        className={`bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 ${compact ? "p-4" : "p-6"}`}
+      >
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-100 dark:ring-slate-700 ${compact ? 'w-8 h-8' : 'w-10 h-10'} flex items-center justify-center`}>
-            <Icon className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-[#0074ff]`} />
+          <div
+            className={`p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-100 dark:ring-slate-700 ${compact ? "w-8 h-8" : "w-10 h-10"} flex items-center justify-center`}
+          >
+            <Icon
+              className={`${compact ? "w-4 h-4" : "w-5 h-5"} text-[#0074ff]`}
+            />
           </div>
           <div>
-            <CardTitle className={`${compact ? 'text-base' : 'text-lg'} font-bold text-slate-900 dark:text-white`}>{title}</CardTitle>
-            {description && <CardDescription className="text-slate-500 mt-1">{description}</CardDescription>}
+            <CardTitle
+              className={`${compact ? "text-base" : "text-lg"} font-bold text-slate-900 dark:text-white`}
+            >
+              {title}
+            </CardTitle>
+            {description && (
+              <CardDescription className="text-slate-500 mt-1">
+                {description}
+              </CardDescription>
+            )}
           </div>
         </div>
       </CardHeader>
-      <CardContent className={`${compact ? 'p-4' : 'p-6'}`}>
+      <CardContent className={`${compact ? "p-4" : "p-6"}`}>
         {children}
       </CardContent>
     </Card>
   );
 }
 
-function FormField({ label, required, children }: { label: string, required?: boolean, children: React.ReactNode }) {
+function FormField({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-2">
       <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
@@ -550,26 +719,42 @@ function FormField({ label, required, children }: { label: string, required?: bo
   );
 }
 
-function ToggleCard({ label, checked, onChange, danger }: { label: string, checked: boolean, onChange: (v: boolean) => void, danger?: boolean }) {
+function ToggleCard({
+  label,
+  checked,
+  onChange,
+  danger,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  danger?: boolean;
+}) {
   return (
     <div
       onClick={() => onChange(!checked)}
       className={`
         flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200
-        ${checked
-          ? (danger ? 'bg-red-50 border-red-200 ring-1 ring-red-200' : 'bg-blue-50 border-blue-200 ring-1 ring-blue-200')
-          : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'}
+        ${
+          checked
+            ? danger
+              ? "bg-red-50 border-red-200 ring-1 ring-red-200"
+              : "bg-blue-50 border-blue-200 ring-1 ring-blue-200"
+            : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+        }
       `}
     >
-      <span className={`text-sm font-medium ${checked ? (danger ? 'text-red-700' : 'text-blue-700') : 'text-slate-600'}`}>
+      <span
+        className={`text-sm font-medium ${checked ? (danger ? "text-red-700" : "text-blue-700") : "text-slate-600"}`}
+      >
         {label}
       </span>
-      <div className={`
+      <div
+        className={`
         w-5 h-5 rounded flex items-center justify-center transition-colors
-        ${checked
-          ? (danger ? 'bg-red-500' : 'bg-[#0074ff]')
-          : 'bg-slate-200'}
-      `}>
+        ${checked ? (danger ? "bg-red-500" : "bg-[#0074ff]") : "bg-slate-200"}
+      `}
+      >
         {checked && <Check className="w-3.5 h-3.5 text-white" />}
       </div>
     </div>

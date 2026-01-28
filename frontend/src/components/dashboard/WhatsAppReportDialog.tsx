@@ -86,7 +86,7 @@ export const WhatsAppReportDialog = ({
     let message = `📊 *דוח מצבת כוח אדם*\n`;
     message += `\n*מפקד:* ${commander}\n`;
     message += `*תאריך:* ${new Date().toLocaleDateString('he-IL')}\n`;
-    message += `*סך הכל משרתים:* ${reportData.total}\n\n`;
+    message += `*סך הכל שוטרים:* ${reportData.total}\n\n`;
 
     message += `*פילוח לפי סטטוס:*\n`;
     reportData.byStatus.forEach(({ name, count }) => {

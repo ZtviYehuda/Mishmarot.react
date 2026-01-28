@@ -43,7 +43,7 @@ export default function EmployeeViewPage() {
                 setEmployee(data);
             } catch (error) {
                 console.error("Failed to fetch employee:", error);
-                toast.error("שגיאה בטעינת פרטי משרת");
+                toast.error("שגיאה בטעינת פרטי שוטר");
             } finally {
                 setLoading(false);
             }
@@ -57,7 +57,7 @@ export default function EmployeeViewPage() {
         setActionLoading(true);
         try {
             await apiClient.put(endpoints.updateEmployeeEndpoint(parseInt(id!)), { is_active: newStatus });
-            toast.success(newStatus ? "המשרת הוחזר למצב פעיל" : "המשרת הועבר לסטטוס לא פעיל");
+            toast.success(newStatus ? "השוטר הוחזר למצב פעיל" : "השוטר הועבר לסטטוס לא פעיל");
             // Refresh local state instead of navigating away if we want to stay on page
             setEmployee(prev => prev ? { ...prev, is_active: newStatus } : null);
         } catch (error) {
@@ -104,7 +104,7 @@ export default function EmployeeViewPage() {
                 <div className="bg-red-500 text-white py-2 px-6 text-center font-bold text-sm shadow-md animate-in slide-in-from-top duration-500 sticky top-0 z-50">
                     <div className="flex items-center justify-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
-                        <span>משרת זה מוגדר כלא פעיל במערכת</span>
+                        <span>שוטר זה מוגדר כלא פעיל במערכת</span>
                     </div>
                 </div>
             )}
@@ -117,7 +117,7 @@ export default function EmployeeViewPage() {
                             <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
                         </div>
                         <div>
-                            <h1 className="text-lg font-black text-slate-800 dark:text-white leading-none">תיק משרת</h1>
+                            <h1 className="text-lg font-black text-slate-800 dark:text-white leading-none">תיק שוטר</h1>
                             <div className="flex items-center gap-2 text-xs font-medium text-slate-500 mt-1">
                                 <span>מצבת כוח אדם</span>
                                 <span className="text-slate-300">/</span>

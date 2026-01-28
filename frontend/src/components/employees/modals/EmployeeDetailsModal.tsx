@@ -40,7 +40,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       if (emp.department_name) return "ראש מחלקה";
       return "מפקד יחידה";
     }
-    return "משרת";
+    return "שוטר";
   };
 
   return (
@@ -60,7 +60,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             </div>
           </DialogTitle>
           <DialogDescription className="text-right">
-            פרטים מלאים של המשרת
+            פרטים מלאים של השוטר
           </DialogDescription>
         </DialogHeader>
 

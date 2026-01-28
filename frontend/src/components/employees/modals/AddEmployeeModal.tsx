@@ -71,10 +71,10 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-right">
           <DialogTitle className="text-2xl font-semibold  text-right text-[#001e30] dark:text-white">
-            הוספת משרת חדש
+            הוספת שוטר חדש
           </DialogTitle>
           <DialogDescription className="text-right">
-            מלא את הפרטים הבאים כדי להוסיף משרת חדש למערכת
+            מלא את הפרטים הבאים כדי להוסיף שוטר חדש למערכת
           </DialogDescription>
         </DialogHeader>
 
@@ -223,7 +223,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   מוסיף...
                 </>
               ) : (
-                "הוסף משרת"
+                "הוסף שוטר"
               )}
             </Button>
           </DialogFooter>

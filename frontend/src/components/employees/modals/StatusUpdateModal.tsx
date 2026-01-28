@@ -122,7 +122,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                         <ClipboardList className="w-6 h-6" />
                     </div>
                     <DialogTitle className="text-xl font-black text-slate-900 dark:text-white mb-1">
-                        עדכון סטטוס משרת
+                        עדכון סטטוס שוטר
                     </DialogTitle>
                     <DialogDescription className="text-sm font-bold text-slate-400">
                         {employee.first_name} {employee.last_name}
@@ -220,7 +220,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                         className="w-full bg-slate-900 hover:bg-black dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-black rounded-[20px] h-12 shadow-xl shadow-slate-200 dark:shadow-none transition-all active:scale-95 disabled:opacity-30 gap-2 text-sm"
                     >
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                        עדכן סטטוס משרת
+                        עדכן סטטוס שוטר
                     </Button>
                     <button
                         onClick={() => onOpenChange(false)}

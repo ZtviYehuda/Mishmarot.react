@@ -25,7 +25,7 @@ export default function EmployeesPage() {
                 ניהול מצבת כוח אדם
               </h1>
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-none">
-                מערך ניהול וצפייה בנתוני המשרתים ביחידה
+                מערך ניהול וצפייה בנתוני השוטרים ביחידה
               </p>
             </div>
           </div>

@@ -20,9 +20,14 @@ def options_pending():
 @jwt_required()
 def create_transfer():
     data = request.get_json()
-    identity_str = get_jwt_identity()
-    identity = json.loads(identity_str)
-    user_id = identity["id"]
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+    user_id = identity["id"] if isinstance(identity, dict) else identity
 
     required = ["employee_id", "target_type", "target_id"]
     if not all(k in data for k in required):
@@ -54,10 +59,15 @@ def get_history():
 @transfer_bp.route("/<int:req_id>/approve", methods=["POST"])
 @jwt_required()
 def approve(req_id):
-    identity_str = get_jwt_identity()
-    identity = json.loads(identity_str)
-    user_id = identity["id"]
-    
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+
     if TransferModel.approve_request(req_id, user_id):
         return jsonify({"success": True, "message": "הבקשה אושרה"})
     return jsonify({"success": False, "error": "Failed to approve"}), 500
@@ -66,10 +76,15 @@ def approve(req_id):
 @transfer_bp.route("/<int:req_id>/reject", methods=["POST"])
 @jwt_required()
 def reject(req_id):
-    identity_str = get_jwt_identity()
-    identity = json.loads(identity_str)
-    user_id = identity["id"]
-    
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+
     data = request.get_json() or {}
     reason = data.get("reason", "")
 
@@ -81,11 +96,17 @@ def reject(req_id):
 @transfer_bp.route("/<int:req_id>/cancel", methods=["POST"])
 @jwt_required()
 def cancel_transfer(req_id):
-    identity_str = get_jwt_identity()
-    identity = json.loads(identity_str)
-    user_id = identity["id"]
-    is_admin = identity.get("is_admin", False)
-    
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+    is_admin = identity.get("is_admin", False) if isinstance(identity, dict) else False
+
     if TransferModel.cancel_request(req_id, user_id, is_admin):
         return jsonify({"success": True, "message": "Cancelled"})
     return jsonify({"success": False, "error": "Failed or Unauthorized"}), 400

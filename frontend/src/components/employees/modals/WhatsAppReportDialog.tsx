@@ -97,7 +97,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
 
     let report = `📋 *דוח מצבת כוח אדם - ${dateStr}*\n`;
     report += `⏰ שעת דיווח: ${timeStr}\n`;
-    report += `👥 סה"כ משרתים: ${employees.length}\n\n`;
+    report += `👥 סה"כ שוטרים: ${employees.length}\n\n`;
 
     const byStatus: Record<string, Employee[]> = {};
     employees.forEach((emp) => {
@@ -123,7 +123,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
     try {
       const emps = getEmployeesToReport();
       if (emps.length === 0) {
-        toast.error("אנא בחר משרתים להכללה בדוח");
+        toast.error("אנא בחר שוטרים להכללה בדוח");
         return;
       }
 
@@ -194,7 +194,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                 )}
               >
                 <Users className="w-6 h-6 mb-1" />
-                <span className="text-xs font-black">כל המשרתים ({filteredEmployees.length})</span>
+                <span className="text-xs font-black">כל השוטרים ({filteredEmployees.length})</span>
               </button>
               <button
                 onClick={() => setSendOption("custom")}
@@ -275,7 +275,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-black text-slate-800 dark:text-slate-200">סיכום הדוח</span>
-                <span className="text-[10px] font-bold text-slate-400">{employeesToReportCount} משרתים כלולים</span>
+                <span className="text-[10px] font-bold text-slate-400">{employeesToReportCount} שוטרים כלולים</span>
               </div>
             </div>
             <div className="text-emerald-600 dark:text-emerald-400">

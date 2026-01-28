@@ -54,7 +54,7 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
       if (emp.department_name && emp.department_name !== 'מטה') return "ראש מחלקה";
       return "מפקד יחידה";
     }
-    return "משרת";
+    return "שוטר";
   };
 
   const filteredEmployees = employees.filter((emp) => {
@@ -287,7 +287,7 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
             onClick={() => navigate("/employees/new")}
           >
             <Plus className="w-4 h-4 ml-2" />
-            הוספת משרת חדש
+            הוספת שוטר חדש
           </Button>
         </div>
       </div>
@@ -298,11 +298,19 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
           <TableHeader className="bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-800 dark:to-slate-800/50">
             <TableRow className="hover:bg-transparent border-b border-slate-200 dark:border-slate-700">
               <TableHead className="text-right font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6">
-                משרת
+                שוטר
               </TableHead>
               <TableHead className="text-right font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6">
                 מספר אישי
               </TableHead>
+              {/* === עמודות חדשות שהוספתי === */}
+              <TableHead className="text-right font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6">
+                טלפון
+              </TableHead>
+              <TableHead className="text-right font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6">
+                תאריך לידה
+              </TableHead>
+              {/* ============================== */}
               <TableHead className="text-right font-semibold text-[#001e30] dark:text-white uppercase tracking-tighter text-xs h-14 px-6">
                 תפקיד/סמכות
               </TableHead>
@@ -324,7 +332,7 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={9} // עדכון colSpan ל-9
                   className="h-32 text-center text-right text-slate-400"
                 >
                   טוען נתונים...
@@ -333,10 +341,10 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
             ) : paginatedEmployees.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={9} // עדכון colSpan ל-9
                   className="h-32 text-center text-right text-slate-400"
                 >
-                  לא נמצאו משרתים התואמים את החיפוש והסינון
+                  לא נמצאו שוטרים התואמים את החיפוש והסינון
                 </TableCell>
               </TableRow>
             ) : (
@@ -368,7 +376,7 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
                         </span>
                         {!emp.is_active && (
                           <span className="text-[10px] text-red-500 font-bold uppercase tracking-tight">
-                            משרת לא פעיל
+                            שוטר לא פעיל
                           </span>
                         )}
                         <span className="text-[10px] text-slate-400 font-medium">
@@ -380,6 +388,14 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
                   <TableCell className="px-6 py-4 text-right font-mono text-xs text-slate-600 dark:text-slate-400 font-medium">
                     {emp.personal_number}
                   </TableCell>
+                  {/* === תאים חדשים שהוספתי === */}
+                  <TableCell className="px-6 py-4 text-right font-mono text-xs text-slate-500 dark:text-slate-400">
+                    {emp.phone_number || "לא עודכן"}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-right text-xs text-slate-500 dark:text-slate-400">
+                    {emp.birth_date ? new Date(emp.birth_date).toLocaleDateString('he-IL') : "לא עודכן"}
+                  </TableCell>
+                  {/* ========================== */}
                   <TableCell className="px-6 py-4 text-right">
                     <Badge
                       variant="outline"
@@ -480,7 +496,7 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
               (currentPage - 1) * itemsPerPage + 1,
             )}
             -{Math.min(filteredEmployees.length, currentPage * itemsPerPage)} מתוך{" "}
-            {filteredEmployees.length} משרתים
+            {filteredEmployees.length} שוטרים
           </div>
           <div className="flex items-center gap-1.5">
             <Button

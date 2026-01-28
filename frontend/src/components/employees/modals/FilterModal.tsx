@@ -181,7 +181,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           <div className="flex items-center justify-between gap-4">
             <div>
               <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white mb-1">
-                סינון משרתים מתקדם
+                סינון שוטרים מתקדם
               </DialogTitle>
               <DialogDescription className="text-sm font-bold text-slate-400">
                 התאם את התצוגה לפי פרמטרים ארגוניים ואישיים
@@ -361,8 +361,8 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   <UserMinus className="w-4 h-4" />
                 </div>
                 <div className="flex flex-col text-right">
-                  <span className="text-xs font-black">הצג משרתים שאינם פעילים</span>
-                  <span className="text-[10px] font-bold opacity-60">כולל משרתים בתהליך שחרור או מושבתים</span>
+                  <span className="text-xs font-black">הצג שוטרים שאינם פעילים</span>
+                  <span className="text-[10px] font-bold opacity-60">כולל שוטרים בתהליך שחרור או מושבתים</span>
                 </div>
               </div>
               <div className={cn(

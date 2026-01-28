@@ -30,6 +30,7 @@ def get_status_types():
     except Exception as e:
         print(f"❌ Error in /status-types: {e}")
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -40,40 +41,48 @@ def get_stats():
     try:
         identity_str = get_jwt_identity()
         print(f"[DEBUG] identity_str: {identity_str}, type: {type(identity_str)}")
-        
+
         # Try to parse as JSON
         try:
-            identity = json.loads(identity_str) if isinstance(identity_str, str) else identity_str
+            identity = (
+                json.loads(identity_str)
+                if isinstance(identity_str, str)
+                else identity_str
+            )
             user_id = identity.get("id") if isinstance(identity, dict) else identity
         except (json.JSONDecodeError, AttributeError):
             # If not JSON, treat as plain ID
             user_id = identity_str
-        
+
         print(f"[DEBUG] user_id: {user_id}")
-        
+
         from app.models.employee_model import EmployeeModel
+
         requester = EmployeeModel.get_employee_by_id(user_id)
-        
+
         # Parse filters for drill-down
         # Parse filters for drill-down
         filters = {}
-        if request.args.get('department_id'):
-            filters['department_id'] = int(request.args.get('department_id'))
-        if request.args.get('section_id'):
-            filters['section_id'] = int(request.args.get('section_id'))
-        if request.args.get('team_id'):
-            filters['team_id'] = int(request.args.get('team_id'))
-        if request.args.get('status_id'):
-            filters['status_id'] = int(request.args.get('status_id'))
-            
+        if request.args.get("department_id"):
+            filters["department_id"] = int(request.args.get("department_id"))
+        if request.args.get("section_id"):
+            filters["section_id"] = int(request.args.get("section_id"))
+        if request.args.get("team_id"):
+            filters["team_id"] = int(request.args.get("team_id"))
+        if request.args.get("status_id"):
+            filters["status_id"] = int(request.args.get("status_id"))
+
         print(f"[DEBUG] get_stats filters: {filters}")
-        
-        stats = AttendanceModel.get_dashboard_stats(requesting_user=requester, filters=filters)
+
+        stats = AttendanceModel.get_dashboard_stats(
+            requesting_user=requester, filters=filters
+        )
         birthdays = AttendanceModel.get_birthdays(requesting_user=requester)
         return jsonify({"stats": stats, "birthdays": birthdays})
     except Exception as e:
         print(f"❌ Error in /stats: {e}")
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -82,9 +91,15 @@ def get_stats():
 @jwt_required()
 def log_status():
     data = request.get_json()
-    identity_str = get_jwt_identity()
-    identity = json.loads(identity_str)
-    current_user_id = identity["id"]
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    current_user_id = identity["id"] if isinstance(identity, dict) else identity
 
     target_id = data.get("employee_id")
     if not target_id:
@@ -117,9 +132,15 @@ def log_status():
 def bulk_log_status():
     data = request.get_json()
     updates = data.get("updates", [])
-    identity_str = get_jwt_identity()
-    identity = json.loads(identity_str)
-    current_user_id = identity["id"]
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    current_user_id = identity["id"] if isinstance(identity, dict) else identity
 
     if not updates:
         return jsonify({"error": "No updates provided"}), 400

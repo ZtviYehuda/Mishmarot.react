@@ -142,7 +142,7 @@ export default function DashboardPage() {
   const chartDescription = currentTeam ? `פירוט נוכחות לחוליית ${currentTeam.name}` :
     currentSection ? `פירוט נוכחות למדור ${currentSection.name}` :
       currentDept ? `פירוט נוכחות למחלקת ${currentDept.name}` :
-        "תצוגה מלאה של כלל המשרתים ביחידה";
+        "תצוגה מלאה של כלל השוטרים ביחידה";
 
   const handleStatusClick = (statusId: number, statusName: string, color: string) => {
     setSelectedStatusData({ id: statusId, name: statusName, color });

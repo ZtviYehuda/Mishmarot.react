@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import apiClient from "@/config/api.client";
 import * as endpoints from "@/config/auth.endpoints";
 import type { AuthUser, LoginResponse } from "@/types/auth.types";
@@ -30,13 +30,6 @@ export const useAuth = () => {
       setLoading(false);
     }
   }, []);
-
-  // Load user on mount
-  useEffect(() => {
-    if (!localStorage.getItem("token")) return;
-
-    fetchUser();
-  }, []); // Empty dependency array - run only once on mount
 
   // Login Function
   const login = async (personal_number: string, password: string) => {
@@ -77,9 +70,12 @@ export const useAuth = () => {
   const changePassword = async (newPassword: string) => {
     setLoading(true);
     try {
-      const { data } = await apiClient.post(endpoints.AUTH_CHANGE_PASSWORD_ENDPOINT, {
-        new_password: newPassword,
-      });
+      const { data } = await apiClient.post(
+        endpoints.AUTH_CHANGE_PASSWORD_ENDPOINT,
+        {
+          new_password: newPassword,
+        },
+      );
 
       if (data.success) {
         // Refresh user data to update must_change_password flag

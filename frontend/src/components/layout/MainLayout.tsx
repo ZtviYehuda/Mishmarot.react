@@ -25,7 +25,7 @@ export default function MainLayout() {
 
   const navItems = [
     { name: "לוח בקרה", path: "/", icon: LayoutDashboard },
-    { name: "ניהול עובדים", path: "/employees", icon: Users },
+    { name: "ניהול שוטרים", path: "/employees", icon: Users },
     { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
     { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
     { name: "הגדרות", path: "/settings", icon: Settings },
@@ -46,7 +46,7 @@ export default function MainLayout() {
         {/* Sidebar Header */}
         <div className="h-16 flex items-center px-4 border-b border-slate-100 dark:border-border/50">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-9 h-9 rounded-full bg-[#0074ff] flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">
+            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             {isSidebarOpen && (
@@ -54,7 +54,7 @@ export default function MainLayout() {
                 <span className="font-black text-[#001e30] text-sm tracking-tight dark:text-white leading-none">
                   gov.il
                 </span>
-                <span className="text-[10px] font-bold text-[#0074ff] uppercase tracking-wider mt-1">
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1">
                   פורטל יחידה
                 </span>
               </div>
@@ -75,16 +75,16 @@ export default function MainLayout() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative",
                   isActive
-                    ? "bg-[#eff6ff] text-[#0074ff] dark:bg-primary/10 dark:text-primary"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0074ff] dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground",
+                    ? "bg-primary/5 text-primary"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-primary dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground",
                 )}
               >
                 <Icon
                   className={cn(
                     "w-5 h-5 shrink-0 transition-transform duration-300 group-hover:scale-105",
                     isActive
-                      ? "text-[#0074ff]"
-                      : "text-slate-400 group-hover:text-[#0074ff]",
+                      ? "text-primary"
+                      : "text-slate-400 group-hover:text-primary",
                   )}
                 />
                 {isSidebarOpen && (
@@ -93,7 +93,7 @@ export default function MainLayout() {
                   </span>
                 )}
                 {isActive && (
-                  <div className="absolute left-1 w-1 h-5 bg-[#0074ff] rounded-full" />
+                  <div className="absolute left-1 w-1 h-5 bg-primary rounded-full" />
                 )}
               </Link>
             );
@@ -108,7 +108,7 @@ export default function MainLayout() {
               to={`/employees/${user?.id}`}
               className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 border border-slate-100 dark:bg-muted/30 dark:border-border/50 hover:bg-slate-100 dark:hover:bg-muted/50 transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[#0074ff] font-black text-[10px] shrink-0 dark:bg-slate-800 dark:border-slate-700">
+              <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-primary font-black text-[10px] shrink-0 dark:bg-slate-800 dark:border-slate-700">
                 {user?.first_name?.[0]}
                 {user?.last_name?.[0]}
               </div>
@@ -122,8 +122,11 @@ export default function MainLayout() {
               </div>
             </Link>
           ) : (
-            <Link to={`/employees/${user?.id}`} className="flex justify-center transition-transform hover:scale-105">
-              <div className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-[#0074ff] font-black text-[10px] dark:bg-slate-800 dark:border-slate-700 shadow-sm">
+            <Link
+              to={`/employees/${user?.id}`}
+              className="flex justify-center transition-transform hover:scale-105"
+            >
+              <div className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-primary font-black text-[10px] dark:bg-slate-800 dark:border-slate-700 shadow-sm">
                 {user?.first_name?.[0]}
               </div>
             </Link>
@@ -134,7 +137,7 @@ export default function MainLayout() {
             <button
               onClick={toggleTheme}
               title={theme === "dark" ? "Light Mode" : "Dark Mode"}
-              className="flex-grow h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-[#0074ff] transition-all border border-transparent hover:border-slate-100 dark:hover:bg-muted dark:hover:border-border"
+              className="flex-grow h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-primary transition-all border border-transparent hover:border-slate-100 dark:hover:bg-muted dark:hover:border-border"
             >
               {theme === "dark" ? (
                 <Sun className="w-4 h-4" />
@@ -160,7 +163,7 @@ export default function MainLayout() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-[#0074ff] hover:bg-slate-50 rounded-lg transition-all"
+              className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-all"
             >
               {isSidebarOpen ? (
                 <X className="w-4 h-4" />
@@ -177,7 +180,7 @@ export default function MainLayout() {
                 {location.pathname === "/"
                   ? "לוח בקרה מרכזי"
                   : navItems.find((n) => n.path === location.pathname)?.name ||
-                  "דף מערכת"}
+                    "דף מערכת"}
               </h2>
             </div>
           </div>

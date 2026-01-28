@@ -155,7 +155,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                 עדכון נוכחות יומי
                             </DialogTitle>
                             <DialogDescription className="text-sm font-bold text-slate-400">
-                                אשר או עדכן את הסטטוס הנוכחי עבור כלל המשרתים
+                                אשר או עדכן את הסטטוס הנוכחי עבור כלל השוטרים
                             </DialogDescription>
                         </div>
                         <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 border border-indigo-100 dark:border-indigo-800">
@@ -185,7 +185,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                         ) : filteredList.length === 0 ? (
                             <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-2">
                                 <AlertCircle className="w-8 h-8 opacity-20" />
-                                <span className="text-sm font-bold">לא נמצאו משרתים</span>
+                                <span className="text-sm font-bold">לא נמצאו שוטרים</span>
                             </div>
                         ) : (
                             filteredList.map((emp) => {
@@ -287,7 +287,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                     <div className="flex items-start gap-3 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-800/20 mb-2 shadow-sm">
                         <AlertCircle className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
                         <p className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 leading-relaxed">
-                            אישור הפעולה יעדכן את הסטטוס עבור {Object.keys(bulkUpdates).length} משרתים. סטטוסים שלא שונו יאושררו מחדש להיום, וסטטוסים ששונו ירשמו עם התאריכים שהוגדרו.
+                            אישור הפעולה יעדכן את הסטטוס עבור {Object.keys(bulkUpdates).length} שוטרים. סטטוסים שלא שונו יאושררו מחדש להיום, וסטטוסים ששונו ירשמו עם התאריכים שהוגדרו.
                         </p>
                     </div>
 

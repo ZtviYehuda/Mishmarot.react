@@ -33,7 +33,7 @@ export const DashboardStatusTable = ({
                         style={{ backgroundColor: statusColor }}
                     />
                     <CardTitle className="text-lg font-black text-[#001e30] dark:text-white">
-                        פירוט משרתים בסטטוס: {statusName}
+                        פירוט שוטרים בסטטוס: {statusName}
                     </CardTitle>
                     <span className="text-xs font-bold text-slate-400 mr-auto bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                         {employees.length} רשומות

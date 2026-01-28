@@ -13,7 +13,7 @@ class EmployeeModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
                 SELECT id, first_name, last_name, personal_number, 
-                       password_hash, must_change_password, is_admin, is_commander, national_id
+                       password_hash, must_change_password, is_admin, is_commander
                 FROM employees 
                 WHERE personal_number = %s AND is_active = TRUE
             """
@@ -25,11 +25,6 @@ class EmployeeModel:
                 # Check actual password hash
                 if user["password_hash"] and check_password_hash(
                     user["password_hash"], password_input
-                ):
-                    is_valid = True
-                # Check initial password (national_id) if forced change is required
-                elif user["must_change_password"] and str(user["national_id"]) == str(
-                    password_input
                 ):
                     is_valid = True
 
@@ -48,7 +43,8 @@ class EmployeeModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
-                SELECT e.*, 
+                SELECT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number,
+                       e.must_change_password, e.is_admin, e.is_commander,
                        d.name as department_name, 
                        s.name as section_name, 
                        t.name as team_name,
@@ -57,8 +53,8 @@ class EmployeeModel:
                        st.color as status_color,
                        al.start_datetime as last_status_update,
                        r.name as role_name,
-                       COALESCE(e.department_id, d.id) as assigned_department_id,
-                       COALESCE(e.section_id, s.id) as assigned_section_id,
+                       d.id as assigned_department_id,
+                       s.id as assigned_section_id,
                        (SELECT id FROM departments WHERE commander_id = e.id LIMIT 1) as commands_department_id_direct,
                        (SELECT id FROM sections WHERE commander_id = e.id LIMIT 1) as commands_section_id_direct,
                        (SELECT id FROM teams WHERE commander_id = e.id LIMIT 1) as commands_team_id
@@ -78,56 +74,62 @@ class EmployeeModel:
             """
             cur.execute(query, (emp_id,))
             user = cur.fetchone()
-            
+
             if user:
                 # Convert to standard dict to be safe and mutable
                 user = dict(user)
-                
+
                 # Assigned units are already partially handled by COALESCE in SQL.
                 # Let's ensure they are set and integers where possible.
-                user['assigned_department_id'] = user.get('assigned_department_id')
-                user['assigned_section_id'] = user.get('assigned_section_id')
-                user['assigned_team_id'] = user.get('team_id')
+                user["assigned_department_id"] = user.get("assigned_department_id")
+                user["assigned_section_id"] = user.get("assigned_section_id")
+                user["assigned_team_id"] = user.get("team_id")
 
                 # Calculate effective command hierarchy
                 # Calculate effective command hierarchy
                 # STRICT SCOPING: Only set the ID for the level they actually command.
                 # Do NOT bubble up to parents - that causes the system to think they command the parent unit.
-                
-                if user.get('commands_section_id_direct'):
-                    user['commands_section_id'] = user['commands_section_id_direct']
-                    user['commands_department_id'] = None # They command the section, not the department
-                elif user.get('commands_team_id'):
-                    # commands_team_id is usually a column on the user itself for "commander of team X"? 
+
+                if user.get("commands_section_id_direct"):
+                    user["commands_section_id"] = user["commands_section_id_direct"]
+                    user["commands_department_id"] = (
+                        None  # They command the section, not the department
+                    )
+                elif user.get("commands_team_id"):
+                    # commands_team_id is usually a column on the user itself for "commander of team X"?
                     # Actually, the SQL query earlier didn't show 'commands_team_id' column on employees table?
                     # Wait, let's check if 'commands_team_id' exists in the user dict.
                     # The get_all_sql in line 50+ didn't fetch a 'commands_team_id' column.
                     # It fetched (SELECT id FROM teams WHERE commander_id = e.id) maybe?
                     # Let's check get_employee_by_id query.
-                    pass 
-                
+                    pass
+
                     # Assuming commands_team_id is already in 'user' from the query or earlier logic?
                     # Looking at lines 60-65 in file (not visible here but assumed):
                     # Queries likely fetch 'commands_section_id_direct', 'commands_department_id_direct'.
                     # Did it fetch team commander?
-                    
-                    # Correction: I need to check how commands_team_id is populated. 
+
+                    # Correction: I need to check how commands_team_id is populated.
                     # If I look at the previous context (Step 1255), line 60:
                     # (SELECT id FROM departments WHERE commander_id = e.id LIMIT 1) as commands_department_id_direct
                     # I should assume there is similar for section and team.
-                    
-                    user['commands_section_id'] = None
-                    user['commands_department_id'] = None
+
+                    user["commands_section_id"] = None
+                    user["commands_department_id"] = None
                 else:
-                    user['commands_department_id'] = user.get('commands_department_id_direct')
-                    user['commands_section_id'] = None
-                
-                if user.get('is_commander'):
-                    print(f"[DEBUG] get_employee_by_id - Final command IDs: dept={user.get('commands_department_id')}, sec={user.get('commands_section_id')}, team={user.get('commands_team_id')}")
+                    user["commands_department_id"] = user.get(
+                        "commands_department_id_direct"
+                    )
+                    user["commands_section_id"] = None
+
+                if user.get("is_commander"):
+                    print(
+                        f"[DEBUG] get_employee_by_id - Final command IDs: dept={user.get('commands_department_id')}, sec={user.get('commands_section_id')}, team={user.get('commands_team_id')}"
+                    )
 
                 # Convert dates to strings for JSON serialization
                 for key, value in user.items():
-                    if hasattr(value, 'isoformat'):
+                    if hasattr(value, "isoformat"):
                         user[key] = value.isoformat()
 
                 return user
@@ -179,10 +181,20 @@ class EmployeeModel:
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
                     query += " AND (d.id = %s OR d_dir.id = %s)"
-                    params.extend([requesting_user["commands_department_id"], requesting_user["commands_department_id"]])
+                    params.extend(
+                        [
+                            requesting_user["commands_department_id"],
+                            requesting_user["commands_department_id"],
+                        ]
+                    )
                 elif requesting_user.get("commands_section_id"):
                     query += " AND (s.id = %s OR s_dir.id = %s)"
-                    params.extend([requesting_user["commands_section_id"], requesting_user["commands_section_id"]])
+                    params.extend(
+                        [
+                            requesting_user["commands_section_id"],
+                            requesting_user["commands_section_id"],
+                        ]
+                    )
                 elif requesting_user.get("commands_team_id"):
                     query += " AND t.id = %s"
                     params.append(requesting_user["commands_team_id"])
@@ -191,11 +203,11 @@ class EmployeeModel:
                     # or just for security - they only see themselves if no scope found
                     query += " AND e.id = %s"
                     params.append(requesting_user["id"])
-            
+
             # Default to active only unless specified otherwise
             if not filters or not filters.get("include_inactive"):
                 query += " AND e.is_active = TRUE"
-            
+
             if filters:
                 if filters.get("search"):
                     term = f"%{filters['search']}%"
@@ -214,7 +226,7 @@ class EmployeeModel:
             results = cur.fetchall()
             for row in results:
                 for key, value in row.items():
-                    if hasattr(value, 'isoformat'):
+                    if hasattr(value, "isoformat"):
                         row[key] = value.isoformat()
             return results
         finally:
@@ -270,43 +282,58 @@ class EmployeeModel:
                 ),
             )
             new_id = cur.fetchone()[0]
-            
+
             # If commander, update the appropriate organizational level
             if data.get("is_commander", False):
                 team_id = data.get("team_id")
-                
+
                 if team_id:
                     # Commander of team
-                    cur.execute("UPDATE teams SET commander_id = %s WHERE id = %s", (new_id, team_id))
+                    cur.execute(
+                        "UPDATE teams SET commander_id = %s WHERE id = %s",
+                        (new_id, team_id),
+                    )
                     # Get section_id for possible section command
-                    cur.execute("SELECT section_id FROM teams WHERE id = %s", (team_id,))
+                    cur.execute(
+                        "SELECT section_id FROM teams WHERE id = %s", (team_id,)
+                    )
                     result = cur.fetchone()
                     section_id = result[0] if result else None
                 else:
                     # Need to find section_id from frontend selection
                     # This will be passed as a separate field
                     section_id = data.get("section_id")
-                
+
                 # If no team but has section, commander of section
                 if not team_id and section_id:
-                    cur.execute("UPDATE sections SET commander_id = %s WHERE id = %s", (new_id, section_id))
+                    cur.execute(
+                        "UPDATE sections SET commander_id = %s WHERE id = %s",
+                        (new_id, section_id),
+                    )
                     # Get department_id for possible department command
-                    cur.execute("SELECT department_id FROM sections WHERE id = %s", (section_id,))
+                    cur.execute(
+                        "SELECT department_id FROM sections WHERE id = %s",
+                        (section_id,),
+                    )
                     result = cur.fetchone()
                     department_id = result[0] if result else None
                 else:
                     department_id = data.get("department_id")
-                
+
                 # If no team and no section but has department, commander of department
                 if not team_id and not section_id and department_id:
-                    cur.execute("UPDATE departments SET commander_id = %s WHERE id = %s", (new_id, department_id))
-            
+                    cur.execute(
+                        "UPDATE departments SET commander_id = %s WHERE id = %s",
+                        (new_id, department_id),
+                    )
+
             conn.commit()
             return new_id
         except Exception as e:
             conn.rollback()
             print(f"Error creating employee: {e}")
             import traceback
+
             print(traceback.format_exc())
             raise Exception(f"Failed to create employee: {str(e)}")
         finally:
@@ -319,32 +346,32 @@ class EmployeeModel:
             return False
         try:
             cur = conn.cursor()
-            
+
             # Map of allowed fields to their DB column names
             # (In this case they mostly match, but good for security checking)
             allowed_fields = {
                 "first_name": "first_name",
-                "last_name": "last_name", 
-                "personal_number": "personal_number", 
+                "last_name": "last_name",
+                "personal_number": "personal_number",
                 "national_id": "national_id",
-                "phone_number": "phone_number", 
-                "city": "city", 
-                "birth_date": "birth_date", 
-                "enlistment_date": "enlistment_date", 
-                "discharge_date": "discharge_date", 
+                "phone_number": "phone_number",
+                "city": "city",
+                "birth_date": "birth_date",
+                "enlistment_date": "enlistment_date",
+                "discharge_date": "discharge_date",
                 "assignment_date": "assignment_date",
-                "team_id": "team_id", 
-                "section_id": "section_id", 
+                "team_id": "team_id",
+                "section_id": "section_id",
                 "department_id": "department_id",
-                "role_id": "role_id", 
+                "role_id": "role_id",
                 "service_type_id": "service_type_id",
-                "security_clearance": "security_clearance", 
-                "police_license": "police_license", 
+                "security_clearance": "security_clearance",
+                "police_license": "police_license",
                 "emergency_contact": "emergency_contact",
-                "is_commander": "is_commander", 
+                "is_commander": "is_commander",
                 "is_admin": "is_admin",
                 "is_active": "is_active",
-                "must_change_password": "must_change_password"
+                "must_change_password": "must_change_password",
             }
 
             # Business Rule: If commander status changes, sync must_change_password
@@ -358,14 +385,14 @@ class EmployeeModel:
                 if key in allowed_fields:
                     set_clauses.append(f"{allowed_fields[key]} = %s")
                     params.append(value)
-            
+
             if not set_clauses:
-                return True # Nothing to update
-            
+                return True  # Nothing to update
+
             params.append(emp_id)
-            
+
             query = f"UPDATE employees SET {', '.join(set_clauses)} WHERE id = %s"
-            
+
             cur.execute(query, tuple(params))
             conn.commit()
             return True
@@ -373,6 +400,7 @@ class EmployeeModel:
             conn.rollback()
             print(f"Error updating: {e}")
             import traceback
+
             print(traceback.format_exc())
             return False
         finally:

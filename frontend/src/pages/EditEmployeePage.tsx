@@ -204,7 +204,7 @@ export default function EditEmployeePage() {
 
             } catch (error) {
                 console.error("Failed to fetch data:", error);
-                toast.error("שגיאה בטעינת נתוני המשרת");
+                toast.error("שגיאה בטעינת נתוני השוטר");
             } finally {
                 setFetching(false);
             }
@@ -231,7 +231,7 @@ export default function EditEmployeePage() {
 
         const success = await updateEmployee(parseInt(id), payload);
         if (success) {
-            toast.success("תיק המשרת עודכן בהצלחה");
+            toast.success("תיק השוטר עודכן בהצלחה");
             navigate("/employees");
         }
         setLoading(false);
@@ -379,7 +379,7 @@ export default function EditEmployeePage() {
                                 <TabsContent value="personal" className="mt-0 focus-visible:outline-none">
                                     <Card className="border-none shadow-sm overflow-hidden rounded-3xl">
                                         <CardContent className="p-8 space-y-8">
-                                            <SectionHeader icon={User} title="מידע אישי בסיסי" description="עדכון פרטי זהות ופרטים אישיים של המשרת" />
+                                            <SectionHeader icon={User} title="מידע אישי בסיסי" description="עדכון פרטי זהות ופרטים אישיים של השוטר" />
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                                 <FormField label="שם פרטי" required>
@@ -469,7 +469,7 @@ export default function EditEmployeePage() {
                                     <div className="space-y-6">
                                         <Card className="border-none shadow-sm overflow-hidden rounded-3xl">
                                             <CardContent className="p-8">
-                                                <SectionHeader icon={Building2} title="מבנה ארגוני" description="הגדרת מיקום המשרת בעץ הארגוני (מחלקה -> מדור -> חולייה)" />
+                                                <SectionHeader icon={Building2} title="מבנה ארגוני" description="הגדרת מיקום השוטר בעץ הארגוני (מחלקה -> מדור -> חולייה)" />
 
                                                 <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                                                     <FormField label="מחלקה (Department)" required>
@@ -554,8 +554,8 @@ export default function EditEmployeePage() {
 
                                                         <div className="mt-4">
                                                             <ToggleCard
-                                                                label="משרת פעיל"
-                                                                description="האם המשרת נכלל כרגע במצבת הפעילה"
+                                                                label="שוטר פעיל"
+                                                                description="האם השוטר נכלל כרגע במצבת הפעילה"
                                                                 checked={formData.is_active ?? true}
                                                                 onChange={(v) => setFormData({ ...formData, is_active: v })}
                                                                 icon={User}
@@ -566,7 +566,7 @@ export default function EditEmployeePage() {
                                                             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-xl text-sm border border-blue-100 flex items-start gap-3">
                                                                 <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center shrink-0">💡</div>
                                                                 <div>
-                                                                    <strong>שים לב:</strong> המשרת יוגדר כמפקד הישיר של הדרג הארגוני אליו הוא משויך
+                                                                    <strong>שים לב:</strong> השוטר יוגדר כמפקד הישיר של הדרג הארגוני אליו הוא משויך
                                                                     ({formData.team_id ? 'חולייה' : selectedSectionId ? 'מדור' : selectedDeptId ? 'מחלקה' : 'מפקדה'}).
                                                                 </div>
                                                             </motion.div>
@@ -672,7 +672,7 @@ export default function EditEmployeePage() {
                                                 * בדוק את הפרטים לפני שמירה
                                             </span>
                                             <Button onClick={() => handleSubmit()} size="lg" className="rounded-xl px-12 bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-600/30 font-bold text-lg">
-                                                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "עדכן תיק עובד"}
+                                                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "עדכן תיק שוטר"}
                                             </Button>
                                         </div>
                                     </div>

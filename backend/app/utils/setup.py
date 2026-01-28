@@ -1,6 +1,7 @@
 from app.utils.db import get_db_connection
 from werkzeug.security import generate_password_hash
 
+
 def setup_database():
     """הרצת סקריפט הקמת הטבלאות והנתונים הראשוניים"""
     conn = get_db_connection()
@@ -10,7 +11,7 @@ def setup_database():
 
     try:
         cur = conn.cursor()
-        
+
         # 1. יצירת טבלאות תשתית (ללא מפתחות זרים עדיין למניעת מעגליות)
         tables = [
             """CREATE TABLE IF NOT EXISTS departments (
@@ -96,20 +97,39 @@ def setup_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 resolved_at TIMESTAMP,
                 resolved_by INTEGER REFERENCES employees(id)
-            );"""
+            );""",
         ]
 
         for table in tables:
             cur.execute(table)
 
+        # --- Migration: Add missing columns if table already existed ---
+        try:
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS section_id INTEGER;"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS department_id INTEGER;"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS national_id VARCHAR(9) UNIQUE;"
+            )
+        except Exception as e:
+            print(f"ℹ️ Migration info: {e}")
+            conn.rollback()
+            cur = conn.cursor()
+
         # 2. הזרקת נתוני בסיס (Roles, Statuses)
         cur.execute("SELECT COUNT(*) FROM roles")
         if cur.fetchone()[0] == 0:
-            cur.execute("INSERT INTO roles (name) VALUES ('מנהל מערכת'), ('מפקד'), ('חייל')")
-            
+            cur.execute(
+                "INSERT INTO roles (name) VALUES ('מנהל מערכת'), ('מפקד'), ('חייל')"
+            )
+
         cur.execute("SELECT COUNT(*) FROM status_types")
         if cur.fetchone()[0] == 0:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO status_types (name, color, is_presence) VALUES 
                 ('משרד', '#22c55e', TRUE),
                 ('חופשה', '#3b82f6', FALSE),
@@ -117,48 +137,53 @@ def setup_database():
                 ('קורס', '#8b5cf6', TRUE),
                 ('תגבור', '#f59e0b', TRUE),
                 ('חו"ל', '#0ea5e9', FALSE)
-            """)
+            """
+            )
 
         # 3. יצירת Admin דיפולטיבי (אם לא קיים)
         cur.execute("SELECT * FROM employees WHERE is_admin = TRUE")
         if not cur.fetchone():
             pw_hash = generate_password_hash("123456")
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO employees 
                 (first_name, last_name, personal_number, national_id, password_hash, is_admin, is_commander, must_change_password)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, ('Admin', 'System', 'admin', '000000000', pw_hash, True, True, False))
+            """,
+                ("Admin", "System", "admin", "000000000", pw_hash, True, True, False),
+            )
             print("✅ Default Admin created: User: admin, Pass: 123456")
-
 
         # 2b. הזרקת נתוני Service Types
         # 2b. הזרקת נתוני Service Types
         cur.execute("SELECT COUNT(*) FROM service_types")
         if cur.fetchone()[0] == 0:
             service_types = [
-                'קבע - קצין',
-                'קבע - נגד',
+                "קבע - קצין",
+                "קבע - נגד",
                 'שמ"ז',
-                'שירות לאומי',
+                "שירות לאומי",
                 'שח"מ',
                 'שח"מ חרדי',
-                'שירות אזרחי ביטחוני',
-                'מתנדב'
+                "שירות אזרחי ביטחוני",
+                "מתנדב",
             ]
 
             for st in service_types:
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO service_types (name)
                     VALUES (%s)
                     ON CONFLICT (name) DO NOTHING
-                """, (st,))
+                """,
+                    (st,),
+                )
 
             print("✅ Service Types inserted successfully.")
 
-
         conn.commit()
         print("✅ Database setup completed successfully.")
-        
+
     except Exception as e:
         print(f"❌ Database setup failed: {e}")
         conn.rollback()

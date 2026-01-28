@@ -73,7 +73,7 @@ export const EmployeesChart = ({
       return (
         <div className="bg-slate-900 text-white px-3 py-2 rounded shadow-lg text-sm border border-slate-700">
           <p className="font-semibold">{data.name}</p>
-          <p className="text-sm">{data.value} משרתים</p>
+          <p className="text-sm">{data.value} שוטרים</p>
           <p className="text-xs text-slate-300 mt-1">{data.percentage}% מהיחידה</p>
           <p className="text-[10px] text-slate-400 mt-1">לחץ לפירוט</p>
         </div>

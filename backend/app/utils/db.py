@@ -1,15 +1,25 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from flask import current_app, g
+from flask import current_app, g, has_app_context
 
 def get_db_connection():
     """יצירת חיבור למסד הנתונים"""
+    # בדיקה אם אנחנו בתוך קונטקסט של אפליקציה
+    if not has_app_context():
+        # זה קורה אם מנסים להתחבר מחוץ לבקשה, כמו בסקריפט ההקמה
+        # במקרה כזה, נייבא את האפליקציה ישירות כדי לקבל גישה לתצורה
+        from run import app
+        config = app.config
+    else:
+        # הדרך הרגילה והמועדפת בתוך בקשת HTTP
+        config = current_app.config
+
     try:
         conn = psycopg2.connect(
-            host=current_app.config['DB_HOST'],
-            database=current_app.config['DB_NAME'],
-            user=current_app.config['DB_USER'],
-            password=current_app.config['DB_PASS']
+            host=config.get('DB_HOST'),
+            database=config.get('DB_NAME'),
+            user=config.get('DB_USER'),
+            password=config.get('DB_PASS') # שימוש ב- .get() בטוח יותר
         )
         return conn
     except Exception as e:

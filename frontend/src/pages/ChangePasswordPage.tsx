@@ -89,7 +89,7 @@ export default function ChangePasswordPage() {
                         <div className="text-sm leading-relaxed">
                             <span className="font-bold text-amber-700 text-base">חובה להחליף סיסמה.</span>
                             <p className="text-amber-600 font-medium">
-                                זוהי התחברות ראשונית למערכת המשרת. למען אבטחת המידע, עליך לבחור סיסמה אישית חדשה שתשמש אותך בכניסות הבאות.
+                                זוהי התחברות ראשונית למערכת השוטר. למען אבטחת המידע, עליך לבחור סיסמה אישית חדשה שתשמש אותך בכניסות הבאות.
                             </p>
                         </div>
                     </div>
