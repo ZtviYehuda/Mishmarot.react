@@ -146,31 +146,31 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl p-0 overflow-hidden rounded-[32px] border-none bg-white dark:bg-slate-950 shadow-2xl flex flex-col max-h-[90vh]" dir="rtl">
+            <DialogContent className="max-w-3xl p-0 overflow-hidden rounded-[32px] border-none bg-card shadow-2xl flex flex-col max-h-[90vh]" dir="rtl">
 
                 <DialogHeader className="p-8 pb-4 text-right">
                     <div className="flex items-center justify-between gap-4">
                         <div>
-                            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white mb-1">
+                            <DialogTitle className="text-2xl font-black text-foreground mb-1">
                                 עדכון נוכחות יומי
                             </DialogTitle>
-                            <DialogDescription className="text-sm font-bold text-slate-400">
+                            <DialogDescription className="text-sm font-bold text-muted-foreground">
                                 אשר או עדכן את הסטטוס הנוכחי עבור כלל השוטרים
                             </DialogDescription>
                         </div>
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 border border-indigo-100 dark:border-indigo-800">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                             <Calendar className="w-6 h-6" />
                         </div>
                     </div>
 
                     <div className="relative mt-6">
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                         <input
                             type="text"
                             placeholder="חיפוש מהיר ברשימה..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full h-11 pr-10 pl-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20"
+                            className="w-full h-11 pr-10 pl-4 bg-muted/50 border-input border rounded-2xl text-sm font-bold text-foreground focus:ring-2 focus:ring-ring/20 outline-none"
                         />
                     </div>
                 </DialogHeader>
@@ -179,11 +179,11 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                     <div className="space-y-3">
                         {fetching ? (
                             <div className="py-20 flex flex-col items-center justify-center gap-3">
-                                <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-                                <span className="text-xs font-bold text-slate-400">טוען נתונים...</span>
+                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                <span className="text-xs font-bold text-muted-foreground">טוען נתונים...</span>
                             </div>
                         ) : filteredList.length === 0 ? (
-                            <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-2">
+                            <div className="py-20 flex flex-col items-center justify-center text-muted-foreground gap-2">
                                 <AlertCircle className="w-8 h-8 opacity-20" />
                                 <span className="text-sm font-bold">לא נמצאו שוטרים</span>
                             </div>
@@ -196,23 +196,23 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                         className={cn(
                                             "flex flex-col p-4 rounded-2xl transition-all border",
                                             current?.isChanged
-                                                ? "bg-indigo-50/30 border-indigo-100 dark:bg-indigo-900/10 dark:border-indigo-800"
-                                                : "bg-slate-50/50 dark:bg-slate-900/50 border-transparent hover:border-slate-100 dark:hover:border-slate-800"
+                                                ? "bg-primary/5 border-primary/20"
+                                                : "bg-muted/30 border-transparent hover:border-border"
                                         )}
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className={cn(
                                                     "w-10 h-10 rounded-xl shadow-sm flex items-center justify-center transition-colors",
-                                                    current?.isChanged ? "bg-indigo-600 text-white" : "bg-white dark:bg-slate-800 text-slate-400"
+                                                    current?.isChanged ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
                                                 )}>
                                                     <User className="w-5 h-5" />
                                                 </div>
                                                 <div className="flex flex-col text-right">
-                                                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                                                    <span className="text-sm font-bold text-foreground">
                                                         {emp.first_name} {emp.last_name}
                                                     </span>
-                                                    <span className="text-[10px] font-medium text-slate-400">
+                                                    <span className="text-[10px] font-medium text-muted-foreground">
                                                         מחלקת {emp.department_name || 'כללי'} • {emp.personal_number}
                                                     </span>
                                                 </div>
@@ -223,7 +223,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                                     value={current?.status_id.toString()}
                                                     onValueChange={(val) => handleUpdateIndividual(emp.id, val)}
                                                 >
-                                                    <SelectTrigger className="h-10 text-right font-bold text-[11px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl" dir="rtl">
+                                                    <SelectTrigger className="h-10 text-right font-bold text-[11px] bg-card border-input rounded-xl" dir="rtl">
                                                         <SelectValue placeholder="בחר סטטוס" />
                                                     </SelectTrigger>
                                                     <SelectContent dir="rtl">
@@ -234,7 +234,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                                                 className="text-right font-bold text-[11px]"
                                                             >
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: type.color }} />
+                                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: type.color || "var(--muted-foreground)" }} />
                                                                     {type.name}
                                                                 </div>
                                                             </SelectItem>
@@ -246,31 +246,31 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
 
                                         {/* Optional Dates if status changed */}
                                         {current?.isChanged && (
-                                            <div className="mt-4 pt-5 border-t border-indigo-100 dark:border-indigo-800/50 flex flex-wrap items-center gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="mt-4 pt-5 border-t border-primary/10 flex flex-wrap items-center gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
                                                 <div className="flex flex-col gap-2 flex-1 min-w-[180px]">
-                                                    <span className="text-[11px] font-black text-indigo-500 pr-1 uppercase tracking-wider">תאריך התחלה:</span>
+                                                    <span className="text-[11px] font-black text-primary pr-1 uppercase tracking-wider">תאריך התחלה:</span>
                                                     <div className="relative">
-                                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-300" />
+                                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/50" />
                                                         <input
                                                             type="date"
                                                             value={current.start_date}
                                                             onChange={(e) => handleDateChange(emp.id, 'start_date', e.target.value)}
-                                                            className="w-full bg-white dark:bg-slate-800 border-2 border-indigo-50 dark:border-indigo-900/30 rounded-xl h-12 text-sm font-black pl-10 pr-4 text-right focus:border-indigo-500 focus:ring-0 transition-all"
+                                                            className="w-full bg-card border-2 border-primary/10 rounded-xl h-12 text-sm font-black pl-10 pr-4 text-right focus:border-primary focus:ring-0 transition-all outline-none"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div className="pt-6 hidden sm:block">
-                                                    <ArrowRight className="w-5 h-5 text-indigo-200" />
+                                                    <ArrowRight className="w-5 h-5 text-muted-foreground/30" />
                                                 </div>
                                                 <div className="flex flex-col gap-2 flex-1 min-w-[180px]">
-                                                    <span className="text-[11px] font-black text-indigo-500 pr-1 uppercase tracking-wider">תאריך סיום (אופציונלי):</span>
+                                                    <span className="text-[11px] font-black text-primary pr-1 uppercase tracking-wider">תאריך סיום (אופציונלי):</span>
                                                     <div className="relative">
-                                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-200" />
+                                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
                                                         <input
                                                             type="date"
                                                             value={current.end_date || ""}
                                                             onChange={(e) => handleDateChange(emp.id, 'end_date', e.target.value)}
-                                                            className="w-full bg-white dark:bg-slate-800 border-2 border-indigo-50 dark:border-indigo-900/30 rounded-xl h-12 text-sm font-black pl-10 pr-4 text-right focus:border-indigo-500 focus:ring-0 transition-all placeholder:text-slate-300"
+                                                            className="w-full bg-card border-2 border-primary/10 rounded-xl h-12 text-sm font-black pl-10 pr-4 text-right focus:border-primary focus:ring-0 transition-all placeholder:text-muted-foreground/30 outline-none"
                                                         />
                                                     </div>
                                                 </div>
@@ -283,10 +283,10 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                     </div>
                 </div>
 
-                <div className="p-8 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-3">
-                    <div className="flex items-start gap-3 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-800/20 mb-2 shadow-sm">
-                        <AlertCircle className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
-                        <p className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 leading-relaxed">
+                <div className="p-8 bg-muted/40 flex flex-col gap-3">
+                    <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/10 mb-2 shadow-sm">
+                        <AlertCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                        <p className="text-[11px] font-bold text-foreground/70 leading-relaxed">
                             אישור הפעולה יעדכן את הסטטוס עבור {Object.keys(bulkUpdates).length} שוטרים. סטטוסים שלא שונו יאושררו מחדש להיום, וסטטוסים ששונו ירשמו עם התאריכים שהוגדרו.
                         </p>
                     </div>
@@ -295,7 +295,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                         <Button
                             onClick={handleSubmit}
                             disabled={loading || Object.keys(bulkUpdates).length === 0}
-                            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl h-12 shadow-xl shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-30 gap-2 text-sm"
+                            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-12 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-30 gap-2 text-sm"
                         >
                             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                             אישור ושליחת כל הדיווחים
@@ -303,7 +303,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                         <Button
                             variant="outline"
                             onClick={() => onOpenChange(false)}
-                            className="px-8 border-slate-200 dark:border-slate-800 rounded-2xl h-12 font-bold text-slate-500 hover:bg-white transition-all shadow-sm"
+                            className="px-8 border-input bg-card rounded-2xl h-12 font-bold text-muted-foreground hover:bg-muted transition-all shadow-sm"
                         >
                             ביטול
                         </Button>

@@ -48,14 +48,14 @@ const SectionHeader = ({
   description: string;
 }) => (
   <div className="flex items-start gap-4 mb-6" dir="rtl">
-    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-primary/80 shadow-lg shadow-primary/20 flex items-center justify-center text-white shrink-0">
+    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-primary/80 shadow-lg shadow-primary/20 flex items-center justify-center text-primary-foreground shrink-0">
       <Icon className="w-6 h-6" />
     </div>
     <div>
-      <h2 className="text-xl font-black text-slate-900 dark:text-white leading-tight text-right">
+      <h2 className="text-xl font-black text-foreground leading-tight text-right">
         {title}
       </h2>
-      <p className="text-sm text-slate-500 font-bold pt-1 text-right">
+      <p className="text-sm text-muted-foreground font-bold pt-1 text-right">
         {description}
       </p>
     </div>
@@ -74,14 +74,14 @@ const FormField = ({
   error?: string;
 }) => (
   <div className="space-y-2 group" dir="rtl">
-    <label className="text-sm font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1 group-focus-within:text-blue-600 transition-colors">
+    <label className="text-sm font-bold text-muted-foreground/80 flex items-center gap-1 group-focus-within:text-primary transition-colors">
       {label}
-      {required && <span className="text-red-500">*</span>}
+      {required && <span className="text-destructive">*</span>}
     </label>
     <div className="relative">
       {children}
       {error && (
-        <span className="text-xs text-red-500 absolute -bottom-5 right-0 font-medium">
+        <span className="text-xs text-destructive absolute -bottom-5 right-0 font-medium">
           {error}
         </span>
       )}
@@ -107,8 +107,8 @@ const ToggleCard = ({
     className={cn(
       "relative overflow-hidden flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer select-none group hover:shadow-md",
       checked
-        ? "bg-blue-50/50 border-blue-500 dark:bg-blue-900/20 dark:border-blue-500"
-        : "bg-white border-slate-100 dark:bg-slate-800 dark:border-slate-700 hover:border-slate-300",
+        ? "bg-primary/5 border-primary shadow-sm"
+        : "bg-card border-border hover:border-accent",
     )}
     dir="rtl"
   >
@@ -118,8 +118,8 @@ const ToggleCard = ({
           className={cn(
             "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
             checked
-              ? "bg-blue-500 text-white shadow-md shadow-blue-500/20"
-              : "bg-slate-100 text-slate-400 dark:bg-slate-700",
+              ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+              : "bg-muted text-muted-foreground",
           )}
         >
           <Icon className="w-5 h-5" />
@@ -130,14 +130,14 @@ const ToggleCard = ({
           className={cn(
             "block text-base font-bold transition-colors text-right",
             checked
-              ? "text-blue-700 dark:text-blue-400"
-              : "text-slate-700 dark:text-slate-300",
+              ? "text-primary"
+              : "text-foreground/80",
           )}
         >
           {label}
         </span>
         {description && (
-          <span className="text-xs text-slate-400 font-medium text-right block">
+          <span className="text-xs text-muted-foreground/60 font-medium text-right block">
             {description}
           </span>
         )}
@@ -146,7 +146,7 @@ const ToggleCard = ({
     <div
       className={cn(
         "w-12 h-7 rounded-full relative transition-colors duration-300 shadow-inner",
-        checked ? "bg-blue-500" : "bg-slate-200 dark:bg-slate-600",
+        checked ? "bg-primary" : "bg-muted-foreground/20",
       )}
     >
       <div
@@ -302,12 +302,12 @@ export default function EditEmployeePage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin"></div>
+          <div className="w-16 h-16 border-4 border-muted border-t-primary rounded-full animate-spin"></div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 bg-white rounded-full"></div>
+            <div className="w-8 h-8 bg-background rounded-full"></div>
           </div>
         </div>
-        <span className="mt-4 text-sm font-bold text-slate-400 animate-pulse">
+        <span className="mt-4 text-sm font-bold text-muted-foreground animate-pulse">
           טוען נתונים...
         </span>
       </div>
@@ -327,7 +327,7 @@ export default function EditEmployeePage() {
   }) => (
     <TabsTrigger
       value={value}
-      className="flex-1 min-w-[120px] py-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 rounded-xl transition-all border border-transparent data-[state=active]:border-slate-200/60 font-bold text-sm gap-2 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+      className="flex-1 min-w-[120px] py-4 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary rounded-xl transition-all border border-transparent data-[state=active]:border-border font-bold text-sm gap-2 text-muted-foreground hover:bg-muted hover:text-foreground/80"
     >
       <Icon className="w-4 h-4 mb-0.5" />
       {label}
@@ -336,7 +336,7 @@ export default function EditEmployeePage() {
 
   return (
     <div
-      className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20 animate-in fade-in duration-500"
+      className="min-h-screen bg-background pb-20 animate-in fade-in duration-500"
       dir="rtl"
     >
       <div className="px-6">
@@ -347,20 +347,20 @@ export default function EditEmployeePage() {
             subtitle={`עדכון פרטים אישיים, שיוך ארגוני והרשאות אבטחה המזהה המערכתי: ${employee.personal_number}`}
             category="ניהול שוטרים"
             categoryLink="/employees"
-            iconClassName="from-indigo-50 to-indigo-100 border-indigo-200"
+            iconClassName="from-primary/10 to-primary/5 border-primary/20"
             badge={
               <div className="flex items-center gap-3">
                 <Button
                   variant="outline"
                   onClick={() => navigate("/employees")}
-                  className="border-slate-200 hover:bg-slate-50 h-11 px-6 rounded-xl font-bold shadow-sm"
+                  className="border-input hover:bg-muted h-11 px-6 rounded-xl font-bold shadow-sm text-muted-foreground"
                 >
                   ביטול
                 </Button>
                 <Button
                   onClick={() => handleSubmit()}
                   disabled={loading}
-                  className="bg-primary hover:opacity-90 text-white shadow-lg shadow-primary/20 rounded-xl px-8 h-11 font-black transition-all"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 rounded-xl px-8 h-11 font-black transition-all"
                 >
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -381,38 +381,38 @@ export default function EditEmployeePage() {
         {/* Visual Sidebar Profile Summary - Positioned for Logic RTL (Col 1) */}
         <div className="lg:col-span-3 space-y-6">
           <div className="lg:sticky lg:top-24 space-y-6">
-            <Card className="border-none shadow-lg shadow-slate-200/40 dark:shadow-none bg-white dark:bg-slate-800 rounded-3xl overflow-hidden ring-1 ring-slate-100 dark:ring-slate-700">
+            <Card className="border-none shadow-lg shadow-primary/5 bg-card rounded-3xl overflow-hidden ring-1 ring-border">
               <div className="p-8 flex flex-col items-center text-center">
                 {/* Minimal Avatar */}
-                <div className="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-3xl font-bold text-slate-600 dark:text-slate-300 mb-5 ring-4 ring-white dark:ring-slate-800 shadow-sm">
+                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-3xl font-bold text-foreground/70 mb-5 ring-4 ring-background shadow-sm">
                   {formData.first_name?.[0]}
                   {formData.last_name?.[0]}
                 </div>
 
                 {/* User Info */}
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                <h2 className="text-xl font-bold text-foreground mb-2">
                   {formData.first_name} {formData.last_name}
                 </h2>
-                <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-xs font-mono font-medium text-slate-500 tracking-wide">
+                <span className="px-3 py-1 rounded-full bg-muted text-xs font-mono font-medium text-muted-foreground tracking-wide">
                   {formData.personal_number || "-------"}
                 </span>
 
                 {/* Divider */}
-                <div className="w-full h-px bg-slate-100 dark:bg-slate-700 my-6" />
+                <div className="w-full h-px bg-border my-6" />
 
                 {/* Stats List - Clean */}
                 <div className="w-full space-y-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">דרגה/תפקיד</span>
-                    <div className="flex items-center gap-2 font-medium text-slate-900 dark:text-white">
+                    <span className="text-muted-foreground">דרגה/תפקיד</span>
+                    <div className="flex items-center gap-2 font-medium text-foreground">
                       {/* Role Name would go here if available */}
                       <span>--</span>
-                      <BadgeCheck className="w-4 h-4 text-blue-500" />
+                      <BadgeCheck className="w-4 h-4 text-primary" />
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">סיווג אבטחתי</span>
+                    <span className="text-muted-foreground">סיווג אבטחתי</span>
                     <div className="flex gap-1">
                       {[...Array(5)].map((_, i) => (
                         <div
@@ -420,8 +420,8 @@ export default function EditEmployeePage() {
                           className={cn(
                             "w-2 h-2 rounded-full",
                             i < (formData.security_clearance || 0)
-                              ? "bg-amber-500"
-                              : "bg-slate-200 dark:bg-slate-700",
+                              ? "bg-primary"
+                              : "bg-muted",
                           )}
                         />
                       ))}
@@ -429,13 +429,13 @@ export default function EditEmployeePage() {
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">סטטוס ניהולי</span>
+                    <span className="text-muted-foreground">סטטוס ניהולי</span>
                     <span
                       className={cn(
                         "font-medium",
                         formData.is_commander
-                          ? "text-blue-600"
-                          : "text-slate-400",
+                          ? "text-primary"
+                          : "text-muted-foreground/60",
                       )}
                     >
                       {formData.is_commander ? "מפקד" : "רגיל"}
@@ -455,7 +455,7 @@ export default function EditEmployeePage() {
             dir="rtl"
             className="w-full"
           >
-            <div className="bg-slate-100/50 dark:bg-slate-800/50 p-1.5 rounded-2xl mb-8 w-fit mx-auto lg:mx-0 lg:w-full overflow-x-auto">
+            <div className="bg-muted/50 p-1.5 rounded-2xl mb-8 w-fit mx-auto lg:mx-0 lg:w-full overflow-x-auto">
               <TabsList className="bg-transparent h-auto p-0 flex gap-1 w-full justify-start lg:justify-between min-w-[500px]">
                 <TabButton value="personal" label="פרטים אישיים" icon={User} />
                 <TabButton value="org" label="שיוך וארגון" icon={Building2} />
@@ -480,12 +480,11 @@ export default function EditEmployeePage() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* Tab 1: Personal */}
                 <TabsContent
                   value="personal"
                   className="mt-0 focus-visible:outline-none"
                 >
-                  <Card className="border-none shadow-sm overflow-hidden rounded-3xl">
+                  <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
                     <CardContent className="p-8 space-y-8">
                       <SectionHeader
                         icon={User}
@@ -503,7 +502,7 @@ export default function EditEmployeePage() {
                                 first_name: e.target.value,
                               })
                             }
-                            className="h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all rounded-xl text-right"
+                            className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl text-right"
                             placeholder="הזן שם פרטי"
                           />
                         </FormField>
@@ -516,7 +515,7 @@ export default function EditEmployeePage() {
                                 last_name: e.target.value,
                               })
                             }
-                            className="h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all rounded-xl text-right"
+                            className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl text-right"
                             placeholder="הזן שם משפחה"
                           />
                         </FormField>
@@ -529,7 +528,7 @@ export default function EditEmployeePage() {
                                 personal_number: e.target.value,
                               })
                             }
-                            className="h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all rounded-xl font-mono tracking-wide text-right"
+                            className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl font-mono tracking-wide text-right"
                             placeholder="1234567"
                           />
                         </FormField>
@@ -542,13 +541,13 @@ export default function EditEmployeePage() {
                                 national_id: e.target.value,
                               })
                             }
-                            className="h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all rounded-xl font-mono tracking-wide text-right"
+                            className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl font-mono tracking-wide text-right"
                             placeholder="012345678"
                           />
                         </FormField>
                       </div>
 
-                      <div className="w-full h-px bg-slate-100 my-8" />
+                      <div className="w-full h-px bg-border my-8" />
 
                       <SectionHeader
                         icon={Phone}
@@ -559,7 +558,7 @@ export default function EditEmployeePage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <FormField label="טלפון נייד">
                           <div className="relative">
-                            <Phone className="absolute right-3 top-3.5 w-5 h-5 text-slate-400" />
+                            <Phone className="absolute right-3 top-3.5 w-5 h-5 text-muted-foreground/50" />
                             <Input
                               value={formData.phone_number}
                               onChange={(e) =>
@@ -568,7 +567,7 @@ export default function EditEmployeePage() {
                                   phone_number: e.target.value,
                                 })
                               }
-                              className="h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all rounded-xl pr-10 text-right"
+                              className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl pr-10 text-right"
                               placeholder="05X-XXXXXXX"
                             />
                           </div>
@@ -579,14 +578,14 @@ export default function EditEmployeePage() {
                             onChange={(e) =>
                               setFormData({ ...formData, city: e.target.value })
                             }
-                            className="h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all rounded-xl text-right"
+                            className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl text-right"
                             placeholder="לדוגמה: תל אביב"
                           />
                         </FormField>
                         <div className="md:col-span-2">
                           <FormField label="איש קשר לחירום">
                             <div className="relative">
-                              <AlertTriangle className="absolute right-3 top-3.5 w-5 h-5 text-amber-500/50" />
+                              <AlertTriangle className="absolute right-3 top-3.5 w-5 h-5 text-destructive/50" />
                               <Input
                                 value={formData.emergency_contact}
                                 onChange={(e) =>
@@ -595,7 +594,7 @@ export default function EditEmployeePage() {
                                     emergency_contact: e.target.value,
                                   })
                                 }
-                                className="h-12 bg-slate-50 border-slate-200 focus:bg-white transition-all rounded-xl pr-10 text-right"
+                                className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl pr-10 text-right"
                                 placeholder="שם מלא ומספר טלפון"
                               />
                             </div>
@@ -607,7 +606,7 @@ export default function EditEmployeePage() {
                         <Button
                           onClick={() => setActiveTab("org")}
                           size="lg"
-                          className="rounded-xl px-8 bg-slate-900 text-white hover:bg-slate-800"
+                          className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90"
                         >
                           הבא: שיוך ארגוני{" "}
                           <ArrowRight className="mr-2 w-4 h-4 rotate-180" />
@@ -617,13 +616,12 @@ export default function EditEmployeePage() {
                   </Card>
                 </TabsContent>
 
-                {/* Tab 2: Organization */}
                 <TabsContent
                   value="org"
                   className="mt-0 focus-visible:outline-none"
                 >
                   <div className="space-y-6">
-                    <Card className="border-none shadow-sm overflow-hidden rounded-3xl">
+                    <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
                       <CardContent className="p-8">
                         <SectionHeader
                           icon={Building2}
@@ -631,7 +629,7 @@ export default function EditEmployeePage() {
                           description="הגדרת מיקום השוטר בעץ הארגוני (מחלקה -> מדור -> חולייה)"
                         />
 
-                        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                           <FormField label="מחלקה (Department)" required>
                             <Select
                               value={selectedDeptId}
@@ -649,7 +647,7 @@ export default function EditEmployeePage() {
                                 )
                               }
                             >
-                              <SelectTrigger className="h-12 bg-white border-blue-200/60 rounded-xl text-right font-bold text-slate-700 focus:ring-2 focus:ring-blue-200">
+                              <SelectTrigger className="h-12 bg-card border-input rounded-xl text-right font-bold text-foreground focus:ring-2 focus:ring-ring/20">
                                 <SelectValue placeholder="בחר מחלקה..." />
                               </SelectTrigger>
                               <SelectContent dir="rtl">
@@ -681,7 +679,7 @@ export default function EditEmployeePage() {
                                   ))
                               }
                             >
-                              <SelectTrigger className="h-12 bg-white border-blue-200/60 rounded-xl text-right font-bold text-slate-700 focus:ring-2 focus:ring-blue-200">
+                              <SelectTrigger className="h-12 bg-card border-input rounded-xl text-right font-bold text-foreground focus:ring-2 focus:ring-ring/20">
                                 <SelectValue
                                   placeholder={
                                     !selectedDeptId
@@ -718,7 +716,7 @@ export default function EditEmployeePage() {
                                 (!user?.is_admin && !!user?.commands_team_id)
                               }
                             >
-                              <SelectTrigger className="h-12 bg-white border-blue-200/60 rounded-xl text-right font-bold text-slate-700 focus:ring-2 focus:ring-blue-200">
+                              <SelectTrigger className="h-12 bg-card border-input rounded-xl text-right font-bold text-foreground focus:ring-2 focus:ring-ring/20">
                                 <SelectValue placeholder="בחר חולייה..." />
                               </SelectTrigger>
                               <SelectContent dir="rtl">
@@ -747,7 +745,7 @@ export default function EditEmployeePage() {
                                 })
                               }
                             >
-                              <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl text-right">
+                              <SelectTrigger className="h-12 bg-muted/50 border-input rounded-xl text-right">
                                 <SelectValue placeholder="בחר סוג שירות..." />
                               </SelectTrigger>
                               <SelectContent dir="rtl">
@@ -774,14 +772,14 @@ export default function EditEmployeePage() {
                                     : undefined,
                                 })
                               }
-                              className="h-12 bg-slate-50 border-slate-200 rounded-xl text-right"
+                              className="h-12 bg-muted/50 border-input rounded-xl text-right"
                               placeholder="קוד תפקיד (אם קיים)"
                             />
                           </FormField>
                         </div>
 
                         <div className="mt-8 space-y-6">
-                          <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                          <div className="p-4 bg-muted/30 border border-border rounded-2xl">
                             <ToggleCard
                               label="מוגדר כמפקד"
                               description="בעל סמכויות פיקודיות על היחידה הארגונית שלו"
@@ -808,9 +806,9 @@ export default function EditEmployeePage() {
                               <motion.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
-                                className="mt-4 p-4 bg-blue-50 text-blue-800 rounded-xl text-sm border border-blue-100 flex items-start gap-3"
+                                className="mt-4 p-4 bg-primary/5 text-primary rounded-xl text-sm border border-primary/10 flex items-start gap-3"
                               >
-                                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                                <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                                   💡
                                 </div>
                                 <div>
@@ -836,14 +834,14 @@ export default function EditEmployeePage() {
                       <Button
                         variant="ghost"
                         onClick={() => setActiveTab("personal")}
-                        className="text-slate-400"
+                        className="text-muted-foreground hover:text-foreground"
                       >
                         חזור לקודם
                       </Button>
                       <Button
                         onClick={() => setActiveTab("service")}
                         size="lg"
-                        className="rounded-xl px-8 bg-slate-900 text-white hover:bg-slate-800"
+                        className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90"
                       >
                         הבא: שירות וזמנים{" "}
                         <ArrowRight className="mr-2 w-4 h-4 rotate-180" />
@@ -852,12 +850,11 @@ export default function EditEmployeePage() {
                   </div>
                 </TabsContent>
 
-                {/* Tab 3: Service */}
                 <TabsContent
                   value="service"
                   className="mt-0 focus-visible:outline-none"
                 >
-                  <Card className="border-none shadow-sm overflow-hidden rounded-3xl">
+                  <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
                     <CardContent className="p-8">
                       <SectionHeader
                         icon={Calendar}
@@ -866,9 +863,9 @@ export default function EditEmployeePage() {
                       />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
-                          <h3 className="font-bold flex items-center gap-2 text-slate-700">
-                            <History className="w-4 h-4" /> התחלה
+                        <div className="bg-muted/30 p-4 rounded-2xl border border-border space-y-4">
+                          <h3 className="font-bold flex items-center gap-2 text-foreground/80">
+                            <History className="w-4 h-4 text-primary" /> התחלה
                           </h3>
                           <FormField label="תאריך גיוס">
                             <Input
@@ -880,7 +877,7 @@ export default function EditEmployeePage() {
                                   enlistment_date: e.target.value,
                                 })
                               }
-                              className="h-12 bg-white text-right"
+                              className="h-12 bg-card text-right border-input"
                             />
                           </FormField>
                           <FormField label="תאריך הצבה ביחידה">
@@ -893,14 +890,14 @@ export default function EditEmployeePage() {
                                   assignment_date: e.target.value,
                                 })
                               }
-                              className="h-12 bg-white text-right"
+                              className="h-12 bg-card text-right border-input"
                             />
                           </FormField>
                         </div>
 
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
-                          <h3 className="font-bold flex items-center gap-2 text-slate-700">
-                            <Briefcase className="w-4 h-4" /> סיום ואישי
+                        <div className="bg-muted/30 p-4 rounded-2xl border border-border space-y-4">
+                          <h3 className="font-bold flex items-center gap-2 text-foreground/80">
+                            <Briefcase className="w-4 h-4 text-primary" /> סיום ואישי
                           </h3>
                           <FormField label="תאריך שחרור צפוי (תש''ש)">
                             <Input
@@ -912,7 +909,7 @@ export default function EditEmployeePage() {
                                   discharge_date: e.target.value,
                                 })
                               }
-                              className="h-12 bg-white text-right"
+                              className="h-12 bg-card text-right border-input"
                             />
                           </FormField>
                           <FormField label="תאריך לידה">
@@ -925,7 +922,7 @@ export default function EditEmployeePage() {
                                   birth_date: e.target.value,
                                 })
                               }
-                              className="h-12 bg-white text-right"
+                              className="h-12 bg-card text-right border-input"
                             />
                           </FormField>
                         </div>
@@ -936,14 +933,14 @@ export default function EditEmployeePage() {
                     <Button
                       variant="ghost"
                       onClick={() => setActiveTab("org")}
-                      className="text-slate-400"
+                      className="text-muted-foreground hover:text-foreground"
                     >
                       חזור לקודם
                     </Button>
                     <Button
                       onClick={() => setActiveTab("security")}
                       size="lg"
-                      className="rounded-xl px-8 bg-slate-900 text-white hover:bg-slate-800"
+                      className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                       הבא: אבטחה{" "}
                       <ArrowRight className="mr-2 w-4 h-4 rotate-180" />
@@ -951,12 +948,11 @@ export default function EditEmployeePage() {
                   </div>
                 </TabsContent>
 
-                {/* Tab 4: Security */}
                 <TabsContent
                   value="security"
                   className="mt-0 focus-visible:outline-none"
                 >
-                  <Card className="border-none shadow-sm overflow-hidden rounded-3xl">
+                  <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
                     <CardContent className="p-8 space-y-8">
                       <SectionHeader
                         icon={Shield}
@@ -964,7 +960,7 @@ export default function EditEmployeePage() {
                         description="ניהול רמות סיווג וסמכויות מיוחדות"
                       />
 
-                      <div className="bg-amber-50/50 border border-amber-100 p-6 rounded-2xl">
+                      <div className="bg-primary/5 border border-primary/10 p-6 rounded-2xl">
                         <FormField label="רמת סיווג אבטחתי (0-5)">
                           <div className="flex items-center gap-6 mt-2">
                             <Input
@@ -979,7 +975,7 @@ export default function EditEmployeePage() {
                                     parseInt(e.target.value) || 0,
                                 })
                               }
-                              className="w-24 h-16 text-center text-3xl font-black bg-white rounded-xl shadow-sm border-amber-200 text-amber-600"
+                              className="w-24 h-16 text-center text-3xl font-black bg-card rounded-xl shadow-sm border-primary/20 text-primary"
                             />
                             <div className="flex-1 space-y-2">
                               <div className="flex gap-2">
@@ -989,13 +985,13 @@ export default function EditEmployeePage() {
                                     className={cn(
                                       "flex-1 h-4 rounded-md transition-all",
                                       lvl <= (formData.security_clearance || 0)
-                                        ? "bg-amber-500 shadow-sm"
-                                        : "bg-slate-200",
+                                        ? "bg-primary shadow-sm"
+                                        : "bg-muted",
                                     )}
                                   />
                                 ))}
                               </div>
-                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest text-left">
+                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-left">
                                 Security Clearance Level
                               </p>
                             </div>
@@ -1019,22 +1015,22 @@ export default function EditEmployeePage() {
                     </CardContent>
                   </Card>
 
-                  <div className="flex justify-between mt-8 items-center bg-white p-4 rounded-2xl shadow-lg border border-slate-100 sticky bottom-6">
+                  <div className="flex justify-between mt-8 items-center bg-card p-4 rounded-2xl shadow-lg border border-border sticky bottom-6 z-20">
                     <Button
                       variant="ghost"
                       onClick={() => setActiveTab("service")}
-                      className="text-slate-400 font-bold"
+                      className="text-muted-foreground font-bold hover:text-foreground"
                     >
                       חזור
                     </Button>
                     <div className="flex items-center gap-4">
-                      <span className="text-xs text-slate-400 font-medium hidden md:inline-block">
+                      <span className="text-xs text-muted-foreground font-medium hidden md:inline-block">
                         * בדוק את הפרטים לפני שמירה
                       </span>
                       <Button
                         onClick={() => handleSubmit()}
                         size="lg"
-                        className="rounded-xl px-12 bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-600/30 font-bold text-lg"
+                        className="rounded-xl px-12 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl shadow-primary/30 font-bold text-lg"
                       >
                         {loading ? (
                           <Loader2 className="w-6 h-6 animate-spin" />

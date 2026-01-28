@@ -78,13 +78,13 @@ export const EmployeesChart = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-slate-900 text-white px-3 py-2 rounded shadow-lg text-sm border border-slate-700">
+        <div className="bg-popover text-popover-foreground px-3 py-2 rounded shadow-lg text-sm border border-border">
           <p className="font-semibold">{data.name}</p>
           <p className="text-sm">{data.value} שוטרים</p>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {data.percentage}% מהיחידה
           </p>
-          <p className="text-[10px] text-slate-400 mt-1">לחץ לפירוט</p>
+          <p className="text-[10px] text-muted-foreground/70 mt-1">לחץ לפירוט</p>
         </div>
       );
     }
@@ -126,7 +126,8 @@ export const EmployeesChart = ({
         <text
           x={x}
           y={y - (isMobile ? 8 : 10)}
-          fill="#64748b"
+          fill="currentColor"
+          className="fill-muted-foreground"
           textAnchor="middle"
           dominantBaseline="middle"
           fontSize={isMobile ? "10" : "12"}
@@ -137,7 +138,8 @@ export const EmployeesChart = ({
         <text
           x={x}
           y={y + (isMobile ? 3 : 5)}
-          fill="#001e30"
+          fill="currentColor"
+          className="fill-foreground"
           textAnchor="middle"
           dominantBaseline="middle"
           fontSize={isMobile ? "12" : "14"}
@@ -148,7 +150,8 @@ export const EmployeesChart = ({
         <text
           x={x}
           y={y + (isMobile ? 14 : 18)}
-          fill="#475569"
+          fill="currentColor"
+          className="fill-muted-foreground"
           textAnchor="middle"
           dominantBaseline="middle"
           fontSize={isMobile ? "9" : "11"}
@@ -162,12 +165,12 @@ export const EmployeesChart = ({
 
   if (loading) {
     return (
-      <Card className="border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] bg-white dark:bg-card dark:border-border">
+      <Card className="border border-border shadow-sm bg-card">
         <CardHeader className="pb-8">
-          <CardTitle className="text-xl font-black text-[#001e30] dark:text-white mb-1">
+          <CardTitle className="text-xl font-black text-card-foreground mb-1">
             {title}
           </CardTitle>
-          <CardDescription className="font-bold text-xs text-slate-400">
+          <CardDescription className="font-bold text-xs text-muted-foreground">
             טוען נתונים...
           </CardDescription>
         </CardHeader>
@@ -176,14 +179,14 @@ export const EmployeesChart = ({
   }
 
   return (
-    <Card className="border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] bg-white dark:bg-card dark:border-border">
+    <Card className="border border-border shadow-sm bg-card">
       <CardHeader className="pb-4 sm:pb-6">
         <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg sm:text-xl font-black text-[#001e30] dark:text-white mb-1 truncate">
+            <CardTitle className="text-lg sm:text-xl font-black text-card-foreground mb-1 truncate">
               {title}
             </CardTitle>
-            <CardDescription className="font-bold text-xs text-slate-400">
+            <CardDescription className="font-bold text-xs text-muted-foreground">
               {description}
             </CardDescription>
           </div>
@@ -208,7 +211,7 @@ export const EmployeesChart = ({
       <CardContent>
         {total === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-muted-foreground">
               אין נתונים להצגה
             </p>
           </div>
@@ -256,10 +259,10 @@ export const EmployeesChart = ({
                 </ResponsiveContainer>
                 {/* Center Display */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <div className="text-3xl font-black text-[#001e30] dark:text-white">
+                  <div className="text-3xl font-black text-foreground">
                     {total}
                   </div>
-                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                  <div className="text-xs font-semibold text-muted-foreground mt-1">
                     סך הכל
                   </div>
                 </div>

@@ -114,17 +114,17 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[400px] p-0 overflow-hidden rounded-[32px] border-none bg-white dark:bg-slate-950 shadow-2xl" dir="rtl">
+            <DialogContent className="max-w-[400px] p-0 overflow-hidden rounded-[32px] border-none bg-card shadow-2xl" dir="rtl">
 
                 {/* Header: Clean & Centered */}
                 <div className="pt-8 pb-4 text-center px-6">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-900 mx-auto flex items-center justify-center text-slate-400 mb-4 border border-slate-100 dark:border-slate-800">
+                    <div className="w-12 h-12 rounded-2xl bg-muted mx-auto flex items-center justify-center text-muted-foreground mb-4 border border-border">
                         <ClipboardList className="w-6 h-6" />
                     </div>
-                    <DialogTitle className="text-xl font-black text-slate-900 dark:text-white mb-1">
+                    <DialogTitle className="text-xl font-black text-foreground mb-1">
                         עדכון סטטוס שוטר
                     </DialogTitle>
-                    <DialogDescription className="text-sm font-bold text-slate-400">
+                    <DialogDescription className="text-sm font-bold text-muted-foreground">
                         {employee.first_name} {employee.last_name}
                     </DialogDescription>
                 </div>
@@ -134,7 +134,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                     <div className="grid grid-cols-2 gap-2">
                         {fetching ? (
                             <div className="col-span-2 py-8 flex items-center justify-center">
-                                <Loader2 className="w-5 h-5 animate-spin text-slate-200" />
+                                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground/30" />
                             </div>
                         ) : (
                             statusTypes.map((type) => {
@@ -149,15 +149,15 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                         className={cn(
                                             "flex items-center gap-3 p-3 rounded-2xl border-2 transition-all text-right group",
                                             isSelected
-                                                ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20"
-                                                : "bg-slate-50 dark:bg-slate-900 border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                                                : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
                                         )}
                                     >
                                         <div className={cn(
                                             "w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
-                                            isSelected ? "bg-white/20" : "bg-white dark:bg-slate-800 shadow-sm"
+                                            isSelected ? "bg-primary-foreground/20" : "bg-card shadow-sm"
                                         )}>
-                                            <Icon className={cn("w-4 h-4", isSelected ? "text-white" : "text-slate-400 group-hover:text-blue-500")} />
+                                            <Icon className={cn("w-4 h-4", isSelected ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary")} />
                                         </div>
                                         <span className="text-[11px] font-black leading-tight flex-1">
                                             {type.name}
@@ -169,43 +169,43 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                     </div>
 
                     {/* Inputs Area */}
-                    <div className="space-y-4 pt-4 border-t border-slate-50 dark:border-slate-900">
+                    <div className="space-y-4 pt-4 border-t border-border">
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block pr-1">מתאריך</Label>
+                                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block pr-1">מתאריך</Label>
                                 <div className="relative">
-                                    <CalendarDays className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-300" />
+                                    <CalendarDays className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground/50" />
                                     <Input
                                         type="date"
                                         value={formData.start_date}
                                         onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                                        className="h-9 bg-slate-50 dark:bg-slate-900/50 border-none rounded-xl text-right pl-8 pr-3 text-[10px] font-black focus:ring-2 focus:ring-blue-500/10"
+                                        className="h-9 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-right pl-8 pr-3 text-[10px] font-black"
                                     />
                                 </div>
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block pr-1">עד תאריך</Label>
+                                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block pr-1">עד תאריך</Label>
                                 <div className="relative">
-                                    <CalendarDays className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-300/50" />
+                                    <CalendarDays className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground/30" />
                                     <Input
                                         type="date"
                                         value={formData.end_date}
                                         onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                                        className="h-9 bg-slate-50 dark:bg-slate-900/50 border-none rounded-xl text-right pl-8 pr-3 text-[10px] font-black focus:ring-2 focus:ring-blue-500/10"
+                                        className="h-9 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-right pl-8 pr-3 text-[10px] font-black"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block pr-1">הערה אישית</Label>
+                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block pr-1">הערה אישית</Label>
                             <div className="relative">
-                                <Clock className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-300" />
+                                <Clock className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground/50" />
                                 <Input
                                     value={formData.note}
                                     onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
                                     placeholder="הוסף הערה..."
-                                    className="h-9 bg-slate-50 dark:bg-slate-900/50 border-none rounded-xl text-right pl-8 pr-3 text-[10px] font-black focus:ring-2 focus:ring-blue-500/10 placeholder:text-slate-300"
+                                    className="h-9 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-right pl-8 pr-3 text-[10px] font-black placeholder:text-muted-foreground/50"
                                 />
                             </div>
                         </div>
@@ -213,18 +213,18 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                 </div>
 
                 {/* Confirm Action */}
-                <div className="p-6 bg-slate-50/50 dark:bg-slate-900/30 flex flex-col gap-3">
+                <div className="p-6 bg-muted/30 flex flex-col gap-3">
                     <Button
                         onClick={handleSubmit}
                         disabled={loading || !formData.status_type_id}
-                        className="w-full bg-slate-900 hover:bg-black dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-black rounded-[20px] h-12 shadow-xl shadow-slate-200 dark:shadow-none transition-all active:scale-95 disabled:opacity-30 gap-2 text-sm"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-[20px] h-12 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-30 gap-2 text-sm"
                     >
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                         עדכן סטטוס שוטר
                     </Button>
                     <button
                         onClick={() => onOpenChange(false)}
-                        className="text-[10px] font-black text-slate-400 hover:text-slate-600 transition-colors pb-1"
+                        className="text-[10px] font-black text-muted-foreground hover:text-foreground transition-colors pb-1"
                     >
                         ביטול
                     </button>

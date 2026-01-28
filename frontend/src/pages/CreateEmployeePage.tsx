@@ -177,20 +177,20 @@ export default function CreateEmployeePage() {
         subtitle="מלא את פרטי השוטר בטופס למטה כדי לצרפו ליחידה"
         category="ניהול שוטרים"
         categoryLink="/employees"
-        iconClassName="from-blue-50 to-blue-100 border-blue-100"
+        iconClassName="from-primary/10 to-primary/5 border-primary/20"
         badge={
           <div className="hidden sm:flex gap-3">
             <Button
               variant="outline"
               onClick={() => navigate("/employees")}
-              className="border-slate-200 hover:bg-slate-50 h-11 px-6 rounded-xl font-bold"
+              className="border-input hover:bg-muted h-11 px-6 rounded-xl font-bold text-muted-foreground"
             >
               ביטול
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-primary hover:opacity-90 text-white h-11 px-8 rounded-xl font-black shadow-lg shadow-primary/20"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground h-11 px-8 rounded-xl font-black shadow-lg shadow-primary/20"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 ml-2 animate-spin" />
@@ -224,6 +224,7 @@ export default function CreateEmployeePage() {
                     setFormData({ ...formData, first_name: e.target.value })
                   }
                   placeholder="לדוגמה: ישראל"
+                  className="bg-muted/50 border-input focus:ring-ring/20"
                 />
               </FormField>
               <FormField label="שם משפחה" required>
@@ -233,6 +234,7 @@ export default function CreateEmployeePage() {
                     setFormData({ ...formData, last_name: e.target.value })
                   }
                   placeholder="לדוגמה: ישראלי"
+                  className="bg-muted/50 border-input focus:ring-ring/20"
                 />
               </FormField>
               <FormField label="מספר אישי" required>
@@ -244,7 +246,7 @@ export default function CreateEmployeePage() {
                       personal_number: e.target.value,
                     })
                   }
-                  className="font-mono text-left ltr"
+                  className="font-mono text-left ltr bg-muted/50 border-input focus:ring-ring/20"
                   placeholder="1234567"
                 />
               </FormField>
@@ -254,7 +256,7 @@ export default function CreateEmployeePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, national_id: e.target.value })
                   }
-                  className="font-mono text-left ltr"
+                  className="font-mono text-left ltr bg-muted/50 border-input focus:ring-ring/20"
                   placeholder="000000000"
                 />
               </FormField>
@@ -275,7 +277,7 @@ export default function CreateEmployeePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, phone_number: e.target.value })
                   }
-                  className="font-mono text-left ltr"
+                  className="font-mono text-left ltr bg-muted/50 border-input focus:ring-ring/20"
                   placeholder="050-0000000"
                 />
               </FormField>
@@ -286,6 +288,7 @@ export default function CreateEmployeePage() {
                     setFormData({ ...formData, city: e.target.value })
                   }
                   placeholder="לדוגמה: תל אביב"
+                  className="bg-muted/50 border-input focus:ring-ring/20"
                 />
               </FormField>
               <div className="sm:col-span-2">
@@ -299,6 +302,7 @@ export default function CreateEmployeePage() {
                       })
                     }
                     placeholder="שם ומספר טלפון"
+                    className="bg-muted/50 border-input focus:ring-ring/20"
                   />
                 </FormField>
               </div>
@@ -314,8 +318,8 @@ export default function CreateEmployeePage() {
             {/* Hierarchical Structure */}
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                  <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+                <h3 className="text-sm font-semibold text-foreground/80 mb-3 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-primary rounded-full"></div>
                   מבנה היררכי
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -337,7 +341,7 @@ export default function CreateEmployeePage() {
                         )
                       }
                     >
-                      <SelectTrigger className="text-right">
+                      <SelectTrigger className="text-right bg-muted/50 border-input">
                         <SelectValue placeholder="בחר מחלקה..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -366,7 +370,7 @@ export default function CreateEmployeePage() {
                           ))
                       }
                     >
-                      <SelectTrigger className="text-right">
+                      <SelectTrigger className="text-right bg-muted/50 border-input">
                         <SelectValue
                           placeholder={
                             !selectedDeptId
@@ -397,7 +401,7 @@ export default function CreateEmployeePage() {
                         (!user?.is_admin && !!user?.commands_team_id)
                       }
                     >
-                      <SelectTrigger className="text-right">
+                      <SelectTrigger className="text-right bg-muted/50 border-input">
                         <SelectValue
                           placeholder={
                             !selectedSectionId
@@ -421,14 +425,14 @@ export default function CreateEmployeePage() {
               {/* Divider */}
               <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                  <div className="w-full border-t border-border"></div>
                 </div>
               </div>
 
               {/* Role and Service Type */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                  <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+                <h3 className="text-sm font-semibold text-foreground/80 mb-3 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-primary/70 rounded-full"></div>
                   תפקיד ושירות
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -442,7 +446,7 @@ export default function CreateEmployeePage() {
                         })
                       }
                     >
-                      <SelectTrigger className="text-right">
+                      <SelectTrigger className="text-right bg-muted/50 border-input">
                         <SelectValue placeholder="בחר סוג שירות..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -468,6 +472,7 @@ export default function CreateEmployeePage() {
                         })
                       }
                       placeholder="הזן מזהה תפקיד"
+                      className="bg-muted/50 border-input focus:ring-ring/20"
                     />
                   </FormField>
                 </div>
@@ -476,14 +481,14 @@ export default function CreateEmployeePage() {
               {/* Divider */}
               <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                  <div className="w-full border-t border-border"></div>
                 </div>
               </div>
 
               {/* Command Position Toggle */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                  <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
+                <h3 className="text-sm font-semibold text-foreground/80 mb-3 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-primary/50 rounded-full"></div>
                   סטטוס פיקוד
                 </h3>
                 <ToggleCard
@@ -494,8 +499,8 @@ export default function CreateEmployeePage() {
                   }
                 />
                 {formData.is_commander && (
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-lg">
-                    <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                  <div className="mt-3 p-3 bg-primary/5 border border-primary/10 rounded-lg">
+                    <p className="text-xs text-primary flex items-start gap-2">
                       <span className="text-base">💡</span>
                       <span>
                         השוטר יוגדר כמפקד של{" "}
@@ -529,6 +534,7 @@ export default function CreateEmployeePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, birth_date: e.target.value })
                   }
+                  className="bg-muted/50 border-input focus:ring-ring/20"
                 />
               </FormField>
               <FormField label="תאריך גיוס">
@@ -541,6 +547,7 @@ export default function CreateEmployeePage() {
                       enlistment_date: e.target.value,
                     })
                   }
+                  className="bg-muted/50 border-input focus:ring-ring/20"
                 />
               </FormField>
               <FormField label="תאריך הצבה">
@@ -553,6 +560,7 @@ export default function CreateEmployeePage() {
                       assignment_date: e.target.value,
                     })
                   }
+                  className="bg-muted/50 border-input focus:ring-ring/20"
                 />
               </FormField>
               <FormField label="תאריך שחרור">
@@ -562,6 +570,7 @@ export default function CreateEmployeePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, discharge_date: e.target.value })
                   }
+                  className="bg-muted/50 border-input focus:ring-ring/20"
                 />
               </FormField>
             </div>
@@ -585,10 +594,10 @@ export default function CreateEmployeePage() {
                           security_clearance: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0074ff]"
+                      className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                     />
                   </div>
-                  <div className="w-8 h-8 rounded-md bg-blue-50 text-[#0074ff] font-bold flex items-center justify-center border border-blue-100">
+                  <div className="w-8 h-8 rounded-md bg-primary/10 text-primary font-bold flex items-center justify-center border border-primary/20">
                     {formData.security_clearance}
                   </div>
                 </div>
@@ -608,19 +617,19 @@ export default function CreateEmployeePage() {
         </div>
 
         {/* Mobile Action Buttons */}
-        <div className="lg:hidden col-span-1 flex gap-3 pt-4 border-t border-slate-200">
+        <div className="lg:hidden col-span-1 flex gap-3 pt-4 border-t border-border">
           <Button
             variant="outline"
             type="button"
             onClick={() => navigate("/employees")}
-            className="flex-1 h-11"
+            className="flex-1 h-11 border-input"
           >
             ביטול
           </Button>
           <Button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-[#0074ff] text-white h-11"
+            className="flex-1 bg-primary text-primary-foreground h-11"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 ml-2 animate-spin" />
@@ -651,26 +660,26 @@ function SectionCard({
   compact?: boolean;
 }) {
   return (
-    <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 overflow-hidden">
+    <Card className="border-0 shadow-sm ring-1 ring-border bg-card overflow-hidden">
       <CardHeader
-        className={`bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 ${compact ? "p-4" : "p-6"}`}
+        className={`bg-muted/30 border-b border-border ${compact ? "p-4" : "p-6"}`}
       >
         <div className="flex items-center gap-3">
           <div
-            className={`p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-100 dark:ring-slate-700 ${compact ? "w-8 h-8" : "w-10 h-10"} flex items-center justify-center`}
+            className={`p-2 rounded-lg bg-card shadow-sm ring-1 ring-border ${compact ? "w-8 h-8" : "w-10 h-10"} flex items-center justify-center`}
           >
             <Icon
-              className={`${compact ? "w-4 h-4" : "w-5 h-5"} text-[#0074ff]`}
+              className={`${compact ? "w-4 h-4" : "w-5 h-5"} text-primary`}
             />
           </div>
           <div>
             <CardTitle
-              className={`${compact ? "text-base" : "text-xl"} font-black text-slate-900 dark:text-white`}
+              className={`${compact ? "text-base" : "text-xl"} font-black text-foreground`}
             >
               {title}
             </CardTitle>
             {description && (
-              <CardDescription className="text-slate-500 mt-1">
+              <CardDescription className="text-muted-foreground mt-1 text-xs">
                 {description}
               </CardDescription>
             )}
@@ -695,9 +704,9 @@ function FormField({
 }) {
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+      <Label className="text-sm font-semibold text-foreground/70 flex items-center gap-1">
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && <span className="text-destructive">*</span>}
       </Label>
       {children}
     </div>
@@ -720,27 +729,26 @@ function ToggleCard({
       onClick={() => onChange(!checked)}
       className={`
         flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200
-        ${
-          checked
-            ? danger
-              ? "bg-red-50 border-red-200 ring-1 ring-red-200"
-              : "bg-blue-50 border-blue-200 ring-1 ring-blue-200"
-            : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+        ${checked
+          ? danger
+            ? "bg-destructive/10 border-destructive/20 ring-1 ring-destructive/20"
+            : "bg-primary/10 border-primary/20 ring-1 ring-primary/20"
+          : "bg-card border-input hover:border-accent hover:bg-muted"
         }
       `}
     >
       <span
-        className={`text-sm font-medium ${checked ? (danger ? "text-red-700" : "text-blue-700") : "text-slate-600"}`}
+        className={`text-sm font-medium ${checked ? (danger ? "text-destructive" : "text-primary") : "text-muted-foreground"}`}
       >
         {label}
       </span>
       <div
         className={`
         w-5 h-5 rounded flex items-center justify-center transition-colors
-        ${checked ? (danger ? "bg-red-500" : "bg-[#0074ff]") : "bg-slate-200"}
+        ${checked ? (danger ? "bg-destructive" : "bg-primary") : "bg-muted-foreground/30"}
       `}
       >
-        {checked && <Check className="w-3.5 h-3.5 text-white" />}
+        {checked && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
       </div>
     </div>
   );

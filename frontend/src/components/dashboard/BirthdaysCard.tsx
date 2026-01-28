@@ -49,15 +49,15 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
   };
 
   return (
-    <Card className="border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] bg-white dark:bg-card dark:border-border h-full flex flex-col">
+    <Card className="border border-border shadow-sm bg-card h-full flex flex-col">
       <CardHeader className="pb-3 sm:pb-4">
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-base sm:text-lg lg:text-xl font-black text-[#001e30] dark:text-white mb-1 flex items-center gap-2">
-              <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 shrink-0" />
+            <CardTitle className="text-base sm:text-lg lg:text-xl font-black text-card-foreground mb-1 flex items-center gap-2">
+              <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
               <span className="truncate">ימי הולדת</span>
             </CardTitle>
-            <CardDescription className="font-bold text-[11px] sm:text-xs text-slate-400">
+            <CardDescription className="font-bold text-[11px] sm:text-xs text-muted-foreground">
               חוגגים השבוע
             </CardDescription>
           </div>
@@ -77,7 +77,7 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto pr-1">
         {birthdays.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-24 sm:h-32 text-slate-400 text-center">
+          <div className="flex flex-col items-center justify-center h-24 sm:h-32 text-muted-foreground text-center">
             <Calendar className="w-6 h-6 sm:w-8 sm:h-8 mb-2 opacity-20" />
             <p className="text-xs sm:text-sm font-medium">
               אין ימי הולדת השבוע
@@ -97,16 +97,16 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
                   className={cn(
                     "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl border transition-colors",
                     isToday
-                      ? "bg-pink-50 border-pink-200 dark:bg-pink-900/20 dark:border-pink-800"
-                      : "bg-slate-50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700",
+                      ? "bg-primary/10 border-primary/20"
+                      : "bg-muted/50 border-input",
                   )}
                 >
                   <div
                     className={cn(
                       "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm shrink-0",
                       isToday
-                        ? "bg-pink-500 text-white"
-                        : "bg-white text-slate-600 dark:bg-slate-700 dark:text-slate-300",
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground",
                     )}
                   >
                     <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -116,16 +116,16 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
                       className={cn(
                         "text-xs sm:text-sm font-bold truncate",
                         isToday
-                          ? "text-pink-700 dark:text-pink-300"
-                          : "text-slate-700 dark:text-slate-200",
+                          ? "text-primary"
+                          : "text-foreground",
                       )}
                     >
                       {emp.first_name} {emp.last_name}
                     </p>
-                    <p className="text-[11px] sm:text-xs text-slate-400 font-medium truncate">
+                    <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate">
                       {format(date, "d בMMMM", { locale: he })}
                       {isToday && (
-                        <span className="mr-2 font-black text-pink-500">
+                        <span className="mr-2 font-black text-primary">
                           היום! 🎉
                         </span>
                       )}

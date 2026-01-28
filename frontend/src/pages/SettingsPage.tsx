@@ -194,13 +194,13 @@ export default function SettingsPage() {
         subtitle="ניהול העדפות אישיות, מראה הממשק ואבטחה"
         category="הגדרות"
         categoryLink="/settings"
-        iconClassName="from-slate-50 to-slate-100 border-slate-200"
+        iconClassName="from-primary/10 to-primary/5 border-primary/20"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Sidebar / Navigation */}
         <div className="lg:col-span-3 space-y-4">
-          <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden border-0 ring-1 ring-slate-200 dark:ring-slate-800">
+          <Card className="border-border shadow-sm overflow-hidden border-0 ring-1 ring-border bg-card">
             <div className="p-4 space-y-1">
               <NavItem
                 icon={User}
@@ -235,11 +235,11 @@ export default function SettingsPage() {
                 />
               )}
             </div>
-            <div className="mt-4 p-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="mt-4 p-4 border-t border-border">
               <Button
                 variant="ghost"
                 onClick={logout}
-                className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 font-bold gap-3 rounded-xl transition-all h-11"
+                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 font-bold gap-3 rounded-xl transition-all h-11"
               >
                 <LogOut className="w-4 h-4" />
                 התנתק מהמערכת
@@ -252,7 +252,7 @@ export default function SettingsPage() {
         <div className="lg:col-span-9">
           {activeTab === "profile" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
-              <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+              <Card className="border-0 shadow-sm ring-1 ring-border bg-card">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-black text-right">
                     פרופיל שוטר
@@ -263,27 +263,27 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-8">
                   {/* Profile Image Section */}
-                  <div className="flex flex-col sm:flex-row items-center gap-8 py-4 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-col sm:flex-row items-center gap-8 py-4 border-b border-border">
                     <div className="relative group">
-                      <div className="w-32 h-32 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-900 shadow-xl ring-1 ring-slate-200 dark:ring-slate-700">
-                        <span className="text-4xl font-black text-slate-300 dark:text-slate-600">
+                      <div className="w-32 h-32 rounded-3xl bg-muted flex items-center justify-center overflow-hidden border-4 border-background shadow-xl ring-1 ring-border">
+                        <span className="text-4xl font-black text-muted-foreground/40">
                           {user?.first_name?.[0]}
                           {user?.last_name?.[0]}
                         </span>
                       </div>
                       <button
                         onClick={handleImageUpload}
-                        className="absolute -bottom-2 -left-2 p-2.5 bg-primary text-white rounded-2xl shadow-lg shadow-primary/30 hover:scale-110 active:scale-95 transition-all"
+                        className="absolute -bottom-2 -left-2 p-2.5 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-primary/30 hover:scale-110 active:scale-95 transition-all"
                       >
                         <Camera className="w-5 h-5" />
                       </button>
                     </div>
                     <div className="text-center sm:text-right space-y-2">
-                      <h3 className="text-2xl font-black text-slate-900 dark:text-white">
+                      <h3 className="text-2xl font-black text-foreground">
                         {user?.first_name} {user?.last_name}
                       </h3>
-                      <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center sm:justify-start gap-2 text-right">
-                        <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px] uppercase">
+                      <p className="text-muted-foreground font-bold flex items-center justify-center sm:justify-start gap-2 text-right">
+                        <span className="bg-muted px-2 py-0.5 rounded text-[10px] uppercase">
                           {user?.personal_number}
                         </span>
                         <span>
@@ -298,13 +298,13 @@ export default function SettingsPage() {
                       <div className="pt-2 flex flex-wrap justify-center sm:justify-start gap-2">
                         <Badge
                           variant="outline"
-                          className="rounded-lg border-primary/20 dark:border-primary/30 text-primary font-bold transition-colors"
+                          className="rounded-lg border-primary/20 text-primary font-bold transition-colors"
                         >
                           פעיל
                         </Badge>
                         <Badge
                           variant="outline"
-                          className="rounded-lg border-emerald-100 dark:border-emerald-900 text-emerald-600 font-bold"
+                          className="rounded-lg border-emerald-100 text-emerald-600 font-bold"
                         >
                           מאומת
                         </Badge>
@@ -315,7 +315,7 @@ export default function SettingsPage() {
                   {/* Personal Info Form */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 text-right">
                     <div className="space-y-2.5">
-                      <Label className="text-sm font-black text-slate-700 dark:text-slate-300">
+                      <Label className="text-sm font-black text-muted-foreground/80">
                         שם פרטי
                       </Label>
                       <Input
@@ -326,11 +326,11 @@ export default function SettingsPage() {
                             first_name: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900 border-0 font-bold focus-visible:ring-2 focus-visible:ring-primary transition-all"
+                        className="h-12 rounded-xl bg-muted/50 border-0 font-bold focus-visible:ring-2 focus-visible:ring-primary transition-all"
                       />
                     </div>
                     <div className="space-y-2.5">
-                      <Label className="text-sm font-black text-slate-700 dark:text-slate-300">
+                      <Label className="text-sm font-black text-muted-foreground/80">
                         שם משפחה
                       </Label>
                       <Input
@@ -341,11 +341,11 @@ export default function SettingsPage() {
                             last_name: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900 border-0 font-bold focus-visible:ring-2 focus-visible:ring-primary transition-all"
+                        className="h-12 rounded-xl bg-muted/50 border-0 font-bold focus-visible:ring-2 focus-visible:ring-primary transition-all"
                       />
                     </div>
                     <div className="space-y-2.5">
-                      <Label className="text-sm font-black text-slate-700 dark:text-slate-300">
+                      <Label className="text-sm font-black text-muted-foreground/80">
                         מספר טלפון
                       </Label>
                       <Input
@@ -356,20 +356,20 @@ export default function SettingsPage() {
                             phone_number: e.target.value,
                           })
                         }
-                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900 border-0 font-bold focus-visible:ring-2 focus-visible:ring-primary transition-all"
+                        className="h-12 rounded-xl bg-muted/50 border-0 font-bold focus-visible:ring-2 focus-visible:ring-primary transition-all"
                       />
                     </div>
                     <div className="space-y-2.5">
-                      <Label className="text-sm font-black text-slate-700 dark:text-slate-300">
+                      <Label className="text-sm font-black text-muted-foreground/80">
                         מספר אישי (נעול)
                       </Label>
                       <div className="relative">
                         <Input
                           value={user?.personal_number || ""}
                           readOnly
-                          className="h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border-0 font-black opacity-70 pr-10"
+                          className="h-12 rounded-xl bg-muted border-0 font-black opacity-70 pr-10"
                         />
-                        <Lock className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2" />
+                        <Lock className="w-4 h-4 text-muted-foreground/50 absolute right-4 top-1/2 -translate-y-1/2" />
                       </div>
                     </div>
                   </div>
@@ -378,7 +378,7 @@ export default function SettingsPage() {
                     <Button
                       onClick={handleSaveProfile}
                       disabled={isSaving}
-                      className="bg-primary hover:opacity-90 text-white px-10 h-12 rounded-xl font-black shadow-lg shadow-primary/20 transition-all active:scale-95"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 h-11 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
                     >
                       {isSaving ? (
                         <>
@@ -397,7 +397,7 @@ export default function SettingsPage() {
 
           {activeTab === "appearance" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
-              <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+              <Card className="border-0 shadow-sm ring-1 ring-border bg-card">
                 <CardHeader>
                   <CardTitle className="text-xl font-black text-right">
                     מראה ותצוגה
@@ -409,22 +409,22 @@ export default function SettingsPage() {
                 <CardContent className="space-y-10">
                   {/* Theme Mode */}
                   <div className="space-y-4">
-                    <Label className="text-sm font-black text-slate-800 dark:text-white block text-right">
+                    <Label className="text-sm font-black text-foreground block text-right">
                       מצב תצוגה
                     </Label>
                     <div className="grid grid-cols-2 gap-4">
                       <button
                         onClick={() => theme === "dark" && toggleTheme()}
-                        className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4 ${theme === "light" ? "border-primary bg-primary/5 shadow-md shadow-primary/5" : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"}`}
+                        className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4 ${theme === "light" ? "border-primary bg-primary/5 shadow-md shadow-primary/5" : "border-border hover:border-border/80"}`}
                       >
-                        <div className="w-full aspect-[2/1] rounded-xl bg-white shadow-inner border border-slate-100 flex items-center justify-center">
-                          <Monitor className="w-10 h-10 text-slate-300" />
+                        <div className="w-full aspect-[2/1] rounded-xl bg-background shadow-inner border border-border flex items-center justify-center">
+                          <Monitor className="w-10 h-10 text-muted-foreground/30" />
                         </div>
                         <span className="font-black text-sm">יום (Light)</span>
                       </button>
                       <button
                         onClick={() => theme === "light" && toggleTheme()}
-                        className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4 ${theme === "dark" ? "border-primary bg-primary/10 shadow-md shadow-primary/10" : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"}`}
+                        className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4 ${theme === "dark" ? "border-primary bg-primary/10 shadow-md shadow-primary/10" : "border-border hover:border-border/80"}`}
                       >
                         <div className="w-full aspect-[2/1] rounded-xl bg-slate-900 shadow-inner border border-slate-800 flex items-center justify-center">
                           <Monitor className="w-10 h-10 text-slate-700" />
@@ -436,7 +436,7 @@ export default function SettingsPage() {
 
                   {/* Accent Color */}
                   <div className="space-y-4">
-                    <Label className="text-sm font-black text-slate-800 dark:text-white block text-right">
+                    <Label className="text-sm font-black text-foreground block text-right">
                       ערכת נושא (Accent Color)
                     </Label>
                     <div className="flex flex-wrap gap-4">
@@ -445,7 +445,7 @@ export default function SettingsPage() {
                           <button
                             key={color}
                             onClick={() => setAccentColor(color as any)}
-                            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${accentColor === color ? "ring-4 ring-offset-4 ring-slate-200 dark:ring-slate-700 shadow-lg" : "opacity-80 hover:opacity-100"}`}
+                            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${accentColor === color ? "ring-4 ring-offset-4 ring-border shadow-lg" : "opacity-80 hover:opacity-100"}`}
                             style={{ backgroundColor: getHexColor(color) }}
                           >
                             {accentColor === color && (
@@ -459,7 +459,7 @@ export default function SettingsPage() {
 
                   {/* Font Size */}
                   <div className="space-y-4">
-                    <Label className="text-sm font-black text-slate-800 dark:text-white block text-right">
+                    <Label className="text-sm font-black text-foreground block text-right">
                       גודל טקסט
                     </Label>
                     <RadioGroup
@@ -468,14 +468,14 @@ export default function SettingsPage() {
                       className="grid grid-cols-3 gap-4"
                     >
                       <label
-                        className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 cursor-pointer transition-all ${fontSize === "small" ? "border-primary bg-primary/5" : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"}`}
+                        className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 cursor-pointer transition-all ${fontSize === "small" ? "border-primary bg-primary/5" : "border-border hover:border-border/80"}`}
                       >
                         <RadioGroupItem value="small" className="sr-only" />
                         <span className="text-xs font-black font-sans">Aa</span>
                         <span className="text-xs font-black">קטן</span>
                       </label>
                       <label
-                        className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 cursor-pointer transition-all ${fontSize === "normal" ? "border-primary bg-primary/5" : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"}`}
+                        className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 cursor-pointer transition-all ${fontSize === "normal" ? "border-primary bg-primary/5" : "border-border hover:border-border/80"}`}
                       >
                         <RadioGroupItem value="normal" className="sr-only" />
                         <span className="text-base font-black font-sans">
@@ -484,7 +484,7 @@ export default function SettingsPage() {
                         <span className="text-xs font-black">רגיל</span>
                       </label>
                       <label
-                        className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 cursor-pointer transition-all ${fontSize === "large" ? "border-primary bg-primary/5" : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"}`}
+                        className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 cursor-pointer transition-all ${fontSize === "large" ? "border-primary bg-primary/5" : "border-border hover:border-border/80"}`}
                       >
                         <RadioGroupItem value="large" className="sr-only" />
                         <span className="text-xl font-black font-sans">Aa</span>
@@ -499,7 +499,7 @@ export default function SettingsPage() {
 
           {activeTab === "security" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300 text-right">
-              <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+              <Card className="border-0 shadow-sm ring-1 ring-border bg-card">
                 <CardHeader>
                   <CardTitle className="text-xl font-black">
                     אבטחה ופרטיות
@@ -509,15 +509,15 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="p-5 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 flex items-start gap-4 text-right transition-colors">
-                    <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/30">
+                  <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-4 text-right transition-colors">
+                    <div className="p-2.5 rounded-xl bg-amber-500/20">
                       <ShieldCheck className="w-6 h-6 text-amber-600" />
                     </div>
                     <div className="flex-1 space-y-1">
-                      <h4 className="text-base font-black text-amber-900 dark:text-amber-400 text-right">
+                      <h4 className="text-base font-black text-amber-700 text-right">
                         החלפת סיסמה תקופתית
                       </h4>
-                      <p className="text-sm text-amber-700/80 dark:text-amber-500/80 font-bold leading-relaxed text-right">
+                      <p className="text-sm text-amber-700/80 font-bold leading-relaxed text-right">
                         חלפו 45 ימים מאז החלפת הסיסמה האחרונה. מומלץ לעדכן את
                         הסיסמה לשיפור אבטחת הנתונים.
                       </p>
@@ -527,30 +527,30 @@ export default function SettingsPage() {
                   <div className="pt-4 flex flex-col gap-4">
                     <div
                       onClick={() => navigate("/change-password")}
-                      className="flex items-center justify-between p-5 rounded-2xl border-2 border-slate-50 dark:border-slate-900 group hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer"
+                      className="flex items-center justify-between p-5 rounded-2xl border-2 border-muted group hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer"
                     >
-                      <button className="text-xs font-black text-primary hover:underline transition-colors">
+                      <button className="text-xs font-black text-primary hover:underline transition-colors focus:outline-none">
                         עדכן כעת
                       </button>
                       <div className="text-right">
-                        <h5 className="text-base font-black text-slate-800 dark:text-white">
+                        <h5 className="text-base font-black text-foreground">
                           סיסמת כניסה
                         </h5>
-                        <p className="text-sm text-slate-400 font-bold">
+                        <p className="text-sm text-muted-foreground font-bold">
                           החלף את סיסמת הגישה למערכת
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between p-5 rounded-2xl border-2 border-slate-50 dark:border-slate-900 group">
-                      <div className="w-12 h-6 bg-slate-200 dark:bg-slate-700 rounded-full relative p-1 cursor-not-allowed opacity-50">
-                        <div className="w-4 h-4 bg-white rounded-full transition-all"></div>
+                    <div className="flex items-center justify-between p-5 rounded-2xl border-2 border-muted group opacity-60">
+                      <div className="w-12 h-6 bg-muted-foreground/20 rounded-full relative p-1 cursor-not-allowed">
+                        <div className="w-4 h-4 bg-background rounded-full transition-all"></div>
                       </div>
                       <div className="text-right">
-                        <h5 className="text-base font-black text-slate-800 dark:text-white">
+                        <h5 className="text-base font-black text-foreground">
                           אימות דו-שלבי
                         </h5>
-                        <p className="text-sm text-slate-400 font-bold">
+                        <p className="text-sm text-muted-foreground font-bold">
                           פיצ'ר זה אינו פעיל כרגע בארגון
                         </p>
                       </div>
@@ -563,7 +563,7 @@ export default function SettingsPage() {
 
           {activeTab === "notifications" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300 text-right">
-              <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+              <Card className="border-0 shadow-sm ring-1 ring-border bg-card">
                 <CardHeader>
                   <CardTitle className="text-xl font-black text-right">
                     התראות ודיווחים
@@ -592,11 +592,11 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex justify-start pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex justify-start pt-6 border-t border-border">
                     <Button
                       onClick={handleSaveProfile}
                       disabled={isSaving}
-                      className="bg-primary hover:opacity-90 text-white px-10 h-12 rounded-xl font-black shadow-lg shadow-primary/20 transition-all active:scale-95"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 h-11 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
                     >
                       {isSaving ? (
                         <>
@@ -616,29 +616,29 @@ export default function SettingsPage() {
           {activeTab === "backup" && user?.is_admin && (
             <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300 text-right">
               {/* כותרת ראשית */}
-              <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+              <Card className="border-0 shadow-sm ring-1 ring-border bg-card">
                 <CardHeader>
-                  <CardTitle className="text-2xl font-black text-right flex items-center gap-3 text-slate-800 dark:text-white">
+                  <CardTitle className="text-2xl font-black text-right flex items-center gap-3 text-foreground">
                     <div className="p-2 bg-primary/10 rounded-xl">
                       <Database className="w-6 h-6 text-primary" />
                     </div>
                     גיבוי ושחזור מערכת
                   </CardTitle>
-                  <CardDescription className="text-base font-medium text-right text-slate-500 mt-1">
+                  <CardDescription className="text-base font-medium text-right text-muted-foreground mt-1">
                     ניהול מערך הגיבויים האוטומטי ושחזור נתונים במקרי חירום
                   </CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-8">
                   {/* Automatic Backup Settings */}
-                  <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
-                      <h4 className="text-lg font-black text-slate-800 dark:text-white">הגדרות אוטומציה</h4>
+                  <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+                    <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+                      <h4 className="text-lg font-black text-foreground">הגדרות אוטומציה</h4>
                       <div className="flex items-center gap-3">
-                        <span className={`font-bold ${backupConfig.enabled ? 'text-primary' : 'text-slate-400'}`}>
+                        <span className={`font-bold ${backupConfig.enabled ? 'text-primary' : 'text-muted-foreground'}`}>
                           {backupConfig.enabled ? "גיבוי אוטומטי פעיל" : "גיבוי אוטומטי כבוי"}
                         </span>
-                        <div className={`p-1.5 rounded-lg transition-colors ${backupConfig.enabled ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400'}`}>
+                        <div className={`p-1.5 rounded-lg transition-colors ${backupConfig.enabled ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                           <RefreshCw className={`w-5 h-5 ${backupConfig.enabled ? 'animate-spin-slow' : ''}`} />
                         </div>
                       </div>
@@ -646,17 +646,17 @@ export default function SettingsPage() {
 
                     <div className="space-y-6">
                       {/* Switch */}
-                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
+                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
                         <div className="text-right">
-                          <span className="block font-bold text-slate-700 dark:text-slate-200">הפעל גיבוי אוטומטי</span>
-                          <span className="text-xs text-slate-500 font-medium">המערכת תבצע גיבוי באופן עצמאי ברקע</span>
+                          <span className="block font-bold text-foreground">הפעל גיבוי אוטומטי</span>
+                          <span className="text-xs text-muted-foreground font-medium">המערכת תבצע גיבוי באופן עצמאי ברקע</span>
                         </div>
                         <div className="flex items-center gap-4">
                           <button
                             onClick={() => updateBackupConfig("enabled", !backupConfig.enabled)}
-                            className={`w-14 h-8 rounded-full relative transition-colors duration-300 ${backupConfig.enabled ? 'bg-primary' : 'bg-slate-300'}`}
+                            className={`w-14 h-8 rounded-full relative transition-colors duration-300 ${backupConfig.enabled ? 'bg-primary' : 'bg-muted-foreground/30'}`}
                           >
-                            <div className={`w-6 h-6 bg-white rounded-full shadow-md absolute top-1 transition-transform duration-300 ${backupConfig.enabled ? 'left-1' : 'left-[calc(100%-28px)]'}`} />
+                            <div className={`w-6 h-6 bg-white rounded-full shadow-md absolute top-1 transition-transform duration-300 ${backupConfig.enabled ? 'right-1' : 'right-[calc(100%-28px)]'}`} />
                           </button>
                         </div>
                       </div>
@@ -670,7 +670,7 @@ export default function SettingsPage() {
                             className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all
                                         ${backupConfig.interval_hours === hours
                                 ? "border-primary bg-primary/5 text-primary shadow-md"
-                                : "border-slate-100 dark:border-slate-800 hover:border-slate-300 bg-white dark:bg-slate-900"
+                                : "border-border hover:border-border/80 bg-card"
                               }
                                     `}
                           >
@@ -681,7 +681,7 @@ export default function SettingsPage() {
                       </div>
 
                       {/* Backup Location Info */}
-                      <div className="flex items-center gap-2 text-sm text-slate-400 font-medium mt-2 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground/60 font-medium mt-2 bg-muted/30 p-3 rounded-lg">
                         <FolderOpen className="w-4 h-4" />
                         <span>נשמר בתיקייה:</span>
                         <span dir="ltr">backend/backups/</span>
@@ -691,22 +691,22 @@ export default function SettingsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Manual Backup Section */}
-                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-primary/20 bg-primary/5 shadow-sm flex flex-col justify-between h-full">
+                    <div className="bg-card p-6 rounded-2xl border border-primary/20 bg-primary/5 shadow-sm flex flex-col justify-between h-full">
                       <div className="text-right space-y-2 mb-6">
-                        <h4 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                        <h4 className="text-lg font-black text-foreground flex items-center gap-2">
                           <div className="p-1.5 bg-primary/10 rounded-lg">
                             <Download className="w-4 h-4 text-primary" />
                           </div>
                           ייצוא ידני
                         </h4>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                           הורדה מיידית של קובץ הגיבוי למחשב האישי שלך.
                         </p>
                       </div>
                       <Button
                         onClick={handleBackup}
                         disabled={isBackingUp}
-                        className="w-full h-12 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                        className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all"
                       >
                         {isBackingUp ? (
                           <>
@@ -720,18 +720,18 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Restore Section */}
-                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm relative overflow-hidden flex flex-col justify-between h-full">
-                      <div className="absolute top-0 right-0 w-1 h-full bg-red-500/20"></div>
+                    <div className="bg-card p-6 rounded-2xl border border-destructive/20 shadow-sm relative overflow-hidden flex flex-col justify-between h-full">
+                      <div className="absolute top-0 right-0 w-1 h-full bg-destructive/10"></div>
                       <div className="text-right space-y-2 mb-6">
-                        <h4 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-                          <div className="p-1.5 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                            <Upload className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        <h4 className="text-lg font-black text-foreground flex items-center gap-2">
+                          <div className="p-1.5 bg-destructive/10 rounded-lg">
+                            <Upload className="w-4 h-4 text-destructive" />
                           </div>
                           שחזור מגיבוי
                         </h4>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                           דריסת כל הנתונים במערכת ושחזור מקובץ.
-                          <span className="block text-red-500 font-bold text-xs mt-1">פעולה בלתי הפיכה!</span>
+                          <span className="block text-destructive font-bold text-xs mt-1">פעולה בלתי הפיכה!</span>
                         </p>
                       </div>
 
@@ -747,7 +747,7 @@ export default function SettingsPage() {
                           onClick={() => document.getElementById("restore-file")?.click()}
                           disabled={isRestoring}
                           variant="outline"
-                          className="w-full h-12 border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/10 text-red-600 rounded-xl font-bold active:scale-95 transition-all"
+                          className="w-full h-11 border-destructive/20 hover:bg-destructive/10 text-destructive rounded-xl font-bold active:scale-95 transition-all"
                         >
                           {isRestoring ? (
                             <>
@@ -788,17 +788,17 @@ function NotifSetting({
     <div
       className={`
       flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer group
-      ${enabled ? "border-primary/20 bg-primary/5" : "border-slate-50 dark:border-slate-900 hover:border-slate-200 dark:hover:border-slate-700"}
+      ${enabled ? "border-primary/20 bg-primary/5" : "border-border bg-card hover:border-border/80"}
     `}
       onClick={() => onChange(!enabled)}
     >
       <div className="text-right">
         <h5
-          className={`text-base font-black transition-colors ${enabled ? "text-primary" : "text-slate-800 dark:text-white"}`}
+          className={`text-base font-black transition-colors ${enabled ? "text-primary" : "text-foreground"}`}
         >
           {title}
         </h5>
-        <p className="text-sm text-slate-500 dark:text-slate-400 font-bold leading-tight mt-0.5">
+        <p className="text-sm text-muted-foreground font-bold leading-tight mt-0.5">
           {description}
         </p>
       </div>
@@ -806,19 +806,19 @@ function NotifSetting({
       <div
         className={`
         w-14 h-7 rounded-full relative p-1 transition-colors duration-300 flex-shrink-0
-        ${enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"}
+        ${enabled ? "bg-primary" : "bg-muted-foreground/20"}
       `}
       >
         <div
           className={`
-          w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 flex items-center justify-center
+          w-5 h-5 bg-background rounded-full shadow-sm transition-transform duration-300 flex items-center justify-center
           ${enabled ? "-translate-x-7" : "translate-x-0"}
-        `} // Fixed translate logic for RTL: if enabled (moved to left) -> translate negative.
+        `}
         >
           {enabled ? (
             <Check className="w-3 h-3 text-primary" />
           ) : (
-            <div className="w-1.5 h-1.5 bg-slate-300 dark:bg-slate-500 rounded-full" />
+            <div className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full" />
           )}
         </div>
       </div>
@@ -843,15 +843,15 @@ function NavItem({
       className={`
         w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 font-black text-sm
         ${active
-          ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]"
-          : "text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
+          ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02]"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
         }
       `}
     >
-      <Icon className={`w-5 h-5 ${active ? "text-white" : "text-slate-400"}`} />
+      <Icon className={`w-5 h-5 ${active ? "text-primary-foreground" : "text-muted-foreground"}`} />
       <span className="flex-1 text-right">{label}</span>
       {active && (
-        <div className="w-2 h-2 bg-white rounded-full animate-pulse shadow-sm shadow-white" />
+        <div className="w-2 h-2 bg-primary-foreground rounded-full animate-pulse shadow-sm shadow-primary-foreground" />
       )}
     </button>
   );

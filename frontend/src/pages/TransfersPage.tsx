@@ -151,29 +151,29 @@ export default function TransfersPage() {
         subtitle="ניהול מעברי שוטרים בין מחלקות, מדורים וחוליות"
         category="בקשות העברה"
         categoryLink="/transfers"
-        iconClassName="from-indigo-50 to-indigo-100 border-indigo-200"
+        iconClassName="from-primary/10 to-primary/5 border-primary/20"
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-          <TabsList className="flex w-full min-w-[400px] bg-slate-100/50 dark:bg-slate-900/50 p-1 rounded-xl">
-            <TabsTrigger value="pending" className="flex-1 rounded-lg gap-2">
+          <TabsList className="flex w-full min-w-[400px] bg-muted/50 p-1 rounded-xl">
+            <TabsTrigger value="pending" className="flex-1 rounded-lg gap-2 data-[state=active]:bg-card">
               <Clock className="w-4 h-4" />
               בקשות ממתינות
               {pendingTransfers.length > 0 && (
                 <Badge
                   variant="secondary"
-                  className="mr-2 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
+                  className="mr-2 bg-primary/10 text-primary border-none"
                 >
                   {pendingTransfers.length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="new" className="flex-1 rounded-lg gap-2">
+            <TabsTrigger value="new" className="flex-1 rounded-lg gap-2 data-[state=active]:bg-card">
               <UserPlus className="w-4 h-4" />
               בקשה חדשה
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex-1 rounded-lg gap-2">
+            <TabsTrigger value="history" className="flex-1 rounded-lg gap-2 data-[state=active]:bg-card">
               <History className="w-4 h-4" />
               היסטוריה
             </TabsTrigger>
@@ -183,8 +183,8 @@ export default function TransfersPage() {
         {/* --- Pending Transfers --- */}
         <TabsContent value="pending" className="mt-6 space-y-4">
           {pendingTransfers.length === 0 && !loading ? (
-            <Card className="border-dashed py-12">
-              <CardContent className="flex flex-col items-center justify-center text-slate-400">
+            <Card className="border-dashed py-12 bg-transparent border-border">
+              <CardContent className="flex flex-col items-center justify-center text-muted-foreground">
                 <TrendingUp className="w-12 h-12 mb-4 opacity-20" />
                 <p className="text-lg font-medium">אין בקשות העברה ממתינות</p>
                 <p className="text-sm">
@@ -193,32 +193,32 @@ export default function TransfersPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <Table className="min-w-[800px]">
-                  <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
-                    <TableRow>
-                      <TableHead className="text-right py-4 px-6">
+                  <TableHeader className="bg-muted/50">
+                    <TableRow className="border-b border-border hover:bg-transparent">
+                      <TableHead className="text-right py-4 px-6 text-muted-foreground font-black text-[10px] uppercase tracking-widest">
                         שוטר
                       </TableHead>
-                      <TableHead className="text-right">ממקור</TableHead>
-                      <TableHead className="text-right">ליעד</TableHead>
-                      <TableHead className="text-right">הוגש ע"י</TableHead>
-                      <TableHead className="text-center">פעולות</TableHead>
+                      <TableHead className="text-right text-muted-foreground font-black text-[10px] uppercase tracking-widest">ממקור</TableHead>
+                      <TableHead className="text-right text-muted-foreground font-black text-[10px] uppercase tracking-widest">ליעד</TableHead>
+                      <TableHead className="text-right text-muted-foreground font-black text-[10px] uppercase tracking-widest">הוגש ע"י</TableHead>
+                      <TableHead className="text-center text-muted-foreground font-black text-[10px] uppercase tracking-widest">פעולות</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {pendingTransfers.map((req) => (
                       <TableRow
                         key={req.id}
-                        className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
+                        className="group hover:bg-muted/50 border-b border-border"
                       >
                         <TableCell className="py-4 px-6">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs">
                               {req.employee_name?.[0]}
                             </div>
-                            <span className="font-bold text-slate-700 dark:text-slate-200">
+                            <span className="font-bold text-foreground">
                               {req.employee_name}
                             </span>
                           </div>
@@ -226,7 +226,7 @@ export default function TransfersPage() {
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className="text-[10px] border-slate-200 bg-slate-50"
+                            className="text-[10px] border-border bg-muted/50 text-muted-foreground"
                           >
                             {req.source_name} (
                             {req.source_type === "department"
@@ -239,8 +239,8 @@ export default function TransfersPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <ArrowRight className="w-3 h-3 text-slate-300" />
-                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px]">
+                            <ArrowRight className="w-3 h-3 text-muted-foreground/30" />
+                            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
                               {req.target_name} (
                               {req.target_type === "department"
                                 ? "מחלקה"
@@ -251,7 +251,7 @@ export default function TransfersPage() {
                             </Badge>
                           </div>
                         </TableCell>
-                        <TableCell className="text-xs text-slate-500 font-medium">
+                        <TableCell className="text-xs text-muted-foreground font-medium">
                           {req.requester_name}
                         </TableCell>
                         <TableCell>
@@ -260,7 +260,7 @@ export default function TransfersPage() {
                               <>
                                 <Button
                                   size="sm"
-                                  className="h-8 bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+                                  className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
                                   onClick={() => handleApprove(req.id)}
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" />
@@ -269,7 +269,7 @@ export default function TransfersPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-8 border-red-200 text-red-600 hover:bg-red-50 gap-1.5"
+                                  className="h-8 border-destructive/20 text-destructive hover:bg-destructive/10 gap-1.5"
                                   onClick={() => handleReject(req.id)}
                                 >
                                   <XCircle className="w-3.5 h-3.5" />
@@ -280,13 +280,13 @@ export default function TransfersPage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-8 text-slate-400 hover:text-red-500"
+                                className="h-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                 onClick={() => handleCancel(req.id)}
                               >
                                 ביטול בקשה
                               </Button>
                             ) : (
-                              <span className="text-[10px] text-slate-400 italic">
+                              <span className="text-[10px] text-muted-foreground italic">
                                 ממתין לאישור
                               </span>
                             )}
@@ -303,55 +303,55 @@ export default function TransfersPage() {
 
         {/* --- New Transfer Form --- */}
         <TabsContent value="new" className="mt-6">
-          <Card className="max-w-2xl mx-auto border-slate-200 shadow-xl overflow-hidden rounded-3xl">
-            <CardHeader className="bg-slate-50/80 border-b border-slate-100 p-8">
+          <Card className="max-w-2xl mx-auto border-border bg-card shadow-xl overflow-hidden rounded-3xl">
+            <CardHeader className="bg-muted/50 border-b border-border p-8">
               <CardTitle className="text-xl font-black flex items-center gap-3">
-                <UserPlus className="w-6 h-6 text-indigo-600" />
+                <UserPlus className="w-6 h-6 text-primary" />
                 יצירת בקשת העברה חדשה
               </CardTitle>
-              <CardDescription className="text-sm font-bold opacity-70">
+              <CardDescription className="text-sm font-bold text-muted-foreground">
                 עבור שוטר מעל סמכותך/מדורך או כמנהל מערכת
               </CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-8">
               {/* 1. Select Employee */}
               <div className="space-y-3">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block pr-1">
+                <label className="text-xs font-black text-muted-foreground uppercase tracking-widest block pr-1">
                   בחר שוטר לביצוע העברה
                 </label>
                 <div className="relative">
-                  <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                  <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                   <Input
                     placeholder="חפש לפי שם או מספר אישי..."
-                    className="h-12 pr-11 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500/20"
+                    className="h-12 pr-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-2xl text-sm font-bold"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                   {filteredEmployees.length > 0 && (
-                    <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl z-20 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-2xl shadow-2xl z-20 overflow-hidden animate-in fade-in slide-in-from-top-2">
                       {filteredEmployees.map((emp) => (
                         <button
                           key={emp.id}
-                          className="w-full p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-50 last:border-0"
+                          className="w-full p-4 flex items-center justify-between hover:bg-muted transition-colors border-b border-border last:border-0"
                           onClick={() => {
                             setSelectedEmployee(emp);
                             setSearchTerm(`${emp.first_name} ${emp.last_name}`);
                           }}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 font-bold text-xs uppercase">
+                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground font-bold text-xs uppercase">
                               {emp.first_name[0]} {emp.last_name[0]}
                             </div>
                             <div className="flex flex-col text-right">
-                              <span className="text-sm font-bold text-slate-900 dark:text-white">
+                              <span className="text-sm font-bold text-foreground">
                                 {emp.first_name} {emp.last_name}
                               </span>
-                              <span className="text-[10px] text-slate-400 font-bold">
+                              <span className="text-[10px] text-muted-foreground font-bold">
                                 {emp.personal_number}
                               </span>
                             </div>
                           </div>
-                          <div className="text-[10px] font-black text-indigo-500 uppercase">
+                          <div className="text-[10px] font-black text-primary uppercase">
                             {emp.department_name || "מטה"}
                           </div>
                         </button>
@@ -362,10 +362,10 @@ export default function TransfersPage() {
               </div>
 
               {selectedEmployee && (
-                <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800 flex items-center justify-between animate-in zoom-in-95 duration-200">
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between animate-in zoom-in-95 duration-200">
                   <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-indigo-500" />
-                    <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
+                    <User className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-bold text-primary">
                       משבץ שוב את: {selectedEmployee.first_name}{" "}
                       {selectedEmployee.last_name}
                     </span>
@@ -374,7 +374,7 @@ export default function TransfersPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedEmployee(null)}
-                    className="text-indigo-400 hover:text-indigo-600"
+                    className="text-primary hover:text-primary/90 hover:bg-primary/10"
                   >
                     החלף שוטר
                   </Button>
@@ -384,7 +384,7 @@ export default function TransfersPage() {
               {/* 2. Choose Target */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block pr-1">
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest block pr-1">
                     רמת יעד
                   </label>
                   <Select
@@ -394,7 +394,7 @@ export default function TransfersPage() {
                       setTargetId("");
                     }}
                   >
-                    <SelectTrigger className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold">
+                    <SelectTrigger className="h-12 bg-muted/50 border-input rounded-2xl font-bold">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -406,11 +406,11 @@ export default function TransfersPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block pr-1">
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-widest block pr-1">
                     בחירת יעד
                   </label>
                   <Select value={targetId} onValueChange={setTargetId}>
-                    <SelectTrigger className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold">
+                    <SelectTrigger className="h-12 bg-muted/50 border-input rounded-2xl font-bold">
                       <SelectValue placeholder="בחר יעד..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -444,12 +444,12 @@ export default function TransfersPage() {
 
               {/* 3. Reason */}
               <div className="space-y-3">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block pr-1">
+                <label className="text-xs font-black text-muted-foreground uppercase tracking-widest block pr-1">
                   סיבה לבקשה (אופציונלי)
                 </label>
                 <Input
                   placeholder="פרט את הסיבה להעברה..."
-                  className="h-12 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20"
+                  className="h-12 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-2xl text-sm font-medium"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                 />
@@ -458,7 +458,7 @@ export default function TransfersPage() {
               <Button
                 onClick={handleCreateRequest}
                 disabled={isSubmitting || !selectedEmployee || !targetId}
-                className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 rounded-2xl text-base font-black shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.98] gap-3"
+                className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl text-base font-black shadow-xl shadow-primary/20 transition-all active:scale-[0.98] gap-3"
               >
                 <UserPlus className="w-5 h-5" />
                 שלח בקשת העברה לאישור
@@ -469,46 +469,46 @@ export default function TransfersPage() {
 
         {/* --- History --- */}
         <TabsContent value="history" className="mt-6">
-          <div className="bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <Table className="min-w-[800px]">
-                <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
-                  <TableRow>
-                    <TableHead className="text-right py-4 px-6">שוטר</TableHead>
-                    <TableHead className="text-right">מסלול העברה</TableHead>
-                    <TableHead className="text-right">תאריך</TableHead>
-                    <TableHead className="text-right">סטטוס</TableHead>
-                    <TableHead className="text-right">סיבת דחייה</TableHead>
+                <TableHeader className="bg-muted/50">
+                  <TableRow className="border-b border-border hover:bg-transparent">
+                    <TableHead className="text-right py-4 px-6 text-muted-foreground font-black text-[10px] uppercase tracking-widest">שוטר</TableHead>
+                    <TableHead className="text-right text-muted-foreground font-black text-[10px] uppercase tracking-widest">מסלול העברה</TableHead>
+                    <TableHead className="text-right text-muted-foreground font-black text-[10px] uppercase tracking-widest">תאריך</TableHead>
+                    <TableHead className="text-right text-muted-foreground font-black text-[10px] uppercase tracking-widest">סטטוס</TableHead>
+                    <TableHead className="text-right text-muted-foreground font-black text-[10px] uppercase tracking-widest">סיבת דחייה</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {history.map((req) => (
                     <TableRow
                       key={req.id}
-                      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
+                      className="group hover:bg-muted/50 border-b border-border"
                     >
-                      <TableCell className="py-4 px-6 font-bold">
+                      <TableCell className="py-4 px-6 font-bold text-foreground">
                         {req.employee_name}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-xs">
-                          <span className="opacity-60">{req.source_name}</span>
-                          <ArrowRight className="w-3 h-3 opacity-30" />
-                          <span className="font-bold">{req.target_name}</span>
+                          <span className="text-muted-foreground">{req.source_name}</span>
+                          <ArrowRight className="w-3 h-3 text-muted-foreground/30" />
+                          <span className="font-bold text-foreground">{req.target_name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-[10px] text-slate-400 font-bold uppercase">
+                      <TableCell className="text-[10px] text-muted-foreground font-bold uppercase">
                         {new Date(req.created_at).toLocaleDateString("he-IL")}
                       </TableCell>
                       <TableCell>
                         <Badge
                           className={cn(
-                            "text-[9px] font-black uppercase px-2 py-0.5",
+                            "text-[9px] font-black uppercase px-2 py-0.5 border-none",
                             req.status === "approved"
-                              ? "bg-emerald-100 text-emerald-700"
+                              ? "bg-emerald-500/10 text-emerald-600"
                               : req.status === "rejected"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-slate-100 text-slate-700",
+                                ? "bg-destructive/10 text-destructive"
+                                : "bg-muted text-muted-foreground",
                           )}
                         >
                           {req.status === "approved"
@@ -518,7 +518,7 @@ export default function TransfersPage() {
                               : "בוטל"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-[10px] text-red-400 italic">
+                      <TableCell className="text-[10px] text-destructive italic">
                         {req.rejection_reason}
                       </TableCell>
                     </TableRow>
@@ -527,7 +527,7 @@ export default function TransfersPage() {
                     <TableRow>
                       <TableCell
                         colSpan={5}
-                        className="h-24 text-center text-slate-400"
+                        className="h-24 text-center text-muted-foreground"
                       >
                         אין היסטוריה זמינה
                       </TableCell>
@@ -542,7 +542,7 @@ export default function TransfersPage() {
 
       {/* Alert for low permissions */}
       {!canManage && (
-        <div className="max-w-2xl mx-auto mt-8 flex items-start gap-4 p-4 rounded-2xl bg-amber-50 border border-amber-100 dark:bg-amber-900/10 dark:border-amber-800/30">
+        <div className="max-w-2xl mx-auto mt-8 flex items-start gap-4 p-4 rounded-2xl bg-warning/10 border border-warning/20">
           <ShieldAlert className="w-5 h-5 text-amber-500 mt-0.5" />
           <div className="flex flex-col gap-1">
             <span className="text-sm font-bold text-amber-800 dark:text-amber-400">

@@ -38,8 +38,8 @@ export interface Employee {
 
   // Status fields
   status_id?: number | null;
-  status_name: string;
-  status_color: string;
+  status_name?: string | null;
+  status_color?: string | null;
   last_status_update?: string | null;
   is_active: boolean;
 }

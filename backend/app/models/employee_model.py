@@ -44,7 +44,11 @@ class EmployeeModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
                 SELECT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number,
+                       e.national_id, e.birth_date, e.city, e.emergency_contact,
+                       e.enlistment_date, e.discharge_date, e.assignment_date,
+                       e.security_clearance, e.police_license, e.is_active,
                        e.must_change_password, e.is_admin, e.is_commander,
+                       e.service_type_id,
                        d.name as department_name, 
                        s.name as section_name, 
                        t.name as team_name,
@@ -55,9 +59,10 @@ class EmployeeModel:
                        r.name as role_name,
                        d.id as assigned_department_id,
                        s.id as assigned_section_id,
+                       e.team_id, e.section_id, e.department_id,
                        (SELECT id FROM departments WHERE commander_id = e.id LIMIT 1) as commands_department_id_direct,
                        (SELECT id FROM sections WHERE commander_id = e.id LIMIT 1) as commands_section_id_direct,
-                        (SELECT id FROM teams WHERE commander_id = e.id LIMIT 1) as commands_team_id,
+                       (SELECT id FROM teams WHERE commander_id = e.id LIMIT 1) as commands_team_id,
                        e.notif_sick_leave, e.notif_transfers
                 FROM employees e
                 -- Structure Joins (Assigned)
@@ -395,6 +400,13 @@ class EmployeeModel:
             params.append(emp_id)
 
             query = f"UPDATE employees SET {', '.join(set_clauses)} WHERE id = %s"
+
+            # Business Rule: If is_active changes, clear open attendance logs
+            if "is_active" in data:
+                cur.execute(
+                    "UPDATE attendance_logs SET end_datetime = NOW() WHERE employee_id = %s AND end_datetime IS NULL",
+                    (emp_id,),
+                )
 
             cur.execute(query, tuple(params))
             conn.commit()

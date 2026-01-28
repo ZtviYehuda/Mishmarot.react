@@ -26,7 +26,6 @@ export const WhatsAppReportDialog = ({
   const { user } = useAuthContext();
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [includeAllStatuses, setIncludeAllStatuses] = useState(true);
-  const [loading, setLoading] = useState(false);
 
   // Get unique statuses from employees
   const availableStatuses = useMemo(() => {
@@ -175,15 +174,15 @@ export const WhatsAppReportDialog = ({
           )}
 
           {/* Report Preview */}
-          <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg text-sm">
+          <div className="mt-6 p-4 bg-muted rounded-lg text-sm">
             <p className="font-semibold mb-2">תצוגה מקדימה:</p>
-            <div className="text-xs text-slate-700 dark:text-slate-300 space-y-1 whitespace-pre-wrap max-h-40 overflow-y-auto">
+            <div className="text-xs text-muted-foreground space-y-1 whitespace-pre-wrap max-h-40 overflow-y-auto">
               {generateWhatsAppMessage()}
             </div>
           </div>
         </div>
 
-        <div className="flex gap-3 pt-4 border-t">
+        <div className="flex gap-3 pt-4 border-t border-border">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -193,7 +192,7 @@ export const WhatsAppReportDialog = ({
           </Button>
           <Button
             onClick={handleSendWhatsApp}
-            className="flex-1 bg-green-600 hover:bg-green-700 gap-2"
+            className="flex-1 bg-green-600 hover:bg-green-700 gap-2 text-white"
           >
             <MessageCircle className="w-4 h-4" />
             שלח בווטסאפ

@@ -54,9 +54,9 @@ export default function MainLayout() {
 
   const navItems = [
     { name: "לוח בקרה", path: "/", icon: LayoutDashboard },
+    { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
     { name: "ניהול שוטרים", path: "/employees", icon: Users },
     { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
-    { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
     { name: "הגדרות", path: "/settings", icon: Settings },
   ];
 
@@ -68,21 +68,21 @@ export default function MainLayout() {
       {/* Sidebar - Official White Style */}
       <aside
         className={cn(
-          "bg-white border-l border-slate-200 transition-all duration-300 flex flex-col z-50 dark:bg-card dark:border-border shadow-[4px_0_24px_rgba(0,0,0,0.02)] fixed lg:sticky top-0 h-screen overflow-hidden",
+          "bg-card border-l border-border transition-all duration-300 flex flex-col z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] fixed lg:sticky top-0 h-screen overflow-hidden",
           isSidebarOpen
             ? "w-64 translate-x-0"
             : "w-0 lg:w-16 -translate-x-full lg:translate-x-0",
         )}
       >
         {/* Sidebar Header */}
-        <div className="h-16 flex items-center px-4 border-b border-slate-100 dark:border-border/50 justify-between">
+        <div className="h-16 flex items-center px-4 border-b border-border/50 justify-between">
           <div className="flex items-center gap-3 overflow-hidden text-right">
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
-              <ShieldCheck className="w-5 h-5 text-white" />
+              <ShieldCheck className="w-5 h-5 text-primary-foreground" />
             </div>
             {isSidebarOpen && (
               <div className="flex flex-col">
-                <span className="font-black text-[#001e30] text-sm tracking-tight dark:text-white leading-none">
+                <span className="font-black text-foreground text-sm tracking-tight leading-none">
                   gov.il
                 </span>
                 <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1">
@@ -93,7 +93,7 @@ export default function MainLayout() {
           </div>
           {/* Close button for mobile sidebar */}
           <button
-            className="lg:hidden p-1 text-slate-400 hover:text-slate-600"
+            className="lg:hidden p-1 text-muted-foreground hover:text-foreground"
             onClick={() => setIsSidebarOpen(false)}
           >
             <X className="w-5 h-5" />
@@ -116,8 +116,8 @@ export default function MainLayout() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative",
                   isActive
-                    ? "bg-primary/5 text-primary"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-primary dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground",
+                    ? "bg-primary/10 text-primary font-bold"
+                    : "text-muted-foreground hover:bg-muted hover:text-primary",
                 )}
               >
                 <Icon
@@ -125,7 +125,7 @@ export default function MainLayout() {
                     "w-5 h-5 shrink-0 transition-transform duration-300 group-hover:scale-105",
                     isActive
                       ? "text-primary"
-                      : "text-slate-400 group-hover:text-primary",
+                      : "text-muted-foreground group-hover:text-primary",
                   )}
                 />
                 {(isSidebarOpen || window.innerWidth < 1024) && (
@@ -142,7 +142,7 @@ export default function MainLayout() {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-3 border-t border-slate-100 dark:border-border/50 space-y-3">
+        <div className="p-3 border-t border-border/50 space-y-3">
           {/* User Profile Area */}
           {isSidebarOpen ? (
             <Link
@@ -150,17 +150,17 @@ export default function MainLayout() {
               onClick={() => {
                 if (window.innerWidth < 1024) setIsSidebarOpen(false);
               }}
-              className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 border border-slate-100 dark:bg-muted/30 dark:border-border/50 hover:bg-slate-100 dark:hover:bg-muted/50 transition-colors"
+              className="flex items-center gap-3 p-2 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-primary font-black text-[10px] shrink-0 dark:bg-slate-800 dark:border-slate-700">
+              <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-primary font-black text-[10px] shrink-0">
                 {user?.first_name?.[0]}
                 {user?.last_name?.[0]}
               </div>
               <div className="flex flex-col min-w-0 text-right">
-                <span className="text-xs font-black text-[#001e30] truncate dark:text-white leading-none mb-1">
+                <span className="text-xs font-black text-foreground truncate leading-none mb-1">
                   {user?.first_name} {user?.last_name}
                 </span>
-                <span className="text-[9px] font-bold text-slate-400 truncate uppercase tracking-tighter">
+                <span className="text-[9px] font-bold text-muted-foreground truncate uppercase tracking-tighter">
                   {user?.is_admin ? "Administrator" : "Commander"}
                 </span>
               </div>
@@ -170,7 +170,7 @@ export default function MainLayout() {
               to={`/settings`}
               className="flex justify-center transition-transform hover:scale-105"
             >
-              <div className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-primary font-black text-[10px] dark:bg-slate-800 dark:border-slate-700 shadow-sm">
+              <div className="w-9 h-9 rounded-full bg-muted/30 border border-border/50 flex items-center justify-center text-primary font-black text-[10px] shadow-sm">
                 {user?.first_name?.[0]}
               </div>
             </Link>
@@ -181,7 +181,7 @@ export default function MainLayout() {
             <button
               onClick={toggleTheme}
               title={theme === "dark" ? "Light Mode" : "Dark Mode"}
-              className="flex-grow h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-primary transition-all border border-transparent hover:border-slate-100 dark:hover:bg-muted dark:hover:border-border"
+              className="flex-grow h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-primary transition-all border border-transparent hover:border-border"
             >
               {theme === "dark" ? (
                 <Sun className="w-4 h-4" />
@@ -192,7 +192,7 @@ export default function MainLayout() {
             <button
               onClick={logout}
               title="Logout"
-              className="flex-grow h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all border border-transparent hover:border-red-100/50 dark:hover:bg-destructive/10"
+              className="flex-grow h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all border border-transparent hover:border-destructive/20"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -211,12 +211,12 @@ export default function MainLayout() {
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col min-w-0">
         {/* Topbar - Professional governmental banner style */}
-        <header className="h-14 sm:h-16 bg-white border-b border-slate-200 px-3 sm:px-4 lg:px-6 flex items-center justify-between sticky top-0 z-40 dark:bg-card dark:border-border shadow-sm shadow-slate-100/50">
+        <header className="h-14 sm:h-16 bg-card border-b border-border px-3 sm:px-4 lg:px-6 flex items-center justify-between sticky top-0 z-40 shadow-sm">
           <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className={cn(
-                "w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-all shrink-0 relative",
+                "w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-all shrink-0 relative",
                 !isSidebarOpen && "animate-pulse",
               )}
               aria-label="תפריט ניווט"
@@ -229,12 +229,12 @@ export default function MainLayout() {
                 </span>
               )}
             </button>
-            <div className="h-4 sm:h-5 w-px bg-slate-200 hidden sm:block dark:bg-border" />
+            <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
             <div className="flex flex-col text-right min-w-0">
-              <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5 sm:mb-1 hidden sm:block">
+              <span className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-0.5 sm:mb-1 hidden sm:block">
                 Security Hub
               </span>
-              <h2 className="text-xs sm:text-sm font-black text-[#001e30] dark:text-white truncate">
+              <h2 className="text-xs sm:text-sm font-black text-foreground truncate">
                 {location.pathname === "/"
                   ? "לוח בקרה מרכזי"
                   : navItems.find((n) => n.path === location.pathname)?.name ||
@@ -247,21 +247,21 @@ export default function MainLayout() {
             {/* Notifications Bell */}
             <Popover>
               <PopoverTrigger asChild>
-                <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-500 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all dark:bg-slate-800 dark:border-slate-700">
+                <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all">
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                   {alerts.length > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[9px] sm:text-[10px] font-black text-white ring-2 ring-white transition-transform animate-in zoom-in">
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-destructive text-[9px] sm:text-[10px] font-black text-destructive-foreground ring-2 ring-card transition-transform animate-in zoom-in">
                       {alerts.length}
                     </span>
                   )}
                 </button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-80 p-0 overflow-hidden rounded-2xl border-slate-200 dark:border-slate-800 shadow-2xl"
+                className="w-80 p-0 overflow-hidden rounded-2xl border-border shadow-2xl"
                 align="start"
               >
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 sticky top-0 z-10">
-                  <span className="text-xs font-black text-slate-900 dark:text-white text-right">
+                <div className="p-4 border-b border-border flex items-center justify-between bg-card sticky top-0 z-10">
+                  <span className="text-xs font-black text-foreground text-right">
                     מרכז התראות ({alerts.length})
                   </span>
                   <button
@@ -271,7 +271,7 @@ export default function MainLayout() {
                     רענן רשימה
                   </button>
                 </div>
-                <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
+                <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-muted/50">
                   {loading ? (
                     <div className="p-12 flex flex-col items-center justify-center gap-3 opacity-50">
                       <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -279,14 +279,14 @@ export default function MainLayout() {
                     </div>
                   ) : alerts.length === 0 ? (
                     <div className="p-12 flex flex-col items-center justify-center gap-4 opacity-50">
-                      <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
                         <CheckCircle2 className="w-8 h-8" />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-black text-slate-900 dark:text-white">
+                        <p className="text-sm font-black text-foreground">
                           שיגרה מלאה
                         </p>
-                        <p className="text-[10px] font-bold text-slate-500">
+                        <p className="text-[10px] font-bold text-muted-foreground">
                           אין התראות חדשות המצריכות טיפול
                         </p>
                       </div>
@@ -297,16 +297,16 @@ export default function MainLayout() {
                         <Link
                           key={alert.id}
                           to={alert.link}
-                          className="p-4 flex gap-4 hover:bg-white dark:hover:bg-slate-800 transition-colors border-b border-slate-100 last:border-0 dark:border-slate-800 group"
+                          className="p-4 flex gap-4 hover:bg-card transition-colors border-b border-border last:border-0 group"
                         >
                           <div
                             className={cn(
                               "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm",
                               alert.type === "danger"
-                                ? "bg-red-50 text-red-500 dark:bg-red-900/20"
+                                ? "bg-destructive/10 text-destructive"
                                 : alert.type === "warning"
-                                  ? "bg-amber-50 text-amber-500 dark:bg-amber-900/20"
-                                  : "bg-blue-50 text-blue-500 dark:bg-blue-900/20",
+                                  ? "bg-amber-500/10 text-amber-500"
+                                  : "bg-primary/10 text-primary",
                             )}
                           >
                             {alert.type === "danger" ? (
@@ -318,10 +318,10 @@ export default function MainLayout() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0 text-right">
-                            <p className="text-xs font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                            <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
                               {alert.title}
                             </p>
-                            <p className="text-[11px] font-bold text-slate-500 leading-tight mt-1">
+                            <p className="text-[11px] font-bold text-muted-foreground leading-tight mt-1">
                               {alert.description}
                             </p>
                           </div>
@@ -331,8 +331,8 @@ export default function MainLayout() {
                   )}
                 </div>
                 {alerts.length > 0 && (
-                  <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 text-center">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                  <div className="p-3 bg-card border-t border-border text-center">
+                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
                       נא לטפל בבקשות הממתינות בהקדם
                     </span>
                   </div>
@@ -340,11 +340,11 @@ export default function MainLayout() {
               </PopoverContent>
             </Popover>
 
-            <div className="h-4 sm:h-5 w-px bg-slate-200 hidden sm:block dark:bg-border" />
+            <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
 
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 Active Secure Hub
               </span>
             </div>

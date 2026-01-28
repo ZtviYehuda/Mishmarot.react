@@ -14,7 +14,7 @@ export default function EmployeesPage() {
         subtitle="מערך ניהול וצפייה בנתוני השוטרים ביחידה"
         category="ניהול שוטרים"
         categoryLink="/employees"
-        iconClassName="from-blue-50 to-blue-100 border-blue-200"
+        iconClassName="from-primary/10 to-primary/5 border-primary/20"
       />
 
       <EmployeeTable

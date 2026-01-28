@@ -43,13 +43,13 @@ export const DashboardFilters = ({
     const hasActiveFilters = !!selectedDeptId || !!selectedSectionId || !!selectedTeamId || !!selectedStatusId;
 
     return (
-        <Card className="p-4 border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] bg-white dark:bg-card dark:border-border mt-4 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-1 h-full bg-[#0074ff]/10" />
+        <Card className="p-4 border border-border shadow-sm bg-card mt-4 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-1 h-full bg-primary/10" />
 
             <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
                 {/* Header Section */}
-                <div className="flex items-center gap-2 text-[#001e30] dark:text-white font-black text-sm pl-6 lg:border-l border-slate-100 dark:border-slate-800 min-w-fit shrink-0">
-                    <div className="p-1.5 rounded-lg bg-[#eff6ff] dark:bg-[#0074ff]/10 text-[#0074ff]">
+                <div className="flex items-center gap-2 text-foreground font-black text-sm pl-6 lg:border-l border-border min-w-fit shrink-0">
+                    <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
                         <Filter className="w-4 h-4" />
                     </div>
                     סינון ממוקד
@@ -61,13 +61,13 @@ export const DashboardFilters = ({
                     <div className="flex flex-wrap gap-4 w-full">
                         {/* Department */}
                         <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mr-1">מחלקה</label>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-1">מחלקה</label>
                             <Select
                                 value={selectedDeptId || "all"}
                                 onValueChange={(val) => onFilterChange('department', val === "all" ? undefined : val)}
                                 disabled={!canSelectDept && !!selectedDeptId}
                             >
-                                <SelectTrigger className="h-10 text-right font-bold text-xs bg-slate-50/50 dark:bg-muted/30 border-slate-200 dark:border-border" dir="rtl">
+                                <SelectTrigger className="h-10 text-right font-bold text-xs bg-muted/50 border-input" dir="rtl">
                                     <SelectValue placeholder="כל המחלקות" />
                                 </SelectTrigger>
                                 <SelectContent dir="rtl">
@@ -81,13 +81,13 @@ export const DashboardFilters = ({
 
                         {/* Section */}
                         <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mr-1">מדור</label>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-1">מדור</label>
                             <Select
                                 value={selectedSectionId || "all"}
                                 onValueChange={(val) => onFilterChange('section', val === "all" ? undefined : val)}
                                 disabled={(!selectedDeptId && !canSelectDept) || (!canSelectSection && !!selectedSectionId) || (canSelectDept && !selectedDeptId)}
                             >
-                                <SelectTrigger className="h-10 text-right font-bold text-xs bg-slate-50/50 dark:bg-muted/30 border-slate-200 dark:border-border" dir="rtl">
+                                <SelectTrigger className="h-10 text-right font-bold text-xs bg-muted/50 border-input" dir="rtl">
                                     <SelectValue placeholder={!selectedDeptId ? "בחר מחלקה..." : "כל המדורים"} />
                                 </SelectTrigger>
                                 <SelectContent dir="rtl">
@@ -101,13 +101,13 @@ export const DashboardFilters = ({
 
                         {/* Team */}
                         <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mr-1">חולייה</label>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-1">חולייה</label>
                             <Select
                                 value={selectedTeamId || "all"}
                                 onValueChange={(val) => onFilterChange('team', val === "all" ? undefined : val)}
                                 disabled={(!selectedSectionId && !canSelectSection) || (!canSelectTeam && !!selectedTeamId) || (canSelectSection && !selectedSectionId)}
                             >
-                                <SelectTrigger className="h-10 text-right font-bold text-xs bg-slate-50/50 dark:bg-muted/30 border-slate-200 dark:border-border" dir="rtl">
+                                <SelectTrigger className="h-10 text-right font-bold text-xs bg-muted/50 border-input" dir="rtl">
                                     <SelectValue placeholder={!selectedSectionId ? "בחר מדור..." : "כל החוליות"} />
                                 </SelectTrigger>
                                 <SelectContent dir="rtl">
@@ -121,18 +121,18 @@ export const DashboardFilters = ({
                     </div>
 
                     {/* Bottom Row: Status Filter */}
-                    <div className="flex items-end justify-between gap-4 w-full pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-end justify-between gap-4 w-full pt-2 border-t border-border">
                         <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mr-1">פילוח לפי סטטוס נוכחות</label>
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-1">פילוח לפי סטטוס נוכחות</label>
                             <Select
                                 value={selectedStatusId || "all"}
                                 onValueChange={(val) => onFilterChange('status', val === "all" ? undefined : val)}
                             >
-                                <SelectTrigger className="h-10 text-right bg-blue-50/30 dark:bg-blue-900/10 border-[#0074ff]/20 dark:border-[#0074ff]/20 font-bold text-sm text-[#0074ff]" dir="rtl">
+                                <SelectTrigger className="h-10 text-right bg-primary/5 border-primary/20 font-bold text-sm text-primary" dir="rtl">
                                     <SelectValue placeholder="בחר סטטוס לפירוט..." />
                                 </SelectTrigger>
                                 <SelectContent dir="rtl">
-                                    <SelectItem value="all" className="font-bold text-slate-500">כל הסטטוסים</SelectItem>
+                                    <SelectItem value="all" className="font-bold text-muted-foreground">כל הסטטוסים</SelectItem>
                                     {statuses.map(st => (
                                         <SelectItem key={st.status_id} value={st.status_id.toString()}>
                                             <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ export const DashboardFilters = ({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onFilterChange('reset')}
-                                className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 h-10 px-6 font-bold transition-all border border-slate-100 dark:border-slate-800"
+                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-10 px-6 font-bold transition-all border border-border"
                             >
                                 <X className="w-4 h-4 ml-2" />
                                 איפוס כלל הסינונים

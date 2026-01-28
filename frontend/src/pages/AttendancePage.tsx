@@ -28,6 +28,7 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
+  User,
 } from "lucide-react";
 import {
   BulkStatusUpdateModal,
@@ -37,13 +38,14 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import type { Employee } from "@/types/employee.types";
 
 export default function AttendancePage() {
-  const {} = useAuthContext();
+  const { user } = useAuthContext();
   const {
     employees,
     loading,
     fetchEmployees,
     getStructure,
     getDashboardStats,
+    getStatusTypes,
   } = useEmployees();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,6 +54,8 @@ export default function AttendancePage() {
   const [selectedDeptId, setSelectedDeptId] = useState<string>("all");
   const [selectedSectionId, setSelectedSectionId] = useState<string>("all");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
+  const [selectedStatusId, setSelectedStatusId] = useState<string>("all");
+  const [statusTypes, setStatusTypes] = useState<any[]>([]);
 
   // Modal states
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
@@ -69,9 +73,12 @@ export default function AttendancePage() {
       if (dashboardStats && dashboardStats.stats) {
         setStats(dashboardStats.stats);
       }
+
+      const statuses = await getStatusTypes();
+      if (statuses) setStatusTypes(statuses);
     };
     init();
-  }, [getStructure, getDashboardStats]);
+  }, [getStructure, getDashboardStats, getStatusTypes]);
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
@@ -96,6 +103,13 @@ export default function AttendancePage() {
       if (selectedTeamId !== "all" && emp.team_id !== parseInt(selectedTeamId))
         return false;
 
+      // Status Filter
+      if (
+        selectedStatusId !== "all" &&
+        emp.status_id !== parseInt(selectedStatusId)
+      )
+        return false;
+
       return true;
     });
   }, [
@@ -104,6 +118,7 @@ export default function AttendancePage() {
     selectedDeptId,
     selectedSectionId,
     selectedTeamId,
+    selectedStatusId,
   ]);
 
   const departments = structure;
@@ -120,10 +135,22 @@ export default function AttendancePage() {
     (emp) =>
       emp.last_status_update &&
       new Date(emp.last_status_update).toDateString() ===
-        new Date().toDateString(),
+      new Date().toDateString(),
   ).length;
 
   const totalCount = employees.length;
+
+  const getProfessionalTitle = (emp: Employee) => {
+    if (emp.is_admin && emp.is_commander) return "מנהל מערכת בכיר";
+    if (emp.is_commander) {
+      if (emp.team_name) return "מפקד חוליה";
+      if (emp.section_name) return "מפקד מדור";
+      if (emp.department_name) return "מפקד מחלקה";
+      return "מפקד יחידה";
+    }
+    return "שוטר";
+  };
+
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
 
@@ -135,38 +162,54 @@ export default function AttendancePage() {
         subtitle="ניהול ודיווח סטטוס נוכחות לכלל שוטרי היחידה"
         category="נוכחות"
         categoryLink="/attendance"
-        iconClassName="from-emerald-50 to-emerald-100 border-emerald-200"
+        iconClassName="from-primary/10 to-primary/5 border-primary/20"
         badge={
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <Button
               variant="outline"
-              className="h-10 sm:h-11 rounded-xl border-slate-200 gap-2 font-bold text-slate-600 flex-1 sm:flex-none"
+              className="h-10 sm:h-11 rounded-xl border-input gap-2 font-bold text-muted-foreground hover:bg-muted flex-1 sm:flex-none"
             >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">ייצוא דוח יומי</span>
               <span className="sm:hidden">ייצוא</span>
             </Button>
             <Button
-              className="h-10 sm:h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 px-4 sm:px-6 gap-2 font-black flex-1 sm:flex-none"
+              className="h-10 sm:h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 px-4 sm:px-6 gap-2 font-black flex-1 sm:flex-none"
               onClick={() => setBulkModalOpen(true)}
             >
               <ClipboardCheck className="w-4 h-4" />
               <span className="hidden sm:inline">עדכון נוכחות מרוכז</span>
               <span className="sm:hidden">עדכון מרוכז</span>
             </Button>
+            {user && (
+              <Button
+                variant="outline"
+                className="h-10 sm:h-11 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 px-4 sm:px-6 gap-2 font-bold flex-1 sm:flex-none"
+                onClick={() => {
+                  const currentUserEmp = employees.find(e => e.id === user.id);
+                  if (currentUserEmp) {
+                    handleOpenStatusModal(currentUserEmp);
+                  }
+                }}
+              >
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">דיווח עצמי</span>
+                <span className="sm:hidden">דיווח</span>
+              </Button>
+            )}
           </div>
         }
       />
 
       {/* Summary Stats & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white dark:bg-slate-800/50 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="lg:col-span-2 bg-card rounded-3xl p-6 border border-border shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div className="flex flex-col gap-1 text-right">
-              <span className="text-sm font-black text-slate-800 dark:text-white">
+              <span className="text-sm font-black text-foreground">
                 סיכום התייצבות יחידתי
               </span>
-              <span className="text-xs text-slate-400 font-bold">
+              <span className="text-xs text-muted-foreground font-bold">
                 מעקב דיווחים ליום{" "}
                 {new Date().toLocaleDateString("he-IL", {
                   weekday: "long",
@@ -176,18 +219,18 @@ export default function AttendancePage() {
               </span>
             </div>
             <div className="text-right">
-              <span className="text-2xl font-black text-emerald-600">
+              <span className="text-2xl font-black text-primary">
                 {updatedTodayCount}/{totalCount}
               </span>
-              <span className="text-[10px] block font-black text-slate-400 uppercase tracking-tighter">
+              <span className="text-[10px] block font-black text-muted-foreground uppercase tracking-tighter">
                 שוטרים מדווחים
               </span>
             </div>
           </div>
 
-          <div className="w-full h-3 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden mb-8">
+          <div className="w-full h-3 bg-muted rounded-full overflow-hidden mb-8">
             <div
-              className="h-full bg-gradient-to-l from-emerald-500 to-emerald-400 transition-all duration-1000 ease-out"
+              className="h-full bg-gradient-to-l from-primary to-primary/70 transition-all duration-1000 ease-out"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -199,14 +242,14 @@ export default function AttendancePage() {
               .map((s: any) => (
                 <div
                   key={s.status_id}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center gap-1"
+                  className="p-4 rounded-2xl bg-muted/50 border border-border flex flex-col items-center gap-1"
                 >
-                  <span className="text-xl font-black text-slate-800 dark:text-white">
+                  <span className="text-xl font-black text-foreground">
                     {s.count}
                   </span>
                   <span
-                    className="text-[10px] font-bold text-slate-400 uppercase"
-                    style={{ color: s.color }}
+                    className="text-[10px] font-bold uppercase"
+                    style={{ color: s.color || "var(--muted-foreground)" }}
                   >
                     {s.status_name}
                   </span>
@@ -215,18 +258,18 @@ export default function AttendancePage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-6 text-white shadow-xl shadow-indigo-600/20 flex flex-col justify-between">
+        <div className="bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-6 text-primary-foreground shadow-xl shadow-primary/20 flex flex-col justify-between">
           <div className="space-y-2">
             <Clock className="w-8 h-8 opacity-50" />
             <h3 className="text-xl font-black">תזכורת דיווח</h3>
-            <p className="text-sm text-indigo-100 font-medium leading-relaxed opacity-80">
+            <p className="text-sm text-primary-foreground/80 font-medium leading-relaxed">
               יש להשלים את דיווחי הנוכחות של כלל השוטרים במחלקה עד השעה 09:00.
             </p>
           </div>
           <div className="pt-4 flex items-center gap-3">
             <div className="bg-white/10 p-2 rounded-xl flex-1 flex items-center justify-center gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-300" />
-              <span className="text-xs font-bold text-indigo-50">
+              <AlertCircle className="w-4 h-4 text-primary-foreground/70" />
+              <span className="text-xs font-bold text-primary-foreground">
                 נותרו לדווח: {totalCount - updatedTodayCount}
               </span>
             </div>
@@ -235,16 +278,16 @@ export default function AttendancePage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row gap-4 items-end">
+      <div className="bg-card p-6 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row gap-4 items-end">
         <div className="flex-1 space-y-2 text-right">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">
+          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
             חיפוש מהיר
           </label>
           <div className="relative">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
             <Input
               placeholder="שם שוטר או מספר אישי..."
-              className="h-11 pr-11 bg-slate-50 dark:bg-slate-900 border-none rounded-xl text-sm font-bold"
+              className="h-11 pr-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-sm font-bold"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -252,7 +295,7 @@ export default function AttendancePage() {
         </div>
 
         <div className="w-full md:w-48 space-y-2 text-right">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">
+          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
             מחלקה
           </label>
           <Select
@@ -263,7 +306,7 @@ export default function AttendancePage() {
               setSelectedTeamId("all");
             }}
           >
-            <SelectTrigger className="h-11 bg-slate-50 dark:bg-slate-900 border-none rounded-xl font-bold">
+            <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
               <SelectValue placeholder="כל המחלקות" />
             </SelectTrigger>
             <SelectContent>
@@ -278,7 +321,7 @@ export default function AttendancePage() {
         </div>
 
         <div className="w-full md:w-48 space-y-2 text-right">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">
+          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
             מדור
           </label>
           <Select
@@ -287,9 +330,9 @@ export default function AttendancePage() {
               setSelectedSectionId(val);
               setSelectedTeamId("all");
             }}
-            disabled={!selectedDeptId}
+            disabled={!selectedDeptId || selectedDeptId === "all"}
           >
-            <SelectTrigger className="h-11 bg-slate-50 dark:bg-slate-900 border-none rounded-xl font-bold">
+            <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
               <SelectValue placeholder="כל המדורים" />
             </SelectTrigger>
             <SelectContent>
@@ -303,13 +346,36 @@ export default function AttendancePage() {
           </Select>
         </div>
 
+        <div className="w-full md:w-48 space-y-2 text-right">
+          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
+            סטטוס
+          </label>
+          <Select
+            value={selectedStatusId}
+            onValueChange={(val) => setSelectedStatusId(val)}
+          >
+            <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
+              <SelectValue placeholder="כל הסטטוסים" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל הסטטוסים</SelectItem>
+              {statusTypes.map((s: any) => (
+                <SelectItem key={s.id} value={s.id.toString()}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <Button
           variant="ghost"
-          className="h-11 text-slate-400 hover:text-slate-600 gap-2"
+          className="h-11 text-muted-foreground hover:text-foreground hover:bg-muted gap-2"
           onClick={() => {
             setSelectedDeptId("all");
             setSelectedSectionId("all");
             setSelectedTeamId("all");
+            setSelectedStatusId("all");
             setSearchTerm("");
           }}
         >
@@ -319,24 +385,27 @@ export default function AttendancePage() {
       </div>
 
       {/* Attendance Table */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <Table className="min-w-[800px]">
-            <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50 h-14">
-              <TableRow>
-                <TableHead className="text-right px-6 font-black text-slate-500 uppercase text-[10px] tracking-widest">
+            <TableHeader className="bg-muted/50 h-14">
+              <TableRow className="border-b border-border hover:bg-transparent">
+                <TableHead className="text-right px-6 font-black text-muted-foreground uppercase text-[10px] tracking-widest">
                   שוטר
                 </TableHead>
-                <TableHead className="text-right font-black text-slate-500 uppercase text-[10px] tracking-widest">
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] tracking-widest">
+                  תפקיד/סמכות
+                </TableHead>
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] tracking-widest">
                   שיוך ארגוני
                 </TableHead>
-                <TableHead className="text-right font-black text-slate-500 uppercase text-[10px] tracking-widest">
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] tracking-widest">
                   סטטוס נוכחות
                 </TableHead>
-                <TableHead className="text-right font-black text-slate-500 uppercase text-[10px] tracking-widest">
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] tracking-widest">
                   עדכון אחרון
                 </TableHead>
-                <TableHead className="text-center font-black text-slate-500 uppercase text-[10px] tracking-widest">
+                <TableHead className="text-center font-black text-muted-foreground uppercase text-[10px] tracking-widest">
                   פעולות
                 </TableHead>
               </TableRow>
@@ -346,7 +415,7 @@ export default function AttendancePage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="h-32 text-center text-slate-400"
+                    className="h-32 text-center text-muted-foreground"
                   >
                     טוען נתונים...
                   </TableCell>
@@ -355,7 +424,7 @@ export default function AttendancePage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="h-32 text-center text-slate-400 font-medium"
+                    className="h-32 text-center text-muted-foreground font-medium"
                   >
                     לא נמצאו שוטרים התואמים את הסינון
                   </TableCell>
@@ -365,51 +434,64 @@ export default function AttendancePage() {
                   const isUpdatedToday =
                     emp.last_status_update &&
                     new Date(emp.last_status_update).toDateString() ===
-                      new Date().toDateString();
+                    new Date().toDateString();
 
                   return (
                     <TableRow
                       key={emp.id}
-                      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
+                      className="group hover:bg-muted/50 transition-colors border-b border-border"
                     >
                       <TableCell className="py-4 px-6 text-right">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 font-black text-[10px] uppercase shadow-sm">
+                          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-black text-[10px] uppercase shadow-sm">
                             {emp.first_name[0]}
                             {emp.last_name[0]}
                           </div>
                           <div className="flex flex-col text-right">
-                            <span className="text-sm font-bold text-slate-800 dark:text-white">
+                            <span className="text-sm font-bold text-foreground">
                               {emp.first_name} {emp.last_name}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-bold">
+                            <span className="text-[10px] text-muted-foreground font-bold">
                               {emp.personal_number}
                             </span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex flex-col text-right">
-                          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                            {emp.department_name || "מטה"}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            {emp.section_name || "ללא מדור"} •{" "}
-                            {emp.team_name || "ללא חולייה"}
-                          </span>
-                        </div>
+                        <Badge
+                          variant="outline"
+                          className="font-medium text-[10px] border-none px-2.5 py-1 bg-muted text-muted-foreground"
+                        >
+                          {getProfessionalTitle(emp)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {(emp.section_name || emp.team_name) ? (
+                          <div className="flex flex-col text-right">
+                            <span className="text-xs font-bold text-foreground/80">
+                              {emp.department_name !== "מטה" ? emp.department_name : ""}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-medium">
+                              {emp.section_name && `מדור ${emp.section_name}`}
+                              {emp.section_name && emp.team_name && " • "}
+                              {emp.team_name && `חוליה ${emp.team_name}`}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center gap-2">
                           <div
                             className="w-2 h-2 rounded-full"
                             style={{
-                              backgroundColor: emp.status_color || "#94a3b8",
+                              backgroundColor: emp.status_color || "var(--muted-foreground)",
                             }}
                           />
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-bold border-none bg-slate-100 dark:bg-slate-900 py-0.5 px-2"
+                            className="text-[10px] font-bold border-none bg-muted py-0.5 px-2 text-muted-foreground"
                           >
                             {emp.status_name || "לא מדווח"}
                           </Badge>
@@ -430,7 +512,7 @@ export default function AttendancePage() {
                             </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-400 font-medium italic">
+                          <span className="text-xs text-muted-foreground font-medium italic">
                             טרם עודכן היום
                           </span>
                         )}
@@ -440,7 +522,7 @@ export default function AttendancePage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-8 rounded-lg gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs"
+                            className="h-8 rounded-lg gap-2 text-primary hover:text-primary/90 hover:bg-primary/10 font-bold text-xs"
                             onClick={() => handleOpenStatusModal(emp)}
                           >
                             <ClipboardCheck className="w-3.5 h-3.5" />
@@ -471,6 +553,6 @@ export default function AttendancePage() {
         employee={selectedEmployee}
         onSuccess={() => fetchEmployees()}
       />
-    </div>
+    </div >
   );
 }
