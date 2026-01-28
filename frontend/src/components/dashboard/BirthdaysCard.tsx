@@ -9,26 +9,26 @@ interface BirthdayEmployee {
     first_name: string;
     last_name: string;
     birth_date: string;
+    phone_number?: string;
     day: number;
     month: number;
 }
 
 interface BirthdaysCardProps {
     birthdays: BirthdayEmployee[];
-    currentUserPhone?: string;
 }
 
-export const BirthdaysCard = ({ birthdays, currentUserPhone }: BirthdaysCardProps) => {
+export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
     const handleSendWhatsApp = () => {
         if (!birthdays.length) return;
 
-        const currentYear = new Date().getFullYear();
         const title = `🎂 ימי הולדת השבוע (${birthdays.length})`;
         const list = birthdays
             .map((emp) => {
                 const date = new Date(emp.birth_date);
                 const dateStr = format(date, "d בMMMM", { locale: he });
-                return `• ${emp.first_name} ${emp.last_name} - ${dateStr}`;
+                const phoneStr = emp.phone_number ? ` (${emp.phone_number})` : '';
+                return `• ${emp.first_name} ${emp.last_name}${phoneStr} - ${dateStr}`;
             })
             .join("\n");
 
