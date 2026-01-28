@@ -27,7 +27,15 @@ class AttendanceModel:
                 (employee_id,),
             )
 
-            start = start_date if start_date else datetime.now()
+            now = datetime.now()
+            start = start_date
+            if not start_date:
+                start = now
+            elif isinstance(start_date, str) and len(start_date) == 10:
+                # If provided string is just YYYY-MM-DD and matches today, use now()
+                if start_date == now.strftime("%Y-%m-%d"):
+                    start = now
+
             cur.execute(
                 """
                 INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by)
@@ -56,6 +64,8 @@ class AttendanceModel:
                 employee_id = update.get("employee_id")
                 status_type_id = update.get("status_type_id")
                 note = update.get("note")
+                start_date = update.get("start_date")
+                end_date = update.get("end_date")
                 
                 if not employee_id or not status_type_id:
                     continue
@@ -71,12 +81,19 @@ class AttendanceModel:
                 )
 
                 # Insert new status
+                start = start_date
+                if not start_date:
+                    start = now
+                elif isinstance(start_date, str) and len(start_date) == 10:
+                    if start_date == now.strftime("%Y-%m-%d"):
+                        start = now
+
                 cur.execute(
                     """
-                    INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, note, reported_by)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                 """,
-                    (employee_id, status_type_id, now, note, reported_by),
+                    (employee_id, status_type_id, start, end_date, note, reported_by),
                 )
             
             conn.commit()

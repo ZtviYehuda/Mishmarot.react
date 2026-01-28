@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, ChevronRight, ChevronLeft, Filter, User, Plus, MessageCircle, ClipboardList } from "lucide-react";
+import { Search, ChevronRight, ChevronLeft, Filter, User, Plus, MessageCircle, ClipboardList, CheckCircle2 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn } from "@/lib/utils";
 import {
@@ -153,8 +153,64 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
     }
   };
 
+  const isReportedToday = currentUserEmployee?.last_status_update &&
+    new Date(currentUserEmployee.last_status_update).toDateString() === new Date().toDateString();
+
+  const updatedTodayCount = employees.filter(emp => emp.last_status_update &&
+    new Date(emp.last_status_update).toDateString() === new Date().toDateString()).length;
+  const totalEmployeesCount = employees.length;
+  const updateProgress = totalEmployeesCount > 0 ? (updatedTodayCount / totalEmployeesCount) * 100 : 0;
+
   return (
     <div className="space-y-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Self-Report Status Indicator */}
+        {isReportedToday && currentUserEmployee && (
+          <div className="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 rounded-2xl p-4 flex items-center justify-between animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col text-right">
+                <span className="text-sm font-black text-emerald-800 dark:text-emerald-400">דיווחת על עצמך!</span>
+                <span className="text-[10px] font-bold text-emerald-600/70">
+                  סטטוס: {currentUserEmployee.status_name} • עודכן ב-{new Date(currentUserEmployee.last_status_update!).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Unit Status Indicator */}
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-4 flex-1">
+            <div className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-colors",
+              updateProgress === 100
+                ? "bg-emerald-500 text-white shadow-emerald-500/20"
+                : "bg-indigo-500 text-white shadow-indigo-500/20"
+            )}>
+              <ClipboardList className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col text-right flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-black text-slate-800 dark:text-slate-200">סטטוס דיווח יחידתי</span>
+                <span className="text-[10px] font-black text-slate-400">{updatedTodayCount}/{totalEmployeesCount} מדווחים</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full transition-all duration-1000",
+                    updateProgress === 100 ? "bg-emerald-500" : "bg-indigo-500"
+                  )}
+                  style={{ width: `${updateProgress}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Search & Filter Bar */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-800/50 p-5 rounded-2xl shadow-sm">
         <div className="relative w-full md:w-96">
@@ -366,17 +422,25 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
                     </span>
                   </TableCell>
                   <TableCell className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-start gap-2">
-                      <div
-                        className={cn("w-2 h-2 rounded-full shadow-sm shrink-0", !emp.is_active && "bg-red-500")}
-                        style={emp.is_active ? { backgroundColor: emp.status_color || "#94a3b8" } : {}}
-                      />
-                      <span className={cn(
-                        "text-xs font-medium transition-colors whitespace-nowrap",
-                        emp.is_active ? "text-slate-600 dark:text-slate-400" : "text-red-500 font-bold"
-                      )}>
-                        {emp.is_active ? (emp.status_name || "ללא סטטוס") : "לא פעיל"}
-                      </span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-start gap-2">
+                        <div
+                          className={cn("w-2 h-2 rounded-full shadow-sm shrink-0", !emp.is_active && "bg-red-500")}
+                          style={emp.is_active ? { backgroundColor: emp.status_color || "#94a3b8" } : {}}
+                        />
+                        <span className={cn(
+                          "text-xs font-medium transition-colors whitespace-nowrap",
+                          emp.is_active ? "text-slate-600 dark:text-slate-400" : "text-red-500 font-bold"
+                        )}>
+                          {emp.is_active ? (emp.status_name || "ללא סטטוס") : "לא פעיל"}
+                        </span>
+                      </div>
+                      {emp.last_status_update && new Date(emp.last_status_update).toDateString() === new Date().toDateString() && (
+                        <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-500 animate-in fade-in duration-300">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          <span>עודכן היום</span>
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-4">

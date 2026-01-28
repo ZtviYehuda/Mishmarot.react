@@ -52,8 +52,10 @@ class EmployeeModel:
                        d.name as department_name, 
                        s.name as section_name, 
                        t.name as team_name,
+                       st.id as status_id,
                        st.name as status_name, 
                        st.color as status_color,
+                       al.start_datetime as last_status_update,
                        r.name as role_name,
                        COALESCE(e.department_id, d.id) as assigned_department_id,
                        COALESCE(e.section_id, s.id) as assigned_section_id,
@@ -147,8 +149,10 @@ class EmployeeModel:
                        COALESCE(t.name, 'מטה') as team_name, 
                        COALESCE(s.name, s_dir.name, 'מטה') as section_name, 
                        COALESCE(d.name, d_dir.name, 'מטה') as department_name,
+                       st.id as status_id,
                        st.name as status_name,
                        st.color as status_color,
+                       last_log.start_datetime as last_status_update,
                        srv.name as service_type_name
                 FROM employees e
                 -- Direct Path Joins (via team_id)
@@ -162,7 +166,7 @@ class EmployeeModel:
                 LEFT JOIN service_types srv ON e.service_type_id = srv.id
                 -- Status Joins
                 LEFT JOIN LATERAL (
-                    SELECT status_type_id FROM attendance_logs 
+                    SELECT status_type_id, start_datetime FROM attendance_logs 
                     WHERE employee_id = e.id AND end_datetime IS NULL
                     ORDER BY start_datetime DESC LIMIT 1
                 ) last_log ON true

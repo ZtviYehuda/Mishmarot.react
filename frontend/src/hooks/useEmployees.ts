@@ -148,7 +148,7 @@ export const useEmployees = () => {
   };
 
   // Bulk Log Attendance Status
-  const logBulkStatus = async (updates: { employee_id: number; status_type_id: number; note?: string }[]) => {
+  const logBulkStatus = async (updates: { employee_id: number; status_type_id: number; start_date?: string; end_date?: string; note?: string }[]) => {
     setLoading(true);
     try {
       await apiClient.post(attEndpoints.ATTENDANCE_BULK_LOG_ENDPOINT, { updates });

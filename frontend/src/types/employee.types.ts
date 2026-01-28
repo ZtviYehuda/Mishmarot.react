@@ -40,6 +40,7 @@ export interface Employee {
   status_id?: number | null;
   status_name: string;
   status_color: string;
+  last_status_update?: string | null;
   is_active: boolean;
 }
 
