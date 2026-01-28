@@ -10,7 +10,12 @@
 
 body {
   direction: rtl;
-  @apply bg-background text-foreground overflow-x-hidden transition-colors duration-300;
+  @apply bg-background text-foreground overflow-x-hidden;
+}
+
+/* Base transitions - scoped for better performance */
+.btn-transition {
+  @apply transition-all duration-200;
 }
 
 ::-webkit-scrollbar {
@@ -54,6 +59,7 @@ body {
 }
 
 :root {
+  color-scheme: light;
   --radius: 0.75rem;
   --background: #ffffff;
   --foreground: #001e30;
@@ -76,6 +82,7 @@ body {
 }
 
 .dark {
+  color-scheme: dark;
   --background: #000c14;
   --foreground: #f8fafc;
   --card: #04121d;
@@ -163,7 +170,7 @@ body {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50 transition-colors duration-200;
+    @apply border-border outline-ring/50;
   }
 }
 
