@@ -20,7 +20,6 @@ import {
   User,
   Plus,
   Pencil,
-  CheckCircle2,
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn } from "@/lib/utils";
@@ -53,7 +52,7 @@ export const EmployeeTable = ({
   const [activeFilters, setActiveFilters] = useState<EmployeeFilters>({});
   const itemsPerPage = 10;
 
-  const currentUserEmployee = employees.find((emp) => emp.id === user?.id);
+
 
   // Role Logic implementation base on user request
   const getProfessionalTitle = (emp: Employee) => {
@@ -166,38 +165,8 @@ export const EmployeeTable = ({
     }
   };
 
-  const isReportedToday =
-    currentUserEmployee?.last_status_update &&
-    new Date(currentUserEmployee.last_status_update).toDateString() ===
-    new Date().toDateString();
-
   return (
     <div className="space-y-4 sm:space-y-5">
-      {/* Self-Report Status Indicator */}
-      {isReportedToday && currentUserEmployee && (
-        <div className="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center justify-between animate-in fade-in slide-in-from-right-4 duration-500">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
-              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-            <div className="flex flex-col text-right flex-1 min-w-0">
-              <span className="text-xs sm:text-sm font-black text-emerald-800 dark:text-emerald-400">
-                דיווחת על עצמך!
-              </span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600/70 truncate">
-                סטטוס: {currentUserEmployee.status_name} • עודכן ב-
-                {new Date(
-                  currentUserEmployee.last_status_update!,
-                ).toLocaleTimeString("he-IL", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Search & Filter Bar */}
       <div className="flex flex-col gap-3 sm:gap-4 bg-card p-3 sm:p-5 rounded-2xl shadow-sm border border-border">
         <div className="relative w-full">
