@@ -224,13 +224,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                                     onValueChange={(val) => handleUpdateIndividual(emp.id, val)}
                                                 >
                                                     <SelectTrigger className="h-10 text-right font-bold text-[11px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl" dir="rtl">
-                                                        <div className="flex items-center gap-2">
-                                                            <div
-                                                                className="w-2.5 h-2.5 rounded-full shadow-sm"
-                                                                style={{ backgroundColor: current?.color || '#94a3b8' }}
-                                                            />
-                                                            <SelectValue placeholder="בחר סטטוס" />
-                                                        </div>
+                                                        <SelectValue placeholder="בחר סטטוס" />
                                                     </SelectTrigger>
                                                     <SelectContent dir="rtl">
                                                         {statusTypes.map((type) => (
@@ -252,25 +246,33 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
 
                                         {/* Optional Dates if status changed */}
                                         {current?.isChanged && (
-                                            <div className="mt-4 pt-4 border-t border-indigo-100 dark:border-indigo-800/50 flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                <div className="flex items-center gap-2 flex-1 min-w-[140px]">
-                                                    <span className="text-[10px] font-black text-indigo-400 whitespace-nowrap">התחלה:</span>
-                                                    <input
-                                                        type="date"
-                                                        value={current.start_date}
-                                                        onChange={(e) => handleDateChange(emp.id, 'start_date', e.target.value)}
-                                                        className="bg-white dark:bg-slate-800 border-none rounded-lg h-8 text-[10px] font-bold pr-2 flex-1 text-right focus:ring-1 focus:ring-indigo-500"
-                                                    />
+                                            <div className="mt-4 pt-5 border-t border-indigo-100 dark:border-indigo-800/50 flex flex-wrap items-center gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <div className="flex flex-col gap-2 flex-1 min-w-[180px]">
+                                                    <span className="text-[11px] font-black text-indigo-500 pr-1 uppercase tracking-wider">תאריך התחלה:</span>
+                                                    <div className="relative">
+                                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-300" />
+                                                        <input
+                                                            type="date"
+                                                            value={current.start_date}
+                                                            onChange={(e) => handleDateChange(emp.id, 'start_date', e.target.value)}
+                                                            className="w-full bg-white dark:bg-slate-800 border-2 border-indigo-50 dark:border-indigo-900/30 rounded-xl h-12 text-sm font-black pl-10 pr-4 text-right focus:border-indigo-500 focus:ring-0 transition-all"
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <ArrowRight className="w-3 h-3 text-indigo-200" />
-                                                <div className="flex items-center gap-2 flex-1 min-w-[140px]">
-                                                    <span className="text-[10px] font-black text-indigo-400 whitespace-nowrap">סיום (אופציונלי):</span>
-                                                    <input
-                                                        type="date"
-                                                        value={current.end_date || ""}
-                                                        onChange={(e) => handleDateChange(emp.id, 'end_date', e.target.value)}
-                                                        className="bg-white dark:bg-slate-800 border-none rounded-lg h-8 text-[10px] font-bold pr-2 flex-1 text-right focus:ring-1 focus:ring-indigo-500"
-                                                    />
+                                                <div className="pt-6 hidden sm:block">
+                                                    <ArrowRight className="w-5 h-5 text-indigo-200" />
+                                                </div>
+                                                <div className="flex flex-col gap-2 flex-1 min-w-[180px]">
+                                                    <span className="text-[11px] font-black text-indigo-500 pr-1 uppercase tracking-wider">תאריך סיום (אופציונלי):</span>
+                                                    <div className="relative">
+                                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-200" />
+                                                        <input
+                                                            type="date"
+                                                            value={current.end_date || ""}
+                                                            onChange={(e) => handleDateChange(emp.id, 'end_date', e.target.value)}
+                                                            className="w-full bg-white dark:bg-slate-800 border-2 border-indigo-50 dark:border-indigo-900/30 rounded-xl h-12 text-sm font-black pl-10 pr-4 text-right focus:border-indigo-500 focus:ring-0 transition-all placeholder:text-slate-300"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
