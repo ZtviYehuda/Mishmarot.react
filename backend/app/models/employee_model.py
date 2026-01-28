@@ -57,7 +57,8 @@ class EmployeeModel:
                        s.id as assigned_section_id,
                        (SELECT id FROM departments WHERE commander_id = e.id LIMIT 1) as commands_department_id_direct,
                        (SELECT id FROM sections WHERE commander_id = e.id LIMIT 1) as commands_section_id_direct,
-                       (SELECT id FROM teams WHERE commander_id = e.id LIMIT 1) as commands_team_id
+                        (SELECT id FROM teams WHERE commander_id = e.id LIMIT 1) as commands_team_id,
+                       e.notif_sick_leave, e.notif_transfers
                 FROM employees e
                 -- Structure Joins (Assigned)
                 LEFT JOIN teams t ON e.team_id = t.id
@@ -372,6 +373,8 @@ class EmployeeModel:
                 "is_admin": "is_admin",
                 "is_active": "is_active",
                 "must_change_password": "must_change_password",
+                "notif_sick_leave": "notif_sick_leave",
+                "notif_transfers": "notif_transfers",
             }
 
             # Business Rule: If commander status changes, sync must_change_password

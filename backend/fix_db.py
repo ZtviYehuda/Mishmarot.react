@@ -20,6 +20,8 @@ def migrate():
             ("employees", "security_clearance", "INTEGER DEFAULT 0"),
             ("employees", "police_license", "BOOLEAN DEFAULT FALSE"),
             ("employees", "emergency_contact", "VARCHAR(100)"),
+            ("employees", "notif_sick_leave", "BOOLEAN DEFAULT TRUE"),
+            ("employees", "notif_transfers", "BOOLEAN DEFAULT TRUE"),
         ]
 
         for table, column, col_type in migrations:

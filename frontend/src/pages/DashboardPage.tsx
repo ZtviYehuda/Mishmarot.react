@@ -6,10 +6,25 @@ import { WhatsAppReportDialog } from "@/components/dashboard/WhatsAppReportDialo
 import { DashboardStatusTable } from "@/components/dashboard/DashboardStatusTable";
 import { useAuthContext } from "@/context/AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { LayoutDashboard } from "lucide-react";
 
-interface Team { id: number; name: string; section_id: number; }
-interface Section { id: number; name: string; department_id: number; teams: Team[]; }
-interface Department { id: number; name: string; sections: Section[]; }
+interface Team {
+  id: number;
+  name: string;
+  section_id: number;
+}
+interface Section {
+  id: number;
+  name: string;
+  department_id: number;
+  teams: Team[];
+}
+interface Department {
+  id: number;
+  name: string;
+  sections: Section[];
+}
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
@@ -27,7 +42,11 @@ export default function DashboardPage() {
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
   const [selectedSectionId, setSelectedSectionId] = useState<string>("");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
-  const [selectedStatusData, setSelectedStatusData] = useState<{ id: number; name: string; color: string } | null>(null);
+  const [selectedStatusData, setSelectedStatusData] = useState<{
+    id: number;
+    name: string;
+    color: string;
+  } | null>(null);
 
   // Initialize filters based on user permissions
   useEffect(() => {
@@ -35,11 +54,14 @@ export default function DashboardPage() {
       if (user.commands_department_id) {
         setSelectedDeptId(user.commands_department_id.toString());
       } else if (user.commands_section_id) {
-        if (user.assigned_department_id) setSelectedDeptId(user.assigned_department_id.toString());
+        if (user.assigned_department_id)
+          setSelectedDeptId(user.assigned_department_id.toString());
         setSelectedSectionId(user.commands_section_id.toString());
       } else if (user.commands_team_id) {
-        if (user.assigned_department_id) setSelectedDeptId(user.assigned_department_id.toString());
-        if (user.assigned_section_id) setSelectedSectionId(user.assigned_section_id.toString());
+        if (user.assigned_department_id)
+          setSelectedDeptId(user.assigned_department_id.toString());
+        if (user.assigned_section_id)
+          setSelectedSectionId(user.assigned_section_id.toString());
         setSelectedTeamId(user.commands_team_id.toString());
       }
     }
@@ -81,7 +103,7 @@ export default function DashboardPage() {
         department_id: selectedDeptId,
         section_id: selectedSectionId,
         team_id: selectedTeamId,
-        status_id: selectedStatusData?.id?.toString()
+        status_id: selectedStatusData?.id?.toString(),
       });
 
       if (data) {
@@ -92,10 +114,19 @@ export default function DashboardPage() {
     };
 
     fetchStatsData();
-  }, [selectedDeptId, selectedSectionId, selectedTeamId, selectedStatusData?.id, getDashboardStats]);
+  }, [
+    selectedDeptId,
+    selectedSectionId,
+    selectedTeamId,
+    selectedStatusData?.id,
+    getDashboardStats,
+  ]);
 
-  const handleFilterChange = (type: 'department' | 'section' | 'team' | 'status' | 'reset', value?: string) => {
-    if (type === 'reset') {
+  const handleFilterChange = (
+    type: "department" | "section" | "team" | "status" | "reset",
+    value?: string,
+  ) => {
+    if (type === "reset") {
       if (user?.is_admin) {
         setSelectedDeptId("");
         setSelectedSectionId("");
@@ -110,19 +141,23 @@ export default function DashboardPage() {
       return;
     }
 
-    if (type === 'department') {
+    if (type === "department") {
       setSelectedDeptId(value || "");
       setSelectedSectionId("");
       setSelectedTeamId("");
-    } else if (type === 'section') {
+    } else if (type === "section") {
       setSelectedSectionId(value || "");
       setSelectedTeamId("");
-    } else if (type === 'team') {
+    } else if (type === "team") {
       setSelectedTeamId(value || "");
-    } else if (type === 'status') {
-      const status = allStatuses.find(s => s.status_id.toString() === value);
+    } else if (type === "status") {
+      const status = allStatuses.find((s) => s.status_id.toString() === value);
       if (status) {
-        setSelectedStatusData({ id: status.status_id, name: status.status_name, color: status.color });
+        setSelectedStatusData({
+          id: status.status_id,
+          name: status.status_name,
+          color: status.color,
+        });
       } else {
         setSelectedStatusData(null);
       }
@@ -130,39 +165,64 @@ export default function DashboardPage() {
   };
 
   // Determine the names for titles
-  const currentDept = structure.find(d => d.id.toString() === selectedDeptId);
-  const currentSection = currentDept?.sections.find(s => s.id.toString() === selectedSectionId);
-  const currentTeam = currentSection?.teams.find(t => t.id.toString() === selectedTeamId);
+  const currentDept = structure.find((d) => d.id.toString() === selectedDeptId);
+  const currentSection = currentDept?.sections.find(
+    (s) => s.id.toString() === selectedSectionId,
+  );
+  const currentTeam = currentSection?.teams.find(
+    (t) => t.id.toString() === selectedTeamId,
+  );
 
-  const chartTitle = currentTeam ? `נתוני חולייה - ${currentTeam.name}` :
-    currentSection ? `נתוני מדור - ${currentSection.name}` :
-      currentDept ? `נתוני מחלקה - ${currentDept.name}` :
-        "כלל היחידה";
+  const chartTitle = currentTeam
+    ? `נתוני חולייה - ${currentTeam.name}`
+    : currentSection
+      ? `נתוני מדור - ${currentSection.name}`
+      : currentDept
+        ? `נתוני מחלקה - ${currentDept.name}`
+        : "כלל היחידה";
 
-  const chartDescription = currentTeam ? `פירוט נוכחות לחוליית ${currentTeam.name}` :
-    currentSection ? `פירוט נוכחות למדור ${currentSection.name}` :
-      currentDept ? `פירוט נוכחות למחלקת ${currentDept.name}` :
-        "תצוגה מלאה של כלל השוטרים ביחידה";
+  const chartDescription = currentTeam
+    ? `פירוט נוכחות לחוליית ${currentTeam.name}`
+    : currentSection
+      ? `פירוט נוכחות למדור ${currentSection.name}`
+      : currentDept
+        ? `פירוט נוכחות למחלקת ${currentDept.name}`
+        : "תצוגה מלאה של כלל השוטרים ביחידה";
 
-  const handleStatusClick = (statusId: number, statusName: string, color: string) => {
+  const handleStatusClick = (
+    statusId: number,
+    statusName: string,
+    color: string,
+  ) => {
     setSelectedStatusData({ id: statusId, name: statusName, color });
     // When clicking chart, we scroll to the table
-    const tableElement = document.getElementById('status-details-table');
+    const tableElement = document.getElementById("status-details-table");
     if (tableElement) {
-      tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      tableElement.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
   // Determine which filters are locked
   const canSelectDept = !!user?.is_admin;
-  const canSelectSection = !!user?.is_admin || (!!user?.commands_department_id);
-  const canSelectTeam = !!user?.is_admin || (!!user?.commands_department_id) || (!!user?.commands_section_id);
+  const canSelectSection = !!user?.is_admin || !!user?.commands_department_id;
+  const canSelectTeam =
+    !!user?.is_admin ||
+    !!user?.commands_department_id ||
+    !!user?.commands_section_id;
 
   return (
     <div className="w-full h-full space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Main Chart - Takes 2 columns */}
-        <div className="md:col-span-2">
+      <PageHeader
+        icon={LayoutDashboard}
+        title="לוח בקרה מרכזי"
+        subtitle="נתוני נוכחות, ימי הולדת וסטטיסטיקות כוח אדם"
+        category="לוח בקרה"
+        categoryLink="/"
+      />
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+        {/* Main Chart - Takes 2 columns on desktop */}
+        <div className="xl:col-span-2 space-y-4 sm:space-y-6">
           <EmployeesChart
             stats={stats}
             loading={loading}
@@ -195,7 +255,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Birthdays Card - Takes 1 column */}
-        <div className="md:col-span-1 h-full min-h-[400px]">
+        <div className="xl:col-span-1 h-full min-h-[300px] sm:min-h-[400px]">
           <BirthdaysCard birthdays={birthdays} />
         </div>
       </div>

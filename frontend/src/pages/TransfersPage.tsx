@@ -37,13 +37,13 @@ import {
   Clock,
   History,
   ShieldAlert,
-  ChevronRight,
   TrendingUp,
   User,
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/layout/PageHeader";
 import type { Employee } from "@/types/employee.types";
 
 export default function TransfersPage() {
@@ -145,53 +145,40 @@ export default function TransfersPage() {
 
   return (
     <div className="space-y-6 pb-12" dir="rtl">
-      {/* Page Header */}
-      <div className="flex flex-col gap-1.5 border-b border-slate-200 dark:border-slate-700 pb-6">
-        <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-widest leading-none mb-1 text-right">
-          <span>Core Hub</span>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-[#0074ff]">Transfers & Movement</span>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 text-right flex-1">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 dark:border-indigo-900/30 flex items-center justify-center dark:from-slate-800 dark:to-slate-800/50 shadow-sm">
-              <ArrowLeftRight className="w-7 h-7 text-indigo-600" />
-            </div>
-            <div className="text-right">
-              <h1 className="text-3xl font-semibold text-[#001e30] dark:text-white tracking-tight leading-none mb-1.5">
-                בקשות העברה ושינוי שיבוץ
-              </h1>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-none">
-                ניהול מעברי שוטרים בין מחלקות, מדורים וחוליות
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        icon={ArrowLeftRight}
+        title="בקשות העברה ושינוי שיבוץ"
+        subtitle="ניהול מעברי שוטרים בין מחלקות, מדורים וחוליות"
+        category="בקשות העברה"
+        categoryLink="/transfers"
+        iconClassName="from-indigo-50 to-indigo-100 border-indigo-200"
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-slate-100/50 dark:bg-slate-900/50 p-1 rounded-xl">
-          <TabsTrigger value="pending" className="rounded-lg gap-2">
-            <Clock className="w-4 h-4" />
-            בקשות ממתינות
-            {pendingTransfers.length > 0 && (
-              <Badge
-                variant="secondary"
-                className="mr-2 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
-              >
-                {pendingTransfers.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="new" className="rounded-lg gap-2">
-            <UserPlus className="w-4 h-4" />
-            בקשה חדשה
-          </TabsTrigger>
-          <TabsTrigger value="history" className="rounded-lg gap-2">
-            <History className="w-4 h-4" />
-            היסטוריה
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="flex w-full min-w-[400px] bg-slate-100/50 dark:bg-slate-900/50 p-1 rounded-xl">
+            <TabsTrigger value="pending" className="flex-1 rounded-lg gap-2">
+              <Clock className="w-4 h-4" />
+              בקשות ממתינות
+              {pendingTransfers.length > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="mr-2 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
+                >
+                  {pendingTransfers.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="new" className="flex-1 rounded-lg gap-2">
+              <UserPlus className="w-4 h-4" />
+              בקשה חדשה
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex-1 rounded-lg gap-2">
+              <History className="w-4 h-4" />
+              היסטוריה
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* --- Pending Transfers --- */}
         <TabsContent value="pending" className="mt-6 space-y-4">
@@ -207,105 +194,109 @@ export default function TransfersPage() {
             </Card>
           ) : (
             <div className="bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-              <Table>
-                <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
-                  <TableRow>
-                    <TableHead className="text-right py-4 px-6">שוטר</TableHead>
-                    <TableHead className="text-right">ממקור</TableHead>
-                    <TableHead className="text-right">ליעד</TableHead>
-                    <TableHead className="text-right">הוגש ע"י</TableHead>
-                    <TableHead className="text-center">פעולות</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pendingTransfers.map((req) => (
-                    <TableRow
-                      key={req.id}
-                      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
-                    >
-                      <TableCell className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
-                            {req.employee_name?.[0]}
+              <div className="overflow-x-auto">
+                <Table className="min-w-[800px]">
+                  <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                    <TableRow>
+                      <TableHead className="text-right py-4 px-6">
+                        שוטר
+                      </TableHead>
+                      <TableHead className="text-right">ממקור</TableHead>
+                      <TableHead className="text-right">ליעד</TableHead>
+                      <TableHead className="text-right">הוגש ע"י</TableHead>
+                      <TableHead className="text-center">פעולות</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingTransfers.map((req) => (
+                      <TableRow
+                        key={req.id}
+                        className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
+                      >
+                        <TableCell className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                              {req.employee_name?.[0]}
+                            </div>
+                            <span className="font-bold text-slate-700 dark:text-slate-200">
+                              {req.employee_name}
+                            </span>
                           </div>
-                          <span className="font-bold text-slate-700 dark:text-slate-200">
-                            {req.employee_name}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] border-slate-200 bg-slate-50"
-                        >
-                          {req.source_name} (
-                          {req.source_type === "department"
-                            ? "מחלקה"
-                            : req.source_type === "section"
-                              ? "מדור"
-                              : "חולייה"}
-                          )
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <ArrowRight className="w-3 h-3 text-slate-300" />
-                          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px]">
-                            {req.target_name} (
-                            {req.target_type === "department"
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] border-slate-200 bg-slate-50"
+                          >
+                            {req.source_name} (
+                            {req.source_type === "department"
                               ? "מחלקה"
-                              : req.target_type === "section"
+                              : req.source_type === "section"
                                 ? "מדור"
                                 : "חולייה"}
                             )
                           </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs text-slate-500 font-medium">
-                        {req.requester_name}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-2">
-                          {canManage ? (
-                            <>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <ArrowRight className="w-3 h-3 text-slate-300" />
+                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px]">
+                              {req.target_name} (
+                              {req.target_type === "department"
+                                ? "מחלקה"
+                                : req.target_type === "section"
+                                  ? "מדור"
+                                  : "חולייה"}
+                              )
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs text-slate-500 font-medium">
+                          {req.requester_name}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-2">
+                            {canManage ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  className="h-8 bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+                                  onClick={() => handleApprove(req.id)}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  אישור
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 border-red-200 text-red-600 hover:bg-red-50 gap-1.5"
+                                  onClick={() => handleReject(req.id)}
+                                >
+                                  <XCircle className="w-3.5 h-3.5" />
+                                  דחייה
+                                </Button>
+                              </>
+                            ) : req.requested_by === user?.id ? (
                               <Button
                                 size="sm"
-                                className="h-8 bg-emerald-600 hover:bg-emerald-700 gap-1.5"
-                                onClick={() => handleApprove(req.id)}
+                                variant="ghost"
+                                className="h-8 text-slate-400 hover:text-red-500"
+                                onClick={() => handleCancel(req.id)}
                               >
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                אישור
+                                ביטול בקשה
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 border-red-200 text-red-600 hover:bg-red-50 gap-1.5"
-                                onClick={() => handleReject(req.id)}
-                              >
-                                <XCircle className="w-3.5 h-3.5" />
-                                דחייה
-                              </Button>
-                            </>
-                          ) : req.requested_by === user?.id ? (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 text-slate-400 hover:text-red-500"
-                              onClick={() => handleCancel(req.id)}
-                            >
-                              ביטול בקשה
-                            </Button>
-                          ) : (
-                            <span className="text-[10px] text-slate-400 italic">
-                              ממתין לאישור
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 italic">
+                                ממתין לאישור
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </TabsContent>
@@ -479,70 +470,72 @@ export default function TransfersPage() {
         {/* --- History --- */}
         <TabsContent value="history" className="mt-6">
           <div className="bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-            <Table>
-              <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
-                <TableRow>
-                  <TableHead className="text-right py-4 px-6">שוטר</TableHead>
-                  <TableHead className="text-right">מסלול העברה</TableHead>
-                  <TableHead className="text-right">תאריך</TableHead>
-                  <TableHead className="text-right">סטטוס</TableHead>
-                  <TableHead className="text-right">סיבת דחייה</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {history.map((req) => (
-                  <TableRow
-                    key={req.id}
-                    className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
-                  >
-                    <TableCell className="py-4 px-6 font-bold">
-                      {req.employee_name}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="opacity-60">{req.source_name}</span>
-                        <ArrowRight className="w-3 h-3 opacity-30" />
-                        <span className="font-bold">{req.target_name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-[10px] text-slate-400 font-bold uppercase">
-                      {new Date(req.created_at).toLocaleDateString("he-IL")}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={cn(
-                          "text-[9px] font-black uppercase px-2 py-0.5",
-                          req.status === "approved"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : req.status === "rejected"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-slate-100 text-slate-700",
-                        )}
-                      >
-                        {req.status === "approved"
-                          ? "אושר"
-                          : req.status === "rejected"
-                            ? "נדחה"
-                            : "בוטל"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-[10px] text-red-400 italic">
-                      {req.rejection_reason}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {history.length === 0 && (
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                   <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="h-24 text-center text-slate-400"
-                    >
-                      אין היסטוריה זמינה
-                    </TableCell>
+                    <TableHead className="text-right py-4 px-6">שוטר</TableHead>
+                    <TableHead className="text-right">מסלול העברה</TableHead>
+                    <TableHead className="text-right">תאריך</TableHead>
+                    <TableHead className="text-right">סטטוס</TableHead>
+                    <TableHead className="text-right">סיבת דחייה</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {history.map((req) => (
+                    <TableRow
+                      key={req.id}
+                      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
+                    >
+                      <TableCell className="py-4 px-6 font-bold">
+                        {req.employee_name}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="opacity-60">{req.source_name}</span>
+                          <ArrowRight className="w-3 h-3 opacity-30" />
+                          <span className="font-bold">{req.target_name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-[10px] text-slate-400 font-bold uppercase">
+                        {new Date(req.created_at).toLocaleDateString("he-IL")}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={cn(
+                            "text-[9px] font-black uppercase px-2 py-0.5",
+                            req.status === "approved"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : req.status === "rejected"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-slate-100 text-slate-700",
+                          )}
+                        >
+                          {req.status === "approved"
+                            ? "אושר"
+                            : req.status === "rejected"
+                              ? "נדחה"
+                              : "בוטל"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-[10px] text-red-400 italic">
+                        {req.rejection_reason}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {history.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="h-24 text-center text-slate-400"
+                      >
+                        אין היסטוריה זמינה
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

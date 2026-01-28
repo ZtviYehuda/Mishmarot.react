@@ -12,6 +12,8 @@ export interface AuthUser {
   commands_department_id?: number;
   commands_section_id?: number;
   commands_team_id?: number;
+  notif_sick_leave?: boolean;
+  notif_transfers?: boolean;
 }
 
 export interface LoginResponse {

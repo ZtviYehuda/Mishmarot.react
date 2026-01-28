@@ -26,10 +26,10 @@ import {
   Check,
   Camera,
   LogOut,
-  ChevronLeft,
   Loader2,
   Lock,
 } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function SettingsPage() {
   const { user, logout } = useAuthContext();
@@ -51,6 +51,8 @@ export default function SettingsPage() {
     first_name: "",
     last_name: "",
     phone_number: "",
+    notif_sick_leave: true,
+    notif_transfers: true,
   });
 
   useEffect(() => {
@@ -59,6 +61,8 @@ export default function SettingsPage() {
         first_name: user.first_name || "",
         last_name: user.last_name || "",
         phone_number: user.phone_number || "",
+        notif_sick_leave: user.notif_sick_leave !== false,
+        notif_transfers: user.notif_transfers !== false,
       });
     }
   }, [user]);
@@ -68,11 +72,11 @@ export default function SettingsPage() {
     try {
       const { data } = await apiClient.put("/auth/update-profile", formData);
       if (data.success) {
-        toast.success("הפרופיל עודכן בהצלחה", {
+        toast.success("ההגדרות עודכנו בהצלחה", {
           description: "השינויים נשמרו במערכת",
         });
       } else {
-        toast.error("שגיאה בעדכון הפרופיל", {
+        toast.error("שגיאה בעדכון ההגדרות", {
           description: data.error,
         });
       }
@@ -91,29 +95,14 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
-          <span>ניהול מערכת</span>
-          <ChevronLeft className="w-3 h-3 rotate-180" />
-          <span className="text-primary transition-colors">הגדרות</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 dark:from-slate-800 dark:to-slate-900 dark:border-slate-800 flex items-center justify-center shadow-sm">
-              <SettingsIcon className="w-7 h-7 text-slate-600 dark:text-slate-400" />
-            </div>
-            <div className="text-right">
-              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1.5">
-                הגדרות מערכת
-              </h1>
-              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 leading-none">
-                ניהול העדפות אישיות, מראה הממשק ואבטחה
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        icon={SettingsIcon}
+        title="הגדרות מערכת"
+        subtitle="ניהול העדפות אישיות, מראה הממשק ואבטחה"
+        category="הגדרות"
+        categoryLink="/settings"
+        iconClassName="from-slate-50 to-slate-100 border-slate-200"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Sidebar / Navigation */}
@@ -192,7 +181,7 @@ export default function SettingsPage() {
                       <h3 className="text-2xl font-black text-slate-900 dark:text-white">
                         {user?.first_name} {user?.last_name}
                       </h3>
-                      <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center sm:justify-start flex-row-reverse gap-2">
+                      <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center sm:justify-start flex-row-reverse gap-2 text-right">
                         <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px] uppercase">
                           {user?.personal_number}
                         </span>
@@ -475,20 +464,49 @@ export default function SettingsPage() {
             <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300 text-right">
               <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
                 <CardHeader>
-                  <CardTitle className="text-xl font-black">
+                  <CardTitle className="text-xl font-black text-right">
                     התראות ודיווחים
                   </CardTitle>
-                  <CardDescription className="text-sm font-medium">
-                    הגדר מה ומתי ברצונך לקבל עדכונים
+                  <CardDescription className="text-sm font-medium text-right">
+                    הגדר מה ומתי ברצונך לקבל עדכונים מהמערכת
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center py-12 space-y-4 opacity-50">
-                  <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <Bell className="w-10 h-10 text-slate-300" />
+                <CardContent className="space-y-8">
+                  <div className="space-y-4">
+                    <NotifSetting
+                      title="התראת מחלה ממושכת"
+                      description="קבל התראה כאשר שוטר נמצא בסטטוס 'מחלה' מעל ל-4 ימים רצופים"
+                      enabled={formData.notif_sick_leave}
+                      onChange={(val: boolean) =>
+                        setFormData({ ...formData, notif_sick_leave: val })
+                      }
+                    />
+                    <NotifSetting
+                      title="בקשות העברה חדשות"
+                      description="קבל התראה כאשר שוטר מגיש בקשת העברה הממתינה לאישור המפקד"
+                      enabled={formData.notif_transfers}
+                      onChange={(val: boolean) =>
+                        setFormData({ ...formData, notif_transfers: val })
+                      }
+                    />
                   </div>
-                  <p className="text-sm font-black text-slate-500">
-                    מרכז ההתראות בבניה...
-                  </p>
+
+                  <div className="flex justify-start pt-6 border-t border-slate-100 dark:border-slate-800">
+                    <Button
+                      onClick={handleSaveProfile}
+                      disabled={isSaving}
+                      className="bg-primary hover:opacity-90 text-white px-10 h-12 rounded-xl font-black shadow-lg shadow-primary/20 transition-all active:scale-95"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                          שומר...
+                        </>
+                      ) : (
+                        "שמור הגדרות התראה"
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -500,6 +518,59 @@ export default function SettingsPage() {
 }
 
 // --- Helper Components ---
+
+function NotifSetting({
+  title,
+  description,
+  enabled,
+  onChange,
+}: {
+  title: string;
+  description: string;
+  enabled: boolean;
+  onChange: (val: boolean) => void;
+}) {
+  return (
+    <div
+      className={`
+      flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer group
+      ${enabled ? "border-primary/20 bg-primary/5" : "border-slate-50 dark:border-slate-900 hover:border-slate-200 dark:hover:border-slate-700"}
+    `}
+      onClick={() => onChange(!enabled)}
+    >
+      <div
+        className={`
+        w-14 h-7 rounded-full relative p-1 transition-colors duration-300
+        ${enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"}
+      `}
+      >
+        <div
+          className={`
+          w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 flex items-center justify-center
+          ${enabled ? "translate-x-0" : "-translate-x-7"}
+        `}
+        >
+          {enabled ? (
+            <Check className="w-3 h-3 text-primary" />
+          ) : (
+            <div className="w-1.5 h-1.5 bg-slate-300 dark:bg-slate-500 rounded-full" />
+          )}
+        </div>
+      </div>
+
+      <div className="text-right">
+        <h5
+          className={`text-base font-black transition-colors ${enabled ? "text-primary" : "text-slate-800 dark:text-white"}`}
+        >
+          {title}
+        </h5>
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-bold leading-tight mt-0.5">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function NavItem({
   icon: Icon,

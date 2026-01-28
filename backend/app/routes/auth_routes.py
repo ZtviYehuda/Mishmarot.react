@@ -82,6 +82,8 @@ def login():
                     "commands_department_id": user.get("commands_department_id"),
                     "commands_section_id": user.get("commands_section_id"),
                     "commands_team_id": user.get("commands_team_id"),
+                    "notif_sick_leave": user.get("notif_sick_leave", True),
+                    "notif_transfers": user.get("notif_transfers", True),
                 },
             }
         )
@@ -135,6 +137,8 @@ def get_current_user():
                 "commands_department_id": user.get("commands_department_id"),
                 "commands_section_id": user.get("commands_section_id"),
                 "commands_team_id": user.get("commands_team_id"),
+                "notif_sick_leave": user.get("notif_sick_leave", True),
+                "notif_transfers": user.get("notif_transfers", True),
             }
         )
     return jsonify({"error": "User not found"}), 404
@@ -192,6 +196,8 @@ def update_profile():
         "first_name": data.get("first_name"),
         "last_name": data.get("last_name"),
         "phone_number": data.get("phone_number"),
+        "notif_sick_leave": data.get("notif_sick_leave"),
+        "notif_transfers": data.get("notif_transfers"),
     }
 
     # הסרת ערכים שהם None (כדי לא לדרוס נתונים קיימים אם לא נשלחו)

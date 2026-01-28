@@ -28,10 +28,10 @@ import {
   Shield,
   Building2,
   Save,
-  ChevronLeft,
   Check,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 interface Team {
   id: number;
@@ -171,41 +171,26 @@ export default function CreateEmployeePage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Page Header */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-          <span>ניהול כח אדם</span>
-          <ChevronLeft className="w-3 h-3 text-slate-300" />
-          <span className="text-[#0074ff]">הוספת שוטר חדש</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-100 flex items-center justify-center dark:from-blue-900/20 dark:to-blue-900/10 dark:border-blue-900/30 shadow-sm">
-              <UserPlus className="w-8 h-8 text-[#0074ff]" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-                הוספת שוטר חדש
-              </h1>
-              <p className="text-slate-500 dark:text-slate-400 mt-1">
-                מלא את פרטי השוטר בטופס למטה כדי לצרפו ליחידה.
-              </p>
-            </div>
-          </div>
-
+      <PageHeader
+        icon={UserPlus}
+        title="הוספת שוטר חדש"
+        subtitle="מלא את פרטי השוטר בטופס למטה כדי לצרפו ליחידה"
+        category="ניהול שוטרים"
+        categoryLink="/employees"
+        iconClassName="from-blue-50 to-blue-100 border-blue-100"
+        badge={
           <div className="hidden sm:flex gap-3">
             <Button
               variant="outline"
               onClick={() => navigate("/employees")}
-              className="border-slate-200 hover:bg-slate-50 h-10 px-5"
+              className="border-slate-200 hover:bg-slate-50 h-11 px-6 rounded-xl font-bold"
             >
               ביטול
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-[#0074ff] hover:bg-[#0060d5] text-white h-10 px-6 shadow-md shadow-blue-500/20"
+              className="bg-primary hover:opacity-90 text-white h-11 px-8 rounded-xl font-black shadow-lg shadow-primary/20"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 ml-2 animate-spin" />
@@ -215,8 +200,8 @@ export default function CreateEmployeePage() {
               שמור שוטר
             </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Form */}
       <form
@@ -680,7 +665,7 @@ function SectionCard({
           </div>
           <div>
             <CardTitle
-              className={`${compact ? "text-base" : "text-lg"} font-bold text-slate-900 dark:text-white`}
+              className={`${compact ? "text-base" : "text-xl"} font-black text-slate-900 dark:text-white`}
             >
               {title}
             </CardTitle>

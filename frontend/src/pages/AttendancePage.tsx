@@ -24,7 +24,6 @@ import {
   Search,
   Filter,
   ClipboardCheck,
-  ChevronRight,
   Download,
   CheckCircle2,
   Clock,
@@ -34,6 +33,7 @@ import {
   BulkStatusUpdateModal,
   StatusUpdateModal,
 } from "@/components/employees/modals";
+import { PageHeader } from "@/components/layout/PageHeader";
 import type { Employee } from "@/types/employee.types";
 
 export default function AttendancePage() {
@@ -129,46 +129,34 @@ export default function AttendancePage() {
 
   return (
     <div className="space-y-6 pb-12" dir="rtl">
-      {/* Page Header */}
-      <div className="flex flex-col gap-1.5 border-b border-slate-200 dark:border-slate-700 pb-6">
-        <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-widest leading-none mb-1 text-right">
-          <span>Operations Hub</span>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-[#0074ff]">Attendance Tracking</span>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 text-right flex-1">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 dark:border-emerald-900/30 flex items-center justify-center dark:from-slate-800 dark:to-slate-800/50 shadow-sm">
-              <CalendarDays className="w-7 h-7 text-emerald-600" />
-            </div>
-            <div className="text-right">
-              <h1 className="text-3xl font-semibold text-[#001e30] dark:text-white tracking-tight leading-none mb-1.5">
-                מעקב נוכחות יומי
-              </h1>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-none">
-                ניהול ודיווח סטטוס נוכחות לכלל שוטרי היחידה
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
+      <PageHeader
+        icon={CalendarDays}
+        title="מעקב נוכחות יומי"
+        subtitle="ניהול ודיווח סטטוס נוכחות לכלל שוטרי היחידה"
+        category="נוכחות"
+        categoryLink="/attendance"
+        iconClassName="from-emerald-50 to-emerald-100 border-emerald-200"
+        badge={
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <Button
               variant="outline"
-              className="h-11 rounded-xl border-slate-200 gap-2 font-bold text-slate-600"
+              className="h-10 sm:h-11 rounded-xl border-slate-200 gap-2 font-bold text-slate-600 flex-1 sm:flex-none"
             >
               <Download className="w-4 h-4" />
-              ייצוא דוח יומי
+              <span className="hidden sm:inline">ייצוא דוח יומי</span>
+              <span className="sm:hidden">ייצוא</span>
             </Button>
             <Button
-              className="h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 px-6 gap-2 font-black"
+              className="h-10 sm:h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 px-4 sm:px-6 gap-2 font-black flex-1 sm:flex-none"
               onClick={() => setBulkModalOpen(true)}
             >
               <ClipboardCheck className="w-4 h-4" />
-              עדכון נוכחות מרוכז
+              <span className="hidden sm:inline">עדכון נוכחות מרוכז</span>
+              <span className="sm:hidden">עדכון מרוכז</span>
             </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Summary Stats & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -332,139 +320,141 @@ export default function AttendancePage() {
 
       {/* Attendance Table */}
       <div className="bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50 h-14">
-            <TableRow>
-              <TableHead className="text-right px-6 font-black text-slate-500 uppercase text-[10px] tracking-widest">
-                שוטר
-              </TableHead>
-              <TableHead className="text-right font-black text-slate-500 uppercase text-[10px] tracking-widest">
-                שיוך ארגוני
-              </TableHead>
-              <TableHead className="text-right font-black text-slate-500 uppercase text-[10px] tracking-widest">
-                סטטוס נוכחות
-              </TableHead>
-              <TableHead className="text-right font-black text-slate-500 uppercase text-[10px] tracking-widest">
-                עדכון אחרון
-              </TableHead>
-              <TableHead className="text-center font-black text-slate-500 uppercase text-[10px] tracking-widest">
-                פעולות
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+        <div className="overflow-x-auto">
+          <Table className="min-w-[800px]">
+            <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50 h-14">
               <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="h-32 text-center text-slate-400"
-                >
-                  טוען נתונים...
-                </TableCell>
+                <TableHead className="text-right px-6 font-black text-slate-500 uppercase text-[10px] tracking-widest">
+                  שוטר
+                </TableHead>
+                <TableHead className="text-right font-black text-slate-500 uppercase text-[10px] tracking-widest">
+                  שיוך ארגוני
+                </TableHead>
+                <TableHead className="text-right font-black text-slate-500 uppercase text-[10px] tracking-widest">
+                  סטטוס נוכחות
+                </TableHead>
+                <TableHead className="text-right font-black text-slate-500 uppercase text-[10px] tracking-widest">
+                  עדכון אחרון
+                </TableHead>
+                <TableHead className="text-center font-black text-slate-500 uppercase text-[10px] tracking-widest">
+                  פעולות
+                </TableHead>
               </TableRow>
-            ) : filteredEmployees.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="h-32 text-center text-slate-400 font-medium"
-                >
-                  לא נמצאו שוטרים התואמים את הסינון
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredEmployees.map((emp) => {
-                const isUpdatedToday =
-                  emp.last_status_update &&
-                  new Date(emp.last_status_update).toDateString() ===
-                    new Date().toDateString();
-
-                return (
-                  <TableRow
-                    key={emp.id}
-                    className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="h-32 text-center text-slate-400"
                   >
-                    <TableCell className="py-4 px-6 text-right">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 font-black text-[10px] uppercase shadow-sm">
-                          {emp.first_name[0]}
-                          {emp.last_name[0]}
+                    טוען נתונים...
+                  </TableCell>
+                </TableRow>
+              ) : filteredEmployees.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="h-32 text-center text-slate-400 font-medium"
+                  >
+                    לא נמצאו שוטרים התואמים את הסינון
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredEmployees.map((emp) => {
+                  const isUpdatedToday =
+                    emp.last_status_update &&
+                    new Date(emp.last_status_update).toDateString() ===
+                      new Date().toDateString();
+
+                  return (
+                    <TableRow
+                      key={emp.id}
+                      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
+                    >
+                      <TableCell className="py-4 px-6 text-right">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 font-black text-[10px] uppercase shadow-sm">
+                            {emp.first_name[0]}
+                            {emp.last_name[0]}
+                          </div>
+                          <div className="flex flex-col text-right">
+                            <span className="text-sm font-bold text-slate-800 dark:text-white">
+                              {emp.first_name} {emp.last_name}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-bold">
+                              {emp.personal_number}
+                            </span>
+                          </div>
                         </div>
+                      </TableCell>
+                      <TableCell className="text-right">
                         <div className="flex flex-col text-right">
-                          <span className="text-sm font-bold text-slate-800 dark:text-white">
-                            {emp.first_name} {emp.last_name}
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                            {emp.department_name || "מטה"}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-bold">
-                            {emp.personal_number}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex flex-col text-right">
-                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                          {emp.department_name || "מטה"}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          {emp.section_name || "ללא מדור"} •{" "}
-                          {emp.team_name || "ללא חולייה"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-2 h-2 rounded-full"
-                          style={{
-                            backgroundColor: emp.status_color || "#94a3b8",
-                          }}
-                        />
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] font-bold border-none bg-slate-100 dark:bg-slate-900 py-0.5 px-2"
-                        >
-                          {emp.status_name || "לא מדווח"}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {isUpdatedToday ? (
-                        <div className="flex items-center gap-1.5 text-emerald-600">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span className="text-xs font-bold">
-                            היום,{" "}
-                            {new Date(
-                              emp.last_status_update!,
-                            ).toLocaleTimeString("he-IL", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {emp.section_name || "ללא מדור"} •{" "}
+                            {emp.team_name || "ללא חולייה"}
                           </span>
                         </div>
-                      ) : (
-                        <span className="text-xs text-slate-400 font-medium italic">
-                          טרם עודכן היום
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 rounded-lg gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs"
-                          onClick={() => handleOpenStatusModal(emp)}
-                        >
-                          <ClipboardCheck className="w-3.5 h-3.5" />
-                          עדכן סטטוס
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{
+                              backgroundColor: emp.status_color || "#94a3b8",
+                            }}
+                          />
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-bold border-none bg-slate-100 dark:bg-slate-900 py-0.5 px-2"
+                          >
+                            {emp.status_name || "לא מדווח"}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {isUpdatedToday ? (
+                          <div className="flex items-center gap-1.5 text-emerald-600">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span className="text-xs font-bold">
+                              היום,{" "}
+                              {new Date(
+                                emp.last_status_update!,
+                              ).toLocaleTimeString("he-IL", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400 font-medium italic">
+                            טרם עודכן היום
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 rounded-lg gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs"
+                            onClick={() => handleOpenStatusModal(emp)}
+                          >
+                            <ClipboardCheck className="w-3.5 h-3.5" />
+                            עדכן סטטוס
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Modals */}

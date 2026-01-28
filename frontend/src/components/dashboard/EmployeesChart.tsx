@@ -1,17 +1,22 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { MessageCircle } from 'lucide-react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 interface EmployeesChartProps {
-  stats: { status_id: number; status_name: string; count: number; color: string }[];
+  stats: {
+    status_id: number;
+    status_name: string;
+    count: number;
+    color: string;
+  }[];
   loading?: boolean;
   onOpenWhatsAppReport?: () => void;
   onStatusClick?: (statusId: number, statusName: string, color: string) => void;
@@ -25,9 +30,8 @@ export const EmployeesChart = ({
   onOpenWhatsAppReport,
   onStatusClick,
   title = "מצבת כוח אדם",
-  description = "סטטוס נוכחות בזמן אמת"
+  description = "סטטוס נוכחות בזמן אמת",
 }: EmployeesChartProps) => {
-
   // Process stats into chart data
   const { chartData, total } = useMemo(() => {
     if (!stats || stats.length === 0) return { chartData: [], total: 0 };
@@ -35,13 +39,16 @@ export const EmployeesChart = ({
     const totalCount = stats.reduce((acc, curr) => acc + curr.count, 0);
 
     // Calculate percentages
-    const percentagesArray = stats.map(item =>
-      totalCount > 0 ? (item.count / totalCount) * 100 : 0
+    const percentagesArray = stats.map((item) =>
+      totalCount > 0 ? (item.count / totalCount) * 100 : 0,
     );
 
     // Adjust for rounding errors - give the remainder to the largest percentage
-    const rounded = percentagesArray.map(p => Math.floor(p));
-    const remainders = percentagesArray.map((p, i) => ({ index: i, remainder: p - rounded[i] }));
+    const rounded = percentagesArray.map((p) => Math.floor(p));
+    const remainders = percentagesArray.map((p, i) => ({
+      index: i,
+      remainder: p - rounded[i],
+    }));
     const totalRounded = rounded.reduce((a, b) => a + b, 0);
     const difference = 100 - totalRounded;
 
@@ -58,9 +65,9 @@ export const EmployeesChart = ({
     const data = stats.map((item, index) => ({
       // Make sure we pass the ID
       id: item.status_id,
-      name: item.status_name || 'ללא סטטוס',
+      name: item.status_name || "ללא סטטוס",
       value: item.count,
-      fill: item.color || '#94a3b8',
+      fill: item.color || "#94a3b8",
       percentage: rounded[index],
     }));
 
@@ -74,7 +81,9 @@ export const EmployeesChart = ({
         <div className="bg-slate-900 text-white px-3 py-2 rounded shadow-lg text-sm border border-slate-700">
           <p className="font-semibold">{data.name}</p>
           <p className="text-sm">{data.value} שוטרים</p>
-          <p className="text-xs text-slate-300 mt-1">{data.percentage}% מהיחידה</p>
+          <p className="text-xs text-slate-300 mt-1">
+            {data.percentage}% מהיחידה
+          </p>
           <p className="text-[10px] text-slate-400 mt-1">לחץ לפירוט</p>
         </div>
       );
@@ -89,50 +98,60 @@ export const EmployeesChart = ({
 
     // Calculate angle for label positioning
     const RADIAN = Math.PI / 180;
-    const radius = 130; // Distance from center
+    const radius = window.innerWidth < 640 ? 95 : 115; // Closer on mobile
     const angle = entry.startAngle + (entry.endAngle - entry.startAngle) / 2;
 
     const x = entry.cx + radius * Math.cos(-angle * RADIAN);
     const y = entry.cy + radius * Math.sin(-angle * RADIAN);
 
+    const isMobile = window.innerWidth < 640;
+
     return (
       <g
         className="cursor-pointer outline-none"
         onClick={() => {
-          if (onStatusClick && entry.payload.id !== undefined && entry.payload.id !== null) {
-            onStatusClick(entry.payload.id, entry.payload.name, entry.payload.fill);
+          if (
+            onStatusClick &&
+            entry.payload.id !== undefined &&
+            entry.payload.id !== null
+          ) {
+            onStatusClick(
+              entry.payload.id,
+              entry.payload.name,
+              entry.payload.fill,
+            );
           }
         }}
       >
         <text
           x={x}
-          y={y - 10}
+          y={y - (isMobile ? 8 : 10)}
           fill="#64748b"
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize="12"
+          fontSize={isMobile ? "10" : "12"}
           fontWeight="700"
         >
           {entry.payload.name}
         </text>
         <text
           x={x}
-          y={y + 5}
+          y={y + (isMobile ? 3 : 5)}
           fill="#001e30"
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize="14"
+          fontSize={isMobile ? "12" : "14"}
           fontWeight="800"
         >
           {entry.payload.value}
         </text>
         <text
           x={x}
-          y={y + 18}
+          y={y + (isMobile ? 14 : 18)}
           fill="#475569"
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize="11"
+          fontSize={isMobile ? "9" : "11"}
           fontWeight="600"
         >
           {entry.payload.percentage}%
@@ -158,27 +177,29 @@ export const EmployeesChart = ({
 
   return (
     <Card className="border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] bg-white dark:bg-card dark:border-border">
-      <CardHeader className="pb-6">
-        <div className="flex justify-between items-start gap-4">
-          <div>
-            <CardTitle className="text-xl font-black text-[#001e30] dark:text-white mb-1">
+      <CardHeader className="pb-4 sm:pb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg sm:text-xl font-black text-[#001e30] dark:text-white mb-1 truncate">
               {title}
             </CardTitle>
             <CardDescription className="font-bold text-xs text-slate-400">
               {description}
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             {onOpenWhatsAppReport && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onOpenWhatsAppReport}
-                className="gap-2"
+                className="gap-1.5 sm:gap-2 h-8 sm:h-9"
                 title="שלח דוח בוואטסאפ"
               >
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-xs" dir="rtl">דוח</span>
+                <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="text-xs hidden sm:inline" dir="rtl">
+                  דוח
+                </span>
               </Button>
             )}
           </div>
@@ -195,20 +216,23 @@ export const EmployeesChart = ({
           <div className="space-y-8">
             {/* Pie Chart with Donut Style */}
             <div className="w-full flex flex-col items-center">
-              <div className="relative w-full" style={{ height: '350px' }}>
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
+              <div className="relative w-full h-[280px] sm:h-[350px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart
+                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                  >
                     <Pie
                       data={chartData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
                       label={renderCustomLabel}
-                      outerRadius={100}
-                      innerRadius={55}
+                      outerRadius={80}
+                      innerRadius={45}
                       fill="#8884d8"
                       dataKey="value"
                       paddingAngle={2}
+                      className="sm:!outerRadius-[100px] sm:!innerRadius-[55px]"
                     >
                       {chartData.map((item, index) => (
                         <Cell
@@ -216,7 +240,11 @@ export const EmployeesChart = ({
                           fill={item.fill}
                           className="outline-none hover:opacity-80 transition-opacity cursor-pointer"
                           onClick={() => {
-                            if (onStatusClick && item.id !== undefined && item.id !== null) {
+                            if (
+                              onStatusClick &&
+                              item.id !== undefined &&
+                              item.id !== null
+                            ) {
                               onStatusClick(item.id, item.name, item.fill);
                             }
                           }}
