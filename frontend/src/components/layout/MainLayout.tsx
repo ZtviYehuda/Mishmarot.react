@@ -62,7 +62,7 @@ export default function MainLayout() {
 
   return (
     <div
-      className="min-h-screen bg-background flex font-sans text-foreground transition-colors duration-300"
+      className="h-screen bg-background flex font-sans text-foreground transition-colors duration-300 overflow-hidden"
       dir="rtl"
     >
       {/* Sidebar - Official White Style */}
@@ -217,7 +217,7 @@ export default function MainLayout() {
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className={cn(
                 "w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-all shrink-0 relative",
-                !isSidebarOpen && "lg:hidden animate-pulse",
+                !isSidebarOpen && "animate-pulse",
               )}
               aria-label="תפריט ניווט"
             >
@@ -238,7 +238,7 @@ export default function MainLayout() {
                 {location.pathname === "/"
                   ? "לוח בקרה מרכזי"
                   : navItems.find((n) => n.path === location.pathname)?.name ||
-                    "דף מערכת"}
+                  "דף מערכת"}
               </h2>
             </div>
           </div>
