@@ -50,58 +50,65 @@ export default function CreateEmployeePage() {
   });
 
   // Fetch structure and service types on mount
+  // 1. Fetch structure and service types on mount
   useEffect(() => {
     const fetchData = async () => {
-      const structData = await getStructure();
+      const [structData, srvData] = await Promise.all([
+        getStructure(),
+        getServiceTypes()
+      ]);
+
       if (structData) setStructure(structData);
-
-      const srvData = await getServiceTypes();
       if (srvData) setServiceTypes(srvData);
+    };
+    fetchData();
+  }, [getStructure, getServiceTypes]);
 
-      // Apply scoping if user is commander
-      if (user && !user.is_admin && structData) {
-        // This assumes the user object in context has the commands_* fields 
-        // which we updated in AuthContext/Backend earlier
-        const anyUser = user as any;
+  // 2. Apply scoping Effect - Runs when User OR Structure updates
+  useEffect(() => {
+    if (!user || user.is_admin || structure.length === 0) return;
 
-        if (anyUser.commands_department_id) {
-          setSelectedDeptId(anyUser.commands_department_id.toString());
-        } else if (anyUser.commands_section_id) {
-          const secId = anyUser.commands_section_id;
-          // Find which dept this section belongs to
-          for (const dept of structData) {
-            const sec = dept.sections.find((s: any) => s.id === secId);
-            if (sec) {
-              setSelectedDeptId(dept.id.toString());
-              setSelectedSectionId(secId.toString());
-              break;
-            }
-          }
-        } else if (anyUser.commands_team_id) {
-          const teamId = anyUser.commands_team_id;
-          // Find dept and section for this team
-          for (const dept of structData) {
-            for (const sec of dept.sections) {
-              const team = sec.teams.find((t: any) => t.id === teamId);
-              if (team) {
-                setSelectedDeptId(dept.id.toString());
-                setSelectedSectionId(sec.id.toString());
-                setFormData(prev => ({ ...prev, team_id: teamId }));
-                break;
-              }
-            }
+    console.log("[DEBUG] Scoping Effect Triggered", { user, structureLoaded: structure.length > 0 });
+
+    if (user.commands_team_id) {
+      const teamId = user.commands_team_id;
+      for (const dept of structure) {
+        for (const sec of dept.sections) {
+          const team = sec.teams.find((t: Team) => t.id === teamId);
+          if (team) {
+            setSelectedDeptId(dept.id.toString());
+            setSelectedSectionId(sec.id.toString());
+            setFormData(prev => ({ ...prev, team_id: teamId }));
+            return;
           }
         }
       }
-    };
-    fetchData();
-  }, [getStructure, getServiceTypes, user]);
+    } else if (user.commands_section_id) {
+      const secId = user.commands_section_id;
+      for (const dept of structure) {
+        const sec = dept.sections.find((s: Section) => s.id === secId);
+        if (sec) {
+          setSelectedDeptId(dept.id.toString());
+          setSelectedSectionId(secId.toString());
+          return;
+        }
+      }
+    } else if (user.commands_department_id) {
+      setSelectedDeptId(user.commands_department_id.toString());
+    }
+    // Fallback to assigned if no command found (already handled largely by backend now, but good for UI sync)
+    else if (user.assigned_department_id) {
+      setSelectedDeptId(user.assigned_department_id.toString());
+      if (user.assigned_section_id) {
+        setSelectedSectionId(user.assigned_section_id.toString());
+      }
+    }
+  }, [user, structure]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Prepare payload with organizational IDs for commander logic
     const payload = {
       ...formData,
       section_id: selectedSectionId ? parseInt(selectedSectionId) : undefined,
@@ -268,7 +275,7 @@ export default function CreateEmployeePage() {
                         setSelectedSectionId("");
                         setFormData({ ...formData, team_id: undefined });
                       }}
-                      disabled={Boolean(user && !user.is_admin && ((user as any).commands_department_id || (user as any).commands_section_id || (user as any).commands_team_id))}
+                      disabled={!user?.is_admin && !!(user?.commands_department_id || user?.commands_section_id || user?.commands_team_id)}
                     >
                       <SelectTrigger className="text-right">
                         <SelectValue placeholder="בחר מחלקה..." />
@@ -291,7 +298,7 @@ export default function CreateEmployeePage() {
                         setSelectedSectionId(val);
                         setFormData({ ...formData, team_id: undefined });
                       }}
-                      disabled={!selectedDeptId || Boolean(user && !user.is_admin && ((user as any).commands_section_id || (user as any).commands_team_id))}
+                      disabled={!selectedDeptId || (!user?.is_admin && !!(user?.commands_section_id || user?.commands_team_id))}
                     >
                       <SelectTrigger className="text-right">
                         <SelectValue placeholder={!selectedDeptId ? "בחר מחלקה קודם..." : "בחר מדור..."} />
@@ -311,7 +318,7 @@ export default function CreateEmployeePage() {
                     <Select
                       value={formData.team_id?.toString() || ""}
                       onValueChange={(val) => setFormData({ ...formData, team_id: parseInt(val) })}
-                      disabled={!selectedSectionId || Boolean(user && !user.is_admin && (user as any).commands_team_id)}
+                      disabled={!selectedSectionId || (!user?.is_admin && !!user?.commands_team_id)}
                     >
                       <SelectTrigger className="text-right">
                         <SelectValue placeholder={!selectedSectionId ? "בחר מדור קודם..." : "בחר חולייה..."} />

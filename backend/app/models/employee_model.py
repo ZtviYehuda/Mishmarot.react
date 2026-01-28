@@ -49,27 +49,25 @@ class EmployeeModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
                 SELECT e.*, 
-                       COALESCE(d.name, d2.name, d3.name, d_cmd.name) as department_name, 
-                       COALESCE(s.name, s2.name, s_cmd.name) as section_name, 
-                       COALESCE(t.name, t_cmd.name) as team_name,
+                       d.name as department_name, 
+                       s.name as section_name, 
+                       t.name as team_name,
                        st.name as status_name, 
                        st.color as status_color,
                        r.name as role_name,
-                       d_cmd.id as commands_department_id,
-                       s_cmd.id as commands_section_id,
-                       t_cmd.id as commands_team_id
+                       COALESCE(e.department_id, d.id) as assigned_department_id,
+                       COALESCE(e.section_id, s.id) as assigned_section_id,
+                       (SELECT id FROM departments WHERE commander_id = e.id LIMIT 1) as commands_department_id_direct,
+                       (SELECT id FROM sections WHERE commander_id = e.id LIMIT 1) as commands_section_id_direct,
+                       (SELECT id FROM teams WHERE commander_id = e.id LIMIT 1) as commands_team_id
                 FROM employees e
-                -- Structure Joins
+                -- Structure Joins (Assigned)
                 LEFT JOIN teams t ON e.team_id = t.id
-                LEFT JOIN sections s ON t.section_id = s.id
-                LEFT JOIN departments d ON s.department_id = d.id
-                -- Commander Structure Joins
-                LEFT JOIN teams t_cmd ON t_cmd.commander_id = e.id
-                LEFT JOIN sections s2 ON t_cmd.section_id = s2.id 
-                LEFT JOIN departments d3 ON s2.department_id = d3.id
-                LEFT JOIN sections s_cmd ON s_cmd.commander_id = e.id
-                LEFT JOIN departments d2 ON s_cmd.department_id = d2.id
-                LEFT JOIN departments d_cmd ON d_cmd.commander_id = e.id
+                LEFT JOIN sections s ON s.id = t.section_id
+                LEFT JOIN departments d ON d.id = s.department_id
+                -- Direct Unit Links (if they are assigned directly to a section/dept instead of a team)
+                LEFT JOIN sections s_dir ON e.section_id = s_dir.id
+                LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                 LEFT JOIN roles r ON e.role_id = r.id
                 -- Active Status
                 LEFT JOIN attendance_logs al ON al.employee_id = e.id AND al.end_datetime IS NULL
@@ -77,7 +75,52 @@ class EmployeeModel:
                 WHERE e.id = %s
             """
             cur.execute(query, (emp_id,))
-            return cur.fetchone()
+            user = cur.fetchone()
+            
+            if user:
+                # Convert to standard dict to be safe and mutable
+                user = dict(user)
+                
+                # Assigned units are already partially handled by COALESCE in SQL.
+                # Let's ensure they are set and integers where possible.
+                user['assigned_department_id'] = user.get('assigned_department_id')
+                user['assigned_section_id'] = user.get('assigned_section_id')
+                user['assigned_team_id'] = user.get('team_id')
+
+                # Calculate effective command hierarchy
+                if user.get('commands_section_id_direct'):
+                    cur.execute("SELECT department_id FROM sections WHERE id = %s", (user['commands_section_id_direct'],))
+                    res = cur.fetchone()
+                    user['commands_department_id'] = res['department_id'] if res else None
+                    user['commands_section_id'] = user['commands_section_id_direct']
+                elif user.get('commands_team_id'):
+                    cur.execute("SELECT s.id as section_id, s.department_id FROM teams t JOIN sections s ON t.section_id = s.id WHERE t.id = %s", (user['commands_team_id'],))
+                    res = cur.fetchone()
+                    user['commands_section_id'] = res['section_id'] if res else None
+                    user['commands_department_id'] = res['department_id'] if res else None
+                else:
+                    user['commands_department_id'] = user.get('commands_department_id_direct')
+                    user['commands_section_id'] = None
+                
+                # CRITICAL FALLBACK: If they are a commander but no unit command ID was found in the unit tables,
+                # fall back to the units they are assigned to themselves.
+                if user.get('is_commander'):
+                    print(f"[DEBUG] get_employee_by_id - Initial command IDs: dept={user.get('commands_department_id')}, sec={user.get('commands_section_id')}, team={user.get('commands_team_id')}")
+                    if not user.get('commands_department_id'):
+                         user['commands_department_id'] = user.get('assigned_department_id')
+                    if not user.get('commands_section_id'):
+                         user['commands_section_id'] = user.get('assigned_section_id')
+                    if not user.get('commands_team_id'):
+                         user['commands_team_id'] = user.get('assigned_team_id')
+                    print(f"[DEBUG] get_employee_by_id - Final command IDs: dept={user['commands_department_id']}, sec={user['commands_section_id']}, team={user['commands_team_id']}")
+
+                # Convert dates to strings for JSON serialization
+                for key, value in user.items():
+                    if hasattr(value, 'isoformat'):
+                        user[key] = value.isoformat()
+
+                return user
+            return None
         finally:
             conn.close()
 
@@ -145,13 +188,19 @@ class EmployeeModel:
                     term = f"%{filters['search']}%"
                     query += " AND (e.first_name ILIKE %s OR e.last_name ILIKE %s OR e.personal_number ILIKE %s)"
                     params.extend([term, term, term])
-                if filters.get("dept_id"):
+                if filters.get("dept_id") and str(filters.get("dept_id")).isdigit():
+                    d_id = int(filters["dept_id"])
                     query += " AND (d.id = %s OR d_dir.id = %s)"
-                    params.extend([filters["dept_id"], filters["dept_id"]])
+                    params.extend([d_id, d_id])
 
             query += " ORDER BY e.first_name ASC"
             cur.execute(query, tuple(params))
-            return cur.fetchall()
+            results = cur.fetchall()
+            for row in results:
+                for key, value in row.items():
+                    if hasattr(value, 'isoformat'):
+                        row[key] = value.isoformat()
+            return results
         finally:
             conn.close()
 

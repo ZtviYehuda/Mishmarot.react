@@ -23,19 +23,12 @@ def options_emp_id(emp_id):
 def get_employees():
     try:
         identity_str = get_jwt_identity()
-        print(f"[DEBUG] Employee GET - identity_str: {identity_str}, type: {type(identity_str)}")
-        
-        # Try to parse as JSON
         try:
             identity = json.loads(identity_str) if isinstance(identity_str, str) else identity_str
             user_id = identity.get("id") if isinstance(identity, dict) else identity
         except (json.JSONDecodeError, AttributeError):
-            # If not JSON, treat as plain ID
             user_id = identity_str
         
-        print(f"[DEBUG] Employee GET - user_id: {user_id}")
-        
-        # Get requester profile to check their organizational scope
         requester = EmployeeModel.get_employee_by_id(user_id)
         
         filters = {
@@ -43,6 +36,7 @@ def get_employees():
             "dept_id": request.args.get("dept_id"),
             "include_inactive": request.args.get("include_inactive") == "true",
         }
+        
         employees = EmployeeModel.get_all_employees(filters, requesting_user=requester)
         return jsonify(employees)
     except Exception as e:

@@ -7,6 +7,11 @@ export interface AuthUser {
   must_change_password: boolean;
   is_admin: boolean;
   is_commander: boolean;
+  assigned_department_id?: number;
+  assigned_section_id?: number;
+  commands_department_id?: number;
+  commands_section_id?: number;
+  commands_team_id?: number;
 }
 
 export interface LoginResponse {

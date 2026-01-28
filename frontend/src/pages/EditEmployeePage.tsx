@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 import type { Employee, CreateEmployeePayload } from "@/types/employee.types";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuthContext } from "@/context/AuthContext";
 
 // --- Styled Components ---
 
@@ -122,6 +123,7 @@ export default function EditEmployeePage() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const { updateEmployee, getStructure, getServiceTypes } = useEmployees();
+    const { user } = useAuthContext();
 
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
@@ -222,9 +224,9 @@ export default function EditEmployeePage() {
         setLoading(true);
         const payload = {
             ...formData,
-            section_id: selectedSectionId ? parseInt(selectedSectionId) : undefined,
-            department_id: selectedDeptId ? parseInt(selectedDeptId) : undefined,
-            team_id: formData.team_id || undefined
+            section_id: selectedSectionId ? parseInt(selectedSectionId) : null,
+            department_id: selectedDeptId ? parseInt(selectedDeptId) : null,
+            team_id: formData.team_id || null
         };
 
         const success = await updateEmployee(parseInt(id), payload);
@@ -471,7 +473,15 @@ export default function EditEmployeePage() {
 
                                                 <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                                                     <FormField label="מחלקה (Department)" required>
-                                                        <Select value={selectedDeptId} onValueChange={(val) => { setSelectedDeptId(val); setSelectedSectionId(""); setFormData({ ...formData, team_id: undefined }); }}>
+                                                        <Select
+                                                            value={selectedDeptId}
+                                                            onValueChange={(val) => {
+                                                                setSelectedDeptId(val);
+                                                                setSelectedSectionId("");
+                                                                setFormData({ ...formData, team_id: null });
+                                                            }}
+                                                            disabled={!user?.is_admin && !!(user?.commands_department_id || user?.commands_section_id || user?.commands_team_id)}
+                                                        >
                                                             <SelectTrigger className="h-12 bg-white border-blue-200/60 rounded-xl text-right font-bold text-slate-700 focus:ring-2 focus:ring-blue-200"><SelectValue placeholder="בחר מחלקה..." /></SelectTrigger>
                                                             <SelectContent dir="rtl">
                                                                 {structure.map(dept => <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>)}
@@ -480,19 +490,33 @@ export default function EditEmployeePage() {
                                                     </FormField>
 
                                                     <FormField label="מדור (Section)">
-                                                        <Select value={selectedSectionId} onValueChange={(val) => { setSelectedSectionId(val); setFormData({ ...formData, team_id: undefined }); }} disabled={!selectedDeptId}>
-                                                            <SelectTrigger className="h-12 bg-white border-blue-200/60 rounded-xl text-right font-bold text-slate-700 focus:ring-2 focus:ring-blue-200"><SelectValue placeholder="בחר מדור..." /></SelectTrigger>
+                                                        <Select
+                                                            value={selectedSectionId}
+                                                            onValueChange={(val) => {
+                                                                setSelectedSectionId(val);
+                                                                setFormData({ ...formData, team_id: null });
+                                                            }}
+                                                            disabled={!selectedDeptId || (!user?.is_admin && !!(user?.commands_section_id || user?.commands_team_id))}
+                                                        >
+                                                            <SelectTrigger className="h-12 bg-white border-blue-200/60 rounded-xl text-right font-bold text-slate-700 focus:ring-2 focus:ring-blue-200"><SelectValue placeholder={!selectedDeptId ? "בחר מחלקה קודם..." : "בחר מדור..."} /></SelectTrigger>
                                                             <SelectContent dir="rtl">
-                                                                {sections.map((sec: any) => <SelectItem key={sec.id} value={sec.id.toString()}>{sec.name}</SelectItem>)}
+                                                                {sections.map(sec => (
+                                                                    <SelectItem key={sec.id} value={sec.id.toString()}>{sec.name}</SelectItem>
+                                                                ))}
                                                             </SelectContent>
                                                         </Select>
                                                     </FormField>
 
                                                     <FormField label="חולייה (Team)">
-                                                        <Select value={formData.team_id?.toString() || ""} onValueChange={(val) => setFormData({ ...formData, team_id: parseInt(val) })} disabled={!selectedSectionId}>
+                                                        <Select
+                                                            value={formData.team_id?.toString() || "none"}
+                                                            onValueChange={(val) => setFormData({ ...formData, team_id: val === "none" ? null : parseInt(val) })}
+                                                            disabled={!selectedSectionId || (!user?.is_admin && !!user?.commands_team_id)}
+                                                        >
                                                             <SelectTrigger className="h-12 bg-white border-blue-200/60 rounded-xl text-right font-bold text-slate-700 focus:ring-2 focus:ring-blue-200"><SelectValue placeholder="בחר חולייה..." /></SelectTrigger>
                                                             <SelectContent dir="rtl">
-                                                                {teams.map((t: any) => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}
+                                                                <SelectItem value="none">ללא חולייה</SelectItem>
+                                                                {teams.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}
                                                             </SelectContent>
                                                         </Select>
                                                     </FormField>

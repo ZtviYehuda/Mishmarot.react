@@ -53,11 +53,11 @@ export interface CreateEmployeePayload {
   enlistment_date?: string;
   discharge_date?: string;
   assignment_date?: string;
-  team_id?: number;
-  section_id?: number;
-  department_id?: number;
-  role_id?: number;
-  service_type_id?: number;
+  team_id?: number | null;
+  section_id?: number | null;
+  department_id?: number | null;
+  role_id?: number | null;
+  service_type_id?: number | null;
   is_commander?: boolean;
   is_admin?: boolean;
   security_clearance?: number;

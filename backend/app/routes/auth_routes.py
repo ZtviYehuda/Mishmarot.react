@@ -20,8 +20,11 @@ def login():
     p_num = data.get("personal_number")
     password = data.get("password")
 
-    user = EmployeeModel.login_check(p_num, password)
-    if user:
+    user_basic = EmployeeModel.login_check(p_num, password)
+    if user_basic:
+        # Fetch full profile to get command hierarchy/scopings
+        user = EmployeeModel.get_employee_by_id(user_basic["id"])
+        
         # Check if user has management permissions
         if not user.get("is_admin") and not user.get("is_commander"):
             return jsonify({
@@ -50,6 +53,8 @@ def login():
                     "must_change_password": user["must_change_password"],
                     "is_admin": user["is_admin"],
                     "is_commander": user["is_commander"],
+                    "assigned_department_id": user.get("assigned_department_id"),
+                    "assigned_section_id": user.get("assigned_section_id"),
                     "commands_department_id": user.get("commands_department_id"),
                     "commands_section_id": user.get("commands_section_id"),
                     "commands_team_id": user.get("commands_team_id"),
@@ -78,6 +83,8 @@ def get_current_user():
                 "must_change_password": user["must_change_password"],
                 "is_admin": user["is_admin"],
                 "is_commander": user["is_commander"],
+                "assigned_department_id": user.get("assigned_department_id"),
+                "assigned_section_id": user.get("assigned_section_id"),
                 "commands_department_id": user.get("commands_department_id"),
                 "commands_section_id": user.get("commands_section_id"),
                 "commands_team_id": user.get("commands_team_id"),

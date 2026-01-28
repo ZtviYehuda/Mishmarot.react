@@ -129,11 +129,8 @@ class AttendanceModel:
                     query += " AND t.id = %s"
                     params.append(requesting_user["commands_team_id"])
                 else:
-                    # If commander but no unit linked, show only themselves? 
-                    # User requirement: "if he is commander of section... he sees only section"
-                    # If not a commander of any unit, should he see anything? 
-                    # Usually "is_commander" means they command something.
-                    query += f" AND e.id = {requesting_user['id']}"
+                    query += " AND e.id = %s"
+                    params.append(requesting_user['id'])
 
             query += " GROUP BY st.name, st.color"
             cur.execute(query, tuple(params))
@@ -171,7 +168,8 @@ class AttendanceModel:
                     query += " AND t.id = %s"
                     params.append(requesting_user["commands_team_id"])
                 else:
-                    query += f" AND e.id = {requesting_user['id']}"
+                    query += " AND e.id = %s"
+                    params.append(requesting_user['id'])
 
             query += """
                 AND (
