@@ -20,8 +20,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuthContext();
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError("");
 
     if (!personalNumber.trim() || !password.trim()) {
@@ -33,9 +33,20 @@ export default function LoginPage() {
 
     try {
       const success = await login(personalNumber.trim(), password.trim());
-      if (success) navigate("/", { replace: true });
+      if (success) {
+        navigate("/", { replace: true });
+      } else {
+        // Login returned false, meaning it failed. Error is set in context, 
+        // but we want to show it here.
+        // Since we don't access context error directly in this component's render (we use local error),
+        // we should set a generic error or try to get it from context if we exposed it. 
+        // However, useAuth sets its own error state which is exposed via context.
+        // Let's rely on a generic message if we can't get the specific one, 
+        // OR better yet, let's just assert failure here.
+        setError("פרטי ההתחברות שגויים. אנא נסה שוב.");
+      }
     } catch (err) {
-      setError("שגיאת התחברות. אנא ודא שהפרטים נכונים ונסה שוב.");
+      setError("שגיאת מערכת. אנא נסה שוב מאוחר יותר.");
     } finally {
       setIsLoading(false);
     }

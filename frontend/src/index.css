@@ -10,12 +10,16 @@
 
 body {
   direction: rtl;
-  @apply bg-background text-foreground overflow-x-hidden;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  overflow-x: hidden;
 }
 
 /* Base transitions - scoped for better performance */
 .btn-transition {
-  @apply transition-all duration-200;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
 }
 
 ::-webkit-scrollbar {

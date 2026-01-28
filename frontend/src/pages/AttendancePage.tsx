@@ -140,6 +140,14 @@ export default function AttendancePage() {
     );
   }, [sections, selectedSectionId]);
 
+  const refreshData = async () => {
+    await fetchEmployees();
+    const dashboardStats = await getDashboardStats();
+    if (dashboardStats && dashboardStats.stats) {
+      setStats(dashboardStats.stats);
+    }
+  };
+
   const handleOpenStatusModal = (emp: Employee) => {
     setSelectedEmployee(emp);
     setStatusModalOpen(true);
@@ -636,14 +644,14 @@ export default function AttendancePage() {
         open={bulkModalOpen}
         onOpenChange={setBulkModalOpen}
         employees={filteredEmployees}
-        onSuccess={() => fetchEmployees()}
+        onSuccess={() => refreshData()}
       />
 
       <StatusUpdateModal
         open={statusModalOpen}
         onOpenChange={setStatusModalOpen}
         employee={selectedEmployee}
-        onSuccess={() => fetchEmployees()}
+        onSuccess={() => refreshData()}
       />
 
       <StatusHistoryModal
