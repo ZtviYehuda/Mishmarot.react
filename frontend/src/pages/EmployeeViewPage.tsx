@@ -24,6 +24,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import * as endpoints from "@/config/employees.endpoints";
 import { PageHeader } from "@/components/layout/PageHeader";
+import StatusHistoryList from "@/components/employees/StatusHistoryList";
+import { History as HistoryIcon } from "lucide-react";
 
 export default function EmployeeViewPage() {
   const { id } = useParams<{ id: string }>();
@@ -412,6 +414,24 @@ export default function EmployeeViewPage() {
                 label="שחרור צפוי (תש''ש)"
                 value={employee.discharge_date?.split("T")[0]}
               />
+            </CardContent>
+          </Card>
+
+          {/* Attendance History */}
+          <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
+            <div className="bg-muted/30 border-b border-border p-6">
+              <h3 className="font-bold text-lg flex items-center gap-2 text-foreground">
+                <HistoryIcon className="w-5 h-5 text-primary" />
+                היסטוריית נוכחות וסטטוסים
+              </h3>
+            </div>
+            <CardContent className="p-6">
+              <StatusHistoryList employeeId={employee.id} limit={5} />
+              <div className="mt-4 pt-4 border-t border-border flex justify-center">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/attendance')} className="text-primary font-bold text-xs hover:bg-primary/5">
+                  למעקב נוכחות מלא
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
