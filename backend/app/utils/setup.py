@@ -73,6 +73,8 @@ def setup_database():
                 security_clearance INTEGER DEFAULT 0,
                 police_license BOOLEAN DEFAULT FALSE,
                 emergency_contact VARCHAR(100),
+                notif_sick_leave BOOLEAN DEFAULT TRUE,
+                notif_transfers BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );""",
             """CREATE TABLE IF NOT EXISTS attendance_logs (
@@ -113,6 +115,12 @@ def setup_database():
             )
             cur.execute(
                 "ALTER TABLE employees ADD COLUMN IF NOT EXISTS national_id VARCHAR(9) UNIQUE;"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS notif_sick_leave BOOLEAN DEFAULT TRUE;"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS notif_transfers BOOLEAN DEFAULT TRUE;"
             )
         except Exception as e:
             print(f"ℹ️ Migration info: {e}")
