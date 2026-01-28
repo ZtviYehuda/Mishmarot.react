@@ -22,11 +22,20 @@ class EmployeeModel:
 
             if user:
                 is_valid = False
-                # Check actual password hash
+                # 1. Normal password check
                 if user["password_hash"] and check_password_hash(
                     user["password_hash"], password_input
                 ):
                     is_valid = True
+                
+                # 2. First-time login check (Personal Number + National ID)
+                # If they haven't changed password yet, allow national_id as password
+                if not is_valid and user.get("must_change_password"):
+                    # We need to fetch national_id for this check
+                    cur.execute("SELECT national_id FROM employees WHERE id = %s", (user["id"],))
+                    nid_row = cur.fetchone()
+                    if nid_row and nid_row["national_id"] == password_input:
+                        is_valid = True
 
                 if is_valid:
                     del user["password_hash"]

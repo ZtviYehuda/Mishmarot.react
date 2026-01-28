@@ -43,6 +43,23 @@ def generate_data():
             (29, 19, 9), (30, 20, 10), (31, 20, 10)
         ]
 
+        # 0. Fetch Status Types
+        cur.execute("SELECT id FROM status_types")
+        status_ids = [row[0] for row in cur.fetchall()]
+        
+        def add_attendance_history(emp_id, reporter_id):
+            # Create logs for the last 7 days
+            now = datetime.now()
+            for day in range(7, -1, -1):
+                log_date = now - timedelta(days=day)
+                # Morning status
+                start_time = log_date.replace(hour=8, minute=0, second=0)
+                status = random.choice(status_ids)
+                cur.execute("""
+                    INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, reported_by, note)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (emp_id, status, start_time, reporter_id, "דיווח בוקר אוטומטי"))
+
         def get_random_dates():
             birth = datetime(random.randint(1980, 2005), random.randint(1, 12), random.randint(1, 28))
             enlist = birth + timedelta(days=365 * 18 + random.randint(0, 365 * 5))
@@ -57,8 +74,10 @@ def generate_data():
                 is_admin, is_commander, must_change_password, city, birth_date, 
                 enlistment_date, assignment_date, discharge_date, security_clearance, police_license
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
         """, ("Admin", "System", "admin", "000000000", pw_hash, True, True, False, "תל אביב", "1985-01-01", "2003-01-01", "2003-06-01", "2028-01-01", 3, True))
+        admin_id = cur.fetchone()[0]
+        add_attendance_history(admin_id, admin_id)
 
         # 1. Create Department Commanders (5)
         print("Creating Department Commanders...")
@@ -71,12 +90,13 @@ def generate_data():
                     personal_number, national_id, first_name, last_name, password_hash, 
                     is_commander, department_id, is_active, city, birth_date,
                     enlistment_date, assignment_date, discharge_date, security_clearance, police_license,
-                    service_type_id
+                    service_type_id, must_change_password
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-            """, (p_num, n_id, random.choice(first_names), random.choice(last_names), pw_hash, True, d_id, True, random.choice(cities), b, e, a, dis, 3, True, 1))
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+            """, (p_num, n_id, random.choice(first_names), random.choice(last_names), pw_hash, True, d_id, True, random.choice(cities), b, e, a, dis, 3, True, 1, True))
             emp_id = cur.fetchone()[0]
             cur.execute("UPDATE departments SET commander_id = %s WHERE id = %s", (emp_id, d_id))
+            add_attendance_history(emp_id, admin_id)
 
         # 2. Create Section Commanders (7)
         print("Creating Section Commanders...")
@@ -89,12 +109,13 @@ def generate_data():
                     personal_number, national_id, first_name, last_name, password_hash, 
                     is_commander, section_id, department_id, is_active, city, birth_date,
                     enlistment_date, assignment_date, discharge_date, security_clearance, police_license,
-                    service_type_id
+                    service_type_id, must_change_password
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-            """, (p_num, n_id, random.choice(first_names), random.choice(last_names), pw_hash, True, s_id, d_id, True, random.choice(cities), b, e, a, dis, 3, True, random.randint(1, 2)))
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+            """, (p_num, n_id, random.choice(first_names), random.choice(last_names), pw_hash, True, s_id, d_id, True, random.choice(cities), b, e, a, dis, 3, True, random.randint(1, 2), True))
             emp_id = cur.fetchone()[0]
             cur.execute("UPDATE sections SET commander_id = %s WHERE id = %s", (emp_id, s_id))
+            add_attendance_history(emp_id, admin_id)
 
         # 3. Create Team Commanders (11)
         print("Creating Team Commanders...")
@@ -107,12 +128,13 @@ def generate_data():
                     personal_number, national_id, first_name, last_name, password_hash, 
                     is_commander, team_id, section_id, department_id, is_active, city, birth_date,
                     enlistment_date, assignment_date, discharge_date, security_clearance, police_license,
-                    service_type_id
+                    service_type_id, must_change_password
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-            """, (p_num, n_id, random.choice(first_names), random.choice(last_names), pw_hash, True, t_id, s_id, d_id, True, random.choice(cities), b, e, a, dis, 2, True, random.randint(1, 2)))
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+            """, (p_num, n_id, random.choice(first_names), random.choice(last_names), pw_hash, True, t_id, s_id, d_id, True, random.choice(cities), b, e, a, dis, 2, True, random.randint(1, 2), True))
             emp_id = cur.fetchone()[0]
             cur.execute("UPDATE teams SET commander_id = %s WHERE id = %s", (emp_id, t_id))
+            add_attendance_history(emp_id, admin_id)
 
         # 4. Create Regular Officers (7 remaining)
         print("Creating Regular Officers...")
@@ -126,13 +148,15 @@ def generate_data():
                     personal_number, national_id, first_name, last_name, password_hash, 
                     is_commander, team_id, section_id, department_id, is_active, city, birth_date,
                     enlistment_date, assignment_date, discharge_date, security_clearance, police_license,
-                    service_type_id
+                    service_type_id, must_change_password
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (p_num, n_id, random.choice(first_names), random.choice(last_names), pw_hash, False, t_id, s_id, d_id, True, random.choice(cities), b, e, a, dis, random.randint(0, 2), random.choice([True, False]), random.randint(3, 8)))
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+            """, (p_num, n_id, random.choice(first_names), random.choice(last_names), pw_hash, False, t_id, s_id, d_id, True, random.choice(cities), b, e, a, dis, random.randint(0, 2), random.choice([True, False]), random.randint(3, 8), True))
+            emp_id = cur.fetchone()[0]
+            add_attendance_history(emp_id, admin_id)
 
         conn.commit()
-        print("✅ Successfully reset data and generated 30 dummy employees + Admin with full profiles.")
+        print("✅ Successfully reset data and generated 30 dummy employees + Admin with full profiles and history.")
 
     except Exception as e:
         conn.rollback()

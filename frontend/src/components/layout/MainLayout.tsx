@@ -65,7 +65,7 @@ export default function MainLayout() {
 
   return (
     <div
-      className="h-screen bg-background flex font-sans text-foreground transition-colors duration-300 overflow-hidden"
+      className="h-screen bg-background flex font-sans text-foreground overflow-hidden"
       dir="rtl"
     >
       {/* Sidebar - Official White Style */}
@@ -371,7 +371,7 @@ export default function MainLayout() {
         </header>
 
         {/* Content Page */}
-        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 flex-grow overflow-auto bg-background transition-colors">
+        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 flex-grow overflow-auto bg-background">
           <div className="w-full max-w-full">
             <Outlet />
           </div>
