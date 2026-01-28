@@ -54,7 +54,19 @@ def get_stats():
         from app.models.employee_model import EmployeeModel
         requester = EmployeeModel.get_employee_by_id(user_id)
         
-        stats = AttendanceModel.get_dashboard_stats(requesting_user=requester)
+        # Parse filters for drill-down
+        # Parse filters for drill-down
+        filters = {}
+        if request.args.get('department_id'):
+            filters['department_id'] = int(request.args.get('department_id'))
+        if request.args.get('section_id'):
+            filters['section_id'] = int(request.args.get('section_id'))
+        if request.args.get('team_id'):
+            filters['team_id'] = int(request.args.get('team_id'))
+            
+        print(f"[DEBUG] get_stats filters: {filters}")
+        
+        stats = AttendanceModel.get_dashboard_stats(requesting_user=requester, filters=filters)
         birthdays = AttendanceModel.get_birthdays(requesting_user=requester)
         return jsonify({"stats": stats, "birthdays": birthdays})
     except Exception as e:

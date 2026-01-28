@@ -1,6 +1,4 @@
 import { useMemo } from 'react';
-import { useEmployees } from '@/hooks/useEmployees';
-import { useAuthContext } from '@/context/AuthContext';
 import {
   Card,
   CardContent,
@@ -9,114 +7,61 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Settings2, MessageCircle } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import type { Employee } from '@/types/employee.types';
 
 interface EmployeesChartProps {
-  onOpenFilter?: () => void;
+  stats: { status_name: string; count: number; color: string }[];
+  loading?: boolean;
   onOpenWhatsAppReport?: () => void;
-  filterType?: 'all' | 'department' | 'section';
-  filteredDepartmentId?: number;
-  filteredSectionId?: number;
-}
-
-interface ChartDataItem {
-  name: string;
-  value: number;
-  fill: string;
-  percentage: number;
+  title?: string;
+  description?: string;
 }
 
 export const EmployeesChart = ({
-  onOpenFilter,
+  stats,
+  loading = false,
   onOpenWhatsAppReport,
-  filterType = 'all',
-  filteredDepartmentId,
-  filteredSectionId,
+  title = "מצבת כוח אדם",
+  description = "סטטוס נוכחות בזמן אמת"
 }: EmployeesChartProps) => {
-  const { employees, loading } = useEmployees();
-  const { user } = useAuthContext();
 
-  // Filter employees based on user permissions and selected filter
-  const filteredEmployees = useMemo(() => {
-    if (loading) return [];
+  // Process stats into chart data
+  const { chartData, total } = useMemo(() => {
+    if (!stats || stats.length === 0) return { chartData: [], total: 0 };
 
-    let filtered = employees;
+    const totalCount = stats.reduce((acc, curr) => acc + curr.count, 0);
 
-    // If not admin, filter to only show employees under same hierarchy
-    if (user && !user.is_admin) {
-      // For commanders, show employees in their section/department
-    }
-
-    // Apply additional filters
-    if (filterType === 'department' && filteredDepartmentId) {
-      filtered = filtered.filter(() => true);
-    } else if (filterType === 'section' && filteredSectionId) {
-      filtered = filtered.filter(() => true);
-    }
-
-    return filtered;
-  }, [employees, loading, user, filterType, filteredDepartmentId, filteredSectionId]);
-
-  // Group employees by status
-  const chartData = useMemo(() => {
-    const grouped = new Map<
-      string,
-      { count: number; color: string; employees: Employee[] }
-    >();
-
-    filteredEmployees.forEach((emp) => {
-      const status = emp.status_name || 'לא ידוע';
-      const color = emp.status_color || '#6b7280';
-
-      if (!grouped.has(status)) {
-        grouped.set(status, { count: 0, color, employees: [] });
-      }
-      const group = grouped.get(status)!;
-      group.count++;
-      group.employees.push(emp);
-    });
-
-    const total = filteredEmployees.length;
-    const entries = Array.from(grouped.entries());
-    
-    // If no entries, return empty array
-    if (entries.length === 0) {
-      return [];
-    }
-    
-    // Calculate percentages with adjustment to ensure sum equals 100
-    const percentagesArray = entries.map(([, { count }]) => 
-      total > 0 ? (count / total) * 100 : 0
+    // Calculate percentages
+    const percentagesArray = stats.map(item =>
+      totalCount > 0 ? (item.count / totalCount) * 100 : 0
     );
-    
+
     // Adjust for rounding errors - give the remainder to the largest percentage
     const rounded = percentagesArray.map(p => Math.floor(p));
     const remainders = percentagesArray.map((p, i) => ({ index: i, remainder: p - rounded[i] }));
     const totalRounded = rounded.reduce((a, b) => a + b, 0);
     const difference = 100 - totalRounded;
-    
+
     // Add the difference to the items with largest remainders
-    for (let i = 0; i < difference; i++) {
-      if (remainders.length === 0) break; // Safety check
+    if (difference > 0) {
       remainders.sort((a, b) => b.remainder - a.remainder);
-      const largestIndex = remainders[0]?.index;
-      if (largestIndex !== undefined) {
-        rounded[largestIndex]++;
-        remainders[0].remainder = -1; // Mark as used
+      for (let i = 0; i < difference; i++) {
+        if (remainders[i]) {
+          rounded[remainders[i].index]++;
+        }
       }
     }
-    
-    return entries.map(([name, { count, color }], index) => ({
-      name,
-      value: count,
-      fill: color,
+
+    const data = stats.map((item, index) => ({
+      name: item.status_name || 'ללא סטטוס',
+      value: item.count,
+      fill: item.color || '#94a3b8',
       percentage: rounded[index],
     }));
-  }, [filteredEmployees]);
 
-  const total = filteredEmployees.length;
+    return { chartData: data, total: totalCount };
+  }, [stats]);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -141,7 +86,7 @@ export const EmployeesChart = ({
     const RADIAN = Math.PI / 180;
     const radius = 130; // Distance from center
     const angle = entry.startAngle + (entry.endAngle - entry.startAngle) / 2;
-    
+
     const x = entry.cx + radius * Math.cos(-angle * RADIAN);
     const y = entry.cy + radius * Math.sin(-angle * RADIAN);
 
@@ -189,7 +134,7 @@ export const EmployeesChart = ({
       <Card className="border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] bg-white dark:bg-card dark:border-border">
         <CardHeader className="pb-8">
           <CardTitle className="text-xl font-black text-[#001e30] dark:text-white mb-1">
-            מצבת כוח אדם
+            {title}
           </CardTitle>
           <CardDescription className="font-bold text-xs text-slate-400">
             טוען נתונים...
@@ -205,12 +150,10 @@ export const EmployeesChart = ({
         <div className="flex justify-between items-start gap-4">
           <div>
             <CardTitle className="text-xl font-black text-[#001e30] dark:text-white mb-1">
-              מצבת כוח אדם
+              {title}
             </CardTitle>
             <CardDescription className="font-bold text-xs text-slate-400">
-              {filterType === 'all' && 'כל העובדים תחת הפיקוד שלך'}
-              {filterType === 'department' && 'עובדי המחלקה'}
-              {filterType === 'section' && 'עובדי המדור'}
+              {description}
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -226,17 +169,6 @@ export const EmployeesChart = ({
                 <span className="text-xs" dir="rtl">דוח</span>
               </Button>
             )}
-            {onOpenFilter && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onOpenFilter}
-                className="gap-2"
-              >
-                <Settings2 className="w-4 h-4" />
-                <span className="text-xs" dir="rtl">סנן</span>
-              </Button>
-            )}
           </div>
         </div>
       </CardHeader>
@@ -244,12 +176,12 @@ export const EmployeesChart = ({
         {total === 0 ? (
           <div className="py-12 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              אין עובדים להצגה
+              אין נתונים להצגה
             </p>
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Pie Chart with Donut Style - Now showing all data on chart */}
+            {/* Pie Chart with Donut Style */}
             <div className="w-full flex flex-col items-center">
               <div className="relative w-full" style={{ height: '350px' }}>
                 <ResponsiveContainer width="100%" height={350}>

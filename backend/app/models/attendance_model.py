@@ -91,7 +91,7 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def get_dashboard_stats(requesting_user=None):
+    def get_dashboard_stats(requesting_user=None, filters=None):
         conn = get_db_connection()
         if not conn:
             return []
@@ -99,9 +99,9 @@ class AttendanceModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
                 SELECT 
-                    COALESCE(st.name, 'משרד') as status_name,
+                    st.name as status_name,
                     COUNT(e.id) as count,
-                    COALESCE(st.color, '#22c55e') as color
+                    st.color as color
                 FROM employees e
                 -- Direct Path Joins (for scoping)
                 LEFT JOIN teams t ON e.team_id = t.id
@@ -118,6 +118,7 @@ class AttendanceModel:
             """
             params = []
             
+            # 1. Base Scoping (Security)
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
                     query += " AND d.id = %s"
@@ -129,12 +130,35 @@ class AttendanceModel:
                     query += " AND t.id = %s"
                     params.append(requesting_user["commands_team_id"])
                 else:
+                    # Individual Fallback
                     query += " AND e.id = %s"
                     params.append(requesting_user['id'])
 
+            # 2. Drill-down Filters (User Selection)
+            if filters:
+                if filters.get('department_id'):
+                    query += " AND d.id = %s"
+                    params.append(filters['department_id'])
+                if filters.get('section_id'):
+                    query += " AND s.id = %s"
+                    params.append(filters['section_id'])
+                if filters.get('team_id'):
+                    query += " AND t.id = %s"
+                    params.append(filters['team_id'])
+
             query += " GROUP BY st.name, st.color"
-            cur.execute(query, tuple(params))
-            return cur.fetchall()
+            
+            # Debug SQL
+            # print(f"Executing SQL: {query} \nParams: {params}")
+            
+            try:
+                cur.execute(query, tuple(params))
+                return cur.fetchall()
+            except Exception as e:
+                print(f"SQL Error in get_dashboard_stats: {e}")
+                print(f"Query: {query}")
+                print(f"Params: {params}")
+                raise e
         finally:
             conn.close()
 
@@ -173,7 +197,7 @@ class AttendanceModel:
 
             query += """
                 AND (
-                    (EXTRACT(DOY FROM e.birth_date) - EXTRACT(DOY FROM CURRENT_DATE) + 365) % 365 < 7
+                    (EXTRACT(DOY FROM e.birth_date) - EXTRACT(DOY FROM CURRENT_DATE) + 365) %% 365 < 7
                 )
                 ORDER BY month, day
             """

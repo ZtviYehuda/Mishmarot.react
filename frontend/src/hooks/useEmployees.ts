@@ -108,6 +108,22 @@ export const useEmployees = () => {
     }
   }, []);
 
+  // Get Dashboard Stats & Birthdays
+  const getDashboardStats = useCallback(async (filters?: { department_id?: string; section_id?: string; team_id?: string }) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters?.department_id) params.append('department_id', filters.department_id);
+      if (filters?.section_id) params.append('section_id', filters.section_id);
+      if (filters?.team_id) params.append('team_id', filters.team_id);
+
+      const { data } = await apiClient.get(`${attEndpoints.ATTENDANCE_STATS_ENDPOINT}?${params}`);
+      return data;
+    } catch (err: any) {
+      console.error("Failed to fetch dashboard stats", err);
+      return { stats: [], birthdays: [] };
+    }
+  }, []);
+
   // Log Attendance Status
   const logStatus = async (payload: {
     employee_id: number;
@@ -145,6 +161,7 @@ export const useEmployees = () => {
     getStructure,
     getServiceTypes,
     getStatusTypes,
-    logStatus
+    logStatus,
+    getDashboardStats
   };
 };
