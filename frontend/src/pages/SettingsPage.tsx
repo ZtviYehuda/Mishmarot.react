@@ -263,7 +263,7 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-8">
                   {/* Profile Image Section */}
-                  <div className="flex flex-col sm:flex-row-reverse items-center gap-8 py-4 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-col sm:flex-row items-center gap-8 py-4 border-b border-slate-100 dark:border-slate-800">
                     <div className="relative group">
                       <div className="w-32 h-32 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-900 shadow-xl ring-1 ring-slate-200 dark:ring-slate-700">
                         <span className="text-4xl font-black text-slate-300 dark:text-slate-600">
@@ -282,7 +282,7 @@ export default function SettingsPage() {
                       <h3 className="text-2xl font-black text-slate-900 dark:text-white">
                         {user?.first_name} {user?.last_name}
                       </h3>
-                      <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center sm:justify-start flex-row-reverse gap-2 text-right">
+                      <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center sm:justify-start gap-2 text-right">
                         <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px] uppercase">
                           {user?.personal_number}
                         </span>
@@ -295,7 +295,7 @@ export default function SettingsPage() {
                               : "יחידה"}
                         </span>
                       </p>
-                      <div className="pt-2 flex flex-wrap justify-center sm:justify-start flex-row-reverse gap-2">
+                      <div className="pt-2 flex flex-wrap justify-center sm:justify-start gap-2">
                         <Badge
                           variant="outline"
                           className="rounded-lg border-primary/20 dark:border-primary/30 text-primary font-bold transition-colors"
@@ -439,7 +439,7 @@ export default function SettingsPage() {
                     <Label className="text-sm font-black text-slate-800 dark:text-white block text-right">
                       ערכת נושא (Accent Color)
                     </Label>
-                    <div className="flex flex-wrap flex-row-reverse gap-4">
+                    <div className="flex flex-wrap gap-4">
                       {["blue", "indigo", "emerald", "rose", "amber"].map(
                         (color) => (
                           <button
@@ -509,7 +509,7 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="p-5 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 flex flex-row-reverse items-start gap-4 text-right transition-colors">
+                  <div className="p-5 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 flex items-start gap-4 text-right transition-colors">
                     <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/30">
                       <ShieldCheck className="w-6 h-6 text-amber-600" />
                     </div>
@@ -616,13 +616,13 @@ export default function SettingsPage() {
           {activeTab === "backup" && user?.is_admin && (
             <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300 text-right">
               {/* כותרת ראשית */}
-              <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-900/50">
+              <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
                 <CardHeader>
-                  <CardTitle className="text-2xl font-black text-right flex items-center justify-end gap-3 text-slate-800 dark:text-white">
-                    גיבוי ושחזור מערכת
-                    <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
-                      <Database className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                  <CardTitle className="text-2xl font-black text-right flex items-center gap-3 text-slate-800 dark:text-white">
+                    <div className="p-2 bg-primary/10 rounded-xl">
+                      <Database className="w-6 h-6 text-primary" />
                     </div>
+                    גיבוי ושחזור מערכת
                   </CardTitle>
                   <CardDescription className="text-base font-medium text-right text-slate-500 mt-1">
                     ניהול מערך הגיבויים האוטומטי ושחזור נתונים במקרי חירום
@@ -635,10 +635,10 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
                       <h4 className="text-lg font-black text-slate-800 dark:text-white">הגדרות אוטומציה</h4>
                       <div className="flex items-center gap-3">
-                        <span className={`font-bold ${backupConfig.enabled ? 'text-green-600' : 'text-slate-400'}`}>
+                        <span className={`font-bold ${backupConfig.enabled ? 'text-primary' : 'text-slate-400'}`}>
                           {backupConfig.enabled ? "גיבוי אוטומטי פעיל" : "גיבוי אוטומטי כבוי"}
                         </span>
-                        <div className={`p-1.5 rounded-lg transition-colors ${backupConfig.enabled ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
+                        <div className={`p-1.5 rounded-lg transition-colors ${backupConfig.enabled ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400'}`}>
                           <RefreshCw className={`w-5 h-5 ${backupConfig.enabled ? 'animate-spin-slow' : ''}`} />
                         </div>
                       </div>
@@ -654,7 +654,7 @@ export default function SettingsPage() {
                         <div className="flex items-center gap-4">
                           <button
                             onClick={() => updateBackupConfig("enabled", !backupConfig.enabled)}
-                            className={`w-14 h-8 rounded-full relative transition-colors duration-300 ${backupConfig.enabled ? 'bg-green-500' : 'bg-slate-300'}`}
+                            className={`w-14 h-8 rounded-full relative transition-colors duration-300 ${backupConfig.enabled ? 'bg-primary' : 'bg-slate-300'}`}
                           >
                             <div className={`w-6 h-6 bg-white rounded-full shadow-md absolute top-1 transition-transform duration-300 ${backupConfig.enabled ? 'left-1' : 'left-[calc(100%-28px)]'}`} />
                           </button>
@@ -669,7 +669,7 @@ export default function SettingsPage() {
                             onClick={() => updateBackupConfig("interval_hours", hours)}
                             className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all
                                         ${backupConfig.interval_hours === hours
-                                ? "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 shadow-md"
+                                ? "border-primary bg-primary/5 text-primary shadow-md"
                                 : "border-slate-100 dark:border-slate-800 hover:border-slate-300 bg-white dark:bg-slate-900"
                               }
                                     `}
@@ -691,11 +691,11 @@ export default function SettingsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Manual Backup Section */}
-                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm flex flex-col justify-between h-full">
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-primary/20 bg-primary/5 shadow-sm flex flex-col justify-between h-full">
                       <div className="text-right space-y-2 mb-6">
                         <h4 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-                          <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                            <Download className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <div className="p-1.5 bg-primary/10 rounded-lg">
+                            <Download className="w-4 h-4 text-primary" />
                           </div>
                           ייצוא ידני
                         </h4>
@@ -706,7 +706,7 @@ export default function SettingsPage() {
                       <Button
                         onClick={handleBackup}
                         disabled={isBackingUp}
-                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
+                        className="w-full h-12 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all"
                       >
                         {isBackingUp ? (
                           <>
@@ -792,26 +792,6 @@ function NotifSetting({
     `}
       onClick={() => onChange(!enabled)}
     >
-      <div
-        className={`
-        w-14 h-7 rounded-full relative p-1 transition-colors duration-300
-        ${enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"}
-      `}
-      >
-        <div
-          className={`
-          w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 flex items-center justify-center
-          ${enabled ? "translate-x-0" : "-translate-x-7"}
-        `}
-        >
-          {enabled ? (
-            <Check className="w-3 h-3 text-primary" />
-          ) : (
-            <div className="w-1.5 h-1.5 bg-slate-300 dark:bg-slate-500 rounded-full" />
-          )}
-        </div>
-      </div>
-
       <div className="text-right">
         <h5
           className={`text-base font-black transition-colors ${enabled ? "text-primary" : "text-slate-800 dark:text-white"}`}
@@ -821,6 +801,26 @@ function NotifSetting({
         <p className="text-sm text-slate-500 dark:text-slate-400 font-bold leading-tight mt-0.5">
           {description}
         </p>
+      </div>
+
+      <div
+        className={`
+        w-14 h-7 rounded-full relative p-1 transition-colors duration-300 flex-shrink-0
+        ${enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"}
+      `}
+      >
+        <div
+          className={`
+          w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 flex items-center justify-center
+          ${enabled ? "-translate-x-7" : "translate-x-0"}
+        `} // Fixed translate logic for RTL: if enabled (moved to left) -> translate negative.
+        >
+          {enabled ? (
+            <Check className="w-3 h-3 text-primary" />
+          ) : (
+            <div className="w-1.5 h-1.5 bg-slate-300 dark:bg-slate-500 rounded-full" />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -841,7 +841,7 @@ function NavItem({
     <button
       onClick={onClick}
       className={`
-        w-full flex items-center flex-row-reverse gap-4 p-4 rounded-2xl transition-all duration-300 font-black text-sm
+        w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 font-black text-sm
         ${active
           ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]"
           : "text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
