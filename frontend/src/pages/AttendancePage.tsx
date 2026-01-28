@@ -144,9 +144,9 @@ export default function AttendancePage() {
   const getProfessionalTitle = (emp: Employee) => {
     if (emp.is_admin && emp.is_commander) return "מנהל מערכת בכיר";
     if (emp.is_commander) {
-      if (emp.team_name) return "מפקד חוליה";
-      if (emp.section_name) return "מפקד מדור";
-      if (emp.department_name) return "מפקד מחלקה";
+      if (emp.team_name && emp.team_name !== "מטה") return "מפקד חוליה";
+      if (emp.section_name && emp.section_name !== "מטה") return "מפקד מדור";
+      if (emp.department_name && emp.department_name !== "מטה") return "מפקד מחלקה";
       return "מפקד יחידה";
     }
     return "שוטר";
@@ -506,16 +506,18 @@ export default function AttendancePage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        {(emp.section_name || emp.team_name) ? (
+                        {emp.department_name && emp.department_name !== "מטה" ? (
                           <div className="flex flex-col text-right">
                             <span className="text-xs font-bold text-foreground/80">
-                              {emp.department_name !== "מטה" ? emp.department_name : ""}
+                              {emp.department_name}
                             </span>
-                            <span className="text-[10px] text-muted-foreground font-medium">
-                              {emp.section_name && `מדור ${emp.section_name}`}
-                              {emp.section_name && emp.team_name && " • "}
-                              {emp.team_name && `חוליה ${emp.team_name}`}
-                            </span>
+                            {((emp.section_name && emp.section_name !== "מטה") || (emp.team_name && emp.team_name !== "מטה")) && (
+                              <span className="text-[10px] text-muted-foreground font-medium">
+                                {emp.section_name && emp.section_name !== "מטה" && `מדור ${emp.section_name}`}
+                                {emp.section_name && emp.section_name !== "מטה" && emp.team_name && emp.team_name !== "מטה" && " • "}
+                                {emp.team_name && emp.team_name !== "מטה" && `חוליה ${emp.team_name}`}
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <span className="text-xs text-muted-foreground">-</span>

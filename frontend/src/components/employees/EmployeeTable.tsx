@@ -58,9 +58,9 @@ export const EmployeeTable = ({
   const getProfessionalTitle = (emp: Employee) => {
     if (emp.is_admin && emp.is_commander) return "מנהל מערכת בכיר";
     if (emp.is_commander) {
-      if (emp.team_name) return "מפקד חוליה";
-      if (emp.section_name) return "מפקד מדור";
-      if (emp.department_name) return "מפקד מחלקה";
+      if (emp.team_name && emp.team_name !== "מטה") return "מפקד חוליה";
+      if (emp.section_name && emp.section_name !== "מטה") return "מפקד מדור";
+      if (emp.department_name && emp.department_name !== "מטה") return "מפקד מחלקה";
       return "מפקד יחידה";
     }
     return "שוטר";
@@ -79,10 +79,6 @@ export const EmployeeTable = ({
     if (!searchMatch) return false;
 
     // Advanced filters
-    if (activeFilters.statuses && activeFilters.statuses.length > 0) {
-      if (!activeFilters.statuses.includes(emp.status_name || "")) return false;
-    }
-
     if (activeFilters.departments && activeFilters.departments.length > 0) {
       if (
         !emp.department_name ||
@@ -332,16 +328,18 @@ export const EmployeeTable = ({
                       </Badge>
                     </TableCell>
                     <TableCell className="px-6 py-4 text-right">
-                      {(emp.section_name || emp.team_name) ? (
+                      {emp.department_name && emp.department_name !== "מטה" ? (
                         <div className="flex flex-col text-right">
                           <span className="text-xs font-semibold text-foreground">
-                            {emp.department_name !== "מטה" ? emp.department_name : ""}
+                            {emp.department_name}
                           </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {emp.section_name && `מדור ${emp.section_name}`}
-                            {emp.section_name && emp.team_name && " • "}
-                            {emp.team_name && `חוליה ${emp.team_name}`}
-                          </span>
+                          {((emp.section_name && emp.section_name !== "מטה") || (emp.team_name && emp.team_name !== "מטה")) && (
+                            <span className="text-[10px] text-muted-foreground">
+                              {emp.section_name && emp.section_name !== "מטה" && `מדור ${emp.section_name}`}
+                              {emp.section_name && emp.section_name !== "מטה" && emp.team_name && emp.team_name !== "מטה" && " • "}
+                              {emp.team_name && emp.team_name !== "מטה" && `חוליה ${emp.team_name}`}
+                            </span>
+                          )}
                         </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
@@ -527,12 +525,17 @@ export const EmployeeTable = ({
                       שיוך ארגוני
                     </span>
                     <span className="font-medium text-foreground text-xs truncate block">
-                      {(emp.section_name || emp.team_name) ? (
+                      {emp.department_name && emp.department_name !== "מטה" ? (
                         <>
-                          {emp.department_name !== "מטה" && `${emp.department_name} • `}
-                          {emp.section_name && `מדור ${emp.section_name}`}
-                          {emp.section_name && emp.team_name && " • "}
-                          {emp.team_name && `חוליה ${emp.team_name}`}
+                          {emp.department_name}
+                          {((emp.section_name && emp.section_name !== "מטה") || (emp.team_name && emp.team_name !== "מטה")) && (
+                            <>
+                              {" • "}
+                              {emp.section_name && emp.section_name !== "מטה" && `מדור ${emp.section_name}`}
+                              {emp.section_name && emp.section_name !== "מטה" && emp.team_name && emp.team_name !== "מטה" && " • "}
+                              {emp.team_name && emp.team_name !== "מטה" && `חוליה ${emp.team_name}`}
+                            </>
+                          )}
                         </>
                       ) : "-"}
                     </span>
