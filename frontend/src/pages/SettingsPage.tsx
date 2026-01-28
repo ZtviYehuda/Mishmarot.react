@@ -28,6 +28,12 @@ import {
   LogOut,
   Loader2,
   Lock,
+  Database,
+  Download,
+  Upload,
+  Clock,
+  FolderOpen,
+  RefreshCw,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 
@@ -45,6 +51,93 @@ export default function SettingsPage() {
 
   const [activeTab, setActiveTab] = useState("profile");
   const [isSaving, setIsSaving] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+
+  // Backup Config State
+  const [backupConfig, setBackupConfig] = useState({
+    enabled: false,
+    interval_hours: 24,
+    last_backup: null
+  });
+
+  useEffect(() => {
+    if (activeTab === "backup" && user?.is_admin) {
+      apiClient.get("/admin/backup/config")
+        .then(res => setBackupConfig(res.data))
+        .catch(err => console.error("Failed to load backup config", err));
+    }
+  }, [activeTab, user]);
+
+  const updateBackupConfig = async (key: string, value: any) => {
+    const newConfig = { ...backupConfig, [key]: value };
+    setBackupConfig(newConfig);
+    try {
+      await apiClient.post("/admin/backup/config", newConfig);
+      toast.success("הגדרות הגיבוי עודכנו");
+    } catch {
+      toast.error("שגיאה בשמירת הגדרות");
+    }
+  };
+
+  const handleBackup = async () => {
+    setIsBackingUp(true);
+    try {
+      const response = await apiClient.get("/admin/backup", {
+        responseType: "blob",
+      });
+
+      // יצירת לינק להורדה
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      const date = new Date().toISOString().split("T")[0];
+      link.setAttribute("download", `mishmarot_backup_${date}.json`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast.success("הגיבוי הושלם בהצלחה");
+    } catch (err) {
+      toast.error("שגיאה בביצוע הגיבוי");
+      console.error(err);
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleRestore = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!confirm("האם אתה בטוח שברצונך לשחזר נתונים? פעולה זו תדרוס את כל המידע הקיים!")) {
+      event.target.value = ""; // איפוס הקלט
+      return;
+    }
+
+    setIsRestoring(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      await apiClient.post("/admin/restore", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      toast.success("הנתונים שוחזרו בהצלחה", {
+        description: "רענן את הדף כדי לראות את השינויים"
+      });
+      // רענון אוטומטי של הדף לאחר השחזור
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (err) {
+      toast.error("שגיאה בשחזור הנתונים");
+      console.error(err);
+    } finally {
+      setIsRestoring(false);
+      event.target.value = "";
+    }
+  };
 
   // Profile form state
   const [formData, setFormData] = useState({
@@ -133,6 +226,14 @@ export default function SettingsPage() {
                 active={activeTab === "notifications"}
                 onClick={() => setActiveTab("notifications")}
               />
+              {user?.is_admin && (
+                <NavItem
+                  icon={Database}
+                  label="גיבוי ושחזור"
+                  active={activeTab === "backup"}
+                  onClick={() => setActiveTab("backup")}
+                />
+              )}
             </div>
             <div className="mt-4 p-4 border-t border-slate-100 dark:border-slate-800">
               <Button
@@ -511,6 +612,159 @@ export default function SettingsPage() {
               </Card>
             </div>
           )}
+
+          {activeTab === "backup" && user?.is_admin && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300 text-right">
+              {/* כותרת ראשית */}
+              <Card className="border-0 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-900/50">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-black text-right flex items-center justify-end gap-3 text-slate-800 dark:text-white">
+                    גיבוי ושחזור מערכת
+                    <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
+                      <Database className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                  </CardTitle>
+                  <CardDescription className="text-base font-medium text-right text-slate-500 mt-1">
+                    ניהול מערך הגיבויים האוטומטי ושחזור נתונים במקרי חירום
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-8">
+                  {/* Automatic Backup Settings */}
+                  <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+                      <h4 className="text-lg font-black text-slate-800 dark:text-white">הגדרות אוטומציה</h4>
+                      <div className="flex items-center gap-3">
+                        <span className={`font-bold ${backupConfig.enabled ? 'text-green-600' : 'text-slate-400'}`}>
+                          {backupConfig.enabled ? "גיבוי אוטומטי פעיל" : "גיבוי אוטומטי כבוי"}
+                        </span>
+                        <div className={`p-1.5 rounded-lg transition-colors ${backupConfig.enabled ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
+                          <RefreshCw className={`w-5 h-5 ${backupConfig.enabled ? 'animate-spin-slow' : ''}`} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {/* Switch */}
+                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
+                        <div className="text-right">
+                          <span className="block font-bold text-slate-700 dark:text-slate-200">הפעל גיבוי אוטומטי</span>
+                          <span className="text-xs text-slate-500 font-medium">המערכת תבצע גיבוי באופן עצמאי ברקע</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => updateBackupConfig("enabled", !backupConfig.enabled)}
+                            className={`w-14 h-8 rounded-full relative transition-colors duration-300 ${backupConfig.enabled ? 'bg-green-500' : 'bg-slate-300'}`}
+                          >
+                            <div className={`w-6 h-6 bg-white rounded-full shadow-md absolute top-1 transition-transform duration-300 ${backupConfig.enabled ? 'left-1' : 'left-[calc(100%-28px)]'}`} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Frequency Selector */}
+                      <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 transition-opacity duration-300 ${!backupConfig.enabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                        {[6, 12, 24].map((hours) => (
+                          <button
+                            key={hours}
+                            onClick={() => updateBackupConfig("interval_hours", hours)}
+                            className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all
+                                        ${backupConfig.interval_hours === hours
+                                ? "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 shadow-md"
+                                : "border-slate-100 dark:border-slate-800 hover:border-slate-300 bg-white dark:bg-slate-900"
+                              }
+                                    `}
+                          >
+                            <Clock className="w-6 h-6 opacity-80" />
+                            <span className="font-bold">כל {hours} שעות</span>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Backup Location Info */}
+                      <div className="flex items-center gap-2 text-sm text-slate-400 font-medium mt-2 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg">
+                        <FolderOpen className="w-4 h-4" />
+                        <span>נשמר בתיקייה:</span>
+                        <span dir="ltr">backend/backups/</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Manual Backup Section */}
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm flex flex-col justify-between h-full">
+                      <div className="text-right space-y-2 mb-6">
+                        <h4 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                          <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                            <Download className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          ייצוא ידני
+                        </h4>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          הורדה מיידית של קובץ הגיבוי למחשב האישי שלך.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleBackup}
+                        disabled={isBackingUp}
+                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
+                      >
+                        {isBackingUp ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                            מעבד...
+                          </>
+                        ) : (
+                          "הורד קובץ גיבוי"
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Restore Section */}
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm relative overflow-hidden flex flex-col justify-between h-full">
+                      <div className="absolute top-0 right-0 w-1 h-full bg-red-500/20"></div>
+                      <div className="text-right space-y-2 mb-6">
+                        <h4 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                          <div className="p-1.5 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                            <Upload className="w-4 h-4 text-red-600 dark:text-red-400" />
+                          </div>
+                          שחזור מגיבוי
+                        </h4>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          דריסת כל הנתונים במערכת ושחזור מקובץ.
+                          <span className="block text-red-500 font-bold text-xs mt-1">פעולה בלתי הפיכה!</span>
+                        </p>
+                      </div>
+
+                      <div className="w-full">
+                        <input
+                          type="file"
+                          id="restore-file"
+                          accept=".json"
+                          className="hidden"
+                          onChange={handleRestore}
+                        />
+                        <Button
+                          onClick={() => document.getElementById("restore-file")?.click()}
+                          disabled={isRestoring}
+                          variant="outline"
+                          className="w-full h-12 border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/10 text-red-600 rounded-xl font-bold active:scale-95 transition-all"
+                        >
+                          {isRestoring ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                              משחזר נתונים...
+                            </>
+                          ) : (
+                            "בחר קובץ לשחזור"
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -588,10 +842,9 @@ function NavItem({
       onClick={onClick}
       className={`
         w-full flex items-center flex-row-reverse gap-4 p-4 rounded-2xl transition-all duration-300 font-black text-sm
-        ${
-          active
-            ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]"
-            : "text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
+        ${active
+          ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]"
+          : "text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
         }
       `}
     >

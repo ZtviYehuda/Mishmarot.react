@@ -70,6 +70,7 @@ def create_app():
     from app.routes.attendance_routes import att_bp
     from app.routes.transfer_routes import transfer_bp
     from app.routes.notification_routes import notif_bp
+    from app.routes.admin_routes import admin_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(emp_bp, url_prefix="/api/employees", strict_slashes=False)
@@ -80,5 +81,6 @@ def create_app():
     app.register_blueprint(
         notif_bp, url_prefix="/api/notifications", strict_slashes=False
     )
+    app.register_blueprint(admin_bp, url_prefix="/api/admin", strict_slashes=False)
 
     return app

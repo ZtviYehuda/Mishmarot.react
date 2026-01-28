@@ -1,0 +1,208 @@
+from flask import Blueprint, request, jsonify, send_file, current_app
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.utils.db import get_db_connection
+from app.services.backup_service import backup_service
+import json
+import datetime
+import io
+import os
+
+admin_bp = Blueprint('admin', __name__)
+
+@admin_bp.route('/backup/config', methods=['GET'])
+@jwt_required()
+def get_backup_config():
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    return jsonify(backup_service.get_config())
+
+@admin_bp.route('/backup/config', methods=['POST'])
+@jwt_required()
+def update_backup_config():
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    data = request.get_json()
+    new_config = {
+        "enabled": data.get("enabled"),
+        "interval_hours": data.get("interval_hours")
+    }
+    backup_service.save_config(new_config)
+    return jsonify({"success": True, "config": backup_service.get_config()})
+
+
+def is_admin():
+    try:
+        identity = get_jwt_identity()
+        current_user_id = None
+        
+        # טיפול ב-Identity אם הוא מילון
+        if isinstance(identity, dict):
+            current_user_id = identity.get('id')
+        # טיפול ב-Identity אם הוא מחרוזת (JSON String)
+        elif isinstance(identity, str):
+            try:
+                # מנסים לפרסר כ-JSON אם זה נראה כמו מילון
+                if identity.strip().startswith('{'):
+                    import json
+                    data = json.loads(identity)
+                    current_user_id = data.get('id')
+                else:
+                    current_user_id = identity # זה כנראה ה-ID עצמו כמחרוזת
+            except:
+                current_user_id = identity # fallback
+        else:
+            current_user_id = identity
+            
+        if not current_user_id:
+            print("DEBUG: No current_user_id found")
+            return False
+            
+        conn = get_db_connection()
+        cur = conn.cursor()
+        print(f"DEBUG: Checking admin status for user_id: {current_user_id}")
+        cur.execute("SELECT is_admin FROM employees WHERE id = %s", (current_user_id,))
+        res = cur.fetchone()
+        conn.close()
+        
+        is_admin_val = res and res[0]
+        print(f"DEBUG: Admin status query result: {res}, is_admin: {is_admin_val}")
+        return is_admin_val
+    except Exception as e:
+        print(f"Error in is_admin check: {e}")
+        return False
+
+@admin_bp.route('/backup', methods=['GET'])
+@jwt_required()
+def backup_database():
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    backup_data = {
+        "metadata": {
+            "version": "1.0",
+            "date": datetime.datetime.now().isoformat()
+        },
+        "data": {}
+    }
+    
+    # רשימת הטבלאות לגיבוי לפי סדר תלויות (חשוב לשחזור)
+    tables = [
+        "roles", "status_types", "service_types",
+        "departments", "sections", "teams",
+        "employees", "attendance_logs", "transfer_requests"
+    ]
+    
+    try:
+        for table in tables:
+            cur.execute(f"SELECT * FROM {table}")
+            columns = [desc[0] for desc in cur.description]
+            rows = cur.fetchall()
+            
+            # המרת נתונים לפורמט JSON-serializable
+            table_data = []
+            for row in rows:
+                item = {}
+                for i, col in enumerate(columns):
+                    val = row[i]
+                    if isinstance(val, (datetime.date, datetime.datetime)):
+                        val = val.isoformat()
+                    item[col] = val
+                table_data.append(item)
+            
+            backup_data["data"][table] = table_data
+            
+        # יצירת הקובץ בזיכרון
+        mem_file = io.BytesIO()
+        mem_file.write(json.dumps(backup_data, indent=4, ensure_ascii=False).encode('utf-8'))
+        mem_file.seek(0)
+        
+        filename = f"mishmarot_backup_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        
+        return send_file(
+            mem_file,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/json'
+        )
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+@admin_bp.route('/restore', methods=['POST'])
+@jwt_required()
+def restore_database():
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+        
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    try:
+        content = json.load(file)
+        data = content.get("data", {})
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # התחלת טרנזקציה
+        
+        # סדר טבלאות הפוך למחיקה (כדי למנוע בעיות Foreign Key)
+        tables_reversed = [
+            "transfer_requests", "attendance_logs", "employees",
+            "teams", "sections", "departments",
+            "service_types", "status_types", "roles"
+        ]
+        
+        # ניקוי טבלאות
+        for table in tables_reversed:
+            cur.execute(f"TRUNCATE TABLE {table} CASCADE")
+            
+        # סדר טבלאות רגיל להוספה
+        tables = [
+            "roles", "status_types", "service_types",
+            "departments", "sections", "teams",
+            "employees", "attendance_logs", "transfer_requests"
+        ]
+        
+        for table in tables:
+            if table not in data:
+                continue
+                
+            rows = data[table]
+            if not rows:
+                continue
+                
+            columns = rows[0].keys()
+            cols_str = ', '.join(columns)
+            vals_str = ', '.join(['%s'] * len(columns))
+            
+            query = f"INSERT INTO {table} ({cols_str}) VALUES ({vals_str})"
+            
+            for row in rows:
+                values = [row[col] for col in columns]
+                cur.execute(query, values)
+                
+            # עדכון ה-Sequence כדי למנוע שגיאות ID בעתיד
+            if 'id' in columns:
+                cur.execute(f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), COALESCE(MAX(id), 1) ) FROM {table}")
+
+        conn.commit()
+        return jsonify({"success": True, "message": "Database restored successfully"})
+        
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
