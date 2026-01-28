@@ -280,3 +280,31 @@ class AttendanceModel:
             return cur.fetchall()
         finally:
             conn.close()
+
+    @staticmethod
+    def get_employee_history(employee_id, limit=50):
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            query = """
+                SELECT 
+                    al.id,
+                    st.name as status_name,
+                    st.color as status_color,
+                    al.start_datetime,
+                    al.end_datetime,
+                    al.note,
+                    r.first_name || ' ' || r.last_name as reported_by_name
+                FROM attendance_logs al
+                JOIN status_types st ON al.status_type_id = st.id
+                LEFT JOIN employees r ON al.reported_by = r.id
+                WHERE al.employee_id = %s
+                ORDER BY al.start_datetime DESC
+                LIMIT %s
+            """
+            cur.execute(query, (employee_id, limit))
+            return cur.fetchall()
+        finally:
+            conn.close()

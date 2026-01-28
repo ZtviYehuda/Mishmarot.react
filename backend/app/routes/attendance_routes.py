@@ -162,3 +162,14 @@ def get_calendar_stats():
         return jsonify(summary)
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid year/month parameters"}), 400
+
+
+@att_bp.route("/history/<int:emp_id>", methods=["GET"])
+@jwt_required()
+def get_employee_history(emp_id):
+    try:
+        history = AttendanceModel.get_employee_history(emp_id)
+        return jsonify(history)
+    except Exception as e:
+        print(f"❌ Error in /history/{emp_id}: {e}")
+        return jsonify({"error": str(e)}), 500

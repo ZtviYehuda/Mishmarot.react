@@ -34,7 +34,9 @@ import { cn } from "@/lib/utils";
 import {
   BulkStatusUpdateModal,
   StatusUpdateModal,
+  StatusHistoryModal,
 } from "@/components/employees/modals";
+import { History } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { Employee } from "@/types/employee.types";
 
@@ -61,6 +63,7 @@ export default function AttendancePage() {
   // Modal states
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null,
   );
@@ -130,6 +133,11 @@ export default function AttendancePage() {
   const handleOpenStatusModal = (emp: Employee) => {
     setSelectedEmployee(emp);
     setStatusModalOpen(true);
+  };
+
+  const handleOpenHistoryModal = (emp: Employee) => {
+    setSelectedEmployee(emp);
+    setHistoryModalOpen(true);
   };
 
   const updatedTodayCount = employees.filter(
@@ -570,6 +578,15 @@ export default function AttendancePage() {
                             <ClipboardCheck className="w-3.5 h-3.5" />
                             עדכן סטטוס
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
+                            onClick={() => handleOpenHistoryModal(emp)}
+                            title="היסטוריית סטטוסים"
+                          >
+                            <History className="w-4 h-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -594,6 +611,12 @@ export default function AttendancePage() {
         onOpenChange={setStatusModalOpen}
         employee={selectedEmployee}
         onSuccess={() => fetchEmployees()}
+      />
+
+      <StatusHistoryModal
+        open={historyModalOpen}
+        onOpenChange={setHistoryModalOpen}
+        employee={selectedEmployee}
       />
     </div >
   );

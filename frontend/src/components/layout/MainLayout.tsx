@@ -33,7 +33,10 @@ export default function MainLayout() {
   const { alerts, loading, refreshAlerts } = useNotifications();
   const location = useLocation();
   // Sidebar closed by default on mobile, open on desktop
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  // Initialize sidebar state based on window width to prevent layout shift on load
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 1024 : false
+  );
 
   // Auto-open sidebar on desktop (lg breakpoint)
   React.useEffect(() => {
@@ -68,14 +71,14 @@ export default function MainLayout() {
       {/* Sidebar - Official White Style */}
       <aside
         className={cn(
-          "bg-card border-l border-border transition-all duration-300 flex flex-col z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] fixed lg:sticky top-0 h-screen overflow-hidden",
+          "bg-card border-l border-border flex flex-col z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] fixed lg:sticky top-0 h-screen overflow-hidden",
           isSidebarOpen
             ? "w-64 translate-x-0"
             : "w-0 lg:w-16 -translate-x-full lg:translate-x-0",
         )}
       >
         {/* Sidebar Header */}
-        <div className="h-16 flex items-center px-4 border-b border-border/50 justify-between">
+        <div className="h-16 sm:h-20 flex items-center px-4 border-b border-border/50 justify-between">
           <div className="flex items-center gap-3 overflow-hidden text-right">
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
               <ShieldCheck className="w-5 h-5 text-primary-foreground" />
@@ -211,7 +214,7 @@ export default function MainLayout() {
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col min-w-0">
         {/* Topbar - Professional governmental banner style */}
-        <header className="h-14 sm:h-16 bg-card border-b border-border px-3 sm:px-4 lg:px-6 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+        <header className="h-16 sm:h-20 bg-card border-b border-border px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
           <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -230,16 +233,24 @@ export default function MainLayout() {
               )}
             </button>
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
-            <div className="flex flex-col text-right min-w-0">
-              <span className="text-[9px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-0.5 sm:mb-1 hidden sm:block">
-                Security Hub
-              </span>
-              <h2 className="text-xs sm:text-sm font-black text-foreground truncate">
-                {location.pathname === "/"
-                  ? "לוח בקרה מרכזי"
-                  : navItems.find((n) => n.path === location.pathname)?.name ||
-                  "דף מערכת"}
-              </h2>
+            <div className="flex items-center gap-5 flex-none max-w-[70%]">
+              <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-2xl bg-primary shadow-xl shadow-primary/25 text-primary-foreground shrink-0 border-2 border-primary-foreground/10">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <div className="flex flex-col text-right border-r-[3px] border-primary pr-5 whitespace-nowrap">
+                <div className="flex items-center gap-2.5 mb-1">
+                  <span className="text-[11px] font-black text-primary uppercase tracking-[0.15em] leading-none">
+                    מוקד שליטה ובקרה
+                  </span>
+                  <div className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)] animate-pulse" />
+                </div>
+                <h2 className="text-lg sm:text-xl font-black text-foreground tracking-tight py-0.5 leading-none">
+                  {location.pathname === "/"
+                    ? "לוח בקרה מרכזי"
+                    : navItems.find((n) => n.path === location.pathname)?.name ||
+                    "דף מערכת"}
+                </h2>
+              </div>
             </div>
           </div>
 
@@ -250,7 +261,7 @@ export default function MainLayout() {
                 <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all">
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                   {alerts.length > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-destructive text-[9px] sm:text-[10px] font-black text-destructive-foreground ring-2 ring-card transition-transform animate-in zoom-in">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-primary text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card shadow-lg shadow-primary/40 animate-in zoom-in duration-300">
                       {alerts.length}
                     </span>
                   )}
@@ -261,9 +272,14 @@ export default function MainLayout() {
                 align="start"
               >
                 <div className="p-4 border-b border-border flex items-center justify-between bg-card sticky top-0 z-10">
-                  <span className="text-xs font-black text-foreground text-right">
-                    מרכז התראות ({alerts.length})
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-foreground text-right">
+                      מרכז התראות
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-black">
+                      {alerts.length}
+                    </span>
+                  </div>
                   <button
                     onClick={refreshAlerts}
                     className="text-[10px] font-black text-primary hover:underline"
@@ -342,10 +358,13 @@ export default function MainLayout() {
 
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
 
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                Active Secure Hub
+            <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/20 shadow-sm transition-all hover:bg-emerald-500/10">
+              <div className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </div>
+              <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">
+                מערכת במצב פעיל
               </span>
             </div>
           </div>
