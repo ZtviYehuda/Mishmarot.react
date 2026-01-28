@@ -147,6 +147,21 @@ export const useEmployees = () => {
     }
   };
 
+  // Bulk Log Attendance Status
+  const logBulkStatus = async (updates: { employee_id: number; status_type_id: number; note?: string }[]) => {
+    setLoading(true);
+    try {
+      await apiClient.post(attEndpoints.ATTENDANCE_BULK_LOG_ENDPOINT, { updates });
+      await fetchEmployees();
+      return true;
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to bulk log status');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Initial fetch
   useEffect(() => {
     fetchEmployees();
@@ -164,6 +179,7 @@ export const useEmployees = () => {
     getServiceTypes,
     getStatusTypes,
     logStatus,
+    logBulkStatus,
     getDashboardStats
   };
 };

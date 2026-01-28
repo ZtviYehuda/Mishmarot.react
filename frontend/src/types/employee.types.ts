@@ -37,6 +37,7 @@ export interface Employee {
   assignment_date?: string | null;
 
   // Status fields
+  status_id?: number | null;
   status_name: string;
   status_color: string;
   is_active: boolean;

@@ -112,6 +112,25 @@ def log_status():
     return jsonify({"success": False, "error": "Failed to log status"}), 500
 
 
+@att_bp.route("/bulk-log", methods=["POST"])
+@jwt_required()
+def bulk_log_status():
+    data = request.get_json()
+    updates = data.get("updates", [])
+    identity_str = get_jwt_identity()
+    identity = json.loads(identity_str)
+    current_user_id = identity["id"]
+
+    if not updates:
+        return jsonify({"error": "No updates provided"}), 400
+
+    success = AttendanceModel.log_bulk_status(updates, reported_by=current_user_id)
+
+    if success:
+        return jsonify({"success": True, "message": "כלל הסטטוסים עודכנו"})
+    return jsonify({"success": False, "error": "Failed to bulk log status"}), 500
+
+
 @att_bp.route("/calendar", methods=["GET"])
 @jwt_required()
 def get_calendar_stats():

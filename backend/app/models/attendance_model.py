@@ -45,6 +45,50 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
+    def log_bulk_status(updates, reported_by=None):
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+            now = datetime.now()
+            for update in updates:
+                employee_id = update.get("employee_id")
+                status_type_id = update.get("status_type_id")
+                note = update.get("note")
+                
+                if not employee_id or not status_type_id:
+                    continue
+
+                # Close previous status
+                cur.execute(
+                    """
+                    UPDATE attendance_logs 
+                    SET end_datetime = CURRENT_TIMESTAMP 
+                    WHERE employee_id = %s AND end_datetime IS NULL
+                """,
+                    (employee_id,),
+                )
+
+                # Insert new status
+                cur.execute(
+                    """
+                    INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, note, reported_by)
+                    VALUES (%s, %s, %s, %s, %s)
+                """,
+                    (employee_id, status_type_id, now, note, reported_by),
+                )
+            
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"Error bulk logging status: {e}")
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
     def get_status_types():
         conn = get_db_connection()
         if not conn:

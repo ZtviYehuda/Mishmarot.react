@@ -19,6 +19,7 @@ import {
   FilterModal,
   WhatsAppReportDialog,
   StatusUpdateModal,
+  BulkStatusUpdateModal,
 } from "./modals";
 import type { EmployeeFilters } from "./modals/FilterModal";
 
@@ -37,9 +38,12 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [bulkStatusModalOpen, setBulkStatusModalOpen] = useState(false);
   const [selectedEmployeeForStatus, setSelectedEmployeeForStatus] = useState<Employee | null>(null);
   const [activeFilters, setActiveFilters] = useState<EmployeeFilters>({});
   const itemsPerPage = 10;
+
+  const currentUserEmployee = employees.find(emp => emp.id === user?.id);
 
   // Role Logic implementation base on user request
   const getProfessionalTitle = (emp: Employee) => {
@@ -185,6 +189,34 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
               </span>
             )}
           </Button>
+
+          {/* New Attendance Actions */}
+          <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1 hidden md:block" />
+
+          {currentUserEmployee && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 border-blue-200 bg-blue-50/30 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/10 dark:border-blue-800 dark:text-blue-400"
+              onClick={() => handleOpenStatusModal(currentUserEmployee)}
+            >
+              <User className="w-4 h-4 ml-2" />
+              דיווח עצמי
+            </Button>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 border-indigo-200 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/10 dark:border-indigo-800 dark:text-indigo-400"
+            onClick={() => setBulkStatusModalOpen(true)}
+          >
+            <ClipboardList className="w-4 h-4 ml-2" />
+            עדכון נוכחות יומי
+          </Button>
+
+          <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1 hidden md:block" />
+
           <Button
             variant="outline"
             size="sm"
@@ -443,6 +475,12 @@ export const EmployeeTable = ({ employees, loading, fetchEmployees }: EmployeeTa
         open={statusModalOpen}
         onOpenChange={setStatusModalOpen}
         employee={selectedEmployeeForStatus}
+        onSuccess={() => fetchEmployees && fetchEmployees()}
+      />
+      <BulkStatusUpdateModal
+        open={bulkStatusModalOpen}
+        onOpenChange={setBulkStatusModalOpen}
+        employees={filteredEmployees}
         onSuccess={() => fetchEmployees && fetchEmployees()}
       />
     </div>
