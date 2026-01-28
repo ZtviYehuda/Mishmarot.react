@@ -149,18 +149,53 @@ def setup_database():
             )
 
         # 3. יצירת Admin דיפולטיבי (אם לא קיים)
-        cur.execute("SELECT * FROM employees WHERE is_admin = TRUE")
-        if not cur.fetchone():
-            pw_hash = generate_password_hash("123456")
+        # 3. יצירת/תיקון Admin דיפולטיבי
+        cur.execute("SELECT id, password_hash FROM employees WHERE personal_number = 'admin'")
+        admin_row = cur.fetchone()
+
+        admin_pw_hash = generate_password_hash("123456")
+
+        if not admin_row:
             cur.execute(
                 """
                 INSERT INTO employees 
                 (first_name, last_name, personal_number, national_id, password_hash, is_admin, is_commander, must_change_password)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """,
-                ("Admin", "System", "admin", "000000000", pw_hash, True, True, False),
+                (
+                    "Admin",
+                    "System",
+                    "admin",
+                    "000000000",
+                    admin_pw_hash,
+                    True,
+                    True,
+                    False,
+                ),
             )
             print("✅ Default Admin created: User: admin, Pass: 123456")
+        else:
+            # בדיקה האם המשתמש קיים אך עם נתונים שגויים (למשל hash לא תקין)
+            current_hash = admin_row[1]
+            if not current_hash or not str(current_hash).startswith("scrypt"):
+                print("⚠️  Admin user found with invalid data. Resetting admin...")
+                cur.execute(
+                    """
+                    UPDATE employees 
+                    SET password_hash = %s,
+                        first_name = 'Admin',
+                        last_name = 'System',
+                        national_id = '000000000',
+                        is_admin = TRUE,
+                        is_commander = TRUE,
+                        must_change_password = FALSE,
+                        phone_number = NULL, -- Reset potentially corrupt fields
+                        role_id = NULL -- Ensure no random role
+                    WHERE id = %s
+                    """,
+                    (admin_pw_hash, admin_row[0]),
+                )
+                print("✅ Default Admin reset: User: admin, Pass: 123456")
 
         # 2b. הזרקת נתוני Service Types
         # 2b. הזרקת נתוני Service Types

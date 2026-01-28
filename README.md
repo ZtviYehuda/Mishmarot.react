@@ -24,10 +24,16 @@ docker-compose up -d
 3. התקן תלויות (במידת הצורך): `pip install -r requirements.txt`
 4. הרץ את השרת: `python run.py`
 
+#בפקודה אחת
+cd backend; .\venv\Scripts\Activate.ps1; python run.py
+
 ### 3. הרצת ה-Frontend
 1. פתח טרמינל חדש וכנס לתיקיית `frontend`: `cd frontend`
 2. התקן חבילות (במידת הצורך): `npm install`
 3. הרץ את האפליקציה: `npm run dev`
+
+#בפקודה אחת
+cd frontend; npm run dev
 
 ---
 
