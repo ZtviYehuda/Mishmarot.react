@@ -10,13 +10,14 @@ export const useEmployees = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch all employees
-  const fetchEmployees = useCallback(async (search?: string, dept_id?: number, include_inactive?: boolean) => {
+  const fetchEmployees = useCallback(async (search?: string, dept_id?: number, include_inactive?: boolean, status_id?: number) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.append('search', search);
       if (dept_id) params.append('dept_id', dept_id.toString());
       if (include_inactive) params.append('include_inactive', 'true');
+      if (status_id) params.append('status_id', status_id.toString());
 
       const { data } = await apiClient.get<Employee[]>(`${endpoints.EMPLOYEES_BASE_ENDPOINT}?${params}`);
       setEmployees(data);
@@ -109,12 +110,13 @@ export const useEmployees = () => {
   }, []);
 
   // Get Dashboard Stats & Birthdays
-  const getDashboardStats = useCallback(async (filters?: { department_id?: string; section_id?: string; team_id?: string }) => {
+  const getDashboardStats = useCallback(async (filters?: { department_id?: string; section_id?: string; team_id?: string; status_id?: string }) => {
     try {
       const params = new URLSearchParams();
       if (filters?.department_id) params.append('department_id', filters.department_id);
       if (filters?.section_id) params.append('section_id', filters.section_id);
       if (filters?.team_id) params.append('team_id', filters.team_id);
+      if (filters?.status_id) params.append('status_id', filters.status_id);
 
       const { data } = await apiClient.get(`${attEndpoints.ATTENDANCE_STATS_ENDPOINT}?${params}`);
       return data;

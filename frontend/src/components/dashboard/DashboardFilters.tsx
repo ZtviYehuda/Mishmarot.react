@@ -9,10 +9,12 @@ interface Department { id: number; name: string; sections: Section[]; }
 
 interface DashboardFiltersProps {
     structure: Department[];
+    statuses: { status_id: number; status_name: string; color: string }[];
     selectedDeptId?: string;
     selectedSectionId?: string;
     selectedTeamId?: string;
-    onFilterChange: (type: 'department' | 'section' | 'team' | 'reset', value?: string) => void;
+    selectedStatusId?: string;
+    onFilterChange: (type: 'department' | 'section' | 'team' | 'status' | 'reset', value?: string) => void;
     canSelectDept: boolean;
     canSelectSection: boolean;
     canSelectTeam: boolean;
@@ -20,9 +22,11 @@ interface DashboardFiltersProps {
 
 export const DashboardFilters = ({
     structure,
+    statuses,
     selectedDeptId,
     selectedSectionId,
     selectedTeamId,
+    selectedStatusId,
     onFilterChange,
     canSelectDept,
     canSelectSection,
@@ -36,81 +40,125 @@ export const DashboardFilters = ({
     const selectedSection = sections.find(s => s.id.toString() === selectedSectionId);
     const teams = selectedSection ? selectedSection.teams : [];
 
-    const hasActiveFilters = selectedDeptId || selectedSectionId || selectedTeamId;
+    const hasActiveFilters = !!selectedDeptId || !!selectedSectionId || !!selectedTeamId || !!selectedStatusId;
 
     return (
-        <Card className="p-4 border border-slate-100 shadow-sm bg-white dark:bg-card dark:border-border mt-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex items-center gap-2 text-slate-500 font-medium text-sm pl-4 border-l border-slate-200 dark:border-slate-700 min-w-fit">
-                    <Filter className="w-4 h-4" />
-                    סינון תצוגה:
+        <Card className="p-4 border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] bg-white dark:bg-card dark:border-border mt-4 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-1 h-full bg-[#0074ff]/10" />
+
+            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                {/* Header Section */}
+                <div className="flex items-center gap-2 text-[#001e30] dark:text-white font-black text-sm pl-6 lg:border-l border-slate-100 dark:border-slate-800 min-w-fit shrink-0">
+                    <div className="p-1.5 rounded-lg bg-[#eff6ff] dark:bg-[#0074ff]/10 text-[#0074ff]">
+                        <Filter className="w-4 h-4" />
+                    </div>
+                    סינון ממוקד
                 </div>
 
-                <div className="flex flex-1 flex-col sm:flex-row gap-3 w-full">
-                    {/* Department */}
-                    <Select
-                        value={selectedDeptId || "all"}
-                        onValueChange={(val) => onFilterChange('department', val === "all" ? undefined : val)}
-                        disabled={!canSelectDept && !!selectedDeptId}
-                    >
-                        <SelectTrigger className="w-full sm:w-[180px] h-9 text-right" dir="rtl">
-                            <SelectValue placeholder="כל המחלקות" />
-                        </SelectTrigger>
-                        <SelectContent dir="rtl">
-                            {canSelectDept && <SelectItem value="all" className="font-semibold">כל המחלקות</SelectItem>}
-                            {structure.map(dept => (
-                                <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                {/* Filters Content Area */}
+                <div className="flex-1 flex flex-col gap-5 w-full">
+                    {/* Top Row: Organizational Filters */}
+                    <div className="flex flex-wrap gap-4 w-full">
+                        {/* Department */}
+                        <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mr-1">מחלקה</label>
+                            <Select
+                                value={selectedDeptId || "all"}
+                                onValueChange={(val) => onFilterChange('department', val === "all" ? undefined : val)}
+                                disabled={!canSelectDept && !!selectedDeptId}
+                            >
+                                <SelectTrigger className="h-10 text-right font-bold text-xs bg-slate-50/50 dark:bg-muted/30 border-slate-200 dark:border-border" dir="rtl">
+                                    <SelectValue placeholder="כל המחלקות" />
+                                </SelectTrigger>
+                                <SelectContent dir="rtl">
+                                    {canSelectDept && <SelectItem value="all" className="font-bold">כל המחלקות</SelectItem>}
+                                    {structure.map(dept => (
+                                        <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                    {/* Section */}
-                    <Select
-                        value={selectedSectionId || "all"}
-                        onValueChange={(val) => onFilterChange('section', val === "all" ? undefined : val)}
-                        disabled={(!selectedDeptId && !canSelectDept) || (!canSelectSection && !!selectedSectionId) || (canSelectDept && !selectedDeptId)}
-                    >
-                        <SelectTrigger className="w-full sm:w-[180px] h-9 text-right" dir="rtl">
-                            <SelectValue placeholder={!selectedDeptId ? "בחר מחלקה תחילה" : "כל המדורים"} />
-                        </SelectTrigger>
-                        <SelectContent dir="rtl">
-                            <SelectItem value="all" className="font-semibold">כל המדורים</SelectItem>
-                            {sections.map(sec => (
-                                <SelectItem key={sec.id} value={sec.id.toString()}>{sec.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                        {/* Section */}
+                        <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mr-1">מדור</label>
+                            <Select
+                                value={selectedSectionId || "all"}
+                                onValueChange={(val) => onFilterChange('section', val === "all" ? undefined : val)}
+                                disabled={(!selectedDeptId && !canSelectDept) || (!canSelectSection && !!selectedSectionId) || (canSelectDept && !selectedDeptId)}
+                            >
+                                <SelectTrigger className="h-10 text-right font-bold text-xs bg-slate-50/50 dark:bg-muted/30 border-slate-200 dark:border-border" dir="rtl">
+                                    <SelectValue placeholder={!selectedDeptId ? "בחר מחלקה..." : "כל המדורים"} />
+                                </SelectTrigger>
+                                <SelectContent dir="rtl">
+                                    <SelectItem value="all" className="font-bold">כל המדורים</SelectItem>
+                                    {sections.map(sec => (
+                                        <SelectItem key={sec.id} value={sec.id.toString()}>{sec.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                    {/* Team */}
-                    <Select
-                        value={selectedTeamId || "all"}
-                        onValueChange={(val) => onFilterChange('team', val === "all" ? undefined : val)}
-                        disabled={(!selectedSectionId && !canSelectSection) || (!canSelectTeam && !!selectedTeamId) || (canSelectSection && !selectedSectionId)}
-                    >
-                        <SelectTrigger className="w-full sm:w-[180px] h-9 text-right" dir="rtl">
-                            <SelectValue placeholder={!selectedSectionId ? "בחר מדור תחילה" : "כל החוליות"} />
-                        </SelectTrigger>
-                        <SelectContent dir="rtl">
-                            <SelectItem value="all" className="font-semibold">כל החוליות</SelectItem>
-                            {teams.map(team => (
-                                <SelectItem key={team.id} value={team.id.toString()}>{team.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                        {/* Team */}
+                        <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mr-1">חולייה</label>
+                            <Select
+                                value={selectedTeamId || "all"}
+                                onValueChange={(val) => onFilterChange('team', val === "all" ? undefined : val)}
+                                disabled={(!selectedSectionId && !canSelectSection) || (!canSelectTeam && !!selectedTeamId) || (canSelectSection && !selectedSectionId)}
+                            >
+                                <SelectTrigger className="h-10 text-right font-bold text-xs bg-slate-50/50 dark:bg-muted/30 border-slate-200 dark:border-border" dir="rtl">
+                                    <SelectValue placeholder={!selectedSectionId ? "בחר מדור..." : "כל החוליות"} />
+                                </SelectTrigger>
+                                <SelectContent dir="rtl">
+                                    <SelectItem value="all" className="font-bold">כל החוליות</SelectItem>
+                                    {teams.map(team => (
+                                        <SelectItem key={team.id} value={team.id.toString()}>{team.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Bottom Row: Status Filter */}
+                    <div className="flex items-end justify-between gap-4 w-full pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex flex-col gap-1.5 flex-1 max-w-sm">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider mr-1">פילוח לפי סטטוס נוכחות</label>
+                            <Select
+                                value={selectedStatusId || "all"}
+                                onValueChange={(val) => onFilterChange('status', val === "all" ? undefined : val)}
+                            >
+                                <SelectTrigger className="h-10 text-right bg-blue-50/30 dark:bg-blue-900/10 border-[#0074ff]/20 dark:border-[#0074ff]/20 font-bold text-sm text-[#0074ff]" dir="rtl">
+                                    <SelectValue placeholder="בחר סטטוס לפירוט..." />
+                                </SelectTrigger>
+                                <SelectContent dir="rtl">
+                                    <SelectItem value="all" className="font-bold text-slate-500">כל הסטטוסים</SelectItem>
+                                    {statuses.map(st => (
+                                        <SelectItem key={st.status_id} value={st.status_id.toString()}>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: st.color }} />
+                                                {st.status_name}
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Clear Filters Action */}
+                        {hasActiveFilters && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onFilterChange('reset')}
+                                className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 h-10 px-6 font-bold transition-all border border-slate-100 dark:border-slate-800"
+                            >
+                                <X className="w-4 h-4 ml-2" />
+                                איפוס כלל הסינונים
+                            </Button>
+                        )}
+                    </div>
                 </div>
-
-                {/* Clear Filters (Only if user has freedom to clear) */}
-                {hasActiveFilters && canSelectDept && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onFilterChange('reset')}
-                        className="text-slate-500 hover:text-red-500 h-9"
-                    >
-                        <X className="w-4 h-4 ml-2" />
-                        נקה סינון
-                    </Button>
-                )}
             </div>
         </Card>
     );

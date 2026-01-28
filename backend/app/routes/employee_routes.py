@@ -34,6 +34,7 @@ def get_employees():
         filters = {
             "search": request.args.get("search"),
             "dept_id": request.args.get("dept_id"),
+            "status_id": request.args.get("status_id"),
             "include_inactive": request.args.get("include_inactive") == "true",
         }
         

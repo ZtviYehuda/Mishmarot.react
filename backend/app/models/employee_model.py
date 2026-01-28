@@ -201,6 +201,9 @@ class EmployeeModel:
                     d_id = int(filters["dept_id"])
                     query += " AND (d.id = %s OR d_dir.id = %s)"
                     params.extend([d_id, d_id])
+                if filters.get("status_id"):
+                    query += " AND st.id = %s"
+                    params.append(filters["status_id"])
 
             query += " ORDER BY e.first_name ASC"
             cur.execute(query, tuple(params))

@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { EmployeesChart } from "@/components/dashboard/EmployeesChart";
 import { BirthdaysCard } from "@/components/dashboard/BirthdaysCard";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { WhatsAppReportDialog } from "@/components/dashboard/WhatsAppReportDialog";
+import { DashboardStatusTable } from "@/components/dashboard/DashboardStatusTable";
 import { useAuthContext } from "@/context/AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
 
@@ -16,6 +17,7 @@ export default function DashboardPage() {
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any[]>([]);
+  const [allStatuses, setAllStatuses] = useState<any[]>([]);
   const [birthdays, setBirthdays] = useState<any[]>([]);
   const [structure, setStructure] = useState<Department[]>([]);
 
@@ -25,6 +27,7 @@ export default function DashboardPage() {
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
   const [selectedSectionId, setSelectedSectionId] = useState<string>("");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
+  const [selectedStatusData, setSelectedStatusData] = useState<{ id: number; name: string; color: string } | null>(null);
 
   // Initialize filters based on user permissions
   useEffect(() => {
@@ -32,10 +35,6 @@ export default function DashboardPage() {
       if (user.commands_department_id) {
         setSelectedDeptId(user.commands_department_id.toString());
       } else if (user.commands_section_id) {
-        // We need structure to find parent dept, but typically backend handles scoping.
-        // For UI consistency we will try to set it once structure loads or via user props if available.
-        // Backend returns "assigned_department_id" for everyone, and "commands_*" for commanders.
-        // For a Section Commander, commands_section_id is set. assigned_department_id should be parent.
         if (user.assigned_department_id) setSelectedDeptId(user.assigned_department_id.toString());
         setSelectedSectionId(user.commands_section_id.toString());
       } else if (user.commands_team_id) {
@@ -55,14 +54,34 @@ export default function DashboardPage() {
     fetchStruct();
   }, [getStructure]);
 
-  // Fetch Stats when filters change
+  // Fetch "Active" Statuses for the dropdown whenever organizational filters change
+  // This ensures we only show statuses that actually have people in the current scope
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchActiveStatuses = async () => {
+      const data = await getDashboardStats({
+        department_id: selectedDeptId,
+        section_id: selectedSectionId,
+        team_id: selectedTeamId,
+      });
+
+      if (data && data.stats) {
+        // Only include statuses that have an ID (not null/no status)
+        setAllStatuses(data.stats.filter((s: any) => s.status_id !== null));
+      }
+    };
+
+    fetchActiveStatuses();
+  }, [selectedDeptId, selectedSectionId, selectedTeamId, getDashboardStats]);
+
+  // Fetch Stats for the chart and table whenever any filter changes
+  useEffect(() => {
+    const fetchStatsData = async () => {
       setLoading(true);
       const data = await getDashboardStats({
         department_id: selectedDeptId,
         section_id: selectedSectionId,
-        team_id: selectedTeamId
+        team_id: selectedTeamId,
+        status_id: selectedStatusData?.id?.toString()
       });
 
       if (data) {
@@ -72,12 +91,11 @@ export default function DashboardPage() {
       setLoading(false);
     };
 
-    fetchStats();
-  }, [selectedDeptId, selectedSectionId, selectedTeamId, getDashboardStats]);
+    fetchStatsData();
+  }, [selectedDeptId, selectedSectionId, selectedTeamId, selectedStatusData?.id, getDashboardStats]);
 
-  const handleFilterChange = (type: 'department' | 'section' | 'team' | 'reset', value?: string) => {
+  const handleFilterChange = (type: 'department' | 'section' | 'team' | 'status' | 'reset', value?: string) => {
     if (type === 'reset') {
-      // Reset only what allowed
       if (user?.is_admin) {
         setSelectedDeptId("");
         setSelectedSectionId("");
@@ -85,7 +103,10 @@ export default function DashboardPage() {
       } else if (user?.commands_department_id) {
         setSelectedSectionId("");
         setSelectedTeamId("");
+      } else if (user?.commands_section_id) {
+        setSelectedTeamId("");
       }
+      setSelectedStatusData(null);
       return;
     }
 
@@ -98,6 +119,37 @@ export default function DashboardPage() {
       setSelectedTeamId("");
     } else if (type === 'team') {
       setSelectedTeamId(value || "");
+    } else if (type === 'status') {
+      const status = allStatuses.find(s => s.status_id.toString() === value);
+      if (status) {
+        setSelectedStatusData({ id: status.status_id, name: status.status_name, color: status.color });
+      } else {
+        setSelectedStatusData(null);
+      }
+    }
+  };
+
+  // Determine the names for titles
+  const currentDept = structure.find(d => d.id.toString() === selectedDeptId);
+  const currentSection = currentDept?.sections.find(s => s.id.toString() === selectedSectionId);
+  const currentTeam = currentSection?.teams.find(t => t.id.toString() === selectedTeamId);
+
+  const chartTitle = currentTeam ? `נתוני חולייה - ${currentTeam.name}` :
+    currentSection ? `נתוני מדור - ${currentSection.name}` :
+      currentDept ? `נתוני מחלקה - ${currentDept.name}` :
+        "כלל היחידה";
+
+  const chartDescription = currentTeam ? `פירוט נוכחות לחוליית ${currentTeam.name}` :
+    currentSection ? `פירוט נוכחות למדור ${currentSection.name}` :
+      currentDept ? `פירוט נוכחות למחלקת ${currentDept.name}` :
+        "תצוגה מלאה של כלל המשרתים ביחידה";
+
+  const handleStatusClick = (statusId: number, statusName: string, color: string) => {
+    setSelectedStatusData({ id: statusId, name: statusName, color });
+    // When clicking chart, we scroll to the table
+    const tableElement = document.getElementById('status-details-table');
+    if (tableElement) {
+      tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -115,30 +167,31 @@ export default function DashboardPage() {
             stats={stats}
             loading={loading}
             onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
-            title={
-              selectedTeamId ? "נתוני חולייה" :
-                selectedSectionId ? "נתוני מדור" :
-                  selectedDeptId ? "נתוני מחלקה" :
-                    "כלל היחידה"
-            }
-            description={
-              selectedTeamId ? "סינון לפי חולייה נבחרת" :
-                selectedSectionId ? "סינון לפי מדור נבחר" :
-                  selectedDeptId ? "סינון לפי מחלקה נבחרת" :
-                    "תצוגה מלאה של כוח האדם"
-            }
+            onStatusClick={handleStatusClick}
+            title={chartTitle}
+            description={chartDescription}
           />
           {/* Inline Drill Down Filters */}
           <DashboardFilters
             structure={structure}
+            statuses={allStatuses}
             selectedDeptId={selectedDeptId}
             selectedSectionId={selectedSectionId}
             selectedTeamId={selectedTeamId}
+            selectedStatusId={selectedStatusData?.id?.toString()}
             onFilterChange={handleFilterChange}
             canSelectDept={canSelectDept}
             canSelectSection={canSelectSection}
             canSelectTeam={canSelectTeam}
           />
+
+          <div id="status-details-table">
+            <DashboardStatusTable
+              statusId={selectedStatusData?.id || null}
+              statusName={selectedStatusData?.name || ""}
+              statusColor={selectedStatusData?.color || ""}
+            />
+          </div>
         </div>
 
         {/* Birthdays Card - Takes 1 column */}

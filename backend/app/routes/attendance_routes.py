@@ -63,6 +63,8 @@ def get_stats():
             filters['section_id'] = int(request.args.get('section_id'))
         if request.args.get('team_id'):
             filters['team_id'] = int(request.args.get('team_id'))
+        if request.args.get('status_id'):
+            filters['status_id'] = int(request.args.get('status_id'))
             
         print(f"[DEBUG] get_stats filters: {filters}")
         

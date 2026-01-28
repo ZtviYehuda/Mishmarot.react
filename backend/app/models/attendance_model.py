@@ -99,6 +99,7 @@ class AttendanceModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
                 SELECT 
+                    st.id as status_id,
                     st.name as status_name,
                     COUNT(e.id) as count,
                     st.color as color
@@ -145,13 +146,16 @@ class AttendanceModel:
                 if filters.get('team_id'):
                     query += " AND t.id = %s"
                     params.append(filters['team_id'])
+                if filters.get('status_id'):
+                    query += " AND st.id = %s"
+                    params.append(filters['status_id'])
 
             # Exclude requesting user (Commander) from stats
             if requesting_user and requesting_user.get('is_commander'):
                 query += " AND e.id != %s"
                 params.append(requesting_user['id'])
 
-            query += " GROUP BY st.name, st.color"
+            query += " GROUP BY st.id, st.name, st.color"
             
             # Debug SQL
             # print(f"Executing SQL: {query} \nParams: {params}")

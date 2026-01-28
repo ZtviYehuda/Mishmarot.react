@@ -11,9 +11,10 @@ import { MessageCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface EmployeesChartProps {
-  stats: { status_name: string; count: number; color: string }[];
+  stats: { status_id: number; status_name: string; count: number; color: string }[];
   loading?: boolean;
   onOpenWhatsAppReport?: () => void;
+  onStatusClick?: (statusId: number, statusName: string, color: string) => void;
   title?: string;
   description?: string;
 }
@@ -22,6 +23,7 @@ export const EmployeesChart = ({
   stats,
   loading = false,
   onOpenWhatsAppReport,
+  onStatusClick,
   title = "מצבת כוח אדם",
   description = "סטטוס נוכחות בזמן אמת"
 }: EmployeesChartProps) => {
@@ -54,6 +56,8 @@ export const EmployeesChart = ({
     }
 
     const data = stats.map((item, index) => ({
+      // Make sure we pass the ID
+      id: item.status_id,
       name: item.status_name || 'ללא סטטוס',
       value: item.count,
       fill: item.color || '#94a3b8',
@@ -71,6 +75,7 @@ export const EmployeesChart = ({
           <p className="font-semibold">{data.name}</p>
           <p className="text-sm">{data.value} משרתים</p>
           <p className="text-xs text-slate-300 mt-1">{data.percentage}% מהיחידה</p>
+          <p className="text-[10px] text-slate-400 mt-1">לחץ לפירוט</p>
         </div>
       );
     }
@@ -91,7 +96,14 @@ export const EmployeesChart = ({
     const y = entry.cy + radius * Math.sin(-angle * RADIAN);
 
     return (
-      <g>
+      <g
+        className="cursor-pointer outline-none"
+        onClick={() => {
+          if (onStatusClick && entry.payload.id !== undefined && entry.payload.id !== null) {
+            onStatusClick(entry.payload.id, entry.payload.name, entry.payload.fill);
+          }
+        }}
+      >
         <text
           x={x}
           y={y - 10}
@@ -199,7 +211,16 @@ export const EmployeesChart = ({
                       paddingAngle={2}
                     >
                       {chartData.map((item, index) => (
-                        <Cell key={`cell-${index}`} fill={item.fill} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={item.fill}
+                          className="outline-none hover:opacity-80 transition-opacity cursor-pointer"
+                          onClick={() => {
+                            if (onStatusClick && item.id !== undefined && item.id !== null) {
+                              onStatusClick(item.id, item.name, item.fill);
+                            }
+                          }}
+                        />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
