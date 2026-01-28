@@ -153,7 +153,7 @@ class EmployeeModel:
             query = """
                 SELECT DISTINCT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number,
                        e.birth_date, e.is_commander, e.security_clearance, e.police_license,
-                       e.is_active,
+                       e.is_active, e.department_id, e.section_id, e.team_id,
                        t.name as team_name, 
                        COALESCE(s.name, s_dir.name) as section_name, 
                        COALESCE(d.name, d_dir.name) as department_name,
@@ -223,6 +223,14 @@ class EmployeeModel:
                     d_id = int(filters["dept_id"])
                     query += " AND (d.id = %s OR d_dir.id = %s)"
                     params.extend([d_id, d_id])
+                if filters.get("section_id") and str(filters.get("section_id")).isdigit():
+                    s_id = int(filters["section_id"])
+                    query += " AND (s.id = %s OR s_dir.id = %s)"
+                    params.extend([s_id, s_id])
+                if filters.get("team_id") and str(filters.get("team_id")).isdigit():
+                    t_id = int(filters["team_id"])
+                    query += " AND t.id = %s"
+                    params.append(t_id)
                 if filters.get("status_id"):
                     query += " AND st.id = %s"
                     params.append(filters["status_id"])

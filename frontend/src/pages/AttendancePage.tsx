@@ -126,9 +126,19 @@ export default function AttendancePage() {
   ]);
 
   const departments = structure;
-  const sections =
-    departments.find((d: any) => d.id.toString() === selectedDeptId)
-      ?.sections || [];
+  const sections = useMemo(() => {
+    return (
+      departments.find((d: any) => d.id.toString() === selectedDeptId)
+        ?.sections || []
+    );
+  }, [departments, selectedDeptId]);
+
+  const teams = useMemo(() => {
+    return (
+      sections.find((s: any) => s.id.toString() === selectedSectionId)
+        ?.teams || []
+    );
+  }, [sections, selectedSectionId]);
 
   const handleOpenStatusModal = (emp: Employee) => {
     setSelectedEmployee(emp);
@@ -383,6 +393,29 @@ export default function AttendancePage() {
               {sections.map((s: any) => (
                 <SelectItem key={s.id} value={s.id.toString()}>
                   {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-full md:w-48 space-y-2 text-right">
+          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
+            חוליה
+          </label>
+          <Select
+            value={selectedTeamId}
+            onValueChange={(val) => setSelectedTeamId(val)}
+            disabled={!selectedSectionId || selectedSectionId === "all"}
+          >
+            <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
+              <SelectValue placeholder="כל החוליות" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל החוליות</SelectItem>
+              {teams.map((t: any) => (
+                <SelectItem key={t.id} value={t.id.toString()}>
+                  {t.name}
                 </SelectItem>
               ))}
             </SelectContent>

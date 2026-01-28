@@ -250,6 +250,9 @@ export default function DashboardPage() {
               statusId={selectedStatusData?.id || null}
               statusName={selectedStatusData?.name || ""}
               statusColor={selectedStatusData?.color || ""}
+              departmentId={selectedDeptId}
+              sectionId={selectedSectionId}
+              teamId={selectedTeamId}
             />
           </div>
         </div>

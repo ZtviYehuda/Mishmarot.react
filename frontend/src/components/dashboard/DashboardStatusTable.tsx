@@ -7,20 +7,33 @@ interface DashboardStatusTableProps {
   statusId: number | null;
   statusName: string;
   statusColor: string;
+  departmentId?: string;
+  sectionId?: string;
+  teamId?: string;
 }
 
 export const DashboardStatusTable = ({
   statusId,
   statusName,
   statusColor,
+  departmentId,
+  sectionId,
+  teamId,
 }: DashboardStatusTableProps) => {
   const { employees, fetchEmployees, loading } = useEmployees();
 
   useEffect(() => {
     if (statusId !== null && statusId !== undefined) {
-      fetchEmployees(undefined, undefined, undefined, statusId);
+      fetchEmployees(
+        undefined,
+        departmentId && departmentId !== "" ? parseInt(departmentId) : undefined,
+        undefined,
+        statusId,
+        sectionId && sectionId !== "" ? parseInt(sectionId) : undefined,
+        teamId && teamId !== "" ? parseInt(teamId) : undefined
+      );
     }
-  }, [statusId, fetchEmployees]);
+  }, [statusId, departmentId, sectionId, teamId, fetchEmployees]);
 
   if (statusId === null || statusId === undefined) return null;
 
