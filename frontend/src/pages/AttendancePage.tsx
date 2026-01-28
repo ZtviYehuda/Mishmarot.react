@@ -30,6 +30,7 @@ import {
   AlertCircle,
   User,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   BulkStatusUpdateModal,
   StatusUpdateModal,
@@ -151,6 +152,12 @@ export default function AttendancePage() {
     return "שוטר";
   };
 
+  const currentUserEmployee = user ? employees.find((e) => e.id === user.id) : null;
+  const isReportedToday =
+    currentUserEmployee?.last_status_update &&
+    new Date(currentUserEmployee.last_status_update).toDateString() ===
+    new Date().toDateString();
+
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
 
@@ -200,6 +207,34 @@ export default function AttendancePage() {
           </div>
         }
       />
+
+      {/* Self-Report Status Indicator */}
+      {isReportedToday && currentUserEmployee && (
+        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-4 flex items-center justify-between shadow-lg shadow-emerald-500/5 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div className="flex flex-col text-right flex-1 min-w-0">
+              <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
+                דיווחת נוכחות בהצלחה!
+              </span>
+              <p className="text-xs font-bold text-emerald-600/80">
+                הסטטוס המעודכן שלך: <span className="text-emerald-700 dark:text-emerald-300 underline underline-offset-4 decoration-emerald-500/30">{currentUserEmployee.status_name}</span> • בוצע בשעה {new Date(currentUserEmployee.last_status_update!).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleOpenStatusModal(currentUserEmployee)}
+            className="text-emerald-700 hover:bg-emerald-500/10 font-black gap-2 hidden sm:flex"
+          >
+            <Clock className="w-4 h-4" />
+            עדכן שוב
+          </Button>
+        </div>
+      )}
 
       {/* Summary Stats & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -439,7 +474,12 @@ export default function AttendancePage() {
                   return (
                     <TableRow
                       key={emp.id}
-                      className="group hover:bg-muted/50 transition-colors border-b border-border"
+                      className={cn(
+                        "group hover:bg-muted/50 transition-colors border-b border-border",
+                        user &&
+                        emp.id === user.id &&
+                        "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
+                      )}
                     >
                       <TableCell className="py-4 px-6 text-right">
                         <div className="flex items-center gap-3">
