@@ -174,7 +174,6 @@ def setup_database():
                     """
                     INSERT INTO service_types (name)
                     VALUES (%s)
-                    ON CONFLICT (name) DO NOTHING
                 """,
                     (st,),
                 )
