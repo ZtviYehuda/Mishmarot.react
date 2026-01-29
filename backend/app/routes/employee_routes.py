@@ -40,6 +40,7 @@ def get_employees():
             "dept_id": request.args.get("dept_id"),
             "status_id": request.args.get("status_id"),
             "include_inactive": request.args.get("include_inactive") == "true",
+            "date": request.args.get("date"),
         }
 
         employees = EmployeeModel.get_all_employees(filters, requesting_user=requester)

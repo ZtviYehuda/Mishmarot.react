@@ -136,6 +136,7 @@ export const useEmployees = () => {
       section_id?: string;
       team_id?: string;
       status_id?: string;
+      date?: string;
     }) => {
       try {
         const params = new URLSearchParams();
@@ -145,6 +146,7 @@ export const useEmployees = () => {
           params.append("section_id", filters.section_id);
         if (filters?.team_id) params.append("team_id", filters.team_id);
         if (filters?.status_id) params.append("status_id", filters.status_id);
+        if (filters?.date) params.append("date", filters.date);
 
         const { data } = await apiClient.get(
           `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}?${params}`,
@@ -243,6 +245,17 @@ export const useEmployees = () => {
       } catch (err: any) {
         console.error("Failed to fetch trend stats", err);
         return [];
+      }
+    }, []),
+    getCalendarStats: useCallback(async (year: number, month: number) => {
+      try {
+        const { data } = await apiClient.get(
+          `${attEndpoints.ATTENDANCE_CALENDAR_ENDPOINT}?year=${year}&month=${month}`,
+        );
+        return data;
+      } catch (err: any) {
+        console.error("Failed to fetch calendar stats", err);
+        return {};
       }
     }, []),
   };

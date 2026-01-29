@@ -71,6 +71,8 @@ def get_stats():
             filters["team_id"] = int(request.args.get("team_id"))
         if request.args.get("status_id"):
             filters["status_id"] = int(request.args.get("status_id"))
+        if request.args.get("date"):
+            filters["date"] = request.args.get("date")
 
         print(f"[DEBUG] get_stats filters: {filters}")
 

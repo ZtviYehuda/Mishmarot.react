@@ -6,10 +6,12 @@ import { WhatsAppReportDialog } from "@/components/dashboard/WhatsAppReportDialo
 import { DashboardStatusTable } from "@/components/dashboard/DashboardStatusTable";
 import { StatsComparisonCard } from "@/components/dashboard/StatsComparisonCard";
 import { AttendanceTrendCard } from "@/components/dashboard/AttendanceTrendCard";
+import { DashboardCalendar } from "@/components/dashboard/DashboardCalendar"; // Added
 import { useAuthContext } from "@/context/AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LayoutDashboard } from "lucide-react";
+import { format } from "date-fns"; // Added
 
 interface Team {
   id: number;
@@ -38,6 +40,9 @@ export default function DashboardPage() {
   const [allStatuses, setAllStatuses] = useState<any[]>([]);
   const [birthdays, setBirthdays] = useState<any[]>([]);
   const [structure, setStructure] = useState<Department[]>([]);
+
+  // Date State
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // New Stats
   const [comparisonStats, setComparisonStats] = useState<any[]>([]);
@@ -106,6 +111,7 @@ export default function DashboardPage() {
         department_id: selectedDeptId,
         section_id: selectedSectionId,
         team_id: selectedTeamId,
+        date: format(selectedDate, "yyyy-MM-dd"),
       });
 
       if (data && data.stats) {
@@ -114,7 +120,13 @@ export default function DashboardPage() {
     };
 
     fetchActiveStatuses();
-  }, [selectedDeptId, selectedSectionId, selectedTeamId, getDashboardStats]);
+  }, [
+    selectedDeptId,
+    selectedSectionId,
+    selectedTeamId,
+    getDashboardStats,
+    selectedDate,
+  ]);
 
   // Fetch Stats for the chart and table
   useEffect(() => {
@@ -125,6 +137,7 @@ export default function DashboardPage() {
         section_id: selectedSectionId,
         team_id: selectedTeamId,
         status_id: selectedStatusData?.id?.toString(),
+        date: format(selectedDate, "yyyy-MM-dd"),
       });
 
       if (data) {
@@ -141,6 +154,7 @@ export default function DashboardPage() {
     selectedTeamId,
     selectedStatusData?.id,
     getDashboardStats,
+    selectedDate,
   ]);
 
   const handleFilterChange = (
@@ -236,6 +250,12 @@ export default function DashboardPage() {
         subtitle="נתוני נוכחות, ימי הולדת וסטטיסטיקות כוח אדם"
         category="לוח בקרה"
         categoryLink="/"
+        badge={
+          <DashboardCalendar
+            selectedDate={selectedDate}
+            onSelectDate={(d) => d && setSelectedDate(d)}
+          />
+        }
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">

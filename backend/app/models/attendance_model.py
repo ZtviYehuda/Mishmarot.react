@@ -286,7 +286,14 @@ class AttendanceModel:
             return []
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            query = """
+            params = []
+            status_condition = "AND end_datetime IS NULL"
+
+            if filters and filters.get("date"):
+                status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                params.extend([filters["date"], filters["date"]])
+
+            query = f"""
                 SELECT 
                     st.id as status_id,
                     st.name as status_name,
@@ -300,13 +307,12 @@ class AttendanceModel:
                 -- Status Joins
                 LEFT JOIN LATERAL (
                     SELECT status_type_id FROM attendance_logs 
-                    WHERE employee_id = e.id AND end_datetime IS NULL
+                    WHERE employee_id = e.id {status_condition}
                     ORDER BY start_datetime DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
                 WHERE e.is_active = TRUE
             """
-            params = []
 
             # 1. Base Scoping (Security)
             if requesting_user and not requesting_user.get("is_admin"):
