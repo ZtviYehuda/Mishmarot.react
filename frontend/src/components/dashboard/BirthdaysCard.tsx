@@ -10,8 +10,10 @@ import { Calendar, Gift, MessageCircle, User } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { EmployeeLink } from "@/components/common/EmployeeLink";
 
 interface BirthdayEmployee {
+  id: number;
   first_name: string;
   last_name: string;
   birth_date: string;
@@ -112,16 +114,14 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
                     <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p
+                    <EmployeeLink
+                      employee={emp.id}
+                      name={`${emp.first_name} ${emp.last_name}`}
                       className={cn(
                         "text-xs sm:text-sm font-bold truncate",
-                        isToday
-                          ? "text-primary"
-                          : "text-foreground",
+                        isToday ? "text-primary" : "text-foreground",
                       )}
-                    >
-                      {emp.first_name} {emp.last_name}
-                    </p>
+                    />
                     <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate">
                       {format(date, "d בMMMM", { locale: he })}
                       {isToday && (

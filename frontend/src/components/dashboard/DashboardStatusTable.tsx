@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { User, Phone } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmployeeLink } from "@/components/common/EmployeeLink";
 
 interface DashboardStatusTableProps {
   statusId: number | null;
@@ -105,9 +106,10 @@ export const DashboardStatusTable = ({
                           {emp.first_name[0]}
                           {emp.last_name[0]}
                         </div>
-                        <span className="text-sm font-bold text-foreground">
-                          {emp.first_name} {emp.last_name}
-                        </span>
+                        <EmployeeLink
+                          employee={emp}
+                          className="text-sm font-bold text-foreground"
+                        />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-muted-foreground">

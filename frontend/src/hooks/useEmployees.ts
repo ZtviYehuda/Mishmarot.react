@@ -224,6 +224,28 @@ export const useEmployees = () => {
     getStructure,
     getServiceTypes,
     getStatusTypes,
+    getRoles: useCallback(async () => {
+      try {
+        const { data } = await apiClient.get(
+          endpoints.EMPLOYEES_ROLES_ENDPOINT,
+        );
+        return data;
+      } catch (err: any) {
+        console.error("Failed to fetch roles", err);
+        return [];
+      }
+    }, []),
+    getEmployeeById: useCallback(async (id: number) => {
+      try {
+        const { data } = await apiClient.get<Employee>(
+          endpoints.getEmployeeByIdEndpoint(id),
+        );
+        return data;
+      } catch (err: any) {
+        console.error("Failed to fetch employee", err);
+        return null;
+      }
+    }, []),
     logStatus,
     logBulkStatus,
     getDashboardStats,

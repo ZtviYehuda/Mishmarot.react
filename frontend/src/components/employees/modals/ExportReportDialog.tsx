@@ -19,11 +19,15 @@ import { useDateContext } from "@/context/DateContext";
 import { type DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { useEmployees } from "@/hooks/useEmployees";
+import { cn } from "@/lib/utils";
 
 interface ExportReportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+import { FilterModal, type EmployeeFilters } from "./FilterModal";
+import { Filter } from "lucide-react";
 
 export function ExportReportDialog({
   open,
@@ -31,6 +35,8 @@ export function ExportReportDialog({
 }: ExportReportDialogProps) {
   const { selectedDate } = useDateContext();
   const [mode, setMode] = useState<"daily" | "range">("daily");
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<EmployeeFilters>({});
 
   // Daily State
   const [dailyDate, setDailyDate] = useState<Date>(selectedDate);
@@ -70,6 +76,29 @@ export function ExportReportDialog({
         toast.error("נא לבחור תאריך או טווח תאריכים");
         return;
       }
+
+      // Apply Filters to Export
+      if (activeFilters.departments?.length)
+        params.append("depts", activeFilters.departments.join(","));
+      if (activeFilters.sections?.length)
+        params.append("sects", activeFilters.sections.join(","));
+      if (activeFilters.teams?.length)
+        params.append("tms", activeFilters.teams.join(","));
+      if (activeFilters.roles?.length)
+        params.append("roles", activeFilters.roles.join(","));
+      if (activeFilters.serviceTypes?.length)
+        params.append("serviceTypes", activeFilters.serviceTypes.join(","));
+      if (activeFilters.statuses?.length)
+        params.append("statuses", activeFilters.statuses.join(","));
+      if (activeFilters.isCommander) params.append("is_commander", "true");
+      if (activeFilters.isAdmin) params.append("is_admin", "true");
+      if (activeFilters.hasSecurityClearance)
+        params.append("has_security_clearance", "true");
+      if (activeFilters.hasPoliceRicense)
+        params.append("has_police_license", "true");
+      if (activeFilters.showInactive) params.append("include_inactive", "true");
+      if (activeFilters.searchText)
+        params.append("search", activeFilters.searchText);
 
       // We trigger download by window.open or recreating the fetch with blob
       // Using direct window open is easiest for download, but we need auth token usually.
@@ -125,10 +154,31 @@ export function ExportReportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md sm:max-w-lg" dir="rtl">
         <DialogHeader className="text-right sm:text-right gap-1">
-          <DialogTitle className="text-xl font-bold">ייצוא ודוחות</DialogTitle>
-          <DialogDescription className="text-base">
-            בחר את סוג הדוח והפורמט הרצוי
-          </DialogDescription>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <DialogTitle className="text-xl font-bold">
+                ייצוא ודוחות
+              </DialogTitle>
+              <DialogDescription className="text-base text-muted-foreground font-medium">
+                בחר את סוג הדוח והפורמט הרצוי
+              </DialogDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFilterModalOpen(true)}
+              className={cn(
+                "h-9 rounded-xl border-primary/20",
+                Object.keys(activeFilters).length > 0 &&
+                  "bg-primary/10 border-primary text-primary",
+              )}
+            >
+              <Filter className="w-4 h-4 ml-2" />
+              {Object.keys(activeFilters).length > 0
+                ? `מסונן (${Object.keys(activeFilters).length})`
+                : "סנן דוח"}
+            </Button>
+          </div>
         </DialogHeader>
 
         <Tabs
@@ -225,6 +275,13 @@ export function ExportReportDialog({
           </div>
         </Tabs>
       </DialogContent>
+
+      <FilterModal
+        open={filterModalOpen}
+        onOpenChange={setFilterModalOpen}
+        onApply={setActiveFilters}
+        employees={employees}
+      />
     </Dialog>
   );
 }

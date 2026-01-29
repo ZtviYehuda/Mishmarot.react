@@ -266,6 +266,70 @@ class EmployeeModel:
                     query += " AND st.id = %s"
                     params.append(filters["status_id"])
 
+                # New Advanced Filters
+                if filters.get("roles"):
+                    roles_list = (
+                        filters["roles"].split(",")
+                        if isinstance(filters["roles"], str)
+                        else filters["roles"]
+                    )
+                    query += " AND EXISTS (SELECT 1 FROM roles r WHERE e.role_id = r.id AND r.name = ANY(%s))"
+                    params.append(roles_list)
+
+                if filters.get("serviceTypes"):
+                    srv_list = (
+                        filters["serviceTypes"].split(",")
+                        if isinstance(filters["serviceTypes"], str)
+                        else filters["serviceTypes"]
+                    )
+                    query += " AND srv.name = ANY(%s)"
+                    params.append(srv_list)
+
+                if filters.get("statuses"):
+                    st_list = (
+                        filters["statuses"].split(",")
+                        if isinstance(filters["statuses"], str)
+                        else filters["statuses"]
+                    )
+                    query += " AND st.name = ANY(%s)"
+                    params.append(st_list)
+
+                if filters.get("is_commander") == "true":
+                    query += " AND e.is_commander = TRUE"
+                if filters.get("is_admin") == "true":
+                    query += " AND e.is_admin = TRUE"
+                if filters.get("has_security_clearance") == "true":
+                    query += " AND e.security_clearance > 0"
+                if filters.get("has_police_license") == "true":
+                    query += " AND e.police_license = TRUE"
+
+                if filters.get("depts"):  # String names from FilterModal
+                    deps = (
+                        filters["depts"].split(",")
+                        if isinstance(filters["depts"], str)
+                        else filters["depts"]
+                    )
+                    query += " AND (d.name = ANY(%s) OR d_dir.name = ANY(%s))"
+                    params.extend([deps, deps])
+
+                if filters.get("sects"):  # String names
+                    sects = (
+                        filters["sects"].split(",")
+                        if isinstance(filters["sects"], str)
+                        else filters["sects"]
+                    )
+                    query += " AND (s.name = ANY(%s) OR s_dir.name = ANY(%s))"
+                    params.extend([sects, sects])
+
+                if filters.get("tms"):  # String names
+                    tms = (
+                        filters["tms"].split(",")
+                        if isinstance(filters["tms"], str)
+                        else filters["tms"]
+                    )
+                    query += " AND t.name = ANY(%s)"
+                    params.append(tms)
+
             query += " ORDER BY e.first_name ASC"
             cur.execute(query, tuple(params))
             results = cur.fetchall()

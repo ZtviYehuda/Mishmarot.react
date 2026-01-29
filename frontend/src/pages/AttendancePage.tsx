@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { EmployeeLink } from "@/components/common/EmployeeLink";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAuthContext } from "@/context/AuthContext";
 import { useDateContext } from "@/context/DateContext";
@@ -46,7 +47,7 @@ import type { Employee } from "@/types/employee.types";
 
 export default function AttendancePage() {
   const { user } = useAuthContext();
-  const { selectedDate, setSelectedDate } = useDateContext();
+  const { selectedDate } = useDateContext();
   const {
     employees,
     loading,
@@ -554,9 +555,10 @@ export default function AttendancePage() {
                             {emp.last_name[0]}
                           </div>
                           <div className="flex flex-col text-right">
-                            <span className="text-sm font-bold text-foreground">
-                              {emp.first_name} {emp.last_name}
-                            </span>
+                            <EmployeeLink
+                              employee={emp}
+                              className="text-sm font-bold text-foreground"
+                            />
                             <span className="text-[10px] text-muted-foreground font-bold">
                               {emp.personal_number}
                             </span>

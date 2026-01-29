@@ -23,10 +23,9 @@ import {
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn } from "@/lib/utils";
-import {
-  FilterModal,
-} from "./modals";
+import { FilterModal } from "./modals";
 import type { EmployeeFilters } from "./modals/FilterModal";
+import { EmployeeLink } from "@/components/common/EmployeeLink";
 
 interface EmployeeTableProps {
   employees: Employee[];
@@ -52,15 +51,14 @@ export const EmployeeTable = ({
   const [activeFilters, setActiveFilters] = useState<EmployeeFilters>({});
   const itemsPerPage = 10;
 
-
-
   // Role Logic implementation base on user request
   const getProfessionalTitle = (emp: Employee) => {
     if (emp.is_admin && emp.is_commander) return "מנהל מערכת בכיר";
     if (emp.is_commander) {
       if (emp.team_name && emp.team_name !== "מטה") return "מפקד חוליה";
       if (emp.section_name && emp.section_name !== "מטה") return "מפקד מדור";
-      if (emp.department_name && emp.department_name !== "מטה") return "מפקד מחלקה";
+      if (emp.department_name && emp.department_name !== "מטה")
+        return "מפקד מחלקה";
       return "מפקד יחידה";
     }
     return "שוטר";
@@ -109,6 +107,24 @@ export const EmployeeTable = ({
       }
     }
 
+    if (activeFilters.serviceTypes && activeFilters.serviceTypes.length > 0) {
+      if (
+        !emp.service_type_name ||
+        !activeFilters.serviceTypes.includes(emp.service_type_name)
+      ) {
+        return false;
+      }
+    }
+
+    if (activeFilters.statuses && activeFilters.statuses.length > 0) {
+      if (
+        !emp.status_name ||
+        !activeFilters.statuses.includes(emp.status_name)
+      ) {
+        return false;
+      }
+    }
+
     if (activeFilters.isCommander) {
       if (!emp.is_commander) return false;
     }
@@ -145,8 +161,6 @@ export const EmployeeTable = ({
   const handleViewDetails = (employee: Employee) => {
     navigate(`/employees/${employee.id}`);
   };
-
-
 
   const handleApplyFilters = (filters: EmployeeFilters) => {
     setActiveFilters(filters);
@@ -199,8 +213,6 @@ export const EmployeeTable = ({
               </span>
             )}
           </Button>
-
-
 
           <Button
             className="h-9 sm:h-10 text-xs sm:text-sm shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 rounded-xl sm:mr-auto"
@@ -270,7 +282,7 @@ export const EmployeeTable = ({
                     className={cn(
                       "group transition-all duration-200 hover:bg-muted/50 border-b border-border",
                       !emp.is_active &&
-                      "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-2 border-r-destructive",
+                        "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-2 border-r-destructive",
                     )}
                   >
                     <TableCell className="px-6 py-4 text-right">
@@ -287,16 +299,15 @@ export const EmployeeTable = ({
                           {emp.last_name[0]}
                         </div>
                         <div className="flex flex-col text-right">
-                          <span
+                          <EmployeeLink
+                            employee={emp}
                             className={cn(
                               "font-semibold text-sm transition-colors",
                               emp.is_active
                                 ? "text-foreground"
                                 : "text-muted-foreground",
                             )}
-                          >
-                            {emp.first_name} {emp.last_name}
-                          </span>
+                          />
                           {!emp.is_active && (
                             <Badge
                               variant="destructive"
@@ -333,11 +344,20 @@ export const EmployeeTable = ({
                           <span className="text-xs font-semibold text-foreground">
                             {emp.department_name}
                           </span>
-                          {((emp.section_name && emp.section_name !== "מטה") || (emp.team_name && emp.team_name !== "מטה")) && (
+                          {((emp.section_name && emp.section_name !== "מטה") ||
+                            (emp.team_name && emp.team_name !== "מטה")) && (
                             <span className="text-[10px] text-muted-foreground">
-                              {emp.section_name && emp.section_name !== "מטה" && `מדור ${emp.section_name}`}
-                              {emp.section_name && emp.section_name !== "מטה" && emp.team_name && emp.team_name !== "מטה" && " • "}
-                              {emp.team_name && emp.team_name !== "מטה" && `חוליה ${emp.team_name}`}
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                `מדור ${emp.section_name}`}
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                " • "}
+                              {emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                `חוליה ${emp.team_name}`}
                             </span>
                           )}
                         </div>
@@ -450,7 +470,7 @@ export const EmployeeTable = ({
               className={cn(
                 "bg-card rounded-2xl border border-border shadow-sm overflow-hidden",
                 !emp.is_active &&
-                "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-4 border-r-destructive",
+                  "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-4 border-r-destructive",
               )}
             >
               <div className="p-4 space-y-3">
@@ -528,16 +548,27 @@ export const EmployeeTable = ({
                       {emp.department_name && emp.department_name !== "מטה" ? (
                         <>
                           {emp.department_name}
-                          {((emp.section_name && emp.section_name !== "מטה") || (emp.team_name && emp.team_name !== "מטה")) && (
+                          {((emp.section_name && emp.section_name !== "מטה") ||
+                            (emp.team_name && emp.team_name !== "מטה")) && (
                             <>
                               {" • "}
-                              {emp.section_name && emp.section_name !== "מטה" && `מדור ${emp.section_name}`}
-                              {emp.section_name && emp.section_name !== "מטה" && emp.team_name && emp.team_name !== "מטה" && " • "}
-                              {emp.team_name && emp.team_name !== "מטה" && `חוליה ${emp.team_name}`}
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                `מדור ${emp.section_name}`}
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                " • "}
+                              {emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                `חוליה ${emp.team_name}`}
                             </>
                           )}
                         </>
-                      ) : "-"}
+                      ) : (
+                        "-"
+                      )}
                     </span>
                   </div>
                   <div className="bg-muted/50 rounded-lg p-2 text-right">

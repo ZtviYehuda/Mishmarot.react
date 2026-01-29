@@ -36,7 +36,7 @@ import { DateHeader } from "@/components/common/DateHeader";
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
-  const { selectedDate, setSelectedDate } = useDateContext();
+  const { selectedDate } = useDateContext();
   const { getStructure, getDashboardStats, getComparisonStats, getTrendStats } =
     useEmployees();
 

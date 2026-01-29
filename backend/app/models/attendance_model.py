@@ -374,7 +374,7 @@ class AttendanceModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
-                SELECT e.first_name, e.last_name, e.birth_date, e.phone_number,
+                SELECT e.id, e.first_name, e.last_name, e.birth_date, e.phone_number,
                     DATE_PART('day', e.birth_date) as day,
                     DATE_PART('month', e.birth_date) as month
                 FROM employees e

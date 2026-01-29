@@ -82,8 +82,8 @@ export default function MainLayout() {
           <div className="flex items-center gap-3 overflow-hidden text-right">
             <div className="w-10 h-10 flex items-center justify-center shrink-0">
               <img
-                src="/police-logo.png"
-                alt="Logo"
+                src="/organization-logo.jpg"
+                alt="Organization Logo"
                 className="w-full h-full object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
@@ -191,7 +191,6 @@ export default function MainLayout() {
               </div>
             </Link>
           )}
-
           {/* Quick Actions Row */}
           <div className="flex items-center gap-1.5 px-0.5">
             <button
@@ -226,18 +225,17 @@ export default function MainLayout() {
 
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col min-w-0">
-        {/* Topbar - Professional governmental banner style */}
-        <header className="h-16 sm:h-20 bg-card border-b border-border px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-          <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0">
+        <header className="h-20 bg-card border-b border-border px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-none flex-none">
+          <div className="flex items-center gap-2 lg:gap-4 flex-1">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className={cn(
-                "w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-all shrink-0 relative",
+                "w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted rounded-lg shrink-0 relative",
                 !isSidebarOpen && "animate-pulse",
               )}
               aria-label="תפריט ניווט"
             >
-              <Menu className="w-4 h-4" />
+              <Menu className="w-5 h-5" />
               {!isSidebarOpen && (
                 <span className="absolute -top-1 -right-1 flex h-2 w-2 lg:hidden">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -245,12 +243,12 @@ export default function MainLayout() {
                 </span>
               )}
             </button>
-            <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
-            <div className="flex items-center gap-5 flex-none max-w-[70%]">
-              <div className="hidden md:flex items-center justify-center w-12 h-12 shrink-0">
+            <div className="h-5 w-px bg-border hidden sm:block" />
+            <div className="flex items-center gap-5 flex-none">
+              <div className="hidden md:flex items-center justify-center w-12 h-12 min-w-[3rem] shrink-0 flex-none overflow-hidden">
                 <img
-                  src="/police-logo.png"
-                  alt="Police Logo"
+                  src="/unit-logo.jpg"
+                  alt="Unit Logo"
                   className="w-full h-full object-contain drop-shadow-md"
                   onError={(e) => (e.currentTarget.style.display = "none")}
                 />
@@ -259,14 +257,14 @@ export default function MainLayout() {
                   style={{ display: "none" }}
                 />
               </div>
-              <div className="flex flex-col text-right border-r-[3px] border-primary pr-5 whitespace-nowrap">
+              <div className="flex flex-col text-right border-r-[3px] border-primary pr-5 whitespace-nowrap min-w-[200px] flex-none">
                 <div className="flex items-center gap-2.5 mb-1">
                   <span className="text-[11px] font-black text-primary uppercase tracking-[0.15em] leading-none">
                     מוקד שליטה ובקרה
                   </span>
-                  <div className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)] animate-pulse" />
+                  <div className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
                 </div>
-                <h2 className="text-lg sm:text-xl font-black text-foreground tracking-tight py-0.5 leading-none">
+                <h2 className="text-xl font-black text-foreground tracking-tight py-0.5 leading-none">
                   {location.pathname === "/"
                     ? "לוח בקרה מרכזי"
                     : navItems.find((n) => n.path === location.pathname)
