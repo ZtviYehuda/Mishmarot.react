@@ -152,7 +152,7 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def get_unit_comparison_stats(requesting_user=None):
+    def get_unit_comparison_stats(requesting_user=None, date=None):
         conn = get_db_connection()
         if not conn:
             return []
@@ -166,6 +166,14 @@ class AttendanceModel:
 
             scoping_clause = ""
             params = []
+            
+            # Status filter params
+            status_condition = "AND end_datetime IS NULL"
+            status_params = []
+            
+            if date:
+                status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                status_params = [date, date]
 
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
@@ -198,7 +206,7 @@ class AttendanceModel:
                 -- Current Status Join
                 LEFT JOIN LATERAL (
                     SELECT status_type_id, id FROM attendance_logs 
-                    WHERE employee_id = e.id AND end_datetime IS NULL
+                    WHERE employee_id = e.id {status_condition}
                     ORDER BY start_datetime DESC LIMIT 1
                 ) al ON true
                 LEFT JOIN status_types st ON al.status_type_id = st.id
@@ -207,7 +215,9 @@ class AttendanceModel:
                 ORDER BY {grouping_col}
             """
 
-            cur.execute(query, tuple(params))
+            # Combine params: status_params + scoping params
+            final_params = status_params + params
+            cur.execute(query, tuple(final_params))
             results = cur.fetchall()
 
             # Add metadata about level
@@ -219,7 +229,7 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def get_attendance_trend(days=7, requesting_user=None):
+    def get_attendance_trend(days=7, requesting_user=None, end_date=None):
         conn = get_db_connection()
         if not conn:
             return []
@@ -243,9 +253,15 @@ class AttendanceModel:
                     scoping_clause = " AND e.id = %s"
                     params.append(requesting_user["id"])
 
+            date_anchor = "CURRENT_DATE"
+            date_params = []
+            if end_date:
+                date_anchor = "%s::date"
+                date_params = [end_date]
+
             query = f"""
                 WITH params AS (
-                    SELECT CURRENT_DATE - (n || ' days')::interval as date
+                    SELECT {date_anchor} - (n || ' days')::interval as date
                     FROM generate_series(0, %s) n
                 ),
                 scoped_employees AS (
@@ -273,7 +289,8 @@ class AttendanceModel:
                 ORDER BY p.date ASC
             """
 
-            final_params = [days - 1] + params
+            # Params: [end_date if set] + [days-1] + [scoping params]
+            final_params = date_params + [days - 1] + params
             cur.execute(query, tuple(final_params))
             return cur.fetchall()
         finally:

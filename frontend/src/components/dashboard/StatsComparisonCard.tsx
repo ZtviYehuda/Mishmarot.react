@@ -1,4 +1,11 @@
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -41,7 +48,32 @@ export function StatsComparisonCard({
   return (
     <Card className="h-full border shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-bold">השוואת כוח אדם</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-bold">השוואת כוח אדם</CardTitle>
+          <TooltipProvider>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[250px] text-right" dir="rtl">
+                <p className="font-bold mb-1">כיצד מחושב?</p>
+                <ul className="text-xs space-y-1 list-disc list-inside">
+                  <li>
+                    <span className="font-semibold">נוכחים:</span> משרד, קורס, תגבור
+                  </li>
+                  <li>
+                    <span className="font-semibold">לא נוכחים:</span> חופשה, מחלה,
+                    חו"ל
+                  </li>
+                  <li>
+                    <span className="font-semibold">תקן:</span> סה"כ שוטרים פעילים
+                    ביחידה
+                  </li>
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <CardDescription>
           תמונת מצב נוכחות לפי{" "}
           {data[0]?.level === "department"

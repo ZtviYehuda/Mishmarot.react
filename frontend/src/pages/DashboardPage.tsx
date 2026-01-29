@@ -53,6 +53,8 @@ export default function DashboardPage() {
   const [comparisonStats, setComparisonStats] = useState<any[]>([]);
   const [trendStats, setTrendStats] = useState<any[]>([]);
   const [loadingExtras, setLoadingExtras] = useState(true);
+  const [trendRange, setTrendRange] = useState(7);
+  const [loadingTrend, setLoadingTrend] = useState(true);
 
   const [whatsAppDialogOpen, setWhatsAppDialogOpen] = useState(false);
 
@@ -94,20 +96,29 @@ export default function DashboardPage() {
     fetchStruct();
   }, [getStructure]);
 
-  // Fetch Extra Stats
+  // Fetch Comparison Stats
   useEffect(() => {
-    const fetchExtras = async () => {
+    const fetchComparison = async () => {
       setLoadingExtras(true);
-      const [compData, trendData] = await Promise.all([
-        getComparisonStats(),
-        getTrendStats(7),
-      ]);
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      const compData = await getComparisonStats(formattedDate);
       setComparisonStats(compData);
-      setTrendStats(trendData);
       setLoadingExtras(false);
     };
-    fetchExtras();
-  }, [getComparisonStats, getTrendStats]);
+    fetchComparison();
+  }, [getComparisonStats, selectedDate]);
+
+  // Fetch Trend Stats
+  useEffect(() => {
+    const fetchTrend = async () => {
+      setLoadingTrend(true);
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      const trendData = await getTrendStats(trendRange, formattedDate);
+      setTrendStats(trendData);
+      setLoadingTrend(false);
+    };
+    fetchTrend();
+  }, [getTrendStats, selectedDate, trendRange]);
 
   // Fetch active statuses
   useEffect(() => {
@@ -314,7 +325,12 @@ export default function DashboardPage() {
                   data={comparisonStats}
                   loading={loadingExtras}
                 />
-                <AttendanceTrendCard data={trendStats} loading={loadingExtras} />
+                <AttendanceTrendCard
+                  data={trendStats}
+                  loading={loadingTrend}
+                  range={trendRange}
+                  onRangeChange={setTrendRange}
+                />
               </div>
             )}
         </div>

@@ -104,8 +104,10 @@ def get_comparison_stats():
         from app.models.employee_model import EmployeeModel
 
         requester = EmployeeModel.get_employee_by_id(user_id)
+        
+        date = request.args.get("date")
 
-        data = AttendanceModel.get_unit_comparison_stats(requesting_user=requester)
+        data = AttendanceModel.get_unit_comparison_stats(requesting_user=requester, date=date)
         return jsonify(data)
     except Exception as e:
         print(f"❌ Error in /stats/comparison: {e}")
@@ -129,8 +131,10 @@ def get_trend_stats():
         requester = EmployeeModel.get_employee_by_id(user_id)
 
         days = int(request.args.get("days", 7))
+        date = request.args.get("date")
+        
         data = AttendanceModel.get_attendance_trend(
-            days=days, requesting_user=requester
+            days=days, requesting_user=requester, end_date=date
         )
         return jsonify(data)
     except Exception as e:

@@ -249,10 +249,12 @@ export const useEmployees = () => {
     logStatus,
     logBulkStatus,
     getDashboardStats,
-    getComparisonStats: useCallback(async () => {
+    getComparisonStats: useCallback(async (date?: string) => {
       try {
+        const params = new URLSearchParams();
+        if (date) params.append("date", date);
         const { data } = await apiClient.get(
-          `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/comparison`,
+          `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/comparison?${params}`,
         );
         return data;
       } catch (err: any) {
@@ -260,10 +262,14 @@ export const useEmployees = () => {
         return [];
       }
     }, []),
-    getTrendStats: useCallback(async (days = 7) => {
+    getTrendStats: useCallback(async (days = 7, date?: string) => {
       try {
+        const params = new URLSearchParams();
+        params.append("days", days.toString());
+        if (date) params.append("date", date);
+
         const { data } = await apiClient.get(
-          `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/trend?days=${days}`,
+          `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/trend?${params}`,
         );
         return data;
       } catch (err: any) {
