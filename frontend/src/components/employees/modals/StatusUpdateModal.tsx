@@ -114,10 +114,10 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[400px] p-0 overflow-hidden rounded-[32px] border-none bg-card shadow-2xl" dir="rtl">
+            <DialogContent className="max-w-[400px] max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-[32px] border-none bg-card shadow-2xl" dir="rtl">
 
                 {/* Header: Clean & Centered */}
-                <div className="pt-8 pb-4 text-center px-6">
+                <div className="pt-8 pb-4 text-center px-6 shrink-0">
                     <div className="w-12 h-12 rounded-2xl bg-muted mx-auto flex items-center justify-center text-muted-foreground mb-4 border border-border">
                         <ClipboardList className="w-6 h-6" />
                     </div>
@@ -129,7 +129,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                     </DialogDescription>
                 </div>
 
-                <div className="px-6 pb-6 space-y-6">
+                <div className="px-6 pb-6 space-y-6 flex-1 overflow-y-auto min-h-0">
                     {/* Compact Grid of Statuses */}
                     <div className="grid grid-cols-2 gap-2">
                         {fetching ? (
@@ -213,7 +213,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                 </div>
 
                 {/* Confirm Action */}
-                <div className="p-6 bg-muted/30 flex flex-col gap-3">
+                <div className="p-6 bg-muted/30 flex flex-col gap-3 shrink-0">
                     <Button
                         onClick={handleSubmit}
                         disabled={loading || !formData.status_type_id}

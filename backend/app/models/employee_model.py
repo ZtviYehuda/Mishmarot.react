@@ -609,3 +609,15 @@ class EmployeeModel:
             return structure
         finally:
             conn.close()
+
+    @staticmethod
+    def get_roles():
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute("SELECT id, name, description FROM roles ORDER BY id")
+            return cur.fetchall()
+        finally:
+            conn.close()

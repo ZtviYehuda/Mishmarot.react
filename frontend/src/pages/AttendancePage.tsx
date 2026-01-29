@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -55,6 +56,7 @@ export default function AttendancePage() {
     getStructure,
     getDashboardStats,
     getStatusTypes,
+    getServiceTypes,
   } = useEmployees();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,7 +66,12 @@ export default function AttendancePage() {
   const [selectedSectionId, setSelectedSectionId] = useState<string>("all");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
   const [selectedStatusId, setSelectedStatusId] = useState<string>("all");
+  const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string>("all");
   const [statusTypes, setStatusTypes] = useState<any[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<any[]>([]);
+
+  // Selection
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>([]);
 
   // Modal states
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
@@ -102,9 +109,12 @@ export default function AttendancePage() {
 
       const statuses = await getStatusTypes();
       if (statuses) setStatusTypes(statuses);
+
+      const sTypes = await getServiceTypes();
+      if (sTypes) setServiceTypes(sTypes);
     };
     init();
-  }, [getStructure, getDashboardStats, getStatusTypes, selectedDate]);
+  }, [getStructure, getDashboardStats, getStatusTypes, getServiceTypes, selectedDate]);
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
@@ -136,6 +146,13 @@ export default function AttendancePage() {
       )
         return false;
 
+      // Service Type Filter
+      if (
+        selectedServiceTypeId !== "all" &&
+        emp.service_type_id?.toString() !== selectedServiceTypeId
+      )
+        return false;
+
       return true;
     });
   }, [
@@ -145,6 +162,7 @@ export default function AttendancePage() {
     selectedSectionId,
     selectedTeamId,
     selectedStatusId,
+    selectedServiceTypeId,
   ]);
 
   const departments = structure;
@@ -178,6 +196,7 @@ export default function AttendancePage() {
     if (dashboardStats && dashboardStats.stats) {
       setStats(dashboardStats.stats);
     }
+    setSelectedEmployeeIds([]);
   };
 
   const handleOpenStatusModal = (emp: Employee) => {
@@ -190,12 +209,23 @@ export default function AttendancePage() {
     setHistoryModalOpen(true);
   };
 
-  const updatedTodayCount = employees.filter(
-    (emp) =>
-      emp.last_status_update &&
-      new Date(emp.last_status_update).toDateString() ===
-        selectedDate.toDateString(),
-  ).length;
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedEmployeeIds(filteredEmployees.map(e => e.id));
+    } else {
+      setSelectedEmployeeIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedEmployeeIds(prev => [...prev, id]);
+    } else {
+      setSelectedEmployeeIds(prev => prev.filter(pid => pid !== id));
+    }
+  };
+
+  const updatedTodayCount = employees.filter((emp) => emp.status_id).length;
 
   const totalCount = employees.length;
 
@@ -217,7 +247,7 @@ export default function AttendancePage() {
   const isReportedToday =
     currentUserEmployee?.last_status_update &&
     new Date(currentUserEmployee.last_status_update).toDateString() ===
-      selectedDate.toDateString();
+    selectedDate.toDateString();
 
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
@@ -245,12 +275,21 @@ export default function AttendancePage() {
               <span className="sm:hidden">ייצוא</span>
             </Button>
             <Button
-              className="h-10 sm:h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 px-4 sm:px-6 gap-2 font-black flex-1 sm:flex-none"
+              className={cn(
+                "h-10 sm:h-11 rounded-xl shadow-lg px-4 sm:px-6 gap-2 font-black flex-1 sm:flex-none transition-all",
+                selectedEmployeeIds.length > 0
+                  ? "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-secondary/20"
+                  : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
+              )}
               onClick={() => setBulkModalOpen(true)}
             >
               <ClipboardCheck className="w-4 h-4" />
-              <span className="hidden sm:inline">עדכון נוכחות מרוכז</span>
-              <span className="sm:hidden">עדכון מרוכז</span>
+              {selectedEmployeeIds.length > 0 ? (
+                <span className="hidden sm:inline">עדכון לנבחרים ({selectedEmployeeIds.length})</span>
+              ) : (
+                <span className="hidden sm:inline">עדכון נוכחות מרוכז</span>
+              )}
+              <span className="sm:hidden">עדכון</span>
             </Button>
             {user && (
               <Button
@@ -348,7 +387,31 @@ export default function AttendancePage() {
             </p>
           </div>
           <div className="pt-4 flex items-center gap-3">
-            <div className="bg-white/10 p-2 rounded-xl flex-1 flex items-center justify-center gap-2">
+            <div
+              className={cn(
+                "bg-white/10 p-2 rounded-xl flex-1 flex items-center justify-center gap-2 transition-colors",
+                totalCount - updatedTodayCount > 0 ? "cursor-pointer hover:bg-white/20" : "opacity-50 cursor-not-allowed"
+              )}
+              onClick={() => {
+                const unreportedIds = employees
+                  .filter((emp) => !emp.status_id)
+                  .map(e => e.id);
+
+                if (unreportedIds.length > 0) {
+                  // Clear filters to ensure all unreported employees are visible
+                  setSelectedDeptId("all");
+                  setSelectedSectionId("all");
+                  setSelectedTeamId("all");
+                  setSelectedStatusId("all");
+                  setSelectedServiceTypeId("all");
+                  setSearchTerm("");
+
+                  // Select unreported employees and open modal
+                  setSelectedEmployeeIds(unreportedIds);
+                  setBulkModalOpen(true);
+                }
+              }}
+            >
               <AlertCircle className="w-4 h-4 text-primary-foreground/70" />
               <span className="text-xs font-bold text-primary-foreground">
                 נותרו לדווח: {totalCount - updatedTodayCount}
@@ -471,6 +534,28 @@ export default function AttendancePage() {
           </Select>
         </div>
 
+        <div className="w-full md:w-36 space-y-2 text-right">
+          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
+            מעמד
+          </label>
+          <Select
+            value={selectedServiceTypeId}
+            onValueChange={(val) => setSelectedServiceTypeId(val)}
+          >
+            <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
+              <SelectValue placeholder="הכל" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">הכל</SelectItem>
+              {serviceTypes.map((s: any) => (
+                <SelectItem key={s.id} value={s.id.toString()}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <Button
           variant="ghost"
           className="h-11 text-muted-foreground hover:text-foreground hover:bg-muted gap-2"
@@ -478,8 +563,11 @@ export default function AttendancePage() {
             setSelectedDeptId("all");
             setSelectedSectionId("all");
             setSelectedTeamId("all");
+            setSelectedTeamId("all");
             setSelectedStatusId("all");
+            setSelectedServiceTypeId("all");
             setSearchTerm("");
+            setSelectedEmployeeIds([]);
           }}
         >
           <Filter className="w-4 h-4" />
@@ -492,6 +580,12 @@ export default function AttendancePage() {
           <Table className="min-w-[800px]">
             <TableHeader className="bg-muted/50 h-14">
               <TableRow className="border-b border-border hover:bg-transparent">
+                <TableHead className="w-[50px] pr-6">
+                  <Checkbox
+                    checked={filteredEmployees.length > 0 && selectedEmployeeIds.length === filteredEmployees.length}
+                    onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                  />
+                </TableHead>
                 <TableHead className="text-right px-6 font-black text-muted-foreground uppercase text-[10px] tracking-widest">
                   שוטר
                 </TableHead>
@@ -516,7 +610,7 @@ export default function AttendancePage() {
               {loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={7}
                     className="h-32 text-center text-muted-foreground"
                   >
                     טוען נתונים...
@@ -525,7 +619,7 @@ export default function AttendancePage() {
               ) : filteredEmployees.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={7}
                     className="h-32 text-center text-muted-foreground font-medium"
                   >
                     לא נמצאו שוטרים התואמים את הסינון
@@ -533,10 +627,9 @@ export default function AttendancePage() {
                 </TableRow>
               ) : (
                 filteredEmployees.map((emp) => {
-                  const isUpdatedToday =
-                    emp.last_status_update &&
-                    new Date(emp.last_status_update).toDateString() ===
-                      selectedDate.toDateString();
+                  const isReported = !!emp.status_id;
+                  const updateDate = emp.last_status_update ? new Date(emp.last_status_update) : null;
+                  const isUpdateFromSelectedDate = updateDate && updateDate.toDateString() === selectedDate.toDateString();
 
                   return (
                     <TableRow
@@ -544,10 +637,17 @@ export default function AttendancePage() {
                       className={cn(
                         "group hover:bg-muted/50 transition-colors border-b border-border",
                         user &&
-                          emp.id === user.id &&
-                          "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
+                        emp.id === user.id &&
+                        "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
+                        selectedEmployeeIds.includes(emp.id) && "bg-muted/30"
                       )}
                     >
+                      <TableCell className="pr-6">
+                        <Checkbox
+                          checked={selectedEmployeeIds.includes(emp.id)}
+                          onCheckedChange={(checked) => handleSelectOne(emp.id, checked as boolean)}
+                        />
+                      </TableCell>
                       <TableCell className="py-4 px-6 text-right">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-black text-[10px] uppercase shadow-sm">
@@ -566,16 +666,21 @@ export default function AttendancePage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Badge
-                          variant="outline"
-                          className="font-medium text-[10px] border-none px-2.5 py-1 bg-muted text-muted-foreground"
-                        >
-                          {getProfessionalTitle(emp)}
-                        </Badge>
+                        <div className="flex flex-col">
+                          <Badge
+                            variant="outline"
+                            className="font-medium text-[10px] border-none px-2.5 py-1 bg-muted text-muted-foreground w-fit mb-1"
+                          >
+                            {getProfessionalTitle(emp)}
+                          </Badge>
+                          {emp.service_type_name && (
+                            <span className="text-[10px] font-bold text-muted-foreground/60">{emp.service_type_name}</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         {emp.department_name &&
-                        emp.department_name !== "מטה" ? (
+                          emp.department_name !== "מטה" ? (
                           <div className="flex flex-col text-right">
                             <span className="text-xs font-bold text-foreground/80">
                               {emp.department_name}
@@ -583,20 +688,20 @@ export default function AttendancePage() {
                             {((emp.section_name &&
                               emp.section_name !== "מטה") ||
                               (emp.team_name && emp.team_name !== "מטה")) && (
-                              <span className="text-[10px] text-muted-foreground font-medium">
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  `מדור ${emp.section_name}`}
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  " • "}
-                                {emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  `חוליה ${emp.team_name}`}
-                              </span>
-                            )}
+                                <span className="text-[10px] text-muted-foreground font-medium">
+                                  {emp.section_name &&
+                                    emp.section_name !== "מטה" &&
+                                    `מדור ${emp.section_name}`}
+                                  {emp.section_name &&
+                                    emp.section_name !== "מטה" &&
+                                    emp.team_name &&
+                                    emp.team_name !== "מטה" &&
+                                    " • "}
+                                  {emp.team_name &&
+                                    emp.team_name !== "מטה" &&
+                                    `חוליה ${emp.team_name}`}
+                                </span>
+                              )}
                           </div>
                         ) : (
                           <span className="text-xs text-muted-foreground">
@@ -622,21 +727,16 @@ export default function AttendancePage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        {isUpdatedToday ? (
+                        {isReported ? (
                           <div className="flex items-center gap-1.5 text-emerald-600">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span className="text-xs font-bold">
-                              {selectedDate.toDateString() ===
-                              new Date().toDateString()
-                                ? "היום"
-                                : format(selectedDate, "dd/MM")}
-                              ,{" "}
-                              {new Date(
-                                emp.last_status_update!,
-                              ).toLocaleTimeString("he-IL", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                              {updateDate ? (
+                                <>
+                                  {isUpdateFromSelectedDate ? "היום" : format(updateDate, "dd/MM")},
+                                  {updateDate.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                                </>
+                              ) : "דווח"}
                             </span>
                           </div>
                         ) : (
@@ -676,10 +776,12 @@ export default function AttendancePage() {
         </div>
       </div>
       {/* Modals */}
+      {/* Modals */}
       <BulkStatusUpdateModal
         open={bulkModalOpen}
         onOpenChange={setBulkModalOpen}
         employees={filteredEmployees}
+        initialSelectedIds={selectedEmployeeIds}
         onSuccess={() => refreshData()}
       />
       <StatusUpdateModal

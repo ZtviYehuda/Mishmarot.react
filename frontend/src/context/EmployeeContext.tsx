@@ -44,6 +44,11 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
     useState<Employee | null>(null);
 
   const refreshReferenceData = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [struct, statuses, allRoles, services] = await Promise.all([

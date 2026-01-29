@@ -356,6 +356,18 @@ def export_excel():
     )
 
 
+@emp_bp.route("/roles", methods=["GET"])
+@jwt_required()
+def get_roles():
+    """Get all roles for dropdown"""
+    try:
+        roles = EmployeeModel.get_roles()
+        return jsonify(roles)
+    except Exception as e:
+        print(f"Error fetching roles: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @emp_bp.route("/service-types", methods=["GET"])
 @jwt_required()
 def get_service_types():
