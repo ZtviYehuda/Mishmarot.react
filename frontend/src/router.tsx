@@ -20,6 +20,7 @@ import ChangePasswordPage from "@/pages/ChangePasswordPage";
 import MainLayout from "@/components/layout/MainLayout";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { EmployeeProvider } from "@/context/EmployeeContext";
 
 const ProtectedRoute = () => {
   const { user, loading } = useAuthContext();
@@ -51,10 +52,18 @@ const ProtectedRoute = () => {
 
   // If on change-password, don't show the sidebar/layout
   if (location.pathname === "/change-password") {
-    return <Outlet />;
+    return (
+      <EmployeeProvider>
+        <Outlet />
+      </EmployeeProvider>
+    );
   }
 
-  return <MainLayout />;
+  return (
+    <EmployeeProvider>
+      <MainLayout />
+    </EmployeeProvider>
+  );
 };
 
 const router = createBrowserRouter([

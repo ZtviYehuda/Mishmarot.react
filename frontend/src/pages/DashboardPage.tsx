@@ -260,42 +260,38 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         {/* Main Chart - Takes 2 columns on desktop */}
-        <div className="xl:col-span-2 space-y-4 sm:space-y-6">
-          <EmployeesChart
-            stats={stats}
-            loading={loading}
-            onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
-            onStatusClick={handleStatusClick}
-            title={chartTitle}
-            description={chartDescription}
-          />
-
-          {/* New Widgets Row - Only show if user is admin or commander */}
-          {(user?.is_admin ||
-            user?.commands_department_id ||
-            user?.commands_section_id) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <StatsComparisonCard
-                data={comparisonStats}
-                loading={loadingExtras}
+        <div className="xl:col-span-2 space-y-6">
+          {/* Top Row: Filters & Chart Side-by-Side */}
+          {/* Top Row: Filters & Chart Side-by-Side - Equal Width */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
+            {/* Filter Column */}
+            <div className="flex flex-col">
+              <DashboardFilters
+                structure={structure}
+                statuses={allStatuses}
+                selectedDeptId={selectedDeptId}
+                selectedSectionId={selectedSectionId}
+                selectedTeamId={selectedTeamId}
+                selectedStatusId={selectedStatusData?.id?.toString()}
+                onFilterChange={handleFilterChange}
+                canSelectDept={canSelectDept}
+                canSelectSection={canSelectSection}
+                canSelectTeam={canSelectTeam}
               />
-              <AttendanceTrendCard data={trendStats} loading={loadingExtras} />
             </div>
-          )}
 
-          {/* Inline Drill Down Filters */}
-          <DashboardFilters
-            structure={structure}
-            statuses={allStatuses}
-            selectedDeptId={selectedDeptId}
-            selectedSectionId={selectedSectionId}
-            selectedTeamId={selectedTeamId}
-            selectedStatusId={selectedStatusData?.id?.toString()}
-            onFilterChange={handleFilterChange}
-            canSelectDept={canSelectDept}
-            canSelectSection={canSelectSection}
-            canSelectTeam={canSelectTeam}
-          />
+            {/* Chart Column */}
+            <div className="flex flex-col">
+              <EmployeesChart
+                stats={stats}
+                loading={loading}
+                onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
+                onStatusClick={handleStatusClick}
+                title={chartTitle}
+                description={chartDescription}
+              />
+            </div>
+          </div>
 
           <div id="status-details-table">
             <DashboardStatusTable
@@ -308,7 +304,21 @@ export default function DashboardPage() {
               date={format(selectedDate, "yyyy-MM-dd")}
             />
           </div>
+
+          {/* Widgets Row */}
+          {(user?.is_admin ||
+            user?.commands_department_id ||
+            user?.commands_section_id) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <StatsComparisonCard
+                  data={comparisonStats}
+                  loading={loadingExtras}
+                />
+                <AttendanceTrendCard data={trendStats} loading={loadingExtras} />
+              </div>
+            )}
         </div>
+
 
         {/* Birthdays Card - Takes 1 column */}
         <div className="xl:col-span-1 h-full min-h-[300px] sm:min-h-[400px]">
@@ -320,6 +330,6 @@ export default function DashboardPage() {
         open={whatsAppDialogOpen}
         onOpenChange={setWhatsAppDialogOpen}
       />
-    </div>
+    </div >
   );
 }

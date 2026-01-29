@@ -7,17 +7,15 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { Toaster } from "sonner";
 
 import { DateProvider } from "./context/DateContext";
-import { EmployeeProvider } from "./context/EmployeeContext";
+
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
       <AuthProvider>
         <DateProvider>
-          <EmployeeProvider>
-            <AppRouter />
-            <Toaster />
-          </EmployeeProvider>
+          <AppRouter />
+          <Toaster />
         </DateProvider>
       </AuthProvider>
     </ThemeProvider>
