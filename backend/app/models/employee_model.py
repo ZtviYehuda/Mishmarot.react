@@ -200,9 +200,13 @@ class EmployeeModel:
             status_sql = "AND end_datetime IS NULL"
             status_params = []
 
-            if filters and filters.get("date"):
+            if filters and (filters.get("date") or filters.get("end_date")):
+                check_date = filters.get("date") or filters.get("end_date")
                 status_sql = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
-                status_params = [filters["date"], filters["date"]]
+                status_params = [check_date, check_date]
+
+            # Initialize query parameters list if not already present
+            params = []
 
             query = query.format(status_condition=status_sql)
             params = status_params + params

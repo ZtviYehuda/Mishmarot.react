@@ -38,6 +38,7 @@ import {
   BulkStatusUpdateModal,
   StatusUpdateModal,
   StatusHistoryModal,
+  ExportReportDialog, // Added
 } from "@/components/employees/modals";
 import { History } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -68,6 +69,7 @@ export default function AttendancePage() {
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null,
   );
@@ -233,9 +235,11 @@ export default function AttendancePage() {
             <Button
               variant="outline"
               className="h-10 sm:h-11 rounded-xl border-input gap-2 font-bold text-muted-foreground hover:bg-muted flex-1 sm:flex-none"
+              onClick={() => setExportDialogOpen(true)} // Updated
             >
               <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">ייצוא דוח יומי</span>
+              <span className="hidden sm:inline">ייצוא דוח</span>{" "}
+              {/* Updated */}
               <span className="sm:hidden">ייצוא</span>
             </Button>
             <Button
@@ -747,6 +751,11 @@ export default function AttendancePage() {
         open={historyModalOpen}
         onOpenChange={setHistoryModalOpen}
         employee={selectedEmployee}
+      />
+
+      <ExportReportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
       />
     </div>
   );

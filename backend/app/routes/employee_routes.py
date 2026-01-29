@@ -201,26 +201,151 @@ def get_structure():
 @emp_bp.route("/export", methods=["GET"])
 @jwt_required()
 def export_excel():
-    employees = EmployeeModel.get_all_employees(request.args)
-    df = pd.DataFrame(employees)
+    from app.models.attendance_model import AttendanceModel
+    from datetime import datetime, timedelta
 
-    columns = {
-        "first_name": "שם פרטי",
-        "last_name": "שם משפחה",
-        "personal_number": "מספר אישי",
-        "status_name": "סטטוס",
-        "team_name": "צוות",
-        "section_name": "מדור",
-        "department_name": "מחלקה",
-    }
+    identity_str = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_str) if isinstance(identity_str, str) else identity_str
+        )
+        user_id = identity.get("id") if isinstance(identity, dict) else identity
+    except (json.JSONDecodeError, AttributeError):
+        user_id = identity_str
 
-    # Keep only relevant columns if they exist in DB response
-    valid_cols = [c for c in columns.keys() if c in df.columns]
-    df = df[valid_cols].rename(columns=columns)
+    requester = EmployeeModel.get_employee_by_id(user_id)
 
+    # Check if this is a range request
+    start_date_str = request.args.get("start_date")
+    end_date_str = request.args.get("end_date")
+
+    if start_date_str and end_date_str:
+        # --- RANGE MATRIX REPORT ---
+
+        # 1. Get List of Employees (Row Headers)
+        # We clean args to avoid 'start_date'/'end_date' messing up standard filtering if not supported
+        # But get_all_employees is safe as we fixed it.
+        params = dict(request.args)
+        employees = EmployeeModel.get_all_employees(params, requesting_user=requester)
+
+        if not employees:
+            return jsonify({"error": "No employees found"}), 404
+
+        emp_map = {
+            e["id"]: f"{e['first_name']} {e['last_name']} ({e['personal_number']})"
+            for e in employees
+        }
+        emp_ids = list(emp_map.keys())
+
+        # 2. Get Logs for these employees in range
+        logs = AttendanceModel.get_logs_for_employees(
+            emp_ids, start_date_str, end_date_str
+        )
+
+        # 3. Build Matrix
+        # Create Date Range
+        start = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+        delta = (end - start).days + 1
+        date_list = [start + timedelta(days=i) for i in range(delta)]
+        date_strs = [d.strftime("%Y-%m-%d") for d in date_list]
+        date_headers = [d.strftime("%d/%m") for d in date_list]
+
+        # Initialize data structure: { emp_id: { date_str: status } }
+        matrix_data = {eid: {d: "-" for d in date_strs} for eid in emp_ids}
+
+        # Populate with logs
+        # This approach assumes one status per day (the latest one active on that day)
+        # Since logs are intervals, we check overlap for each day.
+        # Optimization: Logs are ordered by start_time.
+        # For each log, mark the days it covers.
+        for log in logs:
+            eid = log["employee_id"]
+            if eid not in matrix_data:
+                continue
+
+            s_name = log["status_name"]
+            l_start = log["start_datetime"].date()
+            l_end = (
+                log["end_datetime"].date() if log["end_datetime"] else end
+            )  # If active, goes till end of report
+
+            # Clip to report range
+            overlap_start = max(start, l_start)
+            overlap_end = min(end, l_end)
+
+            if overlap_start <= overlap_end:
+                curr = overlap_start
+                while curr <= overlap_end:
+                    d_str = curr.strftime("%Y-%m-%d")
+                    matrix_data[eid][d_str] = s_name
+                    curr += timedelta(days=1)
+
+        # 4. Convert to DataFrame
+        # Rows: Employees
+        # Cols: Dates
+        rows = []
+        for emp in employees:
+            eid = emp["id"]
+            row = {
+                "שם מלא": f"{emp['first_name']} {emp['last_name']}",
+                "מספר אישי": emp["personal_number"],
+                "מחלקה": emp["department_name"] or "-",
+                "צוות": emp["team_name"] or "-",
+            }
+            # Add dates
+            for i, d_str in enumerate(date_strs):
+                row[date_headers[i]] = matrix_data[eid][d_str]
+            rows.append(row)
+
+        df = pd.DataFrame(rows)
+
+        report_title = f"דו\"ח ריכוז נוכחות - {start.strftime('%d/%m/%Y')} עד {end.strftime('%d/%m/%Y')}"
+
+    else:
+        # --- STANDARD SNAPSHOT REPORT ---
+        filters = dict(request.args)
+        employees = EmployeeModel.get_all_employees(filters, requesting_user=requester)
+        df = pd.DataFrame(employees)
+
+        columns = {
+            "first_name": "שם פרטי",
+            "last_name": "שם משפחה",
+            "personal_number": "מספר אישי",
+            "status_name": "סטטוס",
+            "team_name": "צוות",
+            "section_name": "מדור",
+            "department_name": "מחלקה",
+        }
+
+        # Keep only relevant columns if they exist in DB response
+        valid_cols = [c for c in columns.keys() if c in df.columns]
+        df = df[valid_cols].rename(columns=columns)
+
+        # Determine Report Title
+        report_title = 'דו"ח מצבת כוח אדם'
+        if request.args.get("date"):
+            report_title += f" - נכון ליום {request.args.get('date')}"
+        else:
+            report_title += " - נכון להיום"
+
+    # Export to Excel (Shared Logic)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="Employees")
+        workbook = writer.book
+        worksheet = workbook.create_sheet("Report")
+        writer.sheets["Report"] = worksheet
+
+        # Add Title Cell
+        worksheet.merge_cells("A1:G1")
+        cell = worksheet["A1"]
+        cell.value = report_title
+
+        # Set RTL Direction
+        worksheet.sheet_view.rightToLeft = True
+
+        # Write DataFrame
+        df.to_excel(writer, index=False, sheet_name="Report", startrow=2)
 
     output.seek(0)
     return send_file(

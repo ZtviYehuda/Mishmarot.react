@@ -442,3 +442,30 @@ class AttendanceModel:
             return cur.fetchall()
         finally:
             conn.close()
+
+    @staticmethod
+    def get_logs_for_employees(employee_ids, start_date, end_date):
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            # Find logs that overlap with the range [start, end]
+            # Overlap logic: LogStart <= RangeEnd AND (LogEnd IS NULL OR LogEnd >= RangeStart)
+            query = """
+                SELECT 
+                    al.employee_id,
+                    st.name as status_name,
+                    al.start_datetime,
+                    al.end_datetime
+                FROM attendance_logs al
+                JOIN status_types st ON al.status_type_id = st.id
+                WHERE al.employee_id = ANY(%s)
+                AND DATE(al.start_datetime) <= %s 
+                AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s)
+                ORDER BY al.start_datetime ASC
+            """
+            cur.execute(query, (list(employee_ids), end_date, start_date))
+            return cur.fetchall()
+        finally:
+            conn.close()
