@@ -27,12 +27,14 @@ class EmployeeModel:
                     user["password_hash"], password_input
                 ):
                     is_valid = True
-                
+
                 # 2. First-time login check (Personal Number + National ID)
                 # If they haven't changed password yet, allow national_id as password
                 if not is_valid and user.get("must_change_password"):
                     # We need to fetch national_id for this check
-                    cur.execute("SELECT national_id FROM employees WHERE id = %s", (user["id"],))
+                    cur.execute(
+                        "SELECT national_id FROM employees WHERE id = %s", (user["id"],)
+                    )
                     nid_row = cur.fetchone()
                     if nid_row and nid_row["national_id"] == password_input:
                         is_valid = True
@@ -186,13 +188,24 @@ class EmployeeModel:
                 -- Status Joins
                 LEFT JOIN LATERAL (
                     SELECT status_type_id, start_datetime FROM attendance_logs 
-                    WHERE employee_id = e.id AND end_datetime IS NULL
+                    WHERE employee_id = e.id 
+                    {status_condition}
                     ORDER BY start_datetime DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
                 WHERE 1=1
             """
-            params = []
+
+            # Prepare status condition
+            status_sql = "AND end_datetime IS NULL"
+            status_params = []
+
+            if filters and filters.get("date"):
+                status_sql = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                status_params = [filters["date"], filters["date"]]
+
+            query = query.format(status_condition=status_sql)
+            params = status_params + params
 
             # Scoping for commanders
             if requesting_user and not requesting_user.get("is_admin"):
@@ -234,7 +247,10 @@ class EmployeeModel:
                     d_id = int(filters["dept_id"])
                     query += " AND (d.id = %s OR d_dir.id = %s)"
                     params.extend([d_id, d_id])
-                if filters.get("section_id") and str(filters.get("section_id")).isdigit():
+                if (
+                    filters.get("section_id")
+                    and str(filters.get("section_id")).isdigit()
+                ):
                     s_id = int(filters["section_id"])
                     query += " AND (s.id = %s OR s_dir.id = %s)"
                     params.extend([s_id, s_id])

@@ -10,6 +10,7 @@ interface DashboardStatusTableProps {
   departmentId?: string;
   sectionId?: string;
   teamId?: string;
+  date?: string;
 }
 
 export const DashboardStatusTable = ({
@@ -19,6 +20,7 @@ export const DashboardStatusTable = ({
   departmentId,
   sectionId,
   teamId,
+  date,
 }: DashboardStatusTableProps) => {
   const { employees, fetchEmployees, loading } = useEmployees();
 
@@ -26,14 +28,17 @@ export const DashboardStatusTable = ({
     if (statusId !== null && statusId !== undefined) {
       fetchEmployees(
         undefined,
-        departmentId && departmentId !== "" ? parseInt(departmentId) : undefined,
+        departmentId && departmentId !== ""
+          ? parseInt(departmentId)
+          : undefined,
         undefined,
         statusId,
         sectionId && sectionId !== "" ? parseInt(sectionId) : undefined,
-        teamId && teamId !== "" ? parseInt(teamId) : undefined
+        teamId && teamId !== "" ? parseInt(teamId) : undefined,
+        date,
       );
     }
-  }, [statusId, departmentId, sectionId, teamId, fetchEmployees]);
+  }, [statusId, departmentId, sectionId, teamId, date, fetchEmployees]);
 
   if (statusId === null || statusId === undefined) return null;
 
@@ -57,7 +62,9 @@ export const DashboardStatusTable = ({
         {loading ? (
           <div className="p-12 flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
-            <p className="text-sm font-bold text-muted-foreground">טוען נתונים...</p>
+            <p className="text-sm font-bold text-muted-foreground">
+              טוען נתונים...
+            </p>
           </div>
         ) : employees.length === 0 ? (
           <div className="p-12 flex flex-col items-center text-muted-foreground/30">
@@ -133,7 +140,9 @@ export const DashboardStatusTable = ({
                           {emp.phone_number}
                         </a>
                       ) : (
-                        <span className="text-xs text-muted-foreground/30">-</span>
+                        <span className="text-xs text-muted-foreground/30">
+                          -
+                        </span>
                       )}
                     </td>
                   </tr>

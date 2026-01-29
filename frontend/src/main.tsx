@@ -6,12 +6,16 @@ import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { Toaster } from "sonner";
 
+import { DateProvider } from "./context/DateContext";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
       <AuthProvider>
-        <AppRouter />
-        <Toaster />
+        <DateProvider>
+          <AppRouter />
+          <Toaster />
+        </DateProvider>
       </AuthProvider>
     </ThemeProvider>
   </StrictMode>,

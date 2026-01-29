@@ -18,6 +18,7 @@ export const useEmployees = () => {
       status_id?: number,
       section_id?: number,
       team_id?: number,
+      date?: string,
     ) => {
       setLoading(true);
       try {
@@ -28,6 +29,7 @@ export const useEmployees = () => {
         if (status_id) params.append("status_id", status_id.toString());
         if (section_id) params.append("section_id", section_id.toString());
         if (team_id) params.append("team_id", team_id.toString());
+        if (date) params.append("date", date);
 
         const { data } = await apiClient.get<Employee[]>(
           `${endpoints.EMPLOYEES_BASE_ENDPOINT}?${params}`,

@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAuthContext } from "@/context/AuthContext";
+import { useDateContext } from "@/context/DateContext";
+import { format } from "date-fns";
 import {
   Table,
   TableBody,
@@ -21,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import {
   CalendarDays,
+  CalendarClock, // Added
   Search,
   Filter,
   ClipboardCheck,
@@ -42,6 +45,7 @@ import type { Employee } from "@/types/employee.types";
 
 export default function AttendancePage() {
   const { user } = useAuthContext();
+  const { selectedDate, setSelectedDate } = useDateContext();
   const {
     employees,
     loading,
@@ -68,12 +72,27 @@ export default function AttendancePage() {
     null,
   );
 
+  // Refetch employees when selectedDate changes
+  useEffect(() => {
+    fetchEmployees(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      format(selectedDate, "yyyy-MM-dd"),
+    );
+  }, [selectedDate, fetchEmployees]);
+
   useEffect(() => {
     const init = async () => {
       const struct = await getStructure();
       if (struct) setStructure(struct);
 
-      const dashboardStats = await getDashboardStats();
+      const dashboardStats = await getDashboardStats({
+        date: format(selectedDate, "yyyy-MM-dd"),
+      });
       if (dashboardStats && dashboardStats.stats) {
         setStats(dashboardStats.stats);
       }
@@ -82,7 +101,7 @@ export default function AttendancePage() {
       if (statuses) setStatusTypes(statuses);
     };
     init();
-  }, [getStructure, getDashboardStats, getStatusTypes]);
+  }, [getStructure, getDashboardStats, getStatusTypes, selectedDate]);
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
@@ -135,14 +154,24 @@ export default function AttendancePage() {
 
   const teams = useMemo(() => {
     return (
-      sections.find((s: any) => s.id.toString() === selectedSectionId)
-        ?.teams || []
+      sections.find((s: any) => s.id.toString() === selectedSectionId)?.teams ||
+      []
     );
   }, [sections, selectedSectionId]);
 
   const refreshData = async () => {
-    await fetchEmployees();
-    const dashboardStats = await getDashboardStats();
+    await fetchEmployees(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      format(selectedDate, "yyyy-MM-dd"),
+    );
+    const dashboardStats = await getDashboardStats({
+      date: format(selectedDate, "yyyy-MM-dd"),
+    });
     if (dashboardStats && dashboardStats.stats) {
       setStats(dashboardStats.stats);
     }
@@ -162,7 +191,7 @@ export default function AttendancePage() {
     (emp) =>
       emp.last_status_update &&
       new Date(emp.last_status_update).toDateString() ===
-      new Date().toDateString(),
+        selectedDate.toDateString(),
   ).length;
 
   const totalCount = employees.length;
@@ -172,17 +201,20 @@ export default function AttendancePage() {
     if (emp.is_commander) {
       if (emp.team_name && emp.team_name !== "מטה") return "מפקד חוליה";
       if (emp.section_name && emp.section_name !== "מטה") return "מפקד מדור";
-      if (emp.department_name && emp.department_name !== "מטה") return "מפקד מחלקה";
+      if (emp.department_name && emp.department_name !== "מטה")
+        return "מפקד מחלקה";
       return "מפקד יחידה";
     }
     return "שוטר";
   };
 
-  const currentUserEmployee = user ? employees.find((e) => e.id === user.id) : null;
+  const currentUserEmployee = user
+    ? employees.find((e) => e.id === user.id)
+    : null;
   const isReportedToday =
     currentUserEmployee?.last_status_update &&
     new Date(currentUserEmployee.last_status_update).toDateString() ===
-    new Date().toDateString();
+      selectedDate.toDateString();
 
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
@@ -219,7 +251,9 @@ export default function AttendancePage() {
                 variant="outline"
                 className="h-10 sm:h-11 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 px-4 sm:px-6 gap-2 font-bold flex-1 sm:flex-none"
                 onClick={() => {
-                  const currentUserEmp = employees.find(e => e.id === user.id);
+                  const currentUserEmp = employees.find(
+                    (e) => e.id === user.id,
+                  );
                   if (currentUserEmp) {
                     handleOpenStatusModal(currentUserEmp);
                   }
@@ -234,6 +268,33 @@ export default function AttendancePage() {
         }
       />
 
+      {selectedDate.toDateString() !== new Date().toDateString() && (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-transparent border border-amber-500/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm">
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-inner shrink-0">
+              <CalendarClock className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-black text-amber-800 dark:text-amber-200">
+                מצב היסטורי - {format(selectedDate, "dd/MM/yyyy")}
+              </span>
+              <span className="text-xs font-medium text-amber-700/80 dark:text-amber-300/80">
+                אתה צופה בנתונים כפי שנשמרו בתאריך זה
+              </span>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setSelectedDate(new Date())}
+            className="relative z-10 bg-amber-500 text-white hover:bg-amber-600 border-0 shadow-lg shadow-amber-500/20 font-bold rounded-xl h-9 px-4 transition-all hover:scale-105 active:scale-95"
+          >
+            חזור להיום
+          </Button>
+          {/* Decorative background element */}
+          <div className="absolute -left-4 -top-12 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        </div>
+      )}
+
       {/* Self-Report Status Indicator */}
       {isReportedToday && currentUserEmployee && (
         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-4 flex items-center justify-between shadow-lg shadow-emerald-500/5 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -246,7 +307,17 @@ export default function AttendancePage() {
                 דיווחת נוכחות בהצלחה!
               </span>
               <p className="text-xs font-bold text-emerald-600/80">
-                הסטטוס המעודכן שלך: <span className="text-emerald-700 dark:text-emerald-300 underline underline-offset-4 decoration-emerald-500/30">{currentUserEmployee.status_name}</span> • בוצע בשעה {new Date(currentUserEmployee.last_status_update!).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                הסטטוס המעודכן שלך:{" "}
+                <span className="text-emerald-700 dark:text-emerald-300 underline underline-offset-4 decoration-emerald-500/30">
+                  {currentUserEmployee.status_name}
+                </span>{" "}
+                • בוצע בשעה{" "}
+                {new Date(
+                  currentUserEmployee.last_status_update!,
+                ).toLocaleTimeString("he-IL", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </p>
             </div>
           </div>
@@ -272,7 +343,7 @@ export default function AttendancePage() {
               </span>
               <span className="text-xs text-muted-foreground font-bold">
                 מעקב דיווחים ליום{" "}
-                {new Date().toLocaleDateString("he-IL", {
+                {selectedDate.toLocaleDateString("he-IL", {
                   weekday: "long",
                   day: "numeric",
                   month: "long",
@@ -518,7 +589,7 @@ export default function AttendancePage() {
                   const isUpdatedToday =
                     emp.last_status_update &&
                     new Date(emp.last_status_update).toDateString() ===
-                    new Date().toDateString();
+                      selectedDate.toDateString();
 
                   return (
                     <TableRow
@@ -526,8 +597,8 @@ export default function AttendancePage() {
                       className={cn(
                         "group hover:bg-muted/50 transition-colors border-b border-border",
                         user &&
-                        emp.id === user.id &&
-                        "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
+                          emp.id === user.id &&
+                          "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
                       )}
                     >
                       <TableCell className="py-4 px-6 text-right">
@@ -555,21 +626,34 @@ export default function AttendancePage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        {emp.department_name && emp.department_name !== "מטה" ? (
+                        {emp.department_name &&
+                        emp.department_name !== "מטה" ? (
                           <div className="flex flex-col text-right">
                             <span className="text-xs font-bold text-foreground/80">
                               {emp.department_name}
                             </span>
-                            {((emp.section_name && emp.section_name !== "מטה") || (emp.team_name && emp.team_name !== "מטה")) && (
+                            {((emp.section_name &&
+                              emp.section_name !== "מטה") ||
+                              (emp.team_name && emp.team_name !== "מטה")) && (
                               <span className="text-[10px] text-muted-foreground font-medium">
-                                {emp.section_name && emp.section_name !== "מטה" && `מדור ${emp.section_name}`}
-                                {emp.section_name && emp.section_name !== "מטה" && emp.team_name && emp.team_name !== "מטה" && " • "}
-                                {emp.team_name && emp.team_name !== "מטה" && `חוליה ${emp.team_name}`}
+                                {emp.section_name &&
+                                  emp.section_name !== "מטה" &&
+                                  `מדור ${emp.section_name}`}
+                                {emp.section_name &&
+                                  emp.section_name !== "מטה" &&
+                                  emp.team_name &&
+                                  emp.team_name !== "מטה" &&
+                                  " • "}
+                                {emp.team_name &&
+                                  emp.team_name !== "מטה" &&
+                                  `חוליה ${emp.team_name}`}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
+                          <span className="text-xs text-muted-foreground">
+                            -
+                          </span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
@@ -577,7 +661,8 @@ export default function AttendancePage() {
                           <div
                             className="w-2 h-2 rounded-full"
                             style={{
-                              backgroundColor: emp.status_color || "var(--muted-foreground)",
+                              backgroundColor:
+                                emp.status_color || "var(--muted-foreground)",
                             }}
                           />
                           <Badge
@@ -593,7 +678,11 @@ export default function AttendancePage() {
                           <div className="flex items-center gap-1.5 text-emerald-600">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span className="text-xs font-bold">
-                              היום,{" "}
+                              {selectedDate.toDateString() ===
+                              new Date().toDateString()
+                                ? "היום"
+                                : format(selectedDate, "dd/MM")}
+                              ,{" "}
                               {new Date(
                                 emp.last_status_update!,
                               ).toLocaleTimeString("he-IL", {
@@ -659,6 +748,6 @@ export default function AttendancePage() {
         onOpenChange={setHistoryModalOpen}
         employee={selectedEmployee}
       />
-    </div >
+    </div>
   );
 }
