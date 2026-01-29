@@ -21,7 +21,7 @@ export function PageHeader({
   badge,
 }: PageHeaderProps) {
   return (
-    <div className="flex flex-col gap-2 mb-4 sm:mb-6 lg:mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex flex-col gap-2 mb-4 sm:mb-6 lg:mb-8">
       {/* Breadcrumb style category - Hidden on mobile */}
       <div className="hidden sm:flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1 text-right">
         <span>ניהול מערכת</span>
@@ -31,21 +31,21 @@ export function PageHeader({
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-3 sm:gap-4 lg:gap-5">
-          {/* Icon Container - Smaller on mobile */}
+          {/* Icon Container - Stabilized Size */}
           <div
             className={cn(
-              "w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-muted/50 to-muted border border-border flex items-center justify-center shrink-0 shadow-sm transition-all duration-300",
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-muted/50 to-muted border border-border flex items-center justify-center shrink-0 shadow-sm",
               iconClassName,
             )}
           >
-            <Icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-foreground/70" />
+            <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-foreground/70" />
           </div>
 
           <div className="text-right flex-1 min-w-0">
-            <h1 className="text-lg sm:text-2xl lg:text-3xl font-black text-foreground tracking-tight leading-tight sm:leading-none mb-1 sm:mb-1.5 transition-all truncate">
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight mb-1">
               {title}
             </h1>
-            <p className="text-[11px] sm:text-xs lg:text-sm font-bold text-muted-foreground leading-none truncate">
+            <p className="text-sm font-bold text-muted-foreground">
               {subtitle}
             </p>
           </div>

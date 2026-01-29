@@ -124,9 +124,11 @@ export function ExportReportDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md sm:max-w-lg" dir="rtl">
-        <DialogHeader>
-          <DialogTitle>ייצוא ודוחות</DialogTitle>
-          <DialogDescription>בחר את סוג הדוח והפורמט הרצוי</DialogDescription>
+        <DialogHeader className="text-right sm:text-right gap-1">
+          <DialogTitle className="text-xl font-bold">ייצוא ודוחות</DialogTitle>
+          <DialogDescription className="text-base">
+            בחר את סוג הדוח והפורמט הרצוי
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs

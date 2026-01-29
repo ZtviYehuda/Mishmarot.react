@@ -6,13 +6,11 @@ import { WhatsAppReportDialog } from "@/components/dashboard/WhatsAppReportDialo
 import { DashboardStatusTable } from "@/components/dashboard/DashboardStatusTable";
 import { StatsComparisonCard } from "@/components/dashboard/StatsComparisonCard";
 import { AttendanceTrendCard } from "@/components/dashboard/AttendanceTrendCard";
-import { DashboardCalendar } from "@/components/dashboard/DashboardCalendar"; // Added
 import { useAuthContext } from "@/context/AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useDateContext } from "@/context/DateContext";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { LayoutDashboard, CalendarClock } from "lucide-react"; // Updated
-import { Button } from "@/components/ui/button"; // Added
+import { LayoutDashboard } from "lucide-react"; // Updated
 import { format } from "date-fns";
 
 interface Team {
@@ -31,6 +29,10 @@ interface Department {
   name: string;
   sections: Section[];
 }
+
+import { DateHeader } from "@/components/common/DateHeader";
+
+// ...
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
@@ -253,12 +255,7 @@ export default function DashboardPage() {
         subtitle="נתוני נוכחות, ימי הולדת וסטטיסטיקות כוח אדם"
         category="לוח בקרה"
         categoryLink="/"
-        badge={
-          <DashboardCalendar
-            selectedDate={selectedDate}
-            onSelectDate={(d) => d && setSelectedDate(d)}
-          />
-        }
+        badge={<DateHeader />}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
@@ -299,31 +296,6 @@ export default function DashboardPage() {
             canSelectSection={canSelectSection}
             canSelectTeam={canSelectTeam}
           />
-
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-transparent border border-amber-500/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="flex items-center gap-3 relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-inner shrink-0">
-                <CalendarClock className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-black text-amber-800 dark:text-amber-200">
-                  מצב היסטורי - {format(selectedDate, "dd/MM/yyyy")}
-                </span>
-                <span className="text-xs font-medium text-amber-700/80 dark:text-amber-300/80">
-                  אתה צופה בנתונים כפי שנשמרו בתאריך זה
-                </span>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              onClick={() => setSelectedDate(new Date())}
-              className="relative z-10 bg-amber-500 text-white hover:bg-amber-600 border-0 shadow-lg shadow-amber-500/20 font-bold rounded-xl h-9 px-4 transition-all hover:scale-105 active:scale-95"
-            >
-              חזור להיום
-            </Button>
-            {/* Decorative background element */}
-            <div className="absolute -left-4 -top-12 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-          </div>
 
           <div id="status-details-table">
             <DashboardStatusTable

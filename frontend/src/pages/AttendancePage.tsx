@@ -22,8 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  CalendarDays,
-  CalendarClock, // Added
+  CalendarDays, // Added
   Search,
   Filter,
   ClipboardCheck,
@@ -42,6 +41,7 @@ import {
 } from "@/components/employees/modals";
 import { History } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { DateHeader } from "@/components/common/DateHeader";
 import type { Employee } from "@/types/employee.types";
 
 export default function AttendancePage() {
@@ -232,6 +232,7 @@ export default function AttendancePage() {
         iconClassName="from-primary/10 to-primary/5 border-primary/20"
         badge={
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <DateHeader className="w-full sm:w-auto order-first sm:order-none" />
             <Button
               variant="outline"
               className="h-10 sm:h-11 rounded-xl border-input gap-2 font-bold text-muted-foreground hover:bg-muted flex-1 sm:flex-none"
@@ -252,8 +253,13 @@ export default function AttendancePage() {
             </Button>
             {user && (
               <Button
-                variant="outline"
-                className="h-10 sm:h-11 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 px-4 sm:px-6 gap-2 font-bold flex-1 sm:flex-none"
+                variant={isReportedToday ? "outline" : "outline"}
+                className={cn(
+                  "h-10 sm:h-11 rounded-xl px-4 sm:px-6 gap-2 font-bold flex-1 sm:flex-none transition-all",
+                  isReportedToday
+                    ? "bg-emerald-50 border-emerald-500/30 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
+                    : "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10",
+                )}
                 onClick={() => {
                   const currentUserEmp = employees.find(
                     (e) => e.id === user.id,
@@ -263,7 +269,11 @@ export default function AttendancePage() {
                   }
                 }}
               >
-                <User className="w-4 h-4" />
+                {isReportedToday ? (
+                  <CheckCircle2 className="w-4 h-4" />
+                ) : (
+                  <User className="w-4 h-4" />
+                )}
                 <span className="hidden sm:inline">דיווח עצמי</span>
                 <span className="sm:hidden">דיווח</span>
               </Button>
@@ -271,72 +281,6 @@ export default function AttendancePage() {
           </div>
         }
       />
-
-      {selectedDate.toDateString() !== new Date().toDateString() && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-transparent border border-amber-500/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm">
-          <div className="flex items-center gap-3 relative z-10">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-inner shrink-0">
-              <CalendarClock className="w-5 h-5" />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-black text-amber-800 dark:text-amber-200">
-                מצב היסטורי - {format(selectedDate, "dd/MM/yyyy")}
-              </span>
-              <span className="text-xs font-medium text-amber-700/80 dark:text-amber-300/80">
-                אתה צופה בנתונים כפי שנשמרו בתאריך זה
-              </span>
-            </div>
-          </div>
-          <Button
-            size="sm"
-            onClick={() => setSelectedDate(new Date())}
-            className="relative z-10 bg-amber-500 text-white hover:bg-amber-600 border-0 shadow-lg shadow-amber-500/20 font-bold rounded-xl h-9 px-4 transition-all hover:scale-105 active:scale-95"
-          >
-            חזור להיום
-          </Button>
-          {/* Decorative background element */}
-          <div className="absolute -left-4 -top-12 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        </div>
-      )}
-
-      {/* Self-Report Status Indicator */}
-      {isReportedToday && currentUserEmployee && (
-        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-4 flex items-center justify-between shadow-lg shadow-emerald-500/5 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <div className="flex flex-col text-right flex-1 min-w-0">
-              <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
-                דיווחת נוכחות בהצלחה!
-              </span>
-              <p className="text-xs font-bold text-emerald-600/80">
-                הסטטוס המעודכן שלך:{" "}
-                <span className="text-emerald-700 dark:text-emerald-300 underline underline-offset-4 decoration-emerald-500/30">
-                  {currentUserEmployee.status_name}
-                </span>{" "}
-                • בוצע בשעה{" "}
-                {new Date(
-                  currentUserEmployee.last_status_update!,
-                ).toLocaleTimeString("he-IL", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleOpenStatusModal(currentUserEmployee)}
-            className="text-emerald-700 hover:bg-emerald-500/10 font-black gap-2 hidden sm:flex"
-          >
-            <Clock className="w-4 h-4" />
-            עדכן שוב
-          </Button>
-        </div>
-      )}
-
       {/* Summary Stats & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-card rounded-3xl p-6 border border-border shadow-sm">
@@ -412,7 +356,6 @@ export default function AttendancePage() {
           </div>
         </div>
       </div>
-
       {/* Filters Bar */}
       <div className="bg-card p-6 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row gap-4 items-end">
         <div className="flex-1 space-y-2 text-right">
@@ -542,7 +485,6 @@ export default function AttendancePage() {
           נקה סינון
         </Button>
       </div>
-
       {/* Attendance Table */}
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -731,7 +673,6 @@ export default function AttendancePage() {
           </Table>
         </div>
       </div>
-
       {/* Modals */}
       <BulkStatusUpdateModal
         open={bulkModalOpen}
@@ -739,20 +680,17 @@ export default function AttendancePage() {
         employees={filteredEmployees}
         onSuccess={() => refreshData()}
       />
-
       <StatusUpdateModal
         open={statusModalOpen}
         onOpenChange={setStatusModalOpen}
         employee={selectedEmployee}
         onSuccess={() => refreshData()}
       />
-
       <StatusHistoryModal
         open={historyModalOpen}
         onOpenChange={setHistoryModalOpen}
         employee={selectedEmployee}
       />
-
       <ExportReportDialog
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
