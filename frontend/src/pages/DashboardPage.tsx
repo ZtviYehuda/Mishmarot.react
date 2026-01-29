@@ -4,6 +4,8 @@ import { BirthdaysCard } from "@/components/dashboard/BirthdaysCard";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { WhatsAppReportDialog } from "@/components/dashboard/WhatsAppReportDialog";
 import { DashboardStatusTable } from "@/components/dashboard/DashboardStatusTable";
+import { StatsComparisonCard } from "@/components/dashboard/StatsComparisonCard";
+import { AttendanceTrendCard } from "@/components/dashboard/AttendanceTrendCard";
 import { useAuthContext } from "@/context/AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -28,13 +30,19 @@ interface Department {
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
-  const { getStructure, getDashboardStats } = useEmployees();
+  const { getStructure, getDashboardStats, getComparisonStats, getTrendStats } =
+    useEmployees();
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any[]>([]);
   const [allStatuses, setAllStatuses] = useState<any[]>([]);
   const [birthdays, setBirthdays] = useState<any[]>([]);
   const [structure, setStructure] = useState<Department[]>([]);
+
+  // New Stats
+  const [comparisonStats, setComparisonStats] = useState<any[]>([]);
+  const [trendStats, setTrendStats] = useState<any[]>([]);
+  const [loadingExtras, setLoadingExtras] = useState(true);
 
   const [whatsAppDialogOpen, setWhatsAppDialogOpen] = useState(false);
 
@@ -76,8 +84,22 @@ export default function DashboardPage() {
     fetchStruct();
   }, [getStructure]);
 
-  // Fetch "Active" Statuses for the dropdown whenever organizational filters change
-  // This ensures we only show statuses that actually have people in the current scope
+  // Fetch Extra Stats
+  useEffect(() => {
+    const fetchExtras = async () => {
+      setLoadingExtras(true);
+      const [compData, trendData] = await Promise.all([
+        getComparisonStats(),
+        getTrendStats(7),
+      ]);
+      setComparisonStats(compData);
+      setTrendStats(trendData);
+      setLoadingExtras(false);
+    };
+    fetchExtras();
+  }, [getComparisonStats, getTrendStats]);
+
+  // Fetch active statuses
   useEffect(() => {
     const fetchActiveStatuses = async () => {
       const data = await getDashboardStats({
@@ -87,7 +109,6 @@ export default function DashboardPage() {
       });
 
       if (data && data.stats) {
-        // Only include statuses that have an ID (not null/no status)
         setAllStatuses(data.stats.filter((s: any) => s.status_id !== null));
       }
     };
@@ -95,7 +116,7 @@ export default function DashboardPage() {
     fetchActiveStatuses();
   }, [selectedDeptId, selectedSectionId, selectedTeamId, getDashboardStats]);
 
-  // Fetch Stats for the chart and table whenever any filter changes
+  // Fetch Stats for the chart and table
   useEffect(() => {
     const fetchStatsData = async () => {
       setLoading(true);
@@ -164,7 +185,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Determine the names for titles
   const currentDept = structure.find((d) => d.id.toString() === selectedDeptId);
   const currentSection = currentDept?.sections.find(
     (s) => s.id.toString() === selectedSectionId,
@@ -195,14 +215,12 @@ export default function DashboardPage() {
     color: string,
   ) => {
     setSelectedStatusData({ id: statusId, name: statusName, color });
-    // When clicking chart, we scroll to the table
     const tableElement = document.getElementById("status-details-table");
     if (tableElement) {
       tableElement.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
-  // Determine which filters are locked
   const canSelectDept = !!user?.is_admin;
   const canSelectSection = !!user?.is_admin || !!user?.commands_department_id;
   const canSelectTeam =
@@ -231,6 +249,20 @@ export default function DashboardPage() {
             title={chartTitle}
             description={chartDescription}
           />
+
+          {/* New Widgets Row - Only show if user is admin or commander */}
+          {(user?.is_admin ||
+            user?.commands_department_id ||
+            user?.commands_section_id) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <StatsComparisonCard
+                data={comparisonStats}
+                loading={loadingExtras}
+              />
+              <AttendanceTrendCard data={trendStats} loading={loadingExtras} />
+            </div>
+          )}
+
           {/* Inline Drill Down Filters */}
           <DashboardFilters
             structure={structure}
@@ -263,7 +295,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* WhatsApp Report Dialog */}
       <WhatsAppReportDialog
         open={whatsAppDialogOpen}
         onOpenChange={setWhatsAppDialogOpen}

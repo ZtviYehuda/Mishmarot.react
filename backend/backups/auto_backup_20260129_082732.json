@@ -1,0 +1,1066 @@
+{
+    "metadata": {
+        "version": "1.0",
+        "date": "2026-01-29T08:27:32.329977",
+        "type": "automatic"
+    },
+    "data": {
+        "roles": [
+            {
+                "id": 1,
+                "name": "System Admin",
+                "description": null
+            },
+            {
+                "id": 2,
+                "name": "מפקד צוות",
+                "description": null
+            },
+            {
+                "id": 3,
+                "name": "מפתח Fullstack",
+                "description": null
+            }
+        ],
+        "status_types": [
+            {
+                "id": 1,
+                "code": "OFFICE",
+                "name": "משרד",
+                "color": "#22c55e",
+                "is_presence": false
+            },
+            {
+                "id": 2,
+                "code": "SICK",
+                "name": "חולה",
+                "color": "#ef4444",
+                "is_presence": false
+            },
+            {
+                "id": 3,
+                "code": "REINFORCEMENT",
+                "name": "תגבור",
+                "color": "#f59e0b",
+                "is_presence": false
+            },
+            {
+                "id": 4,
+                "code": "COURSE",
+                "name": "קורס",
+                "color": "#8b5cf6",
+                "is_presence": false
+            },
+            {
+                "id": 5,
+                "code": "VACATION",
+                "name": "חופשה",
+                "color": "#3b82f6",
+                "is_presence": false
+            },
+            {
+                "id": 6,
+                "code": "ABROAD",
+                "name": "חופשה חו\"ל",
+                "color": "#0ea5e9",
+                "is_presence": false
+            }
+        ],
+        "service_types": [
+            {
+                "id": 1,
+                "name": "שמ״ז"
+            },
+            {
+                "id": 2,
+                "name": "קבע"
+            },
+            {
+                "id": 3,
+                "name": "קצין"
+            },
+            {
+                "id": 4,
+                "name": "שירות לאומי"
+            },
+            {
+                "id": 5,
+                "name": "שירות אזרחי ביטחוני"
+            },
+            {
+                "id": 6,
+                "name": "שח״מ"
+            },
+            {
+                "id": 7,
+                "name": "שח״מ חרדי"
+            },
+            {
+                "id": 8,
+                "name": "מתנדב"
+            }
+        ],
+        "departments": [
+            {
+                "id": 2,
+                "name": "מחלקת התעצמות",
+                "commander_id": null
+            },
+            {
+                "id": 3,
+                "name": "מחלקת מענה מבצעי",
+                "commander_id": null
+            },
+            {
+                "id": 1,
+                "name": "מחלקת טכנולוגיות",
+                "commander_id": 15
+            }
+        ],
+        "sections": [
+            {
+                "id": 1,
+                "department_id": 1,
+                "name": "מדור הסייבר המבצעי",
+                "commander_id": null
+            },
+            {
+                "id": 3,
+                "department_id": 1,
+                "name": "מדור מערכות הסייבר",
+                "commander_id": null
+            },
+            {
+                "id": 4,
+                "department_id": 2,
+                "name": "מדור תכנון ייעודי ואסטרטגיה",
+                "commander_id": null
+            },
+            {
+                "id": 5,
+                "department_id": 2,
+                "name": "מדור הכוונה מבצעית",
+                "commander_id": null
+            },
+            {
+                "id": 6,
+                "department_id": 3,
+                "name": "מדור שטח",
+                "commander_id": null
+            },
+            {
+                "id": 7,
+                "department_id": 3,
+                "name": "מדור יחידות ארציות",
+                "commander_id": null
+            },
+            {
+                "id": 8,
+                "department_id": 3,
+                "name": "מדור שליטה מבצעית",
+                "commander_id": null
+            },
+            {
+                "id": 9,
+                "department_id": 3,
+                "name": "מדור סייבר ארצי",
+                "commander_id": null
+            },
+            {
+                "id": 2,
+                "department_id": 1,
+                "name": "מדור סיגמ\"ה",
+                "commander_id": 16
+            }
+        ],
+        "teams": [
+            {
+                "id": 1,
+                "section_id": 1,
+                "name": "חוליית מו\"פ",
+                "commander_id": null
+            },
+            {
+                "id": 2,
+                "section_id": 1,
+                "name": "חוליית סייבר מבצעי",
+                "commander_id": null
+            },
+            {
+                "id": 3,
+                "section_id": 1,
+                "name": "חוליית נגישות בסייבר",
+                "commander_id": null
+            },
+            {
+                "id": 4,
+                "section_id": 2,
+                "name": "חוליית אמצעי קצה",
+                "commander_id": null
+            },
+            {
+                "id": 5,
+                "section_id": 2,
+                "name": "חוליית סיוע מבצעי",
+                "commander_id": null
+            },
+            {
+                "id": 6,
+                "section_id": 2,
+                "name": "חוליית מענים מהירים",
+                "commander_id": null
+            },
+            {
+                "id": 8,
+                "section_id": 3,
+                "name": "חוליית חברות תקשורת",
+                "commander_id": null
+            },
+            {
+                "id": 9,
+                "section_id": 4,
+                "name": "חוליית תקציב",
+                "commander_id": null
+            },
+            {
+                "id": 10,
+                "section_id": 4,
+                "name": "חוליית מערכה (אורית)",
+                "commander_id": null
+            },
+            {
+                "id": 11,
+                "section_id": 4,
+                "name": "חוליית מערכה (רפאל)",
+                "commander_id": null
+            },
+            {
+                "id": 12,
+                "section_id": 4,
+                "name": "חוליית נ\"מ",
+                "commander_id": null
+            },
+            {
+                "id": 13,
+                "section_id": 4,
+                "name": "חוליית קש\"ח ושותפויות",
+                "commander_id": null
+            },
+            {
+                "id": 14,
+                "section_id": 5,
+                "name": "חוליית הפקה ארצית",
+                "commander_id": null
+            },
+            {
+                "id": 15,
+                "section_id": 5,
+                "name": "חוליית ב\"ר",
+                "commander_id": null
+            },
+            {
+                "id": 16,
+                "section_id": 5,
+                "name": "חוליית סייבר",
+                "commander_id": null
+            },
+            {
+                "id": 17,
+                "section_id": 5,
+                "name": "חוליית מחת\"ק",
+                "commander_id": null
+            },
+            {
+                "id": 18,
+                "section_id": 5,
+                "name": "חוליית בקרות",
+                "commander_id": null
+            },
+            {
+                "id": 19,
+                "section_id": 6,
+                "name": "חוליית חות\"ם",
+                "commander_id": null
+            },
+            {
+                "id": 20,
+                "section_id": 6,
+                "name": "חוליית חוס\"ם",
+                "commander_id": null
+            },
+            {
+                "id": 21,
+                "section_id": 6,
+                "name": "חוליית מ\"מ",
+                "commander_id": null
+            },
+            {
+                "id": 22,
+                "section_id": 6,
+                "name": "חוליית ביטחון מידע וחסיונות",
+                "commander_id": null
+            },
+            {
+                "id": 23,
+                "section_id": 7,
+                "name": "חוליית סלע",
+                "commander_id": null
+            },
+            {
+                "id": 24,
+                "section_id": 7,
+                "name": "חוליית שהם",
+                "commander_id": null
+            },
+            {
+                "id": 25,
+                "section_id": 7,
+                "name": "חוליית רשויות",
+                "commander_id": null
+            },
+            {
+                "id": 26,
+                "section_id": 7,
+                "name": "חוליית קיסר",
+                "commander_id": null
+            },
+            {
+                "id": 27,
+                "section_id": 8,
+                "name": "חוליית 7100",
+                "commander_id": null
+            },
+            {
+                "id": 28,
+                "section_id": 8,
+                "name": "חוליית 7103",
+                "commander_id": null
+            },
+            {
+                "id": 29,
+                "section_id": 8,
+                "name": "חוליית משל\"ט טכנו סיגינטי",
+                "commander_id": null
+            },
+            {
+                "id": 30,
+                "section_id": 9,
+                "name": "חוליית מס\"א",
+                "commander_id": null
+            },
+            {
+                "id": 31,
+                "section_id": 9,
+                "name": "חוליית קריפטו",
+                "commander_id": null
+            },
+            {
+                "id": 7,
+                "section_id": 3,
+                "name": "חולייה פרויקטים ואמצעים",
+                "commander_id": null
+            }
+        ],
+        "employees": [
+            {
+                "id": 12,
+                "national_id": "999999712",
+                "personal_number": "pn9712",
+                "first_name": "Test",
+                "last_name": "User",
+                "phone_number": "050-0000000",
+                "birth_date": "1990-01-01",
+                "team_id": null,
+                "role_id": null,
+                "service_type_id": null,
+                "enlistment_date": "2010-01-01",
+                "discharge_date": null,
+                "assignment_date": "2010-02-01",
+                "police_license": true,
+                "security_clearance": 1,
+                "employment_clearance": false,
+                "is_active": true,
+                "created_at": "2026-01-22T14:33:37.578383",
+                "password_hash": null,
+                "must_change_password": false,
+                "city": "Tel Aviv",
+                "emergency_contact": "Mom",
+                "is_commander": false,
+                "is_admin": false,
+                "section_id": null,
+                "department_id": null,
+                "notif_sick_leave": true,
+                "notif_transfers": true
+            },
+            {
+                "id": 15,
+                "national_id": "888882205",
+                "personal_number": "cmd2205",
+                "first_name": "Commander",
+                "last_name": "Test",
+                "phone_number": "050-9999999",
+                "birth_date": "1985-01-01",
+                "team_id": null,
+                "role_id": null,
+                "service_type_id": null,
+                "enlistment_date": "2005-01-01",
+                "discharge_date": null,
+                "assignment_date": "2010-01-01",
+                "police_license": true,
+                "security_clearance": 1,
+                "employment_clearance": false,
+                "is_active": true,
+                "created_at": "2026-01-22T14:46:45.802100",
+                "password_hash": "scrypt:32768:8:1$3D2l5dQ49GitDxDG$45eb9e759f098541992ebfa3e01a2af1d57ef0a27ce2215490bb9118db7c62de9814777fb368656f6b317a30df6db7da0a6c4a0795ff0391963fd46f5360728f",
+                "must_change_password": true,
+                "city": "Base",
+                "emergency_contact": "HQ",
+                "is_commander": true,
+                "is_admin": false,
+                "section_id": null,
+                "department_id": null,
+                "notif_sick_leave": true,
+                "notif_transfers": true
+            },
+            {
+                "id": 8,
+                "national_id": "987497321",
+                "personal_number": "100043",
+                "first_name": "נפתלי",
+                "last_name": "לוי",
+                "phone_number": "0555687214",
+                "birth_date": null,
+                "team_id": 3,
+                "role_id": null,
+                "service_type_id": null,
+                "enlistment_date": null,
+                "discharge_date": null,
+                "assignment_date": null,
+                "police_license": false,
+                "security_clearance": 0,
+                "employment_clearance": false,
+                "is_active": true,
+                "created_at": "2026-01-22T11:02:47.776441",
+                "password_hash": "scrypt:32768:8:1$7l9KEKxvMGvazMP5$8296a69b0b614450792b7142d31b874a2853e40724b1a55278f573facb023d75399410a9dd644f6d2f8fcba3e829ce89d80bc934a7007be3d8df905d0eba462a",
+                "must_change_password": true,
+                "city": "באר יעקב",
+                "emergency_contact": "",
+                "is_commander": true,
+                "is_admin": false,
+                "section_id": null,
+                "department_id": null,
+                "notif_sick_leave": true,
+                "notif_transfers": true
+            },
+            {
+                "id": 9,
+                "national_id": "991376481",
+                "personal_number": "100058",
+                "first_name": "חיים",
+                "last_name": "ישראל",
+                "phone_number": "",
+                "birth_date": "2000-01-23",
+                "team_id": 31,
+                "role_id": null,
+                "service_type_id": null,
+                "enlistment_date": null,
+                "discharge_date": null,
+                "assignment_date": null,
+                "police_license": true,
+                "security_clearance": 0,
+                "employment_clearance": false,
+                "is_active": true,
+                "created_at": "2026-01-22T11:28:34.489421",
+                "password_hash": null,
+                "must_change_password": false,
+                "city": "",
+                "emergency_contact": "",
+                "is_commander": false,
+                "is_admin": false,
+                "section_id": null,
+                "department_id": null,
+                "notif_sick_leave": true,
+                "notif_transfers": true
+            },
+            {
+                "id": 17,
+                "national_id": "519849545",
+                "personal_number": "123456",
+                "first_name": "צבי",
+                "last_name": "בטיטו",
+                "phone_number": "0585669189",
+                "birth_date": "1998-02-16",
+                "team_id": null,
+                "role_id": null,
+                "service_type_id": 7,
+                "enlistment_date": null,
+                "discharge_date": null,
+                "assignment_date": null,
+                "police_license": true,
+                "security_clearance": 0,
+                "employment_clearance": false,
+                "is_active": true,
+                "created_at": "2026-01-25T17:48:19.951851",
+                "password_hash": null,
+                "must_change_password": false,
+                "city": "ירושלים",
+                "emergency_contact": null,
+                "is_commander": false,
+                "is_admin": false,
+                "section_id": null,
+                "department_id": null,
+                "notif_sick_leave": true,
+                "notif_transfers": true
+            },
+            {
+                "id": 6,
+                "national_id": "987654321",
+                "personal_number": "yossi_cohen_2024",
+                "first_name": "יוסי",
+                "last_name": "כהן",
+                "phone_number": "",
+                "birth_date": null,
+                "team_id": null,
+                "role_id": null,
+                "service_type_id": null,
+                "enlistment_date": null,
+                "discharge_date": null,
+                "assignment_date": null,
+                "police_license": false,
+                "security_clearance": 0,
+                "employment_clearance": false,
+                "is_active": true,
+                "created_at": "2026-01-22T11:00:55.911454",
+                "password_hash": null,
+                "must_change_password": false,
+                "city": "",
+                "emergency_contact": "",
+                "is_commander": false,
+                "is_admin": false,
+                "section_id": null,
+                "department_id": null,
+                "notif_sick_leave": true,
+                "notif_transfers": true
+            },
+            {
+                "id": 16,
+                "national_id": "100000000",
+                "personal_number": "1000",
+                "first_name": "רוית",
+                "last_name": "שהריאן",
+                "phone_number": "",
+                "birth_date": null,
+                "team_id": 2,
+                "role_id": null,
+                "service_type_id": 8,
+                "enlistment_date": null,
+                "discharge_date": null,
+                "assignment_date": null,
+                "police_license": false,
+                "security_clearance": 0,
+                "employment_clearance": false,
+                "is_active": true,
+                "created_at": "2026-01-22T14:47:24.822181",
+                "password_hash": "scrypt:32768:8:1$6fLbSQGPkttpbMYr$f77045f7b2bf5cbab716a02608ab009a02322bf8d56165c635ecda4419948e295bbe476b07c9aba0204bc8e3e42947836ca732b5feb860bbe49cf7de3e2c2eed",
+                "must_change_password": false,
+                "city": "",
+                "emergency_contact": "",
+                "is_commander": true,
+                "is_admin": false,
+                "section_id": null,
+                "department_id": null,
+                "notif_sick_leave": true,
+                "notif_transfers": true
+            },
+            {
+                "id": 5,
+                "national_id": "123456789",
+                "personal_number": "admin",
+                "first_name": "מנהל",
+                "last_name": "מערכת",
+                "phone_number": "050-1234567",
+                "birth_date": "1990-01-01",
+                "team_id": null,
+                "role_id": null,
+                "service_type_id": null,
+                "enlistment_date": null,
+                "discharge_date": null,
+                "assignment_date": null,
+                "police_license": false,
+                "security_clearance": 1,
+                "employment_clearance": false,
+                "is_active": true,
+                "created_at": "2026-01-22T10:17:30.059663",
+                "password_hash": "scrypt:32768:8:1$jN1R8qaLt47PipqV$041b9d3a2630d246dae5dc4321f4e98b09f7e8027454055d4f5fd8ea16f71ab0b6f5c216eda78eb77f951ce8db918cb9eab355d9c4662aa418a25c46bd6b9648",
+                "must_change_password": false,
+                "city": "תל אביב",
+                "emergency_contact": "מחלקת IT",
+                "is_commander": true,
+                "is_admin": true,
+                "section_id": null,
+                "department_id": null,
+                "notif_sick_leave": true,
+                "notif_transfers": true
+            }
+        ],
+        "attendance_logs": [
+            {
+                "id": 229,
+                "employee_id": 8,
+                "status_type_id": 3,
+                "start_datetime": "2026-01-22T11:44:19.134824",
+                "end_datetime": "2026-01-22T12:06:56.929625",
+                "note": "עדכון מערכת",
+                "reported_by": null,
+                "created_at": "2026-01-22T11:44:19.134824"
+            },
+            {
+                "id": 230,
+                "employee_id": 8,
+                "status_type_id": 2,
+                "start_datetime": "2026-01-22T12:06:56.929625",
+                "end_datetime": "2026-01-22T12:07:03.954770",
+                "note": "עדכון מערכת",
+                "reported_by": null,
+                "created_at": "2026-01-22T12:06:56.929625"
+            },
+            {
+                "id": 228,
+                "employee_id": 6,
+                "status_type_id": 2,
+                "start_datetime": "2026-01-22T11:16:47.984294",
+                "end_datetime": "2026-01-22T13:22:07.721936",
+                "note": "עדכון מערכת",
+                "reported_by": null,
+                "created_at": "2026-01-22T11:16:47.984294"
+            },
+            {
+                "id": 231,
+                "employee_id": 8,
+                "status_type_id": 4,
+                "start_datetime": "2026-01-22T12:07:03.954770",
+                "end_datetime": "2026-01-22T14:50:30.174418",
+                "note": "עדכון מערכת",
+                "reported_by": null,
+                "created_at": "2026-01-22T12:07:03.954770"
+            },
+            {
+                "id": 233,
+                "employee_id": 8,
+                "status_type_id": 2,
+                "start_datetime": "2026-01-22T14:50:30.174418",
+                "end_datetime": "2026-01-22T14:50:48.060931",
+                "note": "עדכון מערכת",
+                "reported_by": null,
+                "created_at": "2026-01-22T14:50:30.174418"
+            },
+            {
+                "id": 235,
+                "employee_id": 16,
+                "status_type_id": 1,
+                "start_datetime": "2026-01-22T00:00:00",
+                "end_datetime": "2026-01-22T15:43:21.599426",
+                "note": "דיווח עצמי",
+                "reported_by": null,
+                "created_at": "2026-01-22T15:40:47.036561"
+            },
+            {
+                "id": 237,
+                "employee_id": 16,
+                "status_type_id": 3,
+                "start_datetime": "2026-01-25T08:00:00",
+                "end_datetime": "2026-01-25T17:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-25T14:21:09.549817"
+            },
+            {
+                "id": 238,
+                "employee_id": 16,
+                "status_type_id": 2,
+                "start_datetime": "2026-01-25T08:00:00",
+                "end_datetime": "2026-01-25T17:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-25T14:21:17.416715"
+            },
+            {
+                "id": 239,
+                "employee_id": 16,
+                "status_type_id": 2,
+                "start_datetime": "2026-01-25T08:00:00",
+                "end_datetime": "2026-01-25T17:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-25T14:21:31.661557"
+            },
+            {
+                "id": 240,
+                "employee_id": 16,
+                "status_type_id": 2,
+                "start_datetime": "2026-01-25T08:00:00",
+                "end_datetime": "2026-01-25T17:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-25T14:24:00.703457"
+            },
+            {
+                "id": 241,
+                "employee_id": 16,
+                "status_type_id": 4,
+                "start_datetime": "2026-01-25T08:00:00",
+                "end_datetime": "2026-01-25T17:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-25T14:24:08.740673"
+            },
+            {
+                "id": 242,
+                "employee_id": 16,
+                "status_type_id": 2,
+                "start_datetime": "2026-01-25T08:00:00",
+                "end_datetime": "2026-01-25T17:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-25T14:25:45.874568"
+            },
+            {
+                "id": 243,
+                "employee_id": 16,
+                "status_type_id": 5,
+                "start_datetime": "2026-01-25T08:00:00",
+                "end_datetime": "2026-01-25T17:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-25T14:25:52.045092"
+            },
+            {
+                "id": 244,
+                "employee_id": 15,
+                "status_type_id": 5,
+                "start_datetime": "2026-01-25T08:00:00",
+                "end_datetime": "2026-01-25T17:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-25T14:40:49.368857"
+            },
+            {
+                "id": 245,
+                "employee_id": 15,
+                "status_type_id": 6,
+                "start_datetime": "2026-01-25T08:00:00",
+                "end_datetime": "2026-01-25T17:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-25T14:40:56.790851"
+            },
+            {
+                "id": 232,
+                "employee_id": 6,
+                "status_type_id": 3,
+                "start_datetime": "2026-01-22T13:22:07.721936",
+                "end_datetime": "2026-01-28T11:39:54.189221",
+                "note": "עדכון מערכת",
+                "reported_by": null,
+                "created_at": "2026-01-22T13:22:07.721936"
+            },
+            {
+                "id": 246,
+                "employee_id": 6,
+                "status_type_id": 3,
+                "start_datetime": "2026-01-28T11:39:54.189155",
+                "end_datetime": null,
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T11:39:54.189221"
+            },
+            {
+                "id": 234,
+                "employee_id": 8,
+                "status_type_id": 1,
+                "start_datetime": "2026-01-22T14:50:48.060931",
+                "end_datetime": "2026-01-28T11:39:54.189221",
+                "note": "בלה בהל\r\n",
+                "reported_by": null,
+                "created_at": "2026-01-22T14:50:48.060931"
+            },
+            {
+                "id": 248,
+                "employee_id": 12,
+                "status_type_id": 5,
+                "start_datetime": "2026-01-28T11:39:54.189155",
+                "end_datetime": null,
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T11:39:54.189221"
+            },
+            {
+                "id": 236,
+                "employee_id": 16,
+                "status_type_id": 1,
+                "start_datetime": "2026-01-22T00:00:00",
+                "end_datetime": "2026-01-28T11:39:54.189221",
+                "note": "דיווח עצמי",
+                "reported_by": null,
+                "created_at": "2026-01-22T15:43:21.599426"
+            },
+            {
+                "id": 250,
+                "employee_id": 16,
+                "status_type_id": 1,
+                "start_datetime": "2026-01-28T11:39:54.189155",
+                "end_datetime": null,
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T11:39:54.189221"
+            },
+            {
+                "id": 247,
+                "employee_id": 8,
+                "status_type_id": 1,
+                "start_datetime": "2026-01-28T11:39:54.189155",
+                "end_datetime": "2026-01-28T11:45:32.805873",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T11:39:54.189221"
+            },
+            {
+                "id": 251,
+                "employee_id": 8,
+                "status_type_id": 6,
+                "start_datetime": "2026-01-28T11:45:32.807441",
+                "end_datetime": null,
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T11:45:32.805873"
+            },
+            {
+                "id": 252,
+                "employee_id": 17,
+                "status_type_id": 1,
+                "start_datetime": "2026-01-28T11:45:56.071499",
+                "end_datetime": null,
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T11:45:56.069916"
+            },
+            {
+                "id": 253,
+                "employee_id": 9,
+                "status_type_id": 4,
+                "start_datetime": "2026-01-28T11:46:00.492471",
+                "end_datetime": null,
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T11:46:00.490445"
+            },
+            {
+                "id": 254,
+                "employee_id": 5,
+                "status_type_id": 2,
+                "start_datetime": "2026-01-28T11:46:06.731523",
+                "end_datetime": null,
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T11:46:06.730079"
+            },
+            {
+                "id": 249,
+                "employee_id": 15,
+                "status_type_id": 4,
+                "start_datetime": "2026-01-28T11:39:54.189155",
+                "end_datetime": "2026-01-28T14:02:03.557121",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T11:39:54.189221"
+            },
+            {
+                "id": 255,
+                "employee_id": 15,
+                "status_type_id": 4,
+                "start_datetime": "2026-02-01T00:00:00",
+                "end_datetime": "2026-02-20T00:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T14:02:03.557121"
+            },
+            {
+                "id": 256,
+                "employee_id": 15,
+                "status_type_id": 4,
+                "start_datetime": "2026-02-01T00:00:00",
+                "end_datetime": "2026-02-20T00:00:00",
+                "note": null,
+                "reported_by": 5,
+                "created_at": "2026-01-28T14:06:33.413877"
+            }
+        ],
+        "transfer_requests": [
+            {
+                "id": 1,
+                "employee_id": 8,
+                "requester_id": 16,
+                "target_type": "team",
+                "target_id": 3,
+                "status": "approved",
+                "notes": "",
+                "created_at": "2026-01-22T15:25:46.603282",
+                "resolved_at": "2026-01-22T15:29:05.524716",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": null
+            },
+            {
+                "id": 2,
+                "employee_id": 8,
+                "requester_id": 5,
+                "target_type": "team",
+                "target_id": 6,
+                "status": "rejected",
+                "notes": "\nסיבת דחייה: לא רוצה אותו",
+                "created_at": "2026-01-22T15:29:47.327493",
+                "resolved_at": "2026-01-22T15:30:27.961385",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": null
+            },
+            {
+                "id": 3,
+                "employee_id": 8,
+                "requester_id": 5,
+                "target_type": "team",
+                "target_id": 6,
+                "status": "rejected",
+                "notes": "",
+                "created_at": "2026-01-22T15:33:54.805043",
+                "resolved_at": "2026-01-22T15:37:46.398680",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": null
+            },
+            {
+                "id": 4,
+                "employee_id": 16,
+                "requester_id": 5,
+                "target_type": "team",
+                "target_id": 7,
+                "status": "approved",
+                "notes": "",
+                "created_at": "2026-01-25T13:51:49.253579",
+                "resolved_at": "2026-01-25T13:55:40.158873",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": null
+            },
+            {
+                "id": 5,
+                "employee_id": 16,
+                "requester_id": 5,
+                "target_type": "team",
+                "target_id": 3,
+                "status": "approved",
+                "notes": "",
+                "created_at": "2026-01-25T13:56:49.248984",
+                "resolved_at": "2026-01-25T14:03:47.267294",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": null
+            },
+            {
+                "id": 6,
+                "employee_id": 16,
+                "requester_id": 5,
+                "target_type": "team",
+                "target_id": 1,
+                "status": "approved",
+                "notes": "",
+                "created_at": "2026-01-25T14:04:16.793993",
+                "resolved_at": "2026-01-25T14:04:38.161537",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": 5
+            },
+            {
+                "id": 7,
+                "employee_id": 16,
+                "requester_id": 5,
+                "target_type": "team",
+                "target_id": 7,
+                "status": "cancelled",
+                "notes": "\nבקשה בוטלה על ידי המבקש בתאריך 25/01/2026",
+                "created_at": "2026-01-25T14:04:53.498905",
+                "resolved_at": "2026-01-25T14:04:55.293223",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": null
+            },
+            {
+                "id": 8,
+                "employee_id": 16,
+                "requester_id": 5,
+                "target_type": "team",
+                "target_id": 3,
+                "status": "approved",
+                "notes": "",
+                "created_at": "2026-01-25T14:05:04.899087",
+                "resolved_at": "2026-01-25T14:05:12.809083",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": 5
+            },
+            {
+                "id": 9,
+                "employee_id": 16,
+                "requester_id": 5,
+                "target_type": "team",
+                "target_id": 6,
+                "status": "approved",
+                "notes": "",
+                "created_at": "2026-01-25T14:09:49.371156",
+                "resolved_at": "2026-01-25T14:09:55.644798",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": 5
+            },
+            {
+                "id": 10,
+                "employee_id": 16,
+                "requester_id": 5,
+                "target_type": "team",
+                "target_id": 7,
+                "status": "approved",
+                "notes": "",
+                "created_at": "2026-01-25T14:10:41.640804",
+                "resolved_at": "2026-01-25T14:10:47.277937",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": 5
+            },
+            {
+                "id": 11,
+                "employee_id": 16,
+                "requester_id": 5,
+                "target_type": "team",
+                "target_id": 2,
+                "status": "approved",
+                "notes": "",
+                "created_at": "2026-01-25T14:12:17.815476",
+                "resolved_at": "2026-01-25T14:12:22.752150",
+                "current_commander_id": null,
+                "new_commander_id": null,
+                "rejection_reason": null,
+                "resolved_by": 5
+            }
+        ]
+    }
+}

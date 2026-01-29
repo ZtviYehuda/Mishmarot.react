@@ -87,6 +87,55 @@ def get_stats():
         return jsonify({"error": str(e)}), 500
 
 
+@att_bp.route("/stats/comparison", methods=["GET"])
+@jwt_required()
+def get_comparison_stats():
+    try:
+        identity = get_jwt_identity()
+        try:
+            if isinstance(identity, str):
+                identity = json.loads(identity)
+        except:
+            pass
+
+        user_id = identity.get("id") if isinstance(identity, dict) else identity
+        from app.models.employee_model import EmployeeModel
+
+        requester = EmployeeModel.get_employee_by_id(user_id)
+
+        data = AttendanceModel.get_unit_comparison_stats(requesting_user=requester)
+        return jsonify(data)
+    except Exception as e:
+        print(f"❌ Error in /stats/comparison: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@att_bp.route("/stats/trend", methods=["GET"])
+@jwt_required()
+def get_trend_stats():
+    try:
+        identity = get_jwt_identity()
+        try:
+            if isinstance(identity, str):
+                identity = json.loads(identity)
+        except:
+            pass
+
+        user_id = identity.get("id") if isinstance(identity, dict) else identity
+        from app.models.employee_model import EmployeeModel
+
+        requester = EmployeeModel.get_employee_by_id(user_id)
+
+        days = int(request.args.get("days", 7))
+        data = AttendanceModel.get_attendance_trend(
+            days=days, requesting_user=requester
+        )
+        return jsonify(data)
+    except Exception as e:
+        print(f"❌ Error in /stats/trend: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @att_bp.route("/log", methods=["POST"])
 @jwt_required()
 def log_status():

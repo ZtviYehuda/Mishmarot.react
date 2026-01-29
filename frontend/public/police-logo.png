@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f3a61;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#071d3a;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Shield Shape -->
+  <path d="M100 10 C 40 10, 10 50, 10 90 C 10 160, 50 210, 100 230 C 150 210, 190 160, 190 90 C 190 50, 160 10, 100 10 Z" 
+        fill="url(#grad1)" stroke="#silver" stroke-width="4" filter="url(#shadow)"/>
+        
+  <!-- Inner Border -->
+  <path d="M100 20 C 50 20, 20 55, 20 90 C 20 150, 55 195, 100 215 C 145 195, 180 150, 180 90 C 180 55, 150 20, 100 20 Z" 
+        fill="none" stroke="#fff" stroke-width="2" opacity="0.5"/>
+
+  <!-- Star of David -->
+  <g transform="translate(100, 90) scale(0.6)">
+    <path d="M0 -50 L14 -25 L43 -25 L21 0 L29 28 L0 12 L-29 28 L-21 0 L-43 -25 L-14 -25 Z" 
+          fill="none" stroke="white" stroke-width="6"/>
+  </g>
+  
+  <!-- Olive Branches (Simplified) -->
+  <path d="M40 140 Q 30 180, 100 200 Q 170 180, 160 140" fill="none" stroke="#silver" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Text -->
+  <text x="100" y="145" font-family="Arial, sans-serif" font-weight="bold" font-size="24" text-anchor="middle" fill="white" letter-spacing="2">משטרת</text>
+  <text x="100" y="170" font-family="Arial, sans-serif" font-weight="bold" font-size="24" text-anchor="middle" fill="white" letter-spacing="2">ישראל</text>
+
+</svg>

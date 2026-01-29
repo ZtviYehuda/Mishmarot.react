@@ -35,7 +35,7 @@ export default function MainLayout() {
   // Sidebar closed by default on mobile, open on desktop
   // Initialize sidebar state based on window width to prevent layout shift on load
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(() =>
-    typeof window !== "undefined" ? window.innerWidth >= 1024 : false
+    typeof window !== "undefined" ? window.innerWidth >= 1024 : false,
   );
 
   // Auto-open sidebar on desktop (lg breakpoint)
@@ -80,8 +80,21 @@ export default function MainLayout() {
         {/* Sidebar Header */}
         <div className="h-16 sm:h-20 flex items-center px-4 border-b border-border/50 justify-between">
           <div className="flex items-center gap-3 overflow-hidden text-right">
-            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
-              <ShieldCheck className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 flex items-center justify-center shrink-0">
+              <img
+                src="/police-logo.png"
+                alt="Logo"
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove(
+                    "hidden",
+                  );
+                }}
+              />
+              <div className="hidden w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                <ShieldCheck className="w-5 h-5 text-primary-foreground" />
+              </div>
             </div>
             {isSidebarOpen && (
               <div className="flex flex-col">
@@ -234,8 +247,17 @@ export default function MainLayout() {
             </button>
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
             <div className="flex items-center gap-5 flex-none max-w-[70%]">
-              <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-2xl bg-primary shadow-xl shadow-primary/25 text-primary-foreground shrink-0 border-2 border-primary-foreground/10">
-                <ShieldCheck className="w-7 h-7" />
+              <div className="hidden md:flex items-center justify-center w-12 h-12 shrink-0">
+                <img
+                  src="/police-logo.png"
+                  alt="Police Logo"
+                  className="w-full h-full object-contain drop-shadow-md"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+                <ShieldCheck
+                  className="w-10 h-10 text-primary hidden"
+                  style={{ display: "none" }}
+                />
               </div>
               <div className="flex flex-col text-right border-r-[3px] border-primary pr-5 whitespace-nowrap">
                 <div className="flex items-center gap-2.5 mb-1">
@@ -247,8 +269,8 @@ export default function MainLayout() {
                 <h2 className="text-lg sm:text-xl font-black text-foreground tracking-tight py-0.5 leading-none">
                   {location.pathname === "/"
                     ? "לוח בקרה מרכזי"
-                    : navItems.find((n) => n.path === location.pathname)?.name ||
-                    "דף מערכת"}
+                    : navItems.find((n) => n.path === location.pathname)
+                        ?.name || "דף מערכת"}
                 </h2>
               </div>
             </div>

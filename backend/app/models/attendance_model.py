@@ -66,7 +66,7 @@ class AttendanceModel:
                 note = update.get("note")
                 start_date = update.get("start_date")
                 end_date = update.get("end_date")
-                
+
                 if not employee_id or not status_type_id:
                     continue
 
@@ -95,7 +95,7 @@ class AttendanceModel:
                 """,
                     (employee_id, status_type_id, start, end_date, note, reported_by),
                 )
-            
+
             conn.commit()
             return True
         except Exception as e:
@@ -152,6 +152,134 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
+    def get_unit_comparison_stats(requesting_user=None):
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            # Determine grouping level based on user role
+            grouping_col = "d.name"
+            grouping_id = "d.id"
+            grouping_label = "department"
+
+            scoping_clause = ""
+            params = []
+
+            if requesting_user and not requesting_user.get("is_admin"):
+                if requesting_user.get("commands_department_id"):
+                    grouping_col = "s.name"
+                    grouping_id = "s.id"
+                    grouping_label = "section"
+                    scoping_clause = " AND d.id = %s"
+                    params.append(requesting_user["commands_department_id"])
+                elif requesting_user.get("commands_section_id"):
+                    grouping_col = "t.name"
+                    grouping_id = "t.id"
+                    grouping_label = "team"
+                    scoping_clause = " AND s.id = %s"
+                    params.append(requesting_user["commands_section_id"])
+                elif requesting_user.get("commands_team_id"):
+                    return []
+
+            query = f"""
+                SELECT 
+                    {grouping_id} as unit_id,
+                    COALESCE({grouping_col}, 'אחר') as unit_name,
+                    COUNT(e.id) as total_count,
+                    COUNT(CASE WHEN st.is_presence = TRUE THEN 1 END) as present_count,
+                    COUNT(CASE WHEN st.is_presence = FALSE THEN 1 END) as absent_count,
+                    COUNT(CASE WHEN al.id IS NULL THEN 1 END) as unknown_count
+                FROM employees e
+                LEFT JOIN teams t ON e.team_id = t.id
+                LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                -- Current Status Join
+                LEFT JOIN LATERAL (
+                    SELECT status_type_id, id FROM attendance_logs 
+                    WHERE employee_id = e.id AND end_datetime IS NULL
+                    ORDER BY start_datetime DESC LIMIT 1
+                ) al ON true
+                LEFT JOIN status_types st ON al.status_type_id = st.id
+                WHERE e.is_active = TRUE {scoping_clause}
+                GROUP BY {grouping_id}, {grouping_col}
+                ORDER BY {grouping_col}
+            """
+
+            cur.execute(query, tuple(params))
+            results = cur.fetchall()
+
+            # Add metadata about level
+            for r in results:
+                r["level"] = grouping_label
+
+            return results
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_attendance_trend(days=7, requesting_user=None):
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            scoping_clause = ""
+            params = []
+
+            if requesting_user and not requesting_user.get("is_admin"):
+                if requesting_user.get("commands_department_id"):
+                    scoping_clause = " AND (d.id = %s)"
+                    params.append(requesting_user["commands_department_id"])
+                elif requesting_user.get("commands_section_id"):
+                    scoping_clause = " AND (s.id = %s)"
+                    params.append(requesting_user["commands_section_id"])
+                elif requesting_user.get("commands_team_id"):
+                    scoping_clause = " AND (t.id = %s)"
+                    params.append(requesting_user["commands_team_id"])
+                else:
+                    scoping_clause = " AND e.id = %s"
+                    params.append(requesting_user["id"])
+
+            query = f"""
+                WITH params AS (
+                    SELECT CURRENT_DATE - (n || ' days')::interval as date
+                    FROM generate_series(0, %s) n
+                ),
+                scoped_employees AS (
+                    SELECT e.id 
+                    FROM employees e
+                    LEFT JOIN teams t ON e.team_id = t.id
+                    LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                    LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    WHERE e.is_active = TRUE {scoping_clause}
+                )
+                SELECT 
+                    TO_CHAR(p.date, 'DD/MM') as date_str,
+                    p.date,
+                    (SELECT COUNT(*) FROM scoped_employees) as total_employees,
+                    (
+                        SELECT COUNT(DISTINCT se.id)
+                        FROM scoped_employees se
+                        JOIN attendance_logs al ON al.employee_id = se.id
+                        JOIN status_types st ON al.status_type_id = st.id
+                        WHERE st.is_presence = TRUE
+                        AND DATE(al.start_datetime) <= p.date
+                        AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= p.date)
+                    ) as present_count
+                FROM params p
+                ORDER BY p.date ASC
+            """
+
+            final_params = [days - 1] + params
+            cur.execute(query, tuple(final_params))
+            return cur.fetchall()
+        finally:
+            conn.close()
+
+    @staticmethod
     def get_dashboard_stats(requesting_user=None, filters=None):
         conn = get_db_connection()
         if not conn:
@@ -179,7 +307,7 @@ class AttendanceModel:
                 WHERE e.is_active = TRUE
             """
             params = []
-            
+
             # 1. Base Scoping (Security)
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
@@ -194,33 +322,33 @@ class AttendanceModel:
                 else:
                     # Individual Fallback
                     query += " AND e.id = %s"
-                    params.append(requesting_user['id'])
+                    params.append(requesting_user["id"])
 
             # 2. Drill-down Filters (User Selection)
             if filters:
-                if filters.get('department_id'):
+                if filters.get("department_id"):
                     query += " AND d.id = %s"
-                    params.append(filters['department_id'])
-                if filters.get('section_id'):
+                    params.append(filters["department_id"])
+                if filters.get("section_id"):
                     query += " AND s.id = %s"
-                    params.append(filters['section_id'])
-                if filters.get('team_id'):
+                    params.append(filters["section_id"])
+                if filters.get("team_id"):
                     query += " AND t.id = %s"
-                    params.append(filters['team_id'])
-                if filters.get('status_id'):
+                    params.append(filters["team_id"])
+                if filters.get("status_id"):
                     query += " AND st.id = %s"
-                    params.append(filters['status_id'])
+                    params.append(filters["status_id"])
 
             # Exclude requesting user (Commander) from stats
-            if requesting_user and requesting_user.get('is_commander'):
+            if requesting_user and requesting_user.get("is_commander"):
                 query += " AND e.id != %s"
-                params.append(requesting_user['id'])
+                params.append(requesting_user["id"])
 
             query += " GROUP BY st.id, st.name, st.color"
-            
+
             # Debug SQL
             # print(f"Executing SQL: {query} \nParams: {params}")
-            
+
             try:
                 cur.execute(query, tuple(params))
                 return cur.fetchall()
@@ -250,7 +378,7 @@ class AttendanceModel:
                 WHERE e.is_active = TRUE AND e.birth_date IS NOT NULL
             """
             params = []
-            
+
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
                     query += " AND d.id = %s"
@@ -263,12 +391,12 @@ class AttendanceModel:
                     params.append(requesting_user["commands_team_id"])
                 else:
                     query += " AND e.id = %s"
-                    params.append(requesting_user['id'])
+                    params.append(requesting_user["id"])
 
             # Exclude requesting user from birthdays
-            if requesting_user and requesting_user.get('is_commander'):
+            if requesting_user and requesting_user.get("is_commander"):
                 query += " AND e.id != %s"
-                params.append(requesting_user['id'])
+                params.append(requesting_user["id"])
 
             query += """
                 AND (
