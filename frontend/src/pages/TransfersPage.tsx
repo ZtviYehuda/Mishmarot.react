@@ -349,10 +349,52 @@ export default function TransfersPage() {
         {/* --- New Transfer Form --- */}
         <TabsContent value="new" className="animate-in fade-in duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Sidebar info - NOW ON LEFT (first in RTL) */}
+            <div className="space-y-6">
+              <Card className="border shadow-sm bg-card rounded-xl overflow-hidden">
+                <CardHeader className="bg-primary/5 border-b">
+                  <CardTitle className="text-base font-bold flex items-center gap-2 text-primary flex-row-reverse justify-end">
+                    <ShieldAlert className="w-4 h-4" />
+                    הנחיות ודגשים
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4 text-sm text-muted-foreground leading-relaxed text-right">
+                  <div className="flex gap-2 flex-row-reverse">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <p>מעבר ארגוני כפוף לאישור מפקד היחידה וגורמי כוח האדם המוסמכים.</p>
+                  </div>
+                  <div className="flex gap-2 flex-row-reverse">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <p>השיבוץ יתעדכן במערכת באופן אוטומטי רק לאחר קבלת אישור סופי מהגורמים הרלוונטיים.</p>
+                  </div>
+                  <div className="flex gap-2 flex-row-reverse">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <p>ניתן לעקוב אחר סטטוס הטיפול בלשונית בקשות ממתינות.</p>
+                  </div>
+                  <div className="pt-4 border-t text-[11px] font-bold text-primary/70 italic text-right">
+                    * המערכת מתעדת את כלל הפעולות לצרכי מעקב ובקרה.
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border shadow-sm bg-muted/20 rounded-xl overflow-hidden">
+                <CardContent className="p-4 flex items-center gap-3 flex-row-reverse">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-bold">זמן טיפול משוער</p>
+                    <p className="text-[10px] text-muted-foreground">בין 24 ל-48 שעות עבודה</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Main Form - NOW ON RIGHT (second in RTL) */}
             <Card className="lg:col-span-2 border shadow-sm rounded-xl">
               <CardHeader className="border-b bg-muted/20">
-                <CardTitle>טופס בקשת העברה</CardTitle>
-                <CardDescription>מלא את פרטי השוטר והיעד המבוקש להגשת הבקשה לאישור.</CardDescription>
+                <CardTitle className="text-right">טופס בקשת העברה</CardTitle>
+                <CardDescription className="text-right">מלא את פרטי השוטר והיעד המבוקש להגשת הבקשה לאישור.</CardDescription>
               </CardHeader>
               <CardContent className="p-8 space-y-8 text-right">
                 {/* Employee Selection */}
@@ -514,46 +556,6 @@ export default function TransfersPage() {
               </CardContent>
             </Card>
 
-            {/* Sidebar info */}
-            <div className="space-y-6">
-              <Card className="border shadow-sm bg-card rounded-xl overflow-hidden">
-                <CardHeader className="bg-primary/5 border-b">
-                  <CardTitle className="text-base font-bold flex items-center gap-2 text-primary flex-row-reverse justify-end">
-                    <ShieldAlert className="w-4 h-4" />
-                    הנחיות ודגשים
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4 text-sm text-muted-foreground leading-relaxed text-right">
-                  <div className="flex gap-2 flex-row-reverse">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <p>מעבר ארגוני כפוף לאישור מפקד היחידה וגורמי כוח האדם המוסמכים.</p>
-                  </div>
-                  <div className="flex gap-2 flex-row-reverse">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <p>השיבוץ יתעדכן במערכת באופן אוטומטי רק לאחר קבלת אישור סופי מהגורמים הרלוונטיים.</p>
-                  </div>
-                  <div className="flex gap-2 flex-row-reverse">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <p>ניתן לעקוב אחר סטטוס הטיפול בלשונית בקשות ממתינות.</p>
-                  </div>
-                  <div className="pt-4 border-t text-[11px] font-bold text-primary/70 italic text-right">
-                    * המערכת מתעדת את כלל הפעולות לצרכי מעקב ובקרה.
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border shadow-sm bg-muted/20 rounded-xl overflow-hidden">
-                <CardContent className="p-4 flex items-center gap-3 flex-row-reverse">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold">זמן טיפול משוער</p>
-                    <p className="text-[10px] text-muted-foreground">בין 24 ל-48 שעות עבודה</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         </TabsContent>
 
