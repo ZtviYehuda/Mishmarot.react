@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   ArrowRight,
   ArrowLeftRight,
+  Sparkles,
 } from "lucide-react";
 import {
   Select,
@@ -36,6 +37,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthContext } from "@/context/AuthContext";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { BirthdayGreetingsModal } from "@/components/dashboard/BirthdayGreetingsModal";
 
 // --- Styled Components ---
 
@@ -199,10 +201,25 @@ export default function EditEmployeePage() {
     is_active: true,
   });
 
+  const [commanderWarning, setCommanderWarning] = useState<{
+    name: string;
+    unitType: string;
+  } | null>(null);
+
   // Cascading & UI state
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
   const [selectedSectionId, setSelectedSectionId] = useState<string>("");
   const [activeTab, setActiveTab] = useState("personal");
+  const [showBirthdayModal, setShowBirthdayModal] = useState(false);
+
+  // Check if today is birthday
+  const isBirthdayToday = () => {
+    if (!formData.birth_date) return false;
+    const today = new Date();
+    const birthDate = new Date(formData.birth_date);
+    return today.getDate() === birthDate.getDate() &&
+      today.getMonth() === birthDate.getMonth();
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -351,6 +368,15 @@ export default function EditEmployeePage() {
             iconClassName="from-primary/10 to-primary/5 border-primary/20"
             badge={
               <div className="flex items-center gap-3">
+                {isBirthdayToday() && employee && (
+                  <Button
+                    onClick={() => setShowBirthdayModal(true)}
+                    className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-lg shadow-purple-500/20 rounded-xl px-4 h-11 font-black gap-2 animate-bounce hover:animate-none"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    שלח ברכת יום הולדת!
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => navigate("/employees")}
@@ -377,6 +403,20 @@ export default function EditEmployeePage() {
           />
         </div>
       </div>
+
+      {employee && (
+        <BirthdayGreetingsModal
+          open={showBirthdayModal}
+          onOpenChange={setShowBirthdayModal}
+          employeesToday={[{
+            id: employee.id,
+            first_name: employee.first_name,
+            last_name: employee.last_name,
+            birth_date: employee.birth_date || undefined,
+            phone_number: employee.phone_number || undefined
+          }]}
+        />
+      )}
 
       <div className="max-w-7xl mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Visual Sidebar Profile Summary - Positioned for Logic RTL (Col 1) */}
@@ -722,7 +762,7 @@ export default function EditEmployeePage() {
                               </SelectTrigger>
                               <SelectContent dir="rtl">
                                 <SelectItem value="none">ללא חולייה</SelectItem>
-                                {teams.map((t) => (
+                                {teams.map((t: any) => (
                                   <SelectItem
                                     key={t.id}
                                     value={t.id.toString()}
@@ -806,11 +846,83 @@ export default function EditEmployeePage() {
                               label="מוגדר כמפקד"
                               description="בעל סמכויות פיקודיות על היחידה הארגונית שלו"
                               checked={formData.is_commander || false}
-                              onChange={(v) =>
-                                setFormData({ ...formData, is_commander: v })
-                              }
+                              onChange={(v) => {
+                                if (v && id) {
+                                  // Check for existing commander
+                                  const empId = parseInt(id);
+                                  let existing: { name: string; type: string } | null = null;
+
+                                  if (formData.team_id) {
+                                    const team = teams.find((t: any) => t.id === formData.team_id);
+                                    if (team?.commander_id && team.commander_id !== empId) {
+                                      existing = { name: team.commander_name || "לא ידוע", type: "חולייה" };
+                                    }
+                                  } else if (selectedSectionId) {
+                                    const sec = sections.find((s: any) => s.id.toString() === selectedSectionId);
+                                    if (sec?.commander_id && sec.commander_id !== empId) {
+                                      existing = { name: sec.commander_name || "לא ידוע", type: "מדור" };
+                                    }
+                                  } else if (selectedDeptId) {
+                                    const dept = structure.find((d: any) => d.id.toString() === selectedDeptId);
+                                    if (dept?.commander_id && dept.commander_id !== empId) {
+                                      existing = { name: dept.commander_name || "לא ידוע", type: "מחלקה" };
+                                    }
+                                  }
+
+                                  if (existing) {
+                                    setCommanderWarning({ name: existing.name, unitType: existing.type });
+                                    return;
+                                  }
+                                }
+                                setFormData({ ...formData, is_commander: v });
+                              }}
                               icon={Settings2}
                             />
+
+                            <AnimatePresence>
+                              {commanderWarning && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -10 }}
+                                  className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl"
+                                >
+                                  <div className="flex items-start gap-3">
+                                    <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600">
+                                      <Shield className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <h4 className="text-sm font-black text-amber-900 mb-1">שים לב: החלפת מפקד</h4>
+                                      <p className="text-xs text-amber-800 font-bold leading-relaxed">
+                                        ליחידה זו כבר מוגדר מפקד: <span className="underline">{commanderWarning.name}</span>.
+                                        האם אתה בטוח שברצונך להגדיר את <span className="text-amber-950 font-black">{formData.first_name} {formData.last_name}</span> כמפקד ה{commanderWarning.unitType} במקומו?
+                                        פעולה זו תסיר את המפקד הנוכחי מתפקידו הפיקודי.
+                                      </p>
+                                      <div className="flex gap-2 mt-3">
+                                        <Button
+                                          size="sm"
+                                          className="bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] h-8 px-4 rounded-xl shadow-sm"
+                                          onClick={() => {
+                                            setFormData({ ...formData, is_commander: true });
+                                            setCommanderWarning(null);
+                                          }}
+                                        >
+                                          כן, החלף מפקד
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="text-amber-800 font-bold text-[10px] h-8 px-4 hover:bg-amber-500/10 rounded-xl"
+                                          onClick={() => setCommanderWarning(null)}
+                                        >
+                                          ביטול
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
 
                             <div className="mt-4">
                               <ToggleCard

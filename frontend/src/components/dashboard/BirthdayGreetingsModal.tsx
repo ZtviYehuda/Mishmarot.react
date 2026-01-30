@@ -6,12 +6,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Check, Send, Edit2, RotateCcw, Save } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
 
 interface BirthdayEmployee {
     id: number;
     first_name: string;
     last_name: string;
-    birth_date: string;
+    birth_date?: string | null;
     phone_number?: string;
 }
 
@@ -30,9 +31,9 @@ interface Preset {
 const STORAGE_KEY = "birthday_presets";
 
 const INITIAL_PRESETS: Preset[] = [
-    { id: 1, label: "ברכה 1", text: "מזל טוב [שם] יקר! 🎂 מאחלים לך יום הולדת שמח, המון בריאות, אושר והצלחה מהיחידה! ❤️" },
-    { id: 2, label: "ברכה 2", text: "יום הולדת שמח [שם]! 🎉 מאחלים לך שנה מלאה בחוויות טובות, חיוכים והמון כיף. מזל טוב! 🎈" },
-    { id: 3, label: "ברכה 3", text: "מזל טוב [שם]! 🎂 מאחלים לך יום הולדת שמח ומכל הלב! 🎈" }
+    { id: 1, label: "ברכה 1", text: "מזל טוב [שם] יקר! 🎂 מאחלים לך יום הולדת שמח, המון בריאות, אושר והצלחה מהיחידה! ❤️\n\nבברכה, [שם_המפקד]" },
+    { id: 2, label: "ברכה 2", text: "יום הולדת שמח [שם]! 🎉 מאחלים לך שנה מלאה בחוויות טובות, חיוכים והמון כיף. מזל טוב! 🎈\n\nממני, [שם_המפקד]" },
+    { id: 3, label: "ברכה 3", text: "מזל טוב [שם]! 🎂 מאחלים לך יום הולדת שמח ומכל הלב! 🎈\n\n[שם_המפקד]" }
 ];
 
 export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
@@ -40,11 +41,14 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
     onOpenChange,
     employeesToday,
 }) => {
+    const { user } = useAuthContext();
     const [presets, setPresets] = useState<Preset[]>(INITIAL_PRESETS);
     const [activePresetId, setActivePresetId] = useState<number>(1);
     const [template, setTemplate] = useState(INITIAL_PRESETS[0].text);
     const [sentList, setSentList] = useState<number[]>([]);
     const [isEditing, setIsEditing] = useState(false);
+
+    const commanderName = user ? `${user.first_name} ${user.last_name}` : "המפקד";
 
     // Load presets from localStorage on mount
     useEffect(() => {
@@ -53,6 +57,7 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
             try {
                 const parsed = JSON.parse(saved);
                 setPresets(parsed);
+                // Also update current template if it matches the first preset
                 setTemplate(parsed[0].text);
             } catch (e) {
                 console.error("Failed to load presets", e);
@@ -63,7 +68,10 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
     const handleSend = (emp: BirthdayEmployee) => {
         if (!emp.phone_number) return;
 
-        const message = template.replace("[שם]", emp.first_name);
+        // Replace both placeholders
+        let message = template.replace("[שם]", emp.first_name);
+        message = message.replace("[שם_המפקד]", commanderName);
+
         const cleanPhone = emp.phone_number.replace(/\D/g, "");
 
         const finalPhone = cleanPhone.startsWith('972')
@@ -85,7 +93,6 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
         setPresets(updatedPresets);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPresets));
         setIsEditing(false);
-        // Simple visual feedback could be added here
     };
 
     const handleSelectPreset = (p: Preset) => {
@@ -155,13 +162,13 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                                 <textarea
                                     value={template}
                                     onChange={(e) => setTemplate(e.target.value)}
-                                    className="w-full bg-card border border-border rounded-lg p-3 text-sm font-medium focus:ring-1 focus:ring-primary outline-none transition-all h-28 custom-scrollbar resize-none"
-                                    placeholder="הכנס את נוסח הברכה... השתמש ב-[שם] כדי להחליף בשם הפרטי"
+                                    className="w-full bg-card border border-border rounded-lg p-3 text-sm font-medium focus:ring-1 focus:ring-primary outline-none transition-all h-32 custom-scrollbar resize-none"
+                                    placeholder="הכנס את נוסח הברכה... השתמש ב-[שם] וב-[שם_המפקד]"
                                 />
                             ) : (
                                 <div
                                     onClick={() => setIsEditing(true)}
-                                    className="bg-card border border-border/50 rounded-lg p-4 text-sm font-semibold text-foreground leading-relaxed cursor-text min-h-[80px] hover:border-primary/30 transition-colors group relative"
+                                    className="bg-card border border-border/50 rounded-lg p-4 text-sm font-semibold text-foreground leading-relaxed cursor-text min-h-[100px] hover:border-primary/30 transition-colors group relative whitespace-pre-wrap"
                                 >
                                     {template}
                                     <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -172,8 +179,10 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                         </div>
 
                         <div className="flex justify-between items-center mt-3">
-                            <p className="text-[9px] text-muted-foreground font-medium">
-                                * המילה <span className="text-primary font-bold">[שם]</span> תוחלף אוטומטית בשם הפרטי.
+                            <p className="text-[9px] text-muted-foreground font-medium leading-loose">
+                                * <span className="text-primary font-bold">[שם]</span> יוחלף בשם השוטר.
+                                <br />
+                                * <span className="text-primary font-bold">[שם_המפקד]</span> יוחלף ב: <span className="font-bold underline">{commanderName}</span>
                             </p>
                             {!isEditing && (
                                 <button

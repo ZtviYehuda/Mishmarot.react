@@ -37,17 +37,23 @@ interface Team {
   id: number;
   name: string;
   section_id: number;
+  commander_id?: number | null;
+  commander_name?: string | null;
 }
 interface Section {
   id: number;
   name: string;
   department_id: number;
   teams: Team[];
+  commander_id?: number | null;
+  commander_name?: string | null;
 }
 interface Department {
   id: number;
   name: string;
   sections: Section[];
+  commander_id?: number | null;
+  commander_name?: string | null;
 }
 
 export default function CreateEmployeePage() {
@@ -86,6 +92,11 @@ export default function CreateEmployeePage() {
     police_license: false,
     emergency_contact: "",
   });
+
+  const [commanderWarning, setCommanderWarning] = useState<{
+    name: string;
+    unitType: string;
+  } | null>(null);
 
   // Fetch structure and service types on mount
   // 1. Fetch structure and service types on mount
@@ -494,11 +505,69 @@ export default function CreateEmployeePage() {
                 <ToggleCard
                   label="תפקיד פיקודי"
                   checked={formData.is_commander || false}
-                  onChange={(v) =>
-                    setFormData({ ...formData, is_commander: v })
-                  }
+                  onChange={(v) => {
+                    if (v) {
+                      // Check for existing commander
+                      let existing: { name: string; type: string } | null = null;
+                      if (formData.team_id) {
+                        const team = teams.find(t => t.id === formData.team_id);
+                        if (team?.commander_id) existing = { name: team.commander_name || "לא ידוע", type: "חולייה" };
+                      } else if (selectedSectionId) {
+                        const sec = sections.find(s => s.id.toString() === selectedSectionId);
+                        if (sec?.commander_id) existing = { name: sec.commander_name || "לא ידוע", type: "מדור" };
+                      } else if (selectedDeptId) {
+                        const dept = structure.find(d => d.id.toString() === selectedDeptId);
+                        if (dept?.commander_id) existing = { name: dept.commander_name || "לא ידוע", type: "מחלקה" };
+                      }
+
+                      if (existing) {
+                        setCommanderWarning({ name: existing.name, unitType: existing.type });
+                        return; // Don't toggle yet
+                      }
+                    }
+                    setFormData({ ...formData, is_commander: v });
+                  }}
                 />
-                {formData.is_commander && (
+
+                {commanderWarning && (
+                  <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl animate-in fade-in zoom-in-95 duration-200">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-full bg-amber-500/20 text-amber-600">
+                        <Shield className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-black text-amber-700 mb-1">שים לב: החלפת מפקד</h4>
+                        <p className="text-xs text-amber-700/80 font-bold leading-relaxed">
+                          ליחידה זו כבר מוגדר מפקד: <span className="underline">{commanderWarning.name}</span>.
+                          האם אתה בטוח שברצונך להגדיר את <span className="text-amber-900 font-black">{formData.first_name} {formData.last_name}</span> כמפקד ה{commanderWarning.unitType} במקומו?
+                          פעולה זו תסיר את המפקד הנוכחי מתפקידו הפיקודי.
+                        </p>
+                        <div className="flex gap-3 mt-3">
+                          <Button
+                            size="sm"
+                            className="bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] h-7 px-4 rounded-full shadow-sm"
+                            onClick={() => {
+                              setFormData({ ...formData, is_commander: true });
+                              setCommanderWarning(null);
+                            }}
+                          >
+                            כן, החלף מפקד
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-amber-700 font-bold text-[10px] h-7 px-4 hover:bg-amber-500/10"
+                            onClick={() => setCommanderWarning(null)}
+                          >
+                            ביטול
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {formData.is_commander && !commanderWarning && (
                   <div className="mt-3 p-3 bg-primary/5 border border-primary/10 rounded-lg">
                     <p className="text-xs text-primary flex items-start gap-2">
                       <span className="text-base">💡</span>
