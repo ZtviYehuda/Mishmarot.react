@@ -767,40 +767,34 @@ export default function AttendancePage() {
 
       {bulkModalOpen && (
         <BulkStatusUpdateModal
-          isOpen={bulkModalOpen}
-          onClose={() => {
-            setBulkModalOpen(false);
-            // Optionally clear selection if needed, or keep it
-          }}
-          selectedEmployeeIds={selectedEmployeeIds}
-          statusTypes={statusTypes}
+          open={bulkModalOpen}
+          onOpenChange={setBulkModalOpen}
+          employees={filteredEmployees}
+          initialSelectedIds={selectedEmployeeIds}
           onSuccess={refreshData}
         />
       )}
 
       {selectedEmployee && (
         <StatusUpdateModal
-          isOpen={statusModalOpen}
-          onClose={() => setStatusModalOpen(false)}
+          open={statusModalOpen}
+          onOpenChange={setStatusModalOpen}
           employee={selectedEmployee}
-          statusTypes={statusTypes}
           onSuccess={refreshData}
         />
       )}
 
       {selectedEmployee && (
         <StatusHistoryModal
-          isOpen={historyModalOpen}
-          onClose={() => setHistoryModalOpen(false)}
+          open={historyModalOpen}
+          onOpenChange={setHistoryModalOpen}
           employee={selectedEmployee}
         />
       )}
 
       <ExportReportDialog
-        isOpen={exportDialogOpen}
-        onClose={() => setExportDialogOpen(false)}
-        employees={filteredEmployees}
-        selectedDate={selectedDate}
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
       />
     </div>
   );

@@ -393,25 +393,4 @@ def get_service_types():
         return jsonify({"error": str(e)}), 500
 
 
-@emp_bp.route("/roles", methods=["GET"])
-@jwt_required()
-def get_roles():
-    """Get all roles for dropdown"""
-    try:
-        from app.utils.db import get_db_connection
-        from psycopg2.extras import RealDictCursor
 
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"error": "Database connection failed"}), 500
-
-        try:
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            cur.execute("SELECT id, name FROM roles ORDER BY name")
-            roles = cur.fetchall()
-            return jsonify(roles)
-        finally:
-            conn.close()
-    except Exception as e:
-        print(f"Error fetching roles: {e}")
-        return jsonify({"error": str(e)}), 500
