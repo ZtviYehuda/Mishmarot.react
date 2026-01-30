@@ -14,6 +14,14 @@ export interface AuthUser {
   commands_team_id?: number;
   notif_sick_leave?: boolean;
   notif_transfers?: boolean;
+  city?: string | null;
+  birth_date?: string | null;
+  emergency_contact?: string | null;
+  department_name?: string | null;
+  section_name?: string | null;
+  team_name?: string | null;
+  role_name?: string | null;
+  service_type_name?: string | null;
 }
 
 export interface LoginResponse {

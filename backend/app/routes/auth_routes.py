@@ -84,6 +84,14 @@ def login():
                     "commands_team_id": user.get("commands_team_id"),
                     "notif_sick_leave": user.get("notif_sick_leave", True),
                     "notif_transfers": user.get("notif_transfers", True),
+                    "city": user.get("city"),
+                    "birth_date": user.get("birth_date"),
+                    "emergency_contact": user.get("emergency_contact"),
+                    "department_name": user.get("department_name"),
+                    "section_name": user.get("section_name"),
+                    "team_name": user.get("team_name"),
+                    "role_name": user.get("role_name"),
+                    "service_type_name": user.get("service_type_name"),
                 },
             }
         )
@@ -139,6 +147,14 @@ def get_current_user():
                 "commands_team_id": user.get("commands_team_id"),
                 "notif_sick_leave": user.get("notif_sick_leave", True),
                 "notif_transfers": user.get("notif_transfers", True),
+                "city": user.get("city"),
+                "birth_date": user.get("birth_date"),
+                "emergency_contact": user.get("emergency_contact"),
+                "department_name": user.get("department_name"),
+                "section_name": user.get("section_name"),
+                "team_name": user.get("team_name"),
+                "role_name": user.get("role_name"),
+                "service_type_name": user.get("service_type_name"),
             }
         )
     return jsonify({"error": "User not found"}), 404
@@ -198,6 +214,9 @@ def update_profile():
         "phone_number": data.get("phone_number"),
         "notif_sick_leave": data.get("notif_sick_leave"),
         "notif_transfers": data.get("notif_transfers"),
+        "city": data.get("city"),
+        "birth_date": data.get("birth_date"),
+        "emergency_contact": data.get("emergency_contact"),
     }
 
     # הסרת ערכים שהם None (כדי לא לדרוס נתונים קיימים אם לא נשלחו)

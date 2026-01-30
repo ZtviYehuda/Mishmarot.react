@@ -31,9 +31,16 @@ import {
   Database,
   Download,
   Upload,
-  Clock,
   FolderOpen,
   RefreshCw,
+  MapPin,
+  Clock,
+  Cake,
+  PhoneForwarded,
+  Briefcase,
+  KeyRound,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 
@@ -144,9 +151,19 @@ export default function SettingsPage() {
     first_name: "",
     last_name: "",
     phone_number: "",
+    city: "",
+    birth_date: "",
+    emergency_contact: "",
     notif_sick_leave: true,
     notif_transfers: true,
   });
+
+  const [passwordData, setPasswordData] = useState({
+    new_password: "",
+    confirm_password: "",
+  });
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -154,6 +171,9 @@ export default function SettingsPage() {
         first_name: user.first_name || "",
         last_name: user.last_name || "",
         phone_number: user.phone_number || "",
+        city: user.city || "",
+        birth_date: user.birth_date || "",
+        emergency_contact: user.emergency_contact || "",
         notif_sick_leave: user.notif_sick_leave !== false,
         notif_transfers: user.notif_transfers !== false,
       });
@@ -177,6 +197,34 @@ export default function SettingsPage() {
       toast.error("שגיאה בתקשורת עם השרת");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordData.new_password || passwordData.new_password.length < 6) {
+      toast.error("הסיסמה חייבת להכיל לפחות 6 תווים");
+      return;
+    }
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      toast.error("הסיסמאות אינן תואמות");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const { data } = await apiClient.post("/auth/change-password", {
+        new_password: passwordData.new_password
+      });
+      if (data.success) {
+        toast.success("הסיסמה עודכנה בהצלחה");
+        setPasswordData({ new_password: "", confirm_password: "" });
+      } else {
+        toast.error(data.error || "שגיאה בעדכון הסיסמה");
+      }
+    } catch (err) {
+      toast.error("שגיאה בתקשורת עם השרת");
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -361,6 +409,62 @@ export default function SettingsPage() {
                     </div>
                     <div className="space-y-2.5">
                       <Label className="text-sm font-black text-muted-foreground/80">
+                        עיר מגורים
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          value={formData.city}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              city: e.target.value,
+                            })
+                          }
+                          className="h-12 rounded-xl bg-muted/50 border-0 font-bold focus-visible:ring-2 focus-visible:ring-primary pr-10"
+                        />
+                        <MapPin className="w-4 h-4 text-muted-foreground/40 absolute right-4 top-1/2 -translate-y-1/2" />
+                      </div>
+                    </div>
+                    <div className="space-y-2.5">
+                      <Label className="text-sm font-black text-muted-foreground/80">
+                        תאריך לידה
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          type="date"
+                          value={formData.birth_date ? formData.birth_date.split("T")[0] : ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              birth_date: e.target.value,
+                            })
+                          }
+                          className="h-12 rounded-xl bg-muted/50 border-0 font-bold focus-visible:ring-2 focus-visible:ring-primary pr-10"
+                        />
+                        <Cake className="w-4 h-4 text-muted-foreground/40 absolute right-4 top-1/2 -translate-y-1/2" />
+                      </div>
+                    </div>
+                    <div className="space-y-2.5">
+                      <Label className="text-sm font-black text-muted-foreground/80">
+                        איש קשר לחירום
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          value={formData.emergency_contact}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              emergency_contact: e.target.value,
+                            })
+                          }
+                          placeholder="שם וטלפון..."
+                          className="h-12 rounded-xl bg-muted/50 border-0 font-bold focus-visible:ring-2 focus-visible:ring-primary pr-10"
+                        />
+                        <PhoneForwarded className="w-4 h-4 text-muted-foreground/40 absolute right-4 top-1/2 -translate-y-1/2" />
+                      </div>
+                    </div>
+                    <div className="space-y-2.5">
+                      <Label className="text-sm font-black text-muted-foreground/80">
                         מספר אישי (נעול)
                       </Label>
                       <div className="relative">
@@ -371,6 +475,21 @@ export default function SettingsPage() {
                         />
                         <Lock className="w-4 h-4 text-muted-foreground/50 absolute right-4 top-1/2 -translate-y-1/2" />
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Organizational Info (Read-only) */}
+                  <div className="pt-8 border-t border-border">
+                    <h4 className="text-sm font-black text-foreground mb-6 flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-primary" />
+                      שיוך ארגוני (לקריאה בלבד)
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      <InfoBlock label="מחלקה" value={user?.department_name || "-"} />
+                      <InfoBlock label="מדור" value={user?.section_name || "-"} />
+                      <InfoBlock label="חולייה" value={user?.team_name || "-"} />
+                      <InfoBlock label="תפקיד" value={user?.role_name || "-"} />
+                      <InfoBlock label="סוג שירות" value={user?.service_type_name || "-"} />
                     </div>
                   </div>
 
@@ -524,21 +643,63 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="pt-4 flex flex-col gap-4">
-                    <div
-                      onClick={() => navigate("/change-password")}
-                      className="flex items-center justify-between p-5 rounded-2xl border-2 border-muted group hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer"
-                    >
-                      <button className="text-xs font-black text-primary hover:underline transition-colors focus:outline-none">
-                        עדכן כעת
-                      </button>
-                      <div className="text-right">
-                        <h5 className="text-base font-black text-foreground">
-                          סיסמת כניסה
-                        </h5>
-                        <p className="text-sm text-muted-foreground font-bold">
-                          החלף את סיסמת הגישה למערכת
-                        </p>
+                  <div className="pt-4 space-y-6">
+                    <div className="space-y-4 p-6 rounded-2xl border-2 border-muted bg-muted/20">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-right">
+                          <h5 className="text-base font-black text-foreground flex items-center gap-2 justify-end">
+                            החלפת סיסמה
+                            <KeyRound className="w-4 h-4 text-primary" />
+                          </h5>
+                          <p className="text-xs text-muted-foreground font-bold">
+                            הגדר סיסמה חדשה לכניסה למערכת
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground">סיסמה חדשה</Label>
+                          <div className="relative">
+                            <Input
+                              type={showPasswords ? "text" : "password"}
+                              value={passwordData.new_password}
+                              onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                              className="h-11 rounded-xl bg-background border-border font-bold pr-4"
+                              placeholder="לפחות 6 תווים"
+                            />
+                            <button
+                              onClick={() => setShowPasswords(!showPasswords)}
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-primary transition-colors"
+                            >
+                              {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground">אימות סיסמה</Label>
+                          <Input
+                            type={showPasswords ? "text" : "password"}
+                            value={passwordData.confirm_password}
+                            onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                            className="h-11 rounded-xl bg-background border-border font-bold"
+                            placeholder="הקלד שוב..."
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-start pt-2">
+                        <Button
+                          onClick={handleChangePassword}
+                          disabled={isChangingPassword || !passwordData.new_password}
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 px-8 rounded-xl font-bold shadow-md transition-all"
+                        >
+                          {isChangingPassword ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            "עדכן סיסמה"
+                          )}
+                        </Button>
                       </div>
                     </div>
 
@@ -772,6 +933,19 @@ export default function SettingsPage() {
 }
 
 // --- Helper Components ---
+
+function InfoBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-1.5 p-4 rounded-xl bg-muted/30 border border-border/50">
+      <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block text-right">
+        {label}
+      </span>
+      <span className="text-sm font-bold text-foreground block text-right">
+        {value}
+      </span>
+    </div>
+  );
+}
 
 function NotifSetting({
   title,
