@@ -1,0 +1,134 @@
+{
+    "metadata": {
+        "version": "1.0",
+        "date": "2026-01-29T23:31:34.397634",
+        "type": "automatic"
+    },
+    "data": {
+        "roles": [
+            {
+                "id": 1,
+                "name": "מנהל מערכת",
+                "description": null
+            },
+            {
+                "id": 2,
+                "name": "מפקד",
+                "description": null
+            },
+            {
+                "id": 3,
+                "name": "חייל",
+                "description": null
+            }
+        ],
+        "status_types": [
+            {
+                "id": 1,
+                "name": "משרד",
+                "color": "#22c55e",
+                "is_presence": true
+            },
+            {
+                "id": 2,
+                "name": "חופשה",
+                "color": "#3b82f6",
+                "is_presence": false
+            },
+            {
+                "id": 3,
+                "name": "מחלה",
+                "color": "#ef4444",
+                "is_presence": false
+            },
+            {
+                "id": 4,
+                "name": "קורס",
+                "color": "#8b5cf6",
+                "is_presence": true
+            },
+            {
+                "id": 5,
+                "name": "תגבור",
+                "color": "#f59e0b",
+                "is_presence": true
+            },
+            {
+                "id": 6,
+                "name": "חו\"ל",
+                "color": "#0ea5e9",
+                "is_presence": false
+            }
+        ],
+        "service_types": [
+            {
+                "id": 1,
+                "name": "קבע - קצין"
+            },
+            {
+                "id": 2,
+                "name": "קבע - נגד"
+            },
+            {
+                "id": 3,
+                "name": "שמ\"ז"
+            },
+            {
+                "id": 4,
+                "name": "שירות לאומי"
+            },
+            {
+                "id": 5,
+                "name": "שח\"מ"
+            },
+            {
+                "id": 6,
+                "name": "שח\"מ חרדי"
+            },
+            {
+                "id": 7,
+                "name": "שירות אזרחי ביטחוני"
+            },
+            {
+                "id": 8,
+                "name": "מתנדב"
+            }
+        ],
+        "departments": [],
+        "sections": [],
+        "teams": [],
+        "employees": [
+            {
+                "id": 1,
+                "personal_number": "admin",
+                "national_id": "000000000",
+                "first_name": "Admin",
+                "last_name": "System",
+                "phone_number": null,
+                "password_hash": "scrypt:32768:8:1$rYMsdAKfNhE4GLZ6$66e4cee6eb44374658424daf0eca1b9d52a4f8c51eefc1f6cc768ea7b5f73933b380d5a14485d2b5495becbc8ce03b4808b053c0776af9c2cbf15e00c7f8d7fb",
+                "must_change_password": false,
+                "is_admin": true,
+                "is_commander": true,
+                "is_active": true,
+                "team_id": null,
+                "section_id": null,
+                "department_id": null,
+                "role_id": null,
+                "service_type_id": null,
+                "birth_date": null,
+                "enlistment_date": null,
+                "discharge_date": null,
+                "assignment_date": null,
+                "city": null,
+                "security_clearance": 0,
+                "police_license": false,
+                "emergency_contact": null,
+                "notif_sick_leave": true,
+                "notif_transfers": true,
+                "created_at": "2026-01-29T21:31:20.675404"
+            }
+        ],
+        "attendance_logs": [],
+        "transfer_requests": []
+    }
+}

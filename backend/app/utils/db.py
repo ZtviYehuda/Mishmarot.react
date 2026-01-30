@@ -19,7 +19,8 @@ def get_db_connection():
             host=config.get('DB_HOST'),
             database=config.get('DB_NAME'),
             user=config.get('DB_USER'),
-            password=config.get('DB_PASS') # שימוש ב- .get() בטוח יותר
+            password=config.get('DB_PASS'),
+            port=config.get('DB_PORT', 5432)
         )
         return conn
     except Exception as e:

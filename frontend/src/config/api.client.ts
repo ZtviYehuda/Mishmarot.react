@@ -38,7 +38,9 @@ apiClient.interceptors.response.use(
     console.error(`[API] Error: ${error.response?.status} ${error.config?.url}`, error.response?.data);
     if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
     Dialog,
     DialogContent,
@@ -8,13 +8,22 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
     Loader2,
     CheckCircle2,
     Search,
     User,
     AlertCircle,
     Calendar,
-    ArrowRight
+    ArrowLeft,
+    Filter
 } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
 import type { Employee } from "@/types/employee.types";
@@ -26,6 +35,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 interface BulkStatusUpdateModalProps {
@@ -33,6 +43,7 @@ interface BulkStatusUpdateModalProps {
     onOpenChange: (open: boolean) => void;
     employees: Employee[];
     onSuccess?: () => void;
+    initialSelectedIds?: number[];
 }
 
 interface UpdateState {
@@ -40,6 +51,7 @@ interface UpdateState {
     status_name: string;
     color: string;
     isChanged: boolean;
+    touched: boolean; // Added touched flag
     start_date?: string;
     end_date?: string;
 }
@@ -49,25 +61,37 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     onOpenChange,
     employees,
     onSuccess,
+    initialSelectedIds = [],
 }) => {
-    const { getStatusTypes, logBulkStatus } = useEmployees();
+    const { getStatusTypes, logBulkStatus, getServiceTypes } = useEmployees();
     const [statusTypes, setStatusTypes] = useState<any[]>([]);
+    const [serviceTypes, setServiceTypes] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [filterServiceType, setFilterServiceType] = useState<string>("all");
+    const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+
+    // Selection State
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [batchStatusId, setBatchStatusId] = useState<string>("");
 
     // Local state for temporary changes before submission
     const [bulkUpdates, setBulkUpdates] = useState<Record<number, UpdateState>>({});
 
     useEffect(() => {
         if (open) {
-            const fetchTypes = async () => {
+            const fetchData = async () => {
                 setFetching(true);
-                const types = await getStatusTypes();
-                setStatusTypes(types);
+                const [sTypes, servTypes] = await Promise.all([
+                    getStatusTypes(),
+                    getServiceTypes()
+                ]);
+                setStatusTypes(sTypes);
+                setServiceTypes(servTypes || []);
                 setFetching(false);
             };
-            fetchTypes();
+            fetchData();
 
             // Initialize bulkUpdates with current statuses
             const initial: Record<number, UpdateState> = {};
@@ -78,25 +102,38 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                         status_name: emp.status_name || "ללא סטטוס",
                         color: emp.status_color || "#94a3b8",
                         isChanged: false,
+                        touched: false, // Initialize touched
                         start_date: new Date().toISOString().split('T')[0]
                     };
                 }
             });
             setBulkUpdates(initial);
+
+            // Handle Initial Selection
+            if (initialSelectedIds && initialSelectedIds.length > 0) {
+                setSelectedIds(initialSelectedIds);
+                setShowSelectedOnly(true);
+            } else {
+                setSelectedIds([]);
+                setShowSelectedOnly(false);
+            }
+
+            setFilterServiceType("all");
+            setBatchStatusId("");
         }
-    }, [open, getStatusTypes, employees]);
+    }, [open, getStatusTypes, getServiceTypes, employees, initialSelectedIds]);
 
     const handleSubmit = async () => {
         setLoading(true);
-        // We only send updates that were changed OR we send all? 
-        // User said: "update the current statuses so the commander doesn't work hard... and if changed, change specifically".
-        // It's probably better to send all shown in the list to "re-confirm" them for today.
-        const updates = Object.entries(bulkUpdates).map(([empId, data]) => ({
-            employee_id: parseInt(empId),
-            status_type_id: data.status_id,
-            start_date: data.isChanged ? data.start_date : undefined,
-            end_date: data.isChanged ? data.end_date : undefined
-        }));
+        // Only submit updates that were touched (modified in UI)
+        const updates = Object.entries(bulkUpdates)
+            .filter(([_, data]) => data.touched)
+            .map(([empId, data]) => ({
+                employee_id: parseInt(empId),
+                status_type_id: data.status_id,
+                start_date: data.start_date, // Send date for all touched items
+                end_date: data.end_date
+            }));
 
         if (updates.length === 0) {
             toast.error("אין עדכונים לביצוע");
@@ -126,7 +163,8 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                     status_id: type.id,
                     status_name: type.name,
                     color: type.color,
-                    isChanged: type.id !== original?.status_id
+                    isChanged: type.id !== original?.status_id,
+                    touched: true // Mark as touched
                 }
             }));
         }
@@ -135,95 +173,214 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     const handleDateChange = (empId: number, field: 'start_date' | 'end_date', value: string) => {
         setBulkUpdates(prev => ({
             ...prev,
-            [empId]: { ...prev[empId], [field]: value }
+            [empId]: { ...prev[empId], [field]: value, touched: true } // Mark as touched on date change too
         }));
     };
 
-    const filteredList = employees.filter(emp =>
-        `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        emp.personal_number.includes(searchTerm)
-    );
+    const filteredList = useMemo(() => {
+        return employees.filter(emp => {
+            if (showSelectedOnly && !selectedIds.includes(emp.id)) return false;
+
+            const matchesSearch = `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                emp.personal_number.includes(searchTerm);
+
+            const matchesService = filterServiceType === "all" ||
+                emp.service_type_id?.toString() === filterServiceType;
+
+            return matchesSearch && matchesService;
+        });
+    }, [employees, searchTerm, filterServiceType, showSelectedOnly, selectedIds]);
+
+    // Selection Handlers
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            // Selecting all currently VISIBLE employees
+            const visibleIds = filteredList.map(e => e.id);
+            // Merge with existing selection to not lose hidden ones if needed? 
+            // Usually "Select All" determines the scope. Let's select visible ones.
+            const newSelection = Array.from(new Set([...selectedIds, ...visibleIds]));
+            setSelectedIds(newSelection);
+        } else {
+            // Deselect visible ones
+            const visibleIds = filteredList.map(e => e.id);
+            setSelectedIds(prev => prev.filter(id => !visibleIds.includes(id)));
+        }
+    };
+
+    const handleSelectOne = (id: number, checked: boolean) => {
+        if (checked) {
+            setSelectedIds(prev => [...prev, id]);
+        } else {
+            setSelectedIds(prev => prev.filter(pid => pid !== id));
+        }
+    };
+
+    const applyBatchStatus = () => {
+        if (!batchStatusId || selectedIds.length === 0) return;
+
+        const type = statusTypes.find(t => t.id.toString() === batchStatusId);
+        if (!type) return;
+
+        setBulkUpdates(prev => {
+            const next = { ...prev };
+            selectedIds.forEach(id => {
+                const original = employees.find(e => e.id === id);
+                next[id] = {
+                    ...next[id], // keep existing dates if any, or defaults
+                    status_id: type.id,
+                    status_name: type.name,
+                    color: type.color,
+                    isChanged: type.id !== original?.status_id,
+                    touched: true, // Mark as touched
+                    start_date: next[id]?.start_date || new Date().toISOString().split('T')[0]
+                };
+            });
+            return next;
+        });
+
+        toast.info(`הוחל סטטוס ${type.name} על ${selectedIds.length} שוטרים`);
+        setBatchStatusId(""); // Reset selector
+        // Keep selection active
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl p-0 overflow-hidden rounded-[32px] border-none bg-card shadow-2xl flex flex-col max-h-[90vh]" dir="rtl">
+            <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-2xl border-none bg-card shadow-2xl flex flex-col max-h-[90vh]" dir="rtl">
 
-                <DialogHeader className="p-8 pb-4 text-right">
+                <DialogHeader className="px-6 py-4 border-b bg-muted/10 text-right shrink-0">
                     <div className="flex items-center justify-between gap-4">
                         <div>
-                            <DialogTitle className="text-2xl font-black text-foreground mb-1">
+                            <DialogTitle className="text-xl font-black text-foreground mb-1">
                                 עדכון נוכחות יומי
                             </DialogTitle>
-                            <DialogDescription className="text-sm font-bold text-muted-foreground">
-                                אשר או עדכן את הסטטוס הנוכחי עבור כלל השוטרים
+                            <DialogDescription className="text-sm font-medium text-muted-foreground">
+                                עדכון מרוכז ומהיר לכלל היחידה
                             </DialogDescription>
                         </div>
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                            <Calendar className="w-6 h-6" />
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                            <Calendar className="w-5 h-5" />
                         </div>
                     </div>
 
-                    <div className="relative mt-6">
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                        <input
-                            type="text"
-                            placeholder="חיפוש מהיר ברשימה..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full h-11 pr-10 pl-4 bg-muted/50 border-input border rounded-2xl text-sm font-bold text-foreground focus:ring-2 focus:ring-ring/20 outline-none"
-                        />
+                    <div className="flex gap-3 mt-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                            <input
+                                type="text"
+                                placeholder="חיפוש מהיר..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full h-10 pr-10 pl-4 bg-muted/50 border-input border rounded-xl text-sm font-bold text-foreground focus:ring-2 focus:ring-ring/20 outline-none transition-all"
+                            />
+                        </div>
+
+                        {selectedIds.length > 0 && (
+                            <Button
+                                variant={showSelectedOnly ? "secondary" : "outline"}
+                                onClick={() => setShowSelectedOnly(!showSelectedOnly)}
+                                className={cn(
+                                    "h-10 font-bold text-xs gap-2 rounded-xl transition-all",
+                                    showSelectedOnly ? "bg-primary/10 text-primary hover:bg-primary/20" : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                {showSelectedOnly ? `הצג הכל` : `הצג נבחרים (${selectedIds.length})`}
+                            </Button>
+                        )}
+
+                        <div className="w-[160px]">
+                            <Select value={filterServiceType} onValueChange={setFilterServiceType}>
+                                <SelectTrigger className="h-10 bg-muted/50 border-input font-bold text-xs rounded-xl">
+                                    <div className="flex items-center gap-2">
+                                        <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                                        <SelectValue placeholder="סינון לפי מעמד" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">כל המעמדות</SelectItem>
+                                    {serviceTypes.map(st => (
+                                        <SelectItem key={st.id} value={st.id.toString()}>{st.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-y-auto px-8 py-2">
-                    <div className="space-y-3">
-                        {fetching ? (
-                            <div className="py-20 flex flex-col items-center justify-center gap-3">
-                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                <span className="text-xs font-bold text-muted-foreground">טוען נתונים...</span>
-                            </div>
-                        ) : filteredList.length === 0 ? (
-                            <div className="py-20 flex flex-col items-center justify-center text-muted-foreground gap-2">
-                                <AlertCircle className="w-8 h-8 opacity-20" />
-                                <span className="text-sm font-bold">לא נמצאו שוטרים</span>
-                            </div>
-                        ) : (
-                            filteredList.map((emp) => {
-                                const current = bulkUpdates[emp.id];
-                                return (
-                                    <div
-                                        key={emp.id}
-                                        className={cn(
-                                            "flex flex-col p-4 rounded-2xl transition-all border",
-                                            current?.isChanged
-                                                ? "bg-primary/5 border-primary/20"
-                                                : "bg-muted/30 border-transparent hover:border-border"
-                                        )}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className={cn(
-                                                    "w-10 h-10 rounded-xl shadow-sm flex items-center justify-center transition-colors",
-                                                    current?.isChanged ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"
-                                                )}>
-                                                    <User className="w-5 h-5" />
+                <div className="flex-1 overflow-y-auto">
+                    {fetching ? (
+                        <div className="py-20 flex flex-col items-center justify-center gap-3">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            <span className="text-xs font-bold text-muted-foreground">טוען נתונים...</span>
+                        </div>
+                    ) : filteredList.length === 0 ? (
+                        <div className="py-20 flex flex-col items-center justify-center text-muted-foreground gap-2">
+                            <AlertCircle className="w-8 h-8 opacity-20" />
+                            <span className="text-sm font-bold">לא נמצאו שוטרים</span>
+                        </div>
+                    ) : (
+                        <Table>
+                            <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-sm">
+                                <TableRow className="hover:bg-transparent border-b">
+                                    <TableHead className="w-[50px] pr-6">
+                                        <Checkbox
+                                            checked={filteredList.length > 0 && selectedIds.length === filteredList.length}
+                                            onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                                        />
+                                    </TableHead>
+                                    <TableHead className="text-right w-[200px] font-black text-xs uppercase text-muted-foreground">שוטר</TableHead>
+                                    <TableHead className="text-right w-[200px] font-black text-xs uppercase text-muted-foreground">סטטוס נוכחי</TableHead>
+                                    <TableHead className="text-right font-black text-xs uppercase text-muted-foreground">פרטי עדכון (בשינוי סטטוס)</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredList.map((emp) => {
+                                    const current = bulkUpdates[emp.id];
+                                    return (
+                                        <TableRow
+                                            key={emp.id}
+                                            className={cn(
+                                                "transition-colors hover:bg-muted/50",
+                                                current?.isChanged && "bg-primary/5 hover:bg-primary/10",
+                                                selectedIds.includes(emp.id) && "bg-muted/30"
+                                            )}
+                                        >
+                                            <TableCell className="pr-6 py-3 align-top">
+                                                <Checkbox
+                                                    checked={selectedIds.includes(emp.id)}
+                                                    onCheckedChange={(checked) => handleSelectOne(emp.id, checked as boolean)}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="font-medium align-top py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={cn(
+                                                        "w-8 h-8 rounded-lg shadow-sm flex items-center justify-center transition-colors shrink-0",
+                                                        current?.isChanged ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                                                    )}>
+                                                        <User className="w-4 h-4" />
+                                                    </div>
+                                                    <div className="flex flex-col text-right">
+                                                        <span className="text-sm font-bold text-foreground">
+                                                            {emp.first_name} {emp.last_name}
+                                                        </span>
+                                                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                                                            <span>{emp.personal_number}</span>
+                                                            {emp.service_type_name && (
+                                                                <>
+                                                                    <span className="w-1 h-1 rounded-full bg-border" />
+                                                                    <span>{emp.service_type_name}</span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col text-right">
-                                                    <span className="text-sm font-bold text-foreground">
-                                                        {emp.first_name} {emp.last_name}
-                                                    </span>
-                                                    <span className="text-[10px] font-medium text-muted-foreground">
-                                                        מחלקת {emp.department_name || 'כללי'} • {emp.personal_number}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="w-48">
+                                            </TableCell>
+                                            <TableCell className="align-top py-3">
                                                 <Select
                                                     value={current?.status_id.toString()}
                                                     onValueChange={(val) => handleUpdateIndividual(emp.id, val)}
                                                 >
-                                                    <SelectTrigger className="h-10 text-right font-bold text-[11px] bg-card border-input rounded-xl" dir="rtl">
+                                                    <SelectTrigger className="h-9 text-right font-bold text-xs bg-card border-input rounded-lg w-full" dir="rtl">
                                                         <SelectValue placeholder="בחר סטטוס" />
                                                     </SelectTrigger>
                                                     <SelectContent dir="rtl">
@@ -231,79 +388,98 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                                             <SelectItem
                                                                 key={type.id}
                                                                 value={type.id.toString()}
-                                                                className="text-right font-bold text-[11px]"
+                                                                className="text-right font-bold text-xs"
                                                             >
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: type.color || "var(--muted-foreground)" }} />
+                                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: type.color || "var(--muted-foreground)" }} />
                                                                     {type.name}
                                                                 </div>
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
-                                            </div>
-                                        </div>
-
-                                        {/* Optional Dates if status changed */}
-                                        {current?.isChanged && (
-                                            <div className="mt-4 pt-5 border-t border-primary/10 flex flex-wrap items-center gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                <div className="flex flex-col gap-2 flex-1 min-w-[180px]">
-                                                    <span className="text-[11px] font-black text-primary pr-1 uppercase tracking-wider">תאריך התחלה:</span>
-                                                    <div className="relative">
-                                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/50" />
-                                                        <input
-                                                            type="date"
-                                                            value={current.start_date}
-                                                            onChange={(e) => handleDateChange(emp.id, 'start_date', e.target.value)}
-                                                            className="w-full bg-card border-2 border-primary/10 rounded-xl h-12 text-sm font-black pl-10 pr-4 text-right focus:border-primary focus:ring-0 transition-all outline-none"
-                                                        />
+                                            </TableCell>
+                                            <TableCell className="align-top py-3">
+                                                {current?.isChanged ? (
+                                                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+                                                        <div className="relative flex-1 max-w-[140px]">
+                                                            <input
+                                                                type="date"
+                                                                value={current.start_date}
+                                                                onChange={(e) => handleDateChange(emp.id, 'start_date', e.target.value)}
+                                                                className="w-full bg-card border border-input rounded-lg h-9 text-xs font-medium px-2 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                                            />
+                                                        </div>
+                                                        <ArrowLeft className="w-3 h-3 text-muted-foreground" />
+                                                        <div className="relative flex-1 max-w-[140px]">
+                                                            <input
+                                                                type="date"
+                                                                value={current.end_date || ""}
+                                                                onChange={(e) => handleDateChange(emp.id, 'end_date', e.target.value)}
+                                                                className="w-full bg-card border border-input rounded-lg h-9 text-xs font-medium px-2 focus:border-primary focus:ring-1 focus:ring-primary outline-none placeholder:text-muted-foreground/50"
+                                                                placeholder="סיום (אופציונלי)"
+                                                            />
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="pt-6 hidden sm:block">
-                                                    <ArrowRight className="w-5 h-5 text-muted-foreground/30" />
-                                                </div>
-                                                <div className="flex flex-col gap-2 flex-1 min-w-[180px]">
-                                                    <span className="text-[11px] font-black text-primary pr-1 uppercase tracking-wider">תאריך סיום (אופציונלי):</span>
-                                                    <div className="relative">
-                                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
-                                                        <input
-                                                            type="date"
-                                                            value={current.end_date || ""}
-                                                            onChange={(e) => handleDateChange(emp.id, 'end_date', e.target.value)}
-                                                            className="w-full bg-card border-2 border-primary/10 rounded-xl h-12 text-sm font-black pl-10 pr-4 text-right focus:border-primary focus:ring-0 transition-all placeholder:text-muted-foreground/30 outline-none"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
+                                                ) : (
+                                                    <span className="text-[10px] text-muted-foreground/40 font-medium">--</span>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    )}
                 </div>
 
-                <div className="p-8 bg-muted/40 flex flex-col gap-3">
-                    <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/10 mb-2 shadow-sm">
-                        <AlertCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                        <p className="text-[11px] font-bold text-foreground/70 leading-relaxed">
-                            אישור הפעולה יעדכן את הסטטוס עבור {Object.keys(bulkUpdates).length} שוטרים. סטטוסים שלא שונו יאושררו מחדש להיום, וסטטוסים ששונו ירשמו עם התאריכים שהוגדרו.
-                        </p>
+                <div className="p-4 border-t bg-muted/20 flex flex-col gap-3 shrink-0">
+                    {/* Batch Actions Bar */}
+                    <div className="flex items-center gap-3 p-3 bg-card border rounded-xl shadow-sm animate-in slide-in-from-bottom-2">
+                        <span className="text-xs font-black text-muted-foreground whitespace-nowrap px-2">
+                            נבחרו {selectedIds.length} שוטרים:
+                        </span>
+                        <Select value={batchStatusId} onValueChange={setBatchStatusId}>
+                            <SelectTrigger className="h-9 w-[180px] text-right font-bold text-xs bg-muted/30 border-input rounded-lg">
+                                <SelectValue placeholder="בחר סטטוס לכולם..." />
+                            </SelectTrigger>
+                            <SelectContent dir="rtl">
+                                {statusTypes.map((type) => (
+                                    <SelectItem key={type.id} value={type.id.toString()} className="text-xs font-bold">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: type.color }} />
+                                            {type.name}
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={applyBatchStatus}
+                            disabled={!batchStatusId || selectedIds.length === 0}
+                            className="h-9 font-bold text-xs"
+                        >
+                            החל על הנבחרים
+                        </Button>
+                        <div className="flex-1" />
+                        <div className="h-4 w-px bg-border mx-2" />
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 mt-1">
                         <Button
                             onClick={handleSubmit}
                             disabled={loading || Object.keys(bulkUpdates).length === 0}
-                            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-12 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-30 gap-2 text-sm"
+                            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl h-10 shadow-lg shadow-primary/10 transition-all active:scale-95 disabled:opacity-50 text-xs"
                         >
-                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                            אישור ושליחת כל הדיווחים
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                            שמור ועדכן את כל השינויים
                         </Button>
                         <Button
                             variant="outline"
                             onClick={() => onOpenChange(false)}
-                            className="px-8 border-input bg-card rounded-2xl h-12 font-bold text-muted-foreground hover:bg-muted transition-all shadow-sm"
+                            className="px-6 border-input bg-card rounded-xl h-10 font-bold text-muted-foreground hover:bg-muted transition-all text-xs"
                         >
                             ביטול
                         </Button>
