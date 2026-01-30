@@ -47,6 +47,16 @@ export function useNotifications() {
     localStorage.setItem("read_notifications", JSON.stringify(allIds));
   };
 
+  const toggleRead = (id: string) => {
+    setReadIds((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((rid) => rid !== id)
+        : [...prev, id];
+      localStorage.setItem("read_notifications", JSON.stringify(next));
+      return next;
+    });
+  };
+
   useEffect(() => {
     fetchAlerts();
     // Refresh every 5 minutes
@@ -60,7 +70,9 @@ export function useNotifications() {
     alerts,
     loading,
     unreadCount,
+    readIds,
     refreshAlerts: fetchAlerts,
-    markAllAsRead
+    markAllAsRead,
+    toggleRead,
   };
 }

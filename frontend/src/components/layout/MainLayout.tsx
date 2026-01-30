@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Info,
   CheckCheck,
+  Circle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -31,7 +32,7 @@ import {
 export default function MainLayout() {
   const { user, logout } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
-  const { alerts, loading, refreshAlerts, unreadCount, markAllAsRead } = useNotifications();
+  const { alerts, loading, refreshAlerts, unreadCount, markAllAsRead, readIds, toggleRead } = useNotifications();
   const location = useLocation();
   // Sidebar closed by default on mobile, open on desktop
   // Initialize sidebar state based on window width to prevent layout shift on load
@@ -339,40 +340,67 @@ export default function MainLayout() {
                     </div>
                   ) : (
                     <div className="flex flex-col">
-                      {alerts.map((alert) => (
-                        <Link
-                          key={alert.id}
-                          to={alert.link}
-                          className="p-4 flex gap-4 hover:bg-card transition-colors border-b border-border last:border-0 group"
-                        >
+                      {alerts.map((alert) => {
+                        const isRead = readIds.includes(alert.id);
+                        return (
                           <div
+                            key={alert.id}
                             className={cn(
-                              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm",
-                              alert.type === "danger"
-                                ? "bg-destructive/10 text-destructive"
-                                : alert.type === "warning"
-                                  ? "bg-amber-500/10 text-amber-500"
-                                  : "bg-primary/10 text-primary",
+                              "p-4 flex flex-row-reverse gap-4 hover:bg-card transition-all border-b border-border last:border-0 group relative",
+                              isRead && "opacity-60 grayscale-[0.3]"
                             )}
+                            dir="rtl"
                           >
-                            {alert.type === "danger" ? (
-                              <X className="w-5 h-5" />
-                            ) : alert.type === "warning" ? (
-                              <AlertTriangle className="w-5 h-5" />
-                            ) : (
-                              <Info className="w-5 h-5" />
-                            )}
+                            <Link
+                              to={alert.link}
+                              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105"
+                              style={{
+                                backgroundColor: alert.type === "danger" ? "rgba(239, 68, 68, 0.1)" : alert.type === "warning" ? "rgba(245, 158, 11, 0.1)" : "rgba(59, 130, 246, 0.1)",
+                                color: alert.type === "danger" ? "rgb(239, 68, 68)" : alert.type === "warning" ? "rgb(245, 158, 11)" : "rgb(59, 130, 246)"
+                              }}
+                            >
+                              {alert.type === "danger" ? (
+                                <X className="w-5 h-5" />
+                              ) : alert.type === "warning" ? (
+                                <AlertTriangle className="w-5 h-5" />
+                              ) : (
+                                <Info className="w-5 h-5" />
+                              )}
+                            </Link>
+                            <Link to={alert.link} className="flex-1 min-w-0 text-right">
+                              <div className="flex items-center justify-start gap-2">
+                                {!isRead && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                                <p className={cn(
+                                  "text-xs font-black transition-colors",
+                                  isRead ? "text-muted-foreground" : "text-foreground group-hover:text-primary"
+                                )}>
+                                  {alert.title}
+                                </p>
+                              </div>
+                              <p className={cn(
+                                "text-[11px] font-bold leading-tight mt-1",
+                                isRead ? "text-muted-foreground/60" : "text-muted-foreground"
+                              )}>
+                                {alert.description}
+                              </p>
+                            </Link>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleRead(alert.id);
+                              }}
+                              className={cn(
+                                "w-8 h-8 rounded-lg flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shrink-0",
+                                isRead ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-muted"
+                              )}
+                              title={isRead ? "סמן כלא נקרא" : "סמן כנקרא"}
+                            >
+                              {isRead ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4 opacity-30" />}
+                            </button>
                           </div>
-                          <div className="flex-1 min-w-0 text-right">
-                            <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
-                              {alert.title}
-                            </p>
-                            <p className="text-[11px] font-bold text-muted-foreground leading-tight mt-1">
-                              {alert.description}
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
