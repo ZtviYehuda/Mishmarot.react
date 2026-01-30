@@ -45,14 +45,32 @@ def create_transfer():
 @transfer_bp.route("/pending", methods=["GET"])
 @jwt_required()
 def get_pending():
-    requests = TransferModel.get_pending_requests()
+    identity_raw = get_jwt_identity()
+    try:
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+
+    from app.models.employee_model import EmployeeModel
+    user = EmployeeModel.get_employee_by_id(user_id)
+    requests = TransferModel.get_pending_requests(user)
     return jsonify(requests)
 
 
 @transfer_bp.route("/history", methods=["GET"])
 @jwt_required()
 def get_history():
-    history = TransferModel.get_history()
+    identity_raw = get_jwt_identity()
+    try:
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+
+    from app.models.employee_model import EmployeeModel
+    user = EmployeeModel.get_employee_by_id(user_id)
+    history = TransferModel.get_history(requesting_user=user)
     return jsonify(history)
 
 
@@ -61,16 +79,17 @@ def get_history():
 def approve(req_id):
     identity_raw = get_jwt_identity()
     try:
-        identity = (
-            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
-        )
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
     except (json.JSONDecodeError, TypeError):
         identity = identity_raw
     user_id = identity["id"] if isinstance(identity, dict) else identity
 
-    if TransferModel.approve_request(req_id, user_id):
+    from app.models.employee_model import EmployeeModel
+    user = EmployeeModel.get_employee_by_id(user_id)
+
+    if TransferModel.approve_request(req_id, user):
         return jsonify({"success": True, "message": "הבקשה אושרה"})
-    return jsonify({"success": False, "error": "Failed to approve"}), 500
+    return jsonify({"success": False, "error": "אין הרשאה לאשר בקשה זו או שהבקשה לא נמצאה"}), 403
 
 
 @transfer_bp.route("/<int:req_id>/reject", methods=["POST"])
@@ -78,19 +97,20 @@ def approve(req_id):
 def reject(req_id):
     identity_raw = get_jwt_identity()
     try:
-        identity = (
-            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
-        )
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
     except (json.JSONDecodeError, TypeError):
         identity = identity_raw
     user_id = identity["id"] if isinstance(identity, dict) else identity
 
+    from app.models.employee_model import EmployeeModel
+    user = EmployeeModel.get_employee_by_id(user_id)
+
     data = request.get_json() or {}
     reason = data.get("reason", "")
 
-    if TransferModel.reject_request(req_id, user_id, reason):
+    if TransferModel.reject_request(req_id, user, reason):
         return jsonify({"success": True, "message": "הבקשה נדחתה"})
-    return jsonify({"success": False, "error": "Failed to reject"}), 500
+    return jsonify({"success": False, "error": "אין הרשאה לדחות בקשה זו או שהבקשה לא נמצאה"}), 403
 
 
 @transfer_bp.route("/<int:req_id>/cancel", methods=["POST"])

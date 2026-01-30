@@ -6,6 +6,7 @@ export interface TransferRequest {
   id: number;
   employee_id: number;
   employee_name: string;
+  personal_number: string;
   source_type: string;
   source_id: number;
   source_name: string;
@@ -14,10 +15,13 @@ export interface TransferRequest {
   target_name: string;
   requested_by: number;
   requester_name: string;
+  requester_unit?: string;
   status: "pending" | "approved" | "rejected" | "cancelled";
   created_at: string;
   reason?: string;
   rejection_reason?: string;
+  resolver_name?: string;
+  resolver_unit?: string;
 }
 
 export const useTransfers = () => {

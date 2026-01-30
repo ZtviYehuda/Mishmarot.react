@@ -8,31 +8,22 @@ export interface Alert {
   title: string;
   description: string;
   link: string;
+  read_at?: string;
 }
 
 export function useNotifications() {
   const { user } = useAuthContext();
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [readIds, setReadIds] = useState<string[]>([]);
+  const [history, setHistory] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // Load read IDs from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("read_notifications");
-    if (saved) {
-      try {
-        setReadIds(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse read notifications", e);
-      }
-    }
-  }, []);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const fetchAlerts = async () => {
     if (!user) return;
     setLoading(true);
     try {
       const { data } = await apiClient.get<Alert[]>("/notifications/alerts");
+      // The API now returns only unread alerts
       setAlerts(data);
     } catch (err) {
       console.error("Failed to fetch alerts:", err);
@@ -41,20 +32,80 @@ export function useNotifications() {
     }
   };
 
-  const markAllAsRead = () => {
-    const allIds = alerts.map(a => a.id);
-    setReadIds(allIds);
-    localStorage.setItem("read_notifications", JSON.stringify(allIds));
+  const fetchHistory = async () => {
+    if (!user) return;
+    setLoadingHistory(true);
+    try {
+      const { data } = await apiClient.get<Alert[]>("/notifications/alerts/history");
+      setHistory(data);
+    } catch (err) {
+      console.error("Failed to fetch notification history:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
   };
 
-  const toggleRead = (id: string) => {
-    setReadIds((prev) => {
-      const next = prev.includes(id)
-        ? prev.filter((rid) => rid !== id)
-        : [...prev, id];
-      localStorage.setItem("read_notifications", JSON.stringify(next));
-      return next;
-    });
+  const markAsRead = async (notificationId: string) => {
+    try {
+      // Find the alert to send its snapshot details
+      const alert = alerts.find(a => a.id === notificationId);
+
+      await apiClient.post(`/notifications/alerts/${notificationId}/read`, {
+        title: alert?.title,
+        description: alert?.description,
+        type: alert?.type,
+        link: alert?.link
+      });
+
+      // Remove from active alerts and refetch history if needed
+      setAlerts((prev) => prev.filter((a) => a.id !== notificationId));
+      fetchHistory(); // Refresh history immediately
+    } catch (err) {
+      console.error("Failed to mark notification as read:", err);
+    }
+  };
+
+  const markAsUnread = async (notificationId: string) => {
+    try {
+      await apiClient.delete(`/notifications/alerts/${notificationId}/read`);
+
+      // Remove from history immediately
+      setHistory((prev) => prev.filter((a) => a.id !== notificationId));
+
+      // Fetch active alerts to show it back in the list
+      fetchAlerts();
+    } catch (err) {
+      console.error("Failed to mark notification as unread:", err);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      // Mark all current alerts as read
+      await Promise.all(
+        alerts.map((alert) =>
+          apiClient.post(`/notifications/alerts/${alert.id}/read`, {
+            title: alert.title,
+            description: alert.description,
+            type: alert.type,
+            link: alert.link
+          })
+        )
+      );
+      // Clear all alerts from local state
+      setAlerts([]);
+      fetchHistory(); // Refresh history immediately
+    } catch (err) {
+      console.error("Failed to mark all as read:", err);
+    }
+  };
+
+  const toggleRead = async (id: string, currentlyRead: boolean = false) => {
+    if (currentlyRead) {
+      await markAsUnread(id);
+    } else {
+      await markAsRead(id);
+    }
   };
 
   useEffect(() => {
@@ -64,15 +115,20 @@ export function useNotifications() {
     return () => clearInterval(interval);
   }, [user]);
 
-  const unreadCount = alerts.filter(a => !readIds.includes(a.id)).length;
+  const unreadCount = alerts.length; // All alerts shown are unread
 
   return {
     alerts,
+    history,
     loading,
+    loadingHistory,
     unreadCount,
-    readIds,
+    readIds: [], // Deprecated, kept for compatibility
     refreshAlerts: fetchAlerts,
+    fetchHistory,
     markAllAsRead,
     toggleRead,
+    markAsRead,
+    markAsUnread,
   };
 }

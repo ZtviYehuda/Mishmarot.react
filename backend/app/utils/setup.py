@@ -100,6 +100,17 @@ def setup_database():
                 resolved_at TIMESTAMP,
                 resolved_by INTEGER REFERENCES employees(id)
             );""",
+            """CREATE TABLE IF NOT EXISTS notification_reads (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                notification_id VARCHAR(255) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                type VARCHAR(20),
+                link VARCHAR(255),
+                read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, notification_id)
+            );""",
         ]
 
         for table in tables:

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -88,5 +89,14 @@ const router = createBrowserRouter([
 ]);
 
 export function AppRouter() {
+  // Clean up old localStorage notification reads (migration)
+  useEffect(() => {
+    try {
+      localStorage.removeItem('read_notifications');
+    } catch (e) {
+      console.error('Failed to cleanup notification storage:', e);
+    }
+  }, []);
+
   return <RouterProvider router={router} />;
 }

@@ -14,16 +14,24 @@ class NotificationModel:
 
             # 1. Check for Pending Transfers (if enabled)
             if requesting_user.get("notif_transfers", True):
-                # We need to scope this to the commander's unit
-                # For now, let's get all pending if admin, or relevant if commander
                 query = "SELECT COUNT(*) as count FROM transfer_requests WHERE status = 'pending'"
                 params = []
 
                 if not requesting_user.get("is_admin"):
-                    # To be strict, only transfers involving their unit.
-                    # But the current TransferModel might not have deep scoping.
-                    # Let's just check if there are ANY pending for now as a simple alert.
-                    pass
+                    # Visibility Scoping: Only show alerts if they are the target commander
+                    scoping = """
+                        AND (
+                            (target_type = 'department' AND target_id = %s) OR
+                            (target_type = 'section' AND target_id = %s) OR
+                            (target_type = 'team' AND target_id = %s)
+                        )
+                    """
+                    query += scoping
+                    params.extend([
+                        requesting_user.get("commands_department_id"),
+                        requesting_user.get("commands_section_id"),
+                        requesting_user.get("commands_team_id")
+                    ])
 
                 cur.execute(query, params)
                 res = cur.fetchone()
@@ -172,5 +180,133 @@ class NotificationModel:
                         })
 
             return alerts
+        finally:
+            conn.close()
+
+    @staticmethod
+    def mark_as_read(user_id, notification_id, title="התראה", description="", type="info", link=""):
+        """Mark a notification as read for a specific user with a snapshot of its content"""
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO notification_reads (user_id, notification_id, title, description, type, link)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (user_id, notification_id) DO UPDATE 
+                SET title = EXCLUDED.title,
+                    description = EXCLUDED.description,
+                    type = EXCLUDED.type,
+                    link = EXCLUDED.link,
+                    read_at = CURRENT_TIMESTAMP
+            """, (user_id, notification_id, title, description, type, link))
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"❌ Error marking notification as read: {e}")
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def mark_as_unread(user_id, notification_id):
+        """Mark a notification as unread (remove from history) for a specific user"""
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+            cur.execute("""
+                DELETE FROM notification_reads 
+                WHERE user_id = %s AND notification_id = %s
+            """, (user_id, notification_id))
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"❌ Error marking notification as unread: {e}")
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_read_notifications(user_id):
+        """Get list of notification IDs that the user has already read"""
+        conn = get_db_connection()
+        if not conn:
+            return set()
+        try:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT notification_id 
+                FROM notification_reads 
+                WHERE user_id = %s
+            """, (user_id,))
+            rows = cur.fetchall()
+            return {row[0] for row in rows}
+        except Exception as e:
+            print(f"❌ Error getting read notifications: {e}")
+            return set()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_read_history(user_id):
+        """Get notification history with read timestamps for a specific user"""
+        from psycopg2.extras import RealDictCursor
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            # Fetch actual snapshot data instead of placeholder
+            cur.execute("""
+                SELECT 
+                    notification_id as id,
+                    title,
+                    description,
+                    type,
+                    link,
+                    read_at
+                FROM notification_reads 
+                WHERE user_id = %s
+                ORDER BY read_at DESC
+                LIMIT 100
+            """, (user_id,))
+            rows = cur.fetchall()
+            
+            # Convert rows to list of dicts with isoformat date
+            history = []
+            from datetime import timezone
+            
+            for row in rows:
+                row_dict = dict(row)
+                if row_dict['read_at']:
+                    # Assuming PostgreSQL saves as naive timestamp (local time usually in dev, UTC in prod)
+                    # To allow frontend to convert properly, we'll ensure it has timezone info or format clearly.
+                    # Best practice: Treat as UTC if naive, let frontend convert to local.
+                    dt = row_dict['read_at']
+                    if dt.tzinfo is None:
+                        # If naive, assume it's whatever the DB server time is. 
+                        # If we want to force Israeli time display issues to resolve if it *was* UTC:
+                        # But simple isoformat() is safest default.
+                        row_dict['read_at'] = dt.isoformat()
+                    else:
+                        row_dict['read_at'] = dt.isoformat()
+                
+                # Use saved values, fallback if they happen to be NULL (migration edge case)
+                if not row_dict.get('title'):
+                    row_dict['title'] = 'התראה שנקראה'
+                
+                history.append(row_dict)
+            
+            return history
+        except Exception as e:
+            print(f"❌ Error getting notification history: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
         finally:
             conn.close()
