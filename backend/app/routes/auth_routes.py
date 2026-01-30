@@ -190,6 +190,35 @@ def change_password():
     return jsonify({"success": False, "error": "שגיאה בעדכון הסיסמה"}), 500
 
 
+@auth_bp.route("/reset-impersonated-password", methods=["POST"])
+@jwt_required()
+def reset_impersonated_password():
+    """
+    Allows an admin (who is impersonating another user) to reset the password
+    of the IMPERSONATED user to their national ID (ת.ז).
+    """
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    # Check if this is an impersonation session
+    if not isinstance(identity, dict) or not identity.get("is_impersonation"):
+        return jsonify({"success": False, "error": "פעולה זו מותרת רק במצב התחזות מנהל"}), 403
+
+    user_id = identity["id"] # The ID of the user being impersonated
+    
+    success, error = EmployeeModel.reset_password_to_national_id(user_id)
+    
+    if success:
+        return jsonify({"success": True, "message": "הסיסמה אופסה בהצלחה לתעודת הזהות של המשתמש"})
+    else:
+        return jsonify({"success": False, "error": error or "Failed to reset password"}), 500
+
+
 @auth_bp.route("/update-profile", methods=["PUT"])
 @jwt_required()
 def update_profile():

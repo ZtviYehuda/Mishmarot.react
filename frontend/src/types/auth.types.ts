@@ -22,6 +22,7 @@ export interface AuthUser {
   team_name?: string | null;
   role_name?: string | null;
   service_type_name?: string | null;
+  is_impersonated?: boolean;
 }
 
 export interface LoginResponse {

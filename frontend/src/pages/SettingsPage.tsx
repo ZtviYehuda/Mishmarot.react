@@ -207,6 +207,7 @@ export default function SettingsPage() {
   });
   const [showPasswords, setShowPasswords] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -268,6 +269,23 @@ export default function SettingsPage() {
       toast.error("שגיאה בתקשורת עם השרת");
     } finally {
       setIsChangingPassword(false);
+    }
+  };
+
+  const handleResetImpersonatedPassword = async () => {
+    if (!confirm("האם אתה בטוח שברצונך לאפס את הסיסמה של המשתמש לתעודת הזהות שלו?")) return;
+
+    try {
+      setIsResetting(true);
+      const response = await apiClient.post("/auth/reset-impersonated-password");
+      if (response.status === 200) {
+        toast.success("הסיסמה אופסה בהצלחה לתעודת הזהות של המשתמש");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("שגיאה באיפוס הסיסמה");
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -671,6 +689,37 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {user?.is_impersonated && (
+                    <div className="p-5 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-start gap-4 text-right transition-colors">
+                      <div className="p-2.5 rounded-xl bg-destructive/20">
+                        <Lock className="w-6 h-6 text-destructive" />
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <h4 className="text-base font-black text-destructive text-right">
+                            איפוס סיסמה למשתמש (מצב התחזות)
+                          </h4>
+                          <p className="text-sm text-destructive/80 font-bold leading-relaxed text-right">
+                            באפשרותך לאפס את סיסמת המשתמש לתעודת הזהות שלו. המשתמש יידרש להחליף סיסמה בכניסה הבאה.
+                          </p>
+                        </div>
+                        <Button
+                          onClick={handleResetImpersonatedPassword}
+                          disabled={isResetting}
+                          variant="destructive"
+                          className="font-bold shadow-lg shadow-destructive/20 h-9"
+                        >
+                          {isResetting ? (
+                            <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                          ) : (
+                            <RefreshCw className="w-4 h-4 ml-2" />
+                          )}
+                          אפס סיסמה לת.ז.
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-4 text-right transition-colors">
                     <div className="p-2.5 rounded-xl bg-amber-500/20">
                       <ShieldCheck className="w-6 h-6 text-amber-600" />

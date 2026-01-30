@@ -614,6 +614,37 @@ class EmployeeModel:
             conn.close()
 
     @staticmethod
+    def reset_password_to_national_id(user_id):
+        conn = get_db_connection()
+        if not conn:
+            return False, "Database connection failed"
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # Fetch National ID
+            cur.execute("SELECT national_id FROM employees WHERE id = %s", (user_id,))
+            user = cur.fetchone()
+            
+            if not user or not user["national_id"]:
+                return False, "User not found or missing National ID"
+                
+            national_id = user["national_id"]
+            
+            # Update Password
+            new_hash = generate_password_hash(national_id)
+            cur.execute(
+                "UPDATE employees SET password_hash = %s, must_change_password = TRUE WHERE id = %s",
+                (new_hash, user_id),
+            )
+            conn.commit()
+            return True, None
+        except Exception as e:
+            conn.rollback()
+            return False, str(e)
+        finally:
+            conn.close()
+
+    @staticmethod
     def update_password(user_id, new_password):
         conn = get_db_connection()
         if not conn:
