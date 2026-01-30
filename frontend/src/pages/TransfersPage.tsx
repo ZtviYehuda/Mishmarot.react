@@ -224,7 +224,7 @@ export default function TransfersPage() {
         ].map((stat, i) => (
           <Card key={i} className="border shadow-sm rounded-xl">
             <CardContent className="p-6">
-              <div className="flex items-center gap-4 flex-row-reverse">
+              <div className="flex items-start gap-4 justify-start">
                 <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center", stat.bg, stat.color)}>
                   <stat.icon className="w-6 h-6" />
                 </div>
@@ -247,17 +247,17 @@ export default function TransfersPage() {
         onValueChange={setActiveTab}
         className="w-full space-y-6"
       >
-        <div className="flex justify-end items-center w-full">
+        <div className="flex justify-start items-center w-full">
           <TabsList className="bg-muted/50 p-1 rounded-lg border">
-            <TabsTrigger value="pending" className="px-6 py-2 rounded-md font-bold gap-2 flex-row-reverse">
+            <TabsTrigger value="pending" className="px-6 py-2 rounded-md font-bold gap-2">
               <Clock className="w-4 h-4" />
               בקשות ממתינות
             </TabsTrigger>
-            <TabsTrigger value="new" className="px-6 py-2 rounded-md font-bold gap-2 flex-row-reverse">
+            <TabsTrigger value="new" className="px-6 py-2 rounded-md font-bold gap-2">
               <UserPlus className="w-4 h-4" />
               בקשה חדשה
             </TabsTrigger>
-            <TabsTrigger value="history" className="px-6 py-2 rounded-md font-bold gap-2 flex-row-reverse">
+            <TabsTrigger value="history" className="px-6 py-2 rounded-md font-bold gap-2">
               <History className="w-4 h-4" />
               היסטוריה
             </TabsTrigger>
@@ -291,25 +291,25 @@ export default function TransfersPage() {
                     pendingTransfers.map((req) => (
                       <TableRow key={req.id}>
                         <TableCell>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 justify-start">
                             <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
                               {req.employee_name?.[0]}
                             </div>
-                            <div>
+                            <div className="text-right">
                               <div className="font-bold">{req.employee_name}</div>
                               <div className="text-xs text-muted-foreground">מ"א: {req.employee_id}</div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2 text-sm font-medium">
+                          <div className="flex items-center gap-2 text-sm font-medium justify-start">
                             <span className="text-muted-foreground">{req.source_name}</span>
                             <ArrowLeft className="w-4 h-4 text-muted-foreground/30" />
                             <span className="text-primary font-bold">{req.target_name}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-1 justify-start items-start">
                             <Badge variant="outline" className="w-fit text-[10px] bg-amber-50 text-amber-600 border-amber-200 font-bold">ממתין</Badge>
                             <span className="text-xs text-muted-foreground">הוגש ע"י {req.requester_name}</span>
                             {req.reason && (
@@ -349,57 +349,16 @@ export default function TransfersPage() {
         {/* --- New Transfer Form --- */}
         <TabsContent value="new" className="animate-in fade-in duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Sidebar info - NOW ON LEFT (first in RTL) */}
-            <div className="space-y-6">
-              <Card className="border shadow-sm bg-card rounded-xl overflow-hidden">
-                <CardHeader className="bg-primary/5 border-b">
-                  <CardTitle className="text-base font-bold flex items-center gap-2 text-primary flex-row-reverse justify-end">
-                    <ShieldAlert className="w-4 h-4" />
-                    הנחיות ודגשים
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4 text-sm text-muted-foreground leading-relaxed text-right">
-                  <div className="flex gap-2 flex-row-reverse">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <p>מעבר ארגוני כפוף לאישור מפקד היחידה וגורמי כוח האדם המוסמכים.</p>
-                  </div>
-                  <div className="flex gap-2 flex-row-reverse">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <p>השיבוץ יתעדכן במערכת באופן אוטומטי רק לאחר קבלת אישור סופי מהגורמים הרלוונטיים.</p>
-                  </div>
-                  <div className="flex gap-2 flex-row-reverse">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <p>ניתן לעקוב אחר סטטוס הטיפול בלשונית בקשות ממתינות.</p>
-                  </div>
-                  <div className="pt-4 border-t text-[11px] font-bold text-primary/70 italic text-right">
-                    * המערכת מתעדת את כלל הפעולות לצרכי מעקב ובקרה.
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border shadow-sm bg-muted/20 rounded-xl overflow-hidden">
-                <CardContent className="p-4 flex items-center gap-3 flex-row-reverse">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold">זמן טיפול משוער</p>
-                    <p className="text-[10px] text-muted-foreground">בין 24 ל-48 שעות עבודה</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Main Form - NOW ON RIGHT (second in RTL) */}
+            {/* Main Form - FIRST IN DOM = RIGHT IN RTL */}
             <Card className="lg:col-span-2 border shadow-sm rounded-xl">
               <CardHeader className="border-b bg-muted/20">
                 <CardTitle className="text-right">טופס בקשת העברה</CardTitle>
                 <CardDescription className="text-right">מלא את פרטי השוטר והיעד המבוקש להגשת הבקשה לאישור.</CardDescription>
               </CardHeader>
-              <CardContent className="p-8 space-y-8 text-right">
+              <CardContent className="p-8 space-y-8 text-right flex flex-col items-stretch">
                 {/* Employee Selection */}
                 <div className="space-y-4">
-                  <h3 className="text-sm font-bold flex items-center gap-2 flex-row-reverse justify-end">
+                  <h3 className="text-sm font-bold flex items-center gap-2 justify-start">
                     <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px]">1</span>
                     בחירת שוטר
                   </h3>
@@ -445,7 +404,7 @@ export default function TransfersPage() {
                         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
                           {selectedEmployee.first_name[0]}{selectedEmployee.last_name[0]}
                         </div>
-                        <div>
+                        <div className="text-right">
                           <div className="text-sm font-bold">{selectedEmployee.first_name} {selectedEmployee.last_name}</div>
                           <div className="text-xs text-muted-foreground">
                             {selectedEmployee.personal_number} • {selectedEmployee.department_name}
@@ -461,7 +420,7 @@ export default function TransfersPage() {
 
                 {/* Target Destination - Cascading */}
                 <div className="space-y-4 border-t pt-8">
-                  <h3 className="text-sm font-bold flex items-center gap-2 flex-row-reverse justify-end">
+                  <h3 className="text-sm font-bold flex items-center gap-2 justify-start">
                     <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px]">2</span>
                     יעד המעבר המבוקש
                   </h3>
@@ -469,7 +428,7 @@ export default function TransfersPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Department */}
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-muted-foreground grayscale">מחלקה</label>
+                      <label className="text-xs font-bold text-muted-foreground text-right block">מחלקה</label>
                       <Select value={targetDeptId} onValueChange={(v) => {
                         setTargetDeptId(v);
                         setTargetSectionId("");
@@ -488,7 +447,7 @@ export default function TransfersPage() {
 
                     {/* Section */}
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-muted-foreground grayscale">מדור</label>
+                      <label className="text-xs font-bold text-muted-foreground text-right block">מדור</label>
                       <Select
                         value={targetSectionId}
                         onValueChange={(v) => {
@@ -510,7 +469,7 @@ export default function TransfersPage() {
 
                     {/* Team */}
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-muted-foreground grayscale">חוליה / צוות</label>
+                      <label className="text-xs font-bold text-muted-foreground text-right block">חוליה / צוות</label>
                       <Select
                         value={targetTeamId}
                         onValueChange={setTargetTeamId}
@@ -534,7 +493,7 @@ export default function TransfersPage() {
 
                 {/* Reason */}
                 <div className="space-y-4 border-t pt-8">
-                  <h3 className="text-sm font-bold flex items-center gap-2 flex-row-reverse justify-end">
+                  <h3 className="text-sm font-bold flex items-center gap-2 justify-start">
                     <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px]">3</span>
                     סיבה והערות
                   </h3>
@@ -556,6 +515,46 @@ export default function TransfersPage() {
               </CardContent>
             </Card>
 
+            {/* Sidebar info - SECOND IN DOM = LEFT IN RTL */}
+            <div className="space-y-6">
+              <Card className="border shadow-sm bg-card rounded-xl overflow-hidden">
+                <CardHeader className="bg-primary/5 border-b">
+                  <CardTitle className="text-base font-bold flex items-center gap-2 text-primary justify-start">
+                    <ShieldAlert className="w-4 h-4" />
+                    הנחיות ודגשים
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4 text-sm text-muted-foreground leading-relaxed text-right">
+                  <div className="flex gap-2 justify-start">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <p dir="rtl">מעבר ארגוני כפוף לאישור מפקד היחידה וגורמי כוח האדם המוסמכים.</p>
+                  </div>
+                  <div className="flex gap-2 justify-start">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <p dir="rtl">השיבוץ יתעדכן במערכת באופן אוטומטי רק לאחר קבלת אישור סופי מהגורמים הרלוונטיים.</p>
+                  </div>
+                  <div className="flex gap-2 justify-start">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <p dir="rtl">ניתן לעקוב אחר סטטוס הטיפול בלשונית בקשות ממתינות.</p>
+                  </div>
+                  <div className="pt-4 border-t text-[11px] font-bold text-primary/70 italic text-right">
+                    * המערכת מתעדת את כלל הפעולות לצרכי מעקב ובקרה.
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border shadow-sm bg-muted/20 rounded-xl overflow-hidden">
+                <CardContent className="p-4 flex items-start gap-3 justify-start">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-bold">זמן טיפול משוער</p>
+                    <p className="text-[10px] text-muted-foreground">בין 24 ל-48 שעות עבודה</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
 
@@ -584,7 +583,7 @@ export default function TransfersPage() {
                     history.map((req) => (
                       <TableRow key={req.id}>
                         <TableCell>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 justify-start">
                             <div className="w-8 h-8 rounded bg-muted flex items-center justify-center font-bold text-xs">
                               {req.employee_name?.[0]}
                             </div>
@@ -592,7 +591,7 @@ export default function TransfersPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-xs flex items-center gap-1">
+                          <div className="text-xs flex items-center gap-1 justify-start">
                             <span className="text-muted-foreground">{req.source_name}</span>
                             <ArrowLeft className="w-3 h-3 opacity-30 mx-1" />
                             <span className="font-bold text-primary">{req.target_name}</span>
@@ -623,8 +622,8 @@ export default function TransfersPage() {
       </Tabs>
 
       {!canManage && (
-        <div className="mt-8 p-4 rounded-xl bg-amber-50 border border-amber-200 flex gap-4">
-          <ShieldAlert className="w-5 h-5 text-amber-600 mt-1" />
+        <div className="mt-8 p-4 rounded-xl bg-amber-50 border border-amber-200 flex gap-4 justify-start items-center">
+          <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
           <div className="text-right">
             <p className="text-sm font-bold text-amber-900">מצב צפייה בלבד</p>
             <p className="text-xs text-amber-800/80">אין לך הרשאות ניהול לביצוע פעולות אישור או דחייה.</p>

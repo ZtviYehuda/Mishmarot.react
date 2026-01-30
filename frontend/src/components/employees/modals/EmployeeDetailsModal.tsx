@@ -2,22 +2,17 @@ import React from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import type { Employee } from "@/types/employee.types";
-import { cn } from "@/lib/utils";
 import {
-  User,
   Phone,
   MapPin,
   Calendar,
-  Shield,
   Building2,
-  Users,
-  Award,
+  Contact,
+  Cake,
+  User,
 } from "lucide-react";
 
 interface EmployeeDetailsModalProps {
@@ -43,208 +38,108 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     return "שוטר";
   };
 
+  const calculateAge = (birthDate: string) => {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const InfoItem = ({ icon: Icon, label, value }: any) => (
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight flex items-center gap-1">
+        <Icon className="w-3 h-3" />
+        {label}
+      </span>
+      <span className="text-sm font-semibold text-foreground">
+        {value || "---"}
+      </span>
+    </div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" dir="rtl">
-        <DialogHeader className="text-right">
-          <DialogTitle className="text-2xl font-semibold text-[#001e30] dark:text-white flex items-center gap-3 flex-row-reverse">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0074ff] to-[#0060d5] flex items-center justify-center text-white font-semibold text-lg">
-              {employee.first_name[0]}
-              {employee.last_name[0]}
+      <DialogContent className="max-w-xl p-0 overflow-hidden border border-border bg-card shadow-2xl rounded-2xl" dir="rtl">
+        {/* Top Header Section */}
+        <div className="p-8 pb-6 border-b border-border/50 bg-muted/20">
+          <div className="flex items-start gap-6">
+            {/* Avatar */}
+            <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-3xl font-black shrink-0 shadow-inner">
+              {employee.first_name[0]}{employee.last_name[0]}
             </div>
-            <div className="text-right">
-              <div>{employee.first_name} {employee.last_name}</div>
-              <div className="text-sm font-normal text-slate-400 mt-1">
-                מספר אישי: {employee.personal_number}
-              </div>
-            </div>
-          </DialogTitle>
-          <DialogDescription className="text-right">
-            פרטים מלאים של השוטר
-          </DialogDescription>
-        </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Status Badge */}
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex-row-reverse text-right">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: employee.status_color }}
-            />
-            <span className="font-medium text-slate-700 dark:text-slate-300">
-              {employee.status_name}
-            </span>
-            <Badge
-              variant="outline"
-              className={cn(
-                "ml-auto font-medium text-xs border-none px-3 py-1",
-                employee.is_commander
-                  ? "bg-blue-50 text-[#0074ff] dark:bg-[#0074ff]/10"
-                  : "bg-slate-100 text-slate-500 dark:bg-slate-800",
-              )}
-            >
-              {getProfessionalTitle(employee)}
-            </Badge>
-          </div>
-
-          {/* Personal Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 text-right">
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 mb-3 flex-row-reverse">
-                <User className="w-4 h-4" />
-                פרטים אישיים
+            {/* Title & Key Stats */}
+            <div className="flex-1 min-w-0 pt-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-2xl font-black text-foreground tracking-tight truncate">
+                  {employee.first_name} {employee.last_name}
+                </h2>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px] h-5">
+                  {getProfessionalTitle(employee)}
+                </Badge>
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between flex-row-reverse">
-                  <span className="text-slate-400">מספר אישי:</span>
-                  <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
-                    {employee.personal_number}
-                  </span>
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-xs font-bold">
+                  <Contact className="w-3.5 h-3.5" />
+                  <span>מ"א {employee.personal_number}</span>
                 </div>
-                {employee.phone_number && (
-                  <div className="flex justify-between items-center flex-row-reverse">
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <Phone className="w-3 h-3" />
-                      טלפון:
-                    </span>
-                    <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {employee.phone_number}
-                    </span>
-                  </div>
-                )}
-                {employee.city && (
-                  <div className="flex justify-between items-center flex-row-reverse">
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      עיר:
-                    </span>
-                    <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {employee.city}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 text-right">
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 mb-3 flex-row-reverse">
-                <Calendar className="w-4 h-4" />
-                תאריכים
-              </div>
-              <div className="space-y-2 text-sm">
-                {employee.birth_date && (
-                  <div className="flex justify-between flex-row-reverse">
-                    <span className="text-slate-400">תאריך לידה:</span>
-                    <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {new Date(employee.birth_date).toLocaleDateString("he-IL")}
-                    </span>
-                  </div>
-                )}
-                {employee.enlistment_date && (
-                  <div className="flex justify-between flex-row-reverse">
-                    <span className="text-slate-400">תאריך גיוס:</span>
-                    <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {new Date(employee.enlistment_date).toLocaleDateString("he-IL")}
-                    </span>
-                  </div>
-                )}
-                {employee.discharge_date && (
-                  <div className="flex justify-between flex-row-reverse">
-                    <span className="text-slate-400">תאריך שחרור:</span>
-                    <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {new Date(employee.discharge_date).toLocaleDateString("he-IL")}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Organizational Information */}
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 text-right">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 mb-4 flex-row-reverse">
-              <Building2 className="w-4 h-4" />
-              שיוך ארגוני
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex-row-reverse">
-                <Building2 className="w-4 h-4 text-[#0074ff]" />
-                <div className="text-right">
-                  <div className="text-[10px] text-slate-400 font-medium uppercase">
-                    מחלקה
-                  </div>
-                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {employee.department_name || "ללא מחלקה"}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex-row-reverse">
-                <Users className="w-4 h-4 text-[#0074ff]" />
-                <div className="text-right">
-                  <div className="text-[10px] text-slate-400 font-medium uppercase">
-                    מדור
-                  </div>
-                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {employee.section_name || "ללא מדור"}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex-row-reverse">
-                <Award className="w-4 h-4 text-[#0074ff]" />
-                <div className="text-right">
-                  <div className="text-[10px] text-slate-400 font-medium uppercase">
-                    צוות
-                  </div>
-                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {employee.team_name || "ללא צוות"}
-                  </div>
+                <div className="flex items-center gap-1.5 text-xs font-bold">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: employee.status_color || 'var(--primary)' }} />
+                  <span>{employee.status_name}</span>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Security Information */}
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 text-right">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 mb-4 flex-row-reverse">
-              <Shield className="w-4 h-4" />
-              אבטחה והרשאות
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex justify-between items-center flex-row-reverse">
-                <span className="text-slate-400 text-sm">רמת סיווג:</span>
-                <Badge variant="outline" className="font-medium">
-                  {employee.security_clearance}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center flex-row-reverse">
-                <span className="text-slate-400 text-sm">רישיון משטרה:</span>
-                <Badge
-                  variant={employee.police_license ? "default" : "outline"}
-                  className="font-medium"
-                >
-                  {employee.police_license ? "כן" : "לא"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center flex-row-reverse">
-                <span className="text-slate-400 text-sm">מנהל מערכת:</span>
-                <Badge
-                  variant={employee.is_admin ? "default" : "outline"}
-                  className="font-medium"
-                >
-                  {employee.is_admin ? "כן" : "לא"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center flex-row-reverse">
-                <span className="text-slate-400 text-sm">מפקד:</span>
-                <Badge
-                  variant={employee.is_commander ? "default" : "outline"}
-                  className="font-medium"
-                >
-                  {employee.is_commander ? "כן" : "לא"}
-                </Badge>
-              </div>
-            </div>
+        {/* Info Grid */}
+        <div className="p-8 pt-6 space-y-8">
+          {/* Main Info Columns */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+            <InfoItem icon={Phone} label="טלפון" value={employee.phone_number} />
+            <InfoItem icon={MapPin} label="עיר מגורים" value={employee.city} />
+            <InfoItem icon={User} label="גיל" value={employee.birth_date ? `${calculateAge(employee.birth_date)}` : null} />
+            <InfoItem icon={Cake} label="תאריך לידה" value={employee.birth_date ? new Date(employee.birth_date).toLocaleDateString("he-IL") : null} />
+            <InfoItem icon={Calendar} label="תאריך שיבוץ" value={employee.assignment_date ? new Date(employee.assignment_date).toLocaleDateString("he-IL") : null} />
           </div>
+
+          <div className="h-px bg-border/50 w-full" />
+
+          {/* Organizational Block */}
+          {(employee.department_name || employee.section_name || employee.team_name) && (
+            <div>
+              <h3 className="text-[11px] font-black text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Building2 className="w-3.5 h-3.5" />
+                מבנה ארגוני
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {employee.department_name && (
+                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">מחלקה</p>
+                    <p className="text-sm font-bold truncate">{employee.department_name}</p>
+                  </div>
+                )}
+                {employee.section_name && (
+                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">מדור</p>
+                    <p className="text-sm font-bold truncate">{employee.section_name}</p>
+                  </div>
+                )}
+                {employee.team_name && (
+                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">צוות / חוליה</p>
+                    <p className="text-sm font-bold truncate">{employee.team_name}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
         </div>
       </DialogContent>
     </Dialog>
