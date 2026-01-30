@@ -279,8 +279,10 @@ export default function TransfersPage() {
                     <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">מסלול נוכחי</TableHead>
                     <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">מסלול יעד</TableHead>
                     <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">הוגש ע"י</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">תאריך</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">סטטוס</TableHead>
                     <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">מידע נוסף</TableHead>
-                    <TableHead className="text-center font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">פעולות</TableHead>
+                    <TableHead className="text-center font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6 w-[200px]">פעולות</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -332,46 +334,74 @@ export default function TransfersPage() {
                             <span className="text-[9px] text-primary font-black opacity-80 uppercase tracking-tighter">{req.requester_unit || "מטה"}</span>
                           </div>
                         </TableCell>
+                        <TableCell className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase">{new Date(req.created_at).toLocaleDateString("he-IL")}</TableCell>
                         <TableCell className="px-6 py-4">
-                          <div className="flex flex-col gap-1 items-start">
-                            {statusBadge("pending")}
-                            {req.reason && <p className="text-[10px] italic text-muted-foreground/60 max-w-[150px] truncate" title={req.reason}>"{req.reason}"</p>}
-                          </div>
+                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-200 shadow-sm rounded-lg px-2">
+                            <Clock className="w-3 h-3 ml-1" />
+                            ממתין
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-6 py-4">
+                          {req.reason ? (
+                            <span className="text-xs text-muted-foreground block max-w-[200px] break-words">{req.reason}</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground/50 italic">אין הערות</span>
+                          )}
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center justify-center gap-2">
-                            {canManage ? (
-                              <>
-                                <Button
-                                  size="sm"
-                                  className="h-9 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border-0"
-                                  onClick={() => handleApprove(req.id)}
-                                >
-                                  <CheckCircle2 className="w-3.5 h-3.5 ml-1.5" />
-                                  אישור
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-9 text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300 font-bold px-5 rounded-xl transition-all duration-200"
-                                  onClick={() => handleReject(req.id)}
-                                >
-                                  <ShieldAlert className="w-3.5 h-3.5 ml-1.5" />
-                                  דחייה
-                                </Button>
-                              </>
-                            ) : req.requested_by === user?.id ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-9 text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300 font-bold px-5 rounded-xl transition-all duration-200"
-                                onClick={() => handleCancel(req.id)}
-                              >
-                                ביטול
-                              </Button>
-                            ) : (
-                              <Badge variant="secondary" className="px-3 py-1.5 font-bold text-[10px] rounded-lg">בבדיקה</Badge>
-                            )}
+                            {(() => {
+                              // Helper logic for permissions
+                              // Ensure strictly string comparison to avoid type mismatch
+                              const isRequester = String(req.requester_id) === String(user?.id);
+
+                              // Check if user commands the target unit
+                              const isTargetCommander = user?.is_admin || (
+                                (req.target_type === 'team' && user?.commands_team_id === req.target_id) ||
+                                (req.target_type === 'section' && user?.commands_section_id === req.target_id) ||
+                                (req.target_type === 'department' && user?.commands_department_id === req.target_id)
+                              );
+
+                              if (isRequester) {
+                                return (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-9 text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300 font-bold px-4 rounded-xl transition-all duration-200"
+                                    onClick={() => handleCancel(req.id)}
+                                  >
+                                    ביטול
+                                  </Button>
+                                );
+                              }
+
+                              if (isTargetCommander) {
+                                return (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      className="h-9 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold px-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border-0"
+                                      onClick={() => handleApprove(req.id)}
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5 ml-1.5" />
+                                      אישור
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-9 text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300 font-bold px-4 rounded-xl transition-all duration-200"
+                                      onClick={() => handleReject(req.id)}
+                                    >
+                                      <ShieldAlert className="w-3.5 h-3.5 ml-1.5" />
+                                      דחייה
+                                    </Button>
+                                  </>
+                                );
+                              }
+
+                              // Fallback for viewers who help manage but are neither requester nor target commander
+                              return <Badge variant="outline" className="opacity-50">צפייה בלבד</Badge>;
+                            })()}
                           </div>
                         </TableCell>
                       </TableRow>

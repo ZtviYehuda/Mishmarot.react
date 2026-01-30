@@ -81,20 +81,24 @@ export function useNotifications() {
 
   const markAllAsRead = async () => {
     try {
-      // Mark all current alerts as read
-      await Promise.all(
-        alerts.map((alert) =>
-          apiClient.post(`/notifications/alerts/${alert.id}/read`, {
-            title: alert.title,
-            description: alert.description,
-            type: alert.type,
-            link: alert.link
-          })
-        )
-      );
-      // Clear all alerts from local state
+      if (alerts.length === 0) return;
+
+      // Prepare payload with all necessary snapshot data
+      const notificationsPayload = alerts.map(alert => ({
+        id: alert.id,
+        title: alert.title,
+        description: alert.description,
+        type: alert.type,
+        link: alert.link
+      }));
+
+      await apiClient.post(`/notifications/alerts/read-all`, notificationsPayload);
+
+      // Clear all alerts from local state immediately
       setAlerts([]);
-      fetchHistory(); // Refresh history immediately
+
+      // Refresh history to include newly read items
+      fetchHistory();
     } catch (err) {
       console.error("Failed to mark all as read:", err);
     }

@@ -34,10 +34,13 @@ def get_alerts():
         # Get notifications this user has already read
         read_notifications = NotificationModel.get_read_notifications(user_id)
         
-        # Filter out read notifications
+        print(f"DEBUG: User {user_id} - All Alerts IDs: {[a['id'] for a in all_alerts]}")
+        print(f"DEBUG: User {user_id} - Read IDs: {read_notifications}")
+
+        # Filter out read notifications (ensure string comparison)
         unread_alerts = [
             alert for alert in all_alerts 
-            if alert["id"] not in read_notifications
+            if str(alert["id"]) not in read_notifications
         ]
         
         return jsonify(unread_alerts)
@@ -116,6 +119,41 @@ def mark_notification_read(notification_id):
             
     except Exception as e:
         print(f"❌ Error marking notification as read: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@notif_bp.route("/alerts/read-all", methods=["POST"])
+@jwt_required()
+def mark_all_notifications_read():
+    """Mark all provided notifications as read for the current user"""
+    try:
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        user_id = identity["id"] if isinstance(identity, dict) else identity
+
+        notifications = request.json or []
+        if not notifications:
+             return jsonify({"success": True, "message": "No notifications to mark"})
+
+        success = NotificationModel.mark_all_as_read(user_id, notifications)
+        
+        if success:
+            return jsonify({"success": True, "message": "All notifications marked as read"})
+        else:
+            return jsonify({"success": False, "error": "Failed to mark notifications as read"}), 500
+            
+    except Exception as e:
+        print(f"❌ Error marking all notifications as read: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500

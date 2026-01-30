@@ -13,7 +13,7 @@ export interface TransferRequest {
   target_type: string;
   target_id: number;
   target_name: string;
-  requested_by: number;
+  requester_id: number;
   requester_name: string;
   requester_unit?: string;
   status: "pending" | "approved" | "rejected" | "cancelled";

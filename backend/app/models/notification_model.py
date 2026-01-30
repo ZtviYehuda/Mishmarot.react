@@ -232,6 +232,51 @@ class NotificationModel:
             conn.close()
 
     @staticmethod
+    def mark_all_as_read(user_id, notifications):
+        """Mark multiple notifications as read in a single transaction"""
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+            
+            # Prepare data for executemany
+            values = []
+            for notif in notifications:
+                values.append((
+                    user_id, 
+                    notif.get('id'), 
+                    notif.get('title', 'התראה'),
+                    notif.get('description', ''),
+                    notif.get('type', 'info'),
+                    notif.get('link', '')
+                ))
+            
+            from psycopg2.extras import execute_values
+            
+            execute_values(cur, """
+                INSERT INTO notification_reads (user_id, notification_id, title, description, type, link)
+                VALUES %s
+                ON CONFLICT (user_id, notification_id) DO UPDATE 
+                SET title = EXCLUDED.title,
+                    description = EXCLUDED.description,
+                    type = EXCLUDED.type,
+                    link = EXCLUDED.link,
+                    read_at = CURRENT_TIMESTAMP
+            """, values)
+            
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"❌ Error marking all notifications as read: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
     def get_read_notifications(user_id):
         """Get list of notification IDs that the user has already read"""
         conn = get_db_connection()
@@ -245,7 +290,8 @@ class NotificationModel:
                 WHERE user_id = %s
             """, (user_id,))
             rows = cur.fetchall()
-            return {row[0] for row in rows}
+            # Ensure IDs are strings to match the alerts formatting
+            return {str(row[0]) for row in rows}
         except Exception as e:
             print(f"❌ Error getting read notifications: {e}")
             return set()
