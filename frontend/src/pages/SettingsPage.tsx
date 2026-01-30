@@ -59,6 +59,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isSaving, setIsSaving] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isServerBackingUp, setIsServerBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
 
   // Backup Config State
@@ -132,6 +133,26 @@ export default function SettingsPage() {
       console.error(err);
     } finally {
       setIsBackingUp(false);
+    }
+  };
+
+  const handleServerBackupNow = async () => {
+    setIsServerBackingUp(true);
+    try {
+      const { data } = await apiClient.post("/admin/backup/now");
+      if (data.success) {
+        toast.success("גיבוי בוצע בהצלחה", {
+          description: `נשמר בשם: ${data.file.split(/[\\/]/).pop()}`,
+        });
+        setBackupConfig((prev) => ({
+          ...prev,
+          last_backup: data.last_backup,
+        }));
+      }
+    } catch (e) {
+      toast.error("שגיאה בביצוע הגיבוי");
+    } finally {
+      setIsServerBackingUp(false);
     }
   };
 
@@ -837,13 +858,33 @@ export default function SettingsPage() {
                   {/* Automatic Backup Settings */}
                   <div className="bg-card p-6 rounded-2xl border border-border shadow-sm">
                     <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-                      <h4 className="text-lg font-black text-foreground">הגדרות אוטומציה</h4>
-                      <div className="flex items-center gap-3">
-                        <span className={`font-bold ${backupConfig.enabled ? 'text-primary' : 'text-muted-foreground'}`}>
-                          {backupConfig.enabled ? "גיבוי אוטומטי פעיל" : "גיבוי אוטומטי כבוי"}
-                        </span>
-                        <div className={`p-1.5 rounded-lg transition-colors ${backupConfig.enabled ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                          <RefreshCw className={`w-5 h-5 ${backupConfig.enabled ? 'animate-spin-slow' : ''}`} />
+                      <div className="flex flex-col md:flex-row md:items-center gap-4 w-full justify-between">
+                        <div className="flex items-center gap-4">
+                          <h4 className="text-lg font-black text-foreground">
+                            הגדרות אוטומציה
+                          </h4>
+                          <Button
+                            onClick={handleServerBackupNow}
+                            disabled={isServerBackingUp}
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-primary-foreground gap-2 hidden md:flex"
+                          >
+                            {isServerBackingUp ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Database className="w-3 h-3" />
+                            )}
+                            בצע גיבוי עכשיו
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`font-bold ${backupConfig.enabled ? 'text-primary' : 'text-muted-foreground'}`}>
+                            {backupConfig.enabled ? "גיבוי אוטומטי פעיל" : "גיבוי אוטומטי כבוי"}
+                          </span>
+                          <div className={`p-1.5 rounded-lg transition-colors ${backupConfig.enabled ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                            <RefreshCw className={`w-5 h-5 ${backupConfig.enabled ? 'animate-spin-slow' : ''}`} />
+                          </div>
                         </div>
                       </div>
                     </div>

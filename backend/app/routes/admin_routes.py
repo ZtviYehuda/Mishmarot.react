@@ -31,6 +31,25 @@ def update_backup_config():
     return jsonify({"success": True, "config": backup_service.get_config()})
 
 
+@admin_bp.route('/backup/now', methods=['POST'])
+@jwt_required()
+def trigger_backup_now():
+    """Manually trigger a system backup immediately"""
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    success, result = backup_service.perform_backup()
+    if success:
+        return jsonify({
+            "success": True, 
+            "message": "Backup created successfully", 
+            "file": result,
+            "last_backup": backup_service.get_config().get("last_backup")
+        })
+    else:
+        return jsonify({"success": False, "error": result}), 500
+
+
 @admin_bp.route('/settings', methods=['GET'])
 @jwt_required()
 def get_system_settings():
