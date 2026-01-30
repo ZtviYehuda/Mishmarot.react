@@ -291,7 +291,8 @@ def export_excel():
                 "שם מלא": f"{emp['first_name']} {emp['last_name']}",
                 "מספר אישי": emp["personal_number"],
                 "מחלקה": emp["department_name"] or "-",
-                "צוות": emp["team_name"] or "-",
+                "מדור": emp["section_name"] or "-",
+                "חולייה": emp["team_name"] or "-",
             }
             # Add dates
             for i, d_str in enumerate(date_strs):
@@ -313,7 +314,7 @@ def export_excel():
             "last_name": "שם משפחה",
             "personal_number": "מספר אישי",
             "status_name": "סטטוס",
-            "team_name": "צוות",
+            "team_name": "חוליה",
             "section_name": "מדור",
             "department_name": "מחלקה",
         }

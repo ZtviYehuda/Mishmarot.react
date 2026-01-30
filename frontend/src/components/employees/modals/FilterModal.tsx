@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn } from "@/lib/utils";
+import { useAuthContext } from "@/context/AuthContext";
 
 interface FilterModalProps {
   open: boolean;
@@ -52,6 +53,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   onApply,
   employees,
 }) => {
+  const { user } = useAuthContext();
   const [filters, setFilters] = useState<EmployeeFilters>({
     departments: [],
     sections: [],
@@ -131,16 +133,76 @@ export const FilterModal: React.FC<FilterModalProps> = ({
     setFilters((prev: any) => {
       if (Array.isArray(prev[type])) {
         const current = (prev[type] as string[]) || [];
+        const isSelected = current.includes(value);
+        let next = isSelected
+          ? current.filter((v) => v !== value)
+          : [...current, value];
+
+        // Hierarchical cleanup
+        if (type === "departments") {
+          return { ...prev, departments: next, sections: [], teams: [] };
+        }
+        if (type === "sections") {
+          return { ...prev, sections: next, teams: [] };
+        }
+
         return {
           ...prev,
-          [type]: current.includes(value)
-            ? current.filter((v) => v !== value)
-            : [...current, value],
+          [type]: next,
         };
       }
       return { ...prev, [type]: value };
     });
   };
+
+  // Filter labels based on user role
+  const availableDepts = useMemo(() => {
+    const depts = Array.from(hierarchyData.departments.keys());
+    if (user?.is_admin) return depts;
+    if (user?.department_name) return [user.department_name];
+    // If they aren't admin and don't have dept name, but have employees with depts, 
+    // maybe they are a commander with scope.
+    return depts;
+  }, [hierarchyData, user]);
+
+  const availableSections = useMemo(() => {
+    let sects: string[] = [];
+
+    // If something selected, show those
+    if (filters.departments && filters.departments.length > 0) {
+      filters.departments.forEach(d => {
+        sects = [...sects, ...(hierarchyData.departments.get(d) || [])];
+      });
+    } else if (user?.is_admin) {
+      // Show all if admin and nothing selected? Or maybe better to wait for dept?
+      // User wants "chain", so if department commander, show their sections.
+      if (user.department_name) {
+        sects = hierarchyData.departments.get(user.department_name) || [];
+      }
+    } else if (user?.department_name) {
+      sects = hierarchyData.departments.get(user.department_name) || [];
+    } else if (user?.section_name) {
+      sects = [user.section_name];
+    }
+
+    if (user?.section_name && !user?.is_admin) {
+      return [user.section_name];
+    }
+
+    return Array.from(new Set(sects)).sort();
+  }, [filters.departments, hierarchyData, user]);
+
+  const availableTeams = useMemo(() => {
+    let tms: string[] = [];
+    if (filters.sections && filters.sections.length > 0) {
+      filters.sections.forEach(s => {
+        tms = [...tms, ...(hierarchyData.sections.get(s) || [])];
+      });
+    } else if (user?.section_name && !user?.is_admin) {
+      tms = hierarchyData.sections.get(user.section_name) || [];
+    }
+    return Array.from(new Set(tms)).sort();
+  }, [filters.sections, hierarchyData, user]);
 
   const handleApply = () => {
     onApply({
@@ -254,14 +316,14 @@ export const FilterModal: React.FC<FilterModalProps> = ({
 
             {expandedSection === "org" && (
               <div className="space-y-5 pr-11 animate-in fade-in slide-in-from-top-2 duration-300 pb-2">
-                {/* Departments */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-muted-foreground block mb-2">
-                    מחלקות
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {Array.from(hierarchyData.departments.keys()).map(
-                      (dept) => (
+                {/* Departments - Only for Admins or if multiple depts exist */}
+                {(user?.is_admin || availableDepts.length > 1) && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block mb-2">
+                      מחלקות
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {availableDepts.map((dept) => (
                         <button
                           key={dept}
                           onClick={() => toggleFilter("departments", dept)}
@@ -274,10 +336,60 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                         >
                           {dept}
                         </button>
-                      ),
-                    )}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Sections */}
+                {availableSections.length > 0 && (availableSections.length > 1 || user?.is_admin) && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block mb-2">
+                      מדורים
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {availableSections.map((sect) => (
+                        <button
+                          key={sect}
+                          onClick={() => toggleFilter("sections", sect)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all",
+                            filters.sections?.includes(sect)
+                              ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                              : "bg-muted/50 text-muted-foreground border border-border hover:border-blue-200",
+                          )}
+                        >
+                          {sect}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Teams */}
+                {availableTeams.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block mb-2">
+                      חוליות
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {availableTeams.map((team) => (
+                        <button
+                          key={team}
+                          onClick={() => toggleFilter("teams", team)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all",
+                            filters.teams?.includes(team)
+                              ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                              : "bg-muted/50 text-muted-foreground border border-border hover:border-emerald-200",
+                          )}
+                        >
+                          {team}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Roles */}
                 <div className="space-y-2">

@@ -194,7 +194,7 @@ export default function AttendancePage() {
     (emp) =>
       emp.last_status_update &&
       new Date(emp.last_status_update).toDateString() ===
-        selectedDate.toDateString(),
+      selectedDate.toDateString(),
   ).length;
 
   const totalCount = employees.length;
@@ -217,7 +217,7 @@ export default function AttendancePage() {
   const isReportedToday =
     currentUserEmployee?.last_status_update &&
     new Date(currentUserEmployee.last_status_update).toDateString() ===
-      selectedDate.toDateString();
+    selectedDate.toDateString();
 
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
@@ -536,7 +536,7 @@ export default function AttendancePage() {
                   const isUpdatedToday =
                     emp.last_status_update &&
                     new Date(emp.last_status_update).toDateString() ===
-                      selectedDate.toDateString();
+                    selectedDate.toDateString();
 
                   return (
                     <TableRow
@@ -544,8 +544,8 @@ export default function AttendancePage() {
                       className={cn(
                         "group hover:bg-muted/50 transition-colors border-b border-border",
                         user &&
-                          emp.id === user.id &&
-                          "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
+                        emp.id === user.id &&
+                        "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
                       )}
                     >
                       <TableCell className="py-4 px-6 text-right">
@@ -574,35 +574,31 @@ export default function AttendancePage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        {emp.department_name &&
-                        emp.department_name !== "מטה" ? (
-                          <div className="flex flex-col text-right">
+                        <div className="flex flex-col text-right">
+                          {emp.department_name && (
                             <span className="text-xs font-bold text-foreground/80">
                               {emp.department_name}
                             </span>
-                            {((emp.section_name &&
-                              emp.section_name !== "מטה") ||
-                              (emp.team_name && emp.team_name !== "מטה")) && (
+                          )}
+                          <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 mt-0.5">
+                            {emp.section_name && emp.section_name !== "מטה" && (
                               <span className="text-[10px] text-muted-foreground font-medium">
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  `מדור ${emp.section_name}`}
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  " • "}
-                                {emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  `חוליה ${emp.team_name}`}
+                                מדור {emp.section_name}
+                              </span>
+                            )}
+                            {emp.section_name && emp.section_name !== "מטה" && emp.team_name && emp.team_name !== "מטה" && (
+                              <span className="text-[10px] text-muted-foreground/40">•</span>
+                            )}
+                            {emp.team_name && emp.team_name !== "מטה" && (
+                              <span className="text-[10px] text-muted-foreground font-medium">
+                                חוליה {emp.team_name}
                               </span>
                             )}
                           </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            -
-                          </span>
-                        )}
+                          {!emp.department_name && !emp.section_name && !emp.team_name && (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center gap-2">
@@ -627,7 +623,7 @@ export default function AttendancePage() {
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span className="text-xs font-bold">
                               {selectedDate.toDateString() ===
-                              new Date().toDateString()
+                                new Date().toDateString()
                                 ? "היום"
                                 : format(selectedDate, "dd/MM")}
                               ,{" "}

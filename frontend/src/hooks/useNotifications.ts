@@ -13,7 +13,20 @@ export interface Alert {
 export function useNotifications() {
   const { user } = useAuthContext();
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [readIds, setReadIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Load read IDs from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("read_notifications");
+    if (saved) {
+      try {
+        setReadIds(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse read notifications", e);
+      }
+    }
+  }, []);
 
   const fetchAlerts = async () => {
     if (!user) return;
@@ -28,6 +41,12 @@ export function useNotifications() {
     }
   };
 
+  const markAllAsRead = () => {
+    const allIds = alerts.map(a => a.id);
+    setReadIds(allIds);
+    localStorage.setItem("read_notifications", JSON.stringify(allIds));
+  };
+
   useEffect(() => {
     fetchAlerts();
     // Refresh every 5 minutes
@@ -35,5 +54,13 @@ export function useNotifications() {
     return () => clearInterval(interval);
   }, [user]);
 
-  return { alerts, loading, refreshAlerts: fetchAlerts };
+  const unreadCount = alerts.filter(a => !readIds.includes(a.id)).length;
+
+  return {
+    alerts,
+    loading,
+    unreadCount,
+    refreshAlerts: fetchAlerts,
+    markAllAsRead
+  };
 }

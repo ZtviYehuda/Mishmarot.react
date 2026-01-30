@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Info,
+  CheckCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -30,7 +31,7 @@ import {
 export default function MainLayout() {
   const { user, logout } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
-  const { alerts, loading, refreshAlerts } = useNotifications();
+  const { alerts, loading, refreshAlerts, unreadCount, markAllAsRead } = useNotifications();
   const location = useLocation();
   // Sidebar closed by default on mobile, open on desktop
   // Initialize sidebar state based on window width to prevent layout shift on load
@@ -268,7 +269,7 @@ export default function MainLayout() {
                   {location.pathname === "/"
                     ? "לוח בקרה מרכזי"
                     : navItems.find((n) => n.path === location.pathname)
-                        ?.name || "דף מערכת"}
+                      ?.name || "דף מערכת"}
                 </h2>
               </div>
             </div>
@@ -280,15 +281,15 @@ export default function MainLayout() {
               <PopoverTrigger asChild>
                 <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all">
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                  {alerts.length > 0 && (
+                  {unreadCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-primary text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card shadow-lg shadow-primary/40 animate-in zoom-in duration-300">
-                      {alerts.length}
+                      {unreadCount}
                     </span>
                   )}
                 </button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-80 p-0 overflow-hidden rounded-2xl border-border shadow-2xl"
+                className="w-80 sm:w-[450px] p-0 overflow-hidden rounded-2xl border-border shadow-2xl"
                 align="start"
               >
                 <div className="p-4 border-b border-border flex items-center justify-between bg-card sticky top-0 z-10">
@@ -300,12 +301,21 @@ export default function MainLayout() {
                       {alerts.length}
                     </span>
                   </div>
-                  <button
-                    onClick={refreshAlerts}
-                    className="text-[10px] font-black text-primary hover:underline"
-                  >
-                    רענן רשימה
-                  </button>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={markAllAsRead}
+                      className="text-[10px] font-black text-primary hover:underline flex items-center gap-1"
+                    >
+                      <CheckCheck className="w-3 h-3" />
+                      סמן הכל כנקרא
+                    </button>
+                    <button
+                      onClick={refreshAlerts}
+                      className="text-[10px] font-black text-muted-foreground hover:text-primary hover:underline"
+                    >
+                      רענן רשימה
+                    </button>
+                  </div>
                 </div>
                 <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-muted/50">
                   {loading ? (
