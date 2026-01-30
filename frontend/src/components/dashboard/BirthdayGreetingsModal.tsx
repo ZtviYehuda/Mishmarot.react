@@ -28,7 +28,8 @@ interface Preset {
     text: string;
 }
 
-const STORAGE_KEY = "birthday_presets";
+// Storage key will be derived from user ID inside the component
+// const STORAGE_KEY = "birthday_presets";
 
 const INITIAL_PRESETS: Preset[] = [
     { id: 1, label: "ברכה 1", text: "מזל טוב [שם] יקר! 🎂 מאחלים לך יום הולדת שמח, המון בריאות, אושר והצלחה מהיחידה! ❤️\n\nבברכה, [שם_המפקד]" },
@@ -48,11 +49,13 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
     const [sentList, setSentList] = useState<number[]>([]);
     const [isEditing, setIsEditing] = useState(false);
 
-    const commanderName = user ? `${user.first_name} ${user.last_name}` : "המפקד";
 
-    // Load presets from localStorage on mount
+    const commanderName = user ? `${user.first_name} ${user.last_name}` : "המפקד";
+    const storageKey = user?.id ? `birthday_presets_${user.id}` : "birthday_presets_guest";
+
+    // Load presets from localStorage on mount or when user changes
     useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        const saved = localStorage.getItem(storageKey);
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
@@ -62,8 +65,13 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
             } catch (e) {
                 console.error("Failed to load presets", e);
             }
+        } else {
+            // Reset to defaults if no saved data for this user
+            setPresets(INITIAL_PRESETS);
+            setTemplate(INITIAL_PRESETS[0].text);
+            setActivePresetId(1);
         }
-    }, []);
+    }, [storageKey]);
 
     const handleSend = (emp: BirthdayEmployee) => {
         if (!emp.phone_number) return;
@@ -91,7 +99,7 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
             p.id === activePresetId ? { ...p, text: template } : p
         );
         setPresets(updatedPresets);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPresets));
+        localStorage.setItem(storageKey, JSON.stringify(updatedPresets));
         setIsEditing(false);
     };
 

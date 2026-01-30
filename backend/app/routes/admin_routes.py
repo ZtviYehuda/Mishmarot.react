@@ -31,6 +31,75 @@ def update_backup_config():
     return jsonify({"success": True, "config": backup_service.get_config()})
 
 
+@admin_bp.route('/settings', methods=['GET'])
+@jwt_required()
+def get_system_settings():
+    """Get all system settings"""
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT key, value, description FROM system_settings")
+        rows = cur.fetchall()
+        
+        settings = {}
+        for row in rows:
+            # Try to parse boolean values
+            val = row[1]
+            if val.lower() == 'true':
+                val = True
+            elif val.lower() == 'false':
+                val = False
+            settings[row[0]] = val
+            
+        return jsonify(settings)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@admin_bp.route('/settings', methods=['POST'])
+@jwt_required()
+def update_system_settings():
+    """Update a specific system setting"""
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    data = request.get_json()
+    key = data.get('key')
+    value = data.get('value')
+    
+    if not key:
+        return jsonify({"error": "Missing key"}), 400
+        
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        
+        # Convert boolean to string for storage
+        val_str = str(value).lower() if isinstance(value, bool) else str(value)
+        
+        cur.execute("""
+            INSERT INTO system_settings (key, value) 
+            VALUES (%s, %s)
+            ON CONFLICT (key) DO UPDATE SET 
+            value = EXCLUDED.value, 
+            updated_at = CURRENT_TIMESTAMP
+        """, (key, val_str))
+        
+        conn.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+
 def is_admin():
     try:
         identity = get_jwt_identity()
@@ -91,6 +160,7 @@ def backup_database():
     
     # רשימת הטבלאות לגיבוי לפי סדר תלויות (חשוב לשחזור)
     tables = [
+        "system_settings",
         "roles", "status_types", "service_types",
         "departments", "sections", "teams",
         "employees", "attendance_logs", "transfer_requests"
@@ -160,7 +230,8 @@ def restore_database():
         tables_reversed = [
             "transfer_requests", "attendance_logs", "employees",
             "teams", "sections", "departments",
-            "service_types", "status_types", "roles"
+            "service_types", "status_types", "roles",
+            "system_settings"
         ]
         
         # ניקוי טבלאות
@@ -169,6 +240,7 @@ def restore_database():
             
         # סדר טבלאות רגיל להוספה
         tables = [
+            "system_settings",
             "roles", "status_types", "service_types",
             "departments", "sections", "teams",
             "employees", "attendance_logs", "transfer_requests"

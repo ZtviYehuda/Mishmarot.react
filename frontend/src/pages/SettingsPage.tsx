@@ -68,6 +68,28 @@ export default function SettingsPage() {
     last_backup: null
   });
 
+  // System Settings State
+  const [systemSettings, setSystemSettings] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    if (activeTab === "notifications" && user?.is_admin) {
+      apiClient.get("/admin/settings")
+        .then(res => setSystemSettings(res.data))
+        .catch(err => console.error("Failed to load system settings", err));
+    }
+  }, [activeTab, user]);
+
+  const updateSystemSetting = async (key: string, value: any) => {
+    // Optimistic update
+    setSystemSettings(prev => ({ ...prev, [key]: value }));
+    try {
+      await apiClient.post("/admin/settings", { key, value });
+      toast.success("הגדרת מערכת עודכנה");
+    } catch {
+      toast.error("שגיאה בשמירת הגדרת מערכת");
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "backup" && user?.is_admin) {
       apiClient.get("/admin/backup/config")
@@ -752,6 +774,27 @@ export default function SettingsPage() {
                       }
                     />
                   </div>
+
+                  {user?.is_admin && (
+                    <div className="pt-6 mt-6 border-t border-border">
+                      <div className="mb-4">
+                        <h4 className="text-lg font-black text-foreground flex items-center gap-2 justify-end">
+                          הגדרות מערכת (מנהלים בלבד)
+                          <ShieldCheck className="w-4 h-4 text-primary" />
+                        </h4>
+                      </div>
+                      <div className="space-y-4">
+                        <NotifSetting
+                          title="התראות דיווח בסופ״ש"
+                          description="שלח התראות על אי-דיווח בוקר גם בימי שישי ושבת"
+                          enabled={systemSettings.alerts_weekend_enabled === true}
+                          onChange={(val: boolean) =>
+                            updateSystemSetting("alerts_weekend_enabled", val)
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex justify-start pt-6 border-t border-border">
                     <Button

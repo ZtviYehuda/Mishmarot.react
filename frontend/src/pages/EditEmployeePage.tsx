@@ -586,6 +586,22 @@ export default function EditEmployeePage() {
                             placeholder="012345678"
                           />
                         </FormField>
+                        <FormField label="תאריך לידה">
+                          <div className="relative">
+                            <Input
+                              type="date"
+                              value={formData.birth_date}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  birth_date: e.target.value,
+                                })
+                              }
+                              className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl text-right pr-4"
+                            />
+                            <Calendar className="absolute left-3 top-3.5 w-5 h-5 text-muted-foreground/50 pointer-events-none" />
+                          </div>
+                        </FormField>
                       </div>
 
                       <div className="w-full h-px bg-border my-8" />

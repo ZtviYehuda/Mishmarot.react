@@ -111,10 +111,23 @@ def setup_database():
                 read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(user_id, notification_id)
             );""",
+            """CREATE TABLE IF NOT EXISTS system_settings (
+                key VARCHAR(50) PRIMARY KEY,
+                value TEXT,
+                description VARCHAR(255),
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );""",
         ]
 
         for table in tables:
             cur.execute(table)
+            
+        # Insert default system settings
+        cur.execute("""
+            INSERT INTO system_settings (key, value, description)
+            VALUES ('alerts_weekend_enabled', 'false', 'האם לאפשר שליחת התראות דיווח בימי שישי ושבת')
+            ON CONFLICT (key) DO NOTHING;
+        """)
 
         # --- Migration: Add missing columns if table already existed ---
         try:

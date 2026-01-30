@@ -222,6 +222,8 @@ export default function AttendancePage() {
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
 
+  const isAllReported = totalCount > 0 && updatedTodayCount === totalCount;
+
   return (
     <div className="space-y-6 pb-12" dir="rtl">
       <PageHeader
@@ -237,11 +239,10 @@ export default function AttendancePage() {
             <Button
               variant="outline"
               className="h-10 sm:h-11 rounded-xl border-input gap-2 font-bold text-muted-foreground hover:bg-muted flex-1 sm:flex-none"
-              onClick={() => setExportDialogOpen(true)} // Updated
+              onClick={() => setExportDialogOpen(true)}
             >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">ייצוא דוח</span>{" "}
-              {/* Updated */}
               <span className="sm:hidden">ייצוא</span>
             </Button>
             <Button
@@ -284,7 +285,10 @@ export default function AttendancePage() {
       />
       {/* Summary Stats & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-card rounded-3xl p-6 border border-border shadow-sm">
+        <div className={cn(
+          "bg-card rounded-3xl p-6 border border-border shadow-sm",
+          isAllReported ? "lg:col-span-3" : "lg:col-span-2"
+        )}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex flex-col gap-1 text-right">
               <span className="text-sm font-black text-foreground">
@@ -316,10 +320,12 @@ export default function AttendancePage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className={cn(
+            "grid gap-4",
+            isAllReported ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-6" : "grid-cols-2 sm:grid-cols-4"
+          )}>
             {stats
               .filter((s: any) => s.status_id)
-              .slice(0, 4)
               .map((s: any) => (
                 <div
                   key={s.status_id}
@@ -339,23 +345,25 @@ export default function AttendancePage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-6 text-primary-foreground shadow-xl shadow-primary/20 flex flex-col justify-between">
-          <div className="space-y-2">
-            <Clock className="w-8 h-8 opacity-50" />
-            <h3 className="text-xl font-black">תזכורת דיווח</h3>
-            <p className="text-sm text-primary-foreground/80 font-medium leading-relaxed">
-              יש להשלים את דיווחי הנוכחות של כלל השוטרים במחלקה עד השעה 09:00.
-            </p>
-          </div>
-          <div className="pt-4 flex items-center gap-3">
-            <div className="bg-white/10 p-2 rounded-xl flex-1 flex items-center justify-center gap-2">
-              <AlertCircle className="w-4 h-4 text-primary-foreground/70" />
-              <span className="text-xs font-bold text-primary-foreground">
-                נותרו לדווח: {totalCount - updatedTodayCount}
-              </span>
+        {!isAllReported && (
+          <div className="bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-6 text-primary-foreground shadow-xl shadow-primary/20 flex flex-col justify-between">
+            <div className="space-y-2">
+              <Clock className="w-8 h-8 opacity-50" />
+              <h3 className="text-xl font-black">תזכורת דיווח</h3>
+              <p className="text-sm text-primary-foreground/80 font-medium leading-relaxed">
+                יש להשלים את דיווחי הנוכחות של כלל השוטרים במחלקה עד השעה 09:00.
+              </p>
+            </div>
+            <div className="pt-4 flex items-center gap-3">
+              <div className="bg-white/10 p-2 rounded-xl flex-1 flex items-center justify-center gap-2">
+                <AlertCircle className="w-4 h-4 text-primary-foreground/70" />
+                <span className="text-xs font-bold text-primary-foreground">
+                  נותרו לדווח: {totalCount - updatedTodayCount}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
       {/* Filters Bar */}
       <div className="bg-card p-6 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row gap-4 items-end">
