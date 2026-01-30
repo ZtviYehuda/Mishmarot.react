@@ -20,12 +20,15 @@ import {
   User,
   Plus,
   Pencil,
+  LogIn,
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn } from "@/lib/utils";
 import { FilterModal } from "./modals";
 import type { EmployeeFilters } from "./modals/FilterModal";
 import { EmployeeLink } from "@/components/common/EmployeeLink";
+import apiClient from "@/config/api.client";
+import { toast } from "sonner";
 
 interface EmployeeTableProps {
   employees: Employee[];
@@ -175,6 +178,25 @@ export const EmployeeTable = ({
     }
   };
 
+  const handleImpersonate = async (targetId: number, name: string) => {
+    if (!window.confirm(`האם אתה בטוח שברצונך להתחבר כ-${name}?`)) return;
+
+    try {
+      const { data } = await apiClient.post("/auth/impersonate", {
+        target_id: targetId,
+      });
+      if (data.success && data.token) {
+        localStorage.setItem("token", data.token);
+        toast.success(`התחברת בהצלחה כ-${name}`);
+        // Force full reload to update Context and Reset App State
+        window.location.href = "/";
+      }
+    } catch (e) {
+      toast.error("שגיאה בהתחברות כמשתמש");
+      console.error(e);
+    }
+  };
+
   return (
     <div className="space-y-4 sm:space-y-5">
       {/* Search & Filter Bar */}
@@ -282,7 +304,7 @@ export const EmployeeTable = ({
                     className={cn(
                       "group transition-all duration-200 hover:bg-muted/50 border-b border-border",
                       !emp.is_active &&
-                        "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-2 border-r-destructive",
+                      "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-2 border-r-destructive",
                     )}
                   >
                     <TableCell className="px-6 py-4 text-right">
@@ -346,20 +368,20 @@ export const EmployeeTable = ({
                           </span>
                           {((emp.section_name && emp.section_name !== "מטה") ||
                             (emp.team_name && emp.team_name !== "מטה")) && (
-                            <span className="text-[10px] text-muted-foreground">
-                              {emp.section_name &&
-                                emp.section_name !== "מטה" &&
-                                `מדור ${emp.section_name}`}
-                              {emp.section_name &&
-                                emp.section_name !== "מטה" &&
-                                emp.team_name &&
-                                emp.team_name !== "מטה" &&
-                                " • "}
-                              {emp.team_name &&
-                                emp.team_name !== "מטה" &&
-                                `חוליה ${emp.team_name}`}
-                            </span>
-                          )}
+                              <span className="text-[10px] text-muted-foreground">
+                                {emp.section_name &&
+                                  emp.section_name !== "מטה" &&
+                                  `מדור ${emp.section_name}`}
+                                {emp.section_name &&
+                                  emp.section_name !== "מטה" &&
+                                  emp.team_name &&
+                                  emp.team_name !== "מטה" &&
+                                  " • "}
+                                {emp.team_name &&
+                                  emp.team_name !== "מטה" &&
+                                  `חוליה ${emp.team_name}`}
+                              </span>
+                            )}
                         </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
@@ -373,6 +395,24 @@ export const EmployeeTable = ({
 
                     <TableCell className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
+                        {user?.is_admin &&
+                          (emp.is_commander || emp.is_admin) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
+                              onClick={() =>
+                                handleImpersonate(
+                                  emp.id,
+                                  `${emp.first_name} ${emp.last_name}`,
+                                )
+                              }
+                              title="התחבר כמשתמש זה"
+                            >
+                              <LogIn className="w-3.5 h-3.5 ml-1" />
+                              התחבר
+                            </Button>
+                          )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -470,7 +510,7 @@ export const EmployeeTable = ({
               className={cn(
                 "bg-card rounded-2xl border border-border shadow-sm overflow-hidden",
                 !emp.is_active &&
-                  "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-4 border-r-destructive",
+                "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-4 border-r-destructive",
               )}
             >
               <div className="p-4 space-y-3">
@@ -550,21 +590,21 @@ export const EmployeeTable = ({
                           {emp.department_name}
                           {((emp.section_name && emp.section_name !== "מטה") ||
                             (emp.team_name && emp.team_name !== "מטה")) && (
-                            <>
-                              {" • "}
-                              {emp.section_name &&
-                                emp.section_name !== "מטה" &&
-                                `מדור ${emp.section_name}`}
-                              {emp.section_name &&
-                                emp.section_name !== "מטה" &&
-                                emp.team_name &&
-                                emp.team_name !== "מטה" &&
-                                " • "}
-                              {emp.team_name &&
-                                emp.team_name !== "מטה" &&
-                                `חוליה ${emp.team_name}`}
-                            </>
-                          )}
+                              <>
+                                {" • "}
+                                {emp.section_name &&
+                                  emp.section_name !== "מטה" &&
+                                  `מדור ${emp.section_name}`}
+                                {emp.section_name &&
+                                  emp.section_name !== "מטה" &&
+                                  emp.team_name &&
+                                  emp.team_name !== "מטה" &&
+                                  " • "}
+                                {emp.team_name &&
+                                  emp.team_name !== "מטה" &&
+                                  `חוליה ${emp.team_name}`}
+                              </>
+                            )}
                         </>
                       ) : (
                         "-"
@@ -584,6 +624,22 @@ export const EmployeeTable = ({
                 {/* Actions */}
                 <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                   <div className="flex items-center gap-1.5">
+                    {user?.is_admin && (emp.is_commander || emp.is_admin) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
+                        onClick={() =>
+                          handleImpersonate(
+                            emp.id,
+                            `${emp.first_name} ${emp.last_name}`,
+                          )
+                        }
+                      >
+                        <LogIn className="w-3.5 h-3.5 ml-1" />
+                        התחבר
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"

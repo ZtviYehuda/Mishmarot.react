@@ -128,6 +128,8 @@ def get_current_user():
     if not user_id:
         return jsonify({"error": "Invalid token identity"}), 400
 
+    is_impersonated = identity.get("is_impersonation", False) if isinstance(identity, dict) else False
+
     user = EmployeeModel.get_employee_by_id(user_id)
     if user:
         return jsonify(
@@ -137,7 +139,8 @@ def get_current_user():
                 "last_name": user["last_name"],
                 "personal_number": user["personal_number"],
                 "phone_number": user.get("phone_number"),
-                "must_change_password": user["must_change_password"],
+                "must_change_password": False if is_impersonated else user["must_change_password"],
+                "is_impersonated": is_impersonated,
                 "is_admin": user["is_admin"],
                 "is_commander": user["is_commander"],
                 "assigned_department_id": user.get("assigned_department_id"),
@@ -239,3 +242,84 @@ def verify_token():
     """
     # אם הגענו לכאן, הטוקן תקף.
     return jsonify({"success": True, "message": "Token is valid"})
+
+
+@auth_bp.route("/impersonate", methods=["POST"])
+@jwt_required()
+def impersonate_user():
+    """
+    Admin only: Generate a login token for another user to view the system as them.
+    """
+    try:
+        # 1. Verify Admin Status
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+        
+        requesting_id = identity["id"] if isinstance(identity, dict) else identity
+        
+        # Check against DB to be sure
+        admin_user = EmployeeModel.get_employee_by_id(requesting_id)
+        if not admin_user or not admin_user.get("is_admin"):
+            return jsonify({"success": False, "error": "Unauthorized: Admins only"}), 403
+
+        # 2. Get Target User
+        data = request.get_json()
+        target_id = data.get("target_id")
+        
+        target_user = EmployeeModel.get_employee_by_id(target_id)
+        if not target_user:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        # 3. Generate Token for Target
+        token = create_access_token(
+            identity=json.dumps(
+                {
+                    "id": target_user["id"],
+                    "is_admin": target_user["is_admin"],
+                    "is_commander": target_user["is_commander"],
+                    "is_impersonation": True,
+                    "real_admin_id": requesting_id
+                }
+            )
+        )
+
+        # 4. Return as if logged in
+        return jsonify(
+            {
+                "success": True,
+                "token": token,
+                "user": {
+                    "id": target_user.get("id"),
+                    "first_name": target_user.get("first_name"),
+                    "last_name": target_user.get("last_name"),
+                    "personal_number": target_user.get("personal_number"),
+                    "phone_number": target_user.get("phone_number"),
+                    "must_change_password": False, # Admin impersonation does not require password change
+                    "is_admin": target_user.get("is_admin", False),
+                    "is_commander": target_user.get("is_commander", False),
+                    "assigned_department_id": target_user.get("assigned_department_id"),
+                    "assigned_section_id": target_user.get("assigned_section_id"),
+                    "commands_department_id": target_user.get("commands_department_id"),
+                    "commands_section_id": target_user.get("commands_section_id"),
+                    "commands_team_id": target_user.get("commands_team_id"),
+                    "notif_sick_leave": target_user.get("notif_sick_leave", True),
+                    "notif_transfers": target_user.get("notif_transfers", True),
+                    "city": target_user.get("city"),
+                    "birth_date": target_user.get("birth_date"),
+                    "emergency_contact": target_user.get("emergency_contact"),
+                    "department_name": target_user.get("department_name"),
+                    "section_name": target_user.get("section_name"),
+                    "team_name": target_user.get("team_name"),
+                    "role_name": target_user.get("role_name"),
+                    "service_type_name": target_user.get("service_type_name"),
+                },
+            }
+        )
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+

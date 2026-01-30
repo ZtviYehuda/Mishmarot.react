@@ -32,6 +32,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ImpersonationBanner } from "./ImpersonationBanner";
+
 
 function getAlertConfig(alert: { id: string; title: string; description: string; type: string }) {
   const text = (alert.title + alert.description).toLowerCase();
@@ -556,6 +558,8 @@ export default function MainLayout() {
             <Outlet />
           </div>
         </main>
+        {/* Impersonation Banner */}
+        <ImpersonationBanner />
       </div >
     </div >
   );
