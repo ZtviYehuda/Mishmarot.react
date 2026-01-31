@@ -87,7 +87,7 @@ class NotificationModel:
                                 WHERE employee_id = cs.id)
                            ) as effective_start,
                            
-                           EXTRACT(DAY FROM (CURRENT_TIMESTAMP - COALESCE(
+                           (CURRENT_DATE - DATE(COALESCE(
                                (SELECT MAX(end_datetime) 
                                 FROM attendance_logs 
                                 WHERE employee_id = cs.id 
@@ -96,7 +96,7 @@ class NotificationModel:
                                (SELECT MIN(start_datetime) 
                                 FROM attendance_logs 
                                 WHERE employee_id = cs.id)
-                           ))) as days_sick
+                           ))) + 1 as days_sick
                     FROM current_sick cs
                     -- Join explicit structure tables for scoping outside the CTE if needed, 
                     -- or just reuse the logic.
@@ -104,7 +104,7 @@ class NotificationModel:
                     LEFT JOIN sections s ON (t.section_id = s.id OR cs.section_id = s.id)
                     LEFT JOIN departments d ON (s.department_id = d.id OR cs.department_id = d.id)
                     WHERE 
-                      EXTRACT(DAY FROM (CURRENT_TIMESTAMP - COALESCE(
+                      (CURRENT_DATE - DATE(COALESCE(
                            (SELECT MAX(end_datetime) 
                             FROM attendance_logs 
                             WHERE employee_id = cs.id 
@@ -113,7 +113,7 @@ class NotificationModel:
                            (SELECT MIN(start_datetime) 
                             FROM attendance_logs 
                             WHERE employee_id = cs.id)
-                      ))) >= 4
+                      ))) + 1 >= 4
                 """
                 params = []
 

@@ -390,7 +390,7 @@ class EmployeeModel:
                     data.get("police_license", False),
                 ),
             )
-            new_id = cur.fetchone()[0]
+            new_id = cur.fetchone()['id']
 
             # If commander, update the appropriate organizational level
             if data.get("is_commander", False):

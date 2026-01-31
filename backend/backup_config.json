@@ -1,9 +1,5 @@
 {
     "enabled": true,
     "interval_hours": 6,
-<<<<<<< HEAD
-    "last_backup": "2026-01-31T00:24:10.232064"
-=======
-    "last_backup": "2026-01-29T23:31:34.441145"
->>>>>>> 868bad4e85fdaa55c704bd7639061712b5b2b932
+    "last_backup": "2026-01-31T15:18:34.377743"
 }
