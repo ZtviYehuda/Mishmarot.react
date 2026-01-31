@@ -63,20 +63,57 @@ class NotificationModel:
             # 2. Check for Long Sick Leave (if enabled)
             if requesting_user.get("notif_sick_leave", True):
                 query = """
-                    SELECT e.id, e.first_name, e.last_name, MIN(al.start_datetime) as start_datetime,
-                           EXTRACT(DAY FROM (CURRENT_TIMESTAMP - MIN(al.start_datetime))) as days_sick
-                    FROM employees e
-                    JOIN attendance_logs al ON e.id = al.employee_id
-                    JOIN status_types st ON al.status_type_id = st.id
-                    -- Security Scoping
-                    LEFT JOIN teams t ON e.team_id = t.id
-                    LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
-                    LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
-                    WHERE st.name = 'מחלה' 
-                      AND al.end_datetime IS NULL 
-                      AND al.start_datetime < (CURRENT_TIMESTAMP - INTERVAL '4 days')
-                      AND e.is_active = TRUE
-                    GROUP BY e.id, e.first_name, e.last_name
+                    WITH current_sick AS (
+                        SELECT e.id, e.first_name, e.last_name, e.team_id, e.section_id, e.department_id,
+                               al.start_datetime, al.status_type_id
+                        FROM employees e
+                        JOIN attendance_logs al ON e.id = al.employee_id
+                        JOIN status_types st ON al.status_type_id = st.id
+                        WHERE st.name = 'מחלה' 
+                          AND al.end_datetime IS NULL 
+                          AND e.is_active = TRUE
+                    )
+                    SELECT cs.id, cs.first_name, cs.last_name, 
+                           -- Effective start date is the end of the last non-sick log, 
+                           -- or the start of the first ever log if no non-sick log exists.
+                           COALESCE(
+                               (SELECT MAX(end_datetime) 
+                                FROM attendance_logs 
+                                WHERE employee_id = cs.id 
+                                  AND status_type_id != cs.status_type_id
+                                  AND end_datetime <= cs.start_datetime),
+                               (SELECT MIN(start_datetime) 
+                                FROM attendance_logs 
+                                WHERE employee_id = cs.id)
+                           ) as effective_start,
+                           
+                           EXTRACT(DAY FROM (CURRENT_TIMESTAMP - COALESCE(
+                               (SELECT MAX(end_datetime) 
+                                FROM attendance_logs 
+                                WHERE employee_id = cs.id 
+                                  AND status_type_id != cs.status_type_id
+                                  AND end_datetime <= cs.start_datetime),
+                               (SELECT MIN(start_datetime) 
+                                FROM attendance_logs 
+                                WHERE employee_id = cs.id)
+                           ))) as days_sick
+                    FROM current_sick cs
+                    -- Join explicit structure tables for scoping outside the CTE if needed, 
+                    -- or just reuse the logic.
+                    LEFT JOIN teams t ON cs.team_id = t.id
+                    LEFT JOIN sections s ON (t.section_id = s.id OR cs.section_id = s.id)
+                    LEFT JOIN departments d ON (s.department_id = d.id OR cs.department_id = d.id)
+                    WHERE 
+                      EXTRACT(DAY FROM (CURRENT_TIMESTAMP - COALESCE(
+                           (SELECT MAX(end_datetime) 
+                            FROM attendance_logs 
+                            WHERE employee_id = cs.id 
+                              AND status_type_id != cs.status_type_id
+                              AND end_datetime <= cs.start_datetime),
+                           (SELECT MIN(start_datetime) 
+                            FROM attendance_logs 
+                            WHERE employee_id = cs.id)
+                      ))) >= 4
                 """
                 params = []
 
@@ -92,7 +129,7 @@ class NotificationModel:
                         query += " AND t.id = %s"
                         params.append(requesting_user["commands_team_id"])
                     else:
-                        query += " AND e.id = %s"
+                        query += " AND cs.id = %s"
                         params.append(requesting_user["id"])
 
                 cur.execute(query, params)
@@ -103,7 +140,7 @@ class NotificationModel:
                             "id": f"sick-{emp['id']}",
                             "type": "danger",
                             "title": "מחלה ממושכת",
-                            "description": f"השוטר {emp['first_name']} {emp['last_name']} נמצא במחלה כבר {int(emp['days_sick'])} ימים",
+                            "description": f"השוטר {emp['first_name']} {emp['last_name']} נמצא במחלה כבר {int(emp['days_sick'])} ימים רצופים",
                             "link": f"/employees/{emp['id']}",
                         }
                     )

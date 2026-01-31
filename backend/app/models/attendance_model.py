@@ -440,19 +440,54 @@ class AttendanceModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
+                WITH marked_changes AS (
+                    SELECT 
+                        al.id,
+                        al.status_type_id,
+                        al.start_datetime,
+                        al.end_datetime,
+                        al.note,
+                        al.reported_by,
+                        CASE 
+                            WHEN LAG(al.status_type_id) OVER (ORDER BY al.start_datetime) = al.status_type_id THEN 0 
+                            ELSE 1 
+                        END as is_new_group
+                    FROM attendance_logs al
+                    WHERE al.employee_id = %s
+                ),
+                grouped_logs AS (
+                    SELECT 
+                        *,
+                        SUM(is_new_group) OVER (ORDER BY start_datetime) as group_id
+                    FROM marked_changes
+                ),
+                aggregated_history AS (
+                    SELECT 
+                        MIN(gl.id) as id,
+                        st.name as status_name,
+                        st.color as status_color,
+                        MIN(gl.start_datetime) as start_datetime,
+                        CASE 
+                            WHEN BOOL_OR(gl.end_datetime IS NULL) THEN NULL 
+                            ELSE MAX(gl.end_datetime) 
+                        END as end_datetime,
+                        (ARRAY_AGG(gl.note ORDER BY gl.start_datetime))[1] as note,
+                        (ARRAY_AGG(gl.reported_by ORDER BY gl.start_datetime))[1] as reported_by_id
+                    FROM grouped_logs gl
+                    JOIN status_types st ON gl.status_type_id = st.id
+                    GROUP BY gl.group_id, st.id, st.name, st.color
+                )
                 SELECT 
-                    al.id,
-                    st.name as status_name,
-                    st.color as status_color,
-                    al.start_datetime,
-                    al.end_datetime,
-                    al.note,
+                    ah.id,
+                    ah.status_name,
+                    ah.status_color,
+                    ah.start_datetime,
+                    ah.end_datetime,
+                    ah.note,
                     r.first_name || ' ' || r.last_name as reported_by_name
-                FROM attendance_logs al
-                JOIN status_types st ON al.status_type_id = st.id
-                LEFT JOIN employees r ON al.reported_by = r.id
-                WHERE al.employee_id = %s
-                ORDER BY al.start_datetime DESC
+                FROM aggregated_history ah
+                LEFT JOIN employees r ON ah.reported_by_id = r.id
+                ORDER BY ah.start_datetime DESC
                 LIMIT %s
             """
             cur.execute(query, (employee_id, limit))
