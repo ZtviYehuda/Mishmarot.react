@@ -491,7 +491,27 @@ class AttendanceModel:
                 LIMIT %s
             """
             cur.execute(query, (employee_id, limit))
-            return cur.fetchall()
+            results = [dict(row) for row in cur.fetchall()]
+            
+            # Check if updated today
+            from datetime import timedelta
+            now = datetime.now()
+            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            # If no history or latest history is from before today
+            if not results or results[0]["start_datetime"] < today_start:
+                 # Add "Not Updated" placeholder
+                 results.insert(0, {
+                     "id": -1, # Virtual ID
+                     "status_name": "טרם עודכן היום",
+                     "status_color": "#e2e8f0", # Slate-200
+                     "start_datetime": now,
+                     "end_datetime": None,
+                     "note": "לא התקבל דיווח נוכחות להיום",
+                     "reported_by_name": None
+                 })
+            
+            return results
         finally:
             conn.close()
 

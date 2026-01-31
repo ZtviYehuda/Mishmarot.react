@@ -219,8 +219,12 @@ export const EmployeesChart = ({
           <div className="space-y-8">
             {/* Pie Chart with Donut Style */}
             <div className="w-full flex flex-col items-center">
-              <div className="relative w-full h-[280px] sm:h-[350px]">
-                <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+              <div
+                className="relative w-full h-[280px] sm:h-[350px]"
+                style={{ direction: "ltr" }} // Recharts works better with LTR
+              >
+                {/* Ensure parent has explicit height for Recharts */}
+                <ResponsiveContainer width="100%" height="100%" minHeight={280}>
                   <PieChart
                     margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
                   >
@@ -239,7 +243,7 @@ export const EmployeesChart = ({
                     >
                       {chartData.map((item, index) => (
                         <Cell
-                          key={`cell-${index}`}
+                          key={`cell-${item.id || index}`}
                           fill={item.fill}
                           className="outline-none hover:opacity-80 transition-opacity cursor-pointer"
                           onClick={() => {

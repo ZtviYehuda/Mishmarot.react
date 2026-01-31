@@ -48,13 +48,20 @@ def generate_data():
         status_ids = [row[0] for row in cur.fetchall()]
         
         def add_attendance_history(emp_id, reporter_id):
-            # Create logs for the last 7 days
+            # Create logs for random days within the last 7 days
             now = datetime.now()
-            for day in range(7, -1, -1):
+            # Select random days (between 2 to 6 days) out of the last 8 days (0-7)
+            days_to_update = sorted(random.sample(range(8), k=random.randint(2, 6)), reverse=True)
+            
+            for day in days_to_update:
                 log_date = now - timedelta(days=day)
                 # Morning status
                 start_time = log_date.replace(hour=8, minute=0, second=0)
                 status = random.choice(status_ids)
+                
+                # Close any previous open log for this employee to keep data clean
+                cur.execute("UPDATE attendance_logs SET end_datetime = %s WHERE employee_id = %s AND end_datetime IS NULL", (start_time, emp_id))
+                
                 cur.execute("""
                     INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, reported_by, note)
                     VALUES (%s, %s, %s, %s, %s)
