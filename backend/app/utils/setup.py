@@ -91,10 +91,12 @@ def setup_database():
                 id SERIAL PRIMARY KEY,
                 employee_id INTEGER REFERENCES employees(id),
                 requester_id INTEGER REFERENCES employees(id),
+                source_type VARCHAR(20),
+                source_id INTEGER,
                 target_type VARCHAR(20) NOT NULL, 
                 target_id INTEGER NOT NULL,
                 status VARCHAR(20) DEFAULT 'pending',
-                notes TEXT,
+                reason TEXT,
                 rejection_reason TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 resolved_at TIMESTAMP,
@@ -145,6 +147,17 @@ def setup_database():
             )
             cur.execute(
                 "ALTER TABLE employees ADD COLUMN IF NOT EXISTS notif_transfers BOOLEAN DEFAULT TRUE;"
+            )
+
+            # Transfer Requests Migrations
+            cur.execute(
+                "ALTER TABLE transfer_requests ADD COLUMN IF NOT EXISTS source_type VARCHAR(20);"
+            )
+            cur.execute(
+                "ALTER TABLE transfer_requests ADD COLUMN IF NOT EXISTS source_id INTEGER;"
+            )
+            cur.execute(
+                "ALTER TABLE transfer_requests ADD COLUMN IF NOT EXISTS reason TEXT;"
             )
         except Exception as e:
             print(f"ℹ️ Migration info: {e}")
