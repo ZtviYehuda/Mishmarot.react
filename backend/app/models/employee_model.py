@@ -87,7 +87,7 @@ class EmployeeModel:
                 LEFT JOIN roles r ON e.role_id = r.id
                 LEFT JOIN service_types svt ON e.service_type_id = svt.id
                 -- Active Status
-                LEFT JOIN attendance_logs al ON al.employee_id = e.id AND al.end_datetime IS NULL
+                LEFT JOIN attendance_logs al ON al.employee_id = e.id AND (al.end_datetime IS NULL OR al.end_datetime > CURRENT_TIMESTAMP)
                 LEFT JOIN status_types st ON al.status_type_id = st.id
                 WHERE e.id = %s
             """
@@ -197,7 +197,7 @@ class EmployeeModel:
             """
 
             # Prepare status condition
-            status_sql = "AND end_datetime IS NULL"
+            status_sql = "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
             status_params = []
 
             if filters and (filters.get("date") or filters.get("end_date")):

@@ -168,7 +168,7 @@ class AttendanceModel:
             params = []
             
             # Status filter params
-            status_condition = "AND end_datetime IS NULL"
+            status_condition = "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
             status_params = []
             
             if date:
@@ -304,7 +304,7 @@ class AttendanceModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             params = []
-            status_condition = "AND end_datetime IS NULL"
+            status_condition = "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
 
             if filters and filters.get("date"):
                 status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
