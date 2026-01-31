@@ -125,15 +125,18 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
 
     const handleSubmit = async () => {
         setLoading(true);
-        // Only submit updates that were touched (modified in UI)
-        const updates = Object.entries(bulkUpdates)
-            .filter(([_, data]) => data.touched)
-            .map(([empId, data]) => ({
-                employee_id: parseInt(empId),
+
+        // Update ALL visible employees in the filtered list
+        // This allows confirming daily attendance for everyone shown
+        const updates = filteredList.map(emp => {
+            const data = bulkUpdates[emp.id];
+            return {
+                employee_id: emp.id,
                 status_type_id: data.status_id,
-                start_date: data.start_date, // Send date for all touched items
+                start_date: data.start_date,
                 end_date: data.end_date
-            }));
+            };
+        });
 
         if (updates.length === 0) {
             toast.error("אין עדכונים לביצוע");
