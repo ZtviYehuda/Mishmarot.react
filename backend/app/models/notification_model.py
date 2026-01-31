@@ -63,8 +63,8 @@ class NotificationModel:
             # 2. Check for Long Sick Leave (if enabled)
             if requesting_user.get("notif_sick_leave", True):
                 query = """
-                    SELECT e.id, e.first_name, e.last_name, al.start_datetime,
-                           EXTRACT(DAY FROM (CURRENT_TIMESTAMP - al.start_datetime)) as days_sick
+                    SELECT e.id, e.first_name, e.last_name, MIN(al.start_datetime) as start_datetime,
+                           EXTRACT(DAY FROM (CURRENT_TIMESTAMP - MIN(al.start_datetime))) as days_sick
                     FROM employees e
                     JOIN attendance_logs al ON e.id = al.employee_id
                     JOIN status_types st ON al.status_type_id = st.id
@@ -76,6 +76,7 @@ class NotificationModel:
                       AND al.end_datetime IS NULL 
                       AND al.start_datetime < (CURRENT_TIMESTAMP - INTERVAL '4 days')
                       AND e.is_active = TRUE
+                    GROUP BY e.id, e.first_name, e.last_name
                 """
                 params = []
 

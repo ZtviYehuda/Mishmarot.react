@@ -220,7 +220,7 @@ export const EmployeesChart = ({
             {/* Pie Chart with Donut Style */}
             <div className="w-full flex flex-col items-center">
               <div className="relative w-full h-[280px] sm:h-[350px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                   <PieChart
                     margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
                   >
