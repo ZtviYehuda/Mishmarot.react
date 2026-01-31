@@ -731,9 +731,12 @@ export default function AttendancePage() {
                             </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground/50 font-medium">
-                            -
-                          </span>
+                          <div className="flex items-center gap-1.5 text-rose-500/80">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            <span className="text-xs font-bold">
+                              לא עודכן
+                            </span>
+                          </div>
                         )}
                       </TableCell>
                       <TableCell className="text-center">
