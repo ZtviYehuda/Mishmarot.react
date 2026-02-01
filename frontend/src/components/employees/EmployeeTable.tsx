@@ -186,6 +186,12 @@ export const EmployeeTable = ({
         target_id: targetId,
       });
       if (data.success && data.token) {
+        // Save current admin token if not already saved
+        const currentToken = localStorage.getItem("token");
+        if (currentToken && !localStorage.getItem("admin_token")) {
+          localStorage.setItem("admin_token", currentToken);
+        }
+
         localStorage.setItem("token", data.token);
         toast.success(`התחברת בהצלחה כ-${name}`);
         // Force full reload to update Context and Reset App State
@@ -304,7 +310,7 @@ export const EmployeeTable = ({
                     className={cn(
                       "group transition-all duration-200 hover:bg-muted/50 border-b border-border",
                       !emp.is_active &&
-                      "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-2 border-r-destructive",
+                        "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-2 border-r-destructive",
                     )}
                   >
                     <TableCell className="px-6 py-4 text-right">
@@ -368,20 +374,20 @@ export const EmployeeTable = ({
                           </span>
                           {((emp.section_name && emp.section_name !== "מטה") ||
                             (emp.team_name && emp.team_name !== "מטה")) && (
-                              <span className="text-[10px] text-muted-foreground">
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  `מדור ${emp.section_name}`}
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  " • "}
-                                {emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  `חוליה ${emp.team_name}`}
-                              </span>
-                            )}
+                            <span className="text-[10px] text-muted-foreground">
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                `מדור ${emp.section_name}`}
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                " • "}
+                              {emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                `חוליה ${emp.team_name}`}
+                            </span>
+                          )}
                         </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
@@ -510,7 +516,7 @@ export const EmployeeTable = ({
               className={cn(
                 "bg-card rounded-2xl border border-border shadow-sm overflow-hidden",
                 !emp.is_active &&
-                "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-4 border-r-destructive",
+                  "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-4 border-r-destructive",
               )}
             >
               <div className="p-4 space-y-3">
@@ -590,21 +596,21 @@ export const EmployeeTable = ({
                           {emp.department_name}
                           {((emp.section_name && emp.section_name !== "מטה") ||
                             (emp.team_name && emp.team_name !== "מטה")) && (
-                              <>
-                                {" • "}
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  `מדור ${emp.section_name}`}
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  " • "}
-                                {emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  `חוליה ${emp.team_name}`}
-                              </>
-                            )}
+                            <>
+                              {" • "}
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                `מדור ${emp.section_name}`}
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                " • "}
+                              {emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                `חוליה ${emp.team_name}`}
+                            </>
+                          )}
                         </>
                       ) : (
                         "-"

@@ -141,6 +141,21 @@ export default function AttendancePage() {
     selectedDate,
   ]);
 
+  // Set initial filters based on user permissions
+  useEffect(() => {
+    if (user && !user.is_admin) {
+      if (user.department_id) {
+        setSelectedDeptId(user.department_id.toString());
+      }
+      if (user.section_id) {
+        setSelectedSectionId(user.section_id.toString());
+      }
+      if (user.team_id) {
+        setSelectedTeamId(user.team_id.toString());
+      }
+    }
+  }, [user]);
+
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
       // Basic Search
@@ -151,6 +166,14 @@ export default function AttendancePage() {
       if (!searchMatch) return false;
 
       // Organizational Filters
+      // If user is restricted, we double check to ensure security (though logic above sets state)
+      if (user && !user.is_admin) {
+        if (user.department_id && emp.department_id !== user.department_id)
+          return false;
+        if (user.section_id && emp.section_id !== user.section_id) return false;
+        if (user.team_id && emp.team_id !== user.team_id) return false;
+      }
+
       if (
         selectedDeptId !== "all" &&
         emp.department_id !== parseInt(selectedDeptId)
@@ -188,6 +211,7 @@ export default function AttendancePage() {
     selectedTeamId,
     selectedStatusId,
     selectedServiceTypeId,
+    user,
   ]);
 
   const employeesForModal = useMemo(() => {
@@ -483,6 +507,7 @@ export default function AttendancePage() {
               setSelectedSectionId("all");
               setSelectedTeamId("all");
             }}
+            disabled={!!(user && !user.is_admin && user.department_id)}
           >
             <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
               <SelectValue placeholder="כל המחלקות" />
@@ -508,7 +533,11 @@ export default function AttendancePage() {
               setSelectedSectionId(val);
               setSelectedTeamId("all");
             }}
-            disabled={!selectedDeptId || selectedDeptId === "all"}
+            disabled={
+              !selectedDeptId ||
+              selectedDeptId === "all" ||
+              !!(user && !user.is_admin && user.section_id)
+            }
           >
             <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
               <SelectValue placeholder="כל המדורים" />
@@ -531,7 +560,11 @@ export default function AttendancePage() {
           <Select
             value={selectedTeamId}
             onValueChange={(val) => setSelectedTeamId(val)}
-            disabled={!selectedSectionId || selectedSectionId === "all"}
+            disabled={
+              !selectedSectionId ||
+              selectedSectionId === "all" ||
+              !!(user && !user.is_admin && user.team_id)
+            }
           >
             <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
               <SelectValue placeholder="כל החוליות" />
@@ -595,10 +628,20 @@ export default function AttendancePage() {
           variant="ghost"
           className="h-11 text-muted-foreground hover:text-foreground hover:bg-muted gap-2"
           onClick={() => {
-            setSelectedDeptId("all");
-            setSelectedSectionId("all");
-            setSelectedTeamId("all");
-            setSelectedTeamId("all");
+            if (!user || user.is_admin) {
+              setSelectedDeptId("all");
+            } else if (!user.department_id) {
+              setSelectedDeptId("all");
+            }
+
+            if (!user || user.is_admin || (!user.section_id && !user.team_id)) {
+              setSelectedSectionId("all");
+            }
+
+            if (!user || user.is_admin || !user.team_id) {
+              setSelectedTeamId("all");
+            }
+
             setSelectedStatusId("all");
             setSelectedServiceTypeId("all");
             setSearchTerm("");
@@ -615,16 +658,19 @@ export default function AttendancePage() {
           <Table className="min-w-[800px]">
             <TableHeader className="bg-muted/50 h-14">
               <TableRow className="border-b border-border hover:bg-transparent">
-                <TableHead className="w-[50px] pr-6">
-                  <Checkbox
-                    checked={
-                      filteredEmployees.length > 0 &&
-                      selectedEmployeeIds.length === filteredEmployees.length
-                    }
-                    onCheckedChange={(checked) =>
-                      handleSelectAll(checked as boolean)
-                    }
-                  />
+                <TableHead className="w-[60px] text-center px-4">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      className="w-5 h-5 border-2 border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-lg transition-all shadow-sm"
+                      checked={
+                        filteredEmployees.length > 0 &&
+                        selectedEmployeeIds.length === filteredEmployees.length
+                      }
+                      onCheckedChange={(checked) =>
+                        handleSelectAll(checked as boolean)
+                      }
+                    />
+                  </div>
                 </TableHead>
                 <TableHead className="text-right px-6 font-black text-muted-foreground uppercase text-[10px] tracking-widest">
                   שוטר
@@ -671,36 +717,63 @@ export default function AttendancePage() {
                     emp.last_status_update &&
                     new Date(emp.last_status_update).toDateString() ===
                       selectedDate.toDateString();
+                  const isSelected = selectedEmployeeIds.includes(emp.id);
 
                   return (
                     <TableRow
                       key={emp.id}
+                      data-state={isSelected ? "selected" : "unchecked"}
                       className={cn(
                         "group hover:bg-muted/50 transition-colors border-b border-border",
+                        isSelected && "bg-primary/5 hover:bg-primary/10",
                         user &&
                           emp.id === user.id &&
+                          !isSelected &&
                           "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
-                        selectedEmployeeIds.includes(emp.id) && "bg-muted/30",
                       )}
                     >
-                      <TableCell className="pr-6">
-                        <Checkbox
-                          checked={selectedEmployeeIds.includes(emp.id)}
-                          onCheckedChange={(checked) =>
-                            handleSelectOne(emp.id, checked as boolean)
-                          }
-                        />
+                      <TableCell className="text-center px-4 py-4 align-middle">
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            className={cn(
+                              "w-5 h-5 border-2 border-muted-foreground/30 rounded-lg transition-all shadow-sm",
+                              isSelected
+                                ? "bg-primary border-primary text-primary-foreground"
+                                : "bg-background hover:border-primary/50",
+                            )}
+                            checked={isSelected}
+                            onCheckedChange={(checked) =>
+                              handleSelectOne(emp.id, checked as boolean)
+                            }
+                          />
+                        </div>
                       </TableCell>
-                      <TableCell className="py-4 px-6 text-right">
+                      <TableCell className="py-4 px-6 text-right align-middle">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-black text-[10px] uppercase shadow-sm">
-                            {emp.first_name[0]}
-                            {emp.last_name[0]}
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-xl shadow-sm flex items-center justify-center text-muted-foreground font-black text-[10px] uppercase transition-transform hover:scale-105 shrink-0",
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-white dark:bg-muted/50 border border-border/50",
+                            )}
+                          >
+                            {isSelected ? (
+                              <CheckCircle2 className="w-5 h-5" />
+                            ) : (
+                              <span>
+                                {emp.first_name[0]}
+                                {emp.last_name[0]}
+                              </span>
+                            )}
                           </div>
                           <div className="flex flex-col text-right">
                             <EmployeeLink
                               employee={emp}
-                              className="text-sm font-bold text-foreground"
+                              className={cn(
+                                "text-sm font-black transition-colors",
+                                isSelected ? "text-primary" : "text-foreground",
+                              )}
                             />
                             <span className="text-[10px] text-muted-foreground font-bold">
                               {emp.personal_number}

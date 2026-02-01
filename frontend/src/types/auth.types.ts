@@ -7,6 +7,9 @@ export interface AuthUser {
   must_change_password: boolean;
   is_admin: boolean;
   is_commander: boolean;
+  department_id?: number;
+  section_id?: number;
+  team_id?: number;
   assigned_department_id?: number;
   assigned_section_id?: number;
   commands_department_id?: number;

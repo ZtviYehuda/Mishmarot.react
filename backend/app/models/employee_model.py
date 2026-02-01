@@ -194,7 +194,7 @@ class EmployeeModel:
                     ORDER BY start_datetime DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
-                WHERE 1=1
+                WHERE e.personal_number != 'admin'
             """
 
             # Prepare status condition

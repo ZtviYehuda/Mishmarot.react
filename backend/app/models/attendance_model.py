@@ -166,11 +166,13 @@ class AttendanceModel:
 
             scoping_clause = ""
             params = []
-            
+
             # Status filter params
-            status_condition = "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
+            status_condition = (
+                "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
+            )
             status_params = []
-            
+
             if date:
                 status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
                 status_params = [date, date]
@@ -194,7 +196,7 @@ class AttendanceModel:
             query = f"""
                 SELECT 
                     {grouping_id} as unit_id,
-                    COALESCE({grouping_col}, 'אחר') as unit_name,
+                    COALESCE({grouping_col}, 'מטה') as unit_name,
                     COUNT(e.id) as total_count,
                     COUNT(CASE WHEN st.is_presence = TRUE THEN 1 END) as present_count,
                     COUNT(CASE WHEN st.is_presence = FALSE THEN 1 END) as absent_count,
@@ -210,7 +212,14 @@ class AttendanceModel:
                     ORDER BY start_datetime DESC LIMIT 1
                 ) al ON true
                 LEFT JOIN status_types st ON al.status_type_id = st.id
-                WHERE e.is_active = TRUE {scoping_clause}
+                WHERE e.is_active = TRUE 
+                AND e.personal_number != 'admin' 
+                AND e.id NOT IN (
+                    SELECT commander_id FROM departments WHERE commander_id IS NOT NULL
+                    UNION 
+                    SELECT commander_id FROM sections WHERE commander_id IS NOT NULL
+                )
+                {scoping_clause}
                 GROUP BY {grouping_id}, {grouping_col}
                 ORDER BY {grouping_col}
             """
@@ -270,7 +279,7 @@ class AttendanceModel:
                     LEFT JOIN teams t ON e.team_id = t.id
                     LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                     LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
-                    WHERE e.is_active = TRUE {scoping_clause}
+                    WHERE e.is_active = TRUE AND e.personal_number != 'admin' {scoping_clause}
                 )
                 SELECT 
                     TO_CHAR(p.date, 'DD/MM') as date_str,
@@ -304,7 +313,9 @@ class AttendanceModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             params = []
-            status_condition = "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
+            status_condition = (
+                "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
+            )
 
             if filters and filters.get("date"):
                 status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
@@ -328,7 +339,7 @@ class AttendanceModel:
                     ORDER BY start_datetime DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
-                WHERE e.is_active = TRUE
+                WHERE e.is_active = TRUE AND e.personal_number != 'admin'
             """
 
             # 1. Base Scoping (Security)
@@ -398,7 +409,7 @@ class AttendanceModel:
                 LEFT JOIN teams t ON e.team_id = t.id
                 LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                 LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
-                WHERE e.is_active = TRUE AND e.birth_date IS NOT NULL
+                WHERE e.is_active = TRUE AND e.birth_date IS NOT NULL AND e.personal_number != 'admin'
             """
             params = []
 

@@ -59,15 +59,16 @@ export function StatsComparisonCard({
                 <p className="font-bold mb-1">כיצד מחושב?</p>
                 <ul className="text-xs space-y-1 list-disc list-inside">
                   <li>
-                    <span className="font-semibold">נוכחים:</span> משרד, קורס, תגבור
+                    <span className="font-semibold">נוכחים:</span> משרד, קורס,
+                    תגבור
                   </li>
                   <li>
-                    <span className="font-semibold">לא נוכחים:</span> חופשה, מחלה,
-                    חו"ל
+                    <span className="font-semibold">לא נוכחים:</span> חופשה,
+                    מחלה, חו"ל
                   </li>
                   <li>
-                    <span className="font-semibold">תקן:</span> סה"כ שוטרים פעילים
-                    ביחידה
+                    <span className="font-semibold">תקן:</span> סה"כ שוטרים
+                    פעילים ביחידה
                   </li>
                 </ul>
               </TooltipContent>
@@ -102,14 +103,14 @@ export function StatsComparisonCard({
 
             return (
               <div key={item.unit_id} className="space-y-2">
-                <div className="flex justify-between items-center text-sm">
+                <div className="flex justify-between items-center text-sm gap-2">
                   <span
-                    className="font-semibold text-foreground truncate max-w-[120px]"
+                    className="font-semibold text-foreground truncate flex-1 min-w-0 ml-2"
                     title={item.unit_name}
                   >
                     {item.unit_name}
                   </span>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0">
                     <span className="text-green-600 font-medium">
                       {item.present_count} נוכחים
                     </span>

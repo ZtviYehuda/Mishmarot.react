@@ -22,7 +22,6 @@ import {
   User,
   AlertCircle,
   AlertTriangle,
-  Calendar,
   ArrowLeft,
   Filter,
   BellRing,
@@ -297,17 +296,14 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
         dir="rtl"
       >
         <DialogHeader className="px-6 py-4 border-b bg-muted/10 text-right shrink-0">
-          <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="flex items-center justify-between gap-4 mb-4 text-right">
             <div>
-              <DialogTitle className="text-xl font-black text-foreground mb-1">
+              <DialogTitle className="text-xl font-black text-foreground mb-1 text-right">
                 עדכון נוכחות יומי
               </DialogTitle>
-              <DialogDescription className="text-sm font-medium text-muted-foreground">
+              <DialogDescription className="text-sm font-medium text-muted-foreground text-right">
                 עדכון מרוכז ומהיר לכלל היחידה
               </DialogDescription>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-              <Calendar className="w-5 h-5" />
             </div>
           </div>
 
@@ -404,16 +400,19 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
             <Table>
               <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-sm">
                 <TableRow className="hover:bg-transparent border-b">
-                  <TableHead className="w-[50px] pr-6">
-                    <Checkbox
-                      checked={
-                        filteredList.length > 0 &&
-                        selectedIds.length === filteredList.length
-                      }
-                      onCheckedChange={(checked) =>
-                        handleSelectAll(checked as boolean)
-                      }
-                    />
+                  <TableHead className="w-[60px] text-center px-2">
+                    <div className="flex items-center justify-center">
+                      <Checkbox
+                        className="w-5 h-5 border-2 border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-lg transition-all shadow-sm"
+                        checked={
+                          filteredList.length > 0 &&
+                          selectedIds.length === filteredList.length
+                        }
+                        onCheckedChange={(checked) =>
+                          handleSelectAll(checked as boolean)
+                        }
+                      />
+                    </div>
                   </TableHead>
                   <TableHead className="text-right min-w-[200px] font-black text-xs uppercase text-muted-foreground">
                     שוטר
@@ -429,42 +428,59 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
               <TableBody>
                 {filteredList.map((emp) => {
                   const current = bulkUpdates[emp.id];
+                  const isSelected = selectedIds.includes(emp.id);
                   return (
                     <TableRow
                       key={emp.id}
+                      data-state={isSelected ? "selected" : "unchecked"}
                       className={cn(
-                        "transition-colors hover:bg-muted/50",
+                        "transition-all hover:bg-muted/40 border-b last:border-0",
+                        isSelected && "bg-primary/5 hover:bg-primary/10",
                         current?.isChanged &&
-                          "bg-primary/5 hover:bg-primary/10",
-                        selectedIds.includes(emp.id) && "bg-muted/30",
+                          "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
                       )}
                     >
-                      <TableCell className="pr-6 py-3 align-top">
-                        <Checkbox
-                          checked={selectedIds.includes(emp.id)}
-                          onCheckedChange={(checked) =>
-                            handleSelectOne(emp.id, checked as boolean)
-                          }
-                        />
+                      <TableCell className="text-center px-2 py-4 align-middle">
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            className={cn(
+                              "w-5 h-5 border-2 border-muted-foreground/30 rounded-lg transition-all shadow-sm",
+                              isSelected
+                                ? "bg-primary border-primary text-primary-foreground"
+                                : "bg-background hover:border-primary/50",
+                            )}
+                            checked={isSelected}
+                            onCheckedChange={(checked) =>
+                              handleSelectOne(emp.id, checked as boolean)
+                            }
+                          />
+                        </div>
                       </TableCell>
-                      <TableCell className="font-medium align-top py-3">
-                        <div className="flex items-center gap-3">
+                      <TableCell className="font-medium align-middle py-4">
+                        <div className="flex items-center gap-4">
                           <div
                             className={cn(
-                              "w-8 h-8 rounded-lg shadow-sm flex items-center justify-center transition-colors shrink-0",
+                              "w-10 h-10 rounded-xl shadow-sm flex items-center justify-center transition-transform hover:scale-105 shrink-0",
                               current?.isChanged
                                 ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground",
+                                : "bg-white dark:bg-muted/50 text-muted-foreground border border-border/50",
                             )}
                           >
-                            <User className="w-4 h-4" />
+                            <User className="w-5 h-5" />
                           </div>
-                          <div className="flex flex-col text-right">
-                            <span className="text-sm font-bold text-foreground">
+                          <div className="flex flex-col text-right gap-0.5">
+                            <span
+                              className={cn(
+                                "text-sm font-black transition-colors",
+                                isSelected ? "text-primary" : "text-foreground",
+                              )}
+                            >
                               {emp.first_name} {emp.last_name}
                             </span>
-                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                              <span>{emp.personal_number}</span>
+                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
+                              <span className="tracking-wider bg-muted/50 px-1.5 py-0.5 rounded-md">
+                                {emp.personal_number}
+                              </span>
                               {emp.service_type_name && (
                                 <>
                                   <span className="w-1 h-1 rounded-full bg-border" />
@@ -475,7 +491,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="align-top py-3">
+                      <TableCell className="align-middle py-4">
                         <Select
                           value={current?.status_id.toString()}
                           onValueChange={(val) =>
