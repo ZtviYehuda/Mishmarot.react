@@ -285,7 +285,7 @@ export default function AttendancePage() {
     (emp) =>
       emp.last_status_update &&
       new Date(emp.last_status_update).toDateString() ===
-        selectedDate.toDateString(),
+      selectedDate.toDateString(),
   ).length;
 
   const totalCount = employees.length;
@@ -308,7 +308,7 @@ export default function AttendancePage() {
   const isReportedToday =
     currentUserEmployee?.last_status_update &&
     new Date(currentUserEmployee.last_status_update).toDateString() ===
-      selectedDate.toDateString();
+    selectedDate.toDateString();
 
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
@@ -428,7 +428,17 @@ export default function AttendancePage() {
               .map((s: any) => (
                 <div
                   key={s.status_id}
-                  className="flex-1 min-w-[100px] p-4 rounded-2xl bg-muted/50 border border-border flex flex-col items-center gap-1 hover:bg-muted/80 transition-colors"
+                  onClick={() => {
+                    setSelectedStatusId((prev) =>
+                      prev === s.status_id.toString() ? "all" : s.status_id.toString()
+                    );
+                  }}
+                  className={cn(
+                    "flex-1 min-w-[100px] p-4 rounded-2xl border flex flex-col items-center gap-1 transition-all cursor-pointer",
+                    selectedStatusId === s.status_id.toString()
+                      ? "bg-primary/10 border-primary shadow-sm scale-105"
+                      : "bg-muted/50 border-border hover:bg-muted/80"
+                  )}
                 >
                   <span className="text-xl font-black text-foreground">
                     {s.count}
@@ -716,7 +726,7 @@ export default function AttendancePage() {
                   const isUpdatedToday =
                     emp.last_status_update &&
                     new Date(emp.last_status_update).toDateString() ===
-                      selectedDate.toDateString();
+                    selectedDate.toDateString();
                   const isSelected = selectedEmployeeIds.includes(emp.id);
 
                   return (
@@ -727,9 +737,9 @@ export default function AttendancePage() {
                         "group hover:bg-muted/50 transition-colors border-b border-border",
                         isSelected && "bg-primary/5 hover:bg-primary/10",
                         user &&
-                          emp.id === user.id &&
-                          !isSelected &&
-                          "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
+                        emp.id === user.id &&
+                        !isSelected &&
+                        "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
                       )}
                     >
                       <TableCell className="text-center px-4 py-4 align-middle">
@@ -855,7 +865,7 @@ export default function AttendancePage() {
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span className="text-xs font-bold">
                               {selectedDate.toDateString() ===
-                              new Date().toDateString()
+                                new Date().toDateString()
                                 ? "היום"
                                 : format(selectedDate, "dd/MM")}
                               ,{" "}
