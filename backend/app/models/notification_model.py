@@ -174,9 +174,11 @@ class NotificationModel:
                     # We look for active employees who have no attendance log starting today
                     query_teams = """
                         SELECT t.id, t.name, e_cmdr.first_name, e_cmdr.last_name, e_cmdr.id as commander_id,
+                               e_cmdr.phone_number as commander_phone,
                                s.id as section_id, d.id as department_id,
                                COUNT(e.id) as missing_count,
-                               array_agg(e.id) as missing_ids
+                               array_agg(e.id) as missing_ids,
+                               array_agg(CONCAT(e.first_name, ' ', e.last_name)) as missing_names
                         FROM employees e
                         JOIN teams t ON e.team_id = t.id
                         JOIN sections s ON t.section_id = s.id
@@ -186,7 +188,7 @@ class NotificationModel:
                              AND al.start_datetime >= CURRENT_DATE 
                              AND al.start_datetime < CURRENT_DATE + INTERVAL '1 day'
                         WHERE e.is_active = TRUE AND al.id IS NULL
-                        GROUP BY t.id, t.name, e_cmdr.first_name, e_cmdr.last_name, e_cmdr.id, s.id, d.id
+                        GROUP BY t.id, t.name, e_cmdr.first_name, e_cmdr.last_name, e_cmdr.id, e_cmdr.phone_number, s.id, d.id
                     """
                     cur.execute(query_teams)
                     missing_teams = cur.fetchall()
@@ -211,8 +213,6 @@ class NotificationModel:
                         ):
                             show_alert = True
 
-                        # Do not show to the team commander themselves here, or maybe yes?
-                        # The request said "show to superiors".
                         if show_alert and team["first_name"]:
                             alerts.append(
                                 {
@@ -223,8 +223,10 @@ class NotificationModel:
                                     "link": "/attendance",
                                     "data": {
                                         "missing_ids": team["missing_ids"],
+                                        "missing_names": team["missing_names"],
                                         "team_id": team["id"],
                                         "commander_id": team["commander_id"],
+                                        "commander_phone": team["commander_phone"],
                                         "commander_name": f"{team['first_name']} {team['last_name']}",
                                         "missing_count": team["missing_count"],
                                     },
@@ -234,9 +236,11 @@ class NotificationModel:
                     # Find sections with missing members (who are not in teams)
                     query_sections = """
                         SELECT s.id, s.name, e_cmdr.first_name, e_cmdr.last_name, e_cmdr.id as commander_id,
+                               e_cmdr.phone_number as commander_phone,
                                d.id as department_id,
                                COUNT(e.id) as missing_count,
-                               array_agg(e.id) as missing_ids
+                               array_agg(e.id) as missing_ids,
+                               array_agg(CONCAT(e.first_name, ' ', e.last_name)) as missing_names
                         FROM employees e
                         JOIN sections s ON e.section_id = s.id
                         JOIN departments d ON s.department_id = d.id
@@ -245,7 +249,7 @@ class NotificationModel:
                              AND al.start_datetime >= CURRENT_DATE 
                              AND al.start_datetime < CURRENT_DATE + INTERVAL '1 day'
                         WHERE e.is_active = TRUE AND e.team_id IS NULL AND al.id IS NULL
-                        GROUP BY s.id, s.name, e_cmdr.first_name, e_cmdr.last_name, e_cmdr.id, d.id
+                        GROUP BY s.id, s.name, e_cmdr.first_name, e_cmdr.last_name, e_cmdr.id, e_cmdr.phone_number, d.id
                     """
                     cur.execute(query_sections)
                     missing_sections = cur.fetchall()
@@ -270,8 +274,10 @@ class NotificationModel:
                                     "link": "/attendance",
                                     "data": {
                                         "missing_ids": section["missing_ids"],
+                                        "missing_names": section["missing_names"],
                                         "section_id": section["id"],
                                         "commander_id": section["commander_id"],
+                                        "commander_phone": section["commander_phone"],
                                         "commander_name": f"{section['first_name']} {section['last_name']}",
                                         "missing_count": section["missing_count"],
                                     },

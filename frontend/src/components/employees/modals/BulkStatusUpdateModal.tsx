@@ -87,7 +87,26 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
   );
 
   const handleNudge = () => {
-    if (onNudge && alertContext?.commander_id) {
+    if (alertContext?.commander_phone) {
+      const names = alertContext.missing_names || [];
+      const commanderName = alertContext.commander_name || "המפקד";
+      const unitName = alertContext.team_name || alertContext.section_name || "היחידה";
+
+      let message = `שלום ${commanderName}, תזכורת למילוי דוח בוקר עבור ${unitName}.\n\n`;
+      message += `טרם הושלם דיווח עבור ${names.length} שוטרים:\n`;
+      names.forEach((name: string, index: number) => {
+        message += `${index + 1}. ${name}\n`;
+      });
+      message += `\nנא לעדכן בהקדם במערכת המשמרות. תודה!`;
+
+      const encodedMessage = encodeURIComponent(message);
+      const phone = alertContext.commander_phone.replace(/\D/g, ""); // Remove non-digits
+      const finalPhone = phone.startsWith("0") ? "972" + phone.substring(1) : phone;
+
+      window.open(`https://wa.me/${finalPhone}?text=${encodedMessage}`, "_blank");
+      toast.info(`פותח וואטסאפ לשליחת תזכורת ל${commanderName}`);
+    } else if (onNudge && alertContext?.commander_id) {
+      // Fallback to legacy nudge handler if no phone/names
       onNudge(alertContext.commander_id);
     }
   };
@@ -437,7 +456,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                         "transition-all hover:bg-muted/40 border-b last:border-0",
                         isSelected && "bg-primary/5 hover:bg-primary/10",
                         current?.isChanged &&
-                          "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
+                        "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
                       )}
                     >
                       <TableCell className="text-center px-2 py-4 align-middle">
