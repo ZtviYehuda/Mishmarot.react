@@ -174,6 +174,7 @@ class EmployeeModel:
                        st.name as status_name,
                        st.color as status_color,
                        last_log.start_datetime as last_status_update,
+                       e.service_type_id,
                        srv.name as service_type_name
                 FROM employees e
                 -- Direct Path Joins (via team_id)
@@ -197,7 +198,9 @@ class EmployeeModel:
             """
 
             # Prepare status condition
-            status_sql = "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
+            status_sql = (
+                "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
+            )
             status_params = []
 
             if filters and (filters.get("date") or filters.get("end_date")):
@@ -390,7 +393,7 @@ class EmployeeModel:
                     data.get("police_license", False),
                 ),
             )
-            new_id = cur.fetchone()['id']
+            new_id = cur.fetchone()["id"]
 
             # If commander, update the appropriate organizational level
             if data.get("is_commander", False):
@@ -403,33 +406,61 @@ class EmployeeModel:
                     # 1. Find current commander
                     id_col = "id"
                     table = f"{unit_type}s"
-                    cur.execute(f"SELECT commander_id FROM {table} WHERE {id_col} = %s", (unit_id,))
+                    cur.execute(
+                        f"SELECT commander_id FROM {table} WHERE {id_col} = %s",
+                        (unit_id,),
+                    )
                     res = cur.fetchone()
-                    
+
                     old_commander_id = None
                     if res:
-                        old_commander_id = res[0] if not isinstance(res, dict) else res.get("commander_id")
+                        old_commander_id = (
+                            res[0]
+                            if not isinstance(res, dict)
+                            else res.get("commander_id")
+                        )
 
                     # 2. Update unit to new commander
-                    cur.execute(f"UPDATE {table} SET commander_id = %s WHERE {id_col} = %s", (new_commander_id, unit_id))
+                    cur.execute(
+                        f"UPDATE {table} SET commander_id = %s WHERE {id_col} = %s",
+                        (new_commander_id, unit_id),
+                    )
 
                     # 3. If there was an old commander, demote them fully
                     if old_commander_id and old_commander_id != new_commander_id:
                         # Demote in employees table
-                        cur.execute("UPDATE employees SET is_commander = FALSE WHERE id = %s", (old_commander_id,))
+                        cur.execute(
+                            "UPDATE employees SET is_commander = FALSE WHERE id = %s",
+                            (old_commander_id,),
+                        )
                         # Clear any other command slots they might have had (integrity check)
-                        cur.execute("UPDATE teams SET commander_id = NULL WHERE commander_id = %s", (old_commander_id,))
-                        cur.execute("UPDATE sections SET commander_id = NULL WHERE commander_id = %s", (old_commander_id,))
-                        cur.execute("UPDATE departments SET commander_id = NULL WHERE commander_id = %s", (old_commander_id,))
+                        cur.execute(
+                            "UPDATE teams SET commander_id = NULL WHERE commander_id = %s",
+                            (old_commander_id,),
+                        )
+                        cur.execute(
+                            "UPDATE sections SET commander_id = NULL WHERE commander_id = %s",
+                            (old_commander_id,),
+                        )
+                        cur.execute(
+                            "UPDATE departments SET commander_id = NULL WHERE commander_id = %s",
+                            (old_commander_id,),
+                        )
 
                 if team_id:
                     # Commander of team
                     replace_unit_commander("team", team_id, new_id)
                     # Also find section_id to potentially link there if needed (existing logic)
-                    cur.execute("SELECT section_id FROM teams WHERE id = %s", (team_id,))
+                    cur.execute(
+                        "SELECT section_id FROM teams WHERE id = %s", (team_id,)
+                    )
                     result = cur.fetchone()
                     if result:
-                        section_id = result[0] if not isinstance(result, dict) else result.get("section_id")
+                        section_id = (
+                            result[0]
+                            if not isinstance(result, dict)
+                            else result.get("section_id")
+                        )
                 elif section_id:
                     # Commander of section
                     replace_unit_commander("section", section_id, new_id)
@@ -515,11 +546,16 @@ class EmployeeModel:
             cur.execute(query, tuple(params))
 
             # Command Hierarchy Update Logic
-            if data.get("is_commander") is not None or any(k in data for k in ["team_id", "section_id", "department_id"]):
+            if data.get("is_commander") is not None or any(
+                k in data for k in ["team_id", "section_id", "department_id"]
+            ):
                 # Get current (possibly updated) state
-                cur.execute("SELECT id, team_id, section_id, department_id, is_commander FROM employees WHERE id = %s", (emp_id,))
+                cur.execute(
+                    "SELECT id, team_id, section_id, department_id, is_commander FROM employees WHERE id = %s",
+                    (emp_id,),
+                )
                 curr = cur.fetchone()
-                
+
                 if curr and curr["is_commander"]:
                     tid = curr["team_id"]
                     sid = curr["section_id"]
@@ -529,39 +565,81 @@ class EmployeeModel:
                     def replace_unit_commander(unit_type, unit_id, new_commander_id):
                         table = f"{unit_type}s"
                         # Find old commander
-                        cur.execute(f"SELECT commander_id FROM {table} WHERE id = %s", (unit_id,))
+                        cur.execute(
+                            f"SELECT commander_id FROM {table} WHERE id = %s",
+                            (unit_id,),
+                        )
                         res = cur.fetchone()
-                        
+
                         old_id = None
                         if res:
-                            old_id = res.get("commander_id") if isinstance(res, dict) else res[0]
-                        
+                            old_id = (
+                                res.get("commander_id")
+                                if isinstance(res, dict)
+                                else res[0]
+                            )
+
                         # Update unit
-                        cur.execute(f"UPDATE {table} SET commander_id = %s WHERE id = %s", (new_commander_id, unit_id))
-                        
+                        cur.execute(
+                            f"UPDATE {table} SET commander_id = %s WHERE id = %s",
+                            (new_commander_id, unit_id),
+                        )
+
                         # Demote old (if different)
                         if old_id and old_id != new_commander_id:
-                            cur.execute("UPDATE employees SET is_commander = FALSE WHERE id = %s", (old_id,))
+                            cur.execute(
+                                "UPDATE employees SET is_commander = FALSE WHERE id = %s",
+                                (old_id,),
+                            )
                             # Clear other potential command slots for the demoted one
-                            cur.execute("UPDATE teams SET commander_id = NULL WHERE commander_id = %s", (old_id,))
-                            cur.execute("UPDATE sections SET commander_id = NULL WHERE commander_id = %s", (old_id,))
-                            cur.execute("UPDATE departments SET commander_id = NULL WHERE commander_id = %s", (old_id,))
+                            cur.execute(
+                                "UPDATE teams SET commander_id = NULL WHERE commander_id = %s",
+                                (old_id,),
+                            )
+                            cur.execute(
+                                "UPDATE sections SET commander_id = NULL WHERE commander_id = %s",
+                                (old_id,),
+                            )
+                            cur.execute(
+                                "UPDATE departments SET commander_id = NULL WHERE commander_id = %s",
+                                (old_id,),
+                            )
 
                     # Before setting new, clean up any OTHER units this person might have commanded
-                    cur.execute("UPDATE teams SET commander_id = NULL WHERE commander_id = %s", (emp_id,))
-                    cur.execute("UPDATE sections SET commander_id = NULL WHERE commander_id = %s", (emp_id,))
-                    cur.execute("UPDATE departments SET commander_id = NULL WHERE commander_id = %s", (emp_id,))
+                    cur.execute(
+                        "UPDATE teams SET commander_id = NULL WHERE commander_id = %s",
+                        (emp_id,),
+                    )
+                    cur.execute(
+                        "UPDATE sections SET commander_id = NULL WHERE commander_id = %s",
+                        (emp_id,),
+                    )
+                    cur.execute(
+                        "UPDATE departments SET commander_id = NULL WHERE commander_id = %s",
+                        (emp_id,),
+                    )
 
-                    if tid: replace_unit_commander("team", tid, emp_id)
-                    elif sid: replace_unit_commander("section", sid, emp_id)
-                    elif did: replace_unit_commander("department", did, emp_id)
-                
+                    if tid:
+                        replace_unit_commander("team", tid, emp_id)
+                    elif sid:
+                        replace_unit_commander("section", sid, emp_id)
+                    elif did:
+                        replace_unit_commander("department", did, emp_id)
+
                 elif curr and not curr["is_commander"]:
                     # If they are NOT a commander anymore, clear any units they commanded
-                    cur.execute("UPDATE teams SET commander_id = NULL WHERE commander_id = %s", (emp_id,))
-                    cur.execute("UPDATE sections SET commander_id = NULL WHERE commander_id = %s", (emp_id,))
-                    cur.execute("UPDATE departments SET commander_id = NULL WHERE commander_id = %s", (emp_id,))
-
+                    cur.execute(
+                        "UPDATE teams SET commander_id = NULL WHERE commander_id = %s",
+                        (emp_id,),
+                    )
+                    cur.execute(
+                        "UPDATE sections SET commander_id = NULL WHERE commander_id = %s",
+                        (emp_id,),
+                    )
+                    cur.execute(
+                        "UPDATE departments SET commander_id = NULL WHERE commander_id = %s",
+                        (emp_id,),
+                    )
 
             conn.commit()
             return True
@@ -620,16 +698,16 @@ class EmployeeModel:
             return False, "Database connection failed"
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            
+
             # Fetch National ID
             cur.execute("SELECT national_id FROM employees WHERE id = %s", (user_id,))
             user = cur.fetchone()
-            
+
             if not user or not user["national_id"]:
                 return False, "User not found or missing National ID"
-                
+
             national_id = user["national_id"]
-            
+
             # Update Password
             new_hash = generate_password_hash(national_id)
             cur.execute(
@@ -671,35 +749,41 @@ class EmployeeModel:
             return []
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            
+
             # Departments with commander info
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT d.id, d.name, d.commander_id, 
                        CONCAT(e.first_name, ' ', e.last_name) as commander_name 
                 FROM departments d
                 LEFT JOIN employees e ON d.commander_id = e.id
                 ORDER BY d.name
-            """)
+            """
+            )
             depts = cur.fetchall()
-            
+
             # Sections with commander info
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT s.id, s.name, s.department_id, s.commander_id,
                        CONCAT(e.first_name, ' ', e.last_name) as commander_name
                 FROM sections s
                 LEFT JOIN employees e ON s.commander_id = e.id
                 ORDER BY s.name
-            """)
+            """
+            )
             sections = cur.fetchall()
-            
+
             # Teams with commander info
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT t.id, t.name, t.section_id, t.commander_id,
                        CONCAT(e.first_name, ' ', e.last_name) as commander_name
                 FROM teams t
                 LEFT JOIN employees e ON t.commander_id = e.id
                 ORDER BY t.name
-            """)
+            """
+            )
             teams = cur.fetchall()
 
             structure = []

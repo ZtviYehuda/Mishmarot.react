@@ -1,5 +1,5 @@
 import React from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -34,32 +34,73 @@ import {
 } from "@/components/ui/popover";
 import { ImpersonationBanner } from "./ImpersonationBanner";
 
-
-function getAlertConfig(alert: { id: string; title: string; description: string; type: string }) {
+function getAlertConfig(alert: {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+}) {
   const text = (alert.title + alert.description).toLowerCase();
-  const isTransfer = alert.id.includes('transfer') || text.includes('העברה');
-  const isSick = alert.id.includes('sick') || text.includes('מחלה');
+  const isTransfer = alert.id.includes("transfer") || text.includes("העברה");
+  const isSick = alert.id.includes("sick") || text.includes("מחלה");
 
   if (isTransfer) {
-    return { icon: ArrowLeftRight, bg: "rgba(59, 130, 246, 0.1)", color: "rgb(59, 130, 246)" }; // Blue
+    return {
+      icon: ArrowLeftRight,
+      bg: "rgba(59, 130, 246, 0.1)",
+      color: "rgb(59, 130, 246)",
+    }; // Blue
   }
   if (isSick) {
-    return { icon: Thermometer, bg: "rgba(239, 68, 68, 0.1)", color: "rgb(239, 68, 68)" }; // Red
+    return {
+      icon: Thermometer,
+      bg: "rgba(239, 68, 68, 0.1)",
+      color: "rgb(239, 68, 68)",
+    }; // Red
   }
 
   // Default fallback based on type
-  if (alert.type === 'danger') return { icon: AlertTriangle, bg: "rgba(239, 68, 68, 0.1)", color: "rgb(239, 68, 68)" };
-  if (alert.type === 'warning') return { icon: AlertTriangle, bg: "rgba(245, 158, 11, 0.1)", color: "rgb(245, 158, 11)" };
+  if (alert.type === "danger")
+    return {
+      icon: AlertTriangle,
+      bg: "rgba(239, 68, 68, 0.1)",
+      color: "rgb(239, 68, 68)",
+    };
+  if (alert.type === "warning")
+    return {
+      icon: AlertTriangle,
+      bg: "rgba(245, 158, 11, 0.1)",
+      color: "rgb(245, 158, 11)",
+    };
 
-  return { icon: Info, bg: "rgba(59, 130, 246, 0.1)", color: "rgb(59, 130, 246)" };
+  return {
+    icon: Info,
+    bg: "rgba(59, 130, 246, 0.1)",
+    color: "rgb(59, 130, 246)",
+  };
 }
 
 export default function MainLayout() {
   const { user, logout } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
-  const { alerts, history, loading, loadingHistory, refreshAlerts, unreadCount, markAllAsRead, readIds, toggleRead, fetchHistory, markAsUnread } = useNotifications();
-  const [notificationTab, setNotificationTab] = React.useState<'active' | 'history'>('active');
+  const {
+    alerts,
+    history,
+    loading,
+    loadingHistory,
+    refreshAlerts,
+    unreadCount,
+    markAllAsRead,
+    readIds,
+    toggleRead,
+    fetchHistory,
+    markAsUnread,
+  } = useNotifications();
+  const [notificationTab, setNotificationTab] = React.useState<
+    "active" | "history"
+  >("active");
   const location = useLocation();
+  const navigate = useNavigate();
   // Sidebar closed by default on mobile, open on desktop
   // Initialize sidebar state based on window width to prevent layout shift on load
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(() =>
@@ -296,7 +337,7 @@ export default function MainLayout() {
                   {location.pathname === "/"
                     ? "לוח בקרה מרכזי"
                     : navItems.find((n) => n.path === location.pathname)
-                      ?.name || "דף מערכת"}
+                        ?.name || "דף מערכת"}
                 </h2>
               </div>
             </div>
@@ -326,11 +367,13 @@ export default function MainLayout() {
                         מרכז התראות
                       </span>
                       <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-black">
-                        {notificationTab === 'active' ? alerts.length : history.length}
+                        {notificationTab === "active"
+                          ? alerts.length
+                          : history.length}
                       </span>
                     </div>
                     <div className="flex items-center gap-4">
-                      {notificationTab === 'active' && (
+                      {notificationTab === "active" && (
                         <button
                           onClick={markAllAsRead}
                           className="text-[10px] font-black text-primary hover:underline flex items-center gap-1"
@@ -340,7 +383,11 @@ export default function MainLayout() {
                         </button>
                       )}
                       <button
-                        onClick={notificationTab === 'active' ? refreshAlerts : fetchHistory}
+                        onClick={
+                          notificationTab === "active"
+                            ? refreshAlerts
+                            : fetchHistory
+                        }
                         className="text-[10px] font-black text-muted-foreground hover:text-primary hover:underline"
                       >
                         רענן רשימה
@@ -349,23 +396,26 @@ export default function MainLayout() {
                   </div>
                   <div className="flex gap-2 border-b border-border -mb-px">
                     <button
-                      onClick={() => setNotificationTab('active')}
+                      onClick={() => setNotificationTab("active")}
                       className={cn(
                         "flex-1 px-3 py-2 text-[11px] font-black rounded-t-lg transition-all",
-                        notificationTab === 'active'
+                        notificationTab === "active"
                           ? "bg-background text-primary border-b-2 border-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                       )}
                     >
                       פעילות ({alerts.length})
                     </button>
                     <button
-                      onClick={() => { setNotificationTab('history'); fetchHistory(); }}
+                      onClick={() => {
+                        setNotificationTab("history");
+                        fetchHistory();
+                      }}
                       className={cn(
                         "flex-1 px-3 py-2 text-[11px] font-black rounded-t-lg transition-all",
-                        notificationTab === 'history'
+                        notificationTab === "history"
                           ? "bg-background text-primary border-b-2 border-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                       )}
                     >
                       היסטוריה ({history.length})
@@ -373,11 +423,13 @@ export default function MainLayout() {
                   </div>
                 </div>
                 <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-muted/50">
-                  {notificationTab === 'active' ? (
+                  {notificationTab === "active" ? (
                     loading ? (
                       <div className="p-12 flex flex-col items-center justify-center gap-3 opacity-50">
                         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                        <span className="text-xs font-bold">בודק עדכונים...</span>
+                        <span className="text-xs font-bold">
+                          בודק עדכונים...
+                        </span>
                       </div>
                     ) : alerts.length === 0 ? (
                       <div className="p-12 flex flex-col items-center justify-center gap-4 opacity-50">
@@ -404,38 +456,70 @@ export default function MainLayout() {
                             <div
                               key={alert.id}
                               className={cn(
-                                "p-4 flex flex-row-reverse gap-4 hover:bg-card transition-all border-b border-border last:border-0 group relative",
-                                isRead && "opacity-60 grayscale-[0.3]"
+                                "p-4 flex flex-row-reverse gap-4 hover:bg-card transition-all border-b border-border last:border-0 group relative cursor-pointer",
+                                isRead && "opacity-60 grayscale-[0.3]",
                               )}
                               dir="rtl"
+                              onClick={(e) => {
+                                // Default click handler for the whole row
+                                if ((e.target as HTMLElement).closest("button"))
+                                  return; // Ignore button clicks
+
+                                const isMorningReport =
+                                  alert.title?.includes("דיווח בוקר") ||
+                                  alert.description?.includes("דיווח בוקר");
+
+                                if (isMorningReport) {
+                                  navigate("/attendance", {
+                                    state: {
+                                      openBulkModal: true,
+                                      alertData: (alert as any).data,
+                                    },
+                                  });
+                                } else {
+                                  navigate(alert.link);
+                                }
+
+                                // Auto-mark as read if configured? Maybe.
+                                if (!isRead) toggleRead(alert.id);
+                              }}
                             >
-                              <Link
-                                to={alert.link}
+                              <div
                                 className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105"
                                 style={{
                                   backgroundColor: config.bg,
-                                  color: config.color
+                                  color: config.color,
                                 }}
                               >
                                 <Icon className="w-5 h-5" />
-                              </Link>
-                              <Link to={alert.link} className="flex-1 min-w-0 text-right">
+                              </div>
+                              <div className="flex-1 min-w-0 text-right">
                                 <div className="flex items-center justify-start gap-2">
-                                  {!isRead && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
-                                  <p className={cn(
-                                    "text-xs font-black transition-colors",
-                                    isRead ? "text-muted-foreground" : "text-foreground group-hover:text-primary"
-                                  )}>
+                                  {!isRead && (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                                  )}
+                                  <p
+                                    className={cn(
+                                      "text-xs font-black transition-colors",
+                                      isRead
+                                        ? "text-muted-foreground"
+                                        : "text-foreground group-hover:text-primary",
+                                    )}
+                                  >
                                     {alert.title}
                                   </p>
                                 </div>
-                                <p className={cn(
-                                  "text-[11px] font-bold leading-tight mt-1",
-                                  isRead ? "text-muted-foreground/60" : "text-muted-foreground"
-                                )}>
+                                <p
+                                  className={cn(
+                                    "text-[11px] font-bold leading-tight mt-1",
+                                    isRead
+                                      ? "text-muted-foreground/60"
+                                      : "text-muted-foreground",
+                                  )}
+                                >
                                   {alert.description}
                                 </p>
-                              </Link>
+                              </div>
                               <button
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -444,91 +528,108 @@ export default function MainLayout() {
                                 }}
                                 className={cn(
                                   "w-8 h-8 rounded-lg flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shrink-0",
-                                  isRead ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-muted"
+                                  isRead
+                                    ? "text-primary bg-primary/10"
+                                    : "text-muted-foreground hover:text-primary hover:bg-muted",
                                 )}
                                 title={isRead ? "סמן כלא נקרא" : "סמן כנקרא"}
                               >
-                                {isRead ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4 opacity-30" />}
+                                {isRead ? (
+                                  <CheckCircle2 className="w-4 h-4" />
+                                ) : (
+                                  <Circle className="w-4 h-4 opacity-30" />
+                                )}
                               </button>
                             </div>
                           );
                         })}
                       </div>
                     )
+                  ) : loadingHistory ? (
+                    <div className="p-12 flex flex-col items-center justify-center gap-3 opacity-50">
+                      <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                      <span className="text-xs font-bold">
+                        טוען היסטוריה...
+                      </span>
+                    </div>
+                  ) : history.length === 0 ? (
+                    <div className="p-12 flex flex-col items-center justify-center gap-4 opacity-50">
+                      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                        <History className="w-8 h-8" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-black text-foreground">
+                          אין היסטוריה
+                        </p>
+                        <p className="text-[10px] font-bold text-muted-foreground">
+                          לא נמצאו התראות שנקראו
+                        </p>
+                      </div>
+                    </div>
                   ) : (
-                    loadingHistory ? (
-                      <div className="p-12 flex flex-col items-center justify-center gap-3 opacity-50">
-                        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                        <span className="text-xs font-bold">טוען היסטוריה...</span>
-                      </div>
-                    ) : history.length === 0 ? (
-                      <div className="p-12 flex flex-col items-center justify-center gap-4 opacity-50">
-                        <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                          <History className="w-8 h-8" />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm font-black text-foreground">
-                            אין היסטוריה
-                          </p>
-                          <p className="text-[10px] font-bold text-muted-foreground">
-                            לא נמצאו התראות שנקראו
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col">
-                        {history.map((alert) => {
-                          const config = getAlertConfig(alert);
-                          const Icon = config.icon;
+                    <div className="flex flex-col">
+                      {history.map((alert) => {
+                        const config = getAlertConfig(alert);
+                        const Icon = config.icon;
 
-                          return (
+                        return (
+                          <div
+                            key={alert.id}
+                            className="p-4 flex flex-row-reverse gap-4 bg-muted/30 border-b border-border last:border-0 opacity-70 hover:opacity-100 transition-opacity group"
+                          >
                             <div
-                              key={alert.id}
-                              className="p-4 flex flex-row-reverse gap-4 bg-muted/30 border-b border-border last:border-0 opacity-70 hover:opacity-100 transition-opacity group"
+                              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 grayscale opacity-70"
+                              style={{
+                                backgroundColor: config.bg,
+                                color: config.color,
+                              }}
                             >
-                              <div
-                                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 grayscale opacity-70"
-                                style={{
-                                  backgroundColor: config.bg,
-                                  color: config.color
-                                }}
-                              >
-                                <Icon className="w-4 h-4" />
-                              </div>
-                              <div className="flex-1 text-right">
-                                <h4 className="text-xs font-black text-foreground mb-1 leading-tight">
-                                  {alert.title}
-                                </h4>
-                                <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">
-                                  {alert.description}
-                                </p>
-                                {alert.read_at && (
-                                  <p className="text-[9px] font-bold text-muted-foreground mt-2 flex items-center gap-1 justify-end">
-                                    <Clock className="w-3 h-3" />
-                                    נקרא: {new Date(alert.read_at.endsWith('Z') ? alert.read_at : alert.read_at + 'Z').toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex flex-col items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
-                                </div>
-                                <button
-                                  onClick={() => markAsUnread(alert.id)}
-                                  title="סמן כלא נקרא"
-                                  className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
-                                >
-                                  <Undo2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
+                              <Icon className="w-4 h-4" />
                             </div>
-                          );
-                        })}
-                      </div>
-                    )
+                            <div className="flex-1 text-right">
+                              <h4 className="text-xs font-black text-foreground mb-1 leading-tight">
+                                {alert.title}
+                              </h4>
+                              <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">
+                                {alert.description}
+                              </p>
+                              {alert.read_at && (
+                                <p className="text-[9px] font-bold text-muted-foreground mt-2 flex items-center gap-1 justify-end">
+                                  <Clock className="w-3 h-3" />
+                                  נקרא:{" "}
+                                  {new Date(
+                                    alert.read_at.endsWith("Z")
+                                      ? alert.read_at
+                                      : alert.read_at + "Z",
+                                  ).toLocaleString("he-IL", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                              </div>
+                              <button
+                                onClick={() => markAsUnread(alert.id)}
+                                title="סמן כלא נקרא"
+                                className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
+                              >
+                                <Undo2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
-                {alerts.length > 0 && notificationTab === 'active' && (
+                {alerts.length > 0 && notificationTab === "active" && (
                   <div className="p-3 bg-card border-t border-border text-center">
                     <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
                       נא לטפל בבקשות הממתינות בהקדם
@@ -560,7 +661,7 @@ export default function MainLayout() {
         </main>
         {/* Impersonation Banner */}
         <ImpersonationBanner />
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }

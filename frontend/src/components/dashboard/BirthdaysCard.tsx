@@ -6,7 +6,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, MessageCircle, User, Sparkles } from "lucide-react";
+import { Calendar, Gift, User, Sparkles } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -49,7 +50,9 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
         const date = new Date(emp.birth_date);
         const dateStr = format(date, "d בMMMM", { locale: he });
         // הסרת מקפים ורווחים ממספר הטלפון
-        const cleanPhone = emp.phone_number ? emp.phone_number.replace(/\D/g, '') : "";
+        const cleanPhone = emp.phone_number
+          ? emp.phone_number.replace(/\D/g, "")
+          : "";
         const phoneStr = cleanPhone ? ` (${cleanPhone})` : "";
 
         return `• ${emp.first_name} ${emp.last_name} | ${dateStr}${phoneStr}`;
@@ -58,7 +61,10 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
 
     const message = `*${title}*\n\n${list}`;
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://api.whatsapp.com/send?text=${encodedMessage}`, "_blank");
+    window.open(
+      `https://api.whatsapp.com/send?text=${encodedMessage}`,
+      "_blank",
+    );
   };
 
   return (
@@ -77,14 +83,15 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
             </div>
             {birthdays.length > 0 && (
               <Button
-                variant="outline"
                 size="sm"
                 onClick={handleSendWhatsApp}
-                className="gap-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 h-8 px-3 rounded-full group"
+                className="gap-1.5 sm:gap-2 h-8 sm:h-9 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-sm"
                 title="שתף רשימה בוואטסאפ"
               >
-                <MessageCircle className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                <span className="text-[11px] font-black uppercase tracking-wider">שתף</span>
+                <FaWhatsapp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="text-[11px] font-black uppercase tracking-wider">
+                  WhatsApp
+                </span>
               </Button>
             )}
           </div>

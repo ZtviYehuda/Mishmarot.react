@@ -34,6 +34,8 @@ import {
   AlertCircle,
   User,
 } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   BulkStatusUpdateModal,
@@ -49,6 +51,7 @@ import type { Employee } from "@/types/employee.types";
 export default function AttendancePage() {
   const { user } = useAuthContext();
   const { selectedDate } = useDateContext();
+  const location = useLocation();
   const {
     employees,
     loading,
@@ -66,7 +69,8 @@ export default function AttendancePage() {
   const [selectedSectionId, setSelectedSectionId] = useState<string>("all");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
   const [selectedStatusId, setSelectedStatusId] = useState<string>("all");
-  const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string>("all");
+  const [selectedServiceTypeId, setSelectedServiceTypeId] =
+    useState<string>("all");
   const [statusTypes, setStatusTypes] = useState<any[]>([]);
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
 
@@ -81,6 +85,21 @@ export default function AttendancePage() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null,
   );
+  const [alertContext, setAlertContext] = useState<any>(null);
+
+  // Check for auto-open modal from navigation state
+  useEffect(() => {
+    if (location.state?.openBulkModal) {
+      if (location.state.alertData) {
+        setAlertContext(location.state.alertData);
+      } else {
+        setAlertContext(null);
+      }
+      setBulkModalOpen(true);
+      // Clear state to prevent reopening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Refetch employees when selectedDate changes
   useEffect(() => {
@@ -114,7 +133,13 @@ export default function AttendancePage() {
       if (sTypes) setServiceTypes(sTypes);
     };
     init();
-  }, [getStructure, getDashboardStats, getStatusTypes, getServiceTypes, selectedDate]);
+  }, [
+    getStructure,
+    getDashboardStats,
+    getStatusTypes,
+    getServiceTypes,
+    selectedDate,
+  ]);
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
@@ -165,6 +190,13 @@ export default function AttendancePage() {
     selectedServiceTypeId,
   ]);
 
+  const employeesForModal = useMemo(() => {
+    if (alertContext && alertContext.missing_ids) {
+      return employees.filter((e) => alertContext.missing_ids.includes(e.id));
+    }
+    return filteredEmployees;
+  }, [employees, alertContext, filteredEmployees]);
+
   const departments = structure;
   const sections = useMemo(() => {
     return (
@@ -211,7 +243,7 @@ export default function AttendancePage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedEmployeeIds(filteredEmployees.map(e => e.id));
+      setSelectedEmployeeIds(filteredEmployees.map((e) => e.id));
     } else {
       setSelectedEmployeeIds([]);
     }
@@ -219,9 +251,9 @@ export default function AttendancePage() {
 
   const handleSelectOne = (id: number, checked: boolean) => {
     if (checked) {
-      setSelectedEmployeeIds(prev => [...prev, id]);
+      setSelectedEmployeeIds((prev) => [...prev, id]);
     } else {
-      setSelectedEmployeeIds(prev => prev.filter(pid => pid !== id));
+      setSelectedEmployeeIds((prev) => prev.filter((pid) => pid !== id));
     }
   };
 
@@ -229,7 +261,7 @@ export default function AttendancePage() {
     (emp) =>
       emp.last_status_update &&
       new Date(emp.last_status_update).toDateString() ===
-      selectedDate.toDateString(),
+        selectedDate.toDateString(),
   ).length;
 
   const totalCount = employees.length;
@@ -252,7 +284,7 @@ export default function AttendancePage() {
   const isReportedToday =
     currentUserEmployee?.last_status_update &&
     new Date(currentUserEmployee.last_status_update).toDateString() ===
-    selectedDate.toDateString();
+      selectedDate.toDateString();
 
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
@@ -285,13 +317,18 @@ export default function AttendancePage() {
                 "h-10 sm:h-11 rounded-xl shadow-lg px-4 sm:px-6 gap-2 font-black flex-1 sm:flex-none transition-all",
                 selectedEmployeeIds.length > 0
                   ? "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-secondary/20"
-                  : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
+                  : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20",
               )}
-              onClick={() => setBulkModalOpen(true)}
+              onClick={() => {
+                setAlertContext(null);
+                setBulkModalOpen(true);
+              }}
             >
               <ClipboardCheck className="w-4 h-4" />
               {selectedEmployeeIds.length > 0 ? (
-                <span className="hidden sm:inline">עדכון לנבחרים ({selectedEmployeeIds.length})</span>
+                <span className="hidden sm:inline">
+                  עדכון לנבחרים ({selectedEmployeeIds.length})
+                </span>
               ) : (
                 <span className="hidden sm:inline">עדכון נוכחות מרוכז</span>
               )}
@@ -329,10 +366,7 @@ export default function AttendancePage() {
       />
       {/* Summary Stats & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className={cn(
-          "bg-card rounded-3xl p-6 border border-border shadow-sm",
-          isAllReported ? "lg:col-span-3" : "lg:col-span-2"
-        )}>
+        <div className="bg-card rounded-3xl p-6 border border-border shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
             <div className="flex flex-col gap-1 text-right">
               <span className="text-sm font-black text-foreground">
@@ -364,22 +398,19 @@ export default function AttendancePage() {
             />
           </div>
 
-          <div className={cn(
-            "grid gap-4",
-            isAllReported ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-6" : "grid-cols-2 sm:grid-cols-4"
-          )}>
+          <div className="flex flex-wrap gap-4 items-stretch justify-start">
             {stats
               .filter((s: any) => s.status_id)
               .map((s: any) => (
                 <div
                   key={s.status_id}
-                  className="p-4 rounded-2xl bg-muted/50 border border-border flex flex-col items-center gap-1"
+                  className="flex-1 min-w-[100px] p-4 rounded-2xl bg-muted/50 border border-border flex flex-col items-center gap-1 hover:bg-muted/80 transition-colors"
                 >
                   <span className="text-xl font-black text-foreground">
                     {s.count}
                   </span>
                   <span
-                    className="text-[10px] font-bold uppercase"
+                    className="text-[11px] font-bold uppercase text-center"
                     style={{ color: s.color || "var(--muted-foreground)" }}
                   >
                     {s.status_name}
@@ -389,7 +420,7 @@ export default function AttendancePage() {
           </div>
         </div>
 
-        {!isAllReported && (
+        {!isAllReported ? (
           <div className="bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-6 text-primary-foreground shadow-xl shadow-primary/20 flex flex-col justify-between">
             <div className="space-y-2">
               <Clock className="w-8 h-8 opacity-50" />
@@ -399,13 +430,28 @@ export default function AttendancePage() {
               </p>
             </div>
             <div className="pt-4 flex items-center gap-3">
-              <div className="bg-white/10 p-2 rounded-xl flex-1 flex items-center justify-center gap-2">
+              <div
+                className="bg-white/10 p-2 rounded-xl flex-1 flex items-center justify-center gap-2 cursor-pointer hover:bg-white/20 transition-colors"
+                onClick={() => setBulkModalOpen(true)}
+              >
                 <AlertCircle className="w-4 h-4 text-primary-foreground/70" />
-                <span className="text-xs font-bold text-primary-foreground">
+                <span className="text-xs font-bold text-primary-foreground underline decoration-primary-foreground/30 underline-offset-4">
                   נותרו לדווח: {totalCount - updatedTodayCount}
                 </span>
               </div>
             </div>
+          </div>
+        ) : (
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 flex flex-col justify-center items-center text-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center mb-1">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            </div>
+            <h3 className="text-lg font-black text-emerald-800">
+              הושלם הדיווח היומי!
+            </h3>
+            <p className="text-xs text-emerald-700/80 font-bold">
+              כלל שוטרי היחידה ({totalCount}) דווחו במערכת
+            </p>
           </div>
         )}
       </div>
@@ -571,8 +617,13 @@ export default function AttendancePage() {
               <TableRow className="border-b border-border hover:bg-transparent">
                 <TableHead className="w-[50px] pr-6">
                   <Checkbox
-                    checked={filteredEmployees.length > 0 && selectedEmployeeIds.length === filteredEmployees.length}
-                    onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                    checked={
+                      filteredEmployees.length > 0 &&
+                      selectedEmployeeIds.length === filteredEmployees.length
+                    }
+                    onCheckedChange={(checked) =>
+                      handleSelectAll(checked as boolean)
+                    }
                   />
                 </TableHead>
                 <TableHead className="text-right px-6 font-black text-muted-foreground uppercase text-[10px] tracking-widest">
@@ -619,7 +670,7 @@ export default function AttendancePage() {
                   const isUpdatedToday =
                     emp.last_status_update &&
                     new Date(emp.last_status_update).toDateString() ===
-                    selectedDate.toDateString();
+                      selectedDate.toDateString();
 
                   return (
                     <TableRow
@@ -627,15 +678,17 @@ export default function AttendancePage() {
                       className={cn(
                         "group hover:bg-muted/50 transition-colors border-b border-border",
                         user &&
-                        emp.id === user.id &&
-                        "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
-                        selectedEmployeeIds.includes(emp.id) && "bg-muted/30"
+                          emp.id === user.id &&
+                          "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
+                        selectedEmployeeIds.includes(emp.id) && "bg-muted/30",
                       )}
                     >
                       <TableCell className="pr-6">
                         <Checkbox
                           checked={selectedEmployeeIds.includes(emp.id)}
-                          onCheckedChange={(checked) => handleSelectOne(emp.id, checked as boolean)}
+                          onCheckedChange={(checked) =>
+                            handleSelectOne(emp.id, checked as boolean)
+                          }
                         />
                       </TableCell>
                       <TableCell className="py-4 px-6 text-right">
@@ -664,7 +717,9 @@ export default function AttendancePage() {
                             {getProfessionalTitle(emp)}
                           </Badge>
                           {emp.service_type_name && (
-                            <span className="text-[10px] font-bold text-muted-foreground/60">{emp.service_type_name}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground/60">
+                              {emp.service_type_name}
+                            </span>
                           )}
                         </div>
                       </TableCell>
@@ -681,18 +736,27 @@ export default function AttendancePage() {
                                 מדור {emp.section_name}
                               </span>
                             )}
-                            {emp.section_name && emp.section_name !== "מטה" && emp.team_name && emp.team_name !== "מטה" && (
-                              <span className="text-[10px] text-muted-foreground/40">•</span>
-                            )}
+                            {emp.section_name &&
+                              emp.section_name !== "מטה" &&
+                              emp.team_name &&
+                              emp.team_name !== "מטה" && (
+                                <span className="text-[10px] text-muted-foreground/40">
+                                  •
+                                </span>
+                              )}
                             {emp.team_name && emp.team_name !== "מטה" && (
                               <span className="text-[10px] text-muted-foreground font-medium">
                                 חוליה {emp.team_name}
                               </span>
                             )}
                           </div>
-                          {!emp.department_name && !emp.section_name && !emp.team_name && (
-                            <span className="text-xs text-muted-foreground">-</span>
-                          )}
+                          {!emp.department_name &&
+                            !emp.section_name &&
+                            !emp.team_name && (
+                              <span className="text-xs text-muted-foreground">
+                                -
+                              </span>
+                            )}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -718,7 +782,7 @@ export default function AttendancePage() {
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span className="text-xs font-bold">
                               {selectedDate.toDateString() ===
-                                new Date().toDateString()
+                              new Date().toDateString()
                                 ? "היום"
                                 : format(selectedDate, "dd/MM")}
                               ,{" "}
@@ -733,9 +797,7 @@ export default function AttendancePage() {
                         ) : (
                           <div className="flex items-center gap-1.5 text-rose-500/80">
                             <AlertCircle className="w-3.5 h-3.5" />
-                            <span className="text-xs font-bold">
-                              לא עודכן
-                            </span>
+                            <span className="text-xs font-bold">לא עודכן</span>
                           </div>
                         )}
                       </TableCell>
@@ -768,16 +830,6 @@ export default function AttendancePage() {
         </div>
       </div>
 
-      {bulkModalOpen && (
-        <BulkStatusUpdateModal
-          open={bulkModalOpen}
-          onOpenChange={setBulkModalOpen}
-          employees={filteredEmployees}
-          initialSelectedIds={selectedEmployeeIds}
-          onSuccess={refreshData}
-        />
-      )}
-
       {selectedEmployee && (
         <StatusUpdateModal
           open={statusModalOpen}
@@ -795,6 +847,22 @@ export default function AttendancePage() {
         />
       )}
 
+      <BulkStatusUpdateModal
+        open={bulkModalOpen}
+        onOpenChange={(open) => {
+          setBulkModalOpen(open);
+          if (!open) setAlertContext(null);
+        }}
+        employees={employeesForModal}
+        initialSelectedIds={selectedEmployeeIds}
+        onSuccess={refreshData}
+        alertContext={alertContext}
+        onNudge={() => {
+          toast.success(
+            `נשלחה תזכורת למפקד ${alertContext?.commander_name || ""}`,
+          );
+        }}
+      />
       <ExportReportDialog
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}

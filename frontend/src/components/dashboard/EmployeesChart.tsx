@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 interface EmployeesChartProps {
@@ -84,7 +85,9 @@ export const EmployeesChart = ({
           <p className="text-xs text-muted-foreground mt-1">
             {data.percentage}% מהיחידה
           </p>
-          <p className="text-[10px] text-muted-foreground/70 mt-1">לחץ לפירוט</p>
+          <p className="text-[10px] text-muted-foreground/70 mt-1">
+            לחץ לפירוט
+          </p>
         </div>
       );
     }
@@ -193,15 +196,14 @@ export const EmployeesChart = ({
           <div className="flex gap-2 shrink-0">
             {onOpenWhatsAppReport && (
               <Button
-                variant="outline"
                 size="sm"
                 onClick={onOpenWhatsAppReport}
-                className="gap-1.5 sm:gap-2 h-8 sm:h-9"
+                className="gap-1.5 sm:gap-2 h-8 sm:h-9 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-sm"
                 title="שלח דוח בוואטסאפ"
               >
-                <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="text-xs hidden sm:inline" dir="rtl">
-                  דוח
+                <FaWhatsapp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="text-xs hidden sm:inline font-bold" dir="rtl">
+                  WhatsApp
                 </span>
               </Button>
             )}
@@ -211,9 +213,7 @@ export const EmployeesChart = ({
       <CardContent>
         {total === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-sm text-muted-foreground">
-              אין נתונים להצגה
-            </p>
+            <p className="text-sm text-muted-foreground">אין נתונים להצגה</p>
           </div>
         ) : (
           <div className="space-y-8">
