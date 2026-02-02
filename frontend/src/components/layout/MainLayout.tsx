@@ -274,7 +274,7 @@ export default function MainLayout() {
               )}
             </button>
             <button
-              onClick={logout}
+              onClick={() => logout()}
               title="Logout"
               className="flex-grow h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all border border-transparent hover:border-destructive/20"
             >

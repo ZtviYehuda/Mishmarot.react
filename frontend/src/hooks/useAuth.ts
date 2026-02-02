@@ -60,7 +60,21 @@ export const useAuth = () => {
   };
 
   // Logout Function
-  const logout = () => {
+  const logout = (hard: boolean = false) => {
+    if (!hard && user) {
+      localStorage.setItem(
+        "locked_user",
+        JSON.stringify({
+          personal_number: user.personal_number,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          id: user.id,
+        }),
+      );
+    } else {
+      localStorage.removeItem("locked_user");
+    }
+
     localStorage.removeItem("token");
     setUser(null);
     window.location.href = "/login";

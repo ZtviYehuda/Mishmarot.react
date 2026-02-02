@@ -74,10 +74,10 @@ class AttendanceModel:
                 cur.execute(
                     """
                     UPDATE attendance_logs 
-                    SET end_datetime = CURRENT_TIMESTAMP 
+                    SET end_datetime = %s 
                     WHERE employee_id = %s AND end_datetime IS NULL
                 """,
-                    (employee_id,),
+                    (now, employee_id),
                 )
 
                 # Insert new status
@@ -94,6 +94,9 @@ class AttendanceModel:
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """,
                     (employee_id, status_type_id, start, end_date, note, reported_by),
+                )
+                print(
+                    f"DEBUG: Inserted log for emp {employee_id}, status {status_type_id}, start {start}"
                 )
 
             conn.commit()
@@ -209,7 +212,7 @@ class AttendanceModel:
                 LEFT JOIN LATERAL (
                     SELECT status_type_id, id FROM attendance_logs 
                     WHERE employee_id = e.id {status_condition}
-                    ORDER BY start_datetime DESC LIMIT 1
+                    ORDER BY start_datetime DESC, id DESC LIMIT 1
                 ) al ON true
                 LEFT JOIN status_types st ON al.status_type_id = st.id
                 WHERE e.is_active = TRUE 
@@ -336,7 +339,7 @@ class AttendanceModel:
                 LEFT JOIN LATERAL (
                     SELECT status_type_id FROM attendance_logs 
                     WHERE employee_id = e.id {status_condition}
-                    ORDER BY start_datetime DESC LIMIT 1
+                    ORDER BY start_datetime DESC, id DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
                 WHERE e.is_active = TRUE AND e.personal_number != 'admin'

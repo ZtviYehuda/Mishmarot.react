@@ -66,7 +66,7 @@ export default function SettingsPage() {
   const [backupConfig, setBackupConfig] = useState({
     enabled: false,
     interval_hours: 24,
-    last_backup: null
+    last_backup: null,
   });
 
   // System Settings State
@@ -74,15 +74,16 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (activeTab === "notifications" && user?.is_admin) {
-      apiClient.get("/admin/settings")
-        .then(res => setSystemSettings(res.data))
-        .catch(err => console.error("Failed to load system settings", err));
+      apiClient
+        .get("/admin/settings")
+        .then((res) => setSystemSettings(res.data))
+        .catch((err) => console.error("Failed to load system settings", err));
     }
   }, [activeTab, user]);
 
   const updateSystemSetting = async (key: string, value: any) => {
     // Optimistic update
-    setSystemSettings(prev => ({ ...prev, [key]: value }));
+    setSystemSettings((prev) => ({ ...prev, [key]: value }));
     try {
       await apiClient.post("/admin/settings", { key, value });
       toast.success("הגדרת מערכת עודכנה");
@@ -93,9 +94,10 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (activeTab === "backup" && user?.is_admin) {
-      apiClient.get("/admin/backup/config")
-        .then(res => setBackupConfig(res.data))
-        .catch(err => console.error("Failed to load backup config", err));
+      apiClient
+        .get("/admin/backup/config")
+        .then((res) => setBackupConfig(res.data))
+        .catch((err) => console.error("Failed to load backup config", err));
     }
   }, [activeTab, user]);
 
@@ -160,7 +162,11 @@ export default function SettingsPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!confirm("האם אתה בטוח שברצונך לשחזר נתונים? פעולה זו תדרוס את כל המידע הקיים!")) {
+    if (
+      !confirm(
+        "האם אתה בטוח שברצונך לשחזר נתונים? פעולה זו תדרוס את כל המידע הקיים!",
+      )
+    ) {
       event.target.value = ""; // איפוס הקלט
       return;
     }
@@ -176,7 +182,7 @@ export default function SettingsPage() {
         },
       });
       toast.success("הנתונים שוחזרו בהצלחה", {
-        description: "רענן את הדף כדי לראות את השינויים"
+        description: "רענן את הדף כדי לראות את השינויים",
       });
       // רענון אוטומטי של הדף לאחר השחזור
       setTimeout(() => window.location.reload(), 2000);
@@ -257,7 +263,7 @@ export default function SettingsPage() {
     setIsChangingPassword(true);
     try {
       const { data } = await apiClient.post("/auth/change-password", {
-        new_password: passwordData.new_password
+        new_password: passwordData.new_password,
       });
       if (data.success) {
         toast.success("הסיסמה עודכנה בהצלחה");
@@ -273,11 +279,18 @@ export default function SettingsPage() {
   };
 
   const handleResetImpersonatedPassword = async () => {
-    if (!confirm("האם אתה בטוח שברצונך לאפס את הסיסמה של המשתמש לתעודת הזהות שלו?")) return;
+    if (
+      !confirm(
+        "האם אתה בטוח שברצונך לאפס את הסיסמה של המשתמש לתעודת הזהות שלו?",
+      )
+    )
+      return;
 
     try {
       setIsResetting(true);
-      const response = await apiClient.post("/auth/reset-impersonated-password");
+      const response = await apiClient.post(
+        "/auth/reset-impersonated-password",
+      );
       if (response.status === 200) {
         toast.success("הסיסמה אופסה בהצלחה לתעודת הזהות של המשתמש");
       }
@@ -347,7 +360,7 @@ export default function SettingsPage() {
             <div className="mt-4 p-4 border-t border-border">
               <Button
                 variant="ghost"
-                onClick={logout}
+                onClick={() => logout()}
                 className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 font-bold gap-3 rounded-xl transition-all h-11"
               >
                 <LogOut className="w-4 h-4" />
@@ -493,7 +506,11 @@ export default function SettingsPage() {
                       <div className="relative">
                         <Input
                           type="date"
-                          value={formData.birth_date ? formData.birth_date.split("T")[0] : ""}
+                          value={
+                            formData.birth_date
+                              ? formData.birth_date.split("T")[0]
+                              : ""
+                          }
                           onChange={(e) =>
                             setFormData({
                               ...formData,
@@ -546,11 +563,23 @@ export default function SettingsPage() {
                       שיוך ארגוני (לקריאה בלבד)
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                      <InfoBlock label="מחלקה" value={user?.department_name || "-"} />
-                      <InfoBlock label="מדור" value={user?.section_name || "-"} />
-                      <InfoBlock label="חולייה" value={user?.team_name || "-"} />
+                      <InfoBlock
+                        label="מחלקה"
+                        value={user?.department_name || "-"}
+                      />
+                      <InfoBlock
+                        label="מדור"
+                        value={user?.section_name || "-"}
+                      />
+                      <InfoBlock
+                        label="חולייה"
+                        value={user?.team_name || "-"}
+                      />
                       <InfoBlock label="תפקיד" value={user?.role_name || "-"} />
-                      <InfoBlock label="סוג שירות" value={user?.service_type_name || "-"} />
+                      <InfoBlock
+                        label="סוג שירות"
+                        value={user?.service_type_name || "-"}
+                      />
                     </div>
                   </div>
 
@@ -700,7 +729,8 @@ export default function SettingsPage() {
                             איפוס סיסמה למשתמש (מצב התחזות)
                           </h4>
                           <p className="text-sm text-destructive/80 font-bold leading-relaxed text-right">
-                            באפשרותך לאפס את סיסמת המשתמש לתעודת הזהות שלו. המשתמש יידרש להחליף סיסמה בכניסה הבאה.
+                            באפשרותך לאפס את סיסמת המשתמש לתעודת הזהות שלו.
+                            המשתמש יידרש להחליף סיסמה בכניסה הבאה.
                           </p>
                         </div>
                         <Button
@@ -751,12 +781,19 @@ export default function SettingsPage() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground">סיסמה חדשה</Label>
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground">
+                            סיסמה חדשה
+                          </Label>
                           <div className="relative">
                             <Input
                               type={showPasswords ? "text" : "password"}
                               value={passwordData.new_password}
-                              onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                              onChange={(e) =>
+                                setPasswordData({
+                                  ...passwordData,
+                                  new_password: e.target.value,
+                                })
+                              }
                               className="h-11 rounded-xl bg-background border-border font-bold pr-4"
                               placeholder="לפחות 6 תווים"
                             />
@@ -764,16 +801,27 @@ export default function SettingsPage() {
                               onClick={() => setShowPasswords(!showPasswords)}
                               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-primary transition-colors"
                             >
-                              {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              {showPasswords ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
                             </button>
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground">אימות סיסמה</Label>
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground">
+                            אימות סיסמה
+                          </Label>
                           <Input
                             type={showPasswords ? "text" : "password"}
                             value={passwordData.confirm_password}
-                            onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                            onChange={(e) =>
+                              setPasswordData({
+                                ...passwordData,
+                                confirm_password: e.target.value,
+                              })
+                            }
                             className="h-11 rounded-xl bg-background border-border font-bold"
                             placeholder="הקלד שוב..."
                           />
@@ -783,7 +831,9 @@ export default function SettingsPage() {
                       <div className="flex justify-start pt-2">
                         <Button
                           onClick={handleChangePassword}
-                          disabled={isChangingPassword || !passwordData.new_password}
+                          disabled={
+                            isChangingPassword || !passwordData.new_password
+                          }
                           className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 px-8 rounded-xl font-bold shadow-md transition-all"
                         >
                           {isChangingPassword ? (
@@ -857,7 +907,9 @@ export default function SettingsPage() {
                         <NotifSetting
                           title="התראות דיווח בסופ״ש"
                           description="שלח התראות על אי-דיווח בוקר גם בימי שישי ושבת"
-                          enabled={systemSettings.alerts_weekend_enabled === true}
+                          enabled={
+                            systemSettings.alerts_weekend_enabled === true
+                          }
                           onChange={(val: boolean) =>
                             updateSystemSetting("alerts_weekend_enabled", val)
                           }
@@ -928,11 +980,19 @@ export default function SettingsPage() {
                           </Button>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className={`font-bold ${backupConfig.enabled ? 'text-primary' : 'text-muted-foreground'}`}>
-                            {backupConfig.enabled ? "גיבוי אוטומטי פעיל" : "גיבוי אוטומטי כבוי"}
+                          <span
+                            className={`font-bold ${backupConfig.enabled ? "text-primary" : "text-muted-foreground"}`}
+                          >
+                            {backupConfig.enabled
+                              ? "גיבוי אוטומטי פעיל"
+                              : "גיבוי אוטומטי כבוי"}
                           </span>
-                          <div className={`p-1.5 rounded-lg transition-colors ${backupConfig.enabled ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                            <RefreshCw className={`w-5 h-5 ${backupConfig.enabled ? 'animate-spin-slow' : ''}`} />
+                          <div
+                            className={`p-1.5 rounded-lg transition-colors ${backupConfig.enabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+                          >
+                            <RefreshCw
+                              className={`w-5 h-5 ${backupConfig.enabled ? "animate-spin-slow" : ""}`}
+                            />
                           </div>
                         </div>
                       </div>
@@ -942,30 +1002,46 @@ export default function SettingsPage() {
                       {/* Switch */}
                       <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
                         <div className="text-right">
-                          <span className="block font-bold text-foreground">הפעל גיבוי אוטומטי</span>
-                          <span className="text-xs text-muted-foreground font-medium">המערכת תבצע גיבוי באופן עצמאי ברקע</span>
+                          <span className="block font-bold text-foreground">
+                            הפעל גיבוי אוטומטי
+                          </span>
+                          <span className="text-xs text-muted-foreground font-medium">
+                            המערכת תבצע גיבוי באופן עצמאי ברקע
+                          </span>
                         </div>
                         <div className="flex items-center gap-4">
                           <button
-                            onClick={() => updateBackupConfig("enabled", !backupConfig.enabled)}
-                            className={`w-14 h-8 rounded-full relative transition-colors duration-300 ${backupConfig.enabled ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+                            onClick={() =>
+                              updateBackupConfig(
+                                "enabled",
+                                !backupConfig.enabled,
+                              )
+                            }
+                            className={`w-14 h-8 rounded-full relative transition-colors duration-300 ${backupConfig.enabled ? "bg-primary" : "bg-muted-foreground/30"}`}
                           >
-                            <div className={`w-6 h-6 bg-white rounded-full shadow-md absolute top-1 transition-transform duration-300 ${backupConfig.enabled ? 'right-1' : 'right-[calc(100%-28px)]'}`} />
+                            <div
+                              className={`w-6 h-6 bg-white rounded-full shadow-md absolute top-1 transition-transform duration-300 ${backupConfig.enabled ? "right-1" : "right-[calc(100%-28px)]"}`}
+                            />
                           </button>
                         </div>
                       </div>
 
                       {/* Frequency Selector */}
-                      <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 transition-opacity duration-300 ${!backupConfig.enabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <div
+                        className={`grid grid-cols-1 sm:grid-cols-3 gap-4 transition-opacity duration-300 ${!backupConfig.enabled ? "opacity-50 pointer-events-none" : ""}`}
+                      >
                         {[6, 12, 24].map((hours) => (
                           <button
                             key={hours}
-                            onClick={() => updateBackupConfig("interval_hours", hours)}
+                            onClick={() =>
+                              updateBackupConfig("interval_hours", hours)
+                            }
                             className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all
-                                        ${backupConfig.interval_hours === hours
-                                ? "border-primary bg-primary/5 text-primary shadow-md"
-                                : "border-border hover:border-border/80 bg-card"
-                              }
+                                        ${
+                                          backupConfig.interval_hours === hours
+                                            ? "border-primary bg-primary/5 text-primary shadow-md"
+                                            : "border-border hover:border-border/80 bg-card"
+                                        }
                                     `}
                           >
                             <Clock className="w-6 h-6 opacity-80" />
@@ -1025,7 +1101,9 @@ export default function SettingsPage() {
                         </h4>
                         <p className="text-sm text-muted-foreground">
                           דריסת כל הנתונים במערכת ושחזור מקובץ.
-                          <span className="block text-destructive font-bold text-xs mt-1">פעולה בלתי הפיכה!</span>
+                          <span className="block text-destructive font-bold text-xs mt-1">
+                            פעולה בלתי הפיכה!
+                          </span>
                         </p>
                       </div>
 
@@ -1038,7 +1116,9 @@ export default function SettingsPage() {
                           onChange={handleRestore}
                         />
                         <Button
-                          onClick={() => document.getElementById("restore-file")?.click()}
+                          onClick={() =>
+                            document.getElementById("restore-file")?.click()
+                          }
                           disabled={isRestoring}
                           variant="outline"
                           className="w-full h-11 border-destructive/20 hover:bg-destructive/10 text-destructive rounded-xl font-bold active:scale-95 transition-all"
@@ -1149,13 +1229,16 @@ function NavItem({
       onClick={onClick}
       className={`
         w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 font-black text-sm
-        ${active
-          ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02]"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+        ${
+          active
+            ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02]"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted"
         }
       `}
     >
-      <Icon className={`w-5 h-5 ${active ? "text-primary-foreground" : "text-muted-foreground"}`} />
+      <Icon
+        className={`w-5 h-5 ${active ? "text-primary-foreground" : "text-muted-foreground"}`}
+      />
       <span className="flex-1 text-right">{label}</span>
       {active && (
         <div className="w-2 h-2 bg-primary-foreground rounded-full animate-pulse shadow-sm shadow-primary-foreground" />
