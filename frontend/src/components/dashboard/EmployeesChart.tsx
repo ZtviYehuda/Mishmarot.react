@@ -184,21 +184,21 @@ export const EmployeesChart = ({
   return (
     <Card className="border border-border shadow-sm bg-card">
       <CardHeader className="pb-4 sm:pb-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
+        <div className="flex flex-row items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg sm:text-xl font-black text-card-foreground mb-1 truncate">
+            <CardTitle className="text-lg sm:text-xl font-black text-card-foreground mb-1 leading-tight whitespace-normal break-words">
               {title}
             </CardTitle>
-            <CardDescription className="font-bold text-xs text-muted-foreground">
+            <CardDescription className="font-bold text-xs text-muted-foreground whitespace-normal break-words">
               {description}
             </CardDescription>
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex shrink-0 items-center pt-1">
             {onOpenWhatsAppReport && (
               <Button
                 size="sm"
                 onClick={onOpenWhatsAppReport}
-                className="gap-1.5 sm:gap-2 h-8 sm:h-9 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-sm"
+                className="gap-1.5 sm:gap-2 h-8 sm:h-9 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-md transition-all active:scale-95"
                 title="שלח דוח בוואטסאפ"
               >
                 <FaWhatsapp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />

@@ -291,6 +291,8 @@ def restore_database():
         return jsonify({"success": True, "message": "Database restored successfully"})
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         if conn:
             conn.rollback()
         return jsonify({"error": str(e)}), 500

@@ -43,6 +43,7 @@ def setup_database():
             """CREATE TABLE IF NOT EXISTS status_types (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(50) NOT NULL,
+                code VARCHAR(50),
                 color VARCHAR(20),
                 is_presence BOOLEAN DEFAULT FALSE
             );""",
@@ -71,6 +72,7 @@ def setup_database():
                 assignment_date DATE,
                 city VARCHAR(100),
                 security_clearance INTEGER DEFAULT 0,
+                employment_clearance BOOLEAN DEFAULT FALSE,
                 police_license BOOLEAN DEFAULT FALSE,
                 emergency_contact VARCHAR(100),
                 notif_sick_leave BOOLEAN DEFAULT TRUE,
@@ -147,6 +149,12 @@ def setup_database():
             )
             cur.execute(
                 "ALTER TABLE employees ADD COLUMN IF NOT EXISTS notif_transfers BOOLEAN DEFAULT TRUE;"
+            )
+            cur.execute(
+                "ALTER TABLE status_types ADD COLUMN IF NOT EXISTS code VARCHAR(50);"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS employment_clearance BOOLEAN DEFAULT FALSE;"
             )
 
             # Transfer Requests Migrations
