@@ -68,18 +68,18 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="text-right">
-          <DialogTitle className="text-2xl font-semibold  text-right text-[#001e30] dark:text-white">
+          <DialogTitle className="text-xl sm:text-2xl font-semibold  text-right text-[#001e30] dark:text-white">
             הוספת שוטר חדש
           </DialogTitle>
-          <DialogDescription className="text-right">
+          <DialogDescription className="text-right text-sm">
             מלא את הפרטים הבאים כדי להוסיף שוטר חדש למערכת
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2 text-right">
               <Label
                 htmlFor="first_name"
@@ -94,7 +94,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   setFormData({ ...formData, first_name: e.target.value })
                 }
                 required
-                className="border-slate-200 focus:border-[#0074ff] text-right"
+                className="border-slate-200 focus:border-[#0074ff] text-right h-11"
               />
             </div>
             <div className="space-y-2 text-right">
@@ -111,12 +111,12 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   setFormData({ ...formData, last_name: e.target.value })
                 }
                 required
-                className="border-slate-200 focus:border-[#0074ff] text-right"
+                className="border-slate-200 focus:border-[#0074ff] text-right h-11"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2 text-right">
               <Label
                 htmlFor="personal_number"
@@ -131,7 +131,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   setFormData({ ...formData, personal_number: e.target.value })
                 }
                 required
-                className="border-slate-200 focus:border-[#0074ff] text-right"
+                className="border-slate-200 focus:border-[#0074ff] text-right h-11"
               />
             </div>
             <div className="space-y-2 text-right">
@@ -148,12 +148,12 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   setFormData({ ...formData, national_id: e.target.value })
                 }
                 required
-                className="border-slate-200 focus:border-[#0074ff] text-right"
+                className="border-slate-200 focus:border-[#0074ff] text-right h-11"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2 text-right">
               <Label
                 htmlFor="phone_number"
@@ -168,7 +168,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, phone_number: e.target.value })
                 }
-                className="border-slate-200 focus:border-[#0074ff] text-right"
+                className="border-slate-200 focus:border-[#0074ff] text-right h-11"
               />
             </div>
             <div className="space-y-2 text-right">
@@ -181,12 +181,12 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, city: e.target.value })
                 }
-                className="border-slate-200 focus:border-[#0074ff] text-right"
+                className="border-slate-200 focus:border-[#0074ff] text-right h-11"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2 text-right">
               <Label
                 htmlFor="birth_date"
@@ -201,7 +201,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, birth_date: e.target.value })
                 }
-                className="border-slate-200 focus:border-[#0074ff] text-right"
+                className="border-slate-200 focus:border-[#0074ff] text-right h-11"
               />
             </div>
             <div className="space-y-2 text-right">
@@ -218,25 +218,25 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, enlistment_date: e.target.value })
                 }
-                className="border-slate-200 focus:border-[#0074ff] text-right"
+                className="border-slate-200 focus:border-[#0074ff] text-right h-11"
               />
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-0 flex-col sm:flex-row">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
-              className="border-slate-200"
+              className="border-slate-200 w-full sm:w-auto h-11"
             >
               ביטול
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#0074ff] hover:bg-[#0060d5] text-white"
+              className="bg-[#0074ff] hover:bg-[#0060d5] text-white w-full sm:w-auto h-11"
             >
               {loading ? (
                 <>

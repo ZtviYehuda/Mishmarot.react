@@ -813,7 +813,7 @@ export default function MainLayout() {
           open={!!selectedAlert}
           onOpenChange={(open) => !open && setSelectedAlert(null)}
         >
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-[90vw] sm:max-w-md p-4 sm:p-6">
             <DialogHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div
@@ -878,7 +878,7 @@ export default function MainLayout() {
           open={!!criticalAlert}
           onOpenChange={(open) => !open && setCriticalAlert(null)}
         >
-          <DialogContent className="max-w-md border-primary/20 bg-card shadow-xl">
+          <DialogContent className="max-w-[90vw] sm:max-w-md border-primary/20 bg-card shadow-xl p-4 sm:p-6">
             <DialogHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">

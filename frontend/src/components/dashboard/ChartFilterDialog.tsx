@@ -1,20 +1,23 @@
-import { useState, useEffect } from 'react';
-import { useAuthContext } from '@/context/AuthContext';
+import { useState, useEffect } from "react";
+import { useAuthContext } from "@/context/AuthContext";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface ChartFilterDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onApplyFilter: (filterType: 'all' | 'department' | 'section', id?: number) => void;
+  onApplyFilter: (
+    filterType: "all" | "department" | "section",
+    id?: number,
+  ) => void;
 }
 
 export const ChartFilterDialog = ({
@@ -23,7 +26,9 @@ export const ChartFilterDialog = ({
   onApplyFilter,
 }: ChartFilterDialogProps) => {
   const { user } = useAuthContext();
-  const [filterType, setFilterType] = useState<'all' | 'department' | 'section'>('all');
+  const [filterType, setFilterType] = useState<
+    "all" | "department" | "section"
+  >("all");
   const [departments, setDepartments] = useState<any[]>([]);
   const [sections, setSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,14 +39,14 @@ export const ChartFilterDialog = ({
       // For now, we'll just set up basic structure
       // In production, fetch from backend based on user's department/section access
       setDepartments([
-        { id: 1, name: 'פיקוד הצפון' },
-        { id: 2, name: 'פיקוד הדרום' },
-        { id: 3, name: 'פיקוד המרכז' },
+        { id: 1, name: "פיקוד הצפון" },
+        { id: 2, name: "פיקוד הדרום" },
+        { id: 3, name: "פיקוד המרכז" },
       ]);
       setSections([
-        { id: 1, name: 'מחלקה A' },
-        { id: 2, name: 'מחלקה B' },
-        { id: 3, name: 'מחלקה C' },
+        { id: 1, name: "מחלקה A" },
+        { id: 2, name: "מחלקה B" },
+        { id: 3, name: "מחלקה C" },
       ]);
     }
   }, [open, user]);
@@ -56,7 +61,7 @@ export const ChartFilterDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-[90vw] sm:max-w-md p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>בחר סוג גרף</DialogTitle>
           <DialogDescription>
@@ -65,7 +70,10 @@ export const ChartFilterDialog = ({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          <RadioGroup value={filterType} onValueChange={(value: any) => setFilterType(value)}>
+          <RadioGroup
+            value={filterType}
+            onValueChange={(value: any) => setFilterType(value)}
+          >
             {/* All Employees Option */}
             <div className="flex items-center space-x-3 space-x-reverse">
               <RadioGroupItem value="all" id="all" />

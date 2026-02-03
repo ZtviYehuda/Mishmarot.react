@@ -279,100 +279,193 @@ export default function TransfersPage() {
       />
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-card rounded-[20px] p-6 border border-border shadow-sm flex items-center justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <button
+          onClick={() => setActiveTab("pending")}
+          className="bg-card rounded-[20px] p-4 sm:p-6 border border-border shadow-sm flex items-center justify-between hover:border-amber-500/50 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
+        >
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-muted-foreground mb-1">
-              בקשות ממתינות
+            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+             ממתינות
             </span>
-            <span className="text-4xl font-black text-amber-500">
+            <span className="text-2xl sm:text-4xl font-black text-amber-500">
               {stats.pending}
             </span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
-            <Clock className="w-6 h-6 text-amber-500" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" />
           </div>
-        </div>
+        </button>
 
-        <div className="bg-card rounded-[20px] p-6 border border-border shadow-sm flex items-center justify-between">
+        <button
+          onClick={() => setActiveTab("history")}
+          className="bg-card rounded-[20px] p-4 sm:p-6 border border-border shadow-sm flex items-center justify-between hover:border-emerald-500/50 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
+        >
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-muted-foreground mb-1">
-              אושר (היסטוריה)
+            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+              אושרו 
             </span>
-            <span className="text-4xl font-black text-emerald-500">
+            <span className="text-2xl sm:text-4xl font-black text-emerald-500">
               {stats.approved}
             </span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
-            <CheckCircle className="w-6 h-6 text-emerald-500" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
           </div>
-        </div>
+        </button>
 
-        <div className="bg-card rounded-[20px] p-6 border border-border shadow-sm flex items-center justify-between">
+        <button
+          onClick={() => setActiveTab("history")}
+          className="bg-card rounded-[20px] p-4 sm:p-6 border border-border shadow-sm flex items-center justify-between hover:border-rose-500/50 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
+        >
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-muted-foreground mb-1">
-              נדחה (היסטוריה)
+            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+              נדחו
             </span>
-            <span className="text-4xl font-black text-rose-500">
+            <span className="text-2xl sm:text-4xl font-black text-rose-500">
               {stats.rejected}
             </span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center">
-            <XCircle className="w-6 h-6 text-rose-500" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-rose-500/10 flex items-center justify-center">
+            <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500" />
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Main Toolbar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 bg-card p-2 pl-4 rounded-[16px] border border-border shadow-sm">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 bg-card p-2 sm:pl-4 rounded-3xl sm:rounded-[16px] border border-border shadow-sm overflow-hidden">
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
           className="w-full md:w-auto"
         >
-          <TabsList className="bg-muted p-1.5 h-auto rounded-full gap-1 border border-border/50">
+          <TabsList className="bg-muted p-1 h-10 sm:h-auto sm:p-1.5 rounded-full gap-1 border border-border/50 w-full sm:w-auto flex overflow-x-auto no-scrollbar justify-start sm:justify-center">
             <TabsTrigger
               value="history"
-              className="h-9 rounded-full px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border"
+              className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border whitespace-nowrap"
             >
-              <History className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">ארכיון היסטוריה</span>
-              <span className="md:hidden">היסטוריה</span>
+              <History className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+              <span>ארכיון</span>
             </TabsTrigger>
             <TabsTrigger
               value="pending"
-              className="h-9 rounded-full px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border"
+              className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border whitespace-nowrap"
             >
-              <Clock className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">ממתינות לטיפול</span>
-              <span className="md:hidden">ממתינות</span>
+              <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+              <span>ממתינות</span>
             </TabsTrigger>
             <TabsTrigger
               value="new"
-              className="h-9 rounded-full px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border hover:text-primary"
+              className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border hover:text-primary whitespace-nowrap"
             >
-              <Plus className="w-3.5 h-3.5" />
-              הגשת בקשה חדשה
+              <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+              <span>בקשה חדשה</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
         {activeTab !== "new" && (
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative w-full md:w-64 lg:w-72 px-2 sm:px-0">
+            <Search className="absolute right-5 sm:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="סינון מהיר..."
-              className="pl-10 pr-4 h-10 bg-muted/30 border-input hover:bg-muted/50 font-medium text-sm rounded-full focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all"
+              placeholder="חיפוש מהיר..."
+              className="pr-10 sm:pr-10 h-10 bg-muted/30 border-input hover:bg-muted/50 font-medium text-sm rounded-full focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all text-right"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         )}
       </div>
 
-      <div className="mt-4">
-        {/* Pending Requests Table */}
-        {activeTab === "pending" && (
-          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+      {activeTab === "pending" && (
+        <>
+          {/* Mobile View - Pending Cards */}
+          <div className="md:hidden space-y-3 animate-in fade-in slide-in-from-bottom-3 duration-500">
+            {loading ? (
+              <div className="bg-card rounded-2xl p-8 text-center text-muted-foreground animate-pulse border border-border">
+                טוען נתונים...
+              </div>
+            ) : pendingTransfers.length === 0 ? (
+              <div className="bg-card rounded-2xl p-12 text-center border border-border border-dashed">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-muted-foreground/30" />
+                </div>
+                <p className="text-sm font-bold text-muted-foreground">
+                  אין בקשות פתוחות
+                </p>
+              </div>
+            ) : (
+              pendingTransfers.map((req) => (
+                <div
+                  key={req.id}
+                  className="bg-card border border-border rounded-2xl p-4 shadow-sm hover:border-primary/20 transition-all active:scale-[0.98]"
+                  onClick={() => setSelectedRequest(req)}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-xs border border-primary/5">
+                        {req.employee_name?.[0]}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-foreground">
+                          {req.employee_name}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {req.personal_number}
+                        </span>
+                      </div>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="bg-amber-100 text-amber-800 border-amber-200/50 text-[10px] h-6"
+                    >
+                      ממתין
+                    </Badge>
+                  </div>
+
+                  <div className="bg-muted/30 rounded-xl p-3 mb-4 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-muted-foreground font-bold">
+                        מעבר מ:
+                      </span>
+                      <span className="font-bold text-foreground truncate max-w-[150px]">
+                        {req.source_name}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-primary font-black opacity-70">
+                        אל יעד:
+                      </span>
+                      <span className="font-black text-primary truncate max-w-[150px]">
+                        {req.target_name}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-border/40">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center">
+                        <User className="w-3 h-3 text-muted-foreground" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[9px] text-muted-foreground leading-none">
+                          הוגש ע"י
+                        </span>
+                        <span className="text-[10px] font-bold text-foreground">
+                          {req.requester_name}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-muted-foreground">
+                      {new Date(req.created_at).toLocaleDateString("he-IL")}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop View - Pending Table */}
+          <div className="hidden md:block bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="bg-muted/50 border-b border-border sticky top-0 z-10 backdrop-blur-sm">
@@ -552,11 +645,82 @@ export default function TransfersPage() {
               </Table>
             </div>
           </div>
-        )}
+        </>
+      )}
 
-        {/* History Table */}
-        {activeTab === "history" && (
-          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+      {/* History Table */}
+      {activeTab === "history" && (
+        <>
+          {/* Mobile View - History Cards */}
+          <div className="md:hidden space-y-3 animate-in fade-in duration-500">
+            {history.length === 0 ? (
+              <div className="bg-card rounded-2xl p-12 text-center border border-dashed border-border">
+                <p className="text-sm font-bold text-muted-foreground italic">
+                  אין היסטוריה זמינה
+                </p>
+              </div>
+            ) : (
+              history.map((req) => (
+                <div
+                  key={req.id}
+                  className="bg-card border border-border rounded-2xl p-4 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center font-black text-[10px] text-muted-foreground border border-border">
+                        {req.employee_name?.[0]}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-foreground truncate max-w-[120px]">
+                          {req.employee_name}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {req.personal_number}
+                        </span>
+                      </div>
+                    </div>
+                    {statusBadge(req.status)}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-muted/30 rounded-xl p-2 text-center">
+                      <span className="text-[8px] font-black text-muted-foreground uppercase block mb-1">
+                        מעבר מ:
+                      </span>
+                      <span className="text-[10px] font-bold truncate block">
+                        {req.source_name}
+                      </span>
+                    </div>
+                    <div className="bg-primary/5 rounded-xl p-2 text-center border border-primary/10">
+                      <span className="text-[8px] font-black text-primary uppercase block mb-1">
+                        אל יעד:
+                      </span>
+                      <span className="text-[10px] font-black text-primary truncate block">
+                        {req.target_name}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-border/40 text-[10px]">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] text-muted-foreground">
+                        טופל ע"י:
+                      </span>
+                      <span className="font-bold text-foreground">
+                        {req.resolver_name || "---"}
+                      </span>
+                    </div>
+                    <span className="font-bold text-muted-foreground">
+                      {new Date(req.created_at).toLocaleDateString("he-IL")}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop View - History Table */}
+          <div className="hidden md:block bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="bg-muted/30">
@@ -670,287 +834,287 @@ export default function TransfersPage() {
               </Table>
             </div>
           </div>
-        )}
+        </>
+      )}
 
-        {/* New Request Form */}
-        {activeTab === "new" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-card rounded-[20px] border border-border shadow-sm overflow-hidden">
-                <div className="px-8 py-6 border-b border-border/50">
-                  <h2 className="text-xl font-bold text-foreground">
-                    הגשת בקשת ניוד
-                  </h2>
-                  <p className="text-muted-foreground text-sm mt-1">
-                    מילוי פרטים לצורך שינוי שיבוץ ארגוני ביחידה
-                  </p>
-                </div>
+      {/* New Request Form */}
+      {activeTab === "new" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-card rounded-[20px] border border-border shadow-sm overflow-hidden">
+              <div className="px-4 sm:px-8 py-5 sm:py-6 border-b border-border/50">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">
+                  הגשת בקשת ניוד
+                </h2>
+                <p className="text-muted-foreground text-[11px] sm:text-sm mt-1">
+                  מילוי פרטים לצורך שינוי שיבוץ ארגוני ביחידה
+                </p>
+              </div>
 
-                <div className="p-8 space-y-8">
-                  {/* Step 1 */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                        1
-                      </div>
-                      <label className="text-sm font-bold text-foreground">
-                        בחירת שוטר
-                      </label>
+              <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
+                {/* Step 1 */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] sm:text-xs font-bold">
+                      1
                     </div>
-
-                    {!selectedEmployee ? (
-                      <div className="relative">
-                        <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <Input
-                          placeholder="חפש לפי שם או מ''א..."
-                          className="pr-12 h-14 text-right rounded-2xl bg-muted/30 border-input focus:bg-background focus:ring-4 focus:ring-primary/20 transition-all text-base"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        {filteredEmployeesList.length > 0 && searchTerm && (
-                          <div className="absolute top-full mt-2 w-full z-50 bg-popover border border-border rounded-2xl shadow-xl overflow-hidden ring-4 ring-muted/10 animate-in fade-in zoom-in-95 duration-200">
-                            {filteredEmployeesList.map((emp) => (
-                              <button
-                                key={emp.id}
-                                className="w-full p-4 flex items-center gap-4 hover:bg-muted/50 text-right transition-colors border-b border-border/50 last:border-0 group"
-                                onClick={() => {
-                                  setSelectedEmployee(emp);
-                                  setSearchTerm("");
-                                }}
-                              >
-                                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm group-hover:scale-110 transition-transform">
-                                  {emp.first_name[0]}
-                                  {emp.last_name[0]}
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-bold text-foreground">
-                                    {emp.first_name} {emp.last_name}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    מ"א: {emp.personal_number} •{" "}
-                                    {emp.department_name}
-                                  </span>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="p-4 border border-primary/20 bg-primary/5 rounded-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shadow-sm">
-                            {selectedEmployee.first_name[0]}
-                            {selectedEmployee.last_name[0]}
-                          </div>
-                          <div className="flex flex-col text-right">
-                            <span className="font-bold text-foreground">
-                              {selectedEmployee.first_name}{" "}
-                              {selectedEmployee.last_name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              מ"א: {selectedEmployee.personal_number} •{" "}
-                              {selectedEmployee.department_name}
-                            </span>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-primary hover:text-primary hover:bg-primary/10 font-medium"
-                          onClick={() => setSelectedEmployee(null)}
-                        >
-                          החלף שוטר
-                        </Button>
-                      </div>
-                    )}
+                    <label className="text-xs sm:text-sm font-bold text-foreground">
+                      בחירת שוטר
+                    </label>
                   </div>
 
-                  {/* Step 2 */}
-                  <div className="space-y-4 pt-6 border-t border-border/50">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                        2
+                  {!selectedEmployee ? (
+                    <div className="relative">
+                      <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                      <Input
+                        placeholder="חפש לפי שם או מ''א..."
+                        className="pr-10 sm:pr-12 h-12 sm:h-14 text-right rounded-xl sm:rounded-2xl bg-muted/30 border-input focus:bg-background focus:ring-4 focus:ring-primary/20 transition-all text-sm sm:text-base"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                      {filteredEmployeesList.length > 0 && searchTerm && (
+                        <div className="absolute top-full mt-2 w-full z-50 bg-popover border border-border rounded-xl sm:rounded-2xl shadow-xl overflow-hidden ring-4 ring-muted/10 animate-in fade-in zoom-in-95 duration-200">
+                          {filteredEmployeesList.map((emp) => (
+                            <button
+                              key={emp.id}
+                              className="w-full p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/50 text-right transition-colors border-b border-border/50 last:border-0 group"
+                              onClick={() => {
+                                setSelectedEmployee(emp);
+                                setSearchTerm("");
+                              }}
+                            >
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs sm:text-sm group-hover:scale-110 transition-transform">
+                                {emp.first_name[0]}
+                                {emp.last_name[0]}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-xs sm:text-sm font-bold text-foreground">
+                                  {emp.first_name} {emp.last_name}
+                                </span>
+                                <span className="text-[10px] sm:text-xs text-muted-foreground">
+                                  מ"א: {emp.personal_number} •{" "}
+                                  {emp.department_name}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-3 sm:p-4 border border-primary/20 bg-primary/5 rounded-xl sm:rounded-2xl flex items-center justify-between">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-base sm:text-lg shadow-sm">
+                          {selectedEmployee.first_name[0]}
+                          {selectedEmployee.last_name[0]}
+                        </div>
+                        <div className="flex flex-col text-right">
+                          <span className="font-bold text-xs sm:text-base text-foreground">
+                            {selectedEmployee.first_name}{" "}
+                            {selectedEmployee.last_name}
+                          </span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground">
+                            מ"א: {selectedEmployee.personal_number} •{" "}
+                            {selectedEmployee.department_name}
+                          </span>
+                        </div>
                       </div>
-                      <label className="text-sm font-bold text-foreground">
-                        יעד המעבר
-                      </label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary hover:text-primary hover:bg-primary/10 font-medium text-[10px] sm:text-xs"
+                        onClick={() => setSelectedEmployee(null)}
+                      >
+                        החלף
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Step 2 */}
+                <div className="space-y-4 pt-6 border-t border-border/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] sm:text-xs font-bold">
+                      2
+                    </div>
+                    <label className="text-xs sm:text-sm font-bold text-foreground">
+                      יעד המעבר
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <span className="text-[10px] sm:text-xs font-medium text-muted-foreground block text-right">
+                        מחלקה
+                      </span>
+                      <Select
+                        value={targetDeptId}
+                        onValueChange={(v) => {
+                          setTargetDeptId(v);
+                          setTargetSectionId("");
+                          setTargetTeamId("");
+                        }}
+                      >
+                        <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-xs sm:text-sm transition-all focus:bg-background">
+                          <SelectValue placeholder="בחר מחלקה..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
+                          {structure.map((d) => (
+                            <SelectItem
+                              key={d.id}
+                              value={d.id.toString()}
+                              className="font-medium focus:bg-accent text-foreground text-xs sm:text-sm"
+                            >
+                              {d.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <span className="text-xs font-medium text-muted-foreground block text-right">
-                          מחלקה
-                        </span>
-                        <Select
-                          value={targetDeptId}
-                          onValueChange={(v) => {
-                            setTargetDeptId(v);
-                            setTargetSectionId("");
-                            setTargetTeamId("");
-                          }}
-                        >
-                          <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-sm transition-all focus:bg-background">
-                            <SelectValue placeholder="בחר מחלקה..." />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
-                            {structure.map((d) => (
+                    <div className="space-y-2">
+                      <span className="text-[10px] sm:text-xs font-medium text-muted-foreground block text-right">
+                        מדור
+                      </span>
+                      <Select
+                        value={targetSectionId}
+                        onValueChange={(v) => {
+                          setTargetSectionId(v);
+                          setTargetTeamId("");
+                        }}
+                        disabled={!targetDeptId}
+                      >
+                        <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-xs sm:text-sm transition-all focus:bg-background disabled:opacity-50">
+                          <SelectValue placeholder="בחר מדור..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
+                          {structure
+                            .find((d) => d.id.toString() === targetDeptId)
+                            ?.sections.map((s: any) => (
                               <SelectItem
-                                key={d.id}
-                                value={d.id.toString()}
-                                className="font-medium focus:bg-accent text-foreground"
+                                key={s.id}
+                                value={s.id.toString()}
+                                className="font-medium focus:bg-accent text-foreground text-xs sm:text-sm"
                               >
-                                {d.name}
+                                {s.name}
                               </SelectItem>
                             ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <span className="text-xs font-medium text-muted-foreground block text-right">
-                          מדור
-                        </span>
-                        <Select
-                          value={targetSectionId}
-                          onValueChange={(v) => {
-                            setTargetSectionId(v);
-                            setTargetTeamId("");
-                          }}
-                          disabled={!targetDeptId}
-                        >
-                          <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-sm transition-all focus:bg-background disabled:opacity-50">
-                            <SelectValue placeholder="בחר מדור..." />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
-                            {structure
-                              .find((d) => d.id.toString() === targetDeptId)
-                              ?.sections.map((s: any) => (
-                                <SelectItem
-                                  key={s.id}
-                                  value={s.id.toString()}
-                                  className="font-medium focus:bg-accent text-foreground"
-                                >
-                                  {s.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <span className="text-xs font-medium text-muted-foreground block text-right">
-                          חוליה
-                        </span>
-                        <Select
-                          value={targetTeamId}
-                          onValueChange={setTargetTeamId}
-                          disabled={!targetSectionId}
-                        >
-                          <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-sm transition-all focus:bg-background disabled:opacity-50">
-                            <SelectValue placeholder="בחר חוליה..." />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
-                            {structure
-                              .find((d) => d.id.toString() === targetDeptId)
-                              ?.sections.find(
-                                (s: any) => s.id.toString() === targetSectionId,
-                              )
-                              ?.teams.map((t: any) => (
-                                <SelectItem
-                                  key={t.id}
-                                  value={t.id.toString()}
-                                  className="font-medium focus:bg-accent text-foreground"
-                                >
-                                  {t.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="space-y-4 pt-6 border-t border-border/50">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                        3
-                      </div>
-                      <label className="text-sm font-bold text-foreground">
-                        נימוקים נוספים
-                      </label>
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    <textarea
-                      placeholder="פרט את הסיבה לבקשה..."
-                      className="w-full min-h-[140px] p-4 bg-muted/30 rounded-2xl text-sm border-input focus:bg-background focus:ring-4 focus:ring-primary/20 transition-all resize-none font-sans"
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      dir="rtl"
-                    />
-                  </div>
-
-                  <div className="pt-4">
-                    <Button
-                      onClick={handleCreateRequest}
-                      disabled={
-                        isSubmitting || !selectedEmployee || !targetDeptId
-                      }
-                      className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 active:scale-[0.98] text-base"
-                    >
-                      {isSubmitting
-                        ? "בתהליך שליחה..."
-                        : "שלח בקשת ניוד לאישור"}
-                    </Button>
+                    <div className="space-y-2">
+                      <span className="text-[10px] sm:text-xs font-medium text-muted-foreground block text-right">
+                        חוליה
+                      </span>
+                      <Select
+                        value={targetTeamId}
+                        onValueChange={setTargetTeamId}
+                        disabled={!targetSectionId}
+                      >
+                        <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-xs sm:text-sm transition-all focus:bg-background disabled:opacity-50">
+                          <SelectValue placeholder="בחר חוליה..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
+                          {structure
+                            .find((d) => d.id.toString() === targetDeptId)
+                            ?.sections.find(
+                              (s: any) => s.id.toString() === targetSectionId,
+                            )
+                            ?.teams.map((t: any) => (
+                              <SelectItem
+                                key={t.id}
+                                value={t.id.toString()}
+                                className="font-medium focus:bg-accent text-foreground text-xs sm:text-sm"
+                              >
+                                {t.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Sidebar Guidelines */}
-            <div className="space-y-6">
-              <div className="bg-gradient-to-br from-primary/5 to-background rounded-[20px] p-6 border border-border/50 shadow-sm">
-                <div className="flex items-center gap-3 text-primary mb-6">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <ShieldAlert className="w-5 h-5" />
+                {/* Step 3 */}
+                <div className="space-y-4 pt-6 border-t border-border/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] sm:text-xs font-bold">
+                      3
+                    </div>
+                    <label className="text-xs sm:text-sm font-bold text-foreground">
+                      נימוקים נוספים
+                    </label>
                   </div>
-                  <span className="text-lg font-bold">דגשים להגשה</span>
-                </div>
-                <ul className="space-y-4">
-                  {[
-                    "כל ניוד כפוף לאישור מפקד היחידה.",
-                    "יש לנמק את הצורך המבצעי במעבר.",
-                    "השיבוץ יתעדכן לאחר סיום תהליך האישורים.",
-                  ].map((t, i) => (
-                    <li
-                      key={i}
-                      className="flex gap-3 text-sm font-medium text-muted-foreground leading-relaxed text-right items-start"
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary/50 mt-2 shrink-0" />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-              </div>
 
-              <div className="bg-card border border-border rounded-[20px] p-6 flex items-center gap-5 shadow-sm">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
-                  <Clock className="w-6 h-6 text-amber-500" />
+                  <textarea
+                    placeholder="פרט את הסיבה לבקשה..."
+                    className="w-full min-h-[120px] sm:min-h-[140px] p-4 bg-muted/30 rounded-xl sm:rounded-2xl text-xs sm:text-sm border-input focus:bg-background focus:ring-4 focus:ring-primary/20 transition-all resize-none font-sans"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    dir="rtl"
+                  />
                 </div>
-                <div className="text-right">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
-                    זמן טיפול משוער
-                  </p>
-                  <p className="text-lg font-black text-foreground">
-                    24-48 שעות
-                  </p>
+
+                <div className="pt-4">
+                  <Button
+                    onClick={handleCreateRequest}
+                    disabled={
+                      isSubmitting || !selectedEmployee || !targetDeptId
+                    }
+                    className="w-full h-12 sm:h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl sm:rounded-2xl shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 active:scale-[0.98] text-sm sm:text-base"
+                  >
+                    {isSubmitting ? "בתהליך שליחה..." : "שלח בקשת ניוד לאישור"}
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Sidebar Guidelines */}
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-gradient-to-br from-primary/5 to-background rounded-[20px] p-5 sm:p-6 border border-border/50 shadow-sm">
+              <div className="flex items-center gap-3 text-primary mb-4 sm:mb-6">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <span className="text-base sm:text-lg font-bold">
+                  דגשים להגשה
+                </span>
+              </div>
+              <ul className="space-y-3 sm:space-y-4">
+                {[
+                  "כל ניוד כפוף לאישור מפקד היחידה.",
+                  "יש לנמק את הצורך המבצעי במעבר.",
+                  "השיבוץ יתעדכן לאחר סיום תהליך האישורים.",
+                ].map((t, i) => (
+                  <li
+                    key={i}
+                    className="flex gap-3 text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed text-right items-start"
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary/50 mt-2 shrink-0" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-card border border-border rounded-[20px] p-5 sm:p-6 flex items-center gap-4 sm:gap-5 shadow-sm">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" />
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5 sm:mb-1">
+                  זמן טיפול משוער
+                </p>
+                <p className="text-base sm:text-lg font-black text-foreground">
+                  24-48 שעות
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Profile Modal - Birthday Card Style */}
       <Dialog
@@ -972,22 +1136,23 @@ export default function TransfersPage() {
                     </div>
                     <div className="flex flex-col">
                       <h2 className="text-lg font-black text-foreground leading-none">
-                        {viewingEmployee.first_name} {viewingEmployee.last_name}
+                        {viewingEmployee?.first_name}{" "}
+                        {viewingEmployee?.last_name}
                       </h2>
                       <span className="text-[11px] font-bold text-muted-foreground mt-1">
-                        מספר אישי: {viewingEmployee.personal_number}
+                        מספר אישי: {viewingEmployee?.personal_number}
                       </span>
                     </div>
                   </div>
                   <Badge
                     className={cn(
                       "px-3 py-1 text-[10px] font-black rounded-full border-none shadow-sm",
-                      viewingEmployee.is_active
+                      viewingEmployee?.is_active
                         ? "bg-emerald-500 text-white"
                         : "bg-rose-500 text-white",
                     )}
                   >
-                    {viewingEmployee.is_active ? "פעיל" : "לא פעיל"}
+                    {viewingEmployee?.is_active ? "פעיל" : "לא פעיל"}
                   </Badge>
                 </div>
               </div>
@@ -1001,7 +1166,7 @@ export default function TransfersPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-foreground truncate">
-                      {viewingEmployee.national_id || "---"}
+                      {viewingEmployee?.national_id || "---"}
                     </p>
                     <p className="text-[11px] text-muted-foreground font-medium truncate">
                       תעודת זהות
@@ -1018,7 +1183,7 @@ export default function TransfersPage() {
                       className="text-xs font-bold text-foreground truncate"
                       dir="ltr"
                     >
-                      {viewingEmployee.phone_number || "---"}
+                      {viewingEmployee?.phone_number || "---"}
                     </p>
                     <p className="text-[11px] text-muted-foreground font-medium truncate">
                       טלפון נייד
@@ -1032,7 +1197,7 @@ export default function TransfersPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-foreground truncate">
-                      {viewingEmployee.city || "לא הוזנה כתובת"}
+                      {viewingEmployee?.city || "לא הוזנה כתובת"}
                     </p>
                     <p className="text-[11px] text-muted-foreground font-medium truncate">
                       עיר מגורים
@@ -1048,7 +1213,7 @@ export default function TransfersPage() {
                         תאריך גיוס
                       </span>
                       <span className="text-xs font-bold text-foreground mt-1">
-                        {viewingEmployee.enlistment_date
+                        {viewingEmployee?.enlistment_date
                           ? new Date(
                               viewingEmployee.enlistment_date,
                             ).toLocaleDateString("he-IL")
@@ -1060,7 +1225,7 @@ export default function TransfersPage() {
                         הצבה ביחידה
                       </span>
                       <span className="text-xs font-bold text-primary mt-1">
-                        {viewingEmployee.assignment_date
+                        {viewingEmployee?.assignment_date
                           ? new Date(
                               viewingEmployee.assignment_date,
                             ).toLocaleDateString("he-IL")
@@ -1068,7 +1233,7 @@ export default function TransfersPage() {
                       </span>
                     </div>
                   </div>
-                  {viewingEmployee.discharge_date && (
+                  {viewingEmployee?.discharge_date && (
                     <div className="flex flex-col mt-3 pt-3 border-t border-primary/10">
                       <span className="text-[10px] font-black text-rose-500 uppercase tracking-wider">
                         צפי שחרור
@@ -1093,7 +1258,7 @@ export default function TransfersPage() {
                         סטטוס שירות
                       </span>
                       <span className="text-[11px] font-bold text-primary truncate">
-                        {viewingEmployee.service_type_name || "---"}
+                        {viewingEmployee?.service_type_name || "---"}
                       </span>
                     </div>
                     <div className="flex flex-col border-r border-border/10 pr-2">
@@ -1101,7 +1266,7 @@ export default function TransfersPage() {
                         נוכחות
                       </span>
                       <span className="text-[11px] font-bold text-foreground truncate">
-                        {viewingEmployee.status_name || "נוכח"}
+                        {viewingEmployee?.status_name || "נוכח"}
                       </span>
                     </div>
                     <div className="flex flex-col border-r border-border/10 pr-2">
@@ -1109,7 +1274,7 @@ export default function TransfersPage() {
                         סיווג
                       </span>
                       <span className="text-[11px] font-bold text-foreground">
-                        רמה {viewingEmployee.security_clearance || "0"}
+                        רמה {viewingEmployee?.security_clearance || "0"}
                       </span>
                     </div>
                     <div className="flex flex-col border-r border-border/10 pr-2">
@@ -1119,12 +1284,12 @@ export default function TransfersPage() {
                       <span
                         className={cn(
                           "text-[10px] font-black",
-                          viewingEmployee.police_license
+                          viewingEmployee?.police_license
                             ? "text-emerald-600 dark:text-emerald-400"
                             : "text-rose-500",
                         )}
                       >
-                        {viewingEmployee.police_license ? "בתוקף" : "לא בתוקף"}
+                        {viewingEmployee?.police_license ? "בתוקף" : "לא בתוקף"}
                       </span>
                     </div>
                   </div>
@@ -1139,11 +1304,11 @@ export default function TransfersPage() {
                     className="flex items-center gap-2 font-bold text-xs text-primary"
                     dir="ltr"
                   >
-                    <span>{viewingEmployee.team_name || "כללי"}</span>
+                    <span>{viewingEmployee?.team_name || "כללי"}</span>
                     <span className="opacity-30">/</span>
-                    <span>{viewingEmployee.section_name || "כללי"}</span>
+                    <span>{viewingEmployee?.section_name || "כללי"}</span>
                     <span className="opacity-30">/</span>
-                    <span>{viewingEmployee.department_name}</span>
+                    <span>{viewingEmployee?.department_name}</span>
                   </div>
                 </div>
               </div>
@@ -1258,29 +1423,27 @@ export default function TransfersPage() {
               </div>
 
               {/* Actions Footer */}
-              <div className="p-4 bg-muted/10 border-t border-border/50 flex flex-col gap-3">
+              <div className="p-4 sm:p-6 bg-muted/10 border-t border-border/50">
                 {/* Rejection / Snooze / Approve Logic */}
                 {isRejecting ? (
                   <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
                     <Textarea
                       placeholder="נא לפרט את סיבת הדחייה..."
-                      className="bg-background min-h-[80px]"
+                      className="bg-background min-h-[100px] rounded-xl sm:rounded-2xl"
                       value={rejectionReason}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                        setRejectionReason(e.target.value)
-                      }
+                      onChange={(e) => setRejectionReason(e.target.value)}
                     />
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex flex-col sm:flex-row gap-2 justify-end">
                       <Button
                         variant="ghost"
-                        size="sm"
+                        className="w-full sm:w-auto h-11 sm:h-10 rounded-xl"
                         onClick={() => setIsRejecting(false)}
                       >
                         ביטול
                       </Button>
                       <Button
                         variant="destructive"
-                        size="sm"
+                        className="w-full sm:w-auto h-11 sm:h-10 rounded-xl font-bold"
                         onClick={() => handleReject(selectedRequest.id)}
                       >
                         אישור דחייה
@@ -1289,68 +1452,67 @@ export default function TransfersPage() {
                   </div>
                 ) : isSnoozing ? (
                   <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mb-2">
                       <Calendar className="w-4 h-4 text-primary" />
                       <span className="text-sm font-bold">
                         מתי להזכיר לך לטפל בבקשה?
                       </span>
                     </div>
-                    <CalendarComponent
-                      mode="single"
-                      selected={snoozeDate}
-                      onSelect={setSnoozeDate}
-                      className="rounded-md border bg-background mx-auto"
-                    />
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex justify-center p-2 bg-muted/20 rounded-2xl border border-border/50">
+                      <CalendarComponent
+                        mode="single"
+                        selected={snoozeDate}
+                        onSelect={setSnoozeDate}
+                        className="rounded-md"
+                      />
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-end pt-2">
                       <Button
                         variant="ghost"
-                        size="sm"
+                        className="w-full sm:w-auto h-11 sm:h-10 rounded-xl"
                         onClick={() => setIsSnoozing(false)}
                       >
                         ביטול
                       </Button>
-                      <Button onClick={handleSnooze} disabled={!snoozeDate}>
+                      <Button
+                        onClick={handleSnooze}
+                        disabled={!snoozeDate}
+                        className="w-full sm:w-auto h-11 sm:h-10 rounded-xl font-bold"
+                      >
                         קבע תזכורת
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-2 justify-end">
-                    {/* Permission Check */}
-                    {(() => {
-                      return (
-                        <div className="grid grid-cols-3 gap-3 w-full">
-                          <Button
-                            variant="outline"
-                            className="w-full border-muted-foreground/30 hover:bg-accent hover:text-accent-foreground"
-                            onClick={() => setIsSnoozing(true)}
-                          >
-                            <Clock className="w-4 h-4 ml-2" />
-                            טיפול בעתיד
-                          </Button>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 sm:h-11 border-muted-foreground/30 hover:bg-accent hover:text-accent-foreground rounded-xl"
+                      onClick={() => setIsSnoozing(true)}
+                    >
+                      <Clock className="w-4 h-4 ml-2" />
+                      טיפול בעתיד
+                    </Button>
 
-                          <Button
-                            variant="outline"
-                            className="w-full text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300"
-                            onClick={() => setIsRejecting(true)}
-                          >
-                            <XCircle className="w-4 h-4 ml-2" />
-                            דחיית בקשה
-                          </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 sm:h-11 text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 rounded-xl"
+                      onClick={() => setIsRejecting(true)}
+                    >
+                      <XCircle className="w-4 h-4 ml-2" />
+                      דחיית בקשה
+                    </Button>
 
-                          <Button
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20"
-                            onClick={() => {
-                              handleApprove(selectedRequest.id);
-                              setSelectedRequest(null);
-                            }}
-                          >
-                            <CheckCircle className="w-4 h-4 ml-2" />
-                            אישור והעברה
-                          </Button>
-                        </div>
-                      );
-                    })()}
+                    <Button
+                      className="w-full h-12 sm:h-11 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20 rounded-xl"
+                      onClick={() => {
+                        handleApprove(selectedRequest.id);
+                        setSelectedRequest(null);
+                      }}
+                    >
+                      <CheckCircle className="w-4 h-4 ml-2" />
+                      אישור והעברה
+                    </Button>
                   </div>
                 )}
               </div>

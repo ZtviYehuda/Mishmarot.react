@@ -1,17 +1,17 @@
-import { useState, useMemo } from 'react';
-import { useEmployees } from '@/hooks/useEmployees';
-import { useAuthContext } from '@/context/AuthContext';
+import { useState, useMemo } from "react";
+import { useEmployees } from "@/hooks/useEmployees";
+import { useAuthContext } from "@/context/AuthContext";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { MessageCircle } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { MessageCircle } from "lucide-react";
 
 interface WhatsAppReportDialogProps {
   open: boolean;
@@ -47,7 +47,7 @@ export const WhatsAppReportDialog = ({
 
     if (!includeAllStatuses && selectedStatuses.length > 0) {
       filtered = filtered.filter((emp) =>
-        selectedStatuses.includes(emp.status_name)
+        selectedStatuses.includes(emp.status_name),
       );
     }
 
@@ -59,7 +59,11 @@ export const WhatsAppReportDialog = ({
     filtered.forEach((emp) => {
       const status = emp.status_name;
       if (!grouped.has(status)) {
-        grouped.set(status, { count: 0, color: emp.status_color, employees: [] });
+        grouped.set(status, {
+          count: 0,
+          color: emp.status_color,
+          employees: [],
+        });
       }
       const group = grouped.get(status)!;
       group.count++;
@@ -67,12 +71,14 @@ export const WhatsAppReportDialog = ({
     });
 
     // Convert map to array
-    const byStatusArray = Array.from(grouped.entries()).map(([name, { count, color, employees: emps }]) => ({
-      name,
-      count,
-      color,
-      employees: emps,
-    }));
+    const byStatusArray = Array.from(grouped.entries()).map(
+      ([name, { count, color, employees: emps }]) => ({
+        name,
+        count,
+        color,
+        employees: emps,
+      }),
+    );
 
     return {
       total: filtered.length,
@@ -81,20 +87,21 @@ export const WhatsAppReportDialog = ({
   }, [employees, includeAllStatuses, selectedStatuses]);
 
   const generateWhatsAppMessage = () => {
-    const commander = user ? `${user.first_name} ${user.last_name}` : 'מפקד';
+    const commander = user ? `${user.first_name} ${user.last_name}` : "מפקד";
     let message = `📊 *דוח מצבת כוח אדם*\n`;
     message += `\n*מפקד:* ${commander}\n`;
-    message += `*תאריך:* ${new Date().toLocaleDateString('he-IL')}\n`;
+    message += `*תאריך:* ${new Date().toLocaleDateString("he-IL")}\n`;
     message += `*סך הכל שוטרים:* ${reportData.total}\n\n`;
 
     message += `*פילוח לפי סטטוס:*\n`;
     reportData.byStatus.forEach(({ name, count }) => {
-      const percentage = reportData.total > 0 ? Math.round((count / reportData.total) * 100) : 0;
+      const percentage =
+        reportData.total > 0 ? Math.round((count / reportData.total) * 100) : 0;
       message += `• ${name}: ${count} (${percentage}%)\n`;
     });
 
     if (selectedStatuses.length > 0 && !includeAllStatuses) {
-      message += `\n*סינון:* ${selectedStatuses.join(', ')}\n`;
+      message += `\n*סינון:* ${selectedStatuses.join(", ")}\n`;
     }
 
     return message;
@@ -105,7 +112,7 @@ export const WhatsAppReportDialog = ({
     const whatsappUrl = `https://wa.me/?text=${message}`;
 
     // Open WhatsApp
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, "_blank");
     onOpenChange(false);
   };
 
@@ -113,13 +120,13 @@ export const WhatsAppReportDialog = ({
     setSelectedStatuses((prev) =>
       prev.includes(status)
         ? prev.filter((s) => s !== status)
-        : [...prev, status]
+        : [...prev, status],
     );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-[90vw] sm:max-w-md p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>שלח דוח בווטסאפ</DialogTitle>
           <DialogDescription>
