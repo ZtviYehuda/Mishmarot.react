@@ -30,19 +30,20 @@ def get_alerts():
 
         # Get all alerts
         all_alerts = NotificationModel.get_alerts(user)
-        
+
         # Get notifications this user has already read
         read_notifications = NotificationModel.get_read_notifications(user_id)
-        
-        print(f"DEBUG: User {user_id} - All Alerts IDs: {[a['id'] for a in all_alerts]}")
+
+        print(
+            f"DEBUG: User {user_id} - All Alerts IDs: {[a['id'] for a in all_alerts]}"
+        )
         print(f"DEBUG: User {user_id} - Read IDs: {read_notifications}")
 
         # Filter out read notifications (ensure string comparison)
         unread_alerts = [
-            alert for alert in all_alerts 
-            if str(alert["id"]) not in read_notifications
+            alert for alert in all_alerts if str(alert["id"]) not in read_notifications
         ]
-        
+
         return jsonify(unread_alerts)
     except Exception as e:
         print(f"❌ Error in /notifications/alerts: {e}")
@@ -71,10 +72,11 @@ def get_alerts_history():
 
         history = NotificationModel.get_read_history(user_id)
         return jsonify(history)
-        
+
     except Exception as e:
         print(f"❌ Error fetching notification history: {e}")
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -104,22 +106,23 @@ def mark_notification_read(notification_id):
         link = data.get("link", "")
 
         success = NotificationModel.mark_as_read(
-            user_id, 
+            user_id,
             notification_id,
             title=title,
             description=description,
             type=alert_type,
-            link=link
+            link=link,
         )
-        
+
         if success:
             return jsonify({"success": True, "message": "Notification marked as read"})
         else:
             return jsonify({"success": False, "error": "Failed to mark as read"}), 500
-            
+
     except Exception as e:
         print(f"❌ Error marking notification as read: {e}")
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -143,18 +146,26 @@ def mark_all_notifications_read():
 
         notifications = request.json or []
         if not notifications:
-             return jsonify({"success": True, "message": "No notifications to mark"})
+            return jsonify({"success": True, "message": "No notifications to mark"})
 
         success = NotificationModel.mark_all_as_read(user_id, notifications)
-        
+
         if success:
-            return jsonify({"success": True, "message": "All notifications marked as read"})
+            return jsonify(
+                {"success": True, "message": "All notifications marked as read"}
+            )
         else:
-            return jsonify({"success": False, "error": "Failed to mark notifications as read"}), 500
-            
+            return (
+                jsonify(
+                    {"success": False, "error": "Failed to mark notifications as read"}
+                ),
+                500,
+            )
+
     except Exception as e:
         print(f"❌ Error marking all notifications as read: {e}")
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -177,14 +188,59 @@ def mark_notification_unread(notification_id):
         user_id = identity["id"] if isinstance(identity, dict) else identity
 
         success = NotificationModel.mark_as_unread(user_id, notification_id)
-        
+
         if success:
-            return jsonify({"success": True, "message": "Notification marked as unread"})
+            return jsonify(
+                {"success": True, "message": "Notification marked as unread"}
+            )
         else:
             return jsonify({"success": False, "error": "Failed to mark as unread"}), 500
-            
+
     except Exception as e:
         print(f"❌ Error marking notification as unread: {e}")
         import traceback
+
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@notif_bp.route("/send", methods=["POST"])
+@jwt_required()
+def send_internal_message():
+    """Send an internal message to another user"""
+    try:
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        sender_id = identity["id"] if isinstance(identity, dict) else identity
+
+        data = request.json or {}
+        recipient_id = data.get("recipient_id")
+        title = data.get("title")
+        description = data.get("description", "")
+
+        if not recipient_id or not title:
+            return jsonify({"error": "Missing recipient_id or title"}), 400
+
+        success = NotificationModel.send_message(
+            sender_id, recipient_id, title, description
+        )
+
+        if success:
+            return jsonify({"success": True, "message": "Message sent successfully"})
+        else:
+            return jsonify({"success": False, "error": "Failed to send message"}), 500
+
+    except Exception as e:
+        print(f"❌ Error sending message: {e}")
+        import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500

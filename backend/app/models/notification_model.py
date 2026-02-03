@@ -163,8 +163,11 @@ class NotificationModel:
 
             is_weekend = now.weekday() in [4, 5]
 
-            # Check if it's after 09:00 AND allowed by weekend policy
-            if now.hour >= 9:
+            # Check if it's after 08:45 AND allowed by weekend policy
+            current_time_val = now.hour * 60 + now.minute
+            cutoff_time = 8 * 60 + 45  # 08:45
+
+            if current_time_val >= cutoff_time:
                 if is_weekend and not weekend_enabled:
                     pass  # Skip missing report alerts on weekends if disabled
                 else:
@@ -212,14 +215,25 @@ class NotificationModel:
                             == team["section_id"]
                         ):
                             show_alert = True
+                        elif requesting_user.get("commands_team_id") == team["id"]:
+                            show_alert = True
 
                         if show_alert and team["first_name"]:
+                            is_self = requesting_user.get("id") == team["commander_id"]
+
+                            title = "דיווח בוקר לא הושלם"
+                            description = f"מפקד חוליית {team['name']}, {team['first_name']} {team['last_name']}, טרם השלים דיווח עבור {team['missing_count']} שוטרים"
+
+                            if is_self:
+                                title = "פעולה נדרשת: עדכון נוכחות"
+                                description = f"ישנם {team['missing_count']} שוטרים תחת פיקודך (חוליית {team['name']}) שלא עדכנת להם סטטוס."
+
                             alerts.append(
                                 {
                                     "id": f"missing-team-{team['id']}",
                                     "type": "warning",
-                                    "title": "דיווח בוקר לא הושלם",
-                                    "description": f"מפקד חוליית {team['name']}, {team['first_name']} {team['last_name']}, טרם השלים דיווח עבור {team['missing_count']} שוטרים",
+                                    "title": title,
+                                    "description": description,
                                     "link": "/attendance",
                                     "data": {
                                         "missing_ids": team["missing_ids"],
@@ -263,14 +277,29 @@ class NotificationModel:
                             == section["department_id"]
                         ):
                             show_alert = True
+                        elif (
+                            requesting_user.get("commands_section_id") == section["id"]
+                        ):
+                            show_alert = True
 
                         if show_alert and section["first_name"]:
+                            is_self = (
+                                requesting_user.get("id") == section["commander_id"]
+                            )
+
+                            title = "דיווח בוקר לא הושלם"
+                            description = f"מפקד מדור {section['name']}, {section['first_name']} {section['last_name']}, טרם השלים דיווח עבור {section['missing_count']} שוטרים"
+
+                            if is_self:
+                                title = "פעולה נדרשת: עדכון נוכחות"
+                                description = f"ישנם {section['missing_count']} שוטרים תחת פיקודך (מדור {section['name']}) שלא עדכנת להם סטטוס."
+
                             alerts.append(
                                 {
                                     "id": f"missing-section-{section['id']}",
                                     "type": "warning",
-                                    "title": "דיווח בוקר לא הושלם",
-                                    "description": f"מפקד מדור {section['name']}, {section['first_name']} {section['last_name']}, טרם השלים דיווח עבור {section['missing_count']} שוטרים",
+                                    "title": title,
+                                    "description": description,
                                     "link": "/attendance",
                                     "data": {
                                         "missing_ids": section["missing_ids"],
@@ -283,6 +312,35 @@ class NotificationModel:
                                     },
                                 }
                             )
+
+            # 4. Check for Internal Messages
+            query_msgs = """
+                SELECT um.id, um.title, um.description, um.created_at, 
+                       s.first_name, s.last_name
+                FROM user_messages um
+                LEFT JOIN employees s ON um.sender_id = s.id
+                WHERE um.recipient_id = %s
+                ORDER BY um.created_at DESC
+            """
+            cur.execute(query_msgs, (requesting_user["id"],))
+            messages = cur.fetchall()
+            for msg in messages:
+                sender_name = (
+                    f"{msg['first_name']} {msg['last_name']}"
+                    if msg["first_name"]
+                    else "מערכת"
+                )
+                alerts.append(
+                    {
+                        "id": f"msg-{msg['id']}",
+                        "type": "info",
+                        "title": f"הודעה מאת {sender_name}",
+                        "description": msg["title"] + ": " + msg["description"],
+                        "sender": sender_name,
+                        "link": "",
+                        "data": {"is_message": True, "sender": sender_name},
+                    }
+                )
 
             return alerts
         finally:
@@ -392,6 +450,30 @@ class NotificationModel:
             import traceback
 
             traceback.print_exc()
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def send_message(sender_id, recipient_id, title, description):
+        """Send an internal message to a specific user"""
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                INSERT INTO user_messages (sender_id, recipient_id, title, description)
+                VALUES (%s, %s, %s, %s)
+            """,
+                (sender_id, recipient_id, title, description),
+            )
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"❌ Error sending message: {e}")
             return False
         finally:
             conn.close()

@@ -25,6 +25,8 @@ import {
   History,
   Undo2,
   Thermometer,
+  MessageCircle,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -33,6 +35,18 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ImpersonationBanner } from "./ImpersonationBanner";
+import { InternalMessageDialog } from "@/components/dashboard/InternalMessageDialog";
+import { toast } from "sonner";
+import { Send, Eye, Mail } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 function getAlertConfig(alert: {
   id: string;
@@ -43,6 +57,7 @@ function getAlertConfig(alert: {
   const text = (alert.title + alert.description).toLowerCase();
   const isTransfer = alert.id.includes("transfer") || text.includes("העברה");
   const isSick = alert.id.includes("sick") || text.includes("מחלה");
+  const isMessage = alert.id.startsWith("msg-");
 
   if (isTransfer) {
     return {
@@ -57,6 +72,13 @@ function getAlertConfig(alert: {
       bg: "rgba(239, 68, 68, 0.1)",
       color: "rgb(239, 68, 68)",
     }; // Red
+  }
+  if (isMessage) {
+    return {
+      icon: Megaphone,
+      bg: "rgba(59, 130, 246, 0.1)",
+      color: "rgb(59, 130, 246)",
+    };
   }
 
   // Default fallback based on type
@@ -86,19 +108,16 @@ export default function MainLayout() {
   const {
     alerts,
     history,
-    loading,
+    loading: loadingNotifs,
     loadingHistory,
-    refreshAlerts,
     unreadCount,
-    markAllAsRead,
     readIds,
-    toggleRead,
+    refreshAlerts,
     fetchHistory,
+    markAllAsRead,
+    toggleRead,
     markAsUnread,
   } = useNotifications();
-  const [notificationTab, setNotificationTab] = React.useState<
-    "active" | "history"
-  >("active");
   const location = useLocation();
   const navigate = useNavigate();
   // Sidebar closed by default on mobile, open on desktop
@@ -106,6 +125,53 @@ export default function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(() =>
     typeof window !== "undefined" ? window.innerWidth >= 1024 : false,
   );
+  const [notificationTab, setNotificationTab] = React.useState<
+    "active" | "history"
+  >("active");
+  const [msgDialogOpen, setMsgDialogOpen] = React.useState(false);
+  const [selectedAlert, setSelectedAlert] = React.useState<any>(null);
+  const [criticalAlert, setCriticalAlert] = React.useState<any>(null);
+  const [msgRecipient, setMsgRecipient] = React.useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+
+  // Check for critical morning alerts
+  React.useEffect(() => {
+    if (!user) return;
+    const morningAlert = alerts.find(
+      (a) =>
+        a.id.startsWith("missing-") &&
+        (a as any).data?.commander_id === user.id,
+    );
+    if (morningAlert) {
+      setCriticalAlert(morningAlert);
+    } else {
+      setCriticalAlert(null);
+    }
+  }, [alerts, user]);
+  const [msgDefaults, setMsgDefaults] = React.useState({
+    title: "",
+    description: "",
+  });
+
+  // Effect to track shown alerts to prevent duplicate toasts
+  const shownAlertsRef = React.useRef<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    alerts.forEach((alert) => {
+      if (
+        alert.id.startsWith("msg-") &&
+        !shownAlertsRef.current.has(alert.id)
+      ) {
+        shownAlertsRef.current.add(alert.id);
+        toast(alert.title, {
+          description: alert.description,
+          duration: 5000,
+        });
+      }
+    });
+  }, [alerts]);
 
   // Auto-open sidebar on desktop (lg breakpoint)
   React.useEffect(() => {
@@ -357,7 +423,7 @@ export default function MainLayout() {
                 </button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-80 sm:w-[450px] p-0 overflow-hidden rounded-2xl border-border shadow-2xl"
+                className="w-[90vw] sm:w-[450px] p-0 overflow-hidden rounded-2xl border-border shadow-2xl mr-2"
                 align="start"
               >
                 <div className="p-4 border-b border-border bg-card sticky top-0 z-10">
@@ -422,9 +488,9 @@ export default function MainLayout() {
                     </button>
                   </div>
                 </div>
-                <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-muted/50">
+                <div className="max-h-[60vh] sm:max-h-[400px] overflow-y-auto custom-scrollbar bg-muted/50">
                   {notificationTab === "active" ? (
-                    loading ? (
+                    loadingNotifs ? (
                       <div className="p-12 flex flex-col items-center justify-center gap-3 opacity-50">
                         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
                         <span className="text-xs font-bold">
@@ -451,12 +517,15 @@ export default function MainLayout() {
                           const isRead = readIds.includes(alert.id);
                           const config = getAlertConfig(alert);
                           const Icon = config.icon;
+                          const isMorningReport =
+                            alert.title?.includes("דיווח בוקר") ||
+                            alert.description?.includes("דיווח בוקר");
 
                           return (
                             <div
                               key={alert.id}
                               className={cn(
-                                "p-4 flex flex-row-reverse gap-4 hover:bg-card transition-all border-b border-border last:border-0 group relative cursor-pointer",
+                                "p-3 sm:p-4 flex flex-row-reverse gap-3 sm:gap-4 hover:bg-card transition-all border-b border-border last:border-0 group relative cursor-pointer",
                                 isRead && "opacity-60 grayscale-[0.3]",
                               )}
                               dir="rtl"
@@ -464,10 +533,6 @@ export default function MainLayout() {
                                 // Default click handler for the whole row
                                 if ((e.target as HTMLElement).closest("button"))
                                   return; // Ignore button clicks
-
-                                const isMorningReport =
-                                  alert.title?.includes("דיווח בוקר") ||
-                                  alert.description?.includes("דיווח בוקר");
 
                                 if (isMorningReport) {
                                   navigate("/attendance", {
@@ -485,7 +550,7 @@ export default function MainLayout() {
                               }}
                             >
                               <div
-                                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105"
                                 style={{
                                   backgroundColor: config.bg,
                                   color: config.color,
@@ -520,6 +585,80 @@ export default function MainLayout() {
                                   {alert.description}
                                 </p>
                               </div>
+                              {/* Internal Message Button */}
+                              {isMorningReport &&
+                                (alert as any).data?.commander_id &&
+                                user?.id !==
+                                  (alert as any).data.commander_id && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setMsgRecipient({
+                                        id: (alert as any).data.commander_id,
+                                        name: (alert as any).data
+                                          .commander_name,
+                                      });
+                                      setMsgDefaults({
+                                        title: "דיווח בוקר טרם הושלם",
+                                        description: `שלום ${(alert as any).data.commander_name}, טרם הושלם דיווח בוקר עבור ${(alert as any).data.missing_count} שוטרים ביחידתך. נא להשלים את הדיווח בהקדם.`,
+                                      });
+                                      setMsgDialogOpen(true);
+                                    }}
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-blue-600 hover:bg-blue-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0 mr-1"
+                                    title="שלח התראה פנימית"
+                                  >
+                                    <Send className="w-4 h-4" />
+                                  </button>
+                                )}
+                              {/* WhatsApp Reminder Button */}
+                              {isMorningReport &&
+                                (alert as any).data?.commander_phone &&
+                                user?.id !==
+                                  (alert as any).data.commander_id && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const phone = (
+                                        alert as any
+                                      ).data.commander_phone
+                                        .replace(/-/g, "")
+                                        .replace(/^0/, "972");
+                                      const name = (alert as any).data
+                                        .commander_name;
+                                      const count = (alert as any).data
+                                        .missing_count;
+                                      const text = `שלום ${name}, טרם הושלם דיווח בוקר עבור ${count} שוטרים ביחידתך. נא להשלים את הדיווח בהקדם.`;
+                                      window.open(
+                                        `https://wa.me/${phone}?text=${encodeURIComponent(
+                                          text,
+                                        )}`,
+                                        "_blank",
+                                      );
+                                    }}
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-emerald-600 hover:bg-emerald-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0 mr-1"
+                                    title="שלח תזכורת בווטסאפ"
+                                  >
+                                    <MessageCircle className="w-4 h-4" />
+                                  </button>
+                                )}
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setSelectedAlert(alert);
+                                  if (!isRead) toggleRead(alert.id);
+                                }}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-blue-600 hover:bg-blue-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0 mr-1"
+                                title="פתח הודעה"
+                              >
+                                {alert.title.includes("הודעה") ? (
+                                  <Mail className="w-4 h-4" />
+                                ) : (
+                                  <Eye className="w-4 h-4" />
+                                )}
+                              </button>
                               <button
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -527,7 +666,7 @@ export default function MainLayout() {
                                   toggleRead(alert.id);
                                 }}
                                 className={cn(
-                                  "w-8 h-8 rounded-lg flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shrink-0",
+                                  "w-8 h-8 rounded-lg flex items-center justify-center transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0",
                                   isRead
                                     ? "text-primary bg-primary/10"
                                     : "text-muted-foreground hover:text-primary hover:bg-muted",
@@ -661,6 +800,139 @@ export default function MainLayout() {
         </main>
         {/* Impersonation Banner */}
         <ImpersonationBanner />
+
+        <InternalMessageDialog
+          open={msgDialogOpen}
+          onOpenChange={setMsgDialogOpen}
+          recipient={msgRecipient}
+          defaultTitle={msgDefaults.title}
+          defaultDescription={msgDefaults.description}
+        />
+
+        <Dialog
+          open={!!selectedAlert}
+          onOpenChange={(open) => !open && setSelectedAlert(null)}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                  style={
+                    selectedAlert
+                      ? {
+                          backgroundColor: getAlertConfig(selectedAlert).bg,
+                          color: getAlertConfig(selectedAlert).color,
+                        }
+                      : {}
+                  }
+                >
+                  {selectedAlert &&
+                    React.createElement(getAlertConfig(selectedAlert).icon, {
+                      className: "w-5 h-5",
+                    })}
+                </div>
+                <div className="flex-1">
+                  <DialogTitle className="text-lg font-black text-foreground">
+                    {selectedAlert?.title}
+                  </DialogTitle>
+                  <p className="text-xs text-muted-foreground font-bold">
+                    {selectedAlert?.created_at &&
+                      new Date(selectedAlert.created_at).toLocaleString(
+                        "he-IL",
+                      )}
+                  </p>
+                </div>
+              </div>
+            </DialogHeader>
+            <div className="bg-muted/30 p-4 rounded-xl border border-border mt-2">
+              <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap text-foreground">
+                {selectedAlert?.description}
+              </p>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setSelectedAlert(null)}
+                className="flex-1 rounded-xl font-bold"
+              >
+                סגור
+              </Button>
+              {selectedAlert?.link && (
+                <Button
+                  className="flex-1 rounded-xl font-bold"
+                  onClick={() => {
+                    navigate(selectedAlert.link);
+                    setSelectedAlert(null);
+                  }}
+                >
+                  למעבר לעמוד
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Morning Report Reminder Modal */}
+        <Dialog
+          open={!!criticalAlert}
+          onOpenChange={(open) => !open && setCriticalAlert(null)}
+        >
+          <DialogContent className="max-w-md border-primary/20 bg-card shadow-xl">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
+                  <Bell className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <DialogTitle className="text-xl font-black text-foreground">
+                    תזכורת: דיווח בוקר
+                  </DialogTitle>
+                  <DialogDescription className="text-muted-foreground font-medium mt-1">
+                    יש להשלים את הדיווח היומי
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            <div className="p-4 rounded-xl border border-border bg-muted/30 mt-2">
+              <p className="text-sm font-bold leading-relaxed text-foreground">
+                {criticalAlert?.description ||
+                  "אנא השלם את דיווח הנוכחות עבור השוטרים החסרים."}
+              </p>
+              <p className="text-xs mt-2 text-muted-foreground">
+                השעה כעת{" "}
+                {new Date().toLocaleTimeString("he-IL", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                . נא להשלים בהקדם.
+              </p>
+            </div>
+            <DialogFooter className="gap-2 mt-4 sm:gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setCriticalAlert(null)}
+                className="flex-1 rounded-xl font-bold text-muted-foreground"
+              >
+                סגור
+              </Button>
+              <Button
+                className="flex-1 rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                onClick={() => {
+                  navigate("/attendance", {
+                    state: {
+                      openBulkModal: true,
+                      missingIds: criticalAlert?.data?.missing_ids || [],
+                    },
+                  });
+                  setCriticalAlert(null);
+                }}
+              >
+                עדכון שוטרים חסרים
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

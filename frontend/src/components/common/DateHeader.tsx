@@ -41,16 +41,16 @@ export function DateHeader({ className }: DateHeaderProps) {
           <Button
             variant="outline"
             className={cn(
-              "h-auto py-2 px-4 rounded-xl border-input bg-background hover:bg-muted/50 transition-all shadow-sm",
+              "h-auto py-1 px-2.5 lg:py-2 lg:px-4 rounded-lg lg:rounded-xl border-input bg-background hover:bg-muted/50 transition-all shadow-sm",
               !isCurrentDay &&
                 "border-amber-300 bg-amber-50 hover:bg-amber-100/80 text-amber-900",
             )}
           >
             <div className="flex flex-col items-end text-right">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 lg:gap-3">
                 <span
                   className={cn(
-                    "text-base font-bold",
+                    "text-[13px] lg:text-base font-bold",
                     !isCurrentDay && "text-amber-900",
                   )}
                 >
@@ -58,13 +58,13 @@ export function DateHeader({ className }: DateHeaderProps) {
                 </span>
                 <div
                   className={cn(
-                    "w-px h-3.5",
+                    "w-px h-2.5 lg:h-3.5",
                     isCurrentDay ? "bg-border" : "bg-amber-300",
                   )}
                 />
                 <span
                   className={cn(
-                    "text-sm font-medium text-muted-foreground font-serif",
+                    "text-[11px] lg:text-sm font-medium text-muted-foreground font-serif",
                     !isCurrentDay && "text-amber-800/80",
                   )}
                 >

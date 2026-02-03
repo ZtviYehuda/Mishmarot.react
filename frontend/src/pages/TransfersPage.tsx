@@ -238,10 +238,13 @@ export default function TransfersPage() {
 
   const statusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      approved: "bg-emerald-50 text-emerald-700 border-emerald-100",
-      rejected: "bg-rose-50 text-rose-700 border-rose-100",
-      cancelled: "bg-muted text-muted-foreground",
-      pending: "bg-amber-50 text-amber-700 border-amber-100",
+      approved:
+        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-emerald-500/20",
+      rejected:
+        "bg-rose-500/10 text-rose-600 dark:text-rose-500 border-rose-500/20",
+      cancelled: "bg-muted text-muted-foreground border-border/50",
+      pending:
+        "bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-500/20",
     };
     const labels: Record<string, string> = {
       approved: "אושר",
@@ -277,60 +280,60 @@ export default function TransfersPage() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-[20px] p-6 border border-slate-100 shadow-[0_2px_20px_-12px_rgba(0,0,0,0.1)] flex items-center justify-between">
+        <div className="bg-card rounded-[20px] p-6 border border-border shadow-sm flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-slate-400 mb-1">
+            <span className="text-sm font-bold text-muted-foreground mb-1">
               בקשות ממתינות
             </span>
             <span className="text-4xl font-black text-amber-500">
               {stats.pending}
             </span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
             <Clock className="w-6 h-6 text-amber-500" />
           </div>
         </div>
 
-        <div className="bg-white rounded-[20px] p-6 border border-slate-100 shadow-[0_2px_20px_-12px_rgba(0,0,0,0.1)] flex items-center justify-between">
+        <div className="bg-card rounded-[20px] p-6 border border-border shadow-sm flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-slate-400 mb-1">
+            <span className="text-sm font-bold text-muted-foreground mb-1">
               אושר (היסטוריה)
             </span>
             <span className="text-4xl font-black text-emerald-500">
               {stats.approved}
             </span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
             <CheckCircle className="w-6 h-6 text-emerald-500" />
           </div>
         </div>
 
-        <div className="bg-white rounded-[20px] p-6 border border-slate-100 shadow-[0_2px_20px_-12px_rgba(0,0,0,0.1)] flex items-center justify-between">
+        <div className="bg-card rounded-[20px] p-6 border border-border shadow-sm flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-slate-400 mb-1">
+            <span className="text-sm font-bold text-muted-foreground mb-1">
               נדחה (היסטוריה)
             </span>
             <span className="text-4xl font-black text-rose-500">
               {stats.rejected}
             </span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center">
             <XCircle className="w-6 h-6 text-rose-500" />
           </div>
         </div>
       </div>
 
       {/* Main Toolbar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 bg-white p-2 pl-4 rounded-[16px] border border-slate-100 shadow-sm">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 bg-card p-2 pl-4 rounded-[16px] border border-border shadow-sm">
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
           className="w-full md:w-auto"
         >
-          <TabsList className="bg-slate-100/50 p-1.5 h-auto rounded-full gap-1 border border-slate-200/50">
+          <TabsList className="bg-muted p-1.5 h-auto rounded-full gap-1 border border-border/50">
             <TabsTrigger
               value="history"
-              className="h-9 rounded-full px-5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm text-slate-500 font-bold text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-slate-100"
+              className="h-9 rounded-full px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border"
             >
               <History className="w-3.5 h-3.5" />
               <span className="hidden md:inline">ארכיון היסטוריה</span>
@@ -338,7 +341,7 @@ export default function TransfersPage() {
             </TabsTrigger>
             <TabsTrigger
               value="pending"
-              className="h-9 rounded-full px-5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm text-slate-500 font-bold text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-slate-100"
+              className="h-9 rounded-full px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border"
             >
               <Clock className="w-3.5 h-3.5" />
               <span className="hidden md:inline">ממתינות לטיפול</span>
@@ -346,7 +349,7 @@ export default function TransfersPage() {
             </TabsTrigger>
             <TabsTrigger
               value="new"
-              className="h-9 rounded-full px-5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm text-slate-500 font-bold text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-slate-100 hover:text-indigo-600"
+              className="h-9 rounded-full px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border hover:text-primary"
             >
               <Plus className="w-3.5 h-3.5" />
               הגשת בקשה חדשה
@@ -356,10 +359,10 @@ export default function TransfersPage() {
 
         {activeTab !== "new" && (
           <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="סינון מהיר..."
-              className="pl-10 pr-4 h-10 bg-slate-50 border-slate-200 hover:bg-slate-100 font-medium text-sm rounded-full focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all"
+              className="pl-10 pr-4 h-10 bg-muted/30 border-input hover:bg-muted/50 font-medium text-sm rounded-full focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
@@ -372,30 +375,30 @@ export default function TransfersPage() {
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-slate-50/80 border-b border-slate-100 sticky top-0 z-10 backdrop-blur-sm">
+                <TableHeader className="bg-muted/50 border-b border-border sticky top-0 z-10 backdrop-blur-sm">
                   <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="text-right px-6 font-bold text-slate-400 text-xs h-14 w-[15%]">
+                    <TableHead className="text-right px-6 font-bold text-muted-foreground text-xs h-14 w-[15%]">
                       שוטר
                     </TableHead>
-                    <TableHead className="text-right px-6 font-bold text-slate-400 text-xs h-14 w-[15%]">
+                    <TableHead className="text-right px-6 font-bold text-muted-foreground text-xs h-14 w-[15%]">
                       יחידה נוכחית
                     </TableHead>
-                    <TableHead className="text-right px-6 font-bold text-slate-400 text-xs h-14 w-[15%]">
+                    <TableHead className="text-right px-6 font-bold text-muted-foreground text-xs h-14 w-[15%]">
                       יחידה מבוקשת
                     </TableHead>
-                    <TableHead className="text-right px-6 font-bold text-slate-400 text-xs h-14 w-[12%]">
+                    <TableHead className="text-right px-6 font-bold text-muted-foreground text-xs h-14 w-[12%]">
                       הוגש ע"י
                     </TableHead>
-                    <TableHead className="text-right px-6 font-bold text-slate-400 text-xs h-14 w-[10%]">
+                    <TableHead className="text-right px-6 font-bold text-muted-foreground text-xs h-14 w-[10%]">
                       תאריך
                     </TableHead>
-                    <TableHead className="text-right px-6 font-bold text-slate-400 text-xs h-14 w-[10%]">
+                    <TableHead className="text-right px-6 font-bold text-muted-foreground text-xs h-14 w-[10%]">
                       סטטוס
                     </TableHead>
-                    <TableHead className="text-right px-6 font-bold text-slate-400 text-xs h-14 w-[15%]">
+                    <TableHead className="text-right px-6 font-bold text-muted-foreground text-xs h-14 w-[15%]">
                       מידע נוסף
                     </TableHead>
-                    <TableHead className="text-center px-6 font-bold text-slate-400 text-xs h-14 w-[8%]">
+                    <TableHead className="text-center px-6 font-bold text-muted-foreground text-xs h-14 w-[8%]">
                       פעולות
                     </TableHead>
                   </TableRow>
@@ -437,7 +440,7 @@ export default function TransfersPage() {
                             onClick={() => openProfile(req.employee_id)}
                             className="flex items-center gap-3 text-right hover:bg-muted/50 p-2 -mr-2 rounded-xl transition-colors outline-none group/btn max-w-full"
                           >
-                            <div className="w-9 h-9 rounded-full bg-white border border-border flex items-center justify-center font-black text-xs text-muted-foreground shadow-sm group-hover/btn:scale-110 transition-transform shrink-0">
+                            <div className="w-9 h-9 rounded-full bg-background border border-border flex items-center justify-center font-black text-xs text-muted-foreground shadow-sm group-hover/btn:scale-110 transition-transform shrink-0">
                               {req.employee_name?.[0]}
                             </div>
                             <div className="flex flex-col min-w-0">
@@ -602,7 +605,7 @@ export default function TransfersPage() {
                             onClick={() => openProfile(req.employee_id)}
                             className="flex items-center gap-3 text-right hover:bg-muted/50 p-2 -mr-2 rounded-xl transition-colors outline-none group/btn max-w-full"
                           >
-                            <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center font-black text-[10px] text-muted-foreground shadow-sm shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center font-black text-[10px] text-muted-foreground shadow-sm shrink-0">
                               {req.employee_name?.[0]}
                             </div>
                             <div className="flex flex-col min-w-0">
@@ -673,12 +676,12 @@ export default function TransfersPage() {
         {activeTab === "new" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_20px_-12px_rgba(0,0,0,0.1)] overflow-hidden">
-                <div className="px-8 py-6 border-b border-slate-50">
-                  <h2 className="text-xl font-bold text-slate-800">
+              <div className="bg-card rounded-[20px] border border-border shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-border/50">
+                  <h2 className="text-xl font-bold text-foreground">
                     הגשת בקשת ניוד
                   </h2>
-                  <p className="text-slate-400 text-sm mt-1">
+                  <p className="text-muted-foreground text-sm mt-1">
                     מילוי פרטים לצורך שינוי שיבוץ ארגוני ביחידה
                   </p>
                 </div>
@@ -687,43 +690,43 @@ export default function TransfersPage() {
                   {/* Step 1 */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
                         1
                       </div>
-                      <label className="text-sm font-bold text-slate-700">
+                      <label className="text-sm font-bold text-foreground">
                         בחירת שוטר
                       </label>
                     </div>
 
                     {!selectedEmployee ? (
                       <div className="relative">
-                        <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                         <Input
                           placeholder="חפש לפי שם או מ''א..."
-                          className="pr-12 h-14 text-right rounded-2xl bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-indigo-50 transition-all text-base"
+                          className="pr-12 h-14 text-right rounded-2xl bg-muted/30 border-input focus:bg-background focus:ring-4 focus:ring-primary/20 transition-all text-base"
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
                         {filteredEmployeesList.length > 0 && searchTerm && (
-                          <div className="absolute top-full mt-2 w-full z-50 bg-white border border-slate-100 rounded-2xl shadow-xl overflow-hidden ring-4 ring-slate-50 animate-in fade-in zoom-in-95 duration-200">
+                          <div className="absolute top-full mt-2 w-full z-50 bg-popover border border-border rounded-2xl shadow-xl overflow-hidden ring-4 ring-muted/10 animate-in fade-in zoom-in-95 duration-200">
                             {filteredEmployeesList.map((emp) => (
                               <button
                                 key={emp.id}
-                                className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 text-right transition-colors border-b border-slate-50 last:border-0 group"
+                                className="w-full p-4 flex items-center gap-4 hover:bg-muted/50 text-right transition-colors border-b border-border/50 last:border-0 group"
                                 onClick={() => {
                                   setSelectedEmployee(emp);
                                   setSearchTerm("");
                                 }}
                               >
-                                <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm group-hover:scale-110 transition-transform">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm group-hover:scale-110 transition-transform">
                                   {emp.first_name[0]}
                                   {emp.last_name[0]}
                                 </div>
                                 <div className="flex flex-col">
-                                  <span className="text-sm font-bold text-slate-800">
+                                  <span className="text-sm font-bold text-foreground">
                                     {emp.first_name} {emp.last_name}
                                   </span>
-                                  <span className="text-xs text-slate-400">
+                                  <span className="text-xs text-muted-foreground">
                                     מ"א: {emp.personal_number} •{" "}
                                     {emp.department_name}
                                   </span>
@@ -734,18 +737,18 @@ export default function TransfersPage() {
                         )}
                       </div>
                     ) : (
-                      <div className="p-4 border border-indigo-100 bg-indigo-50/30 rounded-2xl flex items-center justify-between">
+                      <div className="p-4 border border-primary/20 bg-primary/5 rounded-2xl flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                          <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shadow-sm">
                             {selectedEmployee.first_name[0]}
                             {selectedEmployee.last_name[0]}
                           </div>
                           <div className="flex flex-col text-right">
-                            <span className="font-bold text-slate-800">
+                            <span className="font-bold text-foreground">
                               {selectedEmployee.first_name}{" "}
                               {selectedEmployee.last_name}
                             </span>
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-muted-foreground">
                               מ"א: {selectedEmployee.personal_number} •{" "}
                               {selectedEmployee.department_name}
                             </span>
@@ -754,7 +757,7 @@ export default function TransfersPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-medium"
+                          className="text-primary hover:text-primary hover:bg-primary/10 font-medium"
                           onClick={() => setSelectedEmployee(null)}
                         >
                           החלף שוטר
@@ -764,19 +767,19 @@ export default function TransfersPage() {
                   </div>
 
                   {/* Step 2 */}
-                  <div className="space-y-4 pt-6 border-t border-slate-50">
+                  <div className="space-y-4 pt-6 border-t border-border/50">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
                         2
                       </div>
-                      <label className="text-sm font-bold text-slate-700">
+                      <label className="text-sm font-bold text-foreground">
                         יעד המעבר
                       </label>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <span className="text-xs font-medium text-slate-500 block text-right">
+                        <span className="text-xs font-medium text-muted-foreground block text-right">
                           מחלקה
                         </span>
                         <Select
@@ -787,15 +790,15 @@ export default function TransfersPage() {
                             setTargetTeamId("");
                           }}
                         >
-                          <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-100 font-medium text-sm transition-all focus:bg-white">
+                          <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-sm transition-all focus:bg-background">
                             <SelectValue placeholder="בחר מחלקה..." />
                           </SelectTrigger>
-                          <SelectContent className="rounded-xl border-slate-100 shadow-lg">
+                          <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
                             {structure.map((d) => (
                               <SelectItem
                                 key={d.id}
                                 value={d.id.toString()}
-                                className="font-medium focus:bg-indigo-50 text-slate-700"
+                                className="font-medium focus:bg-accent text-foreground"
                               >
                                 {d.name}
                               </SelectItem>
@@ -805,7 +808,7 @@ export default function TransfersPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <span className="text-xs font-medium text-slate-500 block text-right">
+                        <span className="text-xs font-medium text-muted-foreground block text-right">
                           מדור
                         </span>
                         <Select
@@ -816,17 +819,17 @@ export default function TransfersPage() {
                           }}
                           disabled={!targetDeptId}
                         >
-                          <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-100 font-medium text-sm transition-all focus:bg-white disabled:opacity-50">
+                          <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-sm transition-all focus:bg-background disabled:opacity-50">
                             <SelectValue placeholder="בחר מדור..." />
                           </SelectTrigger>
-                          <SelectContent className="rounded-xl border-slate-100 shadow-lg">
+                          <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
                             {structure
                               .find((d) => d.id.toString() === targetDeptId)
                               ?.sections.map((s: any) => (
                                 <SelectItem
                                   key={s.id}
                                   value={s.id.toString()}
-                                  className="font-medium focus:bg-indigo-50 text-slate-700"
+                                  className="font-medium focus:bg-accent text-foreground"
                                 >
                                   {s.name}
                                 </SelectItem>
@@ -836,7 +839,7 @@ export default function TransfersPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <span className="text-xs font-medium text-slate-500 block text-right">
+                        <span className="text-xs font-medium text-muted-foreground block text-right">
                           חוליה
                         </span>
                         <Select
@@ -844,10 +847,10 @@ export default function TransfersPage() {
                           onValueChange={setTargetTeamId}
                           disabled={!targetSectionId}
                         >
-                          <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:ring-2 focus:ring-indigo-100 font-medium text-sm transition-all focus:bg-white disabled:opacity-50">
+                          <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-sm transition-all focus:bg-background disabled:opacity-50">
                             <SelectValue placeholder="בחר חוליה..." />
                           </SelectTrigger>
-                          <SelectContent className="rounded-xl border-slate-100 shadow-lg">
+                          <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
                             {structure
                               .find((d) => d.id.toString() === targetDeptId)
                               ?.sections.find(
@@ -857,7 +860,7 @@ export default function TransfersPage() {
                                 <SelectItem
                                   key={t.id}
                                   value={t.id.toString()}
-                                  className="font-medium focus:bg-indigo-50 text-slate-700"
+                                  className="font-medium focus:bg-accent text-foreground"
                                 >
                                   {t.name}
                                 </SelectItem>
@@ -869,19 +872,19 @@ export default function TransfersPage() {
                   </div>
 
                   {/* Step 3 */}
-                  <div className="space-y-4 pt-6 border-t border-slate-50">
+                  <div className="space-y-4 pt-6 border-t border-border/50">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
                         3
                       </div>
-                      <label className="text-sm font-bold text-slate-700">
+                      <label className="text-sm font-bold text-foreground">
                         נימוקים נוספים
                       </label>
                     </div>
 
                     <textarea
                       placeholder="פרט את הסיבה לבקשה..."
-                      className="w-full min-h-[140px] p-4 bg-slate-50 rounded-2xl text-sm border-slate-200 focus:bg-white focus:ring-4 focus:ring-indigo-50 transition-all resize-none font-sans"
+                      className="w-full min-h-[140px] p-4 bg-muted/30 rounded-2xl text-sm border-input focus:bg-background focus:ring-4 focus:ring-primary/20 transition-all resize-none font-sans"
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
                       dir="rtl"
@@ -894,7 +897,7 @@ export default function TransfersPage() {
                       disabled={
                         isSubmitting || !selectedEmployee || !targetDeptId
                       }
-                      className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 transition-all hover:shadow-indigo-300 active:scale-[0.98] text-base"
+                      className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 active:scale-[0.98] text-base"
                     >
                       {isSubmitting
                         ? "בתהליך שליחה..."
@@ -907,9 +910,9 @@ export default function TransfersPage() {
 
             {/* Sidebar Guidelines */}
             <div className="space-y-6">
-              <div className="bg-gradient-to-br from-indigo-50 to-white rounded-[20px] p-6 border border-indigo-100/50 shadow-sm">
-                <div className="flex items-center gap-3 text-indigo-700 mb-6">
-                  <div className="p-2 bg-indigo-100 rounded-lg">
+              <div className="bg-gradient-to-br from-primary/5 to-background rounded-[20px] p-6 border border-border/50 shadow-sm">
+                <div className="flex items-center gap-3 text-primary mb-6">
+                  <div className="p-2 bg-primary/10 rounded-lg">
                     <ShieldAlert className="w-5 h-5" />
                   </div>
                   <span className="text-lg font-bold">דגשים להגשה</span>
@@ -922,24 +925,24 @@ export default function TransfersPage() {
                   ].map((t, i) => (
                     <li
                       key={i}
-                      className="flex gap-3 text-sm font-medium text-slate-600 leading-relaxed text-right items-start"
+                      className="flex gap-3 text-sm font-medium text-muted-foreground leading-relaxed text-right items-start"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 shrink-0" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/50 mt-2 shrink-0" />
                       {t}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-[20px] p-6 flex items-center gap-5 shadow-[0_2px_20px_-12px_rgba(0,0,0,0.1)]">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
+              <div className="bg-card border border-border rounded-[20px] p-6 flex items-center gap-5 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
                   <Clock className="w-6 h-6 text-amber-500" />
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
                     זמן טיפול משוער
                   </p>
-                  <p className="text-lg font-black text-slate-800">
+                  <p className="text-lg font-black text-foreground">
                     24-48 שעות
                   </p>
                 </div>
@@ -1117,7 +1120,7 @@ export default function TransfersPage() {
                         className={cn(
                           "text-[10px] font-black",
                           viewingEmployee.police_license
-                            ? "text-emerald-600"
+                            ? "text-emerald-600 dark:text-emerald-400"
                             : "text-rose-500",
                         )}
                       >

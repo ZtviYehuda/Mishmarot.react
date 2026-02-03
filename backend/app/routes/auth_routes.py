@@ -77,6 +77,9 @@ def login():
                     "must_change_password": user.get("must_change_password", False),
                     "is_admin": user.get("is_admin", False),
                     "is_commander": user.get("is_commander", False),
+                    "department_id": user.get("department_id"),
+                    "section_id": user.get("section_id"),
+                    "team_id": user.get("team_id"),
                     "assigned_department_id": user.get("assigned_department_id"),
                     "assigned_section_id": user.get("assigned_section_id"),
                     "commands_department_id": user.get("commands_department_id"),
@@ -92,6 +95,12 @@ def login():
                     "team_name": user.get("team_name"),
                     "role_name": user.get("role_name"),
                     "service_type_name": user.get("service_type_name"),
+                    "national_id": user.get("national_id"),
+                    "enlistment_date": user.get("enlistment_date"),
+                    "discharge_date": user.get("discharge_date"),
+                    "assignment_date": user.get("assignment_date"),
+                    "police_license": user.get("police_license"),
+                    "security_clearance": user.get("security_clearance"),
                 },
             }
         )
@@ -128,7 +137,9 @@ def get_current_user():
     if not user_id:
         return jsonify({"error": "Invalid token identity"}), 400
 
-    is_impersonated = identity.get("is_impersonation", False) if isinstance(identity, dict) else False
+    is_impersonated = (
+        identity.get("is_impersonation", False) if isinstance(identity, dict) else False
+    )
 
     user = EmployeeModel.get_employee_by_id(user_id)
     if user:
@@ -139,10 +150,15 @@ def get_current_user():
                 "last_name": user["last_name"],
                 "personal_number": user["personal_number"],
                 "phone_number": user.get("phone_number"),
-                "must_change_password": False if is_impersonated else user["must_change_password"],
+                "must_change_password": (
+                    False if is_impersonated else user["must_change_password"]
+                ),
                 "is_impersonated": is_impersonated,
                 "is_admin": user["is_admin"],
                 "is_commander": user["is_commander"],
+                "department_id": user.get("department_id"),
+                "section_id": user.get("section_id"),
+                "team_id": user.get("team_id"),
                 "assigned_department_id": user.get("assigned_department_id"),
                 "assigned_section_id": user.get("assigned_section_id"),
                 "commands_department_id": user.get("commands_department_id"),
@@ -158,6 +174,12 @@ def get_current_user():
                 "team_name": user.get("team_name"),
                 "role_name": user.get("role_name"),
                 "service_type_name": user.get("service_type_name"),
+                "national_id": user.get("national_id"),
+                "enlistment_date": user.get("enlistment_date"),
+                "discharge_date": user.get("discharge_date"),
+                "assignment_date": user.get("assignment_date"),
+                "police_license": user.get("police_license"),
+                "security_clearance": user.get("security_clearance"),
             }
         )
     return jsonify({"error": "User not found"}), 404
@@ -207,23 +229,31 @@ def reset_impersonated_password():
 
     # Check if this is an impersonation session
     if not isinstance(identity, dict) or not identity.get("is_impersonation"):
-        return jsonify({"success": False, "error": "פעולה זו מותרת רק במצב התחזות מנהל"}), 403
+        return (
+            jsonify({"success": False, "error": "פעולה זו מותרת רק במצב התחזות מנהל"}),
+            403,
+        )
 
-    user_id = identity["id"] # The ID of the user being impersonated
-    
+    user_id = identity["id"]  # The ID of the user being impersonated
+
     success, error = EmployeeModel.reset_password_to_national_id(user_id)
-    
+
     if success:
-        return jsonify({"success": True, "message": "הסיסמה אופסה בהצלחה לתעודת הזהות של המשתמש"})
+        return jsonify(
+            {"success": True, "message": "הסיסמה אופסה בהצלחה לתעודת הזהות של המשתמש"}
+        )
     else:
-        return jsonify({"success": False, "error": error or "Failed to reset password"}), 500
+        return (
+            jsonify({"success": False, "error": error or "Failed to reset password"}),
+            500,
+        )
 
 
 @auth_bp.route("/update-profile", methods=["PUT"])
 @jwt_required()
 def update_profile():
     """
-    מאפשר למשתמש לעדכן את פרטי הפרופיל שלו (שם וטלפון בלבד).
+    מאפשר למשתמש לעדכן את פרטי הפרופיל שלו (מורחב).
     """
     identity_raw = get_jwt_identity()
     try:
@@ -239,7 +269,7 @@ def update_profile():
     if not data:
         return jsonify({"success": False, "error": "No data provided"}), 400
 
-    # רק שדות מסוימים מורשים לעדכון עצמי
+    # שדות מורחבים לעדכון עצמי
     allowed_data = {
         "first_name": data.get("first_name"),
         "last_name": data.get("last_name"),
@@ -249,6 +279,12 @@ def update_profile():
         "city": data.get("city"),
         "birth_date": data.get("birth_date"),
         "emergency_contact": data.get("emergency_contact"),
+        "national_id": data.get("national_id"),
+        "enlistment_date": data.get("enlistment_date"),
+        "discharge_date": data.get("discharge_date"),
+        "assignment_date": data.get("assignment_date"),
+        "police_license": data.get("police_license"),
+        "security_clearance": data.get("security_clearance"),
     }
 
     # הסרת ערכים שהם None (כדי לא לדרוס נתונים קיימים אם לא נשלחו)
@@ -284,22 +320,27 @@ def impersonate_user():
         identity_raw = get_jwt_identity()
         try:
             identity = (
-                json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
             )
         except (json.JSONDecodeError, TypeError):
             identity = identity_raw
-        
+
         requesting_id = identity["id"] if isinstance(identity, dict) else identity
-        
+
         # Check against DB to be sure
         admin_user = EmployeeModel.get_employee_by_id(requesting_id)
         if not admin_user or not admin_user.get("is_admin"):
-            return jsonify({"success": False, "error": "Unauthorized: Admins only"}), 403
+            return (
+                jsonify({"success": False, "error": "Unauthorized: Admins only"}),
+                403,
+            )
 
         # 2. Get Target User
         data = request.get_json()
         target_id = data.get("target_id")
-        
+
         target_user = EmployeeModel.get_employee_by_id(target_id)
         if not target_user:
             return jsonify({"success": False, "error": "User not found"}), 404
@@ -312,7 +353,7 @@ def impersonate_user():
                     "is_admin": target_user["is_admin"],
                     "is_commander": target_user["is_commander"],
                     "is_impersonation": True,
-                    "real_admin_id": requesting_id
+                    "real_admin_id": requesting_id,
                 }
             )
         )
@@ -328,7 +369,7 @@ def impersonate_user():
                     "last_name": target_user.get("last_name"),
                     "personal_number": target_user.get("personal_number"),
                     "phone_number": target_user.get("phone_number"),
-                    "must_change_password": False, # Admin impersonation does not require password change
+                    "must_change_password": False,  # Admin impersonation does not require password change
                     "is_admin": target_user.get("is_admin", False),
                     "is_commander": target_user.get("is_commander", False),
                     "assigned_department_id": target_user.get("assigned_department_id"),
@@ -351,4 +392,3 @@ def impersonate_user():
         )
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-

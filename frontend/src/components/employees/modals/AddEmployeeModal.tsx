@@ -37,7 +37,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     team_id: undefined,
     is_commander: false,
     is_admin: false,
-    security_clearance: 0,
+    security_clearance: false,
     police_license: false,
   });
 
@@ -60,7 +60,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         team_id: undefined,
         is_commander: false,
         is_admin: false,
-        security_clearance: 0,
+        security_clearance: false,
         police_license: false,
       });
     }
@@ -81,7 +81,10 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 text-right">
-              <Label htmlFor="first_name" className="text-sm font-medium text-right">
+              <Label
+                htmlFor="first_name"
+                className="text-sm font-medium text-right"
+              >
                 שם פרטי *
               </Label>
               <Input
@@ -95,7 +98,10 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               />
             </div>
             <div className="space-y-2 text-right">
-              <Label htmlFor="last_name" className="text-sm font-medium text-right">
+              <Label
+                htmlFor="last_name"
+                className="text-sm font-medium text-right"
+              >
                 שם משפחה *
               </Label>
               <Input
@@ -112,7 +118,10 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 text-right">
-              <Label htmlFor="personal_number" className="text-sm font-medium text-right">
+              <Label
+                htmlFor="personal_number"
+                className="text-sm font-medium text-right"
+              >
                 מספר אישי *
               </Label>
               <Input
@@ -126,7 +135,10 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               />
             </div>
             <div className="space-y-2 text-right">
-              <Label htmlFor="national_id" className="text-sm font-medium text-right">
+              <Label
+                htmlFor="national_id"
+                className="text-sm font-medium text-right"
+              >
                 תעודת זהות *
               </Label>
               <Input
@@ -143,7 +155,10 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 text-right">
-              <Label htmlFor="phone_number" className="text-sm font-medium text-right">
+              <Label
+                htmlFor="phone_number"
+                className="text-sm font-medium text-right"
+              >
                 מספר טלפון
               </Label>
               <Input
@@ -173,7 +188,10 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 text-right">
-              <Label htmlFor="birth_date" className="text-sm font-medium text-right">
+              <Label
+                htmlFor="birth_date"
+                className="text-sm font-medium text-right"
+              >
                 תאריך לידה
               </Label>
               <Input
@@ -187,7 +205,10 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               />
             </div>
             <div className="space-y-2 text-right">
-              <Label htmlFor="enlistment_date" className="text-sm font-medium text-right">
+              <Label
+                htmlFor="enlistment_date"
+                className="text-sm font-medium text-right"
+              >
                 תאריך גיוס
               </Label>
               <Input

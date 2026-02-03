@@ -137,7 +137,7 @@ export const EmployeeTable = ({
     }
 
     if (activeFilters.hasSecurityClearance) {
-      if (emp.security_clearance === 0) return false;
+      if (!emp.security_clearance) return false;
     }
 
     if (activeFilters.hasPoliceRicense) {

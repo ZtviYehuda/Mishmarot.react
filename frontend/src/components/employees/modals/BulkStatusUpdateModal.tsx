@@ -27,6 +27,7 @@ import {
   BellRing,
 } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
+import { useAuthContext } from "@/context/AuthContext";
 import type { Employee } from "@/types/employee.types";
 import { toast } from "sonner";
 import {
@@ -68,6 +69,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
   alertContext,
   onNudge,
 }) => {
+  const { user } = useAuthContext();
   const { getStatusTypes, logBulkStatus, getServiceTypes } = useEmployees();
   const [statusTypes, setStatusTypes] = useState<any[]>([]);
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
@@ -90,7 +92,8 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     if (alertContext?.commander_phone) {
       const names = alertContext.missing_names || [];
       const commanderName = alertContext.commander_name || "המפקד";
-      const unitName = alertContext.team_name || alertContext.section_name || "היחידה";
+      const unitName =
+        alertContext.team_name || alertContext.section_name || "היחידה";
 
       let message = `שלום ${commanderName}, תזכורת למילוי דוח בוקר עבור ${unitName}.\n\n`;
       message += `טרם הושלם דיווח עבור ${names.length} שוטרים:\n`;
@@ -101,9 +104,14 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
 
       const encodedMessage = encodeURIComponent(message);
       const phone = alertContext.commander_phone.replace(/\D/g, ""); // Remove non-digits
-      const finalPhone = phone.startsWith("0") ? "972" + phone.substring(1) : phone;
+      const finalPhone = phone.startsWith("0")
+        ? "972" + phone.substring(1)
+        : phone;
 
-      window.open(`https://wa.me/${finalPhone}?text=${encodedMessage}`, "_blank");
+      window.open(
+        `https://wa.me/${finalPhone}?text=${encodedMessage}`,
+        "_blank",
+      );
       toast.info(`פותח וואטסאפ לשליחת תזכורת ל${commanderName}`);
     } else if (onNudge && alertContext?.commander_id) {
       // Fallback to legacy nudge handler if no phone/names
@@ -337,23 +345,35 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                 </div>
                 <div className="flex flex-col gap-0.5 text-right">
                   <h4 className="text-sm font-black text-orange-950 dark:text-orange-50">
-                    דיווח בוקר חסר
+                    דיווח בוקר לא הושלם
                   </h4>
                   <p className="text-xs font-medium text-orange-800/90 dark:text-orange-300">
-                    המפקד{" "}
-                    <span className="font-bold border-b border-orange-500/30 pb-0.5">
-                      {alertContext.commander_name}
-                    </span>{" "}
-                    טרם דיווח על{" "}
-                    <span className="font-black font-mono text-orange-600 dark:text-orange-400 text-sm">
-                      {alertContext.missing_count}
-                    </span>{" "}
-                    שוטרים
+                    {user?.id === alertContext.commander_id ? (
+                      <>
+                        נא להשלים דיווח עבור{" "}
+                        <span className="font-black font-mono text-orange-600 dark:text-orange-400 text-sm">
+                          {alertContext.missing_count}
+                        </span>{" "}
+                        שוטרים תחת פיקודך שטרם עודכן להם סטטוס הבוקר.
+                      </>
+                    ) : (
+                      <>
+                        המפקד{" "}
+                        <span className="font-bold border-b border-orange-500/30 pb-0.5">
+                          {alertContext.commander_name}
+                        </span>{" "}
+                        טרם דיווח על{" "}
+                        <span className="font-black font-mono text-orange-600 dark:text-orange-400 text-sm">
+                          {alertContext.missing_count}
+                        </span>{" "}
+                        שוטרים
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
 
-              {onNudge && (
+              {onNudge && user?.id !== alertContext.commander_id && (
                 <Button
                   size="sm"
                   onClick={handleNudge}
@@ -456,7 +476,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                         "transition-all hover:bg-muted/40 border-b last:border-0",
                         isSelected && "bg-primary/5 hover:bg-primary/10",
                         current?.isChanged &&
-                        "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
+                          "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
                       )}
                     >
                       <TableCell className="text-center px-2 py-4 align-middle">

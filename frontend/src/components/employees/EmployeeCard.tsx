@@ -58,7 +58,7 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
           <div className="flex items-center gap-2">
             <div
               className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: employee.status_color }}
+              style={{ backgroundColor: employee.status_color || undefined }}
             />
             <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
               {employee.status_name}
@@ -106,8 +106,16 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
           <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 font-bold">רמת סיווג:</span>
-              <Badge variant="outline" className="text-[10px] font-bold">
-                {employee.security_clearance}
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-[10px] font-bold",
+                  employee.security_clearance
+                    ? "bg-blue-50 text-blue-600 border-blue-200"
+                    : "bg-slate-50 text-slate-400",
+                )}
+              >
+                {employee.security_clearance ? "קיים" : "ללא"}
               </Badge>
             </div>
           </div>

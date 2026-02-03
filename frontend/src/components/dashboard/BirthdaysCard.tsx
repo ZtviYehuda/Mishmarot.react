@@ -85,11 +85,11 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
               <Button
                 size="sm"
                 onClick={handleSendWhatsApp}
-                className="gap-1.5 sm:gap-2 h-8 sm:h-9 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-sm"
+                className="gap-1.5 sm:gap-2 h-8 sm:h-9 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-md transition-all active:scale-95"
                 title="שתף רשימה בוואטסאפ"
               >
                 <FaWhatsapp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="text-[11px] font-black uppercase tracking-wider">
+                <span className="text-xs hidden sm:inline font-bold" dir="rtl">
                   WhatsApp
                 </span>
               </Button>

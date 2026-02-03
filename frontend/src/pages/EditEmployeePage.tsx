@@ -132,9 +132,7 @@ const ToggleCard = ({
         <span
           className={cn(
             "block text-base font-bold transition-colors text-right",
-            checked
-              ? "text-primary"
-              : "text-foreground/80",
+            checked ? "text-primary" : "text-foreground/80",
           )}
         >
           {label}
@@ -195,7 +193,7 @@ export default function EditEmployeePage() {
     service_type_id: undefined,
     is_commander: false,
     is_admin: false,
-    security_clearance: 0,
+    security_clearance: false,
     police_license: false,
     emergency_contact: "",
     is_active: true,
@@ -217,8 +215,10 @@ export default function EditEmployeePage() {
     if (!formData.birth_date) return false;
     const today = new Date();
     const birthDate = new Date(formData.birth_date);
-    return today.getDate() === birthDate.getDate() &&
-      today.getMonth() === birthDate.getMonth();
+    return (
+      today.getDate() === birthDate.getDate() &&
+      today.getMonth() === birthDate.getMonth()
+    );
   };
 
   useEffect(() => {
@@ -261,7 +261,7 @@ export default function EditEmployeePage() {
           service_type_id: data.service_type_id || undefined,
           is_commander: data.is_commander || false,
           is_admin: data.is_admin || false,
-          security_clearance: data.security_clearance || 0,
+          security_clearance: !!data.security_clearance,
           police_license: data.police_license || false,
           emergency_contact: data.emergency_contact || "",
           is_active: data.is_active ?? true,
@@ -408,13 +408,15 @@ export default function EditEmployeePage() {
         <BirthdayGreetingsModal
           open={showBirthdayModal}
           onOpenChange={setShowBirthdayModal}
-          employeesToday={[{
-            id: employee.id,
-            first_name: employee.first_name,
-            last_name: employee.last_name,
-            birth_date: employee.birth_date || undefined,
-            phone_number: employee.phone_number || undefined
-          }]}
+          employeesToday={[
+            {
+              id: employee.id,
+              first_name: employee.first_name,
+              last_name: employee.last_name,
+              birth_date: employee.birth_date || undefined,
+              phone_number: employee.phone_number || undefined,
+            },
+          ]}
         />
       )}
 
@@ -453,19 +455,21 @@ export default function EditEmployeePage() {
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">סיווג אבטחתי</span>
-                    <div className="flex gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <div
-                          key={i}
-                          className={cn(
-                            "w-2 h-2 rounded-full",
-                            i < (formData.security_clearance || 0)
-                              ? "bg-primary"
-                              : "bg-muted",
-                          )}
-                        />
-                      ))}
+                    <span className="text-muted-foreground">סיווג ביטחוני</span>
+                    <div className="flex gap-1 items-center">
+                      <span
+                        className={cn(
+                          "font-medium",
+                          formData.security_clearance
+                            ? "text-primary"
+                            : "text-muted-foreground/60",
+                        )}
+                      >
+                        {formData.security_clearance ? "קיים" : "חסר"}
+                      </span>
+                      {formData.security_clearance && (
+                        <Shield className="w-3.5 h-3.5 text-primary" />
+                      )}
                     </div>
                   </div>
 
@@ -797,8 +801,13 @@ export default function EditEmployeePage() {
                               <ArrowLeftRight className="w-4 h-4" />
                             </div>
                             <div className="text-xs">
-                              <span className="font-bold text-blue-900 block">מעוניין להעביר את השוטר יחידה?</span>
-                              <span className="text-blue-700/80">השינוי הידני נועד למעברים פנימיים (מדור/חוליה). למעבר יחידה מלא יש להגיש בקשה.</span>
+                              <span className="font-bold text-blue-900 block">
+                                מעוניין להעביר את השוטר יחידה?
+                              </span>
+                              <span className="text-blue-700/80">
+                                השינוי הידני נועד למעברים פנימיים (מדור/חוליה).
+                                למעבר יחידה מלא יש להגיש בקשה.
+                              </span>
                             </div>
                           </div>
                           <Button
@@ -806,7 +815,9 @@ export default function EditEmployeePage() {
                             size="sm"
                             type="button"
                             className="bg-white hover:bg-white/80 text-blue-700 border border-blue-200 shadow-sm font-bold text-xs h-8"
-                            onClick={() => navigate(`/transfers?employeeId=${id}`)}
+                            onClick={() =>
+                              navigate(`/transfers?employeeId=${id}`)
+                            }
                           >
                             צור בקשת העברה
                           </Button>
@@ -866,27 +877,59 @@ export default function EditEmployeePage() {
                                 if (v && id) {
                                   // Check for existing commander
                                   const empId = parseInt(id);
-                                  let existing: { name: string; type: string } | null = null;
+                                  let existing: {
+                                    name: string;
+                                    type: string;
+                                  } | null = null;
 
                                   if (formData.team_id) {
-                                    const team = teams.find((t: any) => t.id === formData.team_id);
-                                    if (team?.commander_id && team.commander_id !== empId) {
-                                      existing = { name: team.commander_name || "לא ידוע", type: "חולייה" };
+                                    const team = teams.find(
+                                      (t: any) => t.id === formData.team_id,
+                                    );
+                                    if (
+                                      team?.commander_id &&
+                                      team.commander_id !== empId
+                                    ) {
+                                      existing = {
+                                        name: team.commander_name || "לא ידוע",
+                                        type: "חולייה",
+                                      };
                                     }
                                   } else if (selectedSectionId) {
-                                    const sec = sections.find((s: any) => s.id.toString() === selectedSectionId);
-                                    if (sec?.commander_id && sec.commander_id !== empId) {
-                                      existing = { name: sec.commander_name || "לא ידוע", type: "מדור" };
+                                    const sec = sections.find(
+                                      (s: any) =>
+                                        s.id.toString() === selectedSectionId,
+                                    );
+                                    if (
+                                      sec?.commander_id &&
+                                      sec.commander_id !== empId
+                                    ) {
+                                      existing = {
+                                        name: sec.commander_name || "לא ידוע",
+                                        type: "מדור",
+                                      };
                                     }
                                   } else if (selectedDeptId) {
-                                    const dept = structure.find((d: any) => d.id.toString() === selectedDeptId);
-                                    if (dept?.commander_id && dept.commander_id !== empId) {
-                                      existing = { name: dept.commander_name || "לא ידוע", type: "מחלקה" };
+                                    const dept = structure.find(
+                                      (d: any) =>
+                                        d.id.toString() === selectedDeptId,
+                                    );
+                                    if (
+                                      dept?.commander_id &&
+                                      dept.commander_id !== empId
+                                    ) {
+                                      existing = {
+                                        name: dept.commander_name || "לא ידוע",
+                                        type: "מחלקה",
+                                      };
                                     }
                                   }
 
                                   if (existing) {
-                                    setCommanderWarning({ name: existing.name, unitType: existing.type });
+                                    setCommanderWarning({
+                                      name: existing.name,
+                                      unitType: existing.type,
+                                    });
                                     return;
                                   }
                                 }
@@ -908,18 +951,32 @@ export default function EditEmployeePage() {
                                       <Shield className="w-5 h-5" />
                                     </div>
                                     <div className="flex-1">
-                                      <h4 className="text-sm font-black text-amber-900 mb-1">שים לב: החלפת מפקד</h4>
+                                      <h4 className="text-sm font-black text-amber-900 mb-1">
+                                        שים לב: החלפת מפקד
+                                      </h4>
                                       <p className="text-xs text-amber-800 font-bold leading-relaxed">
-                                        ליחידה זו כבר מוגדר מפקד: <span className="underline">{commanderWarning.name}</span>.
-                                        האם אתה בטוח שברצונך להגדיר את <span className="text-amber-950 font-black">{formData.first_name} {formData.last_name}</span> כמפקד ה{commanderWarning.unitType} במקומו?
-                                        פעולה זו תסיר את המפקד הנוכחי מתפקידו הפיקודי.
+                                        ליחידה זו כבר מוגדר מפקד:{" "}
+                                        <span className="underline">
+                                          {commanderWarning.name}
+                                        </span>
+                                        . האם אתה בטוח שברצונך להגדיר את{" "}
+                                        <span className="text-amber-950 font-black">
+                                          {formData.first_name}{" "}
+                                          {formData.last_name}
+                                        </span>{" "}
+                                        כמפקד ה{commanderWarning.unitType}{" "}
+                                        במקומו? פעולה זו תסיר את המפקד הנוכחי
+                                        מתפקידו הפיקודי.
                                       </p>
                                       <div className="flex gap-2 mt-3">
                                         <Button
                                           size="sm"
                                           className="bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] h-8 px-4 rounded-xl shadow-sm"
                                           onClick={() => {
-                                            setFormData({ ...formData, is_commander: true });
+                                            setFormData({
+                                              ...formData,
+                                              is_commander: true,
+                                            });
                                             setCommanderWarning(null);
                                           }}
                                         >
@@ -929,7 +986,9 @@ export default function EditEmployeePage() {
                                           size="sm"
                                           variant="ghost"
                                           className="text-amber-800 font-bold text-[10px] h-8 px-4 hover:bg-amber-500/10 rounded-xl"
-                                          onClick={() => setCommanderWarning(null)}
+                                          onClick={() =>
+                                            setCommanderWarning(null)
+                                          }
                                         >
                                           ביטול
                                         </Button>
@@ -976,8 +1035,6 @@ export default function EditEmployeePage() {
                               </motion.div>
                             )}
                           </div>
-
-
                         </div>
                       </CardContent>
                     </Card>
@@ -1049,7 +1106,8 @@ export default function EditEmployeePage() {
 
                         <div className="bg-muted/30 p-4 rounded-2xl border border-border space-y-4">
                           <h3 className="font-bold flex items-center gap-2 text-foreground/80">
-                            <Briefcase className="w-4 h-4 text-primary" /> סיום ואישי
+                            <Briefcase className="w-4 h-4 text-primary" /> סיום
+                            ואישי
                           </h3>
                           <FormField label="תאריך שחרור צפוי (תש''ש)">
                             <Input
@@ -1112,43 +1170,19 @@ export default function EditEmployeePage() {
                         description="ניהול רמות סיווג וסמכויות מיוחדות"
                       />
 
-                      <div className="bg-primary/5 border border-primary/10 p-6 rounded-2xl">
-                        <FormField label="רמת סיווג אבטחתי (0-5)">
-                          <div className="flex items-center gap-6 mt-2">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="5"
-                              value={formData.security_clearance}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  security_clearance:
-                                    parseInt(e.target.value) || 0,
-                                })
-                              }
-                              className="w-24 h-16 text-center text-3xl font-black bg-card rounded-xl shadow-sm border-primary/20 text-primary"
-                            />
-                            <div className="flex-1 space-y-2">
-                              <div className="flex gap-2">
-                                {[1, 2, 3, 4, 5].map((lvl) => (
-                                  <div
-                                    key={lvl}
-                                    className={cn(
-                                      "flex-1 h-4 rounded-md transition-all",
-                                      lvl <= (formData.security_clearance || 0)
-                                        ? "bg-primary shadow-sm"
-                                        : "bg-muted",
-                                    )}
-                                  />
-                                ))}
-                              </div>
-                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-left">
-                                Security Clearance Level
-                              </p>
-                            </div>
-                          </div>
-                        </FormField>
+                      <div className="bg-primary/5 border border-primary/10 p-6 rounded-2xl mb-6">
+                        <ToggleCard
+                          label="בעל סיווג ביטחוני"
+                          description="השוטר עבר בדיקת סיווג ורשאי להיחשף למידע מסווג"
+                          checked={formData.security_clearance as boolean}
+                          onChange={(v) =>
+                            setFormData({
+                              ...formData,
+                              security_clearance: v,
+                            })
+                          }
+                          icon={Shield}
+                        />
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

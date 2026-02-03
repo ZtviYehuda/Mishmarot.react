@@ -22,7 +22,7 @@ def create_app():
         app,
         resources={
             r"/api/*": {
-                "origins": ["http://localhost:5173", "http://localhost:5174"],
+                "origins": "*",
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                 "allow_headers": ["Content-Type", "Authorization"],
                 "expose_headers": ["Content-Type"],

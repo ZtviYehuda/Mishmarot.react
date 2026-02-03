@@ -18,7 +18,7 @@ export interface Employee {
   // Permissions & Metadata
   is_commander: boolean;
   is_admin: boolean;
-  security_clearance: number;
+  security_clearance: boolean;
   police_license: boolean;
 
   // Hierarchy (Flattened for display)
@@ -67,7 +67,7 @@ export interface CreateEmployeePayload {
   service_type_id?: number | null;
   is_commander?: boolean;
   is_admin?: boolean;
-  security_clearance?: number;
+  security_clearance?: boolean;
   police_license?: boolean;
   emergency_contact?: string;
   is_active?: boolean;

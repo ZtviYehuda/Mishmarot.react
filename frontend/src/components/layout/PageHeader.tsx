@@ -29,33 +29,29 @@ export function PageHeader({
         <span className="text-primary transition-colors">{category}</span>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="flex items-center gap-3 sm:gap-4 lg:gap-5">
-          {/* Icon Container - Stabilized Size */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 w-full sm:w-auto min-w-0">
+          {/* Icon Container - Responsive Size */}
           <div
             className={cn(
-              "w-14 h-14 rounded-2xl bg-gradient-to-br from-muted/50 to-muted border border-border flex items-center justify-center shrink-0 shadow-sm",
+              "w-8 h-8 sm:w-14 sm:h-14 rounded-lg sm:rounded-2xl bg-gradient-to-br from-muted/50 to-muted border border-border flex items-center justify-center shrink-0 shadow-sm",
               iconClassName,
             )}
           >
-            <Icon className="w-7 h-7 text-foreground/70" />
+            <Icon className="w-4 h-4 sm:w-7 sm:h-7 text-foreground/70" />
           </div>
 
-          <div className="text-right flex-1 min-w-0">
-            <h1 className="text-3xl font-black text-foreground tracking-tight mb-1">
+          <div className="text-right min-w-0 flex-1">
+            <h1 className="text-lg sm:text-3xl font-black text-foreground tracking-tight mb-0.5 sm:mb-1 whitespace-normal break-words">
               {title}
             </h1>
-            <p className="text-sm font-bold text-muted-foreground">
+            <p className="text-xs sm:text-sm font-bold text-muted-foreground whitespace-normal break-words">
               {subtitle}
             </p>
           </div>
         </div>
 
-        {badge && (
-          <div className="flex items-center self-start sm:self-center shrink-0">
-            {badge}
-          </div>
-        )}
+        {badge && <div className="w-full sm:w-auto shrink-0">{badge}</div>}
       </div>
     </div>
   );

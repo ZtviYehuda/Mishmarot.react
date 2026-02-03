@@ -26,6 +26,12 @@ export interface AuthUser {
   role_name?: string | null;
   service_type_name?: string | null;
   is_impersonated?: boolean;
+  national_id?: string | null;
+  enlistment_date?: string | null;
+  discharge_date?: string | null;
+  assignment_date?: string | null;
+  police_license?: boolean;
+  security_clearance?: boolean;
 }
 
 export interface LoginResponse {

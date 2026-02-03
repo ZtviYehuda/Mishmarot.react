@@ -10,8 +10,9 @@ import { useAuthContext } from "@/context/AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useDateContext } from "@/context/DateContext";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { LayoutDashboard } from "lucide-react"; // Updated
+import { LayoutDashboard } from "lucide-react";
 import { format } from "date-fns";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface Team {
   id: number;
@@ -46,8 +47,8 @@ export default function DashboardPage() {
   const [birthdays, setBirthdays] = useState<any[]>([]);
   const [structure, setStructure] = useState<Department[]>([]);
 
-  // Date State - Removed local state
-  // const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  // Filter Modal State
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // New Stats
   const [comparisonStats, setComparisonStats] = useState<any[]>([]);
@@ -266,17 +267,16 @@ export default function DashboardPage() {
         subtitle="נתוני נוכחות, ימי הולדת וסטטיסטיקות כוח אדם"
         category="לוח בקרה"
         categoryLink="/"
-        badge={<DateHeader />}
+        badge={<DateHeader className="w-full justify-end lg:justify-start" />}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-        {/* Main Chart - Takes 2 columns on desktop */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 items-start">
+        {/* Main Section - Takes 2 columns on desktop */}
         <div className="xl:col-span-2 space-y-6">
-          {/* Top Row: Filters & Chart Side-by-Side */}
-          {/* Top Row: Filters & Chart Side-by-Side - Equal Width */}
+          {/* Top Row: Filters & Chart */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-            {/* Filter Column */}
-            <div className="flex flex-col">
+            {/* Filter Column (Desktop Only) */}
+            <div className="hidden lg:flex flex-col">
               <DashboardFilters
                 structure={structure}
                 statuses={allStatuses}
@@ -298,10 +298,16 @@ export default function DashboardPage() {
                 loading={loading}
                 onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
                 onStatusClick={handleStatusClick}
+                onFilterClick={() => setFilterOpen(true)}
                 title={chartTitle}
                 description={chartDescription}
               />
             </div>
+          </div>
+
+          {/* Mobile Only: Birthdays (Under Graph) */}
+          <div className="xl:hidden">
+            <BirthdaysCard birthdays={birthdays} />
           </div>
 
           <div id="status-details-table">
@@ -320,24 +326,23 @@ export default function DashboardPage() {
           {(user?.is_admin ||
             user?.commands_department_id ||
             user?.commands_section_id) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <StatsComparisonCard
-                  data={comparisonStats}
-                  loading={loadingExtras}
-                />
-                <AttendanceTrendCard
-                  data={trendStats}
-                  loading={loadingTrend}
-                  range={trendRange}
-                  onRangeChange={setTrendRange}
-                />
-              </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <StatsComparisonCard
+                data={comparisonStats}
+                loading={loadingExtras}
+              />
+              <AttendanceTrendCard
+                data={trendStats}
+                loading={loadingTrend}
+                range={trendRange}
+                onRangeChange={setTrendRange}
+              />
+            </div>
+          )}
         </div>
 
-
-        {/* Birthdays Card - Takes 1 column */}
-        <div className="xl:col-span-1 h-full min-h-[300px] sm:min-h-[400px]">
+        {/* Desktop Only: Birthdays (Side Column) */}
+        <div className="hidden xl:block xl:col-span-1">
           <BirthdaysCard birthdays={birthdays} />
         </div>
       </div>
@@ -346,6 +351,24 @@ export default function DashboardPage() {
         open={whatsAppDialogOpen}
         onOpenChange={setWhatsAppDialogOpen}
       />
-    </div >
+
+      {/* Mobile Filter Dialog */}
+      <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-[340px] w-full mx-auto">
+          <DashboardFilters
+            structure={structure}
+            statuses={allStatuses}
+            selectedDeptId={selectedDeptId}
+            selectedSectionId={selectedSectionId}
+            selectedTeamId={selectedTeamId}
+            selectedStatusId={selectedStatusData?.id?.toString()}
+            onFilterChange={handleFilterChange}
+            canSelectDept={canSelectDept}
+            canSelectSection={canSelectSection}
+            canSelectTeam={canSelectTeam}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

@@ -389,7 +389,7 @@ class EmployeeModel:
                     data.get("is_admin", False),
                     pw_hash,
                     must_change,
-                    data.get("security_clearance", 0),
+                    int(data.get("security_clearance", 0)),
                     data.get("police_license", False),
                 ),
             )
@@ -520,6 +520,12 @@ class EmployeeModel:
             # Business Rule: If commander status changes, sync must_change_password
             if "is_commander" in data:
                 data["must_change_password"] = data["is_commander"]
+
+            # Convert boolean security_clearance to int (0/1) for legacy DB column
+            if "security_clearance" in data and isinstance(
+                data["security_clearance"], bool
+            ):
+                data["security_clearance"] = 1 if data["security_clearance"] else 0
 
             set_clauses = []
             params = []

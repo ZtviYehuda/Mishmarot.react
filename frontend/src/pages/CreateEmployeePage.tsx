@@ -88,7 +88,7 @@ export default function CreateEmployeePage() {
     service_type_id: undefined,
     is_commander: false,
     is_admin: false,
-    security_clearance: 0,
+    security_clearance: false,
     police_license: false,
     emergency_contact: "",
   });
@@ -508,20 +508,42 @@ export default function CreateEmployeePage() {
                   onChange={(v) => {
                     if (v) {
                       // Check for existing commander
-                      let existing: { name: string; type: string } | null = null;
+                      let existing: { name: string; type: string } | null =
+                        null;
                       if (formData.team_id) {
-                        const team = teams.find(t => t.id === formData.team_id);
-                        if (team?.commander_id) existing = { name: team.commander_name || "לא ידוע", type: "חולייה" };
+                        const team = teams.find(
+                          (t) => t.id === formData.team_id,
+                        );
+                        if (team?.commander_id)
+                          existing = {
+                            name: team.commander_name || "לא ידוע",
+                            type: "חולייה",
+                          };
                       } else if (selectedSectionId) {
-                        const sec = sections.find(s => s.id.toString() === selectedSectionId);
-                        if (sec?.commander_id) existing = { name: sec.commander_name || "לא ידוע", type: "מדור" };
+                        const sec = sections.find(
+                          (s) => s.id.toString() === selectedSectionId,
+                        );
+                        if (sec?.commander_id)
+                          existing = {
+                            name: sec.commander_name || "לא ידוע",
+                            type: "מדור",
+                          };
                       } else if (selectedDeptId) {
-                        const dept = structure.find(d => d.id.toString() === selectedDeptId);
-                        if (dept?.commander_id) existing = { name: dept.commander_name || "לא ידוע", type: "מחלקה" };
+                        const dept = structure.find(
+                          (d) => d.id.toString() === selectedDeptId,
+                        );
+                        if (dept?.commander_id)
+                          existing = {
+                            name: dept.commander_name || "לא ידוע",
+                            type: "מחלקה",
+                          };
                       }
 
                       if (existing) {
-                        setCommanderWarning({ name: existing.name, unitType: existing.type });
+                        setCommanderWarning({
+                          name: existing.name,
+                          unitType: existing.type,
+                        });
                         return; // Don't toggle yet
                       }
                     }
@@ -536,11 +558,20 @@ export default function CreateEmployeePage() {
                         <Shield className="w-5 h-5" />
                       </div>
                       <div className="flex-1">
-                        <h4 className="text-sm font-black text-amber-700 mb-1">שים לב: החלפת מפקד</h4>
+                        <h4 className="text-sm font-black text-amber-700 mb-1">
+                          שים לב: החלפת מפקד
+                        </h4>
                         <p className="text-xs text-amber-700/80 font-bold leading-relaxed">
-                          ליחידה זו כבר מוגדר מפקד: <span className="underline">{commanderWarning.name}</span>.
-                          האם אתה בטוח שברצונך להגדיר את <span className="text-amber-900 font-black">{formData.first_name} {formData.last_name}</span> כמפקד ה{commanderWarning.unitType} במקומו?
-                          פעולה זו תסיר את המפקד הנוכחי מתפקידו הפיקודי.
+                          ליחידה זו כבר מוגדר מפקד:{" "}
+                          <span className="underline">
+                            {commanderWarning.name}
+                          </span>
+                          . האם אתה בטוח שברצונך להגדיר את{" "}
+                          <span className="text-amber-900 font-black">
+                            {formData.first_name} {formData.last_name}
+                          </span>{" "}
+                          כמפקד ה{commanderWarning.unitType} במקומו? פעולה זו
+                          תסיר את המפקד הנוכחי מתפקידו הפיקודי.
                         </p>
                         <div className="flex gap-3 mt-3">
                           <Button
@@ -648,29 +679,15 @@ export default function CreateEmployeePage() {
           {/* Security & Permissions */}
           <SectionCard icon={Shield} title="הגדרות ואבטחה" compact>
             <div className="space-y-6">
-              <FormField label="רמת סיווג (0-5)">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <input
-                      type="range"
-                      min="0"
-                      max="5"
-                      step="1"
-                      value={formData.security_clearance}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          security_clearance: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-                    />
-                  </div>
-                  <div className="w-8 h-8 rounded-md bg-primary/10 text-primary font-bold flex items-center justify-center border border-primary/20">
-                    {formData.security_clearance}
-                  </div>
-                </div>
-              </FormField>
+              <div className="space-y-3 pt-2">
+                <ToggleCard
+                  label="בעל סיווג ביטחוני"
+                  checked={formData.security_clearance as boolean}
+                  onChange={(v) =>
+                    setFormData({ ...formData, security_clearance: v })
+                  }
+                />
+              </div>
 
               <div className="space-y-3 pt-2">
                 <ToggleCard
@@ -798,11 +815,12 @@ function ToggleCard({
       onClick={() => onChange(!checked)}
       className={`
         flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200
-        ${checked
-          ? danger
-            ? "bg-destructive/10 border-destructive/20 ring-1 ring-destructive/20"
-            : "bg-primary/10 border-primary/20 ring-1 ring-primary/20"
-          : "bg-card border-input hover:border-accent hover:bg-muted"
+        ${
+          checked
+            ? danger
+              ? "bg-destructive/10 border-destructive/20 ring-1 ring-destructive/20"
+              : "bg-primary/10 border-primary/20 ring-1 ring-primary/20"
+            : "bg-card border-input hover:border-accent hover:bg-muted"
         }
       `}
     >

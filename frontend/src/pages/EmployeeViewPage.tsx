@@ -14,26 +14,21 @@ import {
   BadgeCheck,
   MapPin,
   AlertTriangle,
-  X,
   History as HistoryIcon,
   Briefcase,
   FileCheck,
   Siren,
-  Users,
   ArrowLeft,
-
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import * as endpoints from "@/config/employees.endpoints";
-import { PageHeader } from "@/components/layout/PageHeader";
 import StatusHistoryList from "@/components/employees/StatusHistoryList";
 import { format, differenceInYears } from "date-fns";
-import { he } from "date-fns/locale";
 
 export default function EmployeeViewPage() {
   const { id } = useParams<{ id: string }>();
@@ -127,7 +122,7 @@ export default function EmployeeViewPage() {
     label,
     value,
     subValue,
-    className
+    className,
   }: {
     icon: any;
     label: string;
@@ -135,16 +130,27 @@ export default function EmployeeViewPage() {
     subValue?: string;
     className?: string;
   }) => (
-    <div className={cn("flex items-start gap-4 p-4 rounded-2xl bg-muted/30 hover:bg-card transition-all border border-transparent hover:border-border hover:shadow-sm", className)}>
+    <div
+      className={cn(
+        "flex items-start gap-4 p-4 rounded-2xl bg-muted/30 hover:bg-card transition-all border border-transparent hover:border-border hover:shadow-sm",
+        className,
+      )}
+    >
       <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-sm border border-primary/5">
         <Icon className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-bold text-muted-foreground/80 mb-0.5">{label}</p>
+        <p className="text-xs font-bold text-muted-foreground/80 mb-0.5">
+          {label}
+        </p>
         <div className="font-bold text-foreground truncate text-sm sm:text-base">
           {value || "—"}
         </div>
-        {subValue && <p className="text-xs text-muted-foreground/80 mt-1 font-medium">{subValue}</p>}
+        {subValue && (
+          <p className="text-xs text-muted-foreground/80 mt-1 font-medium">
+            {subValue}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -164,8 +170,12 @@ export default function EmployeeViewPage() {
                   <UserX className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="font-black text-sm md:text-base">תיק שוטר לא פעיל</p>
-                  <p className="text-xs md:text-sm opacity-90 font-medium">השוטר אינו פעיל במערכת ואינו נכלל בדיווחי הנוכחות השוטפים</p>
+                  <p className="font-black text-sm md:text-base">
+                    תיק שוטר לא פעיל
+                  </p>
+                  <p className="text-xs md:text-sm opacity-90 font-medium">
+                    השוטר אינו פעיל במערכת ואינו נכלל בדיווחי הנוכחות השוטפים
+                  </p>
                 </div>
               </div>
               <Button
@@ -175,19 +185,26 @@ export default function EmployeeViewPage() {
                 disabled={actionLoading}
                 className="font-black whitespace-nowrap shadow-lg"
               >
-                {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "החזר לפעילות"}
+                {actionLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "החזר לפעילות"
+                )}
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      <div className={cn("px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto", !employee.is_active && "mt-6 grayscale-[0.5] opacity-90")}>
-
+      <div
+        className={cn(
+          "px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto",
+          !employee.is_active && "mt-6 grayscale-[0.5] opacity-90",
+        )}
+      >
         {/* Header Profile Section */}
         <div className="relative mt-8 mb-8">
           <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 md:gap-8 px-6 pb-6 pt-2">
-
             {/* Info */}
             <div className="flex-1 text-right mb-2 w-full">
               <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
@@ -216,17 +233,22 @@ export default function EmployeeViewPage() {
               <div className="flex flex-wrap items-center justify-start gap-x-6 gap-y-2 text-muted-foreground font-medium text-sm md:text-base">
                 <div className="flex items-center gap-2">
                   <BadgeCheck className="w-4 h-4 text-primary" />
-                  <span>מספר אישי: <span className="text-foreground font-bold font-mono">{employee.personal_number}</span></span>
+                  <span>
+                    מספר אישי:{" "}
+                    <span className="text-foreground font-bold font-mono">
+                      {employee.personal_number}
+                    </span>
+                  </span>
                 </div>
                 <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-border" />
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-primary" />
-                  <span>{employee.department_name || 'ללא מחלקה'}</span>
+                  <span>{employee.department_name || "ללא מחלקה"}</span>
                 </div>
                 <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-border" />
                 <div className="flex items-center gap-2">
                   <Briefcase className="w-4 h-4 text-primary" />
-                  <span>{employee.role_name || 'תפקיד כללי'}</span>
+                  <span>{employee.role_name || "תפקיד כללי"}</span>
                 </div>
               </div>
             </div>
@@ -246,7 +268,9 @@ export default function EmployeeViewPage() {
                 disabled={actionLoading}
                 className={cn(
                   "h-12 rounded-2xl border-2 font-bold hover:scale-105 transition-all text-sm md:text-base px-6",
-                  employee.is_active ? "bg-background hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20" : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                  employee.is_active
+                    ? "bg-background hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20"
+                    : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200",
                 )}
               >
                 {employee.is_active ? "השבתת שוטר" : "הפעלה מחדש"}
@@ -257,19 +281,27 @@ export default function EmployeeViewPage() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="w-full space-y-8" dir="rtl">
-
           {/* Tabs List */}
           <div className="flex justify-center md:justify-start">
             <TabsList className="bg-muted/40 p-1.5 h-auto rounded-2xl border border-border/50 inline-flex">
-              <TabsTrigger value="overview" className="rounded-xl h-11 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md font-bold text-sm md:text-base transition-all">
+              <TabsTrigger
+                value="overview"
+                className="rounded-xl h-11 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md font-bold text-sm md:text-base transition-all"
+              >
                 <User className="w-4 h-4 ml-2" />
                 פרטים אישיים
               </TabsTrigger>
-              <TabsTrigger value="service" className="rounded-xl h-11 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md font-bold text-sm md:text-base transition-all">
+              <TabsTrigger
+                value="service"
+                className="rounded-xl h-11 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md font-bold text-sm md:text-base transition-all"
+              >
                 <Shield className="w-4 h-4 ml-2" />
                 שירות ותפקיד
               </TabsTrigger>
-              <TabsTrigger value="history" className="rounded-xl h-11 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md font-bold text-sm md:text-base transition-all">
+              <TabsTrigger
+                value="history"
+                className="rounded-xl h-11 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md font-bold text-sm md:text-base transition-all"
+              >
                 <HistoryIcon className="w-4 h-4 ml-2" />
                 נוכחות והיסטוריה
               </TabsTrigger>
@@ -277,9 +309,11 @@ export default function EmployeeViewPage() {
           </div>
 
           {/* TAB: PERSONAL INFO */}
-          <TabsContent value="overview" className="space-y-6 focus-visible:outline-none animate-in slide-in-from-bottom-4 duration-500">
+          <TabsContent
+            value="overview"
+            className="space-y-6 focus-visible:outline-none animate-in slide-in-from-bottom-4 duration-500"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
               {/* Identification */}
               <Card className="rounded-3xl shadow-sm border-border overflow-hidden">
                 <CardHeader className="bg-muted/30 border-b border-border pb-4">
@@ -289,10 +323,27 @@ export default function EmployeeViewPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
-                  <DetailItem icon={User} label="שם מלא" value={`${employee.first_name} ${employee.last_name}`} />
-                  <DetailItem icon={BadgeCheck} label="תעודת זהות" value={employee.national_id} />
-                  <DetailItem icon={Calendar} label="תאריך לידה" value={formatDate(employee.birth_date)} subValue={calculateAge(employee.birth_date)} />
-                  <DetailItem icon={MapPin} label="עיר מגורים" value={employee.city} />
+                  <DetailItem
+                    icon={User}
+                    label="שם מלא"
+                    value={`${employee.first_name} ${employee.last_name}`}
+                  />
+                  <DetailItem
+                    icon={BadgeCheck}
+                    label="תעודת זהות"
+                    value={employee.national_id}
+                  />
+                  <DetailItem
+                    icon={Calendar}
+                    label="תאריך לידה"
+                    value={formatDate(employee.birth_date)}
+                    subValue={calculateAge(employee.birth_date)}
+                  />
+                  <DetailItem
+                    icon={MapPin}
+                    label="עיר מגורים"
+                    value={employee.city}
+                  />
                 </CardContent>
               </Card>
 
@@ -305,12 +356,19 @@ export default function EmployeeViewPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
-                  <DetailItem icon={Phone} label="טלפון נייד" value={employee.phone_number} className="bg-emerald-50/50 border-emerald-100/50" />
+                  <DetailItem
+                    icon={Phone}
+                    label="טלפון נייד"
+                    value={employee.phone_number}
+                    className="bg-emerald-50/50 border-emerald-100/50"
+                  />
                   <div className="my-2 h-px bg-border/50" />
                   <div className="bg-red-50/50 rounded-2xl p-4 border border-red-100/50">
                     <div className="flex items-center gap-2 mb-3">
                       <AlertTriangle className="w-4 h-4 text-red-500" />
-                      <span className="font-black text-xs text-red-600 uppercase tracking-wider">מקרה חירום בלבד</span>
+                      <span className="font-black text-xs text-red-600 uppercase tracking-wider">
+                        מקרה חירום בלבד
+                      </span>
                     </div>
                     <DetailItem
                       icon={Phone}
@@ -333,15 +391,29 @@ export default function EmployeeViewPage() {
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border/50">
                     <div className="flex items-center gap-3">
-                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", employee.is_active ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600")}>
+                      <div
+                        className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center",
+                          employee.is_active
+                            ? "bg-emerald-100 text-emerald-600"
+                            : "bg-red-100 text-red-600",
+                        )}
+                      >
                         <BadgeCheck className="w-5 h-5" />
                       </div>
                       <div>
                         <p className="font-bold text-foreground">סטטוס משתמש</p>
-                        <p className="text-xs text-muted-foreground">{employee.is_active ? "פעיל במערכת" : "מושבת זמנית"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {employee.is_active ? "פעיל במערכת" : "מושבת זמנית"}
+                        </p>
                       </div>
                     </div>
-                    <Badge className={cn("px-3 py-1 text-xs", employee.is_active ? "bg-emerald-500" : "bg-red-500")}>
+                    <Badge
+                      className={cn(
+                        "px-3 py-1 text-xs",
+                        employee.is_active ? "bg-emerald-500" : "bg-red-500",
+                      )}
+                    >
                       {employee.is_active ? "פעיל" : "חסום"}
                     </Badge>
                   </div>
@@ -352,11 +424,17 @@ export default function EmployeeViewPage() {
                         <Shield className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="font-bold text-foreground">הרשאות ניהול</p>
-                        <p className="text-xs text-muted-foreground ml-2">{employee.is_admin ? "מנהל מערכת מלא" : "משתמש רגיל"}</p>
+                        <p className="font-bold text-foreground">
+                          הרשאות ניהול
+                        </p>
+                        <p className="text-xs text-muted-foreground ml-2">
+                          {employee.is_admin ? "מנהל מערכת מלא" : "משתמש רגיל"}
+                        </p>
                       </div>
                     </div>
-                    {employee.is_admin && <Badge className="bg-violet-500">Admin</Badge>}
+                    {employee.is_admin && (
+                      <Badge className="bg-violet-500">Admin</Badge>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border/50">
@@ -366,21 +444,28 @@ export default function EmployeeViewPage() {
                       </div>
                       <div>
                         <p className="font-bold text-foreground">פיקוד</p>
-                        <p className="text-xs text-muted-foreground ml-2">{employee.is_commander ? "מפקד (יכול לנהל אחרים)" : "ללא סמכויות פיקוד"}</p>
+                        <p className="text-xs text-muted-foreground ml-2">
+                          {employee.is_commander
+                            ? "מפקד (יכול לנהל אחרים)"
+                            : "ללא סמכויות פיקוד"}
+                        </p>
                       </div>
                     </div>
-                    {employee.is_commander && <Badge className="bg-blue-500">מפקד</Badge>}
+                    {employee.is_commander && (
+                      <Badge className="bg-blue-500">מפקד</Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-
             </div>
           </TabsContent>
 
           {/* TAB: SERVICE INFO */}
-          <TabsContent value="service" className="space-y-6 focus-visible:outline-none animate-in slide-in-from-bottom-4 duration-500 delay-100">
+          <TabsContent
+            value="service"
+            className="space-y-6 focus-visible:outline-none animate-in slide-in-from-bottom-4 duration-500 delay-100"
+          >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
               {/* Organization Hierarchy */}
               <div className="lg:col-span-8">
                 <Card className="rounded-3xl shadow-sm border-border overflow-hidden h-full">
@@ -395,63 +480,93 @@ export default function EmployeeViewPage() {
                       {/* Line connector for desktop */}
                       <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-gradient-to-l from-transparent via-border to-transparent -translate-y-1/2 z-0" />
 
-                      <div className={cn(
-                        "relative z-10 flex flex-col items-center border p-4 rounded-2xl shadow-sm w-full md:w-48 text-center transition-all",
-                        employee.commands_department_id ? "bg-amber-50 md:-translate-y-2 border-amber-300 shadow-amber-100" : "bg-card border-border hover:border-primary/30"
-                      )}>
+                      <div
+                        className={cn(
+                          "relative z-10 flex flex-col items-center border p-4 rounded-2xl shadow-sm w-full md:w-48 text-center transition-all",
+                          employee.commands_department_id
+                            ? "bg-amber-50 md:-translate-y-2 border-amber-300 shadow-amber-100"
+                            : "bg-card border-border hover:border-primary/30",
+                        )}
+                      >
                         {employee.commands_department_id && (
                           <div className="absolute -top-3 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
                             מפקד מחלקה
                           </div>
                         )}
 
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">מחלקה</span>
-                        <span className="font-black text-lg text-foreground">{employee.department_name || "—"}</span>
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                          מחלקה
+                        </span>
+                        <span className="font-black text-lg text-foreground">
+                          {employee.department_name || "—"}
+                        </span>
                       </div>
 
                       <div className="hidden md:flex w-8 h-8 rounded-full items-center justify-center text-muted-foreground/50 z-10 mx-2">
                         <ArrowLeft className="w-5 h-5" />
                       </div>
 
-                      <div className={cn(
-                        "relative z-10 flex flex-col items-center border p-4 rounded-2xl shadow-sm w-full md:w-48 text-center transition-all",
-                        employee.commands_section_id ? "bg-amber-50 md:-translate-y-2 border-amber-300 shadow-amber-100" : "bg-card border-border hover:border-primary/30"
-                      )}>
+                      <div
+                        className={cn(
+                          "relative z-10 flex flex-col items-center border p-4 rounded-2xl shadow-sm w-full md:w-48 text-center transition-all",
+                          employee.commands_section_id
+                            ? "bg-amber-50 md:-translate-y-2 border-amber-300 shadow-amber-100"
+                            : "bg-card border-border hover:border-primary/30",
+                        )}
+                      >
                         {employee.commands_section_id && (
                           <div className="absolute -top-3 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
                             מפקד מדור
                           </div>
                         )}
 
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">מדור</span>
-                        <span className="font-black text-lg text-foreground">{employee.section_name || "—"}</span>
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                          מדור
+                        </span>
+                        <span className="font-black text-lg text-foreground">
+                          {employee.section_name || "—"}
+                        </span>
                       </div>
 
                       <div className="hidden md:flex w-8 h-8 rounded-full items-center justify-center text-muted-foreground/50 z-10 mx-2">
                         <ArrowLeft className="w-5 h-5" />
                       </div>
 
-                      <div className={cn(
-                        "relative z-10 flex flex-col items-center border p-4 rounded-2xl shadow-sm w-full md:w-48 text-center transition-all",
-                        employee.commands_team_id ? "bg-amber-50 md:-translate-y-2 border-amber-300 shadow-amber-100" : "bg-card border-border hover:border-primary/30"
-                      )}>
+                      <div
+                        className={cn(
+                          "relative z-10 flex flex-col items-center border p-4 rounded-2xl shadow-sm w-full md:w-48 text-center transition-all",
+                          employee.commands_team_id
+                            ? "bg-amber-50 md:-translate-y-2 border-amber-300 shadow-amber-100"
+                            : "bg-card border-border hover:border-primary/30",
+                        )}
+                      >
                         {employee.commands_team_id && (
                           <div className="absolute -top-3 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
                             מפקד חוליה
                           </div>
                         )}
 
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">צוות/חוליה</span>
-                        <span className="font-black text-lg text-foreground">{employee.team_name || "—"}</span>
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                          צוות/חוליה
+                        </span>
+                        <span className="font-black text-lg text-foreground">
+                          {employee.team_name || "—"}
+                        </span>
                       </div>
                     </div>
 
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <DetailItem icon={Briefcase} label="תפקיד נוכחי" value={employee.role_name} />
-                      <DetailItem icon={FileCheck} label="סוג שירות" value={employee.service_type_name} />
+                      <DetailItem
+                        icon={Briefcase}
+                        label="תפקיד נוכחי"
+                        value={employee.role_name}
+                      />
+                      <DetailItem
+                        icon={FileCheck}
+                        label="סוג שירות"
+                        value={employee.service_type_name}
+                      />
                     </div>
-
-
                   </CardContent>
                 </Card>
               </div>
@@ -469,18 +584,30 @@ export default function EmployeeViewPage() {
                     <div className="relative border-r-2 border-primary/20 pr-4 py-2 space-y-8">
                       <div className="relative">
                         <div className="absolute -right-[23px] top-1 w-3.5 h-3.5 bg-primary rounded-full ring-4 ring-background" />
-                        <p className="text-xs font-bold text-primary mb-0.5">תאריך גיוס</p>
-                        <p className="font-black text-foreground">{formatDate(employee.enlistment_date)}</p>
+                        <p className="text-xs font-bold text-primary mb-0.5">
+                          תאריך גיוס
+                        </p>
+                        <p className="font-black text-foreground">
+                          {formatDate(employee.enlistment_date)}
+                        </p>
                       </div>
                       <div className="relative">
                         <div className="absolute -right-[23px] top-1 w-3.5 h-3.5 bg-primary/60 rounded-full ring-4 ring-background" />
-                        <p className="text-xs font-bold text-muted-foreground mb-0.5">כניסה לתפקיד</p>
-                        <p className="font-bold text-foreground">{formatDate(employee.assignment_date)}</p>
+                        <p className="text-xs font-bold text-muted-foreground mb-0.5">
+                          כניסה לתפקיד
+                        </p>
+                        <p className="font-bold text-foreground">
+                          {formatDate(employee.assignment_date)}
+                        </p>
                       </div>
                       <div className="relative">
                         <div className="absolute -right-[23px] top-1 w-3.5 h-3.5 bg-muted-foreground/30 rounded-full ring-4 ring-background" />
-                        <p className="text-xs font-bold text-muted-foreground mb-0.5">שחרור צפוי (תש"ש)</p>
-                        <p className="font-bold text-foreground">{formatDate(employee.discharge_date)}</p>
+                        <p className="text-xs font-bold text-muted-foreground mb-0.5">
+                          שחרור צפוי (תש"ש)
+                        </p>
+                        <p className="font-bold text-foreground">
+                          {formatDate(employee.discharge_date)}
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -489,16 +616,34 @@ export default function EmployeeViewPage() {
                 <Card className="rounded-3xl shadow-sm border-border overflow-hidden">
                   <CardContent className="p-6 space-y-4 pt-6">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-muted-foreground">סיווג אבטחתי</span>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5, 6].map(lvl => (
-                          <div key={lvl} className={cn("w-1.5 h-4 rounded-full", lvl <= (employee.security_clearance || 0) ? "bg-primary" : "bg-muted")} />
-                        ))}
-                      </div>
+                      <span className="text-sm font-bold text-muted-foreground">
+                         סיווג ביטחוני
+                      </span>
+                      <Badge
+                        className={cn(
+                          "px-2",
+                          employee.security_clearance
+                            ? "bg-blue-500"
+                            : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {employee.security_clearance
+                          ? "קיים"
+                          : "ללא סיווג"}
+                      </Badge>
                     </div>
                     <div className="flex items-center justify-between border-t border-border pt-4">
-                      <span className="text-sm font-bold text-muted-foreground">רישיון משטרתי</span>
-                      <Badge className={cn("px-2", employee.police_license ? "bg-emerald-500" : "bg-muted text-muted-foreground")}>
+                      <span className="text-sm font-bold text-muted-foreground">
+                        רישיון משטרתי
+                      </span>
+                      <Badge
+                        className={cn(
+                          "px-2",
+                          employee.police_license
+                            ? "bg-emerald-500"
+                            : "bg-muted text-muted-foreground",
+                        )}
+                      >
                         {employee.police_license ? "בתוקף" : "ללא רישיון"}
                       </Badge>
                     </div>
@@ -509,7 +654,10 @@ export default function EmployeeViewPage() {
           </TabsContent>
 
           {/* TAB: HISTORY */}
-          <TabsContent value="history" className="focus-visible:outline-none animate-in slide-in-from-bottom-4 duration-500 delay-200">
+          <TabsContent
+            value="history"
+            className="focus-visible:outline-none animate-in slide-in-from-bottom-4 duration-500 delay-200"
+          >
             <Card className="rounded-3xl shadow-sm border-border overflow-hidden">
               <CardHeader className="bg-muted/30 border-b border-border pb-4 flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -519,7 +667,7 @@ export default function EmployeeViewPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate('/attendance')}
+                  onClick={() => navigate("/attendance")}
                   className="bg-background"
                 >
                   מעבר ללוח בקרה ראשי
@@ -533,7 +681,6 @@ export default function EmployeeViewPage() {
               </CardContent>
             </Card>
           </TabsContent>
-
         </Tabs>
       </div>
     </div>

@@ -210,27 +210,72 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               אין מספר טלפון זמין
             </Button>
           ) : (
-            <Button
-              asChild
-              variant="outline"
-              className="gap-2 font-bold text-[#25D366] hover:text-[#128C7E] hover:bg-[#25D366]/10 border-[#25D366]/20 h-10 px-6 rounded-xl transition-all shadow-sm"
-            >
-              <a
-                href={`https://wa.me/${(() => {
-                  let phone = employee.phone_number.replace(/\D/g, "");
-                  if (phone.startsWith("0")) phone = "972" + phone.slice(1);
-                  else if (phone.length === 9) phone = "972" + phone;
-                  return phone;
-                })()}?text=${encodeURIComponent(
-                  `היי ${employee.first_name}, המון מזל טוב ליום הולדתך! 🎉 מאחלים לך הרבה אושר, בריאות והצלחה בכל! 🎂`,
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaWhatsapp className="w-5 h-5" />
-                שלח ברכת יום הולדת
-              </a>
-            </Button>
+            (() => {
+              const isBirthdayUpcoming = () => {
+                if (!employee.birth_date) return false;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const birthDate = new Date(employee.birth_date);
+
+                // Create current year birthday date
+                const currentYearBirthday = new Date(
+                  today.getFullYear(),
+                  birthDate.getMonth(),
+                  birthDate.getDate(),
+                );
+
+                // Create next year birthday for edge cases (end of year)
+                const nextYearBirthday = new Date(
+                  today.getFullYear() + 1,
+                  birthDate.getMonth(),
+                  birthDate.getDate(),
+                );
+
+                const isUpcoming = (date: Date) => {
+                  const diffTime = date.getTime() - today.getTime();
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  return diffDays >= 0 && diffDays <= 7;
+                };
+
+                return (
+                  isUpcoming(currentYearBirthday) ||
+                  isUpcoming(nextYearBirthday)
+                );
+              };
+
+              const isBirthday = isBirthdayUpcoming();
+
+              return (
+                <Button
+                  asChild
+                  variant="outline"
+                  className={cn(
+                    "gap-2 font-bold h-10 px-6 rounded-xl transition-all shadow-sm",
+                    isBirthday
+                      ? "text-[#25D366] hover:text-[#128C7E] hover:bg-[#25D366]/10 border-[#25D366]/20"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border-border",
+                  )}
+                >
+                  <a
+                    href={`https://wa.me/${(() => {
+                      let phone = employee.phone_number.replace(/\D/g, "");
+                      if (phone.startsWith("0")) phone = "972" + phone.slice(1);
+                      else if (phone.length === 9) phone = "972" + phone;
+                      return phone;
+                    })()}?text=${encodeURIComponent(
+                      isBirthday
+                        ? `היי ${employee.first_name}, המון מזל טוב ליום הולדתך! 🎉 מאחלים לך הרבה אושר, בריאות והצלחה בכל! 🎂`
+                        : `היי ${employee.first_name}, `,
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <FaWhatsapp className="w-5 h-5" />
+                    {isBirthday ? "שלח ברכת יום הולדת" : "שלח הודעה"}
+                  </a>
+                </Button>
+              );
+            })()
           )}
         </div>
       </DialogContent>

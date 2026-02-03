@@ -9,6 +9,7 @@ export interface Alert {
   description: string;
   link: string;
   read_at?: string;
+  data?: any;
 }
 
 export function useNotifications() {
@@ -36,7 +37,9 @@ export function useNotifications() {
     if (!user) return;
     setLoadingHistory(true);
     try {
-      const { data } = await apiClient.get<Alert[]>("/notifications/alerts/history");
+      const { data } = await apiClient.get<Alert[]>(
+        "/notifications/alerts/history",
+      );
       setHistory(data);
     } catch (err) {
       console.error("Failed to fetch notification history:", err);
@@ -48,13 +51,13 @@ export function useNotifications() {
   const markAsRead = async (notificationId: string) => {
     try {
       // Find the alert to send its snapshot details
-      const alert = alerts.find(a => a.id === notificationId);
+      const alert = alerts.find((a) => a.id === notificationId);
 
       await apiClient.post(`/notifications/alerts/${notificationId}/read`, {
         title: alert?.title,
         description: alert?.description,
         type: alert?.type,
-        link: alert?.link
+        link: alert?.link,
       });
 
       // Remove from active alerts and refetch history if needed
@@ -84,15 +87,18 @@ export function useNotifications() {
       if (alerts.length === 0) return;
 
       // Prepare payload with all necessary snapshot data
-      const notificationsPayload = alerts.map(alert => ({
+      const notificationsPayload = alerts.map((alert) => ({
         id: alert.id,
         title: alert.title,
         description: alert.description,
         type: alert.type,
-        link: alert.link
+        link: alert.link,
       }));
 
-      await apiClient.post(`/notifications/alerts/read-all`, notificationsPayload);
+      await apiClient.post(
+        `/notifications/alerts/read-all`,
+        notificationsPayload,
+      );
 
       // Clear all alerts from local state immediately
       setAlerts([]);
@@ -127,7 +133,7 @@ export function useNotifications() {
     loading,
     loadingHistory,
     unreadCount,
-    readIds: [], // Deprecated, kept for compatibility
+    readIds: [] as string[], // Deprecated, kept for compatibility
     refreshAlerts: fetchAlerts,
     fetchHistory,
     markAllAsRead,

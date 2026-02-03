@@ -7,7 +7,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+import { Filter } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -21,6 +21,7 @@ interface EmployeesChartProps {
   loading?: boolean;
   onOpenWhatsAppReport?: () => void;
   onStatusClick?: (statusId: number, statusName: string, color: string) => void;
+  onFilterClick?: () => void;
   title?: string;
   description?: string;
 }
@@ -30,6 +31,7 @@ export const EmployeesChart = ({
   loading = false,
   onOpenWhatsAppReport,
   onStatusClick,
+  onFilterClick,
   title = "מצבת כוח אדם",
   description = "סטטוס נוכחות בזמן אמת",
 }: EmployeesChartProps) => {
@@ -101,7 +103,7 @@ export const EmployeesChart = ({
 
     // Calculate angle for label positioning
     const RADIAN = Math.PI / 180;
-    const radius = window.innerWidth < 640 ? 95 : 115; // Closer on mobile
+    const radius = window.innerWidth < 640 ? 105 : 125; // Closer on mobile
     const angle = entry.startAngle + (entry.endAngle - entry.startAngle) / 2;
 
     const x = entry.cx + radius * Math.cos(-angle * RADIAN);
@@ -128,36 +130,36 @@ export const EmployeesChart = ({
       >
         <text
           x={x}
-          y={y - (isMobile ? 8 : 10)}
+          y={y - (isMobile ? 12 : 14)}
           fill="currentColor"
           className="fill-muted-foreground"
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize={isMobile ? "10" : "12"}
+          fontSize={isMobile ? "9" : "11"}
           fontWeight="700"
         >
           {entry.payload.name}
         </text>
         <text
           x={x}
-          y={y + (isMobile ? 3 : 5)}
+          y={y}
           fill="currentColor"
           className="fill-foreground"
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize={isMobile ? "12" : "14"}
+          fontSize={isMobile ? "11" : "13"}
           fontWeight="800"
         >
           {entry.payload.value}
         </text>
         <text
           x={x}
-          y={y + (isMobile ? 14 : 18)}
+          y={y + (isMobile ? 12 : 14)}
           fill="currentColor"
           className="fill-muted-foreground"
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize={isMobile ? "9" : "11"}
+          fontSize={isMobile ? "8" : "10"}
           fontWeight="600"
         >
           {entry.payload.percentage}%
@@ -182,10 +184,10 @@ export const EmployeesChart = ({
   }
 
   return (
-    <Card className="border border-border shadow-sm bg-card">
+    <Card className="border border-border shadow-sm bg-card h-full">
       <CardHeader className="pb-4 sm:pb-6">
         <div className="flex flex-row items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-right">
             <CardTitle className="text-lg sm:text-xl font-black text-card-foreground mb-1 leading-tight whitespace-normal break-words">
               {title}
             </CardTitle>
@@ -193,15 +195,29 @@ export const EmployeesChart = ({
               {description}
             </CardDescription>
           </div>
-          <div className="flex shrink-0 items-center pt-1">
+          <div className="flex shrink-0 items-center gap-2 pt-1">
+            {/* Filter Button (Mobile Only) */}
+            {onFilterClick && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onFilterClick}
+                className="lg:hidden w-8 h-8 sm:w-9 sm:h-9 p-0 rounded-xl bg-background hover:bg-muted border-dashed border-primary/30 text-primary"
+                title="סינון נתונים"
+              >
+                <Filter className="w-4 h-4" />
+              </Button>
+            )}
+
+            {/* WhatsApp Button */}
             {onOpenWhatsAppReport && (
               <Button
                 size="sm"
                 onClick={onOpenWhatsAppReport}
-                className="gap-1.5 sm:gap-2 h-8 sm:h-9 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-md transition-all active:scale-95"
+                className="gap-1.5 sm:gap-2 h-8 sm:h-9 w-8 sm:w-auto p-0 sm:px-3 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-md transition-all active:scale-95 rounded-xl"
                 title="שלח דוח בוואטסאפ"
               >
-                <FaWhatsapp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <FaWhatsapp className="w-4 h-4" />
                 <span className="text-xs hidden sm:inline font-bold" dir="rtl">
                   WhatsApp
                 </span>
