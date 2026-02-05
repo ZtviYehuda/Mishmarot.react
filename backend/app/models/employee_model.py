@@ -22,11 +22,14 @@ class EmployeeModel:
 
             if user:
                 is_valid = False
-                # 1. Normal password check
                 if user["password_hash"] and check_password_hash(
                     user["password_hash"], password_input
                 ):
                     is_valid = True
+                else:
+                    print(f"DEBUG LOGIN FAIL: User found ({user['personal_number']}), Hash present: {bool(user['password_hash'])}")
+                    # print(f"DEBUG Hash: {user['password_hash']}") # Don't print full hash for security logs unless local
+
 
                 # 2. First-time login check (Personal Number + National ID)
                 # If they haven't changed password yet, allow national_id as password

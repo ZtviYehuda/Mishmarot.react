@@ -12,9 +12,9 @@ import {
   Cake,
   User,
 } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 
 interface EmployeeDetailsModalProps {
   open: boolean;
@@ -154,8 +154,8 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               value={
                 employee.assignment_date
                   ? new Date(employee.assignment_date).toLocaleDateString(
-                      "he-IL",
-                    )
+                    "he-IL",
+                  )
                   : null
               }
             />
@@ -223,45 +223,45 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
           {(employee.department_name ||
             employee.section_name ||
             employee.team_name) && (
-            <div>
-              <h3 className="text-[11px] font-black text-primary uppercase tracking-widest mb-4 flex items-center justify-center sm:justify-start gap-2">
-                <Building2 className="w-3.5 h-3.5" />
-                מבנה ארגוני
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {employee.department_name && (
-                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">
-                      מחלקה
-                    </p>
-                    <p className="text-sm font-black text-center text-wrap break-words leading-tight">
-                      {cleanUnitName(employee.department_name)}
-                    </p>
-                  </div>
-                )}
-                {employee.section_name && (
-                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">
-                      מדור
-                    </p>
-                    <p className="text-sm font-black text-center text-wrap break-words leading-tight">
-                      {cleanUnitName(employee.section_name)}
-                    </p>
-                  </div>
-                )}
-                {employee.team_name && (
-                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">
-                      צוות / חוליה
-                    </p>
-                    <p className="text-sm font-black text-center text-wrap break-words leading-tight">
-                      {cleanUnitName(employee.team_name)}
-                    </p>
-                  </div>
-                )}
+              <div>
+                <h3 className="text-[11px] font-black text-primary uppercase tracking-widest mb-4 flex items-center justify-center sm:justify-start gap-2">
+                  <Building2 className="w-3.5 h-3.5" />
+                  מבנה ארגוני
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {employee.department_name && (
+                    <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                        מחלקה
+                      </p>
+                      <p className="text-sm font-black text-center text-wrap break-words leading-tight">
+                        {cleanUnitName(employee.department_name)}
+                      </p>
+                    </div>
+                  )}
+                  {employee.section_name && (
+                    <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                        מדור
+                      </p>
+                      <p className="text-sm font-black text-center text-wrap break-words leading-tight">
+                        {cleanUnitName(employee.section_name)}
+                      </p>
+                    </div>
+                  )}
+                  {employee.team_name && (
+                    <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                        צוות / חוליה
+                      </p>
+                      <p className="text-sm font-black text-center text-wrap break-words leading-tight">
+                        {cleanUnitName(employee.team_name)}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
 
         {/* Action Footer */}
@@ -279,14 +279,11 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
           </Button>
 
           {!employee.phone_number ? (
-            <Button
-              variant="outline"
+            <WhatsAppButton
               disabled
-              className="gap-2 font-bold text-muted-foreground border-dashed h-11 sm:h-10 px-6 rounded-xl opacity-70 cursor-not-allowed w-full sm:flex-1"
-            >
-              <FaWhatsapp className="w-5 h-5 opacity-50" />
-              אין מספר טלפון זמין
-            </Button>
+              label="אין מספר טלפון זמין"
+              className="w-full sm:flex-1 bg-muted text-muted-foreground shadow-none"
+            />
           ) : (
             (() => {
               const isBirthdayUpcoming = () => {
@@ -322,36 +319,20 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               };
 
               const isBirthday = isBirthdayUpcoming();
+              const message = isBirthday
+                ? `היי ${employee.first_name}, המון מזל טוב ליום הולדתך! 🎉 מאחלים לך הרבה אושר, בריאות והצלחה בכל! 🎂`
+                : `היי ${employee.first_name}, `;
 
               return (
-                <Button
-                  asChild
-                  variant="outline"
+                <WhatsAppButton
+                  phoneNumber={employee.phone_number}
+                  message={message}
+                  label={isBirthday ? "שלח ברכת יום הולדת" : "שלח הודעה"}
                   className={cn(
-                    "gap-2 font-bold h-11 sm:h-10 px-6 rounded-xl transition-all shadow-sm w-full sm:flex-1",
-                    isBirthday
-                      ? "text-[#25D366] hover:text-[#128C7E] hover:bg-[#25D366]/10 border-[#25D366]/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border-border",
+                    "w-full sm:flex-1 h-11 sm:h-10",
+                    isBirthday && "bg-pink-600 hover:bg-pink-700 shadow-pink-500/20"
                   )}
-                >
-                  <a
-                    href={`https://wa.me/${(() => {
-                      let phone = employee.phone_number!.replace(/\D/g, "");
-                      if (phone.startsWith("0")) phone = "972" + phone.slice(1);
-                      else if (phone.length === 9) phone = "972" + phone;
-                      return phone;
-                    })()}?text=${encodeURIComponent(
-                      isBirthday
-                        ? `היי ${employee.first_name}, המון מזל טוב ליום הולדתך! 🎉 מאחלים לך הרבה אושר, בריאות והצלחה בכל! 🎂`
-                        : `היי ${employee.first_name}, `,
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <FaWhatsapp className="w-5 h-5" />
-                    {isBirthday ? "שלח ברכת יום הולדת" : "שלח הודעה"}
-                  </a>
-                </Button>
+                />
               );
             })()
           )}

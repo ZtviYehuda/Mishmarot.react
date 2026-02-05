@@ -8,6 +8,8 @@ import {
   Lock,
   LogOut,
   ScanEye,
+  Eye,
+  EyeOff,
   Crosshair,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
@@ -36,17 +38,17 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
     const isDark = theme === "dark";
     const colors = isDark
       ? {
-          bg: "#020617", // slate-950
-          hexOutline: "rgba(30, 58, 138, 0.2)", // dark blue
-          hexActiveBlue: "rgba(59, 130, 246, 0.4)", // blue-500
-          hexActiveRed: "rgba(220, 38, 38, 0.4)", // red-600
-        }
+        bg: "#020617", // slate-950
+        hexOutline: "rgba(30, 58, 138, 0.2)", // dark blue
+        hexActiveBlue: "rgba(59, 130, 246, 0.4)", // blue-500
+        hexActiveRed: "rgba(220, 38, 38, 0.4)", // red-600
+      }
       : {
-          bg: "#f8fafc", // slate-50
-          hexOutline: "rgba(148, 163, 184, 0.2)", // slate-400
-          hexActiveBlue: "rgba(59, 130, 246, 0.2)", // blue-500
-          hexActiveRed: "rgba(220, 38, 38, 0.2)", // red-600
-        };
+        bg: "#f8fafc", // slate-50
+        hexOutline: "rgba(148, 163, 184, 0.2)", // slate-400
+        hexActiveBlue: "rgba(59, 130, 246, 0.2)", // blue-500
+        hexActiveRed: "rgba(220, 38, 38, 0.2)", // red-600
+      };
 
     let animationFrameId: number;
     const hexSize = 30; // Radius of hexagon
@@ -205,6 +207,7 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
 export default function LoginPage() {
   const [personalNumber, setPersonalNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [lockedUser, setLockedUser] = useState<LockedUser | null>(null);
@@ -496,7 +499,7 @@ export default function LoginPage() {
                           />
                           <Input
                             id="password"
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             autoComplete="current-password"
                             value={password}
                             onChange={(e) => {
@@ -504,7 +507,7 @@ export default function LoginPage() {
                               setError("");
                             }}
                             className={cn(
-                              "h-12 border rounded-xl pr-12 transition-all font-mono tracking-widest",
+                              "h-12 border rounded-xl pr-12 pl-12 transition-all font-mono tracking-widest",
                               isDark
                                 ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
                                 : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
@@ -512,6 +515,22 @@ export default function LoginPage() {
                             placeholder="••••••••"
                             disabled={isLoading}
                           />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className={cn(
+                              "absolute left-3 top-3.5 transition-colors z-10",
+                              isDark
+                                ? "text-slate-500 hover:text-slate-300"
+                                : "text-slate-400 hover:text-slate-600",
+                            )}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="w-5 h-5" />
+                            ) : (
+                              <Eye className="w-5 h-5" />
+                            )}
+                          </button>
                         </div>
                       </div>
                     </div>

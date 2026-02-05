@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Filter } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 interface EmployeesChartProps {
@@ -211,17 +211,12 @@ export const EmployeesChart = ({
 
             {/* WhatsApp Button */}
             {onOpenWhatsAppReport && (
-              <Button
-                size="sm"
+              <WhatsAppButton
                 onClick={onOpenWhatsAppReport}
-                className="gap-1.5 sm:gap-2 h-8 sm:h-9 w-8 sm:w-auto p-0 sm:px-3 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-md transition-all active:scale-95 rounded-xl"
-                title="שלח דוח בוואטסאפ"
-              >
-                <FaWhatsapp className="w-4 h-4" />
-                <span className="text-xs hidden sm:inline font-bold" dir="rtl">
-                  WhatsApp
-                </span>
-              </Button>
+                className="h-8 sm:h-9 text-xs sm:text-xs px-3"
+                label="WhatsApp"
+                skipDirectLink={true}
+              />
             )}
           </div>
         </div>

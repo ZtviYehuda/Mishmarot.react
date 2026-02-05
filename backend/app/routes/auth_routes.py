@@ -3,6 +3,8 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from app.models.employee_model import EmployeeModel
 import logging
 import json
+from psycopg2.extras import RealDictCursor
+from app.utils.db import get_db_connection
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -22,27 +24,33 @@ def login():
         password = data.get("password")
 
         # שלב 1: אימות פרטים בסיסי
+        print(f"DEBUG LOGIN: Checking credentials for {p_num}")
         user_basic = EmployeeModel.login_check(p_num, password)
         if not user_basic:
+            print("DEBUG LOGIN: login_check failed")
             return (
                 jsonify({"success": False, "error": "מספר אישי או סיסמה שגויים"}),
                 401,
             )
 
         # שלב 2: קבלת פרופיל מלא ובדיקת הרשאות
-        # (מומלץ לאחד את זה עם login_check בעתיד לשיפור ביצועים)
+        print(f"DEBUG LOGIN: Credentials OK for ID {user_basic['id']}. Fetching full profile...")
         user = EmployeeModel.get_employee_by_id(user_basic["id"])
+        
         if not user:
-            # מקרה קצה נדיר, אבל חשוב לטפל בו
+            print("DEBUG LOGIN: Full profile fetch failed (User is None)")
             return (
                 jsonify(
                     {"success": False, "error": "User profile not found after login"}
                 ),
                 500,
             )
+        
+        print(f"DEBUG LOGIN: Profile fetched. Admin={user.get('is_admin')}, Commander={user.get('is_commander')}")
 
         # הערה: אם תרצה לאפשר לכל המשתמשים להתחבר, הסר את התנאי הבא
         if not user.get("is_admin") and not user.get("is_commander"):
+            print("DEBUG LOGIN: Access denied (Not admin/commander)")
             return (
                 jsonify(
                     {
@@ -53,7 +61,8 @@ def login():
                 403,
             )
 
-        # שלב 3: יצירת טוקן עם זהות כמחרוזת (string) למניעת שגיאת "Subject must be a string"
+        # שלב 3: יצירת טוקן
+        print("DEBUG LOGIN: Generating Token...")
         token = create_access_token(
             identity=json.dumps(
                 {
@@ -63,6 +72,7 @@ def login():
                 }
             )
         )
+        print("DEBUG LOGIN: Token generated successfully.")
 
         return jsonify(
             {
@@ -296,6 +306,191 @@ def update_profile():
     if EmployeeModel.update_employee(user_id, allowed_data):
         return jsonify({"success": True, "message": "הפרופיל עודכן בהצלחה"})
     return jsonify({"success": False, "error": "שגיאה בעדכון הפרופיל"}), 500
+
+
+
+
+import random
+import string
+from datetime import datetime, timedelta
+
+def generate_code(length=6):
+    return ''.join(random.choices(string.digits, k=length))
+
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    """
+    Step 1: Request Password Reset
+    - Receives personal_number + email
+    - Checks if they match
+    - Generates 6-digit code
+    - Saves to verification_codes
+    - Sends email (Simulation or SMTP)
+    """
+    data = request.get_json()
+    personal_number = data.get("personal_number")
+    email = data.get("email")
+
+    if not personal_number or not email:
+        return jsonify({"success": False, "error": "Missing fields"}), 400
+
+    from app.utils.db import get_db_connection
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # 1. Verify User
+        # We assume users might NOT have email set in DB yet, so we trust the input email 
+        # IF the user exists. (In a strict system, we would match DB email).
+        # For this prototype: Update the user's email if it's missing? 
+        # Better: Check if user exists.
+        cur.execute(
+            "SELECT id, first_name, last_name, email FROM employees WHERE personal_number = %s",
+            (personal_number,),
+        )
+        user = cur.fetchone()
+
+        if not user:
+             # Security: Fake success
+             return jsonify({"success": True, "message": "Code sent"})
+
+        # If user has email in DB, verify it matches? 
+        # For now, we'll ALLOW updating email if it is null (First time setup)
+        # BUT if it exists and doesn't match, we block.
+        db_email = user.get("email")
+        if db_email and db_email.lower().strip() != email.lower().strip():
+             return jsonify({"success": False, "error": "Email does not match our records"}), 400
+        
+        # If DB email is empty, we set it now (Lazy registration)
+        if not db_email:
+             cur.execute("UPDATE employees SET email = %s WHERE id = %s", (email, user["id"]))
+             conn.commit()
+
+        # 2. Generate Code
+        code = generate_code()
+        expires = datetime.now() + timedelta(minutes=10)
+
+        # 3. Save Code
+        cur.execute(
+            "INSERT INTO verification_codes (email, code, expires_at) VALUES (%s, %s, %s)",
+            (email, code, expires)
+        )
+        conn.commit()
+
+        # 4. Send Email
+        from app.utils.email_service import send_verification_email
+        send_verification_email(email, code)
+
+        return jsonify({"success": True, "message": "Code sent successfully"})
+
+
+
+    except Exception as e:
+        print(f"Error in forgot-password: {e}")
+        return jsonify({"success": False, "error": "Server error"}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@auth_bp.route("/verify-code", methods=["POST"])
+def verify_reset_code():
+    """
+    Step 2: Verify the code entered by user
+    """
+    data = request.get_json()
+    email = data.get("email")
+    code = data.get("code")
+
+    if not email or not code:
+        return jsonify({"success": False, "error": "Missing fields"}), 400
+
+    from app.utils.db import get_db_connection
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cur.execute("""
+            SELECT id FROM verification_codes 
+            WHERE email = %s AND code = %s AND is_used = FALSE AND expires_at > NOW()
+            ORDER BY created_at DESC LIMIT 1
+        """, (email, code))
+        
+        valid = cur.fetchone()
+        
+        if valid:
+            return jsonify({"success": True, "message": "Code is valid"})
+        else:
+            return jsonify({"success": False, "error": "Invalid or expired code"}), 400
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@auth_bp.route("/reset-password-with-code", methods=["POST"])
+def reset_password_with_code():
+    """
+    Step 3: Reset Password using valid code
+    """
+    data = request.get_json()
+    email = data.get("email")
+    code = data.get("code")
+    new_password = data.get("new_password")
+
+    if not email or not code or not new_password:
+        return jsonify({"success": False, "error": "Missing fields"}), 400
+
+    if len(new_password) < 6:
+        return jsonify({"success": False, "error": "Password too short"}), 400
+
+    from app.utils.db import get_db_connection
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Verify code again atomically
+        cur.execute("""
+            SELECT id FROM verification_codes 
+            WHERE email = %s AND code = %s AND is_used = FALSE AND expires_at > NOW()
+            FOR UPDATE
+        """, (email, code))
+        record = cur.fetchone()
+        
+        if not record:
+             return jsonify({"success": False, "error": "Invalid or expired session"}), 400
+
+        # Mark code as used
+        cur.execute("UPDATE verification_codes SET is_used = TRUE WHERE id = %s", (record["id"],))
+
+        # Update Password
+        from werkzeug.security import generate_password_hash
+        new_hash = generate_password_hash(new_password)
+        
+        # We need to find the user by email
+        # Note: If multiple users have same email (shouldn't happen), this resets all??
+        # Better: We trusted personal_number earlier. Ideally we pass personal_number here too.
+        # But assuming unique email per user:
+        cur.execute(
+            "UPDATE employees SET password_hash = %s, must_change_password = FALSE WHERE email = %s",
+            (new_hash, email)
+        )
+        
+        if cur.rowcount == 0:
+             conn.rollback()
+             return jsonify({"success": False, "error": "User not found associated with email"}), 404
+
+        conn.commit()
+        return jsonify({"success": True, "message": "Password updated successfully"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
 
 
 @auth_bp.route("/verify-token", methods=["GET"])

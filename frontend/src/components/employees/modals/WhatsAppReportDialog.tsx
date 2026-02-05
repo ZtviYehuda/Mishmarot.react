@@ -10,20 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
-  MessageCircle,
   Users,
   Filter,
   Smartphone,
   CheckCircle2,
   Share2,
   Info,
-  Loader2,
   User
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { useAuthContext } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 
 interface WhatsAppReportDialogProps {
   open: boolean;
@@ -75,7 +74,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
     return filteredEmployees.filter((emp) => {
       if (customFilters.departments.length > 0 && !customFilters.departments.includes(emp.department_name || "")) return false;
       if (customFilters.sections.length > 0 && !customFilters.sections.includes(emp.section_name || "")) return false;
-      if (customFilters.statuses.length > 0 && !customFilters.statuses.includes(emp.status_name)) return false;
+      if (customFilters.statuses.length > 0 && !customFilters.statuses.includes(emp.status_name || "Unknown")) return false;
       if (customFilters.roles.length > 0 && !customFilters.roles.includes(emp.role_name || "")) return false;
       return true;
     });
@@ -101,8 +100,9 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
 
     const byStatus: Record<string, Employee[]> = {};
     employees.forEach((emp) => {
-      if (!byStatus[emp.status_name]) byStatus[emp.status_name] = [];
-      byStatus[emp.status_name].push(emp);
+      const status = emp.status_name || "Unknown";
+      if (!byStatus[status]) byStatus[status] = [];
+      byStatus[status].push(emp);
     });
 
     report += "*📊 פילוח לפי סטטוס:*\n";
@@ -284,14 +284,14 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
           </div>
 
           <div className="flex gap-3">
-            <Button
+            <WhatsAppButton
               onClick={handleSend}
-              disabled={loading || employeesToReportCount === 0}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl h-12 shadow-xl shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-30 gap-2 text-sm"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
-              שליחת דוח לוואטסאפ
-            </Button>
+              isLoading={loading}
+              disabled={employeesToReportCount === 0}
+              label="שליחת דוח ל-WhatsApp"
+              skipDirectLink={true}
+              className="flex-1 h-12 rounded-2xl"
+            />
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}

@@ -1,0 +1,1 @@
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS notif_morning_report BOOLEAN DEFAULT TRUE;

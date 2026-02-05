@@ -7,13 +7,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Gift, User, Sparkles } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { EmployeeLink } from "@/components/common/EmployeeLink";
 import { useState } from "react";
 import { BirthdayGreetingsModal } from "./BirthdayGreetingsModal";
+import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 
 interface BirthdayEmployee {
   id: number;
@@ -82,17 +83,12 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
               </CardDescription>
             </div>
             {birthdays.length > 0 && (
-              <Button
-                size="sm"
+              <WhatsAppButton
                 onClick={handleSendWhatsApp}
-                className="gap-1.5 sm:gap-2 h-8 sm:h-9 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-md transition-all active:scale-95"
-                title="שתף רשימה בוואטסאפ"
-              >
-                <FaWhatsapp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="text-xs hidden sm:inline font-bold" dir="rtl">
-                  WhatsApp
-                </span>
-              </Button>
+                className="h-8 sm:h-9 text-xs sm:text-xs px-3"
+                label="WhatsApp"
+                skipDirectLink={true}
+              />
             )}
           </div>
         </CardHeader>

@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { MessageCircle } from "lucide-react";
+import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 
 interface WhatsAppReportDialogProps {
   open: boolean;
@@ -31,8 +31,9 @@ export const WhatsAppReportDialog = ({
   const availableStatuses = useMemo(() => {
     const statuses = new Map<string, string>();
     employees.forEach((emp) => {
-      if (!statuses.has(emp.status_name)) {
-        statuses.set(emp.status_name, emp.status_color);
+      const name = emp.status_name || "Unknown";
+      if (!statuses.has(name)) {
+        statuses.set(name, emp.status_color || "#ccc");
       }
     });
     return Array.from(statuses.entries()).map(([name, color]) => ({
@@ -47,7 +48,7 @@ export const WhatsAppReportDialog = ({
 
     if (!includeAllStatuses && selectedStatuses.length > 0) {
       filtered = filtered.filter((emp) =>
-        selectedStatuses.includes(emp.status_name),
+        selectedStatuses.includes(emp.status_name || "Unknown"),
       );
     }
 
@@ -57,11 +58,11 @@ export const WhatsAppReportDialog = ({
       { count: number; color: string; employees: any[] }
     >();
     filtered.forEach((emp) => {
-      const status = emp.status_name;
+      const status = emp.status_name || "Unknown";
       if (!grouped.has(status)) {
         grouped.set(status, {
           count: 0,
-          color: emp.status_color,
+          color: emp.status_color || "#ccc",
           employees: [],
         });
       }
@@ -197,13 +198,12 @@ export const WhatsAppReportDialog = ({
           >
             ביטול
           </Button>
-          <Button
+          <WhatsAppButton
             onClick={handleSendWhatsApp}
-            className="flex-1 bg-green-600 hover:bg-green-700 gap-2 text-white"
-          >
-            <MessageCircle className="w-4 h-4" />
-            שלח בווטסאפ
-          </Button>
+            label="שליחת דוח ל-WhatsApp"
+            skipDirectLink={true}
+            className="flex-1"
+          />
         </div>
       </DialogContent>
     </Dialog>
