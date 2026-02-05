@@ -149,9 +149,15 @@ class NotificationModel:
 
             # 3. Check for Missing Morning Reports
             # This alert shows to commanders if any of their subordinates haven't reported status today
-            if requesting_user.get("notif_morning_report", True) and (
-                requesting_user.get("is_commander") or requesting_user.get("is_admin")
-            ):
+            # STRICT SCOPING: Only show to commanders who have a direct command unit assigned.
+            # Explicitly exclude general Admins who don't have a command role from this specific "Call to Action" alert.
+            user_has_command = (
+                requesting_user.get("commands_team_id")
+                or requesting_user.get("commands_section_id")
+                or requesting_user.get("commands_department_id")
+            )
+
+            if requesting_user.get("notif_morning_report", True) and user_has_command:
                 # Check weekend setting
                 cur.execute(
                     "SELECT value FROM system_settings WHERE key = 'alerts_weekend_enabled'"
@@ -173,15 +179,21 @@ class NotificationModel:
                             show_alert = False
 
                 if show_alert:
+                    # Retrieve IDs of missing employees specifically under this commander's scope
                     missing_query = """
-                        SELECT COUNT(e.id) as count
+                        SELECT e.id
                         FROM employees e
                         LEFT JOIN teams t ON e.team_id = t.id
                         LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                         LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
                         WHERE e.is_active = TRUE 
                           AND e.personal_number != 'admin'
-                          AND e.id != %s  -- Exclude the commander themselves from the "subordinates missing" count
+                          AND e.id != %s  -- Exclude the commander themselves
+                          AND (
+                              (d.id = %s) OR
+                              (s.id = %s) OR
+                              (t.id = %s)
+                          )
                           AND NOT EXISTS (
                               SELECT 1 FROM attendance_logs al
                               WHERE al.employee_id = e.id
@@ -189,32 +201,24 @@ class NotificationModel:
                               AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE)
                               AND (
                                   DATE(al.start_datetime) = CURRENT_DATE  -- Reported today
-                                  OR al.status_type_id IN (2, 4, 5, 6)    -- OR is in persistent status (Sick, Course, Vacation)
+                                  OR al.status_type_id IN (2, 4, 5, 6)    -- OR is in persistent status
                               )
                           )
                     """
-                    missing_params = [requesting_user["id"]]
-
-                    if not requesting_user.get("is_admin"):
-                        missing_query += """
-                          AND (
-                              (d.id = %s) OR
-                              (s.id = %s) OR
-                              (t.id = %s)
-                          )
-                        """
-                        missing_params.extend(
-                            [
-                                requesting_user.get("commands_department_id"),
-                                requesting_user.get("commands_section_id"),
-                                requesting_user.get("commands_team_id"),
-                            ]
-                        )
+                    # Strict params - always filter by command scope
+                    missing_params = [
+                        requesting_user["id"],
+                        requesting_user.get("commands_department_id"),
+                        requesting_user.get("commands_section_id"),
+                        requesting_user.get("commands_team_id"),
+                    ]
 
                     cur.execute(missing_query, missing_params)
-                    missing_res = cur.fetchone()
+                    missing_rows = cur.fetchall()
+                    missing_count = len(missing_rows)
 
-                    if missing_res and missing_res["count"] > 0:
+                    if missing_count > 0:
+                        missing_ids = [row["id"] for row in missing_rows]
                         from datetime import datetime
 
                         today_str = datetime.now().strftime("%Y-%m-%d")
@@ -223,12 +227,12 @@ class NotificationModel:
                                 "id": f"missing-reports-{today_str}",
                                 "type": "danger",
                                 "title": "דיווח חסר ביחידה",
-                                "description": f"ישנם {missing_res['count']} שוטרים שטרם הוזן להם סטטוס להיום",
-                                "link": "/attendance",
+                                "description": f"ישנם {missing_count} שוטרים שטרם הוזן להם סטטוס להיום",
+                                "link": "#bulk-update-missing",  # Special link for frontend handler
                                 "data": {
                                     "commander_id": requesting_user["id"],
-                                    "missing_count": missing_res["count"],
-                                    "date": today_str,
+                                    "missing_count": missing_count,
+                                    "missing_ids": missing_ids,  # Pass IDs to frontend
                                 },
                             }
                         )

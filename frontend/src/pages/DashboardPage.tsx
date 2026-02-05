@@ -14,6 +14,7 @@ import { LayoutDashboard } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CriticalAlerts } from "@/components/dashboard/CriticalAlerts";
+import { BulkStatusUpdateModal } from "@/components/employees/modals/BulkStatusUpdateModal";
 
 interface Team {
   id: number;
@@ -39,8 +40,13 @@ import { DateHeader } from "@/components/common/DateHeader";
 export default function DashboardPage() {
   const { user } = useAuthContext();
   const { selectedDate } = useDateContext();
-  const { getStructure, getDashboardStats, getComparisonStats, getTrendStats } =
-    useEmployees();
+  const {
+    employees, // Get employees from hook
+    getStructure,
+    getDashboardStats,
+    getComparisonStats,
+    getTrendStats,
+  } = useEmployees();
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any[]>([]);
@@ -57,6 +63,8 @@ export default function DashboardPage() {
   const [loadingExtras, setLoadingExtras] = useState(true);
   const [trendRange, setTrendRange] = useState(7);
   const [loadingTrend, setLoadingTrend] = useState(true);
+  const [missingReportIds, setMissingReportIds] = useState<number[]>([]);
+  const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
 
   const [whatsAppDialogOpen, setWhatsAppDialogOpen] = useState(false);
 
@@ -275,7 +283,12 @@ export default function DashboardPage() {
         badge={<DateHeader className="w-full justify-end lg:justify-start" />}
       />
 
-      <CriticalAlerts />
+      <CriticalAlerts
+        onOpenBulkUpdate={(missingIds) => {
+          setMissingReportIds(missingIds);
+          setIsBulkUpdateOpen(true);
+        }}
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 items-start">
         {/* Main Section - Takes 2 columns on desktop */}
@@ -376,6 +389,19 @@ export default function DashboardPage() {
           />
         </DialogContent>
       </Dialog>
+
+      <BulkStatusUpdateModal
+        open={isBulkUpdateOpen}
+        onOpenChange={setIsBulkUpdateOpen}
+        employees={employees}
+        initialSelectedIds={missingReportIds}
+        onSuccess={() => {
+          // efficient refresh?
+          window.location.reload();
+        }}
+        // The modal logic requires `employees` array to function.
+        // I need to fetch the specific missing employees to pass them.
+      />
     </div>
   );
 }

@@ -103,7 +103,7 @@ export const EmployeesChart = ({
 
     // Calculate angle for label positioning
     const RADIAN = Math.PI / 180;
-    const radius = window.innerWidth < 640 ? 105 : 125; // Closer on mobile
+    const radius = window.innerWidth < 640 ? 115 : 135; // Increased radius to correct overlap
     const angle = entry.startAngle + (entry.endAngle - entry.startAngle) / 2;
 
     const x = entry.cx + radius * Math.cos(-angle * RADIAN);
@@ -250,7 +250,7 @@ export const EmployeesChart = ({
                       cy="50%"
                       labelLine={false}
                       label={renderCustomLabel}
-                      outerRadius={window.innerWidth < 640 ? 80 : 100}
+                      outerRadius={window.innerWidth < 640 ? 75 : 95}
                       innerRadius={window.innerWidth < 640 ? 45 : 55}
                       fill="#8884d8"
                       dataKey="value"
