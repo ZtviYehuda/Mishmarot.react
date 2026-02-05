@@ -121,17 +121,28 @@ def setup_database():
                 description VARCHAR(255),
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );""",
+            """CREATE TABLE IF NOT EXISTS support_tickets (
+                id SERIAL PRIMARY KEY,
+                full_name VARCHAR(100) NOT NULL,
+                personal_number VARCHAR(20) NOT NULL,
+                subject VARCHAR(200) NOT NULL,
+                message TEXT NOT NULL,
+                status VARCHAR(20) DEFAULT 'open',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );""",
         ]
 
         for table in tables:
             cur.execute(table)
-            
+
         # Insert default system settings
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO system_settings (key, value, description)
             VALUES ('alerts_weekend_enabled', 'false', 'האם לאפשר שליחת התראות דיווח בימי שישי ושבת')
             ON CONFLICT (key) DO NOTHING;
-        """)
+        """
+        )
 
         # --- Migration: Add missing columns if table already existed ---
         try:
@@ -195,7 +206,9 @@ def setup_database():
 
         # 3. יצירת Admin דיפולטיבי (אם לא קיים)
         # 3. יצירת/תיקון Admin דיפולטיבי
-        cur.execute("SELECT id, password_hash FROM employees WHERE personal_number = 'admin'")
+        cur.execute(
+            "SELECT id, password_hash FROM employees WHERE personal_number = 'admin'"
+        )
         admin_row = cur.fetchone()
 
         admin_pw_hash = generate_password_hash("123456")

@@ -147,171 +147,91 @@ class NotificationModel:
                         }
                     )
 
-            # 3. Check for Missing Morning Reports (After 09:00)
-            from datetime import datetime
+            # 3. Check for Missing Morning Reports
+            # This alert shows to commanders if any of their subordinates haven't reported status today
+            if requesting_user.get("notif_morning_report", True) and (
+                requesting_user.get("is_commander") or requesting_user.get("is_admin")
+            ):
+                # Check weekend setting
+                cur.execute(
+                    "SELECT value FROM system_settings WHERE key = 'alerts_weekend_enabled'"
+                )
+                setting_res = cur.fetchone()
+                weekend_alerts_enabled = (
+                    setting_res["value"].lower() == "true" if setting_res else False
+                )
 
-            now = datetime.now()
+                show_alert = True
+                if not weekend_alerts_enabled:
+                    # In Israel: Friday (5) and Saturday (6) are weekend (PostgreSQL DOW uses 0-6 where 0 is Sunday, 6 is Saturday)
+                    cur.execute("SELECT EXTRACT(DOW FROM CURRENT_DATE)")
+                    dow_res = cur.fetchone()
+                    if dow_res:
+                        # dow_res['extract'] will be 5.0 for Friday, 6.0 for Saturday
+                        dow = int(dow_res["extract"])
+                        if dow in [5, 6]:
+                            show_alert = False
 
-            # Check system settings regarding weekends
-            cur.execute(
-                "SELECT value FROM system_settings WHERE key = 'alerts_weekend_enabled'"
-            )
-            setting_res = cur.fetchone()
-            weekend_enabled = False  # Default
-            if setting_res and setting_res["value"].lower() == "true":
-                weekend_enabled = True
-
-            is_weekend = now.weekday() in [4, 5]
-
-            # Check if it's after 08:45 AND allowed by weekend policy
-            current_time_val = now.hour * 60 + now.minute
-            cutoff_time = 8 * 60 + 45  # 08:45
-
-            if current_time_val >= cutoff_time:
-                if is_weekend and not weekend_enabled:
-                    pass  # Skip missing report alerts on weekends if disabled
-                else:
-                    # Find teams with missing reports
-                    # We look for active employees who have no attendance log starting today
-                    # Find teams with missing reports
-                    # We look for active employees who have no attendance log starting today
-                    query_teams = """
-                        SELECT t.id, t.name, e_cmdr.first_name, e_cmdr.last_name, e_cmdr.id as commander_id,
-                               e_cmdr.phone_number as commander_phone,
-                               s.id as section_id, d.id as department_id,
-                               COUNT(e.id) as missing_count,
-                               array_agg(e.id) as missing_ids,
-                               array_agg(CONCAT(e.first_name, ' ', e.last_name)) as missing_names
+                if show_alert:
+                    missing_query = """
+                        SELECT COUNT(e.id) as count
                         FROM employees e
-                        JOIN teams t ON e.team_id = t.id
-                        JOIN sections s ON t.section_id = s.id
-                        JOIN departments d ON s.department_id = d.id
-                        LEFT JOIN employees e_cmdr ON t.commander_id = e_cmdr.id
-                        LEFT JOIN attendance_logs al ON e.id = al.employee_id 
-                             AND al.start_datetime >= CURRENT_DATE 
-                             AND al.start_datetime < CURRENT_DATE + INTERVAL '1 day'
-                        WHERE e.is_active = TRUE AND al.id IS NULL
-                        GROUP BY t.id, t.name, e_cmdr.first_name, e_cmdr.last_name, e_cmdr.id, e_cmdr.phone_number, s.id, d.id
+                        LEFT JOIN teams t ON e.team_id = t.id
+                        LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                        LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                        WHERE e.is_active = TRUE 
+                          AND e.personal_number != 'admin'
+                          AND e.id != %s  -- Exclude the commander themselves from the "subordinates missing" count
+                          AND NOT EXISTS (
+                              SELECT 1 FROM attendance_logs al
+                              WHERE al.employee_id = e.id
+                              AND DATE(al.start_datetime) <= CURRENT_DATE
+                              AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE)
+                              AND (
+                                  DATE(al.start_datetime) = CURRENT_DATE  -- Reported today
+                                  OR al.status_type_id IN (2, 4, 5, 6)    -- OR is in persistent status (Sick, Course, Vacation)
+                              )
+                          )
                     """
-                    cur.execute(query_teams)
-                    missing_teams = cur.fetchall()
+                    missing_params = [requesting_user["id"]]
 
-                    for team in missing_teams:
-                        # Logic: Who should see this?
-                        # 1. Admins
-                        # 2. Section Commander of this team's section
-                        # 3. Department Commander of this team's department
+                    if not requesting_user.get("is_admin"):
+                        missing_query += """
+                          AND (
+                              (d.id = %s) OR
+                              (s.id = %s) OR
+                              (t.id = %s)
+                          )
+                        """
+                        missing_params.extend(
+                            [
+                                requesting_user.get("commands_department_id"),
+                                requesting_user.get("commands_section_id"),
+                                requesting_user.get("commands_team_id"),
+                            ]
+                        )
 
-                        show_alert = False
-                        if requesting_user.get("is_admin"):
-                            show_alert = True
-                        elif (
-                            requesting_user.get("commands_department_id")
-                            == team["department_id"]
-                        ):
-                            show_alert = True
-                        elif (
-                            requesting_user.get("commands_section_id")
-                            == team["section_id"]
-                        ):
-                            show_alert = True
-                        elif requesting_user.get("commands_team_id") == team["id"]:
-                            show_alert = True
+                    cur.execute(missing_query, missing_params)
+                    missing_res = cur.fetchone()
 
-                        if show_alert and team["first_name"]:
-                            is_self = requesting_user.get("id") == team["commander_id"]
+                    if missing_res and missing_res["count"] > 0:
+                        from datetime import datetime
 
-                            title = "דיווח בוקר לא הושלם"
-                            description = f"מפקד חוליית {team['name']}, {team['first_name']} {team['last_name']}, טרם השלים דיווח עבור {team['missing_count']} שוטרים"
-
-                            if is_self:
-                                title = "פעולה נדרשת: עדכון נוכחות"
-                                description = f"ישנם {team['missing_count']} שוטרים תחת פיקודך (חוליית {team['name']}) שלא עדכנת להם סטטוס."
-
-                            alerts.append(
-                                {
-                                    "id": f"missing-team-{team['id']}",
-                                    "type": "warning",
-                                    "title": title,
-                                    "description": description,
-                                    "link": "/attendance",
-                                    "data": {
-                                        "missing_ids": team["missing_ids"],
-                                        "missing_names": team["missing_names"],
-                                        "team_id": team["id"],
-                                        "commander_id": team["commander_id"],
-                                        "commander_phone": team["commander_phone"],
-                                        "commander_name": f"{team['first_name']} {team['last_name']}",
-                                        "missing_count": team["missing_count"],
-                                    },
-                                }
-                            )
-
-                    # Find sections with missing members (who are not in teams)
-                    query_sections = """
-                        SELECT s.id, s.name, e_cmdr.first_name, e_cmdr.last_name, e_cmdr.id as commander_id,
-                               e_cmdr.phone_number as commander_phone,
-                               d.id as department_id,
-                               COUNT(e.id) as missing_count,
-                               array_agg(e.id) as missing_ids,
-                               array_agg(CONCAT(e.first_name, ' ', e.last_name)) as missing_names
-                        FROM employees e
-                        JOIN sections s ON e.section_id = s.id
-                        JOIN departments d ON s.department_id = d.id
-                        LEFT JOIN employees e_cmdr ON s.commander_id = e_cmdr.id
-                        LEFT JOIN attendance_logs al ON e.id = al.employee_id 
-                             AND al.start_datetime >= CURRENT_DATE 
-                             AND al.start_datetime < CURRENT_DATE + INTERVAL '1 day'
-                        WHERE e.is_active = TRUE AND e.team_id IS NULL AND al.id IS NULL
-                        GROUP BY s.id, s.name, e_cmdr.first_name, e_cmdr.last_name, e_cmdr.id, e_cmdr.phone_number, d.id
-                    """
-                    cur.execute(query_sections)
-                    missing_sections = cur.fetchall()
-
-                    for section in missing_sections:
-                        show_alert = False
-                        if requesting_user.get("is_admin"):
-                            show_alert = True
-                        elif (
-                            requesting_user.get("commands_department_id")
-                            == section["department_id"]
-                        ):
-                            show_alert = True
-                        elif (
-                            requesting_user.get("commands_section_id") == section["id"]
-                        ):
-                            show_alert = True
-
-                        if show_alert and section["first_name"]:
-                            is_self = (
-                                requesting_user.get("id") == section["commander_id"]
-                            )
-
-                            title = "דיווח בוקר לא הושלם"
-                            description = f"מפקד מדור {section['name']}, {section['first_name']} {section['last_name']}, טרם השלים דיווח עבור {section['missing_count']} שוטרים"
-
-                            if is_self:
-                                title = "פעולה נדרשת: עדכון נוכחות"
-                                description = f"ישנם {section['missing_count']} שוטרים תחת פיקודך (מדור {section['name']}) שלא עדכנת להם סטטוס."
-
-                            alerts.append(
-                                {
-                                    "id": f"missing-section-{section['id']}",
-                                    "type": "warning",
-                                    "title": title,
-                                    "description": description,
-                                    "link": "/attendance",
-                                    "data": {
-                                        "missing_ids": section["missing_ids"],
-                                        "missing_names": section["missing_names"],
-                                        "section_id": section["id"],
-                                        "commander_id": section["commander_id"],
-                                        "commander_phone": section["commander_phone"],
-                                        "commander_name": f"{section['first_name']} {section['last_name']}",
-                                        "missing_count": section["missing_count"],
-                                    },
-                                }
-                            )
+                        today_str = datetime.now().strftime("%Y-%m-%d")
+                        alerts.append(
+                            {
+                                "id": f"missing-reports-{today_str}",
+                                "type": "danger",
+                                "title": "דיווח חסר ביחידה",
+                                "description": f"ישנם {missing_res['count']} שוטרים שטרם הוזן להם סטטוס להיום",
+                                "link": "/attendance",
+                                "data": {
+                                    "commander_id": requesting_user["id"],
+                                    "missing_count": missing_res["count"],
+                                    "date": today_str,
+                                },
+                            }
+                        )
 
             # 4. Check for Internal Messages
             query_msgs = """

@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { LayoutDashboard } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { CriticalAlerts } from "@/components/dashboard/CriticalAlerts";
 
 interface Team {
   id: number;
@@ -224,31 +225,35 @@ export default function DashboardPage() {
     (t) => t.id.toString() === selectedTeamId,
   );
 
-  const chartTitle = currentTeam
-    ? `נתוני חולייה - ${currentTeam.name}`
-    : currentSection
-      ? `נתוני מדור - ${currentSection.name}`
-      : currentDept
-        ? `נתוני מחלקה - ${currentDept.name}`
-        : "כלל היחידה";
+  const unitName =
+    currentTeam?.name ||
+    currentSection?.name ||
+    currentDept?.name ||
+    "כלל היחידה";
 
-  const chartDescription = currentTeam
-    ? `פירוט נוכחות לחוליית ${currentTeam.name}`
-    : currentSection
-      ? `פירוט נוכחות למדור ${currentSection.name}`
-      : currentDept
-        ? `פירוט נוכחות למחלקת ${currentDept.name}`
-        : "תצוגה מלאה של כלל השוטרים ביחידה";
+  const chartTitle = selectedStatusData
+    ? `${selectedStatusData.name} | ${unitName}`
+    : unitName === "כלל היחידה"
+      ? "נתוני כלל היחידה"
+      : unitName;
+
+  const chartDescription = selectedStatusData
+    ? `מציג את השוטרים הנמצאים בסטטוס ${selectedStatusData.name} ב${unitName}`
+    : `פירוט נוכחות וסטטיסטיקה עבור ${unitName}`;
 
   const handleStatusClick = (
     statusId: number,
     statusName: string,
     color: string,
   ) => {
-    setSelectedStatusData({ id: statusId, name: statusName, color });
-    const tableElement = document.getElementById("status-details-table");
-    if (tableElement) {
-      tableElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (selectedStatusData?.id === statusId) {
+      setSelectedStatusData(null);
+    } else {
+      setSelectedStatusData({ id: statusId, name: statusName, color });
+      const tableElement = document.getElementById("status-details-table");
+      if (tableElement) {
+        tableElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
   };
 
@@ -269,6 +274,8 @@ export default function DashboardPage() {
         categoryLink="/"
         badge={<DateHeader className="w-full justify-end lg:justify-start" />}
       />
+
+      <CriticalAlerts />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 items-start">
         {/* Main Section - Takes 2 columns on desktop */}

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Employee } from "@/types/employee.types";
-import { cn } from "@/lib/utils";
+import { cn, cleanUnitName } from "@/lib/utils";
 import { User, MoreVertical } from "lucide-react";
 
 interface EmployeeCardProps {
@@ -85,19 +85,19 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
             <div className="text-xs">
               <span className="text-slate-400 font-bold">מחלקה: </span>
               <span className="text-slate-600 dark:text-slate-300 font-bold">
-                {employee.department_name || "ללא מחלקה"}
+                {cleanUnitName(employee.department_name) || "ללא מחלקה"}
               </span>
             </div>
             <div className="text-xs">
               <span className="text-slate-400 font-bold">מדור: </span>
               <span className="text-slate-600 dark:text-slate-300 font-bold">
-                {employee.section_name || "ללא מדור"}
+                {cleanUnitName(employee.section_name) || "ללא מדור"}
               </span>
             </div>
             <div className="text-xs">
               <span className="text-slate-400 font-bold">צוות: </span>
               <span className="text-slate-600 dark:text-slate-300 font-bold">
-                {employee.team_name || "ללא צוות"}
+                {cleanUnitName(employee.team_name) || "ללא צוות"}
               </span>
             </div>
           </div>

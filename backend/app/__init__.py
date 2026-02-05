@@ -17,21 +17,36 @@ def create_app():
     app.json = CustomJSONProvider(app)
 
     # --- תיקון CORS קריטי ---
-    # מאפשר גישה מהפרונט לכל הנתיבים
+    # הגדרת מקורות מורשים ספציפיים במקום כוכבית כדי לאפשר Credentials
+    origins_list = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://moments-accomplish-soon-guestbook.trycloudflare.com",
+    ]
+
     CORS(
         app,
         resources={
             r"/api/*": {
-                "origins": "*",
+                "origins": origins_list,
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-                "allow_headers": ["Content-Type", "Authorization"],
+                "allow_headers": [
+                    "Content-Type",
+                    "Authorization",
+                    "Access-Control-Allow-Private-Network",
+                ],
                 "expose_headers": ["Content-Type"],
                 "max_age": 3600,
             }
         },
         supports_credentials=True,
-        automatic_options=True,
     )
+
+    @app.after_request
+    def add_cors_headers(response):
+        # PNA Header must be present to allow HTTPS public site to talk to HTTP localhost
+        response.headers["Access-Control-Allow-Private-Network"] = "true"
+        return response
 
     jwt = JWTManager(app)
 
@@ -71,6 +86,7 @@ def create_app():
     from app.routes.transfer_routes import transfer_bp
     from app.routes.notification_routes import notif_bp
     from app.routes.admin_routes import admin_bp
+    from app.routes.support_routes import support_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(emp_bp, url_prefix="/api/employees", strict_slashes=False)
@@ -82,5 +98,6 @@ def create_app():
         notif_bp, url_prefix="/api/notifications", strict_slashes=False
     )
     app.register_blueprint(admin_bp, url_prefix="/api/admin", strict_slashes=False)
+    app.register_blueprint(support_bp, url_prefix="/api/support", strict_slashes=False)
 
     return app

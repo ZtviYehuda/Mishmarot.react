@@ -1,3 +1,4 @@
+import os
 from app import create_app
 
 app = create_app()
@@ -9,5 +10,8 @@ def favicon():
 
 
 if __name__ == "__main__":
-    # הרצת השרת במצב דיבאג
-    app.run(debug=True, port=5000)
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        print("Starting Backup Worker (safe)...")
+        # start_backup_worker()
+
+    app.run(debug=True)

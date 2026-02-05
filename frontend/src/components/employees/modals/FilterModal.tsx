@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,8 +18,6 @@ import {
   Layers,
   ShieldCheck,
   UserMinus,
-  Users,
-  Network,
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn } from "@/lib/utils";
@@ -160,7 +158,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
     const depts = Array.from(hierarchyData.departments.keys());
     if (user?.is_admin) return depts;
     if (user?.department_name) return [user.department_name];
-    // If they aren't admin and don't have dept name, but have employees with depts, 
+    // If they aren't admin and don't have dept name, but have employees with depts,
     // maybe they are a commander with scope.
     return depts;
   }, [hierarchyData, user]);
@@ -170,7 +168,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
 
     // If something selected, show those
     if (filters.departments && filters.departments.length > 0) {
-      filters.departments.forEach(d => {
+      filters.departments.forEach((d) => {
         sects = [...sects, ...(hierarchyData.departments.get(d) || [])];
       });
     } else if (user?.is_admin) {
@@ -195,7 +193,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   const availableTeams = useMemo(() => {
     let tms: string[] = [];
     if (filters.sections && filters.sections.length > 0) {
-      filters.sections.forEach(s => {
+      filters.sections.forEach((s) => {
         tms = [...tms, ...(hierarchyData.sections.get(s) || [])];
       });
     } else if (user?.section_name && !user?.is_admin) {
@@ -245,15 +243,12 @@ export const FilterModal: React.FC<FilterModalProps> = ({
     onOpenChange(false);
   };
 
-  const activeFiltersCount = Object.entries(filters).reduce(
-    (acc, [key, val]) => {
-      if (Array.isArray(val)) return acc + val.length;
-      if (typeof val === "boolean" && val) return acc + 1;
-      if (typeof val === "string" && val.trim() !== "") return acc + 1;
-      return acc;
-    },
-    0,
-  );
+  const activeFiltersCount = Object.entries(filters).reduce((acc, [_, val]) => {
+    if (Array.isArray(val)) return acc + val.length;
+    if (typeof val === "boolean" && val) return acc + 1;
+    if (typeof val === "string" && val.trim() !== "") return acc + 1;
+    return acc;
+  }, 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -261,17 +256,17 @@ export const FilterModal: React.FC<FilterModalProps> = ({
         className="max-w-2xl p-0 overflow-hidden rounded-[32px] border border-border bg-card shadow-2xl flex flex-col max-h-[90vh]"
         dir="rtl"
       >
-        <DialogHeader className="p-8 pb-4 text-right">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <DialogTitle className="text-2xl font-black text-foreground mb-1">
+        <DialogHeader className="p-6 sm:p-8 pb-4 text-right shrink-0">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4">
+            <div className="text-center sm:text-right">
+              <DialogTitle className="text-xl sm:text-2xl font-black text-foreground mb-1">
                 סינון שוטרים מתקדם
               </DialogTitle>
               <DialogDescription className="text-sm font-bold text-muted-foreground">
                 התאם את התצוגה לפי פרמטרים ארגוניים ואישיים
               </DialogDescription>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
               <Filter className="w-6 h-6" />
             </div>
           </div>
@@ -289,7 +284,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-8 py-4 space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 space-y-6 custom-scrollbar">
           {/* Organizational Structure */}
           <div className="space-y-4">
             <button
@@ -315,7 +310,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             </button>
 
             {expandedSection === "org" && (
-              <div className="space-y-5 pr-11 animate-in fade-in slide-in-from-top-2 duration-300 pb-2">
+              <div className="space-y-5 pr-2 sm:pr-11 animate-in fade-in slide-in-from-top-2 duration-300 pb-2">
                 {/* Departments - Only for Admins or if multiple depts exist */}
                 {(user?.is_admin || availableDepts.length > 1) && (
                   <div className="space-y-2">
@@ -342,29 +337,30 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 )}
 
                 {/* Sections */}
-                {availableSections.length > 0 && (availableSections.length > 1 || user?.is_admin) && (
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block mb-2">
-                      מדורים
-                    </Label>
-                    <div className="flex flex-wrap gap-2">
-                      {availableSections.map((sect) => (
-                        <button
-                          key={sect}
-                          onClick={() => toggleFilter("sections", sect)}
-                          className={cn(
-                            "px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all",
-                            filters.sections?.includes(sect)
-                              ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                              : "bg-muted/50 text-muted-foreground border border-border hover:border-blue-200",
-                          )}
-                        >
-                          {sect}
-                        </button>
-                      ))}
+                {availableSections.length > 0 &&
+                  (availableSections.length > 1 || user?.is_admin) && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block mb-2">
+                        מדורים
+                      </Label>
+                      <div className="flex flex-wrap gap-2">
+                        {availableSections.map((sect) => (
+                          <button
+                            key={sect}
+                            onClick={() => toggleFilter("sections", sect)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all",
+                              filters.sections?.includes(sect)
+                                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                                : "bg-muted/50 text-muted-foreground border border-border hover:border-blue-200",
+                            )}
+                          >
+                            {sect}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Teams */}
                 {availableTeams.length > 0 && (
@@ -492,7 +488,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             </button>
 
             {expandedSection === "security" && (
-              <div className="grid grid-cols-2 gap-3 pr-11 animate-in fade-in slide-in-from-top-2 duration-300 pb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-2 sm:pr-11 animate-in fade-in slide-in-from-top-2 duration-300 pb-2">
                 {[
                   { id: "isCommander", label: "מפקדים בלבד", color: "blue" },
                   { id: "isAdmin", label: "מנהלי מערכת", color: "indigo" },
@@ -593,29 +589,27 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           </div>
         </div>
 
-        <div className="p-8 bg-muted/30 border-t border-border flex flex-col gap-3">
-          <div className="flex gap-3">
-            <Button
-              onClick={handleApply}
-              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-12 shadow-xl shadow-primary/20 transition-all active:scale-95 gap-2 text-sm"
-            >
-              <Filter className="w-4 h-4" />
-              החל סינון מתקדם
-              {activeFiltersCount > 0 && (
-                <span className="mr-1 bg-primary-foreground/20 px-2 py-0.5 rounded-full text-[10px]">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleReset}
-              className="px-8 border-border rounded-2xl h-12 font-bold text-muted-foreground hover:bg-muted transition-all shadow-sm gap-2"
-            >
-              <RotateCcw className="w-4 h-4" />
-              איפוס
-            </Button>
-          </div>
+        <div className="p-4 sm:p-8 bg-muted/30 border-t border-border flex flex-col sm:flex-row gap-3">
+          <Button
+            onClick={handleApply}
+            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-12 shadow-xl shadow-primary/20 transition-all active:scale-95 gap-2 text-sm order-1 sm:order-2"
+          >
+            <Filter className="w-4 h-4" />
+            החל סינון מתקדם
+            {activeFiltersCount > 0 && (
+              <span className="mr-1 bg-primary-foreground/20 px-2 py-0.5 rounded-full text-[10px]">
+                {activeFiltersCount}
+              </span>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="w-full sm:w-auto px-8 border-border rounded-2xl h-12 font-bold text-muted-foreground hover:bg-muted transition-all shadow-sm gap-2 order-2 sm:order-1"
+          >
+            <RotateCcw className="w-4 h-4" />
+            איפוס
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

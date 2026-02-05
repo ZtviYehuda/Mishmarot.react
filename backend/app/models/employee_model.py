@@ -74,7 +74,7 @@ class EmployeeModel:
                        (SELECT id FROM departments WHERE commander_id = e.id LIMIT 1) as commands_department_id_direct,
                        (SELECT id FROM sections WHERE commander_id = e.id LIMIT 1) as commands_section_id_direct,
                        (SELECT id FROM teams WHERE commander_id = e.id LIMIT 1) as commands_team_id,
-                       e.notif_sick_leave, e.notif_transfers
+                       e.notif_sick_leave, e.notif_transfers, e.notif_morning_report
                 FROM employees e
                 -- Structure Joins (Assigned)
                 LEFT JOIN teams t ON e.team_id = t.id
@@ -214,32 +214,37 @@ class EmployeeModel:
             query = query.format(status_condition=status_sql)
             params = status_params + params
 
-            # Scoping for commanders
-            if requesting_user and not requesting_user.get("is_admin"):
-                if requesting_user.get("commands_department_id"):
-                    query += " AND (d.id = %s OR d_dir.id = %s)"
-                    params.extend(
-                        [
-                            requesting_user["commands_department_id"],
-                            requesting_user["commands_department_id"],
-                        ]
-                    )
-                elif requesting_user.get("commands_section_id"):
-                    query += " AND (s.id = %s OR s_dir.id = %s)"
-                    params.extend(
-                        [
-                            requesting_user["commands_section_id"],
-                            requesting_user["commands_section_id"],
-                        ]
-                    )
-                elif requesting_user.get("commands_team_id"):
-                    query += " AND t.id = %s"
-                    params.append(requesting_user["commands_team_id"])
-                else:
-                    # Case for a commander who isn't linked to a specific unit command in the DB yet
-                    # or just for security - they only see themselves if no scope found
-                    query += " AND e.id = %s"
-                    params.append(requesting_user["id"])
+            # Scoping and Exclusions
+            if requesting_user:
+                # Always exclude the requesting user themselves from the lists
+                query += " AND e.id != %s"
+                params.append(requesting_user["id"])
+
+                if not requesting_user.get("is_admin"):
+                    if requesting_user.get("commands_department_id"):
+                        query += " AND (d.id = %s OR d_dir.id = %s)"
+                        params.extend(
+                            [
+                                requesting_user["commands_department_id"],
+                                requesting_user["commands_department_id"],
+                            ]
+                        )
+                    elif requesting_user.get("commands_section_id"):
+                        query += " AND (s.id = %s OR s_dir.id = %s)"
+                        params.extend(
+                            [
+                                requesting_user["commands_section_id"],
+                                requesting_user["commands_section_id"],
+                            ]
+                        )
+                    elif requesting_user.get("commands_team_id"):
+                        query += " AND t.id = %s"
+                        params.append(requesting_user["commands_team_id"])
+                    else:
+                        # Case for a commander who isn't linked to a specific unit command in the DB yet
+                        # or just for security - they only see themselves if no scope found
+                        # Wait, if we excluded them above, they see nothing here. This is correct if they have no scope.
+                        pass
 
             # Default to active only unless specified otherwise
             if not filters or not filters.get("include_inactive"):
@@ -363,8 +368,9 @@ class EmployeeModel:
                     city, birth_date, enlistment_date, discharge_date, assignment_date,
                     team_id, section_id, department_id, role_id, service_type_id, 
                     is_commander, is_admin, 
-                    password_hash, must_change_password, security_clearance, police_license
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    password_hash, must_change_password, security_clearance, police_license,
+                    employment_clearance, notif_sick_leave, notif_transfers, notif_morning_report
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """
             cur.execute(
@@ -389,8 +395,12 @@ class EmployeeModel:
                     data.get("is_admin", False),
                     pw_hash,
                     must_change,
-                    int(data.get("security_clearance", 0)),
+                    data.get("security_clearance", 0),
                     data.get("police_license", False),
+                    data.get("employment_clearance", False),
+                    data.get("notif_sick_leave", True),
+                    data.get("notif_transfers", True),
+                    data.get("notif_morning_report", True),
                 ),
             )
             new_id = cur.fetchone()["id"]
@@ -515,6 +525,8 @@ class EmployeeModel:
                 "must_change_password": "must_change_password",
                 "notif_sick_leave": "notif_sick_leave",
                 "notif_transfers": "notif_transfers",
+                "notif_morning_report": "notif_morning_report",
+                "employment_clearance": "employment_clearance",
             }
 
             # Business Rule: If commander status changes, sync must_change_password

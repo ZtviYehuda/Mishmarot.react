@@ -9,6 +9,10 @@ import { useAuthContext } from "@/context/AuthContext";
 
 // Placeholder pages (build these next; use ShadCN components)
 import LoginPage from "@/pages/LoginPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import SupportPage from "@/pages/SupportPage";
+import TermsPage from "@/pages/TermsPage";
+import PrivacyPage from "@/pages/PrivacyPage";
 import DashboardPage from "@/pages/DashboardPage";
 import EmployeesPage from "@/pages/EmployeesPage";
 import CreateEmployeePage from "@/pages/CreateEmployeePage";
@@ -73,6 +77,22 @@ const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: "/support",
+    element: <SupportPage />,
+  },
+  {
+    path: "/terms",
+    element: <TermsPage />,
+  },
+  {
+    path: "/privacy",
+    element: <PrivacyPage />,
+  },
+  {
     element: <ProtectedRoute />,
     children: [
       { path: "/", element: <DashboardPage /> },
@@ -92,9 +112,9 @@ export function AppRouter() {
   // Clean up old localStorage notification reads (migration)
   useEffect(() => {
     try {
-      localStorage.removeItem('read_notifications');
+      localStorage.removeItem("read_notifications");
     } catch (e) {
-      console.error('Failed to cleanup notification storage:', e);
+      console.error("Failed to cleanup notification storage:", e);
     }
   }, []);
 

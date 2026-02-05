@@ -286,7 +286,7 @@ export default function TransfersPage() {
         >
           <div className="flex flex-col">
             <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
-             ממתינות
+              ממתינות
             </span>
             <span className="text-2xl sm:text-4xl font-black text-amber-500">
               {stats.pending}
@@ -303,7 +303,7 @@ export default function TransfersPage() {
         >
           <div className="flex flex-col">
             <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
-              אושרו 
+              אושרו
             </span>
             <span className="text-2xl sm:text-4xl font-black text-emerald-500">
               {stats.approved}

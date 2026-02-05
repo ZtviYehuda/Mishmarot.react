@@ -19,7 +19,11 @@ export interface Employee {
   is_commander: boolean;
   is_admin: boolean;
   security_clearance: boolean;
+  employment_clearance: boolean;
   police_license: boolean;
+  notif_sick_leave: boolean;
+  notif_transfers: boolean;
+  notif_morning_report: boolean;
 
   // Hierarchy (Flattened for display)
   team_name: string | null;
@@ -71,13 +75,20 @@ export interface CreateEmployeePayload {
   police_license?: boolean;
   emergency_contact?: string;
   is_active?: boolean;
+  employment_clearance?: boolean;
+  notif_sick_leave?: boolean;
+  notif_transfers?: boolean;
+  notif_morning_report?: boolean;
 }
 
+// Hierarchy Tree Structure
 // Hierarchy Tree Structure
 export interface TeamNode {
   id: number;
   name: string;
   section_id: number;
+  commander_id?: number;
+  commander_name?: string;
 }
 
 export interface SectionNode {
@@ -85,10 +96,19 @@ export interface SectionNode {
   name: string;
   department_id: number;
   teams: TeamNode[];
+  commander_id?: number;
+  commander_name?: string;
 }
 
 export interface DepartmentNode {
   id: number;
   name: string;
   sections: SectionNode[];
+  commander_id?: number;
+  commander_name?: string;
+}
+
+export interface ServiceType {
+  id: number;
+  name: string;
 }

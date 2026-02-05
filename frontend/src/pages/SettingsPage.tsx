@@ -12,6 +12,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   User,
   Settings as SettingsIcon,
   Palette,
@@ -40,6 +47,7 @@ import {
   Award,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { cleanUnitName } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { user, logout, refreshUser } = useAuthContext();
@@ -201,6 +209,7 @@ export default function SettingsPage() {
     emergency_contact: "",
     notif_sick_leave: true,
     notif_transfers: true,
+    notif_morning_report: true,
 
     // New fields
     national_id: "",
@@ -210,6 +219,22 @@ export default function SettingsPage() {
     police_license: false,
     security_clearance: false,
   });
+
+  const [emergencyDetails, setEmergencyDetails] = useState({
+    name: "",
+    relation: "",
+    phone: "",
+  });
+
+  const relations = [
+    "בן / בת זוג",
+    "אבא / אמא",
+    "אח / אחות",
+    "בן / בת",
+    "סבא / סבתא",
+    "חבר / חברה",
+    "אחר",
+  ];
 
   const [passwordData, setPasswordData] = useState({
     new_password: "",
@@ -230,6 +255,7 @@ export default function SettingsPage() {
         emergency_contact: user.emergency_contact || "",
         notif_sick_leave: user.notif_sick_leave !== false,
         notif_transfers: user.notif_transfers !== false,
+        notif_morning_report: user.notif_morning_report !== false,
         national_id: user.national_id || "",
         enlistment_date: user.enlistment_date || "",
         discharge_date: user.discharge_date || "",
@@ -237,8 +263,45 @@ export default function SettingsPage() {
         police_license: !!user.police_license,
         security_clearance: !!user.security_clearance,
       });
+
+      // Parse Emergency Contact
+      if (user.emergency_contact) {
+        const match = user.emergency_contact.match(/^(.*) \((.*)\) - (.*)$/);
+        if (match) {
+          setEmergencyDetails({
+            name: match[1],
+            relation: match[2],
+            phone: match[3],
+          });
+        } else {
+          setEmergencyDetails({
+            name: user.emergency_contact,
+            relation: "",
+            phone: "",
+          });
+        }
+      } else {
+        setEmergencyDetails({
+          name: "",
+          relation: "",
+          phone: "",
+        });
+      }
     }
   }, [user]);
+
+  // Update formData when emergencyDetails changes
+  useEffect(() => {
+    const { name, relation, phone } = emergencyDetails;
+    if (name || relation || phone) {
+      setFormData((prev) => ({
+        ...prev,
+        emergency_contact: `${name} (${relation}) - ${phone}`,
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, emergency_contact: "" }));
+    }
+  }, [emergencyDetails]);
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
@@ -427,18 +490,21 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <p className="text-sm font-medium text-muted-foreground flex items-center justify-center sm:justify-start gap-3">
+                    <p className="text-sm font-medium text-muted-foreground flex flex-wrap items-center justify-center sm:justify-start gap-3">
                       <span className="bg-background px-2 py-0.5 rounded border border-border/50 text-[10px] font-bold uppercase tracking-wider">
                         {user?.personal_number}
                       </span>
-                      <span>
-                        מפקד{" "}
-                        {user?.commands_team_id
-                          ? "חולייה"
-                          : user?.commands_section_id
-                            ? "מדור"
-                            : "יחידה"}
-                      </span>
+                      {(user?.commands_team_id ||
+                        user?.commands_section_id ||
+                        user?.commands_department_id) && (
+                        <span>
+                          {user?.commands_department_id
+                            ? `מפקד מחלקת ${cleanUnitName(user.department_name)}`
+                            : user?.commands_section_id
+                              ? `מפקד מדור ${cleanUnitName(user.section_name)}`
+                              : `מפקד חוליית ${cleanUnitName(user.team_name)}`}
+                        </span>
+                      )}
                     </p>
                   </div>
 
@@ -542,6 +608,21 @@ export default function SettingsPage() {
                       </div>
                       <div className="space-y-1.5">
                         <Label className="text-xs font-bold text-foreground">
+                          עיר מגורים
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            value={formData.city}
+                            onChange={(e) =>
+                              setFormData({ ...formData, city: e.target.value })
+                            }
+                            className="h-9 rounded-lg bg-muted/30 border-border/50 font-medium focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm pr-9"
+                          />
+                          <MapPin className="w-3.5 h-3.5 text-muted-foreground/40 absolute right-3 top-1/2 -translate-y-1/2" />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-foreground">
                           מספר אישי (נעול)
                         </Label>
                         <div className="relative">
@@ -626,145 +707,245 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  {/* Qualifications */}
-                  <div>
-                    <h4 className="text-xs font-black text-muted-foreground/60 uppercase tracking-wider mb-4 flex items-center gap-2">
-                      <Award className="w-3.5 h-3.5" />
-                      כישורים והרשאות
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 text-right items-end">
-                      <div className="flex items-center gap-3 h-9 bg-muted/30 border border-border/50 px-3 rounded-lg">
-                        <Checkbox
-                          checked={formData.security_clearance}
-                          onCheckedChange={(checked) =>
-                            setFormData({
-                              ...formData,
-                              security_clearance: checked as boolean,
-                            })
-                          }
-                          id="security_clearance"
-                        />
-                        <Label
-                          htmlFor="security_clearance"
-                          className="text-sm font-bold text-foreground cursor-pointer"
-                        >
-                          סיווג ביטחוני
-                        </Label>
+                  {/* Contact Info Section */}
+                  <div className="bg-card border border-border/60 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-muted/30 px-6 py-4 border-b border-border/50 flex items-center gap-3">
+                      <div className="bg-primary/10 p-2 rounded-xl text-primary">
+                        <PhoneForwarded className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-sm text-foreground">
+                          פרטי התקשרות וחירום
+                        </h4>
+                        <p className="text-[10px] font-bold text-muted-foreground">
+                          ניהול מספרי טלפון ואנשי קשר למקרה חירום
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-6 space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-right">
+                        <div className="space-y-1.5 lg:col-span-1">
+                          <Label className="text-xs font-bold text-foreground">
+                            מספר טלפון אישי
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              value={formData.phone_number}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  phone_number: e.target.value,
+                                })
+                              }
+                              className="h-10 rounded-lg bg-muted/20 border-border/50 font-medium focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm pr-9"
+                            />
+                            <PhoneForwarded className="w-3.5 h-3.5 text-muted-foreground/40 absolute right-3 top-1/2 -translate-y-1/2" />
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-3 h-9 bg-muted/30 border border-border/50 px-3 rounded-lg">
-                        <Checkbox
-                          checked={formData.police_license}
-                          onCheckedChange={(checked) =>
-                            setFormData({
-                              ...formData,
-                              police_license: checked as boolean,
-                            })
-                          }
-                          id="police_license"
-                        />
-                        <Label
-                          htmlFor="police_license"
-                          className="text-sm font-bold text-foreground cursor-pointer"
-                        >
-                          רישיון משטרתי
-                        </Label>
+                      <div className="bg-muted/10 border border-border/40 rounded-xl overflow-hidden">
+                        <div className="bg-muted/30 px-4 py-2.5 border-b border-border/40 flex items-center gap-2">
+                          <span className="text-[11px] font-black text-foreground/70 uppercase tracking-wider">
+                            איש קשר לחירום
+                          </span>
+                        </div>
+
+                        <div className="p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-right">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold text-foreground">
+                                שם מלא
+                              </Label>
+                              <Input
+                                value={emergencyDetails.name}
+                                onChange={(e) =>
+                                  setEmergencyDetails((prev) => ({
+                                    ...prev,
+                                    name: e.target.value,
+                                  }))
+                                }
+                                placeholder="הזן שם..."
+                                className="h-9 rounded-lg bg-background border-border/50 font-medium focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold text-foreground font-sans">
+                                קרבה
+                              </Label>
+                              <Select
+                                value={emergencyDetails.relation}
+                                onValueChange={(val) =>
+                                  setEmergencyDetails((prev) => ({
+                                    ...prev,
+                                    relation: val,
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="h-9 rounded-lg bg-background border-border/50 font-medium focus:ring-1 focus:ring-primary transition-all text-sm text-right">
+                                  <SelectValue placeholder="בחר קרבה" />
+                                </SelectTrigger>
+                                <SelectContent dir="rtl">
+                                  {relations.map((rel) => (
+                                    <SelectItem
+                                      key={rel}
+                                      value={rel}
+                                      className="text-right"
+                                    >
+                                      {rel}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold text-foreground">
+                                מספר טלפון
+                              </Label>
+                              <Input
+                                value={emergencyDetails.phone}
+                                onChange={(e) =>
+                                  setEmergencyDetails((prev) => ({
+                                    ...prev,
+                                    phone: e.target.value,
+                                  }))
+                                }
+                                placeholder="05X-XXXXXXX"
+                                className="h-9 rounded-lg bg-background border-border/50 font-medium focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm font-mono ltr text-left"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Contact Info */}
-                  <div>
-                    <h4 className="text-xs font-black text-muted-foreground/60 uppercase tracking-wider mb-4 flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5" />
-                      פרטי התקשרות
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 text-right">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-foreground">
-                          מספר טלפון
-                        </Label>
-                        <Input
-                          value={formData.phone_number}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              phone_number: e.target.value,
-                            })
-                          }
-                          className="h-9 rounded-lg bg-muted/30 border-border/50 font-medium focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-foreground">
-                          עיר מגורים
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            value={formData.city}
-                            onChange={(e) =>
-                              setFormData({ ...formData, city: e.target.value })
-                            }
-                            className="h-9 rounded-lg bg-muted/30 border-border/50 font-medium focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm pr-9"
-                          />
-                          <MapPin className="w-3.5 h-3.5 text-muted-foreground/40 absolute right-3 top-1/2 -translate-y-1/2" />
-                        </div>
-                      </div>
-                      <div className="space-y-1.5 md:col-span-2 xl:col-span-1">
-                        <Label className="text-xs font-bold text-foreground">
-                          איש קשר לחירום
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            value={formData.emergency_contact}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                emergency_contact: e.target.value,
-                              })
-                            }
-                            placeholder="שם וטלפון..."
-                            className="h-9 rounded-lg bg-muted/30 border-border/50 font-medium focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm pr-9"
-                          />
-                          <PhoneForwarded className="w-3.5 h-3.5 text-muted-foreground/40 absolute right-3 top-1/2 -translate-y-1/2" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Organizational Info (Read-only) */}
+                  {/* Organizational & Permissions Info (Read-only + Toggles) */}
                   <div className="pt-2">
-                    <div className="bg-muted/30 border border-border/50 rounded-xl p-4">
-                      <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <Briefcase className="w-3 h-3 text-primary" />
-                        שיוך ארגוני (לקריאה בלבד)
-                      </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        <InfoBlock
-                          label="מחלקה"
-                          value={user?.department_name || "-"}
-                          compact
-                        />
-                        <InfoBlock
-                          label="מדור"
-                          value={user?.section_name || "-"}
-                          compact
-                        />
-                        <InfoBlock
-                          label="חולייה"
-                          value={user?.team_name || "-"}
-                          compact
-                        />
-                        <InfoBlock
-                          label="תפקיד"
-                          value={user?.role_name || "-"}
-                          compact
-                        />
-                        <InfoBlock
-                          label="סוג שירות"
-                          value={user?.service_type_name || "-"}
-                          compact
-                        />
+                    <div className="bg-card border border-border/60 rounded-2xl overflow-hidden shadow-sm">
+                      <div className="bg-muted/30 px-6 py-4 border-b border-border/50 flex items-center gap-3">
+                        <div className="bg-primary/10 p-2 rounded-xl text-primary">
+                          <Briefcase className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-sm text-foreground">
+                            שיוך ארגוני והרשאות
+                          </h4>
+                          <p className="text-[10px] font-bold text-muted-foreground">
+                            מידע על היחידה והרשאות מערכת פעילות
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="p-6 space-y-6">
+                        {/* Summary Blocks */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                          <InfoBlock
+                            label="מחלקה"
+                            value={
+                              user?.department_name
+                                ?.replace(/מחלקת|מחלקה/g, "")
+                                .trim() || "-"
+                            }
+                            compact
+                          />
+                          <InfoBlock
+                            label="מדור"
+                            value={
+                              user?.section_name?.replace(/מדור/g, "").trim() ||
+                              "-"
+                            }
+                            compact
+                          />
+                          <InfoBlock
+                            label="חולייה"
+                            value={
+                              user?.team_name
+                                ?.replace(/חוליית|חולייה/g, "")
+                                .trim() || "-"
+                            }
+                            compact
+                          />
+                          <InfoBlock
+                            label="תפקיד"
+                            value={
+                              user?.commands_department_id
+                                ? `מפקד מחלקת ${user.department_name?.replace(/מחלקת|מחלקה/g, "").trim()}`
+                                : user?.commands_section_id
+                                  ? `מפקד מדור ${user.section_name?.replace(/מדור/g, "").trim()}`
+                                  : user?.commands_team_id
+                                    ? `מפקד חוליית ${user.team_name?.replace(/חוליית|חולייה/g, "").trim()}`
+                                    : user?.role_name || "-"
+                            }
+                            compact
+                          />
+                          <InfoBlock
+                            label="סוג שירות"
+                            value={user?.service_type_name || "-"}
+                            compact
+                          />
+                        </div>
+
+                        {/* Qualifications Toggles moved here */}
+                        <div className="pt-4 border-t border-border/40">
+                          <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <Award className="w-3.5 h-3.5" />
+                            הרשאות וכישורים זמינים
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-right">
+                            <div
+                              className="flex items-center justify-between h-10 bg-muted/20 border border-border/40 px-3 rounded-xl hover:bg-muted/30 transition-colors cursor-pointer group"
+                              onClick={() =>
+                                setFormData({
+                                  ...formData,
+                                  security_clearance:
+                                    !formData.security_clearance,
+                                })
+                              }
+                            >
+                              <Label className="text-xs font-bold text-foreground cursor-pointer">
+                                סיווג ביטחוני
+                              </Label>
+                              <Checkbox
+                                checked={formData.security_clearance}
+                                onCheckedChange={(checked) =>
+                                  setFormData({
+                                    ...formData,
+                                    security_clearance: checked as boolean,
+                                  })
+                                }
+                                id="security_clearance_settings"
+                              />
+                            </div>
+
+                            <div
+                              className="flex items-center justify-between h-10 bg-muted/20 border border-border/40 px-3 rounded-xl hover:bg-muted/30 transition-colors cursor-pointer group"
+                              onClick={() =>
+                                setFormData({
+                                  ...formData,
+                                  police_license: !formData.police_license,
+                                })
+                              }
+                            >
+                              <Label className="text-xs font-bold text-foreground cursor-pointer">
+                                רישיון משטרתי
+                              </Label>
+                              <Checkbox
+                                checked={formData.police_license}
+                                onCheckedChange={(checked) =>
+                                  setFormData({
+                                    ...formData,
+                                    police_license: checked as boolean,
+                                  })
+                                }
+                                id="police_license_settings"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1106,6 +1287,14 @@ export default function SettingsPage() {
                       enabled={formData.notif_transfers}
                       onChange={(val: boolean) =>
                         setFormData({ ...formData, notif_transfers: val })
+                      }
+                    />
+                    <NotifSetting
+                      title="אי-דיווח בוקר ביחידה"
+                      description="קבל התראה כאשר ישנם שוטרים ביחידתך שטרם הוזן להם סטטוס להיום"
+                      enabled={formData.notif_morning_report}
+                      onChange={(val: boolean) =>
+                        setFormData({ ...formData, notif_morning_report: val })
                       }
                     />
                   </div>

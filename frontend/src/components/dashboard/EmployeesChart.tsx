@@ -250,12 +250,11 @@ export const EmployeesChart = ({
                       cy="50%"
                       labelLine={false}
                       label={renderCustomLabel}
-                      outerRadius={80}
-                      innerRadius={45}
+                      outerRadius={window.innerWidth < 640 ? 80 : 100}
+                      innerRadius={window.innerWidth < 640 ? 45 : 55}
                       fill="#8884d8"
                       dataKey="value"
                       paddingAngle={2}
-                      className="sm:!outerRadius-[100px] sm:!innerRadius-[55px]"
                     >
                       {chartData.map((item, index) => (
                         <Cell

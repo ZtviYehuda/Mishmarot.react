@@ -136,6 +136,8 @@ export default function MainLayout() {
     name: string;
   } | null>(null);
 
+  const [adminMissingAlerts, setAdminMissingAlerts] = React.useState<any[]>([]);
+
   // Check for critical morning alerts
   React.useEffect(() => {
     if (!user) return;
@@ -171,7 +173,7 @@ export default function MainLayout() {
         });
       }
     });
-  }, [alerts]);
+  }, [alerts, user]);
 
   // Auto-open sidebar on desktop (lg breakpoint)
   React.useEffect(() => {
@@ -233,9 +235,6 @@ export default function MainLayout() {
             </div>
             {isSidebarOpen && (
               <div className="flex flex-col">
-                <span className="font-black text-foreground text-sm tracking-tight leading-none">
-                  gov.il
-                </span>
                 <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1">
                   פורטל יחידה
                 </span>
@@ -869,67 +868,6 @@ export default function MainLayout() {
                   למעבר לעמוד
                 </Button>
               )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Morning Report Reminder Modal */}
-        <Dialog
-          open={!!criticalAlert}
-          onOpenChange={(open) => !open && setCriticalAlert(null)}
-        >
-          <DialogContent className="max-w-[90vw] sm:max-w-md border-primary/20 bg-card shadow-xl p-4 sm:p-6">
-            <DialogHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
-                  <Bell className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <DialogTitle className="text-xl font-black text-foreground">
-                    תזכורת: דיווח בוקר
-                  </DialogTitle>
-                  <DialogDescription className="text-muted-foreground font-medium mt-1">
-                    יש להשלים את הדיווח היומי
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-            <div className="p-4 rounded-xl border border-border bg-muted/30 mt-2">
-              <p className="text-sm font-bold leading-relaxed text-foreground">
-                {criticalAlert?.description ||
-                  "אנא השלם את דיווח הנוכחות עבור השוטרים החסרים."}
-              </p>
-              <p className="text-xs mt-2 text-muted-foreground">
-                השעה כעת{" "}
-                {new Date().toLocaleTimeString("he-IL", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-                . נא להשלים בהקדם.
-              </p>
-            </div>
-            <DialogFooter className="gap-2 mt-4 sm:gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => setCriticalAlert(null)}
-                className="flex-1 rounded-xl font-bold text-muted-foreground"
-              >
-                סגור
-              </Button>
-              <Button
-                className="flex-1 rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-                onClick={() => {
-                  navigate("/attendance", {
-                    state: {
-                      openBulkModal: true,
-                      missingIds: criticalAlert?.data?.missing_ids || [],
-                    },
-                  });
-                  setCriticalAlert(null);
-                }}
-              >
-                עדכון שוטרים חסרים
-              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

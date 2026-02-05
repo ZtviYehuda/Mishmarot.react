@@ -217,6 +217,7 @@ class AttendanceModel:
                 LEFT JOIN status_types st ON al.status_type_id = st.id
                 WHERE e.is_active = TRUE 
                 AND e.personal_number != 'admin' 
+                AND e.id != %s
                 AND e.id NOT IN (
                     SELECT commander_id FROM departments WHERE commander_id IS NOT NULL
                     UNION 
@@ -227,8 +228,9 @@ class AttendanceModel:
                 ORDER BY {grouping_col}
             """
 
-            # Combine params: status_params + scoping params
-            final_params = status_params + params
+            # Combine params: status_params + [requesting_user_id] + scoping params
+            userId = requesting_user["id"] if requesting_user else None
+            final_params = status_params + ([userId] if userId else []) + params
             cur.execute(query, tuple(final_params))
             results = cur.fetchall()
 
@@ -282,7 +284,7 @@ class AttendanceModel:
                     LEFT JOIN teams t ON e.team_id = t.id
                     LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                     LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
-                    WHERE e.is_active = TRUE AND e.personal_number != 'admin' {scoping_clause}
+                    WHERE e.is_active = TRUE AND e.personal_number != 'admin' AND e.id != %s {scoping_clause}
                 )
                 SELECT 
                     TO_CHAR(p.date, 'DD/MM') as date_str,
@@ -301,8 +303,11 @@ class AttendanceModel:
                 ORDER BY p.date ASC
             """
 
-            # Params: [end_date if set] + [days-1] + [scoping params]
-            final_params = date_params + [days - 1] + params
+            # Params: [end_date if set] + [days-1] + [requesting_user_id] + [scoping params]
+            userId = requesting_user["id"] if requesting_user else None
+            final_params = (
+                date_params + [days - 1] + ([userId] if userId else []) + params
+            )
             cur.execute(query, tuple(final_params))
             return cur.fetchall()
         finally:
@@ -376,8 +381,8 @@ class AttendanceModel:
                     query += " AND st.id = %s"
                     params.append(filters["status_id"])
 
-            # Exclude requesting user (Commander) from stats
-            if requesting_user and requesting_user.get("is_commander"):
+            # Exclude requesting user (Commander/Admin) from stats
+            if requesting_user:
                 query += " AND e.id != %s"
                 params.append(requesting_user["id"])
 
@@ -431,7 +436,7 @@ class AttendanceModel:
                     params.append(requesting_user["id"])
 
             # Exclude requesting user from birthdays
-            if requesting_user and requesting_user.get("is_commander"):
+            if requesting_user:
                 query += " AND e.id != %s"
                 params.append(requesting_user["id"])
 
@@ -532,6 +537,80 @@ class AttendanceModel:
                 ORDER BY al.start_datetime ASC
             """
             cur.execute(query, (list(employee_ids), end_date, start_date))
+            return cur.fetchall()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_employee_history_export(employee_id, start_date=None, end_date=None):
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            query = """
+                WITH marked_changes AS (
+                    SELECT 
+                        al.id,
+                        al.status_type_id,
+                        al.start_datetime,
+                        al.end_datetime,
+                        al.note,
+                        al.reported_by,
+                        CASE 
+                            WHEN LAG(al.status_type_id) OVER (ORDER BY al.start_datetime) = al.status_type_id THEN 0 
+                            ELSE 1 
+                        END as is_new_group
+                    FROM attendance_logs al
+                    WHERE al.employee_id = %s
+                ),
+                grouped_logs AS (
+                    SELECT 
+                        *,
+                        SUM(is_new_group) OVER (ORDER BY start_datetime) as group_id
+                    FROM marked_changes
+                ),
+                aggregated_history AS (
+                    SELECT 
+                        MIN(gl.id) as id,
+                        st.name as status_name,
+                        st.color as status_color,
+                        MIN(gl.start_datetime) as start_datetime,
+                        CASE 
+                            WHEN BOOL_OR(gl.end_datetime IS NULL) THEN NULL 
+                            ELSE MAX(gl.end_datetime) 
+                        END as end_datetime,
+                        (ARRAY_AGG(gl.note ORDER BY gl.start_datetime))[1] as note,
+                        (ARRAY_AGG(gl.reported_by ORDER BY gl.start_datetime))[1] as reported_by_id
+                    FROM grouped_logs gl
+                    JOIN status_types st ON gl.status_type_id = st.id
+                    GROUP BY gl.group_id, st.id, st.name, st.color
+                )
+                SELECT 
+                    ah.id,
+                    ah.status_name,
+                    ah.start_datetime,
+                    ah.end_datetime,
+                    ah.note,
+                    r.first_name || ' ' || r.last_name as reported_by_name
+                FROM aggregated_history ah
+                LEFT JOIN employees r ON ah.reported_by_id = r.id
+                WHERE 1=1
+            """
+
+            params = [employee_id]
+
+            if start_date:
+                query += " AND DATE(ah.start_datetime) >= %s"
+                params.append(start_date)
+
+            if end_date:
+                query += " AND DATE(ah.start_datetime) <= %s"
+                params.append(end_date)
+
+            query += " ORDER BY ah.start_datetime DESC"
+
+            cur.execute(query, tuple(params))
             return cur.fetchall()
         finally:
             conn.close()

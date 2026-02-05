@@ -1,17 +1,9 @@
 import axios from "axios";
-
-// Ensure this matches your backend URL (Backend must be running!)
-// detect the base URL dynamically for network / ngrok access
 const getBaseUrl = () => {
-  if (typeof window !== "undefined") {
-    // If we are on mobile/ngrok, window.location.hostname will be the local IP or ngrok address
-    const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-
-    // In dev mode with Vite proxy, we can just use /api
-    return `${protocol}//${hostname}${window.location.port ? ":" + window.location.port : ""}/api`;
-  }
-  return "http://localhost:5000/api";
+  // Use relative path to leverage Vite's proxy.
+  // This solves Mixed Content (HTTPS tunnel -> HTTP localhost)
+  // and CORS/PNA issues by making the request Same-Origin.
+  return "/api";
 };
 
 export const API_URL = getBaseUrl();

@@ -13,13 +13,10 @@ import {
   Building2,
   Calendar,
   Loader2,
-  History,
   Settings2,
   Briefcase,
   BadgeCheck,
-  AlertTriangle,
   ArrowRight,
-  ArrowLeftRight,
   Sparkles,
 } from "lucide-react";
 import {
@@ -31,8 +28,12 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import type { Employee, CreateEmployeePayload } from "@/types/employee.types";
+import { cn, cleanUnitName } from "@/lib/utils";
+import type {
+  Employee,
+  CreateEmployeePayload,
+  DepartmentNode,
+} from "@/types/employee.types";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthContext } from "@/context/AuthContext";
@@ -41,12 +42,17 @@ import { BirthdayGreetingsModal } from "@/components/dashboard/BirthdayGreetings
 
 // --- Styled Components ---
 
+interface ServiceType {
+  id: number;
+  name: string;
+}
+
 const SectionHeader = ({
   icon: Icon,
   title,
   description,
 }: {
-  icon: any;
+  icon: React.ElementType;
   title: string;
   description: string;
 }) => (
@@ -102,7 +108,7 @@ const ToggleCard = ({
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
-  icon?: any;
+  icon?: React.ElementType;
   description?: string;
 }) => (
   <div
@@ -170,8 +176,8 @@ export default function EditEmployeePage() {
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
-  const [structure, setStructure] = useState<any[]>([]);
-  const [serviceTypes, setServiceTypes] = useState<any[]>([]);
+  const [structure, setStructure] = useState<DepartmentNode[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [employee, setEmployee] = useState<Employee | null>(null);
 
   // Form State
@@ -203,6 +209,35 @@ export default function EditEmployeePage() {
     name: string;
     unitType: string;
   } | null>(null);
+
+  const [emergencyDetails, setEmergencyDetails] = useState({
+    name: "",
+    relation: "",
+    phone: "",
+  });
+
+  // Update formData when emergencyDetails changes
+  useEffect(() => {
+    const { name, relation, phone } = emergencyDetails;
+    if (name || relation || phone) {
+      setFormData((prev) => ({
+        ...prev,
+        emergency_contact: `${name} (${relation}) - ${phone}`,
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, emergency_contact: "" }));
+    }
+  }, [emergencyDetails]);
+
+  const relations = [
+    "בן / בת זוג",
+    "אבא / אמא",
+    "אח / אחות",
+    "בן / בת",
+    "סבא / סבתא",
+    "חבר / חברה",
+    "אחר",
+  ];
 
   // Cascading & UI state
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
@@ -266,6 +301,25 @@ export default function EditEmployeePage() {
           emergency_contact: data.emergency_contact || "",
           is_active: data.is_active ?? true,
         });
+
+        // Parse Emergency Contact
+        if (data.emergency_contact) {
+          const match = data.emergency_contact.match(/^(.*) \((.*)\) - (.*)$/);
+          if (match) {
+            setEmergencyDetails({
+              name: match[1],
+              relation: match[2],
+              phone: match[3],
+            });
+          } else {
+            // Fallback for unformatted strings
+            setEmergencyDetails({
+              name: data.emergency_contact,
+              relation: "",
+              phone: "",
+            });
+          }
+        }
 
         if (data.department_id)
           setSelectedDeptId(data.department_id.toString());
@@ -445,6 +499,47 @@ export default function EditEmployeePage() {
 
                 {/* Stats List - Clean */}
                 <div className="w-full space-y-4">
+                  {/* Hierarchy Info */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">מחלקה</span>
+                    <span className="font-medium text-foreground">
+                      {cleanUnitName(
+                        structure.find(
+                          (d) => d.id === Number(formData.department_id),
+                        )?.name,
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">מדור</span>
+                    <span className="font-medium text-foreground">
+                      {cleanUnitName(
+                        structure
+                          .find((d) => d.id === Number(formData.department_id))
+                          ?.sections.find(
+                            (s) => s.id === Number(formData.section_id),
+                          )?.name,
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">חוליה</span>
+                    <span className="font-medium text-foreground">
+                      {cleanUnitName(
+                        structure
+                          .find((d) => d.id === Number(formData.department_id))
+                          ?.sections.find(
+                            (s) => s.id === Number(formData.section_id),
+                          )
+                          ?.teams.find((t) => t.id === Number(formData.team_id))
+                          ?.name,
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="w-full h-px bg-border/50 my-2" />
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">דרגה/תפקיד</span>
                     <div className="flex items-center gap-2 font-medium text-foreground">
@@ -503,15 +598,10 @@ export default function EditEmployeePage() {
             <div className="bg-muted/50 p-1.5 rounded-2xl mb-8 w-fit mx-auto lg:mx-0 lg:w-full overflow-x-auto">
               <TabsList className="bg-transparent h-auto p-0 flex gap-1 w-full justify-start lg:justify-between min-w-[500px]">
                 <TabButton value="personal" label="פרטים אישיים" icon={User} />
-                <TabButton value="org" label="שיוך וארגון" icon={Building2} />
+                <TabButton value="org" label="שיוך יחידתי" icon={Building2} />
                 <TabButton
-                  value="service"
-                  label="שירות וזמנים"
-                  icon={Calendar}
-                />
-                <TabButton
-                  value="security"
-                  label="אבטחה והיתרים"
+                  value="service_security"
+                  label="שירות ואבטחה"
                   icon={Shield}
                 />
               </TabsList>
@@ -644,22 +734,75 @@ export default function EditEmployeePage() {
                           />
                         </FormField>
                         <div className="md:col-span-2">
-                          <FormField label="איש קשר לחירום">
-                            <div className="relative">
-                              <AlertTriangle className="absolute right-3 top-3.5 w-5 h-5 text-destructive/50" />
-                              <Input
-                                value={formData.emergency_contact}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    emergency_contact: e.target.value,
-                                  })
-                                }
-                                className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl pr-10 text-right"
-                                placeholder="שם מלא ומספר טלפון"
-                              />
+                          <div className="md:col-span-2">
+                            {/* Emergency Contact Group - Redesigned */}
+                            <div className="bg-card border border-border/60 rounded-xl overflow-hidden shadow-sm">
+                              <div className="bg-muted/30 px-4 py-3 border-b border-border/50 flex items-center gap-2">
+                                <div className="bg-primary/10 p-1.5 rounded-md text-primary">
+                                  <Phone className="w-4 h-4" />
+                                </div>
+                                <h4 className="font-bold text-sm text-foreground/80">
+                                  איש קשר לחירום
+                                </h4>
+                              </div>
+
+                              <div className="p-4 space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <FormField label="שם איש קשר">
+                                    <Input
+                                      value={emergencyDetails.name}
+                                      onChange={(e) =>
+                                        setEmergencyDetails((prev) => ({
+                                          ...prev,
+                                          name: e.target.value,
+                                        }))
+                                      }
+                                      placeholder="שם מלא"
+                                      className="bg-muted/30 border-input focus:bg-background transition-colors text-right"
+                                    />
+                                  </FormField>
+
+                                  <FormField label="קרבה">
+                                    <Select
+                                      value={emergencyDetails.relation}
+                                      onValueChange={(val) =>
+                                        setEmergencyDetails((prev) => ({
+                                          ...prev,
+                                          relation: val,
+                                        }))
+                                      }
+                                    >
+                                      <SelectTrigger className="bg-muted/30 border-input text-right focus:bg-background transition-colors h-10">
+                                        <SelectValue placeholder="בחר קרבה" />
+                                      </SelectTrigger>
+                                      <SelectContent dir="rtl">
+                                        {relations.map((rel) => (
+                                          <SelectItem key={rel} value={rel}>
+                                            {rel}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </FormField>
+                                </div>
+
+                                <FormField label="טלפון איש קשר">
+                                  <Input
+                                    type="tel"
+                                    value={emergencyDetails.phone}
+                                    onChange={(e) =>
+                                      setEmergencyDetails((prev) => ({
+                                        ...prev,
+                                        phone: e.target.value,
+                                      }))
+                                    }
+                                    className="font-mono text-left ltr bg-muted/30 border-input focus:bg-background transition-colors"
+                                    placeholder="050-0000000"
+                                  />
+                                </FormField>
+                              </div>
                             </div>
-                          </FormField>
+                          </div>
                         </div>
                       </div>
 
@@ -691,7 +834,7 @@ export default function EditEmployeePage() {
                         />
 
                         <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <FormField label="מחלקה (Department)" required>
+                          <FormField label="מחלקה" required>
                             <Select
                               value={selectedDeptId}
                               onValueChange={(val) => {
@@ -724,7 +867,7 @@ export default function EditEmployeePage() {
                             </Select>
                           </FormField>
 
-                          <FormField label="מדור (Section)">
+                          <FormField label="מדור">
                             <Select
                               value={selectedSectionId}
                               onValueChange={(val) => {
@@ -762,7 +905,7 @@ export default function EditEmployeePage() {
                             </Select>
                           </FormField>
 
-                          <FormField label="חולייה (Team)">
+                          <FormField label="חוליה">
                             <Select
                               value={formData.team_id?.toString() || "none"}
                               onValueChange={(val) =>
@@ -795,34 +938,6 @@ export default function EditEmployeePage() {
                           </FormField>
                         </div>
 
-                        <div className="mt-3 bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex flex-row items-center justify-between gap-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-blue-100/50 text-blue-600 flex items-center justify-center shrink-0">
-                              <ArrowLeftRight className="w-4 h-4" />
-                            </div>
-                            <div className="text-xs">
-                              <span className="font-bold text-blue-900 block">
-                                מעוניין להעביר את השוטר יחידה?
-                              </span>
-                              <span className="text-blue-700/80">
-                                השינוי הידני נועד למעברים פנימיים (מדור/חוליה).
-                                למעבר יחידה מלא יש להגיש בקשה.
-                              </span>
-                            </div>
-                          </div>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            type="button"
-                            className="bg-white hover:bg-white/80 text-blue-700 border border-blue-200 shadow-sm font-bold text-xs h-8"
-                            onClick={() =>
-                              navigate(`/transfers?employeeId=${id}`)
-                            }
-                          >
-                            צור בקשת העברה
-                          </Button>
-                        </div>
-
                         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                           <FormField label="סוג שירות">
                             <Select
@@ -848,22 +963,6 @@ export default function EditEmployeePage() {
                                 ))}
                               </SelectContent>
                             </Select>
-                          </FormField>
-                          <FormField label="מזהה תפקיד (Role ID)">
-                            <Input
-                              type="number"
-                              value={formData.role_id || ""}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  role_id: e.target.value
-                                    ? parseInt(e.target.value)
-                                    : undefined,
-                                })
-                              }
-                              className="h-12 bg-muted/50 border-input rounded-xl text-right"
-                              placeholder="קוד תפקיד (אם קיים)"
-                            />
                           </FormField>
                         </div>
 
@@ -1048,11 +1147,11 @@ export default function EditEmployeePage() {
                         חזור לקודם
                       </Button>
                       <Button
-                        onClick={() => setActiveTab("service")}
+                        onClick={() => setActiveTab("service_security")}
                         size="lg"
                         className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90"
                       >
-                        הבא: שירות וזמנים{" "}
+                        הבא: שירות ואבטחה{" "}
                         <ArrowRight className="mr-2 w-4 h-4 rotate-180" />
                       </Button>
                     </div>
@@ -1060,117 +1159,70 @@ export default function EditEmployeePage() {
                 </TabsContent>
 
                 <TabsContent
-                  value="service"
-                  className="mt-0 focus-visible:outline-none"
-                >
-                  <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
-                    <CardContent className="p-8">
-                      <SectionHeader
-                        icon={Calendar}
-                        title="ציר זמן צבאי"
-                        description="ניהול תאריכי שירות, כניסה לתפקיד ושחרור"
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                        <div className="bg-muted/30 p-4 rounded-2xl border border-border space-y-4">
-                          <h3 className="font-bold flex items-center gap-2 text-foreground/80">
-                            <History className="w-4 h-4 text-primary" /> התחלה
-                          </h3>
-                          <FormField label="תאריך גיוס">
-                            <Input
-                              type="date"
-                              value={formData.enlistment_date}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  enlistment_date: e.target.value,
-                                })
-                              }
-                              className="h-12 bg-card text-right border-input"
-                            />
-                          </FormField>
-                          <FormField label="תאריך הצבה ביחידה">
-                            <Input
-                              type="date"
-                              value={formData.assignment_date}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  assignment_date: e.target.value,
-                                })
-                              }
-                              className="h-12 bg-card text-right border-input"
-                            />
-                          </FormField>
-                        </div>
-
-                        <div className="bg-muted/30 p-4 rounded-2xl border border-border space-y-4">
-                          <h3 className="font-bold flex items-center gap-2 text-foreground/80">
-                            <Briefcase className="w-4 h-4 text-primary" /> סיום
-                            ואישי
-                          </h3>
-                          <FormField label="תאריך שחרור צפוי (תש''ש)">
-                            <Input
-                              type="date"
-                              value={formData.discharge_date}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  discharge_date: e.target.value,
-                                })
-                              }
-                              className="h-12 bg-card text-right border-input"
-                            />
-                          </FormField>
-                          <FormField label="תאריך לידה">
-                            <Input
-                              type="date"
-                              value={formData.birth_date}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  birth_date: e.target.value,
-                                })
-                              }
-                              className="h-12 bg-card text-right border-input"
-                            />
-                          </FormField>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <div className="flex justify-between mt-6">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setActiveTab("org")}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      חזור לקודם
-                    </Button>
-                    <Button
-                      onClick={() => setActiveTab("security")}
-                      size="lg"
-                      className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
-                      הבא: אבטחה{" "}
-                      <ArrowRight className="mr-2 w-4 h-4 rotate-180" />
-                    </Button>
-                  </div>
-                </TabsContent>
-
-                <TabsContent
-                  value="security"
+                  value="service_security"
                   className="mt-0 focus-visible:outline-none"
                 >
                   <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
                     <CardContent className="p-8 space-y-8">
+                      {/* Section 1: Dates */}
                       <SectionHeader
-                        icon={Shield}
-                        title="אבטחה והרשאות"
-                        description="ניהול רמות סיווג וסמכויות מיוחדות"
+                        icon={Calendar}
+                        title="תאריכי שירות"
+                        description="ציר זמן שירות"
                       />
 
-                      <div className="bg-primary/5 border border-primary/10 p-6 rounded-2xl mb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <FormField label="תאריך גיוס">
+                          <Input
+                            type="date"
+                            value={formData.enlistment_date}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                enlistment_date: e.target.value,
+                              })
+                            }
+                            className="h-12 bg-muted/50 border-input rounded-xl"
+                          />
+                        </FormField>
+                        <FormField label="תאריך הצבה">
+                          <Input
+                            type="date"
+                            value={formData.assignment_date}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                assignment_date: e.target.value,
+                              })
+                            }
+                            className="h-12 bg-muted/50 border-input rounded-xl"
+                          />
+                        </FormField>
+                        <FormField label="תאריך שחרור">
+                          <Input
+                            type="date"
+                            value={formData.discharge_date}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                discharge_date: e.target.value,
+                              })
+                            }
+                            className="h-12 bg-muted/50 border-input rounded-xl"
+                          />
+                        </FormField>
+                      </div>
+
+                      <div className="w-full h-px bg-border my-8" />
+
+                      {/* Section 2: Security */}
+                      <SectionHeader
+                        icon={Shield}
+                        title="הגדרות מערכת ואבטחה"
+                        description="הרשאות ואישורים"
+                      />
+
+                      <div className="grid grid-cols-1 gap-4">
                         <ToggleCard
                           label="בעל סיווג ביטחוני"
                           description="השוטר עבר בדיקת סיווג ורשאי להיחשף למידע מסווג"
@@ -1183,20 +1235,16 @@ export default function EditEmployeePage() {
                           }
                           icon={Shield}
                         />
-                      </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="lg:col-span-2">
-                          <ToggleCard
-                            label="בעל רישיון משטרה"
-                            description="מאושר לשאת נשק משטרתי / סמכויות"
-                            checked={formData.police_license || false}
-                            onChange={(v) =>
-                              setFormData({ ...formData, police_license: v })
-                            }
-                            icon={BadgeCheck}
-                          />
-                        </div>
+                        <ToggleCard
+                          label="רישיון משטרה"
+                          description="מאושר לשאת נשק משטרתי / סמכויות"
+                          checked={formData.police_license || false}
+                          onChange={(v) =>
+                            setFormData({ ...formData, police_license: v })
+                          }
+                          icon={BadgeCheck}
+                        />
                       </div>
                     </CardContent>
                   </Card>
@@ -1204,7 +1252,7 @@ export default function EditEmployeePage() {
                   <div className="flex justify-between mt-8 items-center bg-card p-4 rounded-2xl shadow-lg border border-border sticky bottom-6 z-20">
                     <Button
                       variant="ghost"
-                      onClick={() => setActiveTab("service")}
+                      onClick={() => setActiveTab("org")}
                       className="text-muted-foreground font-bold hover:text-foreground"
                     >
                       חזור

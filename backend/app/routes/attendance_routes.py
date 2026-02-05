@@ -1,7 +1,9 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.models.attendance_model import AttendanceModel
 import json
+import pandas as pd
+import io
 
 att_bp = Blueprint("attendance", __name__)
 
@@ -104,10 +106,12 @@ def get_comparison_stats():
         from app.models.employee_model import EmployeeModel
 
         requester = EmployeeModel.get_employee_by_id(user_id)
-        
+
         date = request.args.get("date")
 
-        data = AttendanceModel.get_unit_comparison_stats(requesting_user=requester, date=date)
+        data = AttendanceModel.get_unit_comparison_stats(
+            requesting_user=requester, date=date
+        )
         return jsonify(data)
     except Exception as e:
         print(f"❌ Error in /stats/comparison: {e}")
@@ -132,7 +136,7 @@ def get_trend_stats():
 
         days = int(request.args.get("days", 7))
         date = request.args.get("date")
-        
+
         data = AttendanceModel.get_attendance_trend(
             days=days, requesting_user=requester, end_date=date
         )
@@ -227,4 +231,76 @@ def get_employee_history(emp_id):
         return jsonify(history)
     except Exception as e:
         print(f"❌ Error in /history/{emp_id}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@att_bp.route("/history/<int:emp_id>/export", methods=["GET"])
+@jwt_required()
+def export_employee_history(emp_id):
+    try:
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+
+        history = AttendanceModel.get_employee_history_export(
+            emp_id, start_date, end_date
+        )
+
+        if not history:
+            return jsonify({"error": "No history found for specified range"}), 404
+
+        # Convert to DataFrame
+        df = pd.DataFrame(history)
+
+        # Rename columns for Hebrew Report
+        columns = {
+            "status_name": "סטטוס",
+            "start_datetime": "התחלה",
+            "end_datetime": "סיום",
+            "note": "הערה",
+            "reported_by_name": 'דווח ע"י',
+        }
+
+        valid_cols = [c for c in columns.keys() if c in df.columns]
+        df = df[valid_cols].rename(columns=columns)
+
+        # Format dates
+        if "התחלה" in df.columns:
+            df["התחלה"] = pd.to_datetime(df["התחלה"]).dt.strftime("%d/%m/%Y %H:%M")
+        if "סיום" in df.columns:
+            df["סיום"] = pd.to_datetime(df["סיום"]).apply(
+                lambda x: x.strftime("%d/%m/%Y %H:%M") if pd.notnull(x) else "-"
+            )
+
+        # Export to Excel
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            workbook = writer.book
+            worksheet = workbook.create_sheet("History")
+            writer.sheets["History"] = worksheet
+
+            # Title
+            worksheet.merge_cells("A1:E1")
+            worksheet["A1"] = f"היסטוריית דיווחים - שוטר {emp_id}"
+            worksheet.sheet_view.rightToLeft = True
+
+            df.to_excel(writer, index=False, sheet_name="History", startrow=2)
+
+        output.seek(0)
+        filename = f"history_{emp_id}"
+        if start_date:
+            filename += f"_{start_date}"
+        filename += ".xlsx"
+
+        return send_file(
+            output,
+            download_name=filename,
+            as_attachment=True,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+    except Exception as e:
+        print(f"❌ Error exporting history: {e}")
+        import traceback
+
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500

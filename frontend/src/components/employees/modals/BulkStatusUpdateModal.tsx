@@ -436,229 +436,394 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
               <span className="text-sm font-bold">לא נמצאו שוטרים</span>
             </div>
           ) : (
-            <Table>
-              <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-sm">
-                <TableRow className="hover:bg-transparent border-b">
-                  <TableHead className="w-[60px] text-center px-2">
-                    <div className="flex items-center justify-center">
-                      <Checkbox
-                        className="w-5 h-5 border-2 border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-lg transition-all shadow-sm"
-                        checked={
-                          filteredList.length > 0 &&
-                          selectedIds.length === filteredList.length
-                        }
-                        onCheckedChange={(checked) =>
-                          handleSelectAll(checked as boolean)
-                        }
-                      />
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-right min-w-[200px] font-black text-xs uppercase text-muted-foreground">
-                    שוטר
-                  </TableHead>
-                  <TableHead className="text-right min-w-[200px] w-[25%] font-black text-xs uppercase text-muted-foreground">
-                    סטטוס נוכחי
-                  </TableHead>
-                  <TableHead className="text-right min-w-[300px] font-black text-xs uppercase text-muted-foreground">
-                    פרטי עדכון (בשינוי סטטוס)
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden lg:block">
+                <Table>
+                  <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-sm">
+                    <TableRow className="hover:bg-transparent border-b">
+                      <TableHead className="w-[60px] text-center px-2">
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            className="w-5 h-5 border-2 border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-lg transition-all shadow-sm"
+                            checked={
+                              filteredList.length > 0 &&
+                              selectedIds.length === filteredList.length
+                            }
+                            onCheckedChange={(checked) =>
+                              handleSelectAll(checked as boolean)
+                            }
+                          />
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-right min-w-[200px] font-black text-xs uppercase text-muted-foreground">
+                        שוטר
+                      </TableHead>
+                      <TableHead className="text-right min-w-[200px] w-[25%] font-black text-xs uppercase text-muted-foreground">
+                        סטטוס נוכחי
+                      </TableHead>
+                      <TableHead className="text-right min-w-[300px] font-black text-xs uppercase text-muted-foreground">
+                        טווח תאריכים
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredList.map((emp) => {
+                      const current = bulkUpdates[emp.id];
+                      const isSelected = selectedIds.includes(emp.id);
+                      return (
+                        <TableRow
+                          key={emp.id}
+                          data-state={isSelected ? "selected" : "unchecked"}
+                          className={cn(
+                            "transition-all hover:bg-muted/40 border-b last:border-0",
+                            isSelected && "bg-primary/5 hover:bg-primary/10",
+                            current?.isChanged &&
+                              "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
+                          )}
+                        >
+                          <TableCell className="text-center px-2 py-4 align-middle">
+                            <div className="flex items-center justify-center">
+                              <Checkbox
+                                className={cn(
+                                  "w-5 h-5 border-2 border-muted-foreground/30 rounded-lg transition-all shadow-sm",
+                                  isSelected
+                                    ? "bg-primary border-primary text-primary-foreground"
+                                    : "bg-background hover:border-primary/50",
+                                )}
+                                checked={isSelected}
+                                onCheckedChange={(checked) =>
+                                  handleSelectOne(emp.id, checked as boolean)
+                                }
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium align-middle py-4">
+                            <div className="flex items-center gap-4">
+                              <div
+                                className={cn(
+                                  "w-10 h-10 rounded-xl shadow-sm flex items-center justify-center transition-transform hover:scale-105 shrink-0",
+                                  current?.isChanged
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-white dark:bg-muted/50 text-muted-foreground border border-border/50",
+                                )}
+                              >
+                                <User className="w-5 h-5" />
+                              </div>
+                              <div className="flex flex-col text-right gap-0.5">
+                                <span
+                                  className={cn(
+                                    "text-sm font-black transition-colors",
+                                    isSelected
+                                      ? "text-primary"
+                                      : "text-foreground",
+                                  )}
+                                >
+                                  {emp.first_name} {emp.last_name}
+                                </span>
+                                <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
+                                  <span className="tracking-wider bg-muted/50 px-1.5 py-0.5 rounded-md">
+                                    {emp.personal_number}
+                                  </span>
+                                  {emp.service_type_name && (
+                                    <>
+                                      <span className="w-1 h-1 rounded-full bg-border" />
+                                      <span>{emp.service_type_name}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="align-middle py-4">
+                            <Select
+                              value={current?.status_id.toString()}
+                              onValueChange={(val) =>
+                                handleUpdateIndividual(emp.id, val)
+                              }
+                            >
+                              <SelectTrigger
+                                className="h-10 text-right font-bold text-xs bg-muted/40 border-input hover:bg-muted/60 transition-colors rounded-xl w-full"
+                                dir="rtl"
+                              >
+                                <SelectValue placeholder="בחר סטטוס" />
+                              </SelectTrigger>
+                              <SelectContent dir="rtl">
+                                {statusTypes.map((type) => (
+                                  <SelectItem
+                                    key={type.id}
+                                    value={type.id.toString()}
+                                    className="text-right font-bold text-xs"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className="w-2 h-2 rounded-full"
+                                        style={{
+                                          backgroundColor:
+                                            type.color ||
+                                            "var(--muted-foreground)",
+                                        }}
+                                      />
+                                      {type.name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="align-top py-3">
+                            {current?.isChanged ? (
+                              <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+                                <div className="relative flex-1 max-w-[140px]">
+                                  <input
+                                    type="date"
+                                    value={current.start_date}
+                                    onChange={(e) =>
+                                      handleDateChange(
+                                        emp.id,
+                                        "start_date",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full bg-muted/30 hover:bg-muted/50 transition-colors border border-input rounded-xl h-10 text-xs font-medium px-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                  />
+                                </div>
+                                <ArrowLeft className="w-3 h-3 text-muted-foreground" />
+                                <div className="relative flex-1 max-w-[140px]">
+                                  <input
+                                    type="date"
+                                    value={current.end_date || ""}
+                                    onChange={(e) =>
+                                      handleDateChange(
+                                        emp.id,
+                                        "end_date",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full bg-muted/30 hover:bg-muted/50 transition-colors border border-input rounded-xl h-10 text-xs font-medium px-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none placeholder:text-muted-foreground/50"
+                                    placeholder="סיום (אופציונלי)"
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground/40 font-medium">
+                                --
+                              </span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="lg:hidden p-4 space-y-4">
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="select-all-mobile"
+                      className="w-5 h-5 rounded-md"
+                      checked={
+                        filteredList.length > 0 &&
+                        selectedIds.length === filteredList.length
+                      }
+                      onCheckedChange={(checked) =>
+                        handleSelectAll(checked as boolean)
+                      }
+                    />
+                    <label
+                      htmlFor="select-all-mobile"
+                      className="text-xs font-bold text-muted-foreground"
+                    >
+                      בחר את כל המוצגים
+                    </label>
+                  </div>
+                  <span className="text-[10px] font-bold text-muted-foreground/60">
+                    מוצגים {filteredList.length} שוטרים
+                  </span>
+                </div>
+
                 {filteredList.map((emp) => {
                   const current = bulkUpdates[emp.id];
                   const isSelected = selectedIds.includes(emp.id);
                   return (
-                    <TableRow
+                    <div
                       key={emp.id}
-                      data-state={isSelected ? "selected" : "unchecked"}
                       className={cn(
-                        "transition-all hover:bg-muted/40 border-b last:border-0",
-                        isSelected && "bg-primary/5 hover:bg-primary/10",
+                        "rounded-2xl border transition-all duration-200 overflow-hidden",
+                        isSelected
+                          ? "border-primary bg-primary/5 shadow-sm"
+                          : "border-border bg-card",
                         current?.isChanged &&
-                          "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
+                          !isSelected &&
+                          "border-blue-200 bg-blue-50/30",
                       )}
                     >
-                      <TableCell className="text-center px-2 py-4 align-middle">
-                        <div className="flex items-center justify-center">
-                          <Checkbox
-                            className={cn(
-                              "w-5 h-5 border-2 border-muted-foreground/30 rounded-lg transition-all shadow-sm",
-                              isSelected
-                                ? "bg-primary border-primary text-primary-foreground"
-                                : "bg-background hover:border-primary/50",
-                            )}
-                            checked={isSelected}
-                            onCheckedChange={(checked) =>
-                              handleSelectOne(emp.id, checked as boolean)
-                            }
+                      <div className="p-4 space-y-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <Checkbox
+                              className="w-5 h-5 rounded-md shrink-0"
+                              checked={isSelected}
+                              onCheckedChange={(checked) =>
+                                handleSelectOne(emp.id, checked as boolean)
+                              }
+                            />
+                            <div className="flex flex-col text-right truncate">
+                              <span className="text-sm font-black text-foreground truncate">
+                                {emp.first_name} {emp.last_name}
+                              </span>
+                              <span className="text-[10px] font-mono text-muted-foreground">
+                                {emp.personal_number} • {emp.service_type_name}
+                              </span>
+                            </div>
+                          </div>
+                          <div
+                            className="w-2 h-2 rounded-full mt-2"
+                            style={{
+                              backgroundColor: current?.color || "#94a3b8",
+                            }}
                           />
                         </div>
-                      </TableCell>
-                      <TableCell className="font-medium align-middle py-4">
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={cn(
-                              "w-10 h-10 rounded-xl shadow-sm flex items-center justify-center transition-transform hover:scale-105 shrink-0",
-                              current?.isChanged
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-white dark:bg-muted/50 text-muted-foreground border border-border/50",
-                            )}
-                          >
-                            <User className="w-5 h-5" />
-                          </div>
-                          <div className="flex flex-col text-right gap-0.5">
-                            <span
-                              className={cn(
-                                "text-sm font-black transition-colors",
-                                isSelected ? "text-primary" : "text-foreground",
-                              )}
-                            >
-                              {emp.first_name} {emp.last_name}
+
+                        <div className="space-y-3">
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] font-bold text-muted-foreground pr-1">
+                              עדכון סטטוס:
                             </span>
-                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
-                              <span className="tracking-wider bg-muted/50 px-1.5 py-0.5 rounded-md">
-                                {emp.personal_number}
-                              </span>
-                              {emp.service_type_name && (
-                                <>
-                                  <span className="w-1 h-1 rounded-full bg-border" />
-                                  <span>{emp.service_type_name}</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="align-middle py-4">
-                        <Select
-                          value={current?.status_id.toString()}
-                          onValueChange={(val) =>
-                            handleUpdateIndividual(emp.id, val)
-                          }
-                        >
-                          <SelectTrigger
-                            className="h-10 text-right font-bold text-xs bg-muted/40 border-input hover:bg-muted/60 transition-colors rounded-xl w-full"
-                            dir="rtl"
-                          >
-                            <SelectValue placeholder="בחר סטטוס" />
-                          </SelectTrigger>
-                          <SelectContent dir="rtl">
-                            {statusTypes.map((type) => (
-                              <SelectItem
-                                key={type.id}
-                                value={type.id.toString()}
-                                className="text-right font-bold text-xs"
+                            <Select
+                              value={current?.status_id.toString()}
+                              onValueChange={(val) =>
+                                handleUpdateIndividual(emp.id, val)
+                              }
+                            >
+                              <SelectTrigger
+                                className="h-10 text-right font-bold text-xs bg-muted/40 border-input rounded-xl"
+                                dir="rtl"
                               >
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    className="w-2 h-2 rounded-full"
-                                    style={{
-                                      backgroundColor:
-                                        type.color || "var(--muted-foreground)",
-                                    }}
-                                  />
-                                  {type.name}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="align-top py-3">
-                        {current?.isChanged ? (
-                          <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
-                            <div className="relative flex-1 max-w-[140px]">
-                              <input
-                                type="date"
-                                value={current.start_date}
-                                onChange={(e) =>
-                                  handleDateChange(
-                                    emp.id,
-                                    "start_date",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full bg-muted/30 hover:bg-muted/50 transition-colors border border-input rounded-xl h-10 text-xs font-medium px-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                              />
-                            </div>
-                            <ArrowLeft className="w-3 h-3 text-muted-foreground" />
-                            <div className="relative flex-1 max-w-[140px]">
-                              <input
-                                type="date"
-                                value={current.end_date || ""}
-                                onChange={(e) =>
-                                  handleDateChange(
-                                    emp.id,
-                                    "end_date",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full bg-muted/30 hover:bg-muted/50 transition-colors border border-input rounded-xl h-10 text-xs font-medium px-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none placeholder:text-muted-foreground/50"
-                                placeholder="סיום (אופציונלי)"
-                              />
-                            </div>
+                                <SelectValue placeholder="בחר סטטוס" />
+                              </SelectTrigger>
+                              <SelectContent dir="rtl">
+                                {statusTypes.map((type) => (
+                                  <SelectItem
+                                    key={type.id}
+                                    value={type.id.toString()}
+                                    className="text-right font-bold text-xs"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className="w-2 h-2 rounded-full"
+                                        style={{
+                                          backgroundColor: type.color,
+                                        }}
+                                      />
+                                      {type.name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
-                        ) : (
-                          <span className="text-[10px] text-muted-foreground/40 font-medium">
-                            --
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
+
+                          {current?.isChanged && (
+                            <div className="grid grid-cols-2 gap-3 pt-2 animate-in fade-in slide-in-from-top-2 tracking-tighter">
+                              <div className="space-y-1">
+                                <span className="text-[9px] font-bold text-primary pr-1">
+                                  תאריך התחלה:
+                                </span>
+                                <input
+                                  type="date"
+                                  value={current.start_date}
+                                  onChange={(e) =>
+                                    handleDateChange(
+                                      emp.id,
+                                      "start_date",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="w-full bg-white dark:bg-muted/50 border border-primary/20 rounded-lg h-9 text-[11px] font-bold px-2 outline-none"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-[9px] font-bold text-muted-foreground pr-1">
+                                  תאריך סיום:
+                                </span>
+                                <input
+                                  type="date"
+                                  value={current.end_date || ""}
+                                  onChange={(e) =>
+                                    handleDateChange(
+                                      emp.id,
+                                      "end_date",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="w-full bg-white dark:bg-muted/50 border border-border rounded-lg h-9 text-[11px] font-bold px-2 outline-none"
+                                  placeholder="אופציונלי"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </TableBody>
-            </Table>
+              </div>
+            </>
           )}
         </div>
 
         <div className="p-4 border-t bg-muted/20 flex flex-col gap-3 shrink-0">
           {/* Batch Actions Bar */}
-          <div className="flex items-center gap-3 p-3 bg-card border rounded-xl shadow-sm animate-in slide-in-from-bottom-2">
+          <div className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-card border rounded-xl shadow-sm animate-in slide-in-from-bottom-2">
             <span className="text-xs font-black text-muted-foreground whitespace-nowrap px-2">
               נבחרו {selectedIds.length} שוטרים:
             </span>
-            <Select value={batchStatusId} onValueChange={setBatchStatusId}>
-              <SelectTrigger className="h-9 w-[180px] text-right font-bold text-xs bg-muted/30 border-input rounded-lg">
-                <SelectValue placeholder="בחר סטטוס לכולם..." />
-              </SelectTrigger>
-              <SelectContent dir="rtl">
-                {statusTypes.map((type) => (
-                  <SelectItem
-                    key={type.id}
-                    value={type.id.toString()}
-                    className="text-xs font-bold"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: type.color }}
-                      />
-                      {type.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={applyBatchStatus}
-              disabled={!batchStatusId || selectedIds.length === 0}
-              className="h-9 font-bold text-xs"
-            >
-              החל על הנבחרים
-            </Button>
-            <div className="flex-1" />
-            <div className="h-4 w-px bg-border mx-2" />
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Select value={batchStatusId} onValueChange={setBatchStatusId}>
+                <SelectTrigger className="h-9 flex-1 sm:w-[180px] text-right font-bold text-xs bg-muted/30 border-input rounded-lg">
+                  <SelectValue placeholder="בחר סטטוס לכולם..." />
+                </SelectTrigger>
+                <SelectContent dir="rtl">
+                  {statusTypes.map((type) => (
+                    <SelectItem
+                      key={type.id}
+                      value={type.id.toString()}
+                      className="text-xs font-bold"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: type.color }}
+                        />
+                        {type.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={applyBatchStatus}
+                disabled={!batchStatusId || selectedIds.length === 0}
+                className="h-9 font-bold text-xs px-4"
+              >
+                החל
+              </Button>
+            </div>
+            <div className="hidden sm:block flex-1" />
+            <div className="hidden sm:block h-4 w-px bg-border mx-2" />
           </div>
 
-          <div className="flex gap-4 mt-1">
+          <div className="flex flex-col sm:flex-row gap-3 mt-1">
             <Button
               onClick={handleSubmit}
               disabled={loading || Object.keys(bulkUpdates).length === 0}
-              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl h-10 shadow-lg shadow-primary/10 transition-all active:scale-95 disabled:opacity-50 text-xs"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl h-12 sm:h-10 shadow-lg shadow-primary/10 transition-all active:scale-95 disabled:opacity-50 text-xs sm:text-xs"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -670,7 +835,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="px-6 border-input bg-card rounded-xl h-10 font-bold text-muted-foreground hover:bg-muted transition-all text-xs"
+              className="px-6 border-input bg-card rounded-xl h-10 sm:h-10 font-bold text-muted-foreground hover:bg-muted transition-all text-xs"
             >
               ביטול
             </Button>

@@ -2,7 +2,7 @@ import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import type { Employee } from "@/types/employee.types";
-import { cn } from "@/lib/utils";
+import { cn, cleanUnitName } from "@/lib/utils";
 import {
   Phone,
   MapPin,
@@ -13,7 +13,8 @@ import {
   User,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface EmployeeDetailsModalProps {
   open: boolean;
@@ -21,11 +22,32 @@ interface EmployeeDetailsModalProps {
   employee: Employee | null;
 }
 
+const InfoItem = ({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: any;
+  label: string;
+  value: React.ReactNode;
+}) => (
+  <div className="flex flex-col gap-1">
+    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight flex items-center gap-1">
+      <Icon className="w-3 h-3" />
+      {label}
+    </span>
+    <span className="text-sm font-semibold text-foreground">
+      {value || "---"}
+    </span>
+  </div>
+);
+
 export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   open,
   onOpenChange,
   employee,
 }) => {
+  const navigate = useNavigate();
   if (!employee) return null;
 
   const getProfessionalTitle = (emp: Employee) => {
@@ -49,18 +71,6 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     return age;
   };
 
-  const InfoItem = ({ icon: Icon, label, value }: any) => (
-    <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight flex items-center gap-1">
-        <Icon className="w-3 h-3" />
-        {label}
-      </span>
-      <span className="text-sm font-semibold text-foreground">
-        {value || "---"}
-      </span>
-    </div>
-  );
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -68,8 +78,8 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         dir="rtl"
       >
         {/* Top Header Section */}
-        <div className="p-8 pb-6 border-b border-border/50 bg-muted/20">
-          <div className="flex items-start gap-6">
+        <div className="p-4 sm:p-8 pb-6 border-b border-border/50 bg-muted/20">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-right">
             {/* Avatar */}
             <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-3xl font-black shrink-0 shadow-inner">
               {employee.first_name[0]}
@@ -78,8 +88,8 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
             {/* Title & Key Stats */}
             <div className="flex-1 min-w-0 pt-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-black text-foreground tracking-tight truncate">
+              <div className="flex flex-col sm:flex-row items-center gap-2 mb-2 sm:mb-1">
+                <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight truncate">
                   {employee.first_name} {employee.last_name}
                 </h2>
                 <Badge
@@ -90,7 +100,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-muted-foreground">
                 <div className="flex items-center gap-1.5 text-xs font-bold">
                   <Contact className="w-3.5 h-3.5" />
                   <span>מ"א {employee.personal_number}</span>
@@ -111,9 +121,9 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         </div>
 
         {/* Info Grid */}
-        <div className="p-8 pt-6 space-y-8">
+        <div className="p-4 sm:p-8 pt-6 space-y-8 max-h-[60vh] overflow-y-auto">
           {/* Main Info Columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
             <InfoItem
               icon={Phone}
               label="טלפון"
@@ -149,6 +159,62 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                   : null
               }
             />
+            {/* Emergency Contact */}
+            <div className="col-span-2 sm:col-span-3">
+              {(() => {
+                const contactString = employee.emergency_contact || "";
+                const contactParts = contactString.match(
+                  /^(.*) \((.*)\) - (.*)$/,
+                );
+
+                let name = contactString;
+                let relation = "";
+                let phone = "";
+
+                if (contactParts) {
+                  [, name, relation, phone] = contactParts;
+                } else if (!contactString) {
+                  name = "";
+                }
+
+                return (
+                  <div className="bg-red-50/50 p-3 rounded-xl border border-red-100/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <div className="bg-red-100/50 p-2 rounded-lg text-red-500 shrink-0 mx-auto sm:mx-0">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full text-center sm:text-right">
+                      <div>
+                        <span className="text-[10px] font-bold text-red-600/70 uppercase tracking-tight block">
+                          איש קשר לחירום
+                        </span>
+                        <span className="text-sm font-bold text-foreground truncate block">
+                          {name || "---"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-red-600/70 uppercase tracking-tight block">
+                          קרבה
+                        </span>
+                        <span className="text-sm font-bold text-foreground truncate block">
+                          {relation || "---"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-red-600/70 uppercase tracking-tight block">
+                          טלפון
+                        </span>
+                        <span
+                          className="text-sm font-bold text-foreground truncate block"
+                          dir="ltr"
+                        >
+                          {phone || "---"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
 
           <div className="h-px bg-border/50 w-full" />
@@ -158,38 +224,38 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             employee.section_name ||
             employee.team_name) && (
             <div>
-              <h3 className="text-[11px] font-black text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+              <h3 className="text-[11px] font-black text-primary uppercase tracking-widest mb-4 flex items-center justify-center sm:justify-start gap-2">
                 <Building2 className="w-3.5 h-3.5" />
                 מבנה ארגוני
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {employee.department_name && (
-                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40">
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">
+                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase">
                       מחלקה
                     </p>
-                    <p className="text-sm font-bold truncate">
-                      {employee.department_name}
+                    <p className="text-sm font-black text-center text-wrap break-words leading-tight">
+                      {cleanUnitName(employee.department_name)}
                     </p>
                   </div>
                 )}
                 {employee.section_name && (
-                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40">
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">
+                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase">
                       מדור
                     </p>
-                    <p className="text-sm font-bold truncate">
-                      {employee.section_name}
+                    <p className="text-sm font-black text-center text-wrap break-words leading-tight">
+                      {cleanUnitName(employee.section_name)}
                     </p>
                   </div>
                 )}
                 {employee.team_name && (
-                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40">
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">
+                  <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase">
                       צוות / חוליה
                     </p>
-                    <p className="text-sm font-bold truncate">
-                      {employee.team_name}
+                    <p className="text-sm font-black text-center text-wrap break-words leading-tight">
+                      {cleanUnitName(employee.team_name)}
                     </p>
                   </div>
                 )}
@@ -199,12 +265,24 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         </div>
 
         {/* Action Footer */}
-        <div className="p-4 bg-muted/30 border-t flex justify-end">
+        <div className="p-4 bg-muted/30 border-t flex flex-col sm:flex-row justify-between items-center gap-3">
+          <Button
+            variant="default"
+            className="gap-2 font-bold shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground h-11 sm:h-10 px-6 rounded-xl w-full sm:flex-1"
+            onClick={() => {
+              navigate(`/employees/${employee.id}`);
+              onOpenChange(false);
+            }}
+          >
+            <User className="w-4 h-4" />
+            מעבר לפרופיל המלא
+          </Button>
+
           {!employee.phone_number ? (
             <Button
               variant="outline"
               disabled
-              className="gap-2 font-bold text-muted-foreground border-dashed h-10 px-6 rounded-xl opacity-70 cursor-not-allowed"
+              className="gap-2 font-bold text-muted-foreground border-dashed h-11 sm:h-10 px-6 rounded-xl opacity-70 cursor-not-allowed w-full sm:flex-1"
             >
               <FaWhatsapp className="w-5 h-5 opacity-50" />
               אין מספר טלפון זמין
@@ -250,7 +328,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                   asChild
                   variant="outline"
                   className={cn(
-                    "gap-2 font-bold h-10 px-6 rounded-xl transition-all shadow-sm",
+                    "gap-2 font-bold h-11 sm:h-10 px-6 rounded-xl transition-all shadow-sm w-full sm:flex-1",
                     isBirthday
                       ? "text-[#25D366] hover:text-[#128C7E] hover:bg-[#25D366]/10 border-[#25D366]/20"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border-border",
@@ -258,7 +336,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                 >
                   <a
                     href={`https://wa.me/${(() => {
-                      let phone = employee.phone_number.replace(/\D/g, "");
+                      let phone = employee.phone_number!.replace(/\D/g, "");
                       if (phone.startsWith("0")) phone = "972" + phone.slice(1);
                       else if (phone.length === 9) phone = "972" + phone;
                       return phone;

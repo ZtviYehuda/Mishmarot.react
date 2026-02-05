@@ -23,7 +23,7 @@ import {
   LogIn,
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
-import { cn } from "@/lib/utils";
+import { cn, cleanUnitName } from "@/lib/utils";
 import { FilterModal } from "./modals";
 import type { EmployeeFilters } from "./modals/FilterModal";
 import { EmployeeLink } from "@/components/common/EmployeeLink";
@@ -370,14 +370,14 @@ export const EmployeeTable = ({
                       {emp.department_name && emp.department_name !== "מטה" ? (
                         <div className="flex flex-col text-right">
                           <span className="text-xs font-semibold text-foreground">
-                            {emp.department_name}
+                            {cleanUnitName(emp.department_name)}
                           </span>
                           {((emp.section_name && emp.section_name !== "מטה") ||
                             (emp.team_name && emp.team_name !== "מטה")) && (
                             <span className="text-[10px] text-muted-foreground">
                               {emp.section_name &&
                                 emp.section_name !== "מטה" &&
-                                `מדור ${emp.section_name}`}
+                                `מדור ${cleanUnitName(emp.section_name)}`}
                               {emp.section_name &&
                                 emp.section_name !== "מטה" &&
                                 emp.team_name &&
@@ -385,7 +385,7 @@ export const EmployeeTable = ({
                                 " • "}
                               {emp.team_name &&
                                 emp.team_name !== "מטה" &&
-                                `חוליה ${emp.team_name}`}
+                                `חוליה ${cleanUnitName(emp.team_name)}`}
                             </span>
                           )}
                         </div>
@@ -593,14 +593,14 @@ export const EmployeeTable = ({
                     <span className="font-medium text-foreground text-xs truncate block">
                       {emp.department_name && emp.department_name !== "מטה" ? (
                         <>
-                          {emp.department_name}
+                          {cleanUnitName(emp.department_name)}
                           {((emp.section_name && emp.section_name !== "מטה") ||
                             (emp.team_name && emp.team_name !== "מטה")) && (
                             <>
                               {" • "}
                               {emp.section_name &&
                                 emp.section_name !== "מטה" &&
-                                `מדור ${emp.section_name}`}
+                                `מדור ${cleanUnitName(emp.section_name)}`}
                               {emp.section_name &&
                                 emp.section_name !== "מטה" &&
                                 emp.team_name &&
@@ -608,7 +608,7 @@ export const EmployeeTable = ({
                                 " • "}
                               {emp.team_name &&
                                 emp.team_name !== "מטה" &&
-                                `חוליה ${emp.team_name}`}
+                                `חוליה ${cleanUnitName(emp.team_name)}`}
                             </>
                           )}
                         </>

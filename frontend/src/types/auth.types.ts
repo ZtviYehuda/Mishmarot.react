@@ -17,6 +17,7 @@ export interface AuthUser {
   commands_team_id?: number;
   notif_sick_leave?: boolean;
   notif_transfers?: boolean;
+  notif_morning_report?: boolean;
   city?: string | null;
   birth_date?: string | null;
   emergency_contact?: string | null;
