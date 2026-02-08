@@ -26,6 +26,7 @@ def favicon():
     return "", 204
 
 
+# Reload trigger
 if __name__ == '__main__':
     # Start Scheduler only in the main worker process (to avoid duplicates with reloader)
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
@@ -33,3 +34,5 @@ if __name__ == '__main__':
         start_scheduler()
         
     app.run(debug=True, host='0.0.0.0', port=5000)
+
+# Trigger reload

@@ -19,6 +19,7 @@ import {
   Siren,
   ArrowLeft,
   CheckCircle2,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -108,10 +109,10 @@ const TabButton = ({
 }) => (
   <TabsTrigger
     value={value}
-    className="flex-1 min-w-[120px] py-4 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary rounded-xl transition-all border border-transparent data-[state=active]:border-border font-bold text-sm gap-2 text-muted-foreground hover:bg-muted hover:text-foreground/80"
+    className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 px-1 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary rounded-xl transition-all border border-transparent data-[state=active]:border-border font-bold text-[10px] sm:text-sm w-full h-full hover:bg-muted hover:text-foreground/80 leading-tight text-center"
   >
-    <Icon className="w-4 h-4 mb-0.5" />
-    {label}
+    <Icon className="w-4 h-4 sm:w-4 sm:h-4 mb-0.5 sm:mb-0" />
+    <span className="truncate w-full">{label}</span>
   </TabsTrigger>
 );
 
@@ -258,9 +259,9 @@ export default function EmployeeViewPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Sidebar Info */}
-        <div className="lg:col-span-3 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+        {/* Sidebar Info (Desktop Only) */}
+        <div className="hidden lg:block lg:col-span-3 space-y-6">
           <div className="lg:sticky lg:top-24 space-y-6">
             <Card className="border-none shadow-lg shadow-primary/5 bg-card rounded-3xl overflow-hidden ring-1 ring-border">
               <div className="p-8 flex flex-col items-center text-center">
@@ -333,15 +334,49 @@ export default function EmployeeViewPage() {
         </div>
 
         {/* Main Content */}
-        <div className="lg:col-span-9">
+        <div className="lg:col-span-9 space-y-6">
+          {/* Mobile Profile Header (Visible on Mobile Only) */}
+          <div className="lg:hidden bg-card border border-border rounded-3xl p-6 flex flex-col items-center text-center shadow-sm">
+            <div
+              className={cn(
+                "w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold mb-4 ring-4 ring-background shadow-sm",
+                employee.is_active
+                  ? "bg-primary/10 text-primary"
+                  : "bg-muted text-muted-foreground",
+              )}
+            >
+              {employee.first_name?.[0]}
+              {employee.last_name?.[0]}
+            </div>
+            <h2 className="text-xl font-bold text-foreground mb-1">
+              {employee.first_name} {employee.last_name}
+            </h2>
+            <p className="text-sm font-medium text-muted-foreground font-mono mb-4">
+              {employee.personal_number || "-------"}
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Badge
+                className={cn(
+                  "rounded-md px-2 py-0.5",
+                  employee.is_active ? "bg-emerald-500" : "bg-muted",
+                )}
+              >
+                {employee.is_active ? "פעיל" : "לא פעיל"}
+              </Badge>
+              <Badge variant="outline" className="text-xs bg-muted/50">
+                {cleanUnitName(employee.role_name)}
+              </Badge>
+            </div>
+          </div>
+
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
             dir="rtl"
             className="w-full"
           >
-            <div className="bg-muted/50 p-1.5 rounded-2xl mb-8 w-fit mx-auto lg:mx-0 lg:w-full overflow-x-auto">
-              <TabsList className="bg-transparent h-auto p-0 flex gap-1 w-full justify-start lg:justify-between min-w-[550px]">
+            <div className="bg-muted/50 p-1 rounded-2xl mb-6 w-full mx-auto">
+              <TabsList className="bg-transparent h-auto p-0 grid grid-cols-4 gap-1 w-full justify-stretch">
                 <TabButton value="overview" label="פרטים אישיים" icon={User} />
                 <TabButton value="org" label="שיוך יחידתי" icon={Building2} />
                 <TabButton value="service" label="שירות ואבטחה" icon={Shield} />
@@ -367,7 +402,7 @@ export default function EmployeeViewPage() {
                   className="mt-0 focus-visible:outline-none"
                 >
                   <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
-                    <CardContent className="p-8 space-y-8">
+                    <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8">
                       <SectionHeader
                         icon={User}
                         title="פרטים אישיים"
@@ -424,6 +459,12 @@ export default function EmployeeViewPage() {
                           label="טלפון נייד"
                           value={employee.phone_number}
                           className="font-mono text-lg bg-primary/5 border-primary/10"
+                        />
+                        <DetailItem
+                          icon={Mail}
+                          label="כתובת אימייל"
+                          value={employee.email}
+                          className="font-mono text-base"
                         />
 
                         <div className="bg-red-50/50 p-4 sm:p-5 rounded-2xl border border-red-100/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
@@ -492,7 +533,7 @@ export default function EmployeeViewPage() {
                   className="mt-0 focus-visible:outline-none"
                 >
                   <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
-                    <CardContent className="p-8 space-y-8">
+                    <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8">
                       <SectionHeader
                         icon={Building2}
                         title="מבנה ארגוני"
@@ -579,7 +620,7 @@ export default function EmployeeViewPage() {
                   className="mt-0 focus-visible:outline-none"
                 >
                   <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
-                    <CardContent className="p-8 space-y-8">
+                    <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8">
                       <SectionHeader
                         icon={Calendar}
                         title="נתוני שירות ואבטחה"
@@ -663,19 +704,19 @@ export default function EmployeeViewPage() {
                             </Badge>
                           </div>
 
-                          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border/50">
-                            <div className="flex items-center gap-3">
-                              <BadgeCheck className="w-5 h-5 text-primary" />
-                              <span className="font-medium">הרשאות ניהול</span>
+                          {(employee.is_admin || employee.is_commander) && (
+                            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border/50">
+                              <div className="flex items-center gap-3">
+                                <BadgeCheck className="w-5 h-5 text-primary" />
+                                <span className="font-medium">הרשאות ניהול</span>
+                              </div>
+                              <Badge variant="default">
+                                {employee.is_admin
+                                  ? "מנהל מערכת"
+                                  : "מפקד יחידה"}
+                              </Badge>
                             </div>
-                            <Badge
-                              variant={
-                                employee.is_admin ? "default" : "secondary"
-                              }
-                            >
-                              {employee.is_admin ? "מנהל מערכת" : "משתמש רגיל"}
-                            </Badge>
-                          </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>

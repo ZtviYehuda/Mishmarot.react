@@ -58,7 +58,7 @@ class EmployeeModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
                 SELECT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number,
-                       e.national_id, e.birth_date, e.city, e.emergency_contact,
+                       e.national_id, e.email, e.birth_date, e.city, e.emergency_contact,
                        e.enlistment_date, e.discharge_date, e.assignment_date,
                        e.security_clearance, e.police_license, e.is_active,
                        e.must_change_password, e.is_admin, e.is_commander,
@@ -167,7 +167,7 @@ class EmployeeModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
-                SELECT DISTINCT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number,
+                SELECT DISTINCT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number, e.email,
                        e.birth_date, e.is_commander, e.security_clearance, e.police_license,
                        e.is_active, e.department_id, e.section_id, e.team_id,
                        t.name as team_name, 
@@ -367,13 +367,13 @@ class EmployeeModel:
 
             query = """
                 INSERT INTO employees (
-                    first_name, last_name, personal_number, national_id, phone_number,
+                    first_name, last_name, personal_number, national_id, phone_number, email,
                     city, birth_date, enlistment_date, discharge_date, assignment_date,
                     team_id, section_id, department_id, role_id, service_type_id, 
                     is_commander, is_admin, 
                     password_hash, must_change_password, security_clearance, police_license,
                     employment_clearance, notif_sick_leave, notif_transfers, notif_morning_report
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """
             cur.execute(
@@ -384,6 +384,7 @@ class EmployeeModel:
                     data["personal_number"],
                     data["national_id"],
                     data.get("phone_number") or None,
+                    data.get("email") or None,
                     data.get("city") or None,
                     data.get("birth_date") or None,
                     data.get("enlistment_date") or None,
@@ -509,6 +510,7 @@ class EmployeeModel:
                 "personal_number": "personal_number",
                 "national_id": "national_id",
                 "phone_number": "phone_number",
+                "email": "email",
                 "city": "city",
                 "birth_date": "birth_date",
                 "enlistment_date": "enlistment_date",

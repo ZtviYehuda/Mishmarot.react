@@ -21,8 +21,7 @@ def start_scheduler():
         func=check_and_send_morning_reminders,
         trigger="cron",
         day_of_week="sun,mon,tue,wed,thu",
-        hour=8,
-        minute=45,
+        minute="*",
         id="morning_reminder_job",
         replace_existing=True
     )

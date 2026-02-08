@@ -4,6 +4,7 @@ export interface AuthUser {
   last_name: string;
   personal_number: string;
   phone_number: string | null;
+  email?: string | null;
   must_change_password: boolean;
   is_admin: boolean;
   is_commander: boolean;

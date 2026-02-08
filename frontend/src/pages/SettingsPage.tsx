@@ -38,6 +38,7 @@ import {
   Clock,
   Cake,
   PhoneForwarded,
+  Mail,
   Briefcase,
   KeyRound,
   Eye,
@@ -45,6 +46,9 @@ import {
   Calendar,
   FileText,
   Award,
+
+  Menu,
+  X,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cleanUnitName } from "@/lib/utils";
@@ -61,6 +65,7 @@ export default function SettingsPage() {
   } = useTheme();
 
   const [activeTab, setActiveTab] = useState("profile");
+  const [mobileNavOpen, setMobileNavOpen] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isServerBackingUp, setIsServerBackingUp] = useState(false);
@@ -204,6 +209,7 @@ export default function SettingsPage() {
     first_name: "",
     last_name: "",
     phone_number: "",
+    email: "",
     city: "",
     birth_date: "",
     emergency_contact: "",
@@ -250,6 +256,7 @@ export default function SettingsPage() {
         first_name: user.first_name || "",
         last_name: user.last_name || "",
         phone_number: user.phone_number || "",
+        email: user.email || "",
         city: user.city || "",
         birth_date: user.birth_date || "",
         emergency_contact: user.emergency_contact || "",
@@ -392,7 +399,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pb-32 lg:pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <PageHeader
         icon={SettingsIcon}
         title="הגדרות מערכת"
@@ -403,8 +410,9 @@ export default function SettingsPage() {
       />
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
-        {/* Sidebar / Navigation */}
-        <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 lg:sticky lg:top-24 space-y-4">
+
+        {/* Desktop Sidebar / Navigation */}
+        <div className="hidden lg:block w-80 xl:w-96 flex-shrink-0 sticky top-24 space-y-4">
           <Card className="border-border shadow-sm overflow-hidden border-0 ring-1 ring-border bg-card">
             <div className="p-4 space-y-1">
               <NavItem
@@ -497,14 +505,14 @@ export default function SettingsPage() {
                       {(user?.commands_team_id ||
                         user?.commands_section_id ||
                         user?.commands_department_id) && (
-                        <span>
-                          {user?.commands_department_id
-                            ? `מפקד מחלקת ${cleanUnitName(user.department_name)}`
-                            : user?.commands_section_id
-                              ? `מפקד מדור ${cleanUnitName(user.section_name)}`
-                              : `מפקד חוליית ${cleanUnitName(user.team_name)}`}
-                        </span>
-                      )}
+                          <span>
+                            {user?.commands_department_id
+                              ? `מפקד מחלקת ${cleanUnitName(user.department_name)}`
+                              : user?.commands_section_id
+                                ? `מפקד מדור ${cleanUnitName(user.section_name)}`
+                                : `מפקד חוליית ${cleanUnitName(user.team_name)}`}
+                          </span>
+                        )}
                     </p>
                   </div>
 
@@ -724,23 +732,55 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="p-6 space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-right">
-                        <div className="space-y-1.5 lg:col-span-1">
-                          <Label className="text-xs font-bold text-foreground">
-                            מספר טלפון אישי
-                          </Label>
-                          <div className="relative">
-                            <Input
-                              value={formData.phone_number}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  phone_number: e.target.value,
-                                })
-                              }
-                              className="h-10 rounded-lg bg-muted/20 border-border/50 font-medium focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm pr-9"
-                            />
-                            <PhoneForwarded className="w-3.5 h-3.5 text-muted-foreground/40 absolute right-3 top-1/2 -translate-y-1/2" />
+                      {/* Personal Contact Info */}
+                      <div className="bg-muted/10 border border-border/40 rounded-xl overflow-hidden">
+                        <div className="bg-muted/30 px-4 py-2.5 border-b border-border/40 flex items-center gap-2">
+                          <PhoneForwarded className="w-3.5 h-3.5 text-foreground/70" />
+                          <span className="text-[11px] font-black text-foreground/70 uppercase tracking-wider">
+                            פרטי יצירת קשר
+                          </span>
+                        </div>
+                        <div className="p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold text-foreground">
+                                מספר טלפון אישי
+                              </Label>
+                              <div className="relative">
+                                <Input
+                                  value={formData.phone_number}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      phone_number: e.target.value,
+                                    })
+                                  }
+                                  className="h-10 rounded-lg bg-background border-border/50 font-medium focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm pr-9"
+                                />
+                                <PhoneForwarded className="w-3.5 h-3.5 text-muted-foreground/40 absolute right-3 top-1/2 -translate-y-1/2" />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-bold text-foreground">
+                                כתובת אימייל
+                              </Label>
+                              <div className="relative">
+                                <Input
+                                  value={formData.email}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      email: e.target.value,
+                                    })
+                                  }
+                                  className="h-10 rounded-lg bg-background border-border/50 font-medium focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all text-sm pr-9"
+                                  dir="ltr"
+                                  placeholder="example@police.gov.il"
+                                />
+                                <Mail className="w-3.5 h-3.5 text-muted-foreground/40 absolute right-3 top-1/2 -translate-y-1/2" />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1318,6 +1358,23 @@ export default function SettingsPage() {
                             updateSystemSetting("alerts_weekend_enabled", val)
                           }
                         />
+
+                        <div className="flex flex-col gap-3 p-5 rounded-2xl border-2 border-border bg-card hover:border-border/80 transition-all">
+                          <div className="flex justify-between items-center">
+                            <Input
+                              type="time"
+                              value={systemSettings.morning_report_deadline || "09:00"}
+                              onChange={(e) => updateSystemSetting("morning_report_deadline", e.target.value)}
+                              className="w-28 h-10 text-center font-bold bg-muted/50 border-border/60 ltr rounded-lg focus:ring-primary/20"
+                            />
+                            <Label className="text-base font-black text-foreground text-right">
+                              שעת יעד לדיווח
+                            </Label>
+                          </div>
+                          <p className="text-xs text-muted-foreground font-bold leading-relaxed text-right">
+                            קבע את שעת הגג לדיווח נוכחות יומי. תזכורת אוטומטית תישלח למפקדים 15 דקות לפני הזמן שהוגדר.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1422,11 +1479,10 @@ export default function SettingsPage() {
                               updateBackupConfig("interval_hours", hours)
                             }
                             className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all
-                                        ${
-                                          backupConfig.interval_hours === hours
-                                            ? "border-primary bg-primary/5 text-primary shadow-sm"
-                                            : "border-border hover:border-border/80 bg-background"
-                                        }
+                                        ${backupConfig.interval_hours === hours
+                                ? "border-primary bg-primary/5 text-primary shadow-sm"
+                                : "border-border hover:border-border/80 bg-background"
+                              }
                                     `}
                           >
                             <Clock className="w-5 h-5 opacity-80" />
@@ -1520,6 +1576,57 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Mobile Floating Bottom Dock Container */}
+      <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50 flex flex-col items-end gap-3 safe-area-bottom pointer-events-none">
+
+        {/* Toggle Button */}
+        <Button
+          size="icon"
+          className="rounded-full h-12 w-12 shadow-xl shadow-primary/20 pointer-events-auto bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all"
+          onClick={() => setMobileNavOpen(!mobileNavOpen)}
+        >
+          {mobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </Button>
+
+        {/* The Dock */}
+        {mobileNavOpen && (
+          <div className="w-full bg-background/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-2xl p-2 flex items-center justify-between ring-1 ring-black/5 dark:ring-white/5 pointer-events-auto animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 origin-bottom-right">
+            <MobileBottomTab
+              label="פרופיל"
+              icon={User}
+              active={activeTab === "profile"}
+              onClick={() => { setActiveTab("profile"); setMobileNavOpen(false); }}
+            />
+            <MobileBottomTab
+              label="תצוגה"
+              icon={Palette}
+              active={activeTab === "appearance"}
+              onClick={() => { setActiveTab("appearance"); setMobileNavOpen(false); }}
+            />
+            <MobileBottomTab
+              label="אבטחה"
+              icon={ShieldCheck}
+              active={activeTab === "security"}
+              onClick={() => { setActiveTab("security"); setMobileNavOpen(false); }}
+            />
+            <MobileBottomTab
+              label="התראות"
+              icon={Bell}
+              active={activeTab === "notifications"}
+              onClick={() => { setActiveTab("notifications"); setMobileNavOpen(false); }}
+            />
+            {user?.is_admin && (
+              <MobileBottomTab
+                label="גיבוי"
+                icon={Database}
+                active={activeTab === "backup"}
+                onClick={() => { setActiveTab("backup"); setMobileNavOpen(false); }}
+              />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1621,10 +1728,9 @@ function NavItem({
       onClick={onClick}
       className={`
         w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 font-black text-sm
-        ${
-          active
-            ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02]"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+        ${active
+          ? "bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02]"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
         }
       `}
     >
@@ -1654,4 +1760,41 @@ function getHexColor(color: string) {
     default:
       return "#0074ff";
   }
+}
+
+
+
+
+function MobileBottomTab({
+  label,
+  icon: Icon,
+  active,
+  onClick,
+}: {
+  label: string;
+  icon: any;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all duration-300 relative flex-1
+        ${active
+          ? "text-primary bg-primary/10"
+          : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
+        }
+      `}
+    >
+      <div className={`p-1.5 rounded-full transition-all duration-300 ${active ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-110" : ""}`}>
+        <Icon className={`w-5 h-5`} />
+      </div>
+      <span className={`text-[10px] font-black tracking-tight ${active ? "opacity-100" : "opacity-0 h-0 overflow-hidden w-0"}`}>{label}</span>
+
+      {active && (
+        <span className="absolute -top-1 w-8 h-1 bg-primary rounded-b-full shadow-sm shadow-primary/50" />
+      )}
+    </button>
+  );
 }

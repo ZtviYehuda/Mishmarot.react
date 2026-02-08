@@ -11,6 +11,7 @@ import {
   Contact,
   Cake,
   User,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -128,6 +129,11 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               icon={Phone}
               label="טלפון"
               value={employee.phone_number}
+            />
+            <InfoItem
+              icon={Mail}
+              label="אימייל"
+              value={employee.email || "---"}
             />
             <InfoItem icon={MapPin} label="עיר מגורים" value={employee.city} />
             <InfoItem

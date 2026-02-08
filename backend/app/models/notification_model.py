@@ -75,7 +75,7 @@ class NotificationModel:
                           AND al.end_datetime IS NULL 
                           AND e.is_active = TRUE
                     )
-                    SELECT cs.id, cs.first_name, cs.last_name, 
+                    SELECT DISTINCT ON (cs.id) cs.id, cs.first_name, cs.last_name, 
                            -- Effective start date is the end of the last non-sick log, 
                            -- or the start of the first ever log if no non-sick log exists.
                            COALESCE(
@@ -134,108 +134,55 @@ class NotificationModel:
                         query += " AND cs.id = %s"
                         params.append(requesting_user["id"])
 
+                query += " ORDER BY cs.id"
                 cur.execute(query, params)
-                sick_leave = cur.fetchall()
-                for emp in sick_leave:
+                sick_leave_rows = cur.fetchall()
+                
+                # Filter out the requesting user's own sick leave (they know they are sick)
+                sick_employees = [
+                    emp for emp in sick_leave_rows 
+                    if emp['id'] != requesting_user['id']
+                ]
+                
+                if sick_employees:
+                    count = len(sick_employees)
+                    # Create a summary description
+                    if count == 1:
+                        emp = sick_employees[0]
+                        desc = f"השוטר/ת {emp['first_name']} {emp['last_name']} נמצא/ת במחלה כבר {int(emp['days_sick'])} ימים"
+                        link = f"/employees/{emp['id']}"
+                    else:
+                        # List first 3 names
+                        names = [f"{e['first_name']} {e['last_name']}" for e in sick_employees[:3]]
+                        if count > 3:
+                            names.append(f"ועוד {count - 3} אחרים")
+                        desc = f"ישנם {count} שוטרים במחלה ממושכת: {', '.join(names)}"
+                        link = "/attendance" # General link since it's multiple people
+                        
                     alerts.append(
                         {
-                            "id": f"sick-{emp['id']}",
+                            "id": f"sick-summary-{len(sick_employees)}", # Dynamic ID based on count to avoid stale keys if needed, or just 'sick-summary'
                             "type": "danger",
-                            "title": "מחלה ממושכת",
-                            "description": f"השוטר {emp['first_name']} {emp['last_name']} נמצא במחלה כבר {int(emp['days_sick'])} ימים רצופים",
-                            "link": f"/employees/{emp['id']}",
+                            "title": f"מחלה ממושכת ({count})",
+                            "description": desc,
+                            "link": link,
+                            "data": {
+                                "employee_ids": [e['id'] for e in sick_employees],
+                                "sick_employees": [
+                                    {
+                                        "id": e['id'],
+                                        "first_name": e['first_name'],
+                                        "last_name": e['last_name'],
+                                        "days_sick": e['days_sick'],
+                                        "start_date": e['effective_start'].isoformat() if e['effective_start'] else None
+                                    }
+                                    for e in sick_employees
+                                ]
+                            }
                         }
                     )
 
-            # 3. Check for Missing Morning Reports
-            # This alert shows to commanders if any of their subordinates haven't reported status today
-            # STRICT SCOPING: Only show to commanders who have a direct command unit assigned.
-            # Explicitly exclude general Admins who don't have a command role from this specific "Call to Action" alert.
-            user_has_command = (
-                requesting_user.get("commands_team_id")
-                or requesting_user.get("commands_section_id")
-                or requesting_user.get("commands_department_id")
-            )
 
-            if requesting_user.get("notif_morning_report", True) and user_has_command:
-                # Check weekend setting
-                cur.execute(
-                    "SELECT value FROM system_settings WHERE key = 'alerts_weekend_enabled'"
-                )
-                setting_res = cur.fetchone()
-                weekend_alerts_enabled = (
-                    setting_res["value"].lower() == "true" if setting_res else False
-                )
-
-                show_alert = True
-                if not weekend_alerts_enabled:
-                    # In Israel: Friday (5) and Saturday (6) are weekend (PostgreSQL DOW uses 0-6 where 0 is Sunday, 6 is Saturday)
-                    cur.execute("SELECT EXTRACT(DOW FROM CURRENT_DATE)")
-                    dow_res = cur.fetchone()
-                    if dow_res:
-                        # dow_res['extract'] will be 5.0 for Friday, 6.0 for Saturday
-                        dow = int(dow_res["extract"])
-                        if dow in [5, 6]:
-                            show_alert = False
-
-                if show_alert:
-                    # Retrieve IDs of missing employees specifically under this commander's scope
-                    missing_query = """
-                        SELECT e.id
-                        FROM employees e
-                        LEFT JOIN teams t ON e.team_id = t.id
-                        LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
-                        LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
-                        WHERE e.is_active = TRUE 
-                          AND e.personal_number != 'admin'
-                          AND e.id != %s  -- Exclude the commander themselves
-                          AND (
-                              (d.id = %s) OR
-                              (s.id = %s) OR
-                              (t.id = %s)
-                          )
-                          AND NOT EXISTS (
-                              SELECT 1 FROM attendance_logs al
-                              WHERE al.employee_id = e.id
-                              AND DATE(al.start_datetime) <= CURRENT_DATE
-                              AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE)
-                              AND (
-                                  DATE(al.start_datetime) = CURRENT_DATE  -- Reported today
-                                  OR al.status_type_id IN (2, 4, 5, 6)    -- OR is in persistent status
-                              )
-                          )
-                    """
-                    # Strict params - always filter by command scope
-                    missing_params = [
-                        requesting_user["id"],
-                        requesting_user.get("commands_department_id"),
-                        requesting_user.get("commands_section_id"),
-                        requesting_user.get("commands_team_id"),
-                    ]
-
-                    cur.execute(missing_query, missing_params)
-                    missing_rows = cur.fetchall()
-                    missing_count = len(missing_rows)
-
-                    if missing_count > 0:
-                        missing_ids = [row["id"] for row in missing_rows]
-                        from datetime import datetime
-
-                        today_str = datetime.now().strftime("%Y-%m-%d")
-                        alerts.append(
-                            {
-                                "id": f"missing-reports-{today_str}",
-                                "type": "danger",
-                                "title": "דיווח חסר ביחידה",
-                                "description": f"ישנם {missing_count} שוטרים שטרם הוזן להם סטטוס להיום",
-                                "link": "#bulk-update-missing",  # Special link for frontend handler
-                                "data": {
-                                    "commander_id": requesting_user["id"],
-                                    "missing_count": missing_count,
-                                    "missing_ids": missing_ids,  # Pass IDs to frontend
-                                },
-                            }
-                        )
 
             # 4. Check for Internal Messages
             query_msgs = """

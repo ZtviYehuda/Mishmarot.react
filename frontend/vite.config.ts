@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ["moments-accomplish-soon-guestbook.trycloudflare.com"],
+    allowedHosts: true,
     host: "0.0.0.0",
     port: 5173,
     strictPort: false,

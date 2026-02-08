@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/popover";
 import { ImpersonationBanner } from "./ImpersonationBanner";
 import { InternalMessageDialog } from "@/components/dashboard/InternalMessageDialog";
+import { SickLeaveDetailsDialog } from "@/components/dashboard/SickLeaveDetailsDialog";
 import { toast } from "sonner";
 import { Send, Eye, Mail } from "lucide-react";
 import {
@@ -137,6 +138,8 @@ export default function MainLayout() {
   } | null>(null);
 
   const [adminMissingAlerts, setAdminMissingAlerts] = React.useState<any[]>([]);
+  const [sickModalOpen, setSickModalOpen] = React.useState(false);
+  const [sickEmployees, setSickEmployees] = React.useState<any[]>([]);
 
   // Check for critical morning alerts
   React.useEffect(() => {
@@ -378,32 +381,29 @@ export default function MainLayout() {
               )}
             </button>
             <div className="h-5 w-px bg-border hidden sm:block" />
-            <div className="flex items-center gap-5 flex-none">
-              <div className="hidden md:flex items-center justify-center w-12 h-12 min-w-[3rem] shrink-0 flex-none overflow-hidden">
-                <img
-                  src="/unit-logo.jpg"
-                  alt="Unit Logo"
-                  className="w-full h-full object-contain drop-shadow-md"
-                  onError={(e) => (e.currentTarget.style.display = "none")}
-                />
-                <ShieldCheck
-                  className="w-10 h-10 text-primary hidden"
-                  style={{ display: "none" }}
-                />
-              </div>
-              <div className="flex flex-col text-right border-r-[3px] border-primary pr-5 whitespace-nowrap min-w-[200px] flex-none">
-                <div className="flex items-center gap-2.5 mb-1">
-                  <span className="text-[11px] font-black text-primary uppercase tracking-[0.15em] leading-none">
+            <div className="flex items-center gap-2 md:gap-5 flex-1 min-w-0">
+              <div className="flex flex-col text-right border-r-[3px] border-primary pr-3 md:pr-5 leading-none flex-1 min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[9px] md:text-[11px] font-black text-primary uppercase tracking-[0.1em] md:tracking-[0.15em] leading-none truncate">
                     מוקד שליטה ובקרה
                   </span>
-                  <div className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
+                  <div className="flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)] shrink-0" />
                 </div>
-                <h2 className="text-xl font-black text-foreground tracking-tight py-0.5 leading-none">
+                <h2 className="text-lg md:text-xl font-black text-foreground tracking-tight py-0.5 leading-none truncate">
                   {location.pathname === "/"
                     ? "לוח בקרה מרכזי"
                     : navItems.find((n) => n.path === location.pathname)
-                        ?.name || "דף מערכת"}
+                      ?.name || "דף מערכת"}
                 </h2>
+              </div>
+
+              <div className="flex items-center justify-center w-8 h-8 md:w-12 md:h-12 shrink-0 overflow-hidden rounded-lg bg-white/50 border border-border/50 shadow-sm ml-2">
+                <img
+                  src="/unit-logo.jpg"
+                  alt="Unit Logo"
+                  className="w-full h-full object-contain"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
               </div>
             </div>
           </div>
@@ -540,12 +540,17 @@ export default function MainLayout() {
                                       alertData: (alert as any).data,
                                     },
                                   });
+                                } else if ((alert as any).data?.sick_employees) {
+                                  setSickEmployees(
+                                    (alert as any).data.sick_employees,
+                                  );
+                                  setSickModalOpen(true);
+                                  // Do not mark as read - keep active until resolved
                                 } else {
                                   navigate(alert.link);
+                                  // Auto-mark as read for navigation alerts
+                                  if (!isRead) toggleRead(alert.id);
                                 }
-
-                                // Auto-mark as read if configured? Maybe.
-                                if (!isRead) toggleRead(alert.id);
                               }}
                             >
                               <div
@@ -588,7 +593,7 @@ export default function MainLayout() {
                               {isMorningReport &&
                                 (alert as any).data?.commander_id &&
                                 user?.id !==
-                                  (alert as any).data.commander_id && (
+                                (alert as any).data.commander_id && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -614,7 +619,7 @@ export default function MainLayout() {
                               {isMorningReport &&
                                 (alert as any).data?.commander_phone &&
                                 user?.id !==
-                                  (alert as any).data.commander_id && (
+                                (alert as any).data.commander_id && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -646,8 +651,16 @@ export default function MainLayout() {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  setSelectedAlert(alert);
-                                  if (!isRead) toggleRead(alert.id);
+                                  if ((alert as any).data?.sick_employees) {
+                                    setSickEmployees(
+                                      (alert as any).data.sick_employees,
+                                    );
+                                    setSickModalOpen(true);
+                                    // Do not mark as read
+                                  } else {
+                                    setSelectedAlert(alert);
+                                    if (!isRead) toggleRead(alert.id);
+                                  }
                                 }}
                                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-blue-600 hover:bg-blue-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0 mr-1"
                                 title="פתח הודעה"
@@ -808,6 +821,12 @@ export default function MainLayout() {
           defaultDescription={msgDefaults.description}
         />
 
+        <SickLeaveDetailsDialog
+          open={sickModalOpen}
+          onOpenChange={setSickModalOpen}
+          employees={sickEmployees}
+        />
+
         <Dialog
           open={!!selectedAlert}
           onOpenChange={(open) => !open && setSelectedAlert(null)}
@@ -820,9 +839,9 @@ export default function MainLayout() {
                   style={
                     selectedAlert
                       ? {
-                          backgroundColor: getAlertConfig(selectedAlert).bg,
-                          color: getAlertConfig(selectedAlert).color,
-                        }
+                        backgroundColor: getAlertConfig(selectedAlert).bg,
+                        color: getAlertConfig(selectedAlert).color,
+                      }
                       : {}
                   }
                 >

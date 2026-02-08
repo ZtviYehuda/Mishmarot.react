@@ -29,6 +29,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     personal_number: "",
     national_id: "",
     phone_number: "",
+    email: "",
     city: "",
     birth_date: "",
     enlistment_date: "",
@@ -52,6 +53,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         personal_number: "",
         national_id: "",
         phone_number: "",
+        email: "",
         city: "",
         birth_date: "",
         enlistment_date: "",
@@ -186,6 +188,24 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 פרטי התקשרות ומקום מגורים
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="email"
+                    className="text-[10px] font-black text-muted-foreground uppercase pr-1 tracking-wider"
+                  >
+                    אימייל
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    placeholder="example@police.gov.il"
+                    className="h-11 bg-muted/30 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-right font-bold text-sm"
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label
                     htmlFor="phone_number"

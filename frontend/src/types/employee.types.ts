@@ -4,6 +4,7 @@ export interface Employee {
   last_name: string;
   personal_number: string;
   phone_number: string | null;
+  email: string | null;
   national_id?: string; // Often protected/not returned in lists
 
   // Dates (ISO Strings from backend)
@@ -59,6 +60,7 @@ export interface CreateEmployeePayload {
   personal_number: string;
   national_id: string;
   phone_number?: string;
+  email?: string;
   city?: string;
   birth_date?: string;
   enlistment_date?: string;

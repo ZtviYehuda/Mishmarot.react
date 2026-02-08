@@ -182,6 +182,7 @@ export default function CreateEmployeePage() {
     personal_number: "",
     national_id: "",
     phone_number: "",
+    email: "",
     city: "",
     birth_date: "",
     enlistment_date: "",
@@ -334,10 +335,10 @@ export default function CreateEmployeePage() {
   }) => (
     <TabsTrigger
       value={value}
-      className="flex-1 min-w-[120px] py-4 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary rounded-xl transition-all border border-transparent data-[state=active]:border-border font-bold text-sm gap-2 text-muted-foreground hover:bg-muted hover:text-foreground/80"
+      className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 px-1 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary rounded-xl transition-all border border-transparent data-[state=active]:border-border font-bold text-[10px] sm:text-sm w-full h-full hover:bg-muted hover:text-foreground/80 leading-tight text-center"
     >
-      <Icon className="w-4 h-4 mb-0.5" />
-      {label}
+      <Icon className="w-4 h-4 sm:w-4 sm:h-4 mb-0.5 sm:mb-0" />
+      <span className="truncate w-full">{label}</span>
     </TabsTrigger>
   );
 
@@ -384,9 +385,9 @@ export default function CreateEmployeePage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Visual Sidebar Profile Summary (Live Preview) */}
-        <div className="lg:col-span-3 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+        {/* Visual Sidebar Profile Summary (Starts Hidden on Mobile) */}
+        <div className="hidden lg:block lg:col-span-3 space-y-6">
           <div className="lg:sticky lg:top-24 space-y-6">
             <Card className="border-none shadow-lg shadow-primary/5 bg-card rounded-3xl overflow-hidden ring-1 ring-border">
               <div className="p-8 flex flex-col items-center text-center">
@@ -505,8 +506,8 @@ export default function CreateEmployeePage() {
             dir="rtl"
             className="w-full"
           >
-            <div className="bg-muted/50 p-1.5 rounded-2xl mb-8 w-fit mx-auto lg:mx-0 lg:w-full overflow-x-auto">
-              <TabsList className="bg-transparent h-auto p-0 flex gap-1 w-full justify-start lg:justify-between min-w-[500px]">
+            <div className="bg-muted/50 p-1 rounded-2xl mb-6 w-full mx-auto">
+              <TabsList className="bg-transparent h-auto p-0 grid grid-cols-3 gap-1 w-full justify-stretch">
                 <TabButton value="personal" label="פרטים אישיים" icon={User} />
                 <TabButton value="org" label="שיוך יחידתי" icon={Building2} />
                 <TabButton
@@ -530,7 +531,7 @@ export default function CreateEmployeePage() {
                   className="mt-0 focus-visible:outline-none"
                 >
                   <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
-                    <CardContent className="p-8 space-y-8">
+                    <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8">
                       <SectionHeader
                         icon={User}
                         title="מידע אישי בסיסי"
@@ -617,6 +618,23 @@ export default function CreateEmployeePage() {
                       />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <FormField label="כתובת אימייל">
+                          <div className="relative">
+                            <span className="absolute right-3 top-3.5 text-muted-foreground/50 font-bold">@</span>
+                            <Input
+                              value={formData.email || ""}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  email: e.target.value,
+                                })
+                              }
+                              className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl pr-10 text-right"
+                              placeholder="example@police.gov.il"
+                              type="email"
+                            />
+                          </div>
+                        </FormField>
                         <FormField label="טלפון נייד">
                           <div className="relative">
                             <Phone className="absolute right-3 top-3.5 w-5 h-5 text-muted-foreground/50" />
@@ -714,12 +732,12 @@ export default function CreateEmployeePage() {
                         </div>
                       </div>
 
-                      <div className="flex justify-end pt-6">
+                      <div className="flex flex-col-reverse sm:flex-row justify-end pt-6 gap-3">
                         <Button
                           onClick={() => setActiveTab("org")}
                           size="lg"
                           type="button"
-                          className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                          className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
                         >
                           הבא: שיוך ארגוני{" "}
                           <ArrowRight className="mr-2 w-4 h-4 rotate-180" />
@@ -735,7 +753,7 @@ export default function CreateEmployeePage() {
                 >
                   <div className="space-y-6">
                     <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
-                      <CardContent className="p-8">
+                      <CardContent className="p-4 sm:p-8">
                         <SectionHeader
                           icon={Building2}
                           title="מבנה ארגוני"
@@ -862,13 +880,13 @@ export default function CreateEmployeePage() {
                       </CardContent>
                     </Card>
 
-                    <div className="flex justify-between pt-4">
+                    <div className="flex flex-col-reverse sm:flex-row justify-between pt-4 gap-3">
                       <Button
                         variant="outline"
                         onClick={() => setActiveTab("personal")}
                         size="lg"
                         type="button"
-                        className="rounded-xl px-8 border-2"
+                        className="rounded-xl px-8 border-2 w-full sm:w-auto"
                       >
                         חזור לפרטים אישיים
                       </Button>
@@ -876,7 +894,7 @@ export default function CreateEmployeePage() {
                         onClick={() => setActiveTab("service_security")}
                         size="lg"
                         type="button"
-                        className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                        className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
                       >
                         הבא: שירות ואבטחה{" "}
                         <ArrowRight className="mr-2 w-4 h-4 rotate-180" />
@@ -890,7 +908,7 @@ export default function CreateEmployeePage() {
                   className="mt-0 focus-visible:outline-none"
                 >
                   <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
-                    <CardContent className="p-8 space-y-8">
+                    <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8">
                       <SectionHeader
                         icon={Calendar}
                         title="נתוני שירות, תפקיד והרשאות"
@@ -1086,24 +1104,16 @@ export default function CreateEmployeePage() {
                           icon={AlertTriangle} // Or Car icon if available
                         />
 
-                        <ToggleCard
-                          label="התראות ימי מחלה"
-                          description="קבלת התראות על ימי מחלה של כפופים"
-                          checked={formData.notif_sick_leave || false}
-                          onChange={(v) =>
-                            setFormData({ ...formData, notif_sick_leave: v })
-                          }
-                          icon={Save} // Just a placeholder icon, maybe Bell
-                        />
+
                       </div>
 
-                      <div className="flex justify-between pt-6">
+                      <div className="flex flex-col-reverse sm:flex-row justify-between pt-6 gap-3">
                         <Button
                           variant="outline"
                           onClick={() => setActiveTab("org")}
                           size="lg"
                           type="button"
-                          className="rounded-xl px-8 border-2"
+                          className="rounded-xl px-8 border-2 w-full sm:w-auto"
                         >
                           חזור למבנה ארגוני
                         </Button>
@@ -1111,7 +1121,7 @@ export default function CreateEmployeePage() {
                           onClick={() => handleSubmit()}
                           disabled={loading}
                           size="lg"
-                          className="rounded-xl px-12 bg-primary text-primary-foreground hover:bg-primary/90 font-black shadow-lg shadow-primary/20"
+                          className="rounded-xl px-12 bg-primary text-primary-foreground hover:bg-primary/90 font-black shadow-lg shadow-primary/20 w-full sm:w-auto"
                         >
                           {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />

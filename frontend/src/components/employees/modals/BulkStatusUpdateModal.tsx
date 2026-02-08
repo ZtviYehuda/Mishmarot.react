@@ -287,10 +287,11 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     }
   };
 
-  const applyBatchStatus = () => {
-    if (!batchStatusId || selectedIds.length === 0) return;
+  const handleBatchStatusChange = (val: string) => {
+    setBatchStatusId(val);
+    if (!val || selectedIds.length === 0) return;
 
-    const type = statusTypes.find((t) => t.id.toString() === batchStatusId);
+    const type = statusTypes.find((t) => t.id.toString() === val);
     if (!type) return;
 
     setBulkUpdates((prev) => {
@@ -298,26 +299,38 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
       selectedIds.forEach((id) => {
         const original = employees.find((e) => e.id === id);
         next[id] = {
-          ...next[id], // keep existing dates if any, or defaults
+          ...next[id],
           status_id: type.id,
           status_name: type.name,
           color: type.color,
           isChanged: type.id !== original?.status_id,
-          touched: true, // Mark as touched
+          touched: true,
           start_date:
             next[id]?.start_date || new Date().toISOString().split("T")[0],
         };
       });
       return next;
     });
+  };
 
-    toast.info(`הוחל סטטוס ${type.name} על ${selectedIds.length} שוטרים`);
-    setBatchStatusId(""); // Reset selector
-    // Keep selection active
+  const handleCloseAttempt = () => {
+    const hasChanges = Object.values(bulkUpdates).some(
+      (u) => u.touched || u.isChanged,
+    );
+    if (hasChanges) {
+      if (window.confirm("אתה בטוח שברצונך לצאת מבלי לעדכן את השינויים ?")) {
+        onOpenChange(false);
+      }
+    } else {
+      onOpenChange(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => (!v ? handleCloseAttempt() : onOpenChange(v))}
+    >
       <DialogContent
         className="max-w-[95vw] lg:max-w-7xl p-0 overflow-hidden rounded-3xl border-none bg-card shadow-2xl flex flex-col h-[85vh] sm:h-[90vh]"
         dir="rtl"
@@ -334,57 +347,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
             </div>
           </div>
 
-          {alertContext && (
-            <div className="relative overflow-hidden bg-orange-50 border border-orange-100 dark:bg-orange-950/20 dark:border-orange-900/50 p-4 rounded-2xl flex items-center justify-between gap-4 mb-6">
-              {/* Decorative background vibe */}
-              <div className="absolute -right-6 -top-6 w-24 h-24 bg-orange-500/5 rounded-full blur-2xl" />
 
-              <div className="flex items-center gap-3 relative z-10">
-                <div className="w-10 h-10 rounded-xl bg-white dark:bg-orange-950/50 border border-orange-100 dark:border-orange-900/50 flex items-center justify-center shrink-0 shadow-sm">
-                  <AlertTriangle className="w-5 h-5 text-orange-500 fill-orange-500/20" />
-                </div>
-                <div className="flex flex-col gap-0.5 text-right">
-                  <h4 className="text-sm font-black text-orange-950 dark:text-orange-50">
-                    דיווח בוקר לא הושלם
-                  </h4>
-                  <p className="text-xs font-medium text-orange-800/90 dark:text-orange-300">
-                    {user?.id === alertContext.commander_id ? (
-                      <>
-                        נא להשלים דיווח עבור{" "}
-                        <span className="font-black font-mono text-orange-600 dark:text-orange-400 text-sm">
-                          {alertContext.missing_count}
-                        </span>{" "}
-                        שוטרים תחת פיקודך שטרם עודכן להם סטטוס הבוקר.
-                      </>
-                    ) : (
-                      <>
-                        המפקד{" "}
-                        <span className="font-bold border-b border-orange-500/30 pb-0.5">
-                          {alertContext.commander_name}
-                        </span>{" "}
-                        טרם דיווח על{" "}
-                        <span className="font-black font-mono text-orange-600 dark:text-orange-400 text-sm">
-                          {alertContext.missing_count}
-                        </span>{" "}
-                        שוטרים
-                      </>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {onNudge && user?.id !== alertContext.commander_id && (
-                <Button
-                  size="sm"
-                  onClick={handleNudge}
-                  className="bg-orange-500 hover:bg-orange-600 text-white border-0 gap-2 h-9 px-4 rounded-xl shadow-md shadow-orange-500/20 relative z-10 transition-all active:scale-95"
-                >
-                  <BellRing className="w-4 h-4" />
-                  <span className="font-bold">שלח תזכורת</span>
-                </Button>
-              )}
-            </div>
-          )}
 
           <div className="flex gap-3">
             <div className="relative flex-1">
@@ -479,7 +442,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             "transition-all hover:bg-muted/40 border-b last:border-0",
                             isSelected && "bg-primary/5 hover:bg-primary/10",
                             current?.isChanged &&
-                              "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
+                            "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
                           )}
                         >
                           <TableCell className="text-center px-2 py-4 align-middle">
@@ -572,7 +535,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             </Select>
                           </TableCell>
                           <TableCell className="align-top py-3">
-                            {current?.isChanged ? (
+                            {(current?.isChanged || current?.touched) ? (
                               <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
                                 <div className="relative flex-1 max-w-[140px]">
                                   <input
@@ -657,8 +620,8 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                           ? "border-primary bg-primary/5 shadow-sm"
                           : "border-border bg-card",
                         current?.isChanged &&
-                          !isSelected &&
-                          "border-blue-200 bg-blue-50/30",
+                        !isSelected &&
+                        "border-blue-200 bg-blue-50/30",
                       )}
                     >
                       <div className="p-4 space-y-4">
@@ -727,7 +690,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             </Select>
                           </div>
 
-                          {current?.isChanged && (
+                          {(current?.isChanged || current?.touched) && (
                             <div className="grid grid-cols-2 gap-3 pt-2 animate-in fade-in slide-in-from-top-2 tracking-tighter">
                               <div className="space-y-1">
                                 <span className="text-[9px] font-bold text-primary pr-1">
@@ -783,7 +746,10 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
               נבחרו {selectedIds.length} שוטרים:
             </span>
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Select value={batchStatusId} onValueChange={setBatchStatusId}>
+              <Select
+                value={batchStatusId}
+                onValueChange={handleBatchStatusChange}
+              >
                 <SelectTrigger className="h-9 flex-1 sm:w-[180px] text-right font-bold text-xs bg-muted/30 border-input rounded-lg">
                   <SelectValue placeholder="בחר סטטוס לכולם..." />
                 </SelectTrigger>
@@ -805,24 +771,18 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={applyBatchStatus}
-                disabled={!batchStatusId || selectedIds.length === 0}
-                className="h-9 font-bold text-xs px-4"
-              >
-                החל
-              </Button>
             </div>
-            <div className="hidden sm:block flex-1" />
-            <div className="hidden sm:block h-4 w-px bg-border mx-2" />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 mt-1">
             <Button
               onClick={handleSubmit}
-              disabled={loading || Object.keys(bulkUpdates).length === 0}
+              disabled={
+                loading ||
+                !Object.values(bulkUpdates).some(
+                  (u) => u.touched || u.isChanged,
+                )
+              }
               className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl h-12 sm:h-10 shadow-lg shadow-primary/10 transition-all active:scale-95 disabled:opacity-50 text-xs sm:text-xs"
             >
               {loading ? (
@@ -834,7 +794,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
             </Button>
             <Button
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={handleCloseAttempt}
               className="px-6 border-input bg-card rounded-xl h-10 sm:h-10 font-bold text-muted-foreground hover:bg-muted transition-all text-xs"
             >
               ביטול

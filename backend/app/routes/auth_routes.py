@@ -84,6 +84,7 @@ def login():
                     "last_name": user.get("last_name"),
                     "personal_number": user.get("personal_number"),
                     "phone_number": user.get("phone_number"),
+                    "email": user.get("email"),
                     "must_change_password": user.get("must_change_password", False),
                     "is_admin": user.get("is_admin", False),
                     "is_commander": user.get("is_commander", False),
@@ -160,6 +161,7 @@ def get_current_user():
                 "last_name": user["last_name"],
                 "personal_number": user["personal_number"],
                 "phone_number": user.get("phone_number"),
+                "email": user.get("email"),
                 "must_change_password": (
                     False if is_impersonated else user["must_change_password"]
                 ),
@@ -280,25 +282,32 @@ def update_profile():
         return jsonify({"success": False, "error": "No data provided"}), 400
 
     # שדות מורחבים לעדכון עצמי
-    allowed_data = {
-        "first_name": data.get("first_name"),
-        "last_name": data.get("last_name"),
-        "phone_number": data.get("phone_number"),
-        "notif_sick_leave": data.get("notif_sick_leave"),
-        "notif_transfers": data.get("notif_transfers"),
-        "city": data.get("city"),
-        "birth_date": data.get("birth_date"),
-        "emergency_contact": data.get("emergency_contact"),
-        "national_id": data.get("national_id"),
-        "enlistment_date": data.get("enlistment_date"),
-        "discharge_date": data.get("discharge_date"),
-        "assignment_date": data.get("assignment_date"),
-        "police_license": data.get("police_license"),
-        "security_clearance": data.get("security_clearance"),
-    }
+    target_fields = [
+        "first_name",
+        "last_name",
+        "phone_number",
+        "email",
+        "notif_sick_leave",
+        "notif_transfers",
+        "city",
+        "birth_date",
+        "emergency_contact",
+        "national_id",
+        "enlistment_date",
+        "discharge_date",
+        "assignment_date",
+        "police_license",
+        "security_clearance",
+    ]
 
-    # הסרת ערכים שהם None (כדי לא לדרוס נתונים קיימים אם לא נשלחו)
-    allowed_data = {k: v for k, v in allowed_data.items() if v is not None}
+    allowed_data = {}
+    for field in target_fields:
+        if field in data:
+            val = data[field]
+            # Convert empty strings to None (common in frontend forms for dates/optional text)
+            if isinstance(val, str) and not val.strip():
+                val = None
+            allowed_data[field] = val
 
     if not allowed_data:
         return jsonify({"success": True, "message": "No changes to update"})
@@ -564,6 +573,7 @@ def impersonate_user():
                     "last_name": target_user.get("last_name"),
                     "personal_number": target_user.get("personal_number"),
                     "phone_number": target_user.get("phone_number"),
+                    "email": target_user.get("email"),
                     "must_change_password": False,  # Admin impersonation does not require password change
                     "is_admin": target_user.get("is_admin", False),
                     "is_commander": target_user.get("is_commander", False),
