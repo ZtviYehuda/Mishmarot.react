@@ -464,7 +464,7 @@ export default function EditEmployeePage() {
         <BirthdayGreetingsModal
           open={showBirthdayModal}
           onOpenChange={setShowBirthdayModal}
-          employeesToday={[
+          weeklyBirthdays={[
             {
               id: employee.id,
               first_name: employee.first_name,
@@ -711,7 +711,9 @@ export default function EditEmployeePage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <FormField label="כתובת אימייל">
                           <div className="relative">
-                            <span className="absolute right-3 top-3.5 text-muted-foreground/50 font-bold">@</span>
+                            <span className="absolute right-3 top-3.5 text-muted-foreground/50 font-bold">
+                              @
+                            </span>
                             <Input
                               value={formData.email || ""}
                               onChange={(e) =>

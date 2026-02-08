@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
+import { cn } from "@/lib/utils";
 
 interface BirthdayEmployee {
   id: number;
@@ -57,7 +58,7 @@ const INITIAL_PRESETS: Preset[] = [
 export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
   open,
   onOpenChange,
-  weeklyBirthdays,
+  weeklyBirthdays = [],
 }) => {
   const { user } = useAuthContext();
   const { markBirthdaySent } = useEmployees();
@@ -69,8 +70,9 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
   const [viewMode, setViewMode] = useState<"today" | "week">("today");
 
   // Filter employees for "Today"
-  const employeesToday = weeklyBirthdays.filter((emp) => {
-    const date = new Date(emp.birth_date || "");
+  const employeesToday = (weeklyBirthdays || []).filter((emp) => {
+    if (!emp.birth_date) return false;
+    const date = new Date(emp.birth_date);
     const today = new Date();
     return (
       date.getDate() === today.getDate() && date.getMonth() === today.getMonth()
@@ -375,7 +377,3 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
     </Dialog>
   );
 };
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
-}
