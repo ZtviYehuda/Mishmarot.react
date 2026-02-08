@@ -67,8 +67,8 @@ export const EmployeesChart = ({
 
     const data = stats.map((item, index) => ({
       // Make sure we pass the ID
-      id: item.status_id,
-      name: item.status_name || "ללא סטטוס",
+      id: item.status_id === null ? -1 : item.status_id, // Use -1 for "No Status" to allow clicking
+      name: item.status_name || "לא עודכן",
       value: item.count,
       fill: item.color || "#94a3b8",
       percentage: rounded[index],
@@ -185,40 +185,42 @@ export const EmployeesChart = ({
 
   return (
     <Card className="border border-border shadow-sm bg-card h-full">
-      <CardHeader className="pb-4 sm:pb-6">
-        <div className="flex flex-row items-start justify-between gap-4">
-          <div className="flex-1 min-w-0 text-right">
-            <CardTitle className="text-lg sm:text-xl font-black text-card-foreground mb-1 leading-tight whitespace-normal break-words">
-              {title}
-            </CardTitle>
-            <CardDescription className="font-bold text-xs text-muted-foreground whitespace-normal break-words">
-              {description}
-            </CardDescription>
-          </div>
-          <div className="flex shrink-0 items-center gap-2 pt-1">
-            {/* Filter Button (Mobile Only) */}
-            {onFilterClick && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onFilterClick}
-                className="lg:hidden w-8 h-8 sm:w-9 sm:h-9 p-0 rounded-xl bg-background hover:bg-muted border-dashed border-primary/30 text-primary"
-                title="סינון נתונים"
-              >
-                <Filter className="w-4 h-4" />
-              </Button>
-            )}
+      <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+        <div className="space-y-2">
+          <div className="flex flex-row items-center justify-between gap-2">
+            <div className="flex-1 min-w-0 text-right">
+              <CardTitle className="text-base sm:text-xl font-black text-card-foreground leading-tight truncate">
+                {title}
+              </CardTitle>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {/* Filter Button (Mobile Only) */}
+              {onFilterClick && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onFilterClick}
+                  className="lg:hidden w-8 h-8 p-0 rounded-xl bg-background hover:bg-muted border-dashed border-primary/30 text-primary"
+                  title="סינון נתונים"
+                >
+                  <Filter className="w-4 h-4" />
+                </Button>
+              )}
 
-            {/* WhatsApp Button */}
-            {onOpenWhatsAppReport && (
-              <WhatsAppButton
-                onClick={onOpenWhatsAppReport}
-                className="h-8 sm:h-9 text-xs sm:text-xs px-3"
-                label="WhatsApp"
-                skipDirectLink={true}
-              />
-            )}
+              {/* WhatsApp Button */}
+              {onOpenWhatsAppReport && (
+                <WhatsAppButton
+                  onClick={onOpenWhatsAppReport}
+                  className="h-8 text-xs px-2 sm:px-3"
+                  label="WhatsApp"
+                  skipDirectLink={true}
+                />
+              )}
+            </div>
           </div>
+          <CardDescription className="font-bold text-[10px] sm:text-xs text-muted-foreground whitespace-pre-line text-right leading-relaxed opacity-80">
+            {description}
+          </CardDescription>
         </div>
       </CardHeader>
       <CardContent>

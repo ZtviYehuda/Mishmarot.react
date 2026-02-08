@@ -4,6 +4,7 @@ import { useEmployees } from "@/hooks/useEmployees";
 import { useAuthContext } from "@/context/AuthContext";
 import { useDateContext } from "@/context/DateContext";
 import { format } from "date-fns";
+import { he } from "date-fns/locale";
 import {
   Table,
   TableBody,
@@ -89,6 +90,7 @@ export default function AttendancePage() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null,
   );
+  const [currentUserEmp, setCurrentUserEmp] = useState<Employee | null>(null);
   const [alertContext, setAlertContext] = useState<any>(null);
 
   // Check for auto-open modal from navigation state
@@ -137,6 +139,11 @@ export default function AttendancePage() {
 
       const sTypes = await getServiceTypes();
       if (sTypes) setServiceTypes(sTypes);
+
+      if (user) {
+        const me = await getEmployeeById(user.id);
+        setCurrentUserEmp(me);
+      }
     };
     init();
   }, [
@@ -144,7 +151,9 @@ export default function AttendancePage() {
     getDashboardStats,
     getStatusTypes,
     getServiceTypes,
+    getEmployeeById,
     selectedDate,
+    user,
   ]);
 
   // Set initial filters based on user permissions
@@ -284,6 +293,10 @@ export default function AttendancePage() {
     if (dashboardStats && dashboardStats.stats) {
       setStats(dashboardStats.stats);
     }
+    if (user) {
+      const me = await getEmployeeById(user.id);
+      setCurrentUserEmp(me);
+    }
     setSelectedEmployeeIds([]);
   };
 
@@ -334,12 +347,9 @@ export default function AttendancePage() {
     return "שוטר";
   };
 
-  const currentUserEmployee = user
-    ? employees.find((e) => e.id === user.id)
-    : null;
   const isReportedToday =
-    currentUserEmployee?.last_status_update &&
-    new Date(currentUserEmployee.last_status_update).toDateString() ===
+    currentUserEmp?.last_status_update &&
+    new Date(currentUserEmp.last_status_update).toDateString() ===
       selectedDate.toDateString();
 
   const progressPercent =
@@ -363,27 +373,21 @@ export default function AttendancePage() {
               <div className="grid grid-cols-2 lg:flex lg:flex-row gap-2 lg:gap-3 w-full lg:w-auto">
                 <Button
                   variant="outline"
-                  className="h-11 rounded-xl border-input gap-2 font-bold text-muted-foreground hover:bg-muted lg:px-6 lg:w-auto"
+                  className="h-12 rounded-2xl border-input gap-2 font-black text-muted-foreground hover:bg-muted lg:px-6 lg:w-auto"
                   onClick={() => setExportDialogOpen(true)}
                 >
                   <Download className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm">ייצוא דו"ח</span>
+                  <span className="text-sm">ייצוא</span>
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={isReportedToday ? "default" : "outline"}
                   className={cn(
-                    "h-11 rounded-xl gap-2 font-bold transition-all lg:px-6 lg:w-auto",
+                    "h-12 rounded-2xl gap-2 font-black transition-all lg:px-6 lg:w-auto",
                     isReportedToday
-                      ? "bg-emerald-50 border-emerald-500/30 text-emerald-700 hover:bg-emerald-100"
-                      : "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10",
+                      ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20"
+                      : "border-primary/20 bg-primary/5 text-primary",
                   )}
-                  onClick={async () => {
-                    let currentUserEmp: Employee | null | undefined =
-                      employees.find((e) => e.id === user?.id);
-                    if (!currentUserEmp && user) {
-                      currentUserEmp = await getEmployeeById(user.id);
-                    }
-
+                  onClick={() => {
                     if (currentUserEmp) {
                       handleOpenStatusModal(currentUserEmp);
                     } else {
@@ -392,27 +396,27 @@ export default function AttendancePage() {
                   }}
                 >
                   {isReportedToday ? (
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="w-5 h-5" />
                   ) : (
                     <User className="w-4 h-4" />
                   )}
-                  <span className="text-xs sm:text-sm">דיווח עצמי</span>
+                  <span className="text-sm">דיווח עצמי</span>
                 </Button>
               </div>
 
               <Button
                 className={cn(
-                  "w-full lg:w-auto h-11 lg:px-8 rounded-xl shadow-lg gap-2 font-black transition-all",
+                  "w-full lg:w-auto h-12 lg:px-8 rounded-2xl shadow-xl gap-2 font-black transition-all",
                   selectedEmployeeIds.length > 0
-                    ? "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-secondary/20"
-                    : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20",
+                    ? "bg-secondary text-secondary-foreground shadow-secondary/20"
+                    : "bg-primary text-primary-foreground shadow-primary/20",
                 )}
                 onClick={() => {
                   setAlertContext(null);
                   setBulkModalOpen(true);
                 }}
               >
-                <ClipboardCheck className="w-4 h-4" />
+                <ClipboardCheck className="w-5 h-5" />
                 <span className="text-sm">
                   {selectedEmployeeIds.length > 0
                     ? `עדכון לנבחרים (${selectedEmployeeIds.length})`
@@ -420,50 +424,47 @@ export default function AttendancePage() {
                 </span>
               </Button>
 
-              {/* Mobile Reminder Card */}
-              <div className="lg:hidden mt-1 w-full">
+              {/* Mobile Reminder Banner */}
+              <div className="lg:hidden mt-2 w-full">
                 {!isAllReported ? (
                   <div
-                    className="w-full h-14 bg-gradient-to-l from-primary to-primary/80 rounded-2xl px-4 flex items-center justify-between text-primary-foreground shadow-xl shadow-primary/20 cursor-pointer"
+                    className="w-full bg-gradient-to-l from-rose-500 to-rose-600 rounded-2xl p-4 flex items-center justify-between text-white shadow-lg shadow-rose-500/20 cursor-pointer"
                     onClick={() => {
                       setAlertContext(null);
                       setBulkModalOpen(true);
                     }}
                   >
-                    <div className="flex flex-row-reverse items-center gap-3">
-                      <div className="p-2 bg-white/10 rounded-xl">
-                        <Clock className="w-5 h-5 text-white/90" />
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-white/20 rounded-xl">
+                        <Clock className="w-5 h-5" />
                       </div>
-                      <div className="flex flex-col text-right">
-                        <h3 className="text-sm font-black leading-none">
-                          תזכורת דיווח
+                      <div className="flex flex-col">
+                        <h3 className="text-[13px] font-black leading-none">
+                          יש להשלים דיווחים
                         </h3>
                         <span className="text-[10px] font-bold opacity-80 mt-1">
-                          השלמה עד 09:00
+                          עד השעה 09:00
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 bg-white/20 h-8 px-3 rounded-full border border-white/10">
-                      <AlertCircle className="w-3.5 h-3.5 text-white/70" />
                       <span className="text-[11px] font-black">
                         נותרו: {totalCount - updatedTodayCount}
                       </span>
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 flex items-center justify-between text-emerald-800">
-                    <div className="flex flex-row-reverse items-center gap-3">
-                      <div className="p-2 bg-emerald-500/20 rounded-xl">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div className="flex flex-col text-right">
-                        <h3 className="text-sm font-black leading-none">
-                          הושלם הדיווח!
-                        </h3>
-                        <span className="text-[10px] font-bold opacity-70 mt-1">
-                          כלל השוטרים דווחו
-                        </span>
-                      </div>
+                  <div className="w-full bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3 text-emerald-800">
+                    <div className="p-2.5 bg-emerald-500/20 rounded-xl">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="flex flex-col text-right">
+                      <h3 className="text-sm font-black leading-none italic">
+                        כל הכבוד! היחידה מדווחת
+                      </h3>
+                      <span className="text-[10px] font-bold opacity-70 mt-1">
+                        הושלמו כלל דיווחי הנוכחות להיום
+                      </span>
                     </div>
                   </div>
                 )}
@@ -474,41 +475,47 @@ export default function AttendancePage() {
       />
       {/* Summary Stats & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-border shadow-sm lg:col-span-2 order-2 lg:order-1">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <div className="flex flex-col gap-0.5 text-right">
-              <span className="text-xs sm:text-sm font-black text-foreground">
+        <div className="bg-card rounded-[32px] p-6 sm:p-8 border border-border shadow-2xl lg:col-span-2 order-2 lg:order-1 relative overflow-hidden">
+          {/* Subtle Background Pattern */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+
+          <div className="flex items-center justify-between mb-8 relative z-10">
+            <div className="flex flex-col gap-1 text-right">
+              <span className="text-sm sm:text-base font-black text-foreground tracking-tight">
                 סיכום התייצבות יחידתי
               </span>
-              <span className="text-[10px] sm:text-xs text-muted-foreground font-bold">
-                מעקב דיווחים ליום{" "}
-                {selectedDate.toLocaleDateString("he-IL", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
+              <span className="text-[11px] sm:text-sm text-muted-foreground font-bold italic">
+                מעקב דיווחים להיום,{" "}
+                {format(selectedDate, "EEEE, d MMM", {
+                  locale: he,
                 })}
               </span>
             </div>
-            <div className="text-right">
-              <span className="text-lg sm:text-2xl font-black text-primary">
-                {updatedTodayCount}/{totalCount}
-              </span>
-              <span className="text-[9px] sm:text-[10px] block font-black text-muted-foreground uppercase tracking-tighter">
+            <div className="text-right flex flex-col items-end">
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl sm:text-4xl font-black text-primary animate-in zoom-in duration-500">
+                  {updatedTodayCount}
+                </span>
+                <span className="text-base sm:text-xl font-bold text-muted-foreground/40">
+                  / {totalCount}
+                </span>
+              </div>
+              <span className="text-[10px] sm:text-[11px] font-black text-muted-foreground uppercase tracking-wider mt-1">
                 שוטרים מדווחים
               </span>
             </div>
           </div>
 
-          <div className="w-full h-2 sm:h-3 bg-muted rounded-full overflow-hidden mb-4 sm:mb-8">
+          <div className="w-full h-3 bg-muted rounded-full overflow-hidden mb-8 relative shadow-inner">
             <div
-              className="h-full bg-gradient-to-l from-primary to-primary/70 transition-all duration-1000 ease-out"
+              className="h-full bg-gradient-to-l from-primary via-primary/80 to-primary/60 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(var(--primary),0.3)]"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
 
           <div
             className={cn(
-              "grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-4",
+              "grid grid-cols-3 gap-3",
               "lg:flex lg:flex-row lg:w-full lg:gap-0 lg:border lg:border-border/60 lg:rounded-3xl lg:overflow-hidden lg:divide-x lg:divide-x-reverse lg:divide-border/40 lg:bg-muted/5",
             )}
           >
@@ -525,29 +532,42 @@ export default function AttendancePage() {
                     );
                   }}
                   className={cn(
-                    "relative flex flex-col items-center justify-center transition-all cursor-pointer group",
-                    // Mobile: Individual cards - tight and efficient
-                    "p-2 rounded-xl border h-16 sm:h-28 bg-muted/50 border-border hover:bg-muted/80",
-                    // Desktop: Unified segments that fill the space
-                    "lg:flex-1 lg:h-24 lg:p-4 lg:rounded-none lg:border-0 lg:bg-transparent hover:lg:bg-muted/20",
+                    "relative flex flex-col items-center justify-center transition-all cursor-pointer group rounded-2xl border aspect-square sm:aspect-auto sm:h-28",
+                    "lg:flex-1 lg:h-24 lg:p-4 lg:rounded-none lg:border-0 lg:bg-transparent",
                     selectedStatusId === s.status_id.toString()
-                      ? "bg-primary/10 border-primary shadow-sm lg:bg-primary/5"
-                      : "",
+                      ? "bg-primary border-primary shadow-xl shadow-primary/20 scale-[1.02] z-10"
+                      : "bg-muted/30 border-transparent hover:bg-muted/50",
                   )}
                 >
-                  <span className="text-sm sm:text-2xl lg:text-3xl font-black text-foreground">
+                  <span
+                    className={cn(
+                      "text-xl sm:text-2xl lg:text-3xl font-black",
+                      selectedStatusId === s.status_id.toString()
+                        ? "text-primary-foreground"
+                        : "text-foreground",
+                    )}
+                  >
                     {s.count}
                   </span>
                   <span
-                    className="text-[8px] sm:text-[11px] lg:text-xs font-black uppercase text-center leading-tight mt-0.5 sm:mt-1"
-                    style={{ color: s.color || "var(--muted-foreground)" }}
+                    className={cn(
+                      "text-[9px] sm:text-[11px] lg:text-xs font-black uppercase text-center leading-tight mt-1",
+                      selectedStatusId === s.status_id.toString()
+                        ? "text-primary-foreground/90"
+                        : "",
+                    )}
+                    style={
+                      selectedStatusId === s.status_id.toString()
+                        ? {}
+                        : { color: s.color || "var(--muted-foreground)" }
+                    }
                   >
                     {s.status_name}
                   </span>
 
-                  {/* Subtle selection indicator for desktop */}
+                  {/* Desktop Selection Bar */}
                   {selectedStatusId === s.status_id.toString() && (
-                    <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-1 bg-primary transition-all" />
+                    <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-1 bg-primary-foreground transition-all" />
                   )}
                 </div>
               ))}
@@ -1273,107 +1293,131 @@ export default function AttendancePage() {
                 <div
                   key={emp.id}
                   className={cn(
-                    "group bg-card rounded-2xl border shadow-sm overflow-hidden transition-all",
+                    "group bg-card rounded-[24px] border shadow-sm overflow-hidden transition-all active:scale-[0.98]",
                     isSelected
-                      ? "bg-primary/5 border-primary/30"
+                      ? "bg-primary/5 border-primary shadow-primary/10"
                       : "border-border",
-                    !emp.is_active && "bg-destructive/5 grayscale opacity-80",
+                    !emp.is_active && "grayscale opacity-80",
                   )}
                   onClick={() => handleSelectOne(emp.id, !isSelected)}
                 >
-                  <div className="p-3">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={(c) =>
-                          handleSelectOne(emp.id, c as boolean)
-                        }
-                        className="mt-1 shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      />
+                  <div className="p-4">
+                    <div className="flex items-start gap-4">
+                      {/* Avatar/Initials */}
+                      <div
+                        className={cn(
+                          "w-12 h-12 rounded-[18px] flex items-center justify-center font-black text-xs shrink-0 transition-transform",
+                          isSelected
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground border border-border/50",
+                        )}
+                      >
+                        {emp.first_name[0]}
+                        {emp.last_name[0]}
+                      </div>
 
                       <div className="flex-1 min-w-0">
-                        {/* Top Row: Name & Badges */}
-                        <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <div>
-                            <h3 className="font-black text-sm text-foreground truncate leading-tight">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex flex-col">
+                            <h3 className="font-black text-[15px] text-foreground truncate leading-none mb-1">
                               {emp.first_name} {emp.last_name}
                             </h3>
-                            <div className="text-[11px] text-muted-foreground font-bold font-mono">
-                              {emp.personal_number}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-muted-foreground font-black tracking-widest">
+                                {emp.personal_number}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground/30">
+                                •
+                              </span>
+                              <span className="text-[10px] text-muted-foreground font-bold">
+                                {emp.service_type_name}
+                              </span>
                             </div>
                           </div>
 
-                          <Badge
-                            variant="outline"
+                          <div
                             className={cn(
-                              "border-none text-[10px] px-2 h-6 flex gap-1.5 items-center font-bold shrink-0",
+                              "w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 shadow-sm",
                               isUpdatedToday
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-red-50 text-red-600",
+                                ? "ring-4 ring-emerald-500/10"
+                                : "animate-pulse ring-4 ring-rose-500/10",
                             )}
-                          >
-                            {isUpdatedToday ? (
-                              <>
-                                <CheckCircle2 className="w-3 h-3" />
-                                <span>תקין</span>
-                              </>
-                            ) : (
-                              <>
-                                <AlertCircle className="w-3 h-3" />
-                                <span>חסר</span>
-                              </>
-                            )}
-                          </Badge>
+                            style={{
+                              backgroundColor: emp.status_color || "#cbd5e1",
+                            }}
+                          />
                         </div>
 
-                        {/* Middle Row: Org Info */}
-                        <div className="text-[11px] text-muted-foreground/80 font-medium truncate mb-2.5">
-                          {emp.department_name || "-"}
-                          {emp.section_name && ` • ${emp.section_name}`}
-                          {emp.team_name && ` • ${emp.team_name}`}
+                        {/* Org Path */}
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground/60 font-medium mb-3">
+                          <span className="truncate">
+                            {emp.department_name}
+                          </span>
+                          {emp.section_name && (
+                            <>
+                              <span className="opacity-30">/</span>
+                              <span className="truncate">
+                                {emp.section_name}
+                              </span>
+                            </>
+                          )}
+                          {emp.team_name && (
+                            <>
+                              <span className="opacity-30">/</span>
+                              <span className="truncate">{emp.team_name}</span>
+                            </>
+                          )}
                         </div>
 
-                        {/* Status Bar */}
-                        <div className="bg-muted/50 rounded-lg p-2 flex items-center justify-between border border-border/50">
+                        {/* Status Capsule */}
+                        <div
+                          className={cn(
+                            "rounded-2xl p-2.5 flex items-center justify-between border transition-colors",
+                            isUpdatedToday
+                              ? "bg-emerald-500/[0.03] border-emerald-500/10"
+                              : "bg-muted/50 border-border/50",
+                          )}
+                        >
                           <div className="flex items-center gap-2">
-                            <div
-                              className="w-2.5 h-2.5 rounded-full ring-2 ring-background"
-                              style={{
-                                backgroundColor: emp.status_color || "#ccc",
-                              }}
-                            />
-                            <span className="text-xs font-black text-foreground">
-                              {emp.status_name || "ללא סטטוס"}
+                            <span
+                              className={cn(
+                                "text-xs font-black",
+                                isUpdatedToday
+                                  ? "text-emerald-700"
+                                  : "text-foreground",
+                              )}
+                            >
+                              {emp.status_name || "טרם דווח"}
                             </span>
                           </div>
                           {isUpdatedToday && (
-                            <span className="text-[10px] font-bold text-muted-foreground bg-background/50 px-1.5 rounded">
+                            <div className="flex items-center gap-1 text-[9px] font-black text-emerald-600/70 bg-emerald-500/5 px-2 py-0.5 rounded-full">
+                              <Clock className="w-3 h-3" />
                               {format(
                                 new Date(emp.last_status_update!),
                                 "HH:mm",
                               )}
-                            </span>
+                            </div>
                           )}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Actions (Update/History) - Condensed */}
-                  <div className="grid grid-cols-2 divide-x divide-x-reverse divide-border/50 border-t border-border/50 bg-muted/20">
+                  {/* Actions Bar */}
+                  <div className="flex border-t border-border/50 bg-muted/20">
                     <button
-                      className="py-2.5 text-xs font-bold text-primary hover:bg-primary/5 active:bg-primary/10 transition-colors flex items-center justify-center gap-1.5"
+                      className="flex-1 py-3 text-[11px] font-black text-primary hover:bg-primary/5 active:bg-primary/10 transition-colors flex items-center justify-center gap-2 border-l border-border/50"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleOpenStatusModal(emp);
                       }}
                     >
                       <ClipboardCheck className="w-3.5 h-3.5" />
-                      עדכון
+                      עדכן נוכחות
                     </button>
                     <button
-                      className="py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted/50 active:bg-muted transition-colors flex items-center justify-center gap-1.5"
+                      className="flex-1 py-3 text-[11px] font-black text-muted-foreground hover:bg-muted/50 active:bg-muted transition-colors flex items-center justify-center gap-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleOpenHistoryModal(emp);

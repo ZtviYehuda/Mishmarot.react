@@ -75,6 +75,8 @@ def get_stats():
             filters["status_id"] = int(request.args.get("status_id"))
         if request.args.get("date"):
             filters["date"] = request.args.get("date")
+        if request.args.get("serviceTypes"):
+            filters["serviceTypes"] = request.args.get("serviceTypes")
 
         print(f"[DEBUG] get_stats filters: {filters}")
 
@@ -108,9 +110,10 @@ def get_comparison_stats():
         requester = EmployeeModel.get_employee_by_id(user_id)
 
         date = request.args.get("date")
+        days = int(request.args.get("days", 1))
 
         data = AttendanceModel.get_unit_comparison_stats(
-            requesting_user=requester, date=date
+            requesting_user=requester, date=date, days=days
         )
         return jsonify(data)
     except Exception as e:

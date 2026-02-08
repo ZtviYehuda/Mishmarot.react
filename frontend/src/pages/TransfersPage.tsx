@@ -54,7 +54,7 @@ import type { Employee } from "@/types/employee.types";
 
 export default function TransfersPage() {
   const { user } = useAuthContext();
-  const { employees, getStructure } = useEmployees();
+  const { employees, getStructure, fetchEmployees } = useEmployees();
   const [searchParams] = useSearchParams();
   const {
     pendingTransfers,
@@ -106,12 +106,13 @@ export default function TransfersPage() {
   useEffect(() => {
     fetchPending();
     fetchHistory();
+    fetchEmployees();
     const loadStructure = async () => {
       const data = await getStructure();
       if (data) setStructure(data);
     };
     loadStructure();
-  }, [fetchPending, fetchHistory, getStructure]);
+  }, [fetchPending, fetchHistory, getStructure, fetchEmployees]);
 
   useEffect(() => {
     const empId = searchParams.get("employeeId");

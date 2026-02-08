@@ -9,6 +9,7 @@ interface ThemeContextType {
   accentColor: AccentColor;
   fontSize: FontSize;
   toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
   setAccentColor: (color: AccentColor) => void;
   setFontSize: (size: FontSize) => void;
 }
@@ -67,6 +68,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         accentColor,
         fontSize,
         toggleTheme,
+        setTheme,
         setAccentColor,
         setFontSize,
       }}

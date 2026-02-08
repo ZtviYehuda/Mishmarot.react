@@ -21,13 +21,10 @@ import {
   Search,
   User,
   AlertCircle,
-  AlertTriangle,
   ArrowLeft,
   Filter,
-  BellRing,
 } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
-import { useAuthContext } from "@/context/AuthContext";
 import type { Employee } from "@/types/employee.types";
 import { toast } from "sonner";
 import {
@@ -46,8 +43,8 @@ interface BulkStatusUpdateModalProps {
   employees: Employee[];
   onSuccess?: () => void;
   initialSelectedIds?: number[];
-  alertContext?: any; // New prop
-  onNudge?: (commanderId: number) => void; // New prop
+  alertContext?: any;
+  onNudge?: (commanderId: number) => void;
 }
 
 interface UpdateState {
@@ -55,7 +52,7 @@ interface UpdateState {
   status_name: string;
   color: string;
   isChanged: boolean;
-  touched: boolean; // Added touched flag
+  touched: boolean;
   start_date?: string;
   end_date?: string;
 }
@@ -69,7 +66,6 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
   alertContext,
   onNudge,
 }) => {
-  const { user } = useAuthContext();
   const { getStatusTypes, logBulkStatus, getServiceTypes } = useEmployees();
   const [statusTypes, setStatusTypes] = useState<any[]>([]);
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
@@ -87,37 +83,6 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
   const [bulkUpdates, setBulkUpdates] = useState<Record<number, UpdateState>>(
     {},
   );
-
-  const handleNudge = () => {
-    if (alertContext?.commander_phone) {
-      const names = alertContext.missing_names || [];
-      const commanderName = alertContext.commander_name || "המפקד";
-      const unitName =
-        alertContext.team_name || alertContext.section_name || "היחידה";
-
-      let message = `שלום ${commanderName}, תזכורת למילוי דוח בוקר עבור ${unitName}.\n\n`;
-      message += `טרם הושלם דיווח עבור ${names.length} שוטרים:\n`;
-      names.forEach((name: string, index: number) => {
-        message += `${index + 1}. ${name}\n`;
-      });
-      message += `\nנא לעדכן בהקדם במערכת המשמרות. תודה!`;
-
-      const encodedMessage = encodeURIComponent(message);
-      const phone = alertContext.commander_phone.replace(/\D/g, ""); // Remove non-digits
-      const finalPhone = phone.startsWith("0")
-        ? "972" + phone.substring(1)
-        : phone;
-
-      window.open(
-        `https://wa.me/${finalPhone}?text=${encodedMessage}`,
-        "_blank",
-      );
-      toast.info(`פותח וואטסאפ לשליחת תזכורת ל${commanderName}`);
-    } else if (onNudge && alertContext?.commander_id) {
-      // Fallback to legacy nudge handler if no phone/names
-      onNudge(alertContext.commander_id);
-    }
-  };
 
   useEffect(() => {
     if (open) {
@@ -142,7 +107,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
             status_name: emp.status_name || "ללא סטטוס",
             color: emp.status_color || "#94a3b8",
             isChanged: false,
-            touched: false, // Initialize touched
+            touched: false,
             start_date: new Date().toISOString().split("T")[0],
           };
         }
@@ -167,8 +132,10 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     setLoading(true);
 
     const updates: any[] = [];
+    const hasSelectionOrMod =
+      selectedIds.length > 0 ||
+      Object.values(bulkUpdates).some((u) => u.touched || u.isChanged);
 
-    // Iterate over all employees to ensure we capture hidden but selected/modified ones
     employees.forEach((emp) => {
       const data = bulkUpdates[emp.id];
       if (!data) return;
@@ -176,15 +143,6 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
       const isSelected = selectedIds.includes(emp.id);
       const isVisible = filteredList.some((e) => e.id === emp.id);
       const isModified = data.touched || data.isChanged;
-
-      // Logic:
-      // 1. Always update if Selected
-      // 2. Always update if manually Modified (even if not selected/hidden)
-      // 3. If NO selection and NO modification (global confirm mode), update all Visible
-
-      const hasSelectionOrMod =
-        selectedIds.length > 0 ||
-        Object.values(bulkUpdates).some((u) => u.touched || u.isChanged);
 
       const shouldUpdate =
         isSelected || isModified || (!hasSelectionOrMod && isVisible);
@@ -228,7 +186,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
           status_name: type.name,
           color: type.color,
           isChanged: type.id !== original?.status_id,
-          touched: true, // Mark as touched
+          touched: true,
         },
       }));
     }
@@ -241,7 +199,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
   ) => {
     setBulkUpdates((prev) => ({
       ...prev,
-      [empId]: { ...prev[empId], [field]: value, touched: true }, // Mark as touched on date change too
+      [empId]: { ...prev[empId], [field]: value, touched: true },
     }));
   };
 
@@ -263,17 +221,12 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     });
   }, [employees, searchTerm, filterServiceType, showSelectedOnly, selectedIds]);
 
-  // Selection Handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      // Selecting all currently VISIBLE employees
       const visibleIds = filteredList.map((e) => e.id);
-      // Merge with existing selection to not lose hidden ones if needed?
-      // Usually "Select All" determines the scope. Let's select visible ones.
       const newSelection = Array.from(new Set([...selectedIds, ...visibleIds]));
       setSelectedIds(newSelection);
     } else {
-      // Deselect visible ones
       const visibleIds = filteredList.map((e) => e.id);
       setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
     }
@@ -326,28 +279,62 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     }
   };
 
+  const handleNudge = () => {
+    if (alertContext?.commander_phone) {
+      const names = alertContext.missing_names || [];
+      const commanderName = alertContext.commander_name || "המפקד";
+      const unitName =
+        alertContext.team_name || alertContext.section_name || "היחידה";
+
+      let message = `שלום ${commanderName}, תזכורת למילוי דוח בוקר עבור ${unitName}.\n\n`;
+      message += `טרם הושלם דיווח עבור ${names.length} שוטרים:\n`;
+      names.forEach((name: string, index: number) => {
+        message += `${index + 1}. ${name}\n`;
+      });
+      message += `\nנא לעדכן בהקדם במערכת המשמרות. תודה!`;
+
+      const encodedMessage = encodeURIComponent(message);
+      const phone = alertContext.commander_phone.replace(/\D/g, "");
+      const finalPhone = phone.startsWith("0")
+        ? "972" + phone.substring(1)
+        : phone;
+
+      window.open(
+        `https://wa.me/${finalPhone}?text=${encodedMessage}`,
+        "_blank",
+      );
+      toast.info(`פותח וואטסאפ לשליחת תזכורת ל${commanderName}`);
+    } else if (onNudge && alertContext?.commander_id) {
+      onNudge(alertContext.commander_id);
+    }
+  };
+
   return (
     <Dialog
       open={open}
       onOpenChange={(v) => (!v ? handleCloseAttempt() : onOpenChange(v))}
     >
       <DialogContent
-        className="max-w-[95vw] lg:max-w-7xl p-0 overflow-hidden rounded-3xl border-none bg-card shadow-2xl flex flex-col h-[85vh] sm:h-[90vh]"
+        className="max-w-[100vw] sm:max-w-7xl h-[100dvh] sm:h-[90vh] p-0 overflow-hidden sm:rounded-3xl border-none bg-card shadow-2xl flex flex-col"
         dir="rtl"
       >
-        <DialogHeader className="px-6 py-4 border-b bg-muted/10 text-right shrink-0">
+        <DialogHeader className="px-6 py-4 border-b bg-muted/10 text-right shrink-0 relative">
           <div className="flex items-center justify-between gap-4 mb-4 text-right">
             <div>
-              <DialogTitle className="text-xl font-black text-foreground mb-1 text-right">
-                עדכון נוכחות יומי
+              <DialogTitle className="text-2xl font-black text-foreground mb-1 text-right tracking-tight">
+                עדכון נוכחות יחידתי
               </DialogTitle>
-              <DialogDescription className="text-sm font-medium text-muted-foreground text-right">
-                עדכון מרוכז ומהיר לכלל היחידה
+              <DialogDescription className="text-sm font-bold text-muted-foreground text-right italic">
+                {employees.length} שוטרים מופיעים ברשימה
               </DialogDescription>
             </div>
+            <button
+              onClick={handleCloseAttempt}
+              className="lg:hidden p-2 rounded-full hover:bg-muted transition-colors"
+            >
+              <ArrowLeft className="w-6 h-6 text-foreground" />
+            </button>
           </div>
-
-
 
           <div className="flex gap-3">
             <div className="relative flex-1">
@@ -442,7 +429,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             "transition-all hover:bg-muted/40 border-b last:border-0",
                             isSelected && "bg-primary/5 hover:bg-primary/10",
                             current?.isChanged &&
-                            "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
+                              "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
                           )}
                         >
                           <TableCell className="text-center px-2 py-4 align-middle">
@@ -535,7 +522,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             </Select>
                           </TableCell>
                           <TableCell className="align-top py-3">
-                            {(current?.isChanged || current?.touched) ? (
+                            {current?.isChanged || current?.touched ? (
                               <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
                                 <div className="relative flex-1 max-w-[140px]">
                                   <input
@@ -620,8 +607,8 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                           ? "border-primary bg-primary/5 shadow-sm"
                           : "border-border bg-card",
                         current?.isChanged &&
-                        !isSelected &&
-                        "border-blue-200 bg-blue-50/30",
+                          !isSelected &&
+                          "border-blue-200 bg-blue-50/30",
                       )}
                     >
                       <div className="p-4 space-y-4">
@@ -635,16 +622,18 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               }
                             />
                             <div className="flex flex-col text-right truncate">
-                              <span className="text-sm font-black text-foreground truncate">
+                              <span className="text-[15px] font-black text-foreground truncate leading-none mb-1">
                                 {emp.first_name} {emp.last_name}
                               </span>
-                              <span className="text-[10px] font-mono text-muted-foreground">
-                                {emp.personal_number} • {emp.service_type_name}
+                              <span className="text-[11px] font-bold text-muted-foreground/60">
+                                {emp.personal_number}{" "}
+                                <span className="opacity-30">•</span>{" "}
+                                {emp.service_type_name}
                               </span>
                             </div>
                           </div>
                           <div
-                            className="w-2 h-2 rounded-full mt-2"
+                            className="w-3 h-3 rounded-full mt-1.5 shadow-sm ring-4 ring-muted"
                             style={{
                               backgroundColor: current?.color || "#94a3b8",
                             }}
@@ -772,6 +761,16 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                 </SelectContent>
               </Select>
             </div>
+            {alertContext?.commander_phone && selectedIds.length === 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNudge}
+                className="mr-auto h-9 rounded-lg border-emerald-500/30 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 font-bold text-xs gap-2"
+              >
+                שלח תזכורת בוואטסאפ
+              </Button>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 mt-1">
@@ -779,23 +778,24 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
               onClick={handleSubmit}
               disabled={
                 loading ||
-                !Object.values(bulkUpdates).some(
+                (!Object.values(bulkUpdates).some(
                   (u) => u.touched || u.isChanged,
-                )
+                ) &&
+                  batchStatusId === "")
               }
-              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl h-12 sm:h-10 shadow-lg shadow-primary/10 transition-all active:scale-95 disabled:opacity-50 text-xs sm:text-xs"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-14 sm:h-12 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 text-sm"
             >
               {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
               ) : (
-                <CheckCircle2 className="w-4 h-4 mr-2" />
+                <CheckCircle2 className="w-5 h-5 mr-2" />
               )}
-              שמור ועדכן את כל השינויים
+              עדכן את כל הדיווחים
             </Button>
             <Button
               variant="outline"
               onClick={handleCloseAttempt}
-              className="px-6 border-input bg-card rounded-xl h-10 sm:h-10 font-bold text-muted-foreground hover:bg-muted transition-all text-xs"
+              className="px-6 border-input bg-card rounded-2xl h-14 sm:h-12 font-black text-muted-foreground hover:bg-muted transition-all text-sm hidden sm:flex"
             >
               ביטול
             </Button>

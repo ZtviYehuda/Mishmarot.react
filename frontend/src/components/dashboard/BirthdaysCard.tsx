@@ -95,15 +95,30 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
 
         <CardContent className="flex-1 overflow-y-auto pr-1">
           {/* Quick Action for Today's Birthdays */}
-          {employeesToday.length > 0 && (
+          {/* Quick Action for Greetings */}
+          {birthdays.length > 0 && (
             <div className="mb-4">
               <Button
                 onClick={() => setIsGreetingsModalOpen(true)}
-                className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl h-12 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] group"
+                className={cn(
+                  "w-full border rounded-xl h-12 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] group",
+                  employeesToday.length > 0
+                    ? "bg-primary/10 hover:bg-primary/20 text-primary border-primary/20"
+                    : "bg-muted/50 hover:bg-muted text-muted-foreground border-border/50 hover:text-primary",
+                )}
               >
-                <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                <Sparkles
+                  className={cn(
+                    "w-4 h-4",
+                    employeesToday.length > 0
+                      ? "text-primary animate-pulse"
+                      : "text-muted-foreground",
+                  )}
+                />
                 <span className="font-black text-xs uppercase tracking-widest">
-                  שלח ברכות היום ({employeesToday.length})
+                  {employeesToday.length > 0
+                    ? `שלח ברכות היום (${employeesToday.length})`
+                    : `שלח ברכות השבוע (${birthdays.length})`}
                 </span>
               </Button>
             </div>
@@ -173,7 +188,7 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
       <BirthdayGreetingsModal
         open={isGreetingsModalOpen}
         onOpenChange={setIsGreetingsModalOpen}
-        employeesToday={employeesToday}
+        weeklyBirthdays={birthdays}
       />
     </>
   );

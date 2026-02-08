@@ -178,6 +178,24 @@ def setup_database():
             cur.execute(
                 "ALTER TABLE transfer_requests ADD COLUMN IF NOT EXISTS reason TEXT;"
             )
+
+            # --- Email & Verification Migrations ---
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS email VARCHAR(255);"
+            )
+
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS verification_codes (
+                    id SERIAL PRIMARY KEY,
+                    email VARCHAR(255) NOT NULL,
+                    code VARCHAR(10) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP NOT NULL,
+                    is_used BOOLEAN DEFAULT FALSE
+                );
+            """
+            )
         except Exception as e:
             print(f"ℹ️ Migration info: {e}")
             conn.rollback()

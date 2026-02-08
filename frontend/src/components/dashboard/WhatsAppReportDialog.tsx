@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAuthContext } from "@/context/AuthContext";
 import {
@@ -9,101 +9,85 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
+import { ShieldAlert, Info, FilterX, Send, RefreshCw } from "lucide-react";
 
 interface WhatsAppReportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  currentStats: any[]; // The grouped stats from the dashboard
+  unitName: string;
+  isFiltered: boolean;
 }
 
 export const WhatsAppReportDialog = ({
   open,
   onOpenChange,
+  currentStats,
+  unitName,
+  isFiltered,
 }: WhatsAppReportDialogProps) => {
-  const { employees } = useEmployees();
+  const { getDashboardStats } = useEmployees();
   const { user } = useAuthContext();
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const [includeAllStatuses, setIncludeAllStatuses] = useState(true);
 
-  // Get unique statuses from employees
-  const availableStatuses = useMemo(() => {
-    const statuses = new Map<string, string>();
-    employees.forEach((emp) => {
-      const name = emp.status_name || "Unknown";
-      if (!statuses.has(name)) {
-        statuses.set(name, emp.status_color || "#ccc");
-      }
-    });
-    return Array.from(statuses.entries()).map(([name, color]) => ({
-      name,
-      color,
-    }));
-  }, [employees]);
+  const [isFullMode, setIsFullMode] = useState(false);
+  const [fullStats, setFullStats] = useState<any[] | null>(null);
+  const [loadingFull, setLoadingFull] = useState(false);
 
-  // Prepare report data
-  const reportData = useMemo(() => {
-    let filtered = employees;
-
-    if (!includeAllStatuses && selectedStatuses.length > 0) {
-      filtered = filtered.filter((emp) =>
-        selectedStatuses.includes(emp.status_name || "Unknown"),
-      );
+  // Reset mode when dialog opens
+  useEffect(() => {
+    if (open) {
+      setIsFullMode(false);
     }
+  }, [open]);
 
-    // Group by status
-    const grouped = new Map<
-      string,
-      { count: number; color: string; employees: any[] }
-    >();
-    filtered.forEach((emp) => {
-      const status = emp.status_name || "Unknown";
-      if (!grouped.has(status)) {
-        grouped.set(status, {
-          count: 0,
-          color: emp.status_color || "#ccc",
-          employees: [],
-        });
-      }
-      const group = grouped.get(status)!;
-      group.count++;
-      group.employees.push(emp);
-    });
+  // Fetch full stats if requested
+  useEffect(() => {
+    if (open && isFullMode && !fullStats) {
+      const fetchFull = async () => {
+        setLoadingFull(true);
+        const data = await getDashboardStats({});
+        if (data && data.stats) {
+          setFullStats(data.stats);
+        } else if (Array.isArray(data)) {
+          setFullStats(data);
+        }
+        setLoadingFull(false);
+      };
+      fetchFull();
+    }
+  }, [open, isFullMode, fullStats, getDashboardStats]);
 
-    // Convert map to array
-    const byStatusArray = Array.from(grouped.entries()).map(
-      ([name, { count, color, employees: emps }]) => ({
-        name,
-        count,
-        color,
-        employees: emps,
-      }),
-    );
+  const activeStats = isFullMode ? fullStats || [] : currentStats;
+  const activeUnit = isFullMode ? "כלל היחידה" : unitName;
 
-    return {
-      total: filtered.length,
-      byStatus: byStatusArray,
-    };
-  }, [employees, includeAllStatuses, selectedStatuses]);
+  const reportData = useMemo(() => {
+    let total = 0;
+    const sorted = [...activeStats].sort((a, b) => b.count - a.count);
+    sorted.forEach((s) => (total += s.count));
+    return { total, byStatus: sorted };
+  }, [activeStats]);
 
   const generateWhatsAppMessage = () => {
     const commander = user ? `${user.first_name} ${user.last_name}` : "מפקד";
     let message = `📊 *דוח מצבת כוח אדם*\n`;
-    message += `\n*מפקד:* ${commander}\n`;
+    message += `\n*מפקד/ת:* ${commander}\n`;
     message += `*תאריך:* ${new Date().toLocaleDateString("he-IL")}\n`;
-    message += `*סך הכל שוטרים:* ${reportData.total}\n\n`;
+    message += `*יחידה:* ${activeUnit}\n`;
+
+    if (isFiltered && !isFullMode) {
+      message += `_(תצוגה מסוננת)_\n`;
+    }
+
+    message += `\n*סך הכל שוטרים:* ${reportData.total}\n\n`;
 
     message += `*פילוח לפי סטטוס:*\n`;
-    reportData.byStatus.forEach(({ name, count }) => {
+    reportData.byStatus.forEach(({ status_name, count }) => {
       const percentage =
         reportData.total > 0 ? Math.round((count / reportData.total) * 100) : 0;
-      message += `• ${name}: ${count} (${percentage}%)\n`;
+      message += `• ${status_name}: ${count} (${percentage}%)\n`;
     });
-
-    if (selectedStatuses.length > 0 && !includeAllStatuses) {
-      message += `\n*סינון:* ${selectedStatuses.join(", ")}\n`;
-    }
 
     return message;
   };
@@ -111,98 +95,124 @@ export const WhatsAppReportDialog = ({
   const handleSendWhatsApp = () => {
     const message = encodeURIComponent(generateWhatsAppMessage());
     const whatsappUrl = `https://wa.me/?text=${message}`;
-
-    // Open WhatsApp
     window.open(whatsappUrl, "_blank");
     onOpenChange(false);
   };
 
-  const handleStatusToggle = (status: string) => {
-    setSelectedStatuses((prev) =>
-      prev.includes(status)
-        ? prev.filter((s) => s !== status)
-        : [...prev, status],
-    );
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90vw] sm:max-w-md p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle>שלח דוח בווטסאפ</DialogTitle>
-          <DialogDescription>
-            בחר את הסטטוסים שברצונך להציג בדוח
+      <DialogContent className="w-[95dvw] sm:max-w-md p-0 gap-0 overflow-hidden flex flex-col rounded-2xl border-none shadow-2xl animate-in zoom-in-95 duration-200">
+        <DialogHeader
+          className="p-6 pb-4 border-b bg-primary/5 text-right"
+          dir="rtl"
+        >
+          <DialogTitle className="text-xl font-black text-primary flex items-center justify-start gap-2">
+            <Send className="w-5 h-5" />
+            שליחת דוח בווטסאפ
+          </DialogTitle>
+          <DialogDescription className="text-right font-medium text-muted-foreground">
+            סקירת נתוני המצבה לשיתוף מהיר עם מפקדים
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Include All Statuses Option */}
-          <div className="flex items-center space-x-3 space-x-reverse pb-4 border-b">
-            <Checkbox
-              id="all-statuses"
-              checked={includeAllStatuses}
-              onCheckedChange={(checked) => {
-                setIncludeAllStatuses(checked as boolean);
-                if (checked) {
-                  setSelectedStatuses([]);
-                }
-              }}
-            />
-            <Label htmlFor="all-statuses" className="cursor-pointer flex-1">
-              <span className="font-semibold">כל הסטטוסים</span>
-            </Label>
+        <div className="flex-1 p-5 space-y-6 overflow-y-auto max-h-[70vh]">
+          {/* Status Badge & Mode Switcher */}
+          <div className="flex flex-col gap-3">
+            <div
+              className={`flex items-center justify-between p-3 rounded-xl border ${isFullMode ? "bg-orange-50/50 border-orange-100" : "bg-primary/5 border-primary/10"}`}
+            >
+              <div className="flex items-center gap-2">
+                <div
+                  className={`p-1.5 rounded-lg ${isFullMode ? "bg-orange-100 text-orange-600" : "bg-primary/10 text-primary"}`}
+                >
+                  {isFullMode ? (
+                    <RefreshCw className="w-4 h-4 animate-spin-slow" />
+                  ) : (
+                    <ShieldAlert className="w-4 h-4" />
+                  )}
+                </div>
+                <div className="flex flex-col text-right" dir="rtl">
+                  <span className="text-xs font-black uppercase tracking-tight opacity-60">
+                    היקף הדוח
+                  </span>
+                  <span
+                    className={`text-sm font-black ${isFullMode ? "text-orange-700" : "text-primary"}`}
+                  >
+                    {isFullMode
+                      ? "כלל היחידה (ללא סינונים)"
+                      : `מסונן: ${unitName}`}
+                  </span>
+                </div>
+              </div>
+
+              {isFiltered && (
+                <Button
+                  variant={isFullMode ? "outline" : "secondary"}
+                  size="sm"
+                  className="h-8 text-[10px] font-black rounded-lg gap-1.5"
+                  onClick={() => setIsFullMode(!isFullMode)}
+                >
+                  {isFullMode ? (
+                    <>
+                      <FilterX className="w-3 h-3" />
+                      חזור למסונן
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-3 h-3" />
+                      דוח כלל היחידה
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
 
-          {/* Individual Status Selection */}
-          {!includeAllStatuses && (
-            <div className="space-y-3">
-              {availableStatuses.map(({ name, color }) => (
-                <div
-                  key={name}
-                  className="flex items-center space-x-3 space-x-reverse"
-                >
-                  <Checkbox
-                    id={`status-${name}`}
-                    checked={selectedStatuses.includes(name)}
-                    onCheckedChange={() => handleStatusToggle(name)}
-                  />
-                  <Label
-                    htmlFor={`status-${name}`}
-                    className="cursor-pointer flex-1 flex items-center gap-2"
-                  >
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span>{name}</span>
-                  </Label>
-                </div>
-              ))}
+          {/* Preview Panel */}
+          <div className="space-y-3" dir="rtl">
+            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
+              תצוגה מקדימה להודעה
+            </Label>
+            <div className="relative group">
+              <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
+              <div className="bg-muted/30 p-4 rounded-xl border border-border/50 text-xs font-medium text-foreground whitespace-pre-wrap leading-relaxed min-h-[120px] max-h-[220px] overflow-y-auto custom-scrollbar shadow-inner text-right">
+                {loadingFull ? (
+                  <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <span className="font-bold">טוען נתוני יחידה מלאים...</span>
+                  </div>
+                ) : (
+                  generateWhatsAppMessage()
+                )}
+              </div>
             </div>
-          )}
+          </div>
 
-          {/* Report Preview */}
-          <div className="mt-6 p-4 bg-muted rounded-lg text-sm">
-            <p className="font-semibold mb-2">תצוגה מקדימה:</p>
-            <div className="text-xs text-muted-foreground space-y-1 whitespace-pre-wrap max-h-40 overflow-y-auto">
-              {generateWhatsAppMessage()}
-            </div>
+          <div
+            className="flex items-start gap-2 bg-blue-50/50 p-3 rounded-xl border border-blue-100"
+            dir="rtl"
+          >
+            <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+            <p className="text-[10px] text-blue-700 leading-normal font-medium">
+              הדוח כולל פילוח סטטיסטי בלבד. שמות שוטרים ופרטים אישיים אינם
+              נשלחים בווטסאפ מטעמי ביטחון מידע.
+            </p>
           </div>
         </div>
 
-        <div className="flex gap-3 pt-4 border-t border-border">
+        <div className="p-5 bg-muted/20 border-t flex flex-col sm:flex-row gap-3">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="flex-1"
+            className="flex-1 rounded-xl font-bold h-12 order-2 sm:order-1"
           >
             ביטול
           </Button>
           <WhatsAppButton
             onClick={handleSendWhatsApp}
-            label="שליחת דוח ל-WhatsApp"
+            label="שליחה ב-WhatsApp"
             skipDirectLink={true}
-            className="flex-1"
+            className="flex-[2] rounded-xl font-bold h-12 shadow-lg shadow-green-500/10 order-1 sm:order-2"
           />
         </div>
       </DialogContent>

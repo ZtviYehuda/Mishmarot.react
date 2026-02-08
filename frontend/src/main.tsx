@@ -8,14 +8,13 @@ import { Toaster } from "sonner";
 
 import { DateProvider } from "./context/DateContext";
 
-
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
       <AuthProvider>
         <DateProvider>
           <AppRouter />
-          <Toaster />
+          <Toaster richColors position="top-center" dir="rtl" />
         </DateProvider>
       </AuthProvider>
     </ThemeProvider>

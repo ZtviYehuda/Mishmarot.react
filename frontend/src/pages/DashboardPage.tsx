@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { EmployeesChart } from "@/components/dashboard/EmployeesChart";
 import { BirthdaysCard } from "@/components/dashboard/BirthdaysCard";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
@@ -14,7 +14,15 @@ import { LayoutDashboard } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CriticalAlerts } from "@/components/dashboard/CriticalAlerts";
-import { BulkStatusUpdateModal } from "@/components/employees/modals/BulkStatusUpdateModal";
+import {
+  BulkStatusUpdateModal,
+  StatusUpdateModal,
+} from "@/components/employees/modals";
+import { CheckCircle2, User } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { Employee } from "@/types/employee.types";
 
 interface Team {
   id: number;
@@ -35,8 +43,6 @@ interface Department {
 
 import { DateHeader } from "@/components/common/DateHeader";
 
-// ...
-
 export default function DashboardPage() {
   const { user } = useAuthContext();
   const { selectedDate } = useDateContext();
@@ -46,6 +52,8 @@ export default function DashboardPage() {
     getDashboardStats,
     getComparisonStats,
     getTrendStats,
+    getServiceTypes,
+    fetchEmployees,
   } = useEmployees();
 
   const [loading, setLoading] = useState(true);
@@ -62,11 +70,16 @@ export default function DashboardPage() {
   const [trendStats, setTrendStats] = useState<any[]>([]);
   const [loadingExtras, setLoadingExtras] = useState(true);
   const [trendRange, setTrendRange] = useState(7);
+  const [comparisonRange, setComparisonRange] = useState(1);
   const [loadingTrend, setLoadingTrend] = useState(true);
   const [missingReportIds, setMissingReportIds] = useState<number[]>([]);
   const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
 
   const [whatsAppDialogOpen, setWhatsAppDialogOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [currentUserEmp, setCurrentUserEmp] = useState<Employee | null>(null);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedSelfEmp, setSelectedSelfEmp] = useState<Employee | null>(null);
 
   // Filters
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
@@ -77,9 +90,75 @@ export default function DashboardPage() {
     name: string;
     color: string;
   } | null>(null);
+  const [serviceTypes, setServiceTypes] = useState<any[]>([]);
+  const [selectedServiceTypes, setSelectedServiceTypes] = useState<string[]>(
+    [],
+  );
 
-  // Initialize filters based on user permissions
+  // Load filters from localStorage on mount
   useEffect(() => {
+    const savedFilters = localStorage.getItem("dashboard_filters");
+    if (savedFilters) {
+      try {
+        const filters = JSON.parse(savedFilters);
+        if (filters.deptId) setSelectedDeptId(filters.deptId);
+        if (filters.sectionId) setSelectedSectionId(filters.sectionId);
+        if (filters.teamId) setSelectedTeamId(filters.teamId);
+        if (filters.statusData) setSelectedStatusData(filters.statusData);
+        if (filters.serviceTypes) setSelectedServiceTypes(filters.serviceTypes);
+      } catch (e) {
+        console.error("Failed to parse saved filters", e);
+      }
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Save filters to localStorage when they change
+  useEffect(() => {
+    if (!isInitialized) return; // Wait until loaded
+
+    const filters = {
+      deptId: selectedDeptId,
+      sectionId: selectedSectionId,
+      teamId: selectedTeamId,
+      statusData: selectedStatusData,
+      serviceTypes: selectedServiceTypes,
+    };
+    localStorage.setItem("dashboard_filters", JSON.stringify(filters));
+  }, [
+    isInitialized,
+    selectedDeptId,
+    selectedSectionId,
+    selectedTeamId,
+    selectedStatusData,
+    selectedServiceTypes,
+  ]);
+
+  // Initialize filters based on user permissions (only if no saved filters AND initialized)
+  useEffect(() => {
+    if (!isInitialized) return;
+    const savedFilters = localStorage.getItem("dashboard_filters");
+
+    // Check if saved filters are effectively empty
+    const hasSavedData =
+      savedFilters &&
+      (() => {
+        try {
+          const f = JSON.parse(savedFilters);
+          return (
+            f.deptId ||
+            f.sectionId ||
+            f.teamId ||
+            f.statusData ||
+            (f.serviceTypes && f.serviceTypes.length > 0)
+          );
+        } catch (e) {
+          return false;
+        }
+      })();
+
+    if (hasSavedData) return;
+
     if (user && !user.is_admin) {
       if (user.commands_department_id) {
         setSelectedDeptId(user.commands_department_id.toString());
@@ -95,28 +174,39 @@ export default function DashboardPage() {
         setSelectedTeamId(user.commands_team_id.toString());
       }
     }
-  }, [user]);
+  }, [user, isInitialized]);
 
-  // Fetch Structure
+  // Fetch Structure and Service Types
   useEffect(() => {
-    const fetchStruct = async () => {
-      const data = await getStructure();
-      if (data) setStructure(data);
+    const fetchSelects = async () => {
+      const structData = await getStructure();
+      if (structData) setStructure(structData);
+
+      const srvData = await getServiceTypes();
+      if (srvData) setServiceTypes(srvData);
     };
-    fetchStruct();
-  }, [getStructure]);
+    fetchSelects();
+  }, [getStructure, getServiceTypes]);
+
+  // Fetch current user separately since they are excluded from lists
+  const { getEmployeeById } = useEmployees();
+  useEffect(() => {
+    if (user) {
+      getEmployeeById(user.id).then(setCurrentUserEmp);
+    }
+  }, [user, getEmployeeById]);
 
   // Fetch Comparison Stats
   useEffect(() => {
     const fetchComparison = async () => {
       setLoadingExtras(true);
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
-      const compData = await getComparisonStats(formattedDate);
+      const compData = await getComparisonStats(formattedDate, comparisonRange);
       setComparisonStats(compData);
       setLoadingExtras(false);
     };
     fetchComparison();
-  }, [getComparisonStats, selectedDate]);
+  }, [getComparisonStats, selectedDate, comparisonRange]);
 
   // Fetch Trend Stats
   useEffect(() => {
@@ -150,8 +240,30 @@ export default function DashboardPage() {
     selectedDeptId,
     selectedSectionId,
     selectedTeamId,
+    selectedServiceTypes,
     getDashboardStats,
     selectedDate,
+  ]);
+
+  // Sync main employees list for the unit (used by Bulk Update, etc.)
+  useEffect(() => {
+    fetchEmployees(
+      undefined,
+      selectedDeptId ? parseInt(selectedDeptId) : undefined,
+      undefined,
+      undefined,
+      selectedSectionId ? parseInt(selectedSectionId) : undefined,
+      selectedTeamId ? parseInt(selectedTeamId) : undefined,
+      format(selectedDate, "yyyy-MM-dd"),
+      selectedServiceTypes,
+    );
+  }, [
+    selectedDeptId,
+    selectedSectionId,
+    selectedTeamId,
+    selectedDate,
+    selectedServiceTypes,
+    fetchEmployees,
   ]);
 
   // Fetch Stats for the chart and table
@@ -164,6 +276,7 @@ export default function DashboardPage() {
         team_id: selectedTeamId,
         status_id: selectedStatusData?.id?.toString(),
         date: format(selectedDate, "yyyy-MM-dd"),
+        serviceTypes: selectedServiceTypes.join(","),
       });
 
       if (data) {
@@ -179,15 +292,23 @@ export default function DashboardPage() {
     selectedSectionId,
     selectedTeamId,
     selectedStatusData?.id,
+    selectedServiceTypes,
     getDashboardStats,
     selectedDate,
   ]);
 
   const handleFilterChange = (
-    type: "department" | "section" | "team" | "status" | "reset",
-    value?: string,
+    type:
+      | "department"
+      | "section"
+      | "team"
+      | "status"
+      | "serviceType"
+      | "reset",
+    value?: any,
   ) => {
     if (type === "reset") {
+      localStorage.removeItem("dashboard_filters");
       if (user?.is_admin) {
         setSelectedDeptId("");
         setSelectedSectionId("");
@@ -199,10 +320,13 @@ export default function DashboardPage() {
         setSelectedTeamId("");
       }
       setSelectedStatusData(null);
+      setSelectedServiceTypes([]);
       return;
     }
 
-    if (type === "department") {
+    if (type === "serviceType") {
+      setSelectedServiceTypes(value || []);
+    } else if (type === "department") {
       setSelectedDeptId(value || "");
       setSelectedSectionId("");
       setSelectedTeamId("");
@@ -225,6 +349,44 @@ export default function DashboardPage() {
     }
   };
 
+  const isReportedToday =
+    currentUserEmp?.last_status_update &&
+    new Date(currentUserEmp.last_status_update).toDateString() ===
+      selectedDate.toDateString();
+
+  // Comparison Matrix: Admin, Dept Commander, Section Commander (Hide for Team Commander)
+  const showComparisonMatrix = useMemo(() => {
+    if (user?.is_admin) return true;
+    if (user?.commands_department_id) return true;
+    if (user?.commands_section_id) return true;
+    return false;
+  }, [user]);
+
+  // Trend Graph: Admin, Dept, Section, and Team Commanders
+  const showTrendGraph = useMemo(() => {
+    if (user?.is_admin) return true;
+    if (user?.commands_department_id) return true;
+    if (user?.commands_section_id) return true;
+    if (user?.commands_team_id) return true;
+    return false;
+  }, [user]);
+
+  const handleOpenSelfReport = () => {
+    if (currentUserEmp) {
+      setSelectedSelfEmp(currentUserEmp);
+      setStatusModalOpen(true);
+    } else {
+      toast.error("לא ניתן לטעון את פרטי השוטר לדיווח");
+    }
+  };
+
+  const refreshSelfStatus = async () => {
+    if (user) {
+      const me = await getEmployeeById(user.id);
+      setCurrentUserEmp(me);
+    }
+  };
+
   const currentDept = structure.find((d) => d.id.toString() === selectedDeptId);
   const currentSection = currentDept?.sections.find(
     (s) => s.id.toString() === selectedSectionId,
@@ -239,15 +401,44 @@ export default function DashboardPage() {
     currentDept?.name ||
     "כלל היחידה";
 
-  const chartTitle = selectedStatusData
-    ? `${selectedStatusData.name} | ${unitName}`
-    : unitName === "כלל היחידה"
-      ? "נתוני כלל היחידה"
-      : unitName;
+  const serviceTypeLabel =
+    selectedServiceTypes.length > 0
+      ? selectedServiceTypes.length === 1
+        ? selectedServiceTypes[0]
+        : `${selectedServiceTypes.length} מעמדות`
+      : "";
 
-  const chartDescription = selectedStatusData
-    ? `מציג את השוטרים הנמצאים בסטטוס ${selectedStatusData.name} ב${unitName}`
-    : `פירוט נוכחות וסטטיסטיקה עבור ${unitName}`;
+  const chartTitle = useMemo(() => {
+    let title = unitName;
+
+    if (selectedStatusData) {
+      title = `${selectedStatusData.name} | ${title}`;
+    }
+
+    if (serviceTypeLabel) {
+      title = `${serviceTypeLabel} | ${title}`;
+    }
+
+    if (title === "כלל היחידה") return "נתוני כלל היחידה";
+    return title;
+  }, [unitName, selectedStatusData, serviceTypeLabel]);
+
+  const chartDescription = useMemo(() => {
+    const filters: string[] = [];
+    if (selectedStatusData) filters.push(`בסטטוס ${selectedStatusData.name}`);
+    if (serviceTypeLabel) filters.push(`ב - ${serviceTypeLabel}`);
+
+    const filterText =
+      filters.length > 0 ? `\nמציג שוטרים ${filters.join(" ו")}` : "";
+    return `פירוט נוכחות וסטטיסטיקה עבור ${unitName}${filterText}`;
+  }, [unitName, selectedStatusData, serviceTypeLabel]);
+
+  const hasActiveFilters =
+    !!selectedDeptId ||
+    !!selectedSectionId ||
+    !!selectedTeamId ||
+    !!selectedStatusData ||
+    selectedServiceTypes.length > 0;
 
   const handleStatusClick = (
     statusId: number,
@@ -280,7 +471,29 @@ export default function DashboardPage() {
         subtitle="נתוני נוכחות, ימי הולדת וסטטיסטיקות כוח אדם"
         category="לוח בקרה"
         categoryLink="/"
-        badge={<DateHeader className="w-full justify-end lg:justify-start" />}
+        badge={
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full lg:w-auto">
+            <DateHeader className="w-full justify-end lg:justify-start" />
+            <Button
+              variant={isReportedToday ? "default" : "outline"}
+              size="sm"
+              className={cn(
+                "h-10 rounded-xl gap-2 font-black transition-all px-4 shrink-0 shadow-sm",
+                isReportedToday
+                  ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white shadow-emerald-500/20"
+                  : "border-primary/20 bg-primary/5 text-primary",
+              )}
+              onClick={handleOpenSelfReport}
+            >
+              {isReportedToday ? (
+                <CheckCircle2 className="w-4 h-4" />
+              ) : (
+                <User className="w-4 h-4" />
+              )}
+              <span className="text-xs">דיווח עצמי</span>
+            </Button>
+          </div>
+        }
       />
 
       <CriticalAlerts
@@ -304,6 +517,8 @@ export default function DashboardPage() {
                 selectedSectionId={selectedSectionId}
                 selectedTeamId={selectedTeamId}
                 selectedStatusId={selectedStatusData?.id?.toString()}
+                serviceTypes={serviceTypes}
+                selectedServiceTypes={selectedServiceTypes}
                 onFilterChange={handleFilterChange}
                 canSelectDept={canSelectDept}
                 canSelectSection={canSelectSection}
@@ -339,24 +554,32 @@ export default function DashboardPage() {
               sectionId={selectedSectionId}
               teamId={selectedTeamId}
               date={format(selectedDate, "yyyy-MM-dd")}
+              serviceTypes={selectedServiceTypes}
             />
           </div>
 
           {/* Widgets Row */}
-          {(user?.is_admin ||
-            user?.commands_department_id ||
-            user?.commands_section_id) && (
+          {(showComparisonMatrix || showTrendGraph) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <StatsComparisonCard
-                data={comparisonStats}
-                loading={loadingExtras}
-              />
-              <AttendanceTrendCard
-                data={trendStats}
-                loading={loadingTrend}
-                range={trendRange}
-                onRangeChange={setTrendRange}
-              />
+              {showComparisonMatrix && (
+                <StatsComparisonCard
+                  data={comparisonStats}
+                  loading={loadingExtras}
+                  days={comparisonRange}
+                  onDaysChange={setComparisonRange}
+                  onShare={() => setWhatsAppDialogOpen(true)}
+                />
+              )}
+              {showTrendGraph && (
+                <AttendanceTrendCard
+                  data={trendStats}
+                  loading={loadingTrend}
+                  range={trendRange}
+                  onRangeChange={setTrendRange}
+                  onOpenReport={() => setWhatsAppDialogOpen(true)}
+                  className={!showComparisonMatrix ? "md:col-span-2" : ""}
+                />
+              )}
             </div>
           )}
         </div>
@@ -370,6 +593,9 @@ export default function DashboardPage() {
       <WhatsAppReportDialog
         open={whatsAppDialogOpen}
         onOpenChange={setWhatsAppDialogOpen}
+        currentStats={stats}
+        unitName={unitName}
+        isFiltered={hasActiveFilters}
       />
 
       {/* Mobile Filter Dialog */}
@@ -382,10 +608,13 @@ export default function DashboardPage() {
             selectedSectionId={selectedSectionId}
             selectedTeamId={selectedTeamId}
             selectedStatusId={selectedStatusData?.id?.toString()}
+            serviceTypes={serviceTypes}
+            selectedServiceTypes={selectedServiceTypes}
             onFilterChange={handleFilterChange}
             canSelectDept={canSelectDept}
             canSelectSection={canSelectSection}
             canSelectTeam={canSelectTeam}
+            isMobile={true}
           />
         </DialogContent>
       </Dialog>
@@ -402,6 +631,28 @@ export default function DashboardPage() {
         // The modal logic requires `employees` array to function.
         // I need to fetch the specific missing employees to pass them.
       />
+
+      {selectedSelfEmp && (
+        <StatusUpdateModal
+          open={statusModalOpen}
+          onOpenChange={setStatusModalOpen}
+          employee={selectedSelfEmp}
+          onSuccess={() => {
+            refreshSelfStatus();
+            // Also refresh stats since report changed
+            getDashboardStats({
+              department_id: selectedDeptId,
+              section_id: selectedSectionId,
+              team_id: selectedTeamId,
+              date: format(selectedDate, "yyyy-MM-dd"),
+            }).then((data) => {
+              if (data) {
+                setStats(data.stats || []);
+              }
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

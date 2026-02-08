@@ -27,9 +27,10 @@ class EmployeeModel:
                 ):
                     is_valid = True
                 else:
-                    print(f"DEBUG LOGIN FAIL: User found ({user['personal_number']}), Hash present: {bool(user['password_hash'])}")
+                    print(
+                        f"DEBUG LOGIN FAIL: User found ({user['personal_number']}), Hash present: {bool(user['password_hash'])}"
+                    )
                     # print(f"DEBUG Hash: {user['password_hash']}") # Don't print full hash for security logs unless local
-
 
                 # 2. First-time login check (Personal Number + National ID)
                 # If they haven't changed password yet, allow national_id as password
@@ -90,7 +91,11 @@ class EmployeeModel:
                 LEFT JOIN roles r ON e.role_id = r.id
                 LEFT JOIN service_types svt ON e.service_type_id = svt.id
                 -- Active Status
-                LEFT JOIN attendance_logs al ON al.employee_id = e.id AND (al.end_datetime IS NULL OR al.end_datetime > CURRENT_TIMESTAMP)
+                LEFT JOIN LATERAL (
+                    SELECT status_type_id, start_datetime FROM attendance_logs 
+                    WHERE employee_id = e.id AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)
+                    ORDER BY start_datetime DESC, id DESC LIMIT 1
+                ) al ON true
                 LEFT JOIN status_types st ON al.status_type_id = st.id
                 WHERE e.id = %s
             """
@@ -112,37 +117,26 @@ class EmployeeModel:
                 # STRICT SCOPING: Only set the ID for the level they actually command.
                 # Do NOT bubble up to parents - that causes the system to think they command the parent unit.
 
-                if user.get("commands_section_id_direct"):
-                    user["commands_section_id"] = user["commands_section_id_direct"]
-                    user["commands_department_id"] = (
-                        None  # They command the section, not the department
-                    )
-                elif user.get("commands_team_id"):
-                    # commands_team_id is usually a column on the user itself for "commander of team X"?
-                    # Actually, the SQL query earlier didn't show 'commands_team_id' column on employees table?
-                    # Wait, let's check if 'commands_team_id' exists in the user dict.
-                    # The get_all_sql in line 50+ didn't fetch a 'commands_team_id' column.
-                    # It fetched (SELECT id FROM teams WHERE commander_id = e.id) maybe?
-                    # Let's check get_employee_by_id query.
+                # Fetch IDs from the direct subquery columns
+                d_id = user.get("commands_department_id_direct")
+                s_id = user.get("commands_section_id_direct")
+                t_id = user.get("commands_team_id")
+
+                # Normalize to None if 0 or falsy (IDs should be > 0)
+                user["commands_department_id"] = d_id if d_id else None
+                user["commands_section_id"] = s_id if s_id else None
+                user["commands_team_id"] = t_id if t_id else None
+
+                # Priority logic: If you command a higher level, that's your primary command scope
+                if user["commands_department_id"]:
+                    # Dept commander should only be scoped to dept
                     pass
-
-                    # Assuming commands_team_id is already in 'user' from the query or earlier logic?
-                    # Looking at lines 60-65 in file (not visible here but assumed):
-                    # Queries likely fetch 'commands_section_id_direct', 'commands_department_id_direct'.
-                    # Did it fetch team commander?
-
-                    # Correction: I need to check how commands_team_id is populated.
-                    # If I look at the previous context (Step 1255), line 60:
-                    # (SELECT id FROM departments WHERE commander_id = e.id LIMIT 1) as commands_department_id_direct
-                    # I should assume there is similar for section and team.
-
-                    user["commands_section_id"] = None
-                    user["commands_department_id"] = None
-                else:
-                    user["commands_department_id"] = user.get(
-                        "commands_department_id_direct"
-                    )
-                    user["commands_section_id"] = None
+                elif user["commands_section_id"]:
+                    # Section commander should only be scoped to section
+                    pass
+                elif user["commands_team_id"]:
+                    # Team commander should only be scoped to team
+                    pass
 
                 if user.get("is_commander"):
                     print(
@@ -194,7 +188,7 @@ class EmployeeModel:
                     SELECT status_type_id, start_datetime FROM attendance_logs 
                     WHERE employee_id = e.id 
                     {status_condition}
-                    ORDER BY start_datetime DESC LIMIT 1
+                    ORDER BY start_datetime DESC, id DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
                 WHERE e.personal_number != 'admin'
@@ -274,8 +268,11 @@ class EmployeeModel:
                     query += " AND t.id = %s"
                     params.append(t_id)
                 if filters.get("status_id"):
-                    query += " AND st.id = %s"
-                    params.append(filters["status_id"])
+                    if str(filters["status_id"]) == "missing":
+                        query += " AND st.id IS NULL"
+                    else:
+                        query += " AND st.id = %s"
+                        params.append(filters["status_id"])
 
                 # New Advanced Filters
                 if filters.get("roles"):
@@ -672,6 +669,26 @@ class EmployeeModel:
             import traceback
 
             print(traceback.format_exc())
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def mark_birthday_message_sent(emp_id):
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE employees SET last_birthday_message_sent = CURRENT_TIMESTAMP WHERE id = %s",
+                (emp_id,),
+            )
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"Error marking birthday message sent: {e}")
             return False
         finally:
             conn.close()

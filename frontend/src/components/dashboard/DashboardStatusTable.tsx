@@ -12,6 +12,7 @@ interface DashboardStatusTableProps {
   sectionId?: string;
   teamId?: string;
   date?: string;
+  serviceTypes?: string[];
 }
 
 export const DashboardStatusTable = ({
@@ -22,6 +23,7 @@ export const DashboardStatusTable = ({
   sectionId,
   teamId,
   date,
+  serviceTypes,
 }: DashboardStatusTableProps) => {
   const { employees, fetchEmployees, loading } = useEmployees();
 
@@ -33,13 +35,22 @@ export const DashboardStatusTable = ({
           ? parseInt(departmentId)
           : undefined,
         undefined,
-        statusId,
+        statusId === -1 ? "missing" : statusId, // Pass "missing" string if -1, assuming hook/backend handles it or I'll fix hook next
         sectionId && sectionId !== "" ? parseInt(sectionId) : undefined,
         teamId && teamId !== "" ? parseInt(teamId) : undefined,
         date,
+        serviceTypes,
       );
     }
-  }, [statusId, departmentId, sectionId, teamId, date, fetchEmployees]);
+  }, [
+    statusId,
+    departmentId,
+    sectionId,
+    teamId,
+    date,
+    serviceTypes,
+    fetchEmployees,
+  ]);
 
   if (statusId === null || statusId === undefined) return null;
 

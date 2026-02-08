@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { EmployeeTable } from "@/components/employees/EmployeeTable";
 import { Users } from "lucide-react";
@@ -5,6 +6,10 @@ import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function EmployeesPage() {
   const { employees, loading, fetchEmployees } = useEmployees();
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
 
   return (
     <div className="space-y-6 pb-6 animate-in fade-in duration-500">

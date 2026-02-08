@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import apiClient from "@/config/api.client";
 import * as endpoints from "@/config/employees.endpoints";
 import * as attEndpoints from "@/config/attendance.endpoints";
@@ -15,10 +15,11 @@ export const useEmployees = () => {
       search?: string,
       dept_id?: number,
       include_inactive?: boolean,
-      status_id?: number,
+      status_id?: number | string,
       section_id?: number,
       team_id?: number,
       date?: string,
+      service_types?: string[],
     ) => {
       setLoading(true);
       try {
@@ -30,6 +31,9 @@ export const useEmployees = () => {
         if (section_id) params.append("section_id", section_id.toString());
         if (team_id) params.append("team_id", team_id.toString());
         if (date) params.append("date", date);
+        if (service_types && service_types.length > 0) {
+          params.append("serviceTypes", service_types.join(","));
+        }
 
         const { data } = await apiClient.get<Employee[]>(
           `${endpoints.EMPLOYEES_BASE_ENDPOINT}?${params}`,
@@ -139,6 +143,7 @@ export const useEmployees = () => {
       team_id?: string;
       status_id?: string;
       date?: string;
+      serviceTypes?: string;
     }) => {
       try {
         const params = new URLSearchParams();
@@ -149,6 +154,8 @@ export const useEmployees = () => {
         if (filters?.team_id) params.append("team_id", filters.team_id);
         if (filters?.status_id) params.append("status_id", filters.status_id);
         if (filters?.date) params.append("date", filters.date);
+        if (filters?.serviceTypes)
+          params.append("serviceTypes", filters.serviceTypes);
 
         const { data } = await apiClient.get(
           `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}?${params}`,
@@ -208,10 +215,16 @@ export const useEmployees = () => {
     }
   };
 
-  // Initial fetch
-  useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
+  // Mark Birthday Sent
+  const markBirthdaySent = async (empId: number) => {
+    try {
+      await apiClient.post(endpoints.markBirthdaySentEndpoint(empId));
+      return true;
+    } catch (err: any) {
+      console.error("Failed to mark birthday sent", err);
+      return false;
+    }
+  };
 
   return {
     employees,
@@ -249,10 +262,11 @@ export const useEmployees = () => {
     logStatus,
     logBulkStatus,
     getDashboardStats,
-    getComparisonStats: useCallback(async (date?: string) => {
+    getComparisonStats: useCallback(async (date?: string, days: number = 1) => {
       try {
         const params = new URLSearchParams();
         if (date) params.append("date", date);
+        if (days && days > 1) params.append("days", days.toString());
         const { data } = await apiClient.get(
           `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/comparison?${params}`,
         );
@@ -288,5 +302,6 @@ export const useEmployees = () => {
         return {};
       }
     }, []),
+    markBirthdaySent,
   };
 };

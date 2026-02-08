@@ -393,4 +393,17 @@ def get_service_types():
         return jsonify({"error": str(e)}), 500
 
 
-
+@emp_bp.route("/<int:emp_id>/birthday-sent", methods=["POST"])
+@jwt_required()
+def mark_birthday_sent_route(emp_id):
+    """Mark that a birthday message was sent to this employee"""
+    try:
+        # Check permissions? Any commander can send?
+        # A simple check: if the user can send, they must be authorized (frontend hides button).
+        # We rely on JWT required.
+        if EmployeeModel.mark_birthday_message_sent(emp_id):
+            return jsonify({"success": True})
+        return jsonify({"success": False, "error": "Database update failed"}), 500
+    except Exception as e:
+        print(f"Error marking birthday sent: {e}")
+        return jsonify({"error": str(e)}), 500

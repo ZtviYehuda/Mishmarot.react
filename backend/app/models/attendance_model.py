@@ -21,10 +21,10 @@ class AttendanceModel:
             cur.execute(
                 """
                 UPDATE attendance_logs 
-                SET end_datetime = CURRENT_TIMESTAMP 
+                SET end_datetime = %s 
                 WHERE employee_id = %s AND end_datetime IS NULL
             """,
-                (employee_id,),
+                (datetime.now(), employee_id),
             )
 
             now = datetime.now()
@@ -155,7 +155,7 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def get_unit_comparison_stats(requesting_user=None, date=None):
+    def get_unit_comparison_stats(requesting_user=None, date=None, days=1):
         conn = get_db_connection()
         if not conn:
             return []
@@ -169,16 +169,6 @@ class AttendanceModel:
 
             scoping_clause = ""
             params = []
-
-            # Status filter params
-            status_condition = (
-                "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
-            )
-            status_params = []
-
-            if date:
-                status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
-                status_params = [date, date]
 
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
@@ -196,48 +186,109 @@ class AttendanceModel:
                 elif requesting_user.get("commands_team_id"):
                     return []
 
-            query = f"""
-                SELECT 
-                    {grouping_id} as unit_id,
-                    COALESCE({grouping_col}, 'מטה') as unit_name,
-                    COUNT(e.id) as total_count,
-                    COUNT(CASE WHEN st.is_presence = TRUE THEN 1 END) as present_count,
-                    COUNT(CASE WHEN st.is_presence = FALSE THEN 1 END) as absent_count,
-                    COUNT(CASE WHEN al.id IS NULL THEN 1 END) as unknown_count
-                FROM employees e
-                LEFT JOIN teams t ON e.team_id = t.id
-                LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
-                LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
-                -- Current Status Join
-                LEFT JOIN LATERAL (
-                    SELECT status_type_id, id FROM attendance_logs 
-                    WHERE employee_id = e.id {status_condition}
-                    ORDER BY start_datetime DESC, id DESC LIMIT 1
-                ) al ON true
-                LEFT JOIN status_types st ON al.status_type_id = st.id
-                WHERE e.is_active = TRUE 
-                AND e.personal_number != 'admin' 
-                AND e.id != %s
-                AND e.id NOT IN (
-                    SELECT commander_id FROM departments WHERE commander_id IS NOT NULL
-                    UNION 
-                    SELECT commander_id FROM sections WHERE commander_id IS NOT NULL
+            # If days > 1, we calculate average over requested range
+            if days > 1:
+                query = f"""
+                    WITH RECURSIVE date_range AS (
+                        SELECT DATE(%s) as date_val
+                        UNION ALL
+                        SELECT date_val - INTERVAL '1 day'
+                        FROM date_range
+                        WHERE date_val > DATE(%s) - INTERVAL '%s day' + INTERVAL '1 day'
+                    ),
+                    daily_presence AS (
+                        SELECT 
+                            dr.date_val,
+                            {grouping_id} as unit_id,
+                            COALESCE({grouping_col}, 'מטה') as unit_name,
+                            e.id as emp_id,
+                            (
+                                SELECT st.is_presence
+                                FROM attendance_logs al
+                                JOIN status_types st ON al.status_type_id = st.id
+                                WHERE al.employee_id = e.id
+                                AND DATE(al.start_datetime) <= dr.date_val
+                                AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= dr.date_val)
+                                ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
+                            ) as is_present
+                        FROM date_range dr
+                        CROSS JOIN employees e
+                        LEFT JOIN teams t ON e.team_id = t.id
+                        LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                        LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                        WHERE e.is_active = TRUE 
+                        AND e.personal_number != 'admin'
+                        {scoping_clause}
+                        AND e.id != %s
+                        AND e.id NOT IN (
+                            SELECT commander_id FROM departments WHERE commander_id IS NOT NULL
+                            UNION 
+                            SELECT commander_id FROM sections WHERE commander_id IS NOT NULL
+                        )
+                    )
+                    SELECT 
+                        unit_id,
+                        unit_name,
+                        COUNT(DISTINCT emp_id) as total_count,
+                        ROUND(CAST(COUNT(CASE WHEN is_present = TRUE THEN 1 END) AS NUMERIC) / {days}, 1) as present_count,
+                        ROUND(CAST(COUNT(CASE WHEN is_present = FALSE THEN 1 END) AS NUMERIC) / {days}, 1) as absent_count,
+                        ROUND(CAST(COUNT(CASE WHEN is_present IS NULL THEN 1 END) AS NUMERIC) / {days}, 1) as unknown_count
+                    FROM daily_presence
+                    GROUP BY unit_id, unit_name
+                    ORDER BY unit_name
+                """
+                base_date = date if date else "CURRENT_DATE"
+                # Combine params: [date, date, days, requesting_user_id]
+                userId = requesting_user["id"] if requesting_user else None
+                final_params = [base_date, base_date, days, userId] + params
+                cur.execute(query, tuple(final_params))
+            else:
+                # Original Snapshot logic for single day
+                status_condition = (
+                    "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
                 )
-                {scoping_clause}
-                GROUP BY {grouping_id}, {grouping_col}
-                ORDER BY {grouping_col}
-            """
+                status_params = []
+                if date:
+                    status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                    status_params = [date, date]
 
-            # Combine params: status_params + [requesting_user_id] + scoping params
-            userId = requesting_user["id"] if requesting_user else None
-            final_params = status_params + ([userId] if userId else []) + params
-            cur.execute(query, tuple(final_params))
+                query = f"""
+                    SELECT 
+                        {grouping_id} as unit_id,
+                        COALESCE({grouping_col}, 'מטה') as unit_name,
+                        COUNT(e.id) as total_count,
+                        COUNT(CASE WHEN st.is_presence = TRUE THEN 1 END) as present_count,
+                        COUNT(CASE WHEN st.is_presence = FALSE THEN 1 END) as absent_count,
+                        COUNT(CASE WHEN al.id IS NULL THEN 1 END) as unknown_count
+                    FROM employees e
+                    LEFT JOIN teams t ON e.team_id = t.id
+                    LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                    LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    LEFT JOIN LATERAL (
+                        SELECT status_type_id, id FROM attendance_logs 
+                        WHERE employee_id = e.id {status_condition}
+                        ORDER BY start_datetime DESC, id DESC LIMIT 1
+                    ) al ON true
+                    LEFT JOIN status_types st ON al.status_type_id = st.id
+                    WHERE e.is_active = TRUE 
+                    AND e.personal_number != 'admin' 
+                    AND e.id != %s
+                    AND e.id NOT IN (
+                        SELECT commander_id FROM departments WHERE commander_id IS NOT NULL
+                        UNION 
+                        SELECT commander_id FROM sections WHERE commander_id IS NOT NULL
+                    )
+                    {scoping_clause}
+                    GROUP BY {grouping_id}, {grouping_col}
+                    ORDER BY {grouping_col}
+                """
+                userId = requesting_user["id"] if requesting_user else None
+                final_params = status_params + ([userId] if userId else []) + params
+                cur.execute(query, tuple(final_params))
+
             results = cur.fetchall()
-
-            # Add metadata about level
             for r in results:
                 r["level"] = grouping_label
-
             return results
         finally:
             conn.close()
@@ -347,6 +398,7 @@ class AttendanceModel:
                     ORDER BY start_datetime DESC, id DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
+                LEFT JOIN service_types srv ON e.service_type_id = srv.id
                 WHERE e.is_active = TRUE AND e.personal_number != 'admin'
             """
 
@@ -380,6 +432,14 @@ class AttendanceModel:
                 if filters.get("status_id"):
                     query += " AND st.id = %s"
                     params.append(filters["status_id"])
+                if filters.get("serviceTypes"):
+                    srv_list = (
+                        filters["serviceTypes"].split(",")
+                        if isinstance(filters["serviceTypes"], str)
+                        else filters["serviceTypes"]
+                    )
+                    query += " AND srv.name = ANY(%s)"
+                    params.append(srv_list)
 
             # Exclude requesting user (Commander/Admin) from stats
             if requesting_user:

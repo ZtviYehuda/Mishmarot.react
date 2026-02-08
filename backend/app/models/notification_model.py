@@ -137,13 +137,12 @@ class NotificationModel:
                 query += " ORDER BY cs.id"
                 cur.execute(query, params)
                 sick_leave_rows = cur.fetchall()
-                
+
                 # Filter out the requesting user's own sick leave (they know they are sick)
                 sick_employees = [
-                    emp for emp in sick_leave_rows 
-                    if emp['id'] != requesting_user['id']
+                    emp for emp in sick_leave_rows if emp["id"] != requesting_user["id"]
                 ]
-                
+
                 if sick_employees:
                     count = len(sick_employees)
                     # Create a summary description
@@ -153,36 +152,41 @@ class NotificationModel:
                         link = f"/employees/{emp['id']}"
                     else:
                         # List first 3 names
-                        names = [f"{e['first_name']} {e['last_name']}" for e in sick_employees[:3]]
+                        names = [
+                            f"{e['first_name']} {e['last_name']}"
+                            for e in sick_employees[:3]
+                        ]
                         if count > 3:
                             names.append(f"ועוד {count - 3} אחרים")
                         desc = f"ישנם {count} שוטרים במחלה ממושכת: {', '.join(names)}"
-                        link = "/attendance" # General link since it's multiple people
-                        
+                        link = "/attendance"  # General link since it's multiple people
+
                     alerts.append(
                         {
-                            "id": f"sick-summary-{len(sick_employees)}", # Dynamic ID based on count to avoid stale keys if needed, or just 'sick-summary'
+                            "id": f"sick-summary-{len(sick_employees)}",  # Dynamic ID based on count to avoid stale keys if needed, or just 'sick-summary'
                             "type": "danger",
                             "title": f"מחלה ממושכת ({count})",
                             "description": desc,
                             "link": link,
                             "data": {
-                                "employee_ids": [e['id'] for e in sick_employees],
+                                "employee_ids": [e["id"] for e in sick_employees],
                                 "sick_employees": [
                                     {
-                                        "id": e['id'],
-                                        "first_name": e['first_name'],
-                                        "last_name": e['last_name'],
-                                        "days_sick": e['days_sick'],
-                                        "start_date": e['effective_start'].isoformat() if e['effective_start'] else None
+                                        "id": e["id"],
+                                        "first_name": e["first_name"],
+                                        "last_name": e["last_name"],
+                                        "days_sick": e["days_sick"],
+                                        "start_date": (
+                                            e["effective_start"].isoformat()
+                                            if e["effective_start"]
+                                            else None
+                                        ),
                                     }
                                     for e in sick_employees
-                                ]
-                            }
+                                ],
+                            },
                         }
                     )
-
-
 
             # 4. Check for Internal Messages
             query_msgs = """
@@ -213,7 +217,108 @@ class NotificationModel:
                     }
                 )
 
-            return alerts
+            # 5. Check for Missed Birthdays (Shabbat & Holidays)
+            # Logic: Has birthday in last 3 days (Fri/Sat/Holiday) AND no message sent in last 7 days
+            if requesting_user.get("is_commander") or requesting_user.get("is_admin"):
+                # Simplified check: Employees with birthday in last few days who haven't received a message recently
+                query_bday = """
+                    SELECT id, first_name, last_name, birth_date, phone_number, last_birthday_message_sent
+                    FROM employees
+                    WHERE is_active = TRUE
+                    AND birth_date IS NOT NULL
+                    AND (
+                        -- Check for recent birthdays (last 3 days)
+                        (
+                            EXTRACT(MONTH FROM birth_date) = EXTRACT(MONTH FROM CURRENT_DATE - INTERVAL '1 day')
+                            AND EXTRACT(DAY FROM birth_date) = EXTRACT(DAY FROM CURRENT_DATE - INTERVAL '1 day')
+                        ) OR (
+                            EXTRACT(MONTH FROM birth_date) = EXTRACT(MONTH FROM CURRENT_DATE - INTERVAL '2 days')
+                            AND EXTRACT(DAY FROM birth_date) = EXTRACT(DAY FROM CURRENT_DATE - INTERVAL '2 days')
+                        ) OR (
+                            EXTRACT(MONTH FROM birth_date) = EXTRACT(MONTH FROM CURRENT_DATE - INTERVAL '3 days')
+                            AND EXTRACT(DAY FROM birth_date) = EXTRACT(DAY FROM CURRENT_DATE - INTERVAL '3 days')
+                        )
+                    )
+                    AND (
+                        last_birthday_message_sent IS NULL 
+                        OR last_birthday_message_sent < CURRENT_DATE - INTERVAL '7 days'
+                    )
+                """
+                params_bday = []
+
+                if not requesting_user.get("is_admin"):
+                    # Add scope filters
+                    scope_filter = ""
+                    if requesting_user.get("commands_department_id"):
+                        scope_filter = " AND (department_id = %s OR department_id_direct = %s)"  # Pseudocode, adjust to actual column names
+                        # Actually let's reuse earlier join logic or keep it simple if IDs are direct
+                        pass
+
+                # Re-using the robust query structure
+                # Let's use a simpler approach: fetch potential candidates and filter in python for complex holiday logic?
+                # Or just use the simple SQL logic: Birthday was recently, message wasn't sent.
+                # The user asked specifically about Shabbat/Holydays.
+                # A general "Recent Missed Birthday" alert covers this.
+
+                # Let's refine the query to join structure for scoping
+                query_bday = """
+                    SELECT e.id, e.first_name, e.last_name, e.birth_date, e.phone_number
+                    FROM employees e
+                    LEFT JOIN teams t ON e.team_id = t.id
+                    LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                    LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    WHERE e.is_active = TRUE
+                    AND e.birth_date IS NOT NULL
+                    AND (
+                       -- Birthday within last 3 days
+                       to_char(e.birth_date, 'MM-DD') IN (
+                           to_char(CURRENT_DATE - INTERVAL '1 day', 'MM-DD'),
+                           to_char(CURRENT_DATE - INTERVAL '2 days', 'MM-DD'),
+                           to_char(CURRENT_DATE - INTERVAL '3 days', 'MM-DD')
+                       )
+                    )
+                    AND (
+                        e.last_birthday_message_sent IS NULL 
+                        OR e.last_birthday_message_sent < CURRENT_DATE - INTERVAL '30 days' -- Message not sent this year/month
+                    )
+                    AND e.id != %s
+                """
+                params_bday = [requesting_user["id"]]
+
+                if not requesting_user.get("is_admin"):
+                    if requesting_user.get("commands_department_id"):
+                        query_bday += " AND d.id = %s"
+                        params_bday.append(requesting_user["commands_department_id"])
+                    elif requesting_user.get("commands_section_id"):
+                        query_bday += " AND s.id = %s"
+                        params_bday.append(requesting_user["commands_section_id"])
+                    elif requesting_user.get("commands_team_id"):
+                        query_bday += " AND t.id = %s"
+                        params_bday.append(requesting_user["commands_team_id"])
+
+                cur.execute(query_bday, params_bday)
+                missed_bdays = cur.fetchall()
+
+                if missed_bdays:
+                    count = len(missed_bdays)
+                    desc = f"ישנם {count} שוטרים עם ימי הולדת מהימים האחרונים שטרם קיבלו ברכה"
+                    if count == 1:
+                        desc = f"השוטר/ת {missed_bdays[0]['first_name']} {missed_bdays[0]['last_name']} חגג/ה יום הולדת לאחרונה"
+
+                    alerts.append(
+                        {
+                            "id": "missed-birthdays",
+                            "type": "info",
+                            "title": "🎁 ימי הולדת שפוספסו",
+                            "description": desc,
+                            "link": "/",  # Opens dashboard where birthdays card is
+                            "data": {
+                                "missed_birthdays": [
+                                    dict(row) for row in missed_bdays
+                                ]  # Pass data for frontend processing if needed
+                            },
+                        }
+                    )
         finally:
             conn.close()
 

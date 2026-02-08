@@ -8,3 +8,5 @@ export const EMPLOYEES_EXPORT_ENDPOINT = "/employees/export";
 export const getEmployeeByIdEndpoint = (id: number) => `/employees/${id}`;
 export const updateEmployeeEndpoint = (id: number) => `/employees/${id}`;
 export const deleteEmployeeEndpoint = (id: number) => `/employees/${id}`;
+export const markBirthdaySentEndpoint = (id: number) =>
+  `/employees/${id}/birthday-sent`;

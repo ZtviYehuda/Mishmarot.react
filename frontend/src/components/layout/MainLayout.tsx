@@ -1,7 +1,6 @@
 import React from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import {
   LayoutDashboard,
@@ -13,8 +12,6 @@ import {
   Menu,
   X,
   ShieldCheck,
-  Sun,
-  Moon,
   Bell,
   CheckCircle2,
   AlertTriangle,
@@ -35,6 +32,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ImpersonationBanner } from "./ImpersonationBanner";
+import { ThemeToggle } from "./ThemeToggle";
 import { InternalMessageDialog } from "@/components/dashboard/InternalMessageDialog";
 import { SickLeaveDetailsDialog } from "@/components/dashboard/SickLeaveDetailsDialog";
 import { toast } from "sonner";
@@ -44,7 +42,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -105,7 +102,7 @@ function getAlertConfig(alert: {
 
 export default function MainLayout() {
   const { user, logout } = useAuthContext();
-  const { theme, toggleTheme } = useTheme();
+
   const {
     alerts,
     history,
@@ -121,40 +118,27 @@ export default function MainLayout() {
   } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
-  // Sidebar closed by default on mobile, open on desktop
-  // Initialize sidebar state based on window width to prevent layout shift on load
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(() =>
-    typeof window !== "undefined" ? window.innerWidth >= 1024 : false,
-  );
+  // Sidebar closed by default on mobile and desktop
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [notificationTab, setNotificationTab] = React.useState<
     "active" | "history"
   >("active");
   const [msgDialogOpen, setMsgDialogOpen] = React.useState(false);
   const [selectedAlert, setSelectedAlert] = React.useState<any>(null);
-  const [criticalAlert, setCriticalAlert] = React.useState<any>(null);
   const [msgRecipient, setMsgRecipient] = React.useState<{
     id: number;
     name: string;
   } | null>(null);
 
-  const [adminMissingAlerts, setAdminMissingAlerts] = React.useState<any[]>([]);
   const [sickModalOpen, setSickModalOpen] = React.useState(false);
   const [sickEmployees, setSickEmployees] = React.useState<any[]>([]);
 
   // Check for critical morning alerts
   React.useEffect(() => {
     if (!user) return;
-    const morningAlert = alerts.find(
-      (a) =>
-        a.id.startsWith("missing-") &&
-        (a as any).data?.commander_id === user.id,
-    );
-    if (morningAlert) {
-      setCriticalAlert(morningAlert);
-    } else {
-      setCriticalAlert(null);
-    }
+    // logic removed for specific critical alert state as it was unused
   }, [alerts, user]);
+
   const [msgDefaults, setMsgDefaults] = React.useState({
     title: "",
     description: "",
@@ -178,19 +162,12 @@ export default function MainLayout() {
     });
   }, [alerts, user]);
 
-  // Auto-open sidebar on desktop (lg breakpoint)
+  // Handle window resize - keep closed by default unless user interacts
   React.useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsSidebarOpen(true);
-      } else {
-        setIsSidebarOpen(false);
-      }
+      // Logic removed to enforce "default closed" behavior requested by user
+      // Sidebar will stay in whatever state the user left it, or default to false on load
     };
-
-    // Set initial state
-    handleResize();
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -211,15 +188,26 @@ export default function MainLayout() {
       {/* Sidebar - Official White Style */}
       <aside
         className={cn(
-          "bg-card border-l border-border flex flex-col z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] fixed lg:sticky top-0 h-screen overflow-hidden",
+          "bg-card border-l border-border flex flex-col z-[100] shadow-[4px_0_24px_rgba(0,0,0,0.02)] fixed lg:sticky top-0 h-[100dvh] overflow-hidden transition-all duration-300 ease-in-out",
           isSidebarOpen
             ? "w-64 translate-x-0"
-            : "w-0 lg:w-16 -translate-x-full lg:translate-x-0",
+            : "w-0 lg:w-20 -translate-x-full lg:translate-x-0",
         )}
       >
         {/* Sidebar Header */}
-        <div className="h-16 sm:h-20 flex items-center px-4 border-b border-border/50 justify-between">
-          <div className="flex items-center gap-3 overflow-hidden text-right">
+        <div
+          className={cn(
+            "h-20 flex items-center border-b border-border/50 transition-all duration-300",
+            isSidebarOpen ? "px-4 justify-between" : "justify-center",
+          )}
+        >
+          <div
+            className={cn(
+              "flex items-center gap-3 overflow-hidden transition-all duration-300",
+              isSidebarOpen ? "w-auto text-right" : "w-full justify-center",
+            )}
+            onDoubleClick={() => setIsSidebarOpen(true)}
+          >
             <div className="w-10 h-10 flex items-center justify-center shrink-0">
               <img
                 src="/organization-logo.jpg"
@@ -236,13 +224,18 @@ export default function MainLayout() {
                 <ShieldCheck className="w-5 h-5 text-primary-foreground" />
               </div>
             </div>
-            {isSidebarOpen && (
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1">
-                  פורטל יחידה
-                </span>
-              </div>
-            )}
+            <div
+              className={cn(
+                "flex flex-col transition-all duration-300",
+                isSidebarOpen
+                  ? "opacity-100 w-auto"
+                  : "opacity-0 w-0 overflow-hidden",
+              )}
+            >
+              <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1 whitespace-nowrap">
+                פורטל יחידה
+              </span>
+            </div>
           </div>
           {/* Close button for mobile sidebar */}
           <button
@@ -263,15 +256,15 @@ export default function MainLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => {
-                  if (window.innerWidth < 1024) setIsSidebarOpen(false);
-                }}
+                onClick={() => setIsSidebarOpen(false)}
+                onDoubleClick={() => setIsSidebarOpen(true)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative overflow-hidden select-none",
                   isActive
                     ? "bg-primary/10 text-primary font-bold"
                     : "text-muted-foreground hover:bg-muted hover:text-primary",
                 )}
+                title={!isSidebarOpen ? item.name : undefined}
               >
                 <Icon
                   className={cn(
@@ -279,15 +272,21 @@ export default function MainLayout() {
                     isActive
                       ? "text-primary"
                       : "text-muted-foreground group-hover:text-primary",
+                    !isSidebarOpen && "mx-auto",
                   )}
                 />
-                {(isSidebarOpen || window.innerWidth < 1024) && (
-                  <span className="text-sm font-bold tracking-tight truncate flex-1 text-right">
-                    {item.name}
-                  </span>
-                )}
+                <span
+                  className={cn(
+                    "text-sm font-bold tracking-tight truncate flex-1 text-right transition-all duration-300",
+                    isSidebarOpen
+                      ? "opacity-100 translate-x-0"
+                      : "opacity-0 translate-x-10 absolute right-12 w-0",
+                  )}
+                >
+                  {item.name}
+                </span>
                 {isActive && (
-                  <div className="absolute left-1 w-1 h-5 bg-primary rounded-full" />
+                  <div className="absolute left-1 w-1 h-5 bg-primary rounded-full transition-opacity duration-300" />
                 )}
               </Link>
             );
@@ -297,54 +296,50 @@ export default function MainLayout() {
         {/* Sidebar Footer */}
         <div className="p-3 border-t border-border/50 space-y-3">
           {/* User Profile Area */}
-          {isSidebarOpen ? (
-            <Link
-              to={`/settings`}
-              onClick={() => {
-                if (window.innerWidth < 1024) setIsSidebarOpen(false);
-              }}
-              className="flex items-center gap-3 p-2 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors"
-            >
-              <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-primary font-black text-[10px] shrink-0">
-                {user?.first_name?.[0]}
-                {user?.last_name?.[0]}
-              </div>
-              <div className="flex flex-col min-w-0 text-right">
-                <span className="text-xs font-black text-foreground truncate leading-none mb-1">
-                  {user?.first_name} {user?.last_name}
-                </span>
-                <span className="text-[9px] font-bold text-muted-foreground truncate uppercase tracking-tighter">
-                  {user?.is_admin ? "Administrator" : "Commander"}
-                </span>
-              </div>
-            </Link>
-          ) : (
-            <Link
-              to={`/settings`}
-              className="flex justify-center transition-transform hover:scale-105"
-            >
-              <div className="w-9 h-9 rounded-full bg-muted/30 border border-border/50 flex items-center justify-center text-primary font-black text-[10px] shadow-sm">
-                {user?.first_name?.[0]}
-              </div>
-            </Link>
-          )}
-          {/* Quick Actions Row */}
-          <div className="flex items-center gap-1.5 px-0.5">
-            <button
-              onClick={toggleTheme}
-              title={theme === "dark" ? "Light Mode" : "Dark Mode"}
-              className="flex-grow h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-primary transition-all border border-transparent hover:border-border"
-            >
-              {theme === "dark" ? (
-                <Sun className="w-4 h-4" />
-              ) : (
-                <Moon className="w-4 h-4" />
+          <Link
+            to={`/settings`}
+            onClick={() => setIsSidebarOpen(false)}
+            onDoubleClick={() => setIsSidebarOpen(true)}
+            className={cn(
+              "flex items-center gap-3 rounded-xl transition-all select-none",
+              isSidebarOpen
+                ? "p-2 bg-muted/30 border border-border/50 hover:bg-muted/50"
+                : "justify-center p-0 border-0 hover:scale-105",
+            )}
+          >
+            <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-primary font-black text-[10px] shrink-0 shadow-sm">
+              {user?.first_name?.[0]}
+              {user?.last_name?.[0]}
+            </div>
+            <div
+              className={cn(
+                "flex flex-col min-w-0 text-right transition-all duration-300",
+                isSidebarOpen
+                  ? "opacity-100 w-auto"
+                  : "opacity-0 w-0 overflow-hidden",
               )}
-            </button>
+            >
+              <span className="text-xs font-black text-foreground truncate leading-none mb-1">
+                {user?.first_name} {user?.last_name}
+              </span>
+              <span className="text-[9px] font-bold text-muted-foreground truncate uppercase tracking-tighter">
+                {user?.is_admin ? "Administrator" : "Commander"}
+              </span>
+            </div>
+          </Link>
+
+          {/* Quick Actions Row */}
+          <div
+            className={cn(
+              "flex items-center gap-1.5",
+              isSidebarOpen ? "px-0.5" : "flex-col",
+            )}
+          >
+            <ThemeToggle collapsed={!isSidebarOpen} />
             <button
               onClick={() => logout()}
               title="Logout"
-              className="flex-grow h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all border border-transparent hover:border-destructive/20"
+              className="flex-grow w-full h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all border border-transparent hover:border-destructive/20"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -355,13 +350,21 @@ export default function MainLayout() {
       {/* Mobile Backdrop Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[90] lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Main Content Area */}
-      <div className="flex-grow flex flex-col min-w-0">
+      <div
+        className="flex-grow flex flex-col min-w-0"
+        onClick={() => {
+          // Close sidebar when clicking main content on desktop if it's open
+          if (isSidebarOpen && window.innerWidth >= 1024) {
+            setIsSidebarOpen(false);
+          }
+        }}
+      >
         <header className="h-20 bg-card border-b border-border px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-none flex-none">
           <div className="flex items-center gap-2 lg:gap-4 flex-1">
             <button
@@ -393,7 +396,7 @@ export default function MainLayout() {
                   {location.pathname === "/"
                     ? "לוח בקרה מרכזי"
                     : navItems.find((n) => n.path === location.pathname)
-                      ?.name || "דף מערכת"}
+                        ?.name || "דף מערכת"}
                 </h2>
               </div>
 
@@ -540,7 +543,9 @@ export default function MainLayout() {
                                       alertData: (alert as any).data,
                                     },
                                   });
-                                } else if ((alert as any).data?.sick_employees) {
+                                } else if (
+                                  (alert as any).data?.sick_employees
+                                ) {
                                   setSickEmployees(
                                     (alert as any).data.sick_employees,
                                   );
@@ -593,7 +598,7 @@ export default function MainLayout() {
                               {isMorningReport &&
                                 (alert as any).data?.commander_id &&
                                 user?.id !==
-                                (alert as any).data.commander_id && (
+                                  (alert as any).data.commander_id && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -619,7 +624,7 @@ export default function MainLayout() {
                               {isMorningReport &&
                                 (alert as any).data?.commander_phone &&
                                 user?.id !==
-                                (alert as any).data.commander_id && (
+                                  (alert as any).data.commander_id && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -807,7 +812,7 @@ export default function MainLayout() {
         {/* Content Page */}
         <main className="p-3 sm:p-4 lg:p-6 xl:p-8 flex-grow overflow-auto bg-background">
           <div className="w-full max-w-full">
-            <Outlet />
+            <Outlet context={{ isSidebarOpen }} />
           </div>
         </main>
         {/* Impersonation Banner */}
@@ -839,9 +844,9 @@ export default function MainLayout() {
                   style={
                     selectedAlert
                       ? {
-                        backgroundColor: getAlertConfig(selectedAlert).bg,
-                        color: getAlertConfig(selectedAlert).color,
-                      }
+                          backgroundColor: getAlertConfig(selectedAlert).bg,
+                          color: getAlertConfig(selectedAlert).color,
+                        }
                       : {}
                   }
                 >
