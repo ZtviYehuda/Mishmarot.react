@@ -19,6 +19,8 @@ interface BirthdayEmployee {
   last_name: string;
   birth_date?: string | null;
   phone_number?: string;
+  day: number;
+  month: number;
 }
 
 interface BirthdayGreetingsModalProps {
@@ -70,13 +72,9 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
   const [viewMode, setViewMode] = useState<"today" | "week">("today");
 
   // Filter employees for "Today"
-  const employeesToday = (weeklyBirthdays || []).filter((emp) => {
-    if (!emp.birth_date) return false;
-    const date = new Date(emp.birth_date);
+  const employeesToday = (weeklyBirthdays || []).filter((emp: any) => {
     const today = new Date();
-    return (
-      date.getDate() === today.getDate() && date.getMonth() === today.getMonth()
-    );
+    return emp.day === today.getDate() && emp.month === today.getMonth() + 1;
   });
 
   const displayedEmployees =
@@ -297,10 +295,10 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
             ) : (
               displayedEmployees.map((emp) => {
                 const isSent = sentList.includes(emp.id);
-                const birthDate = new Date(emp.birth_date || "");
+                const today = new Date();
                 const isToday =
-                  birthDate.getDate() === new Date().getDate() &&
-                  birthDate.getMonth() === new Date().getMonth();
+                  emp.day === today.getDate() &&
+                  emp.month === today.getMonth() + 1;
 
                 return (
                   <div
@@ -327,10 +325,7 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                         )}
                         {!isToday && viewMode === "week" && (
                           <span className="text-[9px] text-muted-foreground font-bold">
-                            {birthDate.toLocaleDateString("he-IL", {
-                              day: "numeric",
-                              month: "numeric",
-                            })}
+                            {emp.day}/{emp.month}
                           </span>
                         )}
                       </div>

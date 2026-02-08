@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { EmployeesChart } from "@/components/dashboard/EmployeesChart";
 import { BirthdaysCard } from "@/components/dashboard/BirthdaysCard";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/employee.types";
+import { ReportHub } from "@/components/dashboard/ReportHub";
 
 interface Team {
   id: number;
@@ -46,6 +47,12 @@ import { DateHeader } from "@/components/common/DateHeader";
 export default function DashboardPage() {
   const { user } = useAuthContext();
   const { selectedDate } = useDateContext();
+
+  // Refs for reports
+  const snapshotRef = useRef<any>(null);
+  const trendRef = useRef<any>(null);
+  const comparisonRef = useRef<any>(null);
+  const birthdaysRef = useRef<any>(null);
   const {
     employees, // Get employees from hook
     getStructure,
@@ -201,24 +208,54 @@ export default function DashboardPage() {
     const fetchComparison = async () => {
       setLoadingExtras(true);
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
-      const compData = await getComparisonStats(formattedDate, comparisonRange);
+      const compData = await getComparisonStats(formattedDate, comparisonRange, {
+        department_id: selectedDeptId,
+        section_id: selectedSectionId,
+        team_id: selectedTeamId,
+        status_id: selectedStatusData?.id?.toString(),
+        serviceTypes: selectedServiceTypes.join(","),
+      });
       setComparisonStats(compData);
       setLoadingExtras(false);
     };
     fetchComparison();
-  }, [getComparisonStats, selectedDate, comparisonRange]);
+  }, [
+    getComparisonStats,
+    selectedDate,
+    comparisonRange,
+    selectedDeptId,
+    selectedSectionId,
+    selectedTeamId,
+    selectedStatusData,
+    selectedServiceTypes,
+  ]);
 
   // Fetch Trend Stats
   useEffect(() => {
     const fetchTrend = async () => {
       setLoadingTrend(true);
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
-      const trendData = await getTrendStats(trendRange, formattedDate);
+      const trendData = await getTrendStats(trendRange, formattedDate, {
+        department_id: selectedDeptId,
+        section_id: selectedSectionId,
+        team_id: selectedTeamId,
+        status_id: selectedStatusData?.id?.toString(),
+        serviceTypes: selectedServiceTypes.join(","),
+      });
       setTrendStats(trendData);
       setLoadingTrend(false);
     };
     fetchTrend();
-  }, [getTrendStats, selectedDate, trendRange]);
+  }, [
+    getTrendStats,
+    selectedDate,
+    trendRange,
+    selectedDeptId,
+    selectedSectionId,
+    selectedTeamId,
+    selectedStatusData,
+    selectedServiceTypes,
+  ]);
 
   // Fetch active statuses
   useEffect(() => {
@@ -352,7 +389,7 @@ export default function DashboardPage() {
   const isReportedToday =
     currentUserEmp?.last_status_update &&
     new Date(currentUserEmp.last_status_update).toDateString() ===
-      selectedDate.toDateString();
+    selectedDate.toDateString();
 
   // Comparison Matrix: Admin, Dept Commander, Section Commander (Hide for Team Commander)
   const showComparisonMatrix = useMemo(() => {
@@ -474,6 +511,12 @@ export default function DashboardPage() {
         badge={
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full lg:w-auto">
             <DateHeader className="w-full justify-end lg:justify-start" />
+            <ReportHub
+              onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
+              onShareTrend={() => trendRef.current?.share()}
+              onShareComparison={() => comparisonRef.current?.share()}
+              onShareBirthdays={() => birthdaysRef.current?.share()}
+            />
             <Button
               variant={isReportedToday ? "default" : "outline"}
               size="sm"
@@ -503,91 +546,94 @@ export default function DashboardPage() {
         }}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 items-start">
-        {/* Main Section - Takes 2 columns on desktop */}
-        <div className="xl:col-span-2 space-y-6">
-          {/* Top Row: Filters & Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-            {/* Filter Column (Desktop Only) */}
-            <div className="hidden lg:flex flex-col">
-              <DashboardFilters
-                structure={structure}
-                statuses={allStatuses}
-                selectedDeptId={selectedDeptId}
-                selectedSectionId={selectedSectionId}
-                selectedTeamId={selectedTeamId}
-                selectedStatusId={selectedStatusData?.id?.toString()}
-                serviceTypes={serviceTypes}
-                selectedServiceTypes={selectedServiceTypes}
-                onFilterChange={handleFilterChange}
-                canSelectDept={canSelectDept}
-                canSelectSection={canSelectSection}
-                canSelectTeam={canSelectTeam}
-              />
-            </div>
-
-            {/* Chart Column */}
-            <div className="flex flex-col">
-              <EmployeesChart
-                stats={stats}
-                loading={loading}
-                onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
-                onStatusClick={handleStatusClick}
-                onFilterClick={() => setFilterOpen(true)}
-                title={chartTitle}
-                description={chartDescription}
-              />
-            </div>
-          </div>
-
-          {/* Mobile Only: Birthdays (Under Graph) */}
-          <div className="xl:hidden">
-            <BirthdaysCard birthdays={birthdays} />
-          </div>
-
-          <div id="status-details-table">
-            <DashboardStatusTable
-              statusId={selectedStatusData?.id || null}
-              statusName={selectedStatusData?.name || ""}
-              statusColor={selectedStatusData?.color || ""}
-              departmentId={selectedDeptId}
-              sectionId={selectedSectionId}
-              teamId={selectedTeamId}
-              date={format(selectedDate, "yyyy-MM-dd")}
-              serviceTypes={selectedServiceTypes}
+      <div className="space-y-6">
+        {/* Top Section: Filters, Main Chart & Birthdays (Desktop) */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 items-stretch">
+          {/* Filters - Always visible on desktop XL, or inside mobile dialog */}
+          <div className="hidden lg:flex flex-col xl:col-span-1">
+            <DashboardFilters
+              structure={structure}
+              statuses={allStatuses}
+              selectedDeptId={selectedDeptId}
+              selectedSectionId={selectedSectionId}
+              selectedTeamId={selectedTeamId}
+              selectedStatusId={selectedStatusData?.id?.toString()}
+              serviceTypes={serviceTypes}
+              selectedServiceTypes={selectedServiceTypes}
+              onFilterChange={handleFilterChange}
+              canSelectDept={canSelectDept}
+              canSelectSection={canSelectSection}
+              canSelectTeam={canSelectTeam}
             />
           </div>
 
-          {/* Widgets Row */}
-          {(showComparisonMatrix || showTrendGraph) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {showComparisonMatrix && (
-                <StatsComparisonCard
-                  data={comparisonStats}
-                  loading={loadingExtras}
-                  days={comparisonRange}
-                  onDaysChange={setComparisonRange}
-                  onShare={() => setWhatsAppDialogOpen(true)}
-                />
-              )}
-              {showTrendGraph && (
-                <AttendanceTrendCard
-                  data={trendStats}
-                  loading={loadingTrend}
-                  range={trendRange}
-                  onRangeChange={setTrendRange}
-                  onOpenReport={() => setWhatsAppDialogOpen(true)}
-                  className={!showComparisonMatrix ? "md:col-span-2" : ""}
-                />
-              )}
-            </div>
-          )}
+          {/* Main Attendance Chart */}
+          <div className="flex flex-col xl:col-span-1">
+            <EmployeesChart
+              ref={snapshotRef}
+              stats={stats}
+              loading={loading}
+              onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
+              onStatusClick={handleStatusClick}
+              onFilterClick={() => setFilterOpen(true)}
+              title={chartTitle}
+              description={chartDescription}
+            />
+          </div>
+
+          {/* Birthdays (Desktop Version) */}
+          <div className="hidden xl:flex flex-col xl:col-span-1">
+            <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} />
+          </div>
         </div>
 
-        {/* Desktop Only: Birthdays (Side Column) */}
-        <div className="hidden xl:block xl:col-span-1">
-          <BirthdaysCard birthdays={birthdays} />
+        {/* Mobile/Tablet Only: Birthdays (When not in top row) */}
+        <div className="xl:hidden">
+          <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} />
         </div>
+
+        {/* Middle Section: Status Details Table (Full Width) */}
+        <div id="status-details-table" className="w-full">
+          <DashboardStatusTable
+            statusId={selectedStatusData?.id || null}
+            statusName={selectedStatusData?.name || ""}
+            statusColor={selectedStatusData?.color || ""}
+            departmentId={selectedDeptId}
+            sectionId={selectedSectionId}
+            teamId={selectedTeamId}
+            date={format(selectedDate, "yyyy-MM-dd")}
+            serviceTypes={selectedServiceTypes}
+          />
+        </div>
+
+        {/* Bottom Section: Wider Comparison & Trend Charts */}
+        {(showComparisonMatrix || showTrendGraph) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {showComparisonMatrix && (
+              <StatsComparisonCard
+                ref={comparisonRef}
+                data={comparisonStats}
+                loading={loadingExtras}
+                days={comparisonRange}
+                onDaysChange={setComparisonRange}
+                unitName={unitName}
+                subtitle={chartDescription}
+              />
+            )}
+            {showTrendGraph && (
+              <AttendanceTrendCard
+                ref={trendRef}
+                data={trendStats}
+                loading={loadingTrend}
+                range={trendRange}
+                onRangeChange={setTrendRange}
+                unitName={unitName}
+                subtitle={chartDescription}
+                className={!showComparisonMatrix ? "md:col-span-2" : ""}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       <WhatsAppReportDialog
@@ -628,8 +674,8 @@ export default function DashboardPage() {
           // efficient refresh?
           window.location.reload();
         }}
-        // The modal logic requires `employees` array to function.
-        // I need to fetch the specific missing employees to pass them.
+      // The modal logic requires `employees` array to function.
+      // I need to fetch the specific missing employees to pass them.
       />
 
       {selectedSelfEmp && (

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
 import {
   Card,
   CardContent,
@@ -7,9 +7,11 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter } from "lucide-react";
+import { Filter, Download } from "lucide-react";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { toPng } from "html-to-image";
+import { toast } from "sonner";
 
 interface EmployeesChartProps {
   stats: {
@@ -26,15 +28,55 @@ interface EmployeesChartProps {
   description?: string;
 }
 
-export const EmployeesChart = ({
-  stats,
-  loading = false,
-  onOpenWhatsAppReport,
-  onStatusClick,
-  onFilterClick,
-  title = "מצבת כוח אדם",
-  description = "סטטוס נוכחות בזמן אמת",
-}: EmployeesChartProps) => {
+export const EmployeesChart = forwardRef<any, EmployeesChartProps>((
+  {
+    stats,
+    loading = false,
+    onOpenWhatsAppReport,
+    onStatusClick,
+    onFilterClick,
+    title = "מצבת כוח אדם",
+    description = "סטטוס נוכחות בזמן אמת",
+  },
+  ref
+) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    download: handleDownload,
+  }));
+
+  const handleDownload = async () => {
+    if (!cardRef.current) return;
+
+    try {
+      const dataUrl = await toPng(cardRef.current, {
+        backgroundColor: "white",
+        style: {
+          borderRadius: "0",
+        },
+        filter: (node) => {
+          if (
+            node instanceof HTMLElement &&
+            node.classList.contains("no-export")
+          ) {
+            return false;
+          }
+          return true;
+        },
+      });
+
+      const link = document.createElement("a");
+      link.download = `attendance-snapshot-${new Date().getTime()}.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("גרף הורד בהצלחה");
+    } catch (err) {
+      console.error("Download failed", err);
+      toast.error("שגיאה בהורדת הגרף");
+    }
+  };
+
   // Process stats into chart data
   const { chartData, total } = useMemo(() => {
     if (!stats || stats.length === 0) return { chartData: [], total: 0 };
@@ -184,8 +226,12 @@ export const EmployeesChart = ({
   }
 
   return (
-    <Card className="border border-border shadow-sm bg-card h-full">
-      <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+    <Card
+      ref={cardRef}
+      id="attendance-snapshot-card"
+      className="border border-border shadow-sm flex flex-col bg-card overflow-hidden h-full"
+    >
+      <CardHeader className="pb-3 border-b border-border/40 mb-2">
         <div className="space-y-2">
           <div className="flex flex-row items-center justify-between gap-2">
             <div className="flex-1 min-w-0 text-right">
@@ -193,26 +239,37 @@ export const EmployeesChart = ({
                 {title}
               </CardTitle>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1.5 no-export">
               {/* Filter Button (Mobile Only) */}
               {onFilterClick && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={onFilterClick}
-                  className="lg:hidden w-8 h-8 p-0 rounded-xl bg-background hover:bg-muted border-dashed border-primary/30 text-primary"
+                  className="lg:hidden h-8 w-8 p-0 rounded-lg bg-background hover:bg-muted border-primary/20 text-primary shadow-sm"
                   title="סינון נתונים"
                 >
                   <Filter className="w-4 h-4" />
                 </Button>
               )}
 
+              {/* Download Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-primary rounded-lg transition-all"
+                onClick={handleDownload}
+                title="הורדה כתמונה"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+
               {/* WhatsApp Button */}
               {onOpenWhatsAppReport && (
                 <WhatsAppButton
                   onClick={onOpenWhatsAppReport}
-                  className="h-8 text-xs px-2 sm:px-3"
-                  label="WhatsApp"
+                  variant="outline"
+                  className="h-8 w-8 p-0 rounded-lg border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
                   skipDirectLink={true}
                 />
               )}
@@ -289,4 +346,4 @@ export const EmployeesChart = ({
       </CardContent>
     </Card>
   );
-};
+});

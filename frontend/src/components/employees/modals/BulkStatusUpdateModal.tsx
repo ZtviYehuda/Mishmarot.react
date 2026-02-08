@@ -315,7 +315,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
       onOpenChange={(v) => (!v ? handleCloseAttempt() : onOpenChange(v))}
     >
       <DialogContent
-        className="max-w-[100vw] sm:max-w-7xl h-[100dvh] sm:h-[90vh] p-0 overflow-hidden sm:rounded-3xl border-none bg-card shadow-2xl flex flex-col"
+        className="max-w-[100vw] sm:max-w-7xl p-0 border-none bg-card shadow-2xl flex flex-col"
         dir="rtl"
       >
         <DialogHeader className="px-6 py-4 border-b bg-muted/10 text-right shrink-0 relative">
@@ -429,7 +429,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             "transition-all hover:bg-muted/40 border-b last:border-0",
                             isSelected && "bg-primary/5 hover:bg-primary/10",
                             current?.isChanged &&
-                              "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
+                            "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
                           )}
                         >
                           <TableCell className="text-center px-2 py-4 align-middle">
@@ -607,8 +607,8 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                           ? "border-primary bg-primary/5 shadow-sm"
                           : "border-border bg-card",
                         current?.isChanged &&
-                          !isSelected &&
-                          "border-blue-200 bg-blue-50/30",
+                        !isSelected &&
+                        "border-blue-200 bg-blue-50/30",
                       )}
                     >
                       <div className="p-4 space-y-4">

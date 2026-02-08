@@ -5,7 +5,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-interface WhatsAppButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface WhatsAppButtonProps extends React.ComponentProps<typeof Button> {
     message?: string; // The text message to send
     phoneNumber?: string; // Target phone number (optional)
     label?: string; // Button text
@@ -17,37 +17,35 @@ interface WhatsAppButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
 export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
     message = "",
     phoneNumber = "",
-    label = "WhatsApp",
+    label = "",
     isLoading = false,
     className,
     onBeforeSend,
     skipDirectLink = false,
     onClick,
     disabled,
+    variant,
+    size,
     ...props
 }) => {
 
     const handleSend = async (e: React.MouseEvent<HTMLButtonElement>) => {
-        // Execute custom click handler if provided
+        // ... (unchanged)
         if (onClick) {
             onClick(e);
         }
 
-        // Execute async preparation logic
         if (onBeforeSend) {
             await onBeforeSend();
         }
 
-        // If we simply wanted to trigger an action (like opening a modal), stop here
         if (skipDirectLink) return;
 
         try {
-            // Prepare message
             const encodedMessage = encodeURIComponent(message);
             let url = "";
 
             if (phoneNumber && phoneNumber.trim()) {
-                // Format phone number
                 let formattedPhone = phoneNumber.replace(/\D/g, "");
                 if (!formattedPhone.startsWith("972") && !formattedPhone.startsWith("1")) {
                     if (formattedPhone.startsWith("0")) formattedPhone = "972" + formattedPhone.substring(1);
@@ -55,18 +53,15 @@ export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
                 }
                 url = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
             } else {
-                // General link (opens WA Web/App to select contact)
                 url = `https://wa.me/?text=${encodedMessage}`;
             }
 
-            // Copy to clipboard as fallback/bonus
             try {
                 await navigator.clipboard.writeText(message);
             } catch (err) {
                 console.error("Clipboard copy failed", err);
             }
 
-            // Open WhatsApp
             window.open(url, "_blank");
             toast.success("Opening WhatsApp...");
 
@@ -76,12 +71,20 @@ export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
         }
     };
 
+    const isCustomVariant = variant && variant !== "default";
+    const defaultClasses = cn(
+        "bg-[#25D366] hover:bg-[#128C7E] text-white font-bold transition-all active:scale-95 shadow-sm",
+        label ? "rounded-xl gap-2 px-4 h-10" : "rounded-full w-9 h-9 flex items-center justify-center p-0"
+    );
+
     return (
         <Button
             onClick={handleSend}
             disabled={disabled || isLoading}
+            variant={variant}
+            size={size || (label ? "default" : "icon")}
             className={cn(
-                "bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 gap-2",
+                !isCustomVariant && defaultClasses,
                 className
             )}
             {...props}
@@ -89,9 +92,9 @@ export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
             {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-                <FaWhatsapp className="w-5 h-5" />
+                <FaWhatsapp className={cn("shrink-0", label ? "w-5 h-5" : "w-5.5 h-5.5")} />
             )}
-            <span>{label}</span>
+            {label && <span>{label}</span>}
         </Button>
     );
 };

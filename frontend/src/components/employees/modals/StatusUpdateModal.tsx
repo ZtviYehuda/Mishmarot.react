@@ -113,11 +113,11 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[400px] max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-[32px] border-none bg-card shadow-2xl"
+        className="max-w-[400px] p-0 border-none bg-card shadow-2xl"
         dir="rtl"
       >
         {/* Header: Clean & Centered */}
-        <div className="pt-8 pb-4 text-center px-6 shrink-0 relative overflow-hidden">
+        <div className="pt-6 pb-4 text-center px-6 shrink-0 relative overflow-hidden">
           {/* Background Decorative Element */}
           <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
 
@@ -138,7 +138,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
           </div>
         </div>
 
-        <div className="px-6 pb-6 space-y-6 flex-1 overflow-y-auto min-h-0">
+        <div className="px-6 pb-6 space-y-6 flex-1 overflow-y-auto min-h-0 custom-scrollbar">
           {/* Compact Grid of Statuses */}
           <div className="grid grid-cols-2 gap-2">
             {fetching ? (

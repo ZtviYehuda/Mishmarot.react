@@ -66,10 +66,111 @@ class TransferModel:
             )
             new_id = cur.fetchone()[0]
             conn.commit()
+            
+            # --- NOTIFICATION ---
+            try:
+                TransferModel._notify_transfer_event(new_id, 'created')
+            except Exception as e:
+                print(f"⚠️ Notification failed after transfer creation: {e}")
+                
             return new_id
         except Exception as e:
             conn.rollback()
             raise e
+        finally:
+            conn.close()
+
+    @staticmethod
+    def _notify_transfer_event(request_id, event_type):
+        """
+        Helper to send email notifications for transfer lifecycle events.
+        """
+        from app.utils.email_service import send_email
+        conn = get_db_connection()
+        if not conn: return
+        
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            # Fetch complete request data with names
+            query = """
+                SELECT tr.*, 
+                       (e.first_name || ' ' || e.last_name) as employee_name,
+                       (req.first_name || ' ' || req.last_name) as requester_name,
+                       req.email as requester_email,
+                       CASE 
+                           WHEN tr.target_type = 'department' THEN d.name
+                           WHEN tr.target_type = 'section' THEN d_target_s.name || ' / ' || s.name
+                           WHEN tr.target_type = 'team' THEN d_target_t.name || ' / ' || s_target_t.name || ' / ' || t.name
+                       END as target_name,
+                       CASE 
+                           WHEN tr.target_type = 'department' THEN dept_cmdr.email
+                           WHEN tr.target_type = 'section' THEN sec_cmdr.email
+                           WHEN tr.target_type = 'team' THEN team_cmdr.email
+                       END as target_commander_email,
+                        CASE 
+                           WHEN tr.target_type = 'department' THEN dept_cmdr.first_name
+                           WHEN tr.target_type = 'section' THEN sec_cmdr.first_name
+                           WHEN tr.target_type = 'team' THEN team_cmdr.first_name
+                       END as target_commander_name
+                FROM transfer_requests tr
+                JOIN employees e ON tr.employee_id = e.id
+                JOIN employees req ON tr.requester_id = req.id
+                
+                -- Target Unit Name Joins
+                LEFT JOIN departments d ON (tr.target_type = 'department' AND tr.target_id = d.id)
+                LEFT JOIN sections s ON (tr.target_type = 'section' AND tr.target_id = s.id)
+                LEFT JOIN teams t ON (tr.target_type = 'team' AND tr.target_id = t.id)
+                LEFT JOIN departments d_target_s ON (tr.target_type = 'section' AND s.department_id = d_target_s.id)
+                LEFT JOIN sections s_target_t ON (tr.target_type = 'team' AND t.section_id = s_target_t.id)
+                LEFT JOIN departments d_target_t ON (tr.target_type = 'team' AND s_target_t.department_id = d_target_t.id)
+                
+                -- Target Commander Joins
+                LEFT JOIN employees dept_cmdr ON (tr.target_type = 'department' AND d.commander_id = dept_cmdr.id)
+                LEFT JOIN employees sec_cmdr ON (tr.target_type = 'section' AND s.commander_id = sec_cmdr.id)
+                LEFT JOIN employees team_cmdr ON (tr.target_type = 'team' AND t.commander_id = team_cmdr.id)
+                
+                WHERE tr.id = %s
+            """
+            cur.execute(query, (request_id,))
+            req = cur.fetchone()
+            if not req: return
+
+            if event_type == 'created':
+                # Notify Target Commander
+                if req['target_commander_email']:
+                    subject = f"בקשת ניוד חדשה: {req['employee_name']} ליחידתך"
+                    body = f"""
+                    <div dir="rtl" style="font-family: Arial, sans-serif;">
+                        <h2>שלום {req['target_commander_name']},</h2>
+                        <p>הוגשה בקשת ניוד חדשה עבור <strong>{req['employee_name']}</strong> ליחידתך (<strong>{req['target_name']}</strong>).</p>
+                        <p><strong>הוגש ע"י:</strong> {req['requester_name']}</p>
+                        <p><strong>נימוק:</strong> {req['reason'] or 'לא צוין'}</p>
+                        <br>
+                        <a href="http://localhost:5173/transfers" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">לצפייה בבקשה ואישור</a>
+                    </div>
+                    """
+                    send_email(req['target_commander_email'], subject, body)
+                    
+            elif event_type in ['approved', 'rejected']:
+                # Notify Requester
+                if req['requester_email']:
+                    status_text = "אושרה" if event_type == 'approved' else "נדחתה"
+                    color = "#16a34a" if event_type == 'approved' else "#dc2626"
+                    
+                    rejection_html = f"<p><strong>סיבת דחייה:</strong> {req['rejection_reason']}</p>" if event_type == 'rejected' else ""
+                    
+                    subject = f"עדכון בקשת ניוד: {req['employee_name']} - {status_text}"
+                    body = f"""
+                    <div dir="rtl" style="font-family: Arial, sans-serif;">
+                        <h2>שלום {req['requester_name']},</h2>
+                        <p>בקשת הניוד שהגשת עבור <strong>{req['employee_name']}</strong> ליחידת <strong>{req['target_name']}</strong> <span style="color: {color}; font-weight: bold;">{status_text}</span>.</p>
+                        {rejection_html}
+                        <br>
+                        <a href="http://localhost:5173/transfers" style="background-color: #475569; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">לצפייה בהיסטוריית בקשות</a>
+                    </div>
+                    """
+                    send_email(req['requester_email'], subject, body)
+                    
         finally:
             conn.close()
 
@@ -246,6 +347,13 @@ class TransferModel:
                 (approver_user["id"], request_id),
             )
             conn.commit()
+
+            # --- NOTIFICATION ---
+            try:
+                TransferModel._notify_transfer_event(request_id, 'approved')
+            except Exception as e:
+                print(f"⚠️ Notification failed after transfer approval: {e}")
+
             return True
         except Exception as e:
             conn.rollback()
@@ -294,6 +402,13 @@ class TransferModel:
                 (approver_user["id"], reason, request_id),
             )
             conn.commit()
+
+            # --- NOTIFICATION ---
+            try:
+                TransferModel._notify_transfer_event(request_id, 'rejected')
+            except Exception as e:
+                print(f"⚠️ Notification failed after transfer rejection: {e}")
+
             return True
         except Exception:
             conn.rollback()

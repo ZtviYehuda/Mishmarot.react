@@ -299,3 +299,31 @@ def restore_database():
     finally:
         if conn:
             conn.close()
+@admin_bp.route('/reports/birthday/trigger', methods=['POST'])
+@jwt_required()
+def trigger_birthday_report():
+    """Manually trigger the weekly birthday report"""
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        from app.utils.reminder_service import check_and_send_weekly_birthday_report
+        check_and_send_weekly_birthday_report()
+        return jsonify({"success": True, "message": "Birthday report manually triggered. Check server logs/simulation."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@admin_bp.route('/reminders/morning/trigger', methods=['POST'])
+@jwt_required()
+def trigger_morning_reminders():
+    """Manually trigger the morning attendance reminders"""
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        from app.utils.reminder_service import check_and_send_morning_reminders
+        # force_now=True to skip the 15-min-before-deadline check
+        check_and_send_morning_reminders(force_now=True)
+        return jsonify({"success": True, "message": "Morning reminders triggered. Check server logs/simulation."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

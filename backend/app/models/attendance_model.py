@@ -155,20 +155,21 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def get_unit_comparison_stats(requesting_user=None, date=None, days=1):
+    def get_unit_comparison_stats(requesting_user=None, date=None, days=1, filters=None):
         conn = get_db_connection()
         if not conn:
             return []
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
-            # Determine grouping level based on user role
+            # 1. Determine base grouping level
             grouping_col = "d.name"
             grouping_id = "d.id"
             grouping_label = "department"
-
+            
+            # 2. Base Scoping (Security)
             scoping_clause = ""
-            params = []
+            scoping_params = []
 
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
@@ -176,16 +177,57 @@ class AttendanceModel:
                     grouping_id = "s.id"
                     grouping_label = "section"
                     scoping_clause = " AND d.id = %s"
-                    params.append(requesting_user["commands_department_id"])
+                    scoping_params.append(requesting_user["commands_department_id"])
                 elif requesting_user.get("commands_section_id"):
                     grouping_col = "t.name"
                     grouping_id = "t.id"
                     grouping_label = "team"
                     scoping_clause = " AND s.id = %s"
-                    params.append(requesting_user["commands_section_id"])
+                    scoping_params.append(requesting_user["commands_section_id"])
                 elif requesting_user.get("commands_team_id"):
                     return []
 
+            # 3. Dynamic Filtering & Drill-down Adjustment
+            if filters:
+                if filters.get("department_id"):
+                    scoping_clause += " AND d.id = %s"
+                    scoping_params.append(filters["department_id"])
+                    # If we filter by dept, we want to see sections
+                    grouping_col = "s.name"
+                    grouping_id = "s.id"
+                    grouping_label = "section"
+                
+                if filters.get("section_id"):
+                    scoping_clause += " AND s.id = %s"
+                    scoping_params.append(filters["section_id"])
+                    # If we filter by section, we want to see teams
+                    grouping_col = "t.name"
+                    grouping_id = "t.id"
+                    grouping_label = "team"
+
+                if filters.get("team_id"):
+                    scoping_clause += " AND t.id = %s"
+                    scoping_params.append(filters["team_id"])
+                    # Keep at team level or show individuals? Let's stay at team for now.
+                    grouping_col = "t.name"
+                    grouping_id = "t.id"
+                    grouping_label = "team"
+
+                if filters.get("serviceTypes"):
+                    srv_list = (
+                        filters["serviceTypes"].split(",")
+                        if isinstance(filters["serviceTypes"], str)
+                        else filters["serviceTypes"]
+                    )
+                    scoping_clause += " AND srv.name = ANY(%s)"
+                    scoping_params.append(srv_list)
+
+            # 3.5. Status Comparison Filter Logic
+            count_condition = "st.is_presence = TRUE"
+            if filters and filters.get("status_id"):
+                count_condition = f"st.id = {int(filters['status_id'])}"
+
+            # 4. Execute Query
             # If days > 1, we calculate average over requested range
             if days > 1:
                 query = f"""
@@ -200,10 +242,10 @@ class AttendanceModel:
                         SELECT 
                             dr.date_val,
                             {grouping_id} as unit_id,
-                            COALESCE({grouping_col}, 'מטה') as unit_name,
+                            COALESCE({grouping_col}, 'ללא שיוך') as unit_name,
                             e.id as emp_id,
                             (
-                                SELECT st.is_presence
+                                SELECT {count_condition}
                                 FROM attendance_logs al
                                 JOIN status_types st ON al.status_type_id = st.id
                                 WHERE al.employee_id = e.id
@@ -216,6 +258,7 @@ class AttendanceModel:
                         LEFT JOIN teams t ON e.team_id = t.id
                         LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                         LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                        LEFT JOIN service_types srv ON e.service_type_id = srv.id
                         WHERE e.is_active = TRUE 
                         AND e.personal_number != 'admin'
                         {scoping_clause}
@@ -234,13 +277,13 @@ class AttendanceModel:
                         ROUND(CAST(COUNT(CASE WHEN is_present = FALSE THEN 1 END) AS NUMERIC) / {days}, 1) as absent_count,
                         ROUND(CAST(COUNT(CASE WHEN is_present IS NULL THEN 1 END) AS NUMERIC) / {days}, 1) as unknown_count
                     FROM daily_presence
+                    WHERE unit_id IS NOT NULL
                     GROUP BY unit_id, unit_name
                     ORDER BY unit_name
                 """
                 base_date = date if date else "CURRENT_DATE"
-                # Combine params: [date, date, days, requesting_user_id]
                 userId = requesting_user["id"] if requesting_user else None
-                final_params = [base_date, base_date, days, userId] + params
+                final_params = [base_date, base_date, days] + scoping_params + [userId]
                 cur.execute(query, tuple(final_params))
             else:
                 # Original Snapshot logic for single day
@@ -255,15 +298,16 @@ class AttendanceModel:
                 query = f"""
                     SELECT 
                         {grouping_id} as unit_id,
-                        COALESCE({grouping_col}, 'מטה') as unit_name,
+                        COALESCE({grouping_col}, 'ללא שיוך') as unit_name,
                         COUNT(e.id) as total_count,
-                        COUNT(CASE WHEN st.is_presence = TRUE THEN 1 END) as present_count,
+                        COUNT(CASE WHEN {count_condition} THEN 1 END) as present_count,
                         COUNT(CASE WHEN st.is_presence = FALSE THEN 1 END) as absent_count,
                         COUNT(CASE WHEN al.id IS NULL THEN 1 END) as unknown_count
                     FROM employees e
                     LEFT JOIN teams t ON e.team_id = t.id
                     LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                     LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    LEFT JOIN service_types srv ON e.service_type_id = srv.id
                     LEFT JOIN LATERAL (
                         SELECT status_type_id, id FROM attendance_logs 
                         WHERE employee_id = e.id {status_condition}
@@ -280,10 +324,11 @@ class AttendanceModel:
                     )
                     {scoping_clause}
                     GROUP BY {grouping_id}, {grouping_col}
+                    HAVING {grouping_id} IS NOT NULL
                     ORDER BY {grouping_col}
                 """
                 userId = requesting_user["id"] if requesting_user else None
-                final_params = status_params + ([userId] if userId else []) + params
+                final_params = status_params + [userId] + scoping_params
                 cur.execute(query, tuple(final_params))
 
             results = cur.fetchall()
@@ -294,7 +339,7 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def get_attendance_trend(days=7, requesting_user=None, end_date=None):
+    def get_attendance_trend(days=7, requesting_user=None, end_date=None, filters=None):
         conn = get_db_connection()
         if not conn:
             return []
@@ -302,21 +347,48 @@ class AttendanceModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
             scoping_clause = ""
-            params = []
+            scoping_params = []
 
+            # 1. Base Scoping (Security)
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
                     scoping_clause = " AND (d.id = %s)"
-                    params.append(requesting_user["commands_department_id"])
+                    scoping_params.append(requesting_user["commands_department_id"])
                 elif requesting_user.get("commands_section_id"):
                     scoping_clause = " AND (s.id = %s)"
-                    params.append(requesting_user["commands_section_id"])
+                    scoping_params.append(requesting_user["commands_section_id"])
                 elif requesting_user.get("commands_team_id"):
                     scoping_clause = " AND (t.id = %s)"
-                    params.append(requesting_user["commands_team_id"])
+                    scoping_params.append(requesting_user["commands_team_id"])
                 else:
                     scoping_clause = " AND e.id = %s"
-                    params.append(requesting_user["id"])
+                    scoping_params.append(requesting_user["id"])
+
+            # 2. Dynamic Filtering
+            if filters:
+                if filters.get("department_id"):
+                    scoping_clause += " AND d.id = %s"
+                    scoping_params.append(filters["department_id"])
+                if filters.get("section_id"):
+                    scoping_clause += " AND s.id = %s"
+                    scoping_params.append(filters["section_id"])
+                if filters.get("team_id"):
+                    scoping_clause += " AND t.id = %s"
+                    scoping_params.append(filters["team_id"])
+                
+                if filters.get("serviceTypes"):
+                    srv_list = (
+                        filters["serviceTypes"].split(",")
+                        if isinstance(filters["serviceTypes"], str)
+                        else filters["serviceTypes"]
+                    )
+                    scoping_clause += " AND srv.name = ANY(%s)"
+                    scoping_params.append(srv_list)
+
+            # 2.5. Status Trend Filter Logic
+            count_condition = "st.is_presence = TRUE"
+            if filters and filters.get("status_id"):
+                count_condition = f"st.id = {int(filters['status_id'])}"
 
             date_anchor = "CURRENT_DATE"
             date_params = []
@@ -335,6 +407,7 @@ class AttendanceModel:
                     LEFT JOIN teams t ON e.team_id = t.id
                     LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                     LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    LEFT JOIN service_types srv ON e.service_type_id = srv.id
                     WHERE e.is_active = TRUE AND e.personal_number != 'admin' AND e.id != %s {scoping_clause}
                 )
                 SELECT 
@@ -346,7 +419,7 @@ class AttendanceModel:
                         FROM scoped_employees se
                         JOIN attendance_logs al ON al.employee_id = se.id
                         JOIN status_types st ON al.status_type_id = st.id
-                        WHERE st.is_presence = TRUE
+                        WHERE {count_condition}
                         AND DATE(al.start_datetime) <= p.date
                         AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= p.date)
                     ) as present_count
@@ -354,10 +427,9 @@ class AttendanceModel:
                 ORDER BY p.date ASC
             """
 
-            # Params: [end_date if set] + [days-1] + [requesting_user_id] + [scoping params]
             userId = requesting_user["id"] if requesting_user else None
             final_params = (
-                date_params + [days - 1] + ([userId] if userId else []) + params
+                date_params + [days - 1] + ([userId] if userId else []) + scoping_params
             )
             cur.execute(query, tuple(final_params))
             return cur.fetchall()

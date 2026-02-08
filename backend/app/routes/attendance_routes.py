@@ -112,8 +112,21 @@ def get_comparison_stats():
         date = request.args.get("date")
         days = int(request.args.get("days", 1))
 
+        # Parse filters
+        filters = {}
+        if request.args.get("department_id"):
+            filters["department_id"] = int(request.args.get("department_id"))
+        if request.args.get("section_id"):
+            filters["section_id"] = int(request.args.get("section_id"))
+        if request.args.get("team_id"):
+            filters["team_id"] = int(request.args.get("team_id"))
+        if request.args.get("status_id"):
+            filters["status_id"] = int(request.args.get("status_id"))
+        if request.args.get("serviceTypes"):
+            filters["serviceTypes"] = request.args.get("serviceTypes")
+
         data = AttendanceModel.get_unit_comparison_stats(
-            requesting_user=requester, date=date, days=days
+            requesting_user=requester, date=date, days=days, filters=filters
         )
         return jsonify(data)
     except Exception as e:
@@ -140,8 +153,21 @@ def get_trend_stats():
         days = int(request.args.get("days", 7))
         date = request.args.get("date")
 
+        # Parse filters
+        filters = {}
+        if request.args.get("department_id"):
+            filters["department_id"] = int(request.args.get("department_id"))
+        if request.args.get("section_id"):
+            filters["section_id"] = int(request.args.get("section_id"))
+        if request.args.get("team_id"):
+            filters["team_id"] = int(request.args.get("team_id"))
+        if request.args.get("status_id"):
+            filters["status_id"] = int(request.args.get("status_id"))
+        if request.args.get("serviceTypes"):
+            filters["serviceTypes"] = request.args.get("serviceTypes")
+
         data = AttendanceModel.get_attendance_trend(
-            days=days, requesting_user=requester, end_date=date
+            days=days, requesting_user=requester, end_date=date, filters=filters
         )
         return jsonify(data)
     except Exception as e:

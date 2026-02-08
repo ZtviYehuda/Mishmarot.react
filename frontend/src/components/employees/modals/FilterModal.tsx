@@ -253,10 +253,10 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-2xl p-0 overflow-hidden rounded-[32px] border border-border bg-card shadow-2xl flex flex-col max-h-[90vh]"
+        className="max-w-2xl p-0 border border-border bg-card shadow-2xl flex flex-col"
         dir="rtl"
       >
-        <DialogHeader className="p-6 sm:p-8 pb-4 text-right shrink-0">
+        <DialogHeader className="p-4 sm:p-6 pb-4 text-right shrink-0">
           <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4">
             <div className="text-center sm:text-right">
               <DialogTitle className="text-xl sm:text-2xl font-black text-foreground mb-1">

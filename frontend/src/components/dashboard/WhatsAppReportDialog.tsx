@@ -101,9 +101,9 @@ export const WhatsAppReportDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95dvw] sm:max-w-md p-0 gap-0 overflow-hidden flex flex-col rounded-2xl border-none shadow-2xl animate-in zoom-in-95 duration-200">
+      <DialogContent className="w-[95dvw] sm:max-w-md p-0 flex flex-col border-none shadow-2xl overflow-hidden">
         <DialogHeader
-          className="p-6 pb-4 border-b bg-primary/5 text-right"
+          className="p-5 pb-4 border-b bg-primary/5 text-right"
           dir="rtl"
         >
           <DialogTitle className="text-xl font-black text-primary flex items-center justify-start gap-2">
@@ -115,7 +115,7 @@ export const WhatsAppReportDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 p-5 space-y-6 overflow-y-auto max-h-[70vh]">
+        <div className="flex-1 p-5 space-y-5 overflow-y-auto max-h-[60vh] custom-scrollbar">
           {/* Status Badge & Mode Switcher */}
           <div className="flex flex-col gap-3">
             <div
@@ -210,9 +210,8 @@ export const WhatsAppReportDialog = ({
           </Button>
           <WhatsAppButton
             onClick={handleSendWhatsApp}
-            label="שליחה ב-WhatsApp"
             skipDirectLink={true}
-            className="flex-[2] rounded-xl font-bold h-12 shadow-lg shadow-green-500/10 order-1 sm:order-2"
+            className="w-12 h-12 rounded-full shadow-lg shadow-green-500/20 order-1 sm:order-2 mx-auto sm:mx-0"
           />
         </div>
       </DialogContent>

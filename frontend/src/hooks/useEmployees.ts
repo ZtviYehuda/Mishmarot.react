@@ -262,35 +262,78 @@ export const useEmployees = () => {
     logStatus,
     logBulkStatus,
     getDashboardStats,
-    getComparisonStats: useCallback(async (date?: string, days: number = 1) => {
-      try {
-        const params = new URLSearchParams();
-        if (date) params.append("date", date);
-        if (days && days > 1) params.append("days", days.toString());
-        const { data } = await apiClient.get(
-          `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/comparison?${params}`,
-        );
-        return data;
-      } catch (err: any) {
-        console.error("Failed to fetch comparison stats", err);
-        return [];
-      }
-    }, []),
-    getTrendStats: useCallback(async (days = 7, date?: string) => {
-      try {
-        const params = new URLSearchParams();
-        params.append("days", days.toString());
-        if (date) params.append("date", date);
+    getComparisonStats: useCallback(
+      async (
+        date?: string,
+        days: number = 1,
+        filters?: {
+          department_id?: string;
+          section_id?: string;
+          team_id?: string;
+          status_id?: string;
+          serviceTypes?: string;
+        },
+      ) => {
+        try {
+          const params = new URLSearchParams();
+          if (date) params.append("date", date);
+          if (days && days > 1) params.append("days", days.toString());
+          if (filters?.department_id)
+            params.append("department_id", filters.department_id);
+          if (filters?.section_id)
+            params.append("section_id", filters.section_id);
+          if (filters?.team_id) params.append("team_id", filters.team_id);
+          if (filters?.status_id) params.append("status_id", filters.status_id);
+          if (filters?.serviceTypes)
+            params.append("serviceTypes", filters.serviceTypes);
 
-        const { data } = await apiClient.get(
-          `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/trend?${params}`,
-        );
-        return data;
-      } catch (err: any) {
-        console.error("Failed to fetch trend stats", err);
-        return [];
-      }
-    }, []),
+          const { data } = await apiClient.get(
+            `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/comparison?${params}`,
+          );
+          return data;
+        } catch (err: any) {
+          console.error("Failed to fetch comparison stats", err);
+          return [];
+        }
+      },
+      [],
+    ),
+    getTrendStats: useCallback(
+      async (
+        days = 7,
+        date?: string,
+        filters?: {
+          department_id?: string;
+          section_id?: string;
+          team_id?: string;
+          status_id?: string;
+          serviceTypes?: string;
+        },
+      ) => {
+        try {
+          const params = new URLSearchParams();
+          params.append("days", days.toString());
+          if (date) params.append("date", date);
+          if (filters?.department_id)
+            params.append("department_id", filters.department_id);
+          if (filters?.section_id)
+            params.append("section_id", filters.section_id);
+          if (filters?.team_id) params.append("team_id", filters.team_id);
+          if (filters?.status_id) params.append("status_id", filters.status_id);
+          if (filters?.serviceTypes)
+            params.append("serviceTypes", filters.serviceTypes);
+
+          const { data } = await apiClient.get(
+            `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/trend?${params}`,
+          );
+          return data;
+        } catch (err: any) {
+          console.error("Failed to fetch trend stats", err);
+          return [];
+        }
+      },
+      [],
+    ),
     getCalendarStats: useCallback(async (year: number, month: number) => {
       try {
         const { data } = await apiClient.get(

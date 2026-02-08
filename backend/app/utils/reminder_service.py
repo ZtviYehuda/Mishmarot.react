@@ -191,16 +191,19 @@ def check_and_send_weekly_birthday_report():
         # 1. Get all active employees with birthdays
         cur.execute(
             """
-            SELECT first_name, last_name, birth_date, t.name as team_name
+            SELECT e.id, e.first_name, e.last_name, e.birth_date, 
+                   e.department_id, e.section_id, e.team_id,
+                   t.name as team_name, s.name as section_name, d.name as department_name
             FROM employees e
             LEFT JOIN teams t ON e.team_id = t.id
+            LEFT JOIN sections s ON e.section_id = s.id
+            LEFT JOIN departments d ON e.department_id = d.id
             WHERE e.is_active = TRUE AND e.birth_date IS NOT NULL
         """
         )
         employees = cur.fetchall()
 
         today = datetime.now().date()
-
         upcoming_birthdays = []
 
         for emp in employees:
@@ -232,27 +235,31 @@ def check_and_send_weekly_birthday_report():
             print("   [INFO] No birthdays this week.")
             return
 
-        print(f"   [INFO] Found {len(upcoming_birthdays)} birthdays for this week.")
+        print(f"   [INFO] Found {len(upcoming_birthdays)} total birthdays for this week.")
 
         # Sort by date
         upcoming_birthdays.sort(key=lambda x: x["celebrate_date"])
 
-        # 2. Get all Commanders email
+        # 2. Get all Commanders email and their command scope
         cur.execute(
             """
-            SELECT email, first_name FROM employees 
-            WHERE (is_commander = TRUE OR is_admin = TRUE) AND is_active = TRUE AND email IS NOT NULL
+            SELECT e.id, e.first_name, e.last_name, e.email, e.is_admin,
+                   t.id as commands_team_id,
+                   s.id as commands_section_id,
+                   d.id as commands_department_id
+            FROM employees e
+            LEFT JOIN teams t ON t.commander_id = e.id
+            LEFT JOIN sections s ON s.commander_id = e.id
+            LEFT JOIN departments d ON d.commander_id = e.id
+            WHERE (e.is_commander = TRUE OR e.is_admin = TRUE) AND e.is_active = TRUE AND e.email IS NOT NULL
         """
         )
         commanders = cur.fetchall()
 
-        # 3. Send Email
-        print(f"   [INFO] Sending report to {len(commanders)} commanders.")
-
+        # 3. Send Emails (Filtered per commander)
+        emails_sent = 0
         from app.utils.email_service import send_email
 
-        # Build HTML content
-        items_html = ""
         days_map = {
             0: "שני",
             1: "שלישי",
@@ -263,59 +270,100 @@ def check_and_send_weekly_birthday_report():
             6: "ראשון",
         }
 
-        for b in upcoming_birthdays:
-            d = b["celebrate_date"]
-            wd = days_map[d.weekday()]
-            date_str = d.strftime("%d/%m")
-            team = b["team_name"] or "ללא צוות"
-            age = d.year - b["birth_date"].year
+        for cmdr in commanders:
+            # Filter birthdays for this commander
+            relevant_birthdays = []
+            
+            has_command = (
+                cmdr["commands_team_id"]
+                or cmdr["commands_section_id"]
+                or cmdr["commands_department_id"]
+            )
 
-            items_html += f"""
-                <tr style="background-color: white; border-bottom: 1px solid #eee;">
-                    <td style="padding: 10px; text-align: right;">{b['first_name']} {b['last_name']}</td>
-                    <td style="padding: 10px; text-align: right;">{team}</td>
-                    <td style="padding: 10px; text-align: right;">{wd} ({date_str})</td>
-                    <td style="padding: 10px; text-align: right;">{age}</td>
-                </tr>
+            # If Admin with no specific command -> Show All
+            if cmdr["is_admin"] and not has_command:
+                relevant_birthdays = upcoming_birthdays
+            else:
+                # Filter based on unit hierarchy
+                for b in upcoming_birthdays:
+                    # Skip self? (Optional, usually we want to know our own birthday?)
+                    # Let's keep self.
+                    
+                    is_relevant = False
+                    if cmdr["commands_department_id"] and b["department_id"] == cmdr["commands_department_id"]:
+                         is_relevant = True
+                    elif cmdr["commands_section_id"] and b["section_id"] == cmdr["commands_section_id"]:
+                         is_relevant = True
+                    elif cmdr["commands_team_id"] and b["team_id"] == cmdr["commands_team_id"]:
+                         is_relevant = True
+                    # Also include if they are simply Admin (but they have a command, so we prioritized command? 
+                    # The logic in MorningReminder suggests strict filtering if has_command exists.
+                    
+                    if is_relevant:
+                        relevant_birthdays.append(b)
+
+            if not relevant_birthdays:
+                continue
+
+            # Build HTML content for this commander
+            items_html = ""
+            for b in relevant_birthdays:
+                d = b["celebrate_date"]
+                wd = days_map[d.weekday()]
+                date_str = d.strftime("%d/%m")
+                
+                # Logic for Unit Display
+                unit_str = b["team_name"] or b["section_name"] or b["department_name"] or "מטה"
+                age = d.year - b["birth_date"].year
+
+                items_html += f"""
+                    <tr style="background-color: white; border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px; text-align: right;">{b['first_name']} {b['last_name']}</td>
+                        <td style="padding: 10px; text-align: right;">{unit_str}</td>
+                        <td style="padding: 10px; text-align: right;">{wd} ({date_str})</td>
+                        <td style="padding: 10px; text-align: right;">{age}</td>
+                    </tr>
+                """
+
+            body = f"""
+            <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9fafb;">
+                <div style="background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 6px solid #8b5cf6;">
+                    <h2 style="color: #7c3aed; margin-top: 0;">📅 דוח ימי הולדת שבועי</h2>
+                    <p style="color: #4b5563;">שלום {cmdr['first_name']}, להלן רשימת ימי ההולדת ביחידתך לשבוע הקרוב:</p>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; border-radius: 8px; overflow: hidden; font-size: 14px;">
+                        <thead>
+                            <tr style="background-color: #f3f4f6; color: #374151;">
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">שם</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">יחידה</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">מועד</th>
+                                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">גיל</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items_html}
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 20px; padding: 10px; background-color: #ede9fe; border-radius: 8px; color: #5b21b6; font-size: 13px;">
+                        <strong>💡 טיפ:</strong> מומלץ לשלוח הודעת מזל טוב בוואטסאפ דרך דף "ניהול שוטרים" או ישירות מהדאשבורד.
+                    </div>
+                </div>
+                <p style="text-align: center; color: #9ca3af; font-size: 11px; margin-top: 15px;">נשלח אוטומטית ע"י מערכת משמרות | אין להשיב למייל זה</p>
+            </div>
             """
 
-        body = f"""
-        <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9fafb;">
-            <div style="background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 6px solid #8b5cf6;">
-                <h2 style="color: #7c3aed; margin-top: 0;">📅 דוח ימי הולדת שבועי</h2>
-                <p style="color: #4b5563;">כיף לפתוח את השבוע עם חגיגות! להלן רשימת ימי ההולדת החלים בשבוע הקרוב:</p>
-                
-                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; border-radius: 8px; overflow: hidden; font-size: 14px;">
-                    <thead>
-                        <tr style="background-color: #f3f4f6; color: #374151;">
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">שם</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">יחידה</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">מועד</th>
-                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">גיל</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items_html}
-                    </tbody>
-                </table>
-                
-                <div style="margin-top: 20px; padding: 10px; background-color: #ede9fe; border-radius: 8px; color: #5b21b6; font-size: 13px;">
-                    <strong>💡 טיפ:</strong> מומלץ לשלוח הודעת מזל טוב בוואטסאפ דרך דף "ניהול שוטרים".
-                </div>
-            </div>
-            <p style="text-align: center; color: #9ca3af; font-size: 11px; margin-top: 15px;">נשלח אוטומטית ע"י מערכת משמרות | אין להשיב למייל זה</p>
-        </div>
-        """
-
-        for cmdr in commanders:
             try:
                 send_email(
                     cmdr["email"],
-                    f"🎉 ימי הולדת השבוע ({len(upcoming_birthdays)})",
+                    f"🎉 ימי הולדת השבוע - {len(relevant_birthdays)} חוגגים",
                     body,
                 )
+                emails_sent += 1
             except Exception as e:
                 print(f"   [ERROR] Failed to send to {cmdr['email']}: {e}")
+        
+        print(f"   [INFO] Sent birthday reports to {emails_sent} commanders.")
 
     except Exception as e:
         print(f"[SCHEDULER] Birthday Error: {e}")

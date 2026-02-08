@@ -1,3 +1,4 @@
+import { forwardRef, useImperativeHandle, useState } from "react";
 import {
   Card,
   CardContent,
@@ -12,7 +13,6 @@ import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { EmployeeLink } from "@/components/common/EmployeeLink";
-import { useState } from "react";
 import { BirthdayGreetingsModal } from "./BirthdayGreetingsModal";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 
@@ -30,26 +30,41 @@ interface BirthdaysCardProps {
   birthdays: BirthdayEmployee[];
 }
 
-export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
+export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(({ birthdays }, ref) => {
   const [isGreetingsModalOpen, setIsGreetingsModalOpen] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    share: handleSendWhatsApp,
+  }));
 
   // Filter employees who have birthday TODAY
   const employeesToday = birthdays.filter((emp) => {
-    const date = new Date(emp.birth_date);
-    return (
-      date.getDate() === new Date().getDate() &&
-      date.getMonth() === new Date().getMonth()
-    );
+    const today = new Date();
+    return emp.day === today.getDate() && emp.month === today.getMonth() + 1;
   });
 
   const handleSendWhatsApp = () => {
     if (!birthdays.length) return;
 
     const title = `🎂 ימי הולדת השבוע (${birthdays.length})`;
+    const labels = [
+      "ינואר",
+      "פברואר",
+      "מרץ",
+      "אפריל",
+      "מאי",
+      "יוני",
+      "יולי",
+      "אוגוסט",
+      "ספטמבר",
+      "אוקטובר",
+      "נובמבר",
+      "דצמבר",
+    ];
+
     const list = birthdays
       .map((emp) => {
-        const date = new Date(emp.birth_date);
-        const dateStr = format(date, "d בMMMM", { locale: he });
+        const dateStr = `${emp.day} ב${labels[emp.month - 1]}`;
         // הסרת מקפים ורווחים ממספר הטלפון
         const cleanPhone = emp.phone_number
           ? emp.phone_number.replace(/\D/g, "")
@@ -70,7 +85,10 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
 
   return (
     <>
-      <Card className="border border-border shadow-sm bg-card h-full flex flex-col">
+      <Card
+        id="birthdays-card"
+        className="border border-border shadow-sm bg-card h-full flex flex-col"
+      >
         <CardHeader className="pb-3 sm:pb-4 border-b border-border/40 mb-2">
           <div className="flex justify-between items-start gap-2">
             <div className="flex-1 min-w-0">
@@ -85,8 +103,8 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
             {birthdays.length > 0 && (
               <WhatsAppButton
                 onClick={handleSendWhatsApp}
-                className="h-8 sm:h-9 text-xs sm:text-xs px-3"
-                label="WhatsApp"
+                variant="outline"
+                className="h-8 w-8 p-0 rounded-lg border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
                 skipDirectLink={true}
               />
             )}
@@ -112,76 +130,89 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
                     "w-4 h-4",
                     employeesToday.length > 0
                       ? "text-primary animate-pulse"
-                      : "text-muted-foreground",
+                      : "text-muted-foreground group-hover:text-primary transition-colors",
                   )}
                 />
-                <span className="font-black text-xs uppercase tracking-widest">
+                <span className="text-xs font-black">
                   {employeesToday.length > 0
-                    ? `שלח ברכות היום (${employeesToday.length})`
-                    : `שלח ברכות השבוע (${birthdays.length})`}
+                    ? `שלח ברכות השבוע (${birthdays.length})`
+                    : "שלח ברכות השבוע"}
                 </span>
               </Button>
             </div>
           )}
 
-          {birthdays.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-24 sm:h-32 text-muted-foreground text-center">
-              <Calendar className="w-6 h-6 sm:w-8 sm:h-8 mb-2 opacity-20" />
-              <p className="text-xs sm:text-sm font-medium">
-                אין ימי הולדת השבוע
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2 sm:space-y-3 pb-2">
-              {birthdays.map((emp, idx) => {
-                const date = new Date(emp.birth_date);
+          <div className="space-y-2 pb-2">
+            {birthdays.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 opacity-40">
+                <Calendar className="w-8 h-8 mb-2" />
+                <p className="text-xs font-bold">אין ימי הולדת השבוע</p>
+              </div>
+            ) : (
+              birthdays.map((employee) => {
+                const today = new Date();
                 const isToday =
-                  date.getDate() === new Date().getDate() &&
-                  date.getMonth() === new Date().getMonth();
+                  employee.day === today.getDate() &&
+                  employee.month === today.getMonth() + 1;
+
+                const labels = [
+                  "ינואר",
+                  "פברואר",
+                  "מרץ",
+                  "אפריל",
+                  "מאי",
+                  "יוני",
+                  "יולי",
+                  "אוגוסט",
+                  "ספטמבר",
+                  "אוקטובר",
+                  "נובמבר",
+                  "דצמבר",
+                ];
+                const dateStr = `${employee.day} ב${labels[employee.month - 1]}`;
 
                 return (
                   <div
-                    key={idx}
+                    key={employee.id}
                     className={cn(
-                      "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl border transition-all",
+                      "flex items-center gap-3 p-3 rounded-2xl border transition-all hover:shadow-md",
                       isToday
                         ? "bg-primary/5 border-primary/20 shadow-sm"
-                        : "bg-muted/30 border-transparent hover:border-border",
+                        : "bg-muted/30 border-border/40 hover:bg-muted/50",
                     )}
                   >
                     <div
                       className={cn(
-                        "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm shrink-0",
+                        "w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2",
                         isToday
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-card text-muted-foreground border border-border/50",
+                          ? "bg-white border-primary text-primary shadow-inner"
+                          : "bg-muted border-border/60 text-muted-foreground",
                       )}
                     >
-                      <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <User className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <EmployeeLink
-                        employee={emp.id}
-                        name={`${emp.first_name} ${emp.last_name}`}
+                        employee={employee}
                         className={cn(
-                          "text-xs sm:text-sm font-bold truncate",
+                          "text-sm font-black truncate block hover:text-primary transition-colors",
                           isToday ? "text-primary" : "text-foreground",
                         )}
                       />
-                      <p className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate">
-                        {format(date, "d בMMMM", { locale: he })}
-                        {isToday && (
-                          <span className="mr-2 font-black text-primary animate-pulse">
-                            היום! 🎉
-                          </span>
-                        )}
+                      <p className="text-[11px] font-bold text-muted-foreground">
+                        {dateStr}
                       </p>
                     </div>
+                    {isToday && (
+                      <div className="shrink-0 bg-primary/20 text-primary p-1.5 rounded-lg animate-bounce">
+                        <Gift className="w-4 h-4" />
+                      </div>
+                    )}
                   </div>
                 );
-              })}
-            </div>
-          )}
+              })
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -192,4 +223,4 @@ export const BirthdaysCard = ({ birthdays }: BirthdaysCardProps) => {
       />
     </>
   );
-};
+});

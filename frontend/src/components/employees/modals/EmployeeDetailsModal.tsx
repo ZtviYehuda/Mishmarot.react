@@ -75,11 +75,11 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 overflow-hidden border border-border bg-card shadow-2xl rounded-2xl"
+        className="max-w-xl p-0 overflow-hidden border border-border bg-card shadow-2xl"
         dir="rtl"
       >
         {/* Top Header Section */}
-        <div className="p-4 sm:p-8 pb-6 border-b border-border/50 bg-muted/20">
+        <div className="p-4 sm:p-6 pb-4 border-b border-border/50 bg-muted/20">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-right">
             {/* Avatar */}
             <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-3xl font-black shrink-0 shadow-inner">
@@ -122,7 +122,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         </div>
 
         {/* Info Grid */}
-        <div className="p-4 sm:p-8 pt-6 space-y-8 max-h-[60vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 pt-6 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
           {/* Main Info Columns */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
             <InfoItem
@@ -333,10 +333,10 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                 <WhatsAppButton
                   phoneNumber={employee.phone_number}
                   message={message}
-                  label={isBirthday ? "שלח ברכת יום הולדת" : "שלח הודעה"}
+                  title={isBirthday ? "שלח ברכת יום הולדת" : "שלח הודעה"}
                   className={cn(
-                    "w-full sm:flex-1 h-11 sm:h-10",
-                    isBirthday && "bg-pink-600 hover:bg-pink-700 shadow-pink-500/20"
+                    "w-12 h-12 rounded-full shadow-lg transition-transform",
+                    isBirthday ? "bg-pink-600 hover:bg-pink-700 shadow-pink-500/20" : "shadow-emerald-500/20"
                   )}
                 />
               );
