@@ -63,7 +63,7 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
         # Note: commands_*_id are not on employees table, we must join.
         cur.execute(
             """
-            SELECT e.id, e.first_name, e.last_name, e.email, e.is_admin,
+            SELECT e.id, e.first_name, e.last_name, e.email, e.is_admin, e.notif_morning_report,
                    t.id as commands_team_id,
                    s.id as commands_section_id,
                    d.id as commands_department_id
@@ -86,6 +86,10 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
 
             if not email:
                 continue  # Skip if no email
+
+            if not cmdr.get("notif_morning_report", True):
+                print(f"   [INFO] Skipping {cmdr['first_name']} {cmdr['last_name']} (User disabled morning report)")
+                continue
 
             if email in sent_emails_set:
                 continue

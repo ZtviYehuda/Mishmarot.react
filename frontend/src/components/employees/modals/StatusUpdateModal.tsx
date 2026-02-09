@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -113,96 +118,105 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[400px] p-0 border-none bg-card shadow-2xl"
+        className="max-w-md p-0 border-none bg-card shadow-2xl rounded-3xl overflow-hidden"
         dir="rtl"
       >
-        {/* Header: Clean & Centered */}
-        <div className="pt-6 pb-4 text-center px-6 shrink-0 relative overflow-hidden">
-          {/* Background Decorative Element */}
-          <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
-
-          <div className="w-16 h-16 rounded-[24px] bg-primary/10 mx-auto flex items-center justify-center text-primary mb-5 border border-primary/20 shadow-inner relative z-10 transition-transform hover:scale-105 duration-300">
-            <ClipboardList className="w-8 h-8" />
-          </div>
-          <DialogTitle className="text-2xl font-black text-foreground mb-2 tracking-tight relative z-10">
-            עדכון סטטוס
-          </DialogTitle>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-full border border-border/50 relative z-10 shadow-sm">
-            <span className="text-sm font-black text-foreground">
-              {employee.first_name} {employee.last_name}
-            </span>
-            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-            <span className="text-[11px] font-bold text-muted-foreground font-mono">
-              {employee.personal_number}
-            </span>
-          </div>
-        </div>
-
-        <div className="px-6 pb-6 space-y-6 flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-          {/* Compact Grid of Statuses */}
-          <div className="grid grid-cols-2 gap-2">
-            {fetching ? (
-              <div className="col-span-2 py-8 flex items-center justify-center">
-                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground/30" />
+        <DialogHeader className="p-6 border-b border-border/50 bg-muted/20 text-right">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner border border-primary/20 shrink-0">
+              <ClipboardList className="w-7 h-7" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-black text-foreground mb-1">
+                עדכון סטטוס
+              </DialogTitle>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-background rounded-full border border-border shadow-sm">
+                <span className="text-xs font-black text-foreground">
+                  {employee.first_name} {employee.last_name}
+                </span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                <span className="text-[10px] font-bold text-muted-foreground font-mono">
+                  {employee.personal_number}
+                </span>
               </div>
-            ) : (
-              statusTypes.map((type) => {
-                const Icon = getStatusIcon(type.name);
-                const isSelected =
-                  formData.status_type_id === type.id.toString();
+            </div>
+          </div>
+        </DialogHeader>
 
-                return (
-                  <button
-                    key={type.id}
-                    type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        status_type_id: type.id.toString(),
-                      }))
-                    }
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-2xl border-2 transition-all text-right group",
-                      isSelected
-                        ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
-                        : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
-                    )}
-                  >
-                    <div
+        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          {/* Compact Grid of Statuses */}
+          <div className="space-y-3">
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">
+              בחר סטטוס חדש
+            </span>
+            <div className="grid grid-cols-2 gap-2.5">
+              {fetching ? (
+                <div className="col-span-2 py-8 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary/30" />
+                </div>
+              ) : (
+                statusTypes.map((type: any) => {
+                  const Icon = getStatusIcon(type.name);
+                  const isSelected =
+                    formData.status_type_id === type.id.toString();
+
+                  return (
+                    <Button
+                      key={type.id}
+                      type="button"
+                      variant={isSelected ? "default" : "secondary"}
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          status_type_id: type.id.toString(),
+                        }))
+                      }
                       className={cn(
-                        "w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
+                        "flex items-center justify-start gap-3 p-3 h-auto rounded-2xl border-2 transition-all text-right group",
                         isSelected
-                          ? "bg-primary-foreground/20"
-                          : "bg-card shadow-sm",
+                          ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                          : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted/50 hover:border-border/50",
                       )}
                     >
-                      <Icon
+                      <div
                         className={cn(
-                          "w-4 h-4",
+                          "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-300",
                           isSelected
-                            ? "text-primary-foreground"
-                            : "text-muted-foreground group-hover:text-primary",
+                            ? "bg-primary-foreground/20"
+                            : "bg-background shadow-sm",
                         )}
-                      />
-                    </div>
-                    <span className="text-[11px] font-black leading-tight flex-1">
-                      {type.name}
-                    </span>
-                  </button>
-                );
-              })
-            )}
+                      >
+                        <Icon
+                          className={cn(
+                            "w-4 h-4",
+                            isSelected
+                              ? "text-primary-foreground"
+                              : "text-muted-foreground group-hover:text-primary",
+                          )}
+                        />
+                      </div>
+                      <span className="text-[11px] font-black leading-tight flex-1">
+                        {type.name}
+                      </span>
+                      {isSelected && <CheckCircle2 className="w-3.5 h-3.5 opacity-60" />}
+                    </Button>
+                  );
+                })
+              )}
+            </div>
           </div>
 
+          <div className="h-px bg-border/40" />
+
           {/* Inputs Area */}
-          <div className="space-y-4 pt-4 border-t border-border">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block pr-1">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1">
                   מתאריך
                 </Label>
-                <div className="relative">
-                  <CalendarDays className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground/50" />
+                <div className="relative group">
+                  <CalendarDays className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
                   <Input
                     type="date"
                     value={formData.start_date}
@@ -212,16 +226,16 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                         start_date: e.target.value,
                       }))
                     }
-                    className="h-9 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-right pl-8 pr-3 text-[10px] font-black"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-primary/20 focus:border-primary rounded-2xl text-right pr-10 pl-3 text-xs font-black transition-all"
                   />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block pr-1">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1">
                   עד תאריך
                 </Label>
-                <div className="relative">
-                  <CalendarDays className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground/30" />
+                <div className="relative group">
+                  <CalendarDays className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 group-focus-within:text-primary transition-colors" />
                   <Input
                     type="date"
                     value={formData.end_date}
@@ -231,51 +245,53 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                         end_date: e.target.value,
                       }))
                     }
-                    className="h-9 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-right pl-8 pr-3 text-[10px] font-black"
+                    placeholder="לא חובה"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-primary/20 focus:border-primary rounded-2xl text-right pr-10 pl-3 text-xs font-black transition-all"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block pr-1">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1">
                 הערה אישית
               </Label>
-              <div className="relative">
-                <Clock className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground/50" />
+              <div className="relative group">
+                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
                 <Input
                   value={formData.note}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, note: e.target.value }))
                   }
                   placeholder="הוסף הערה..."
-                  className="h-9 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-right pl-8 pr-3 text-[10px] font-black placeholder:text-muted-foreground/50"
+                  className="h-11 bg-muted/30 border-border/50 focus:ring-primary/20 focus:border-primary rounded-2xl text-right pr-10 pl-3 text-xs font-black placeholder:text-muted-foreground/50 transition-all"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Confirm Action */}
-        <div className="p-6 bg-muted/30 flex flex-col gap-3 shrink-0">
+        {/* Action Footer */}
+        <div className="p-6 bg-muted/20 border-t border-border/50 flex flex-col gap-3">
           <Button
             onClick={handleSubmit}
             disabled={loading || !formData.status_type_id}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-[20px] h-12 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-30 gap-2 text-sm"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-12 shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-30 gap-2 text-sm"
           >
             {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-5 h-5" />
             )}
             עדכן סטטוס שוטר
           </Button>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="text-[10px] font-black text-muted-foreground hover:text-foreground transition-colors pb-1"
+            className="h-10 text-[10px] font-black text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors uppercase tracking-widest"
           >
-            ביטול
-          </button>
+            ביטול חזרה
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

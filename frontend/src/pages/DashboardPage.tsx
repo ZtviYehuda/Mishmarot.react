@@ -46,7 +46,7 @@ import { DateHeader } from "@/components/common/DateHeader";
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
-  const { selectedDate } = useDateContext();
+  const { selectedDate, setSelectedDate } = useDateContext();
 
   // Refs for reports
   const snapshotRef = useRef<any>(null);
@@ -76,9 +76,29 @@ export default function DashboardPage() {
   const [comparisonStats, setComparisonStats] = useState<any[]>([]);
   const [trendStats, setTrendStats] = useState<any[]>([]);
   const [loadingExtras, setLoadingExtras] = useState(true);
-  const [trendRange, setTrendRange] = useState(7);
-  const [comparisonRange, setComparisonRange] = useState(1);
   const [loadingTrend, setLoadingTrend] = useState(true);
+
+  const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
+
+  const trendRange = useMemo(() => {
+    switch (viewMode) {
+      case 'daily': return 7;
+      case 'weekly': return 7;
+      case 'monthly': return 30;
+      case 'yearly': return 365;
+      default: return 7;
+    }
+  }, [viewMode]);
+
+  const comparisonRange = useMemo(() => {
+    switch (viewMode) {
+      case 'daily': return 1;
+      case 'weekly': return 7;
+      case 'monthly': return 30;
+      case 'yearly': return 365;
+      default: return 1;
+    }
+  }, [viewMode]);
   const [missingReportIds, setMissingReportIds] = useState<number[]>([]);
   const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
 
@@ -212,7 +232,7 @@ export default function DashboardPage() {
         department_id: selectedDeptId,
         section_id: selectedSectionId,
         team_id: selectedTeamId,
-        status_id: selectedStatusData?.id?.toString(),
+        // status_id excluded as per request
         serviceTypes: selectedServiceTypes.join(","),
       });
       setComparisonStats(compData);
@@ -226,7 +246,7 @@ export default function DashboardPage() {
     selectedDeptId,
     selectedSectionId,
     selectedTeamId,
-    selectedStatusData,
+    // selectedStatusData excluded
     selectedServiceTypes,
   ]);
 
@@ -239,7 +259,7 @@ export default function DashboardPage() {
         department_id: selectedDeptId,
         section_id: selectedSectionId,
         team_id: selectedTeamId,
-        status_id: selectedStatusData?.id?.toString(),
+        // status_id excluded as per request
         serviceTypes: selectedServiceTypes.join(","),
       });
       setTrendStats(trendData);
@@ -253,7 +273,7 @@ export default function DashboardPage() {
     selectedDeptId,
     selectedSectionId,
     selectedTeamId,
-    selectedStatusData,
+    // selectedStatusData excluded
     selectedServiceTypes,
   ]);
 
@@ -500,6 +520,28 @@ export default function DashboardPage() {
     !!user?.commands_department_id ||
     !!user?.commands_section_id;
 
+  const currentUnitName = useMemo(() => {
+    if (selectedTeamId) {
+      for (const dept of structure) {
+        for (const sec of dept.sections) {
+          const team = sec.teams.find((t) => t.id === Number(selectedTeamId));
+          if (team) return team.name;
+        }
+      }
+    }
+    if (selectedSectionId) {
+      for (const dept of structure) {
+        const sec = dept.sections.find((s) => s.id === Number(selectedSectionId));
+        if (sec) return sec.name;
+      }
+    }
+    if (selectedDeptId) {
+      const dept = structure.find((d) => d.id === Number(selectedDeptId));
+      if (dept) return dept.name;
+    }
+    return "כלל היחידה";
+  }, [selectedTeamId, selectedSectionId, selectedDeptId, structure]);
+
   return (
     <div className="w-full h-full space-y-6">
       <PageHeader
@@ -513,9 +555,19 @@ export default function DashboardPage() {
             <DateHeader className="w-full justify-end lg:justify-start" />
             <ReportHub
               onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
-              onShareTrend={() => trendRef.current?.share()}
+              onShareTrend={() => trendRef.current?.share()} // Only used for legacy/direct sharing if needed, otherwise ReportHub handles it internally via hidden ref
               onShareComparison={() => comparisonRef.current?.share()}
               onShareBirthdays={() => birthdaysRef.current?.share()}
+              initialViewMode={viewMode}
+              initialDate={selectedDate}
+              filters={{
+                department_id: selectedDeptId?.toString() || "",
+                section_id: selectedSectionId?.toString() || "",
+                team_id: selectedTeamId?.toString() || "",
+                serviceTypes: selectedServiceTypes,
+                unitName: currentUnitName,
+                statusName: selectedStatusData?.name
+              }}
             />
             <Button
               variant={isReportedToday ? "default" : "outline"}
@@ -578,6 +630,7 @@ export default function DashboardPage() {
               onFilterClick={() => setFilterOpen(true)}
               title={chartTitle}
               description={chartDescription}
+              selectedDate={selectedDate}
             />
           </div>
 
@@ -615,9 +668,9 @@ export default function DashboardPage() {
                 data={comparisonStats}
                 loading={loadingExtras}
                 days={comparisonRange}
-                onDaysChange={setComparisonRange}
                 unitName={unitName}
                 subtitle={chartDescription}
+                selectedDate={selectedDate}
               />
             )}
             {showTrendGraph && (
@@ -626,9 +679,9 @@ export default function DashboardPage() {
                 data={trendStats}
                 loading={loadingTrend}
                 range={trendRange}
-                onRangeChange={setTrendRange}
                 unitName={unitName}
                 subtitle={chartDescription}
+                selectedDate={selectedDate}
                 className={!showComparisonMatrix ? "md:col-span-2" : ""}
               />
             )}

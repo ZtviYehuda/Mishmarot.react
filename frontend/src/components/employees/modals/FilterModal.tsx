@@ -18,6 +18,7 @@ import {
   Layers,
   ShieldCheck,
   UserMinus,
+  CheckCircle2,
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn } from "@/lib/utils";
@@ -158,22 +159,17 @@ export const FilterModal: React.FC<FilterModalProps> = ({
     const depts = Array.from(hierarchyData.departments.keys());
     if (user?.is_admin) return depts;
     if (user?.department_name) return [user.department_name];
-    // If they aren't admin and don't have dept name, but have employees with depts,
-    // maybe they are a commander with scope.
     return depts;
   }, [hierarchyData, user]);
 
   const availableSections = useMemo(() => {
     let sects: string[] = [];
 
-    // If something selected, show those
     if (filters.departments && filters.departments.length > 0) {
       filters.departments.forEach((d) => {
         sects = [...sects, ...(hierarchyData.departments.get(d) || [])];
       });
     } else if (user?.is_admin) {
-      // Show all if admin and nothing selected? Or maybe better to wait for dept?
-      // User wants "chain", so if department commander, show their sections.
       if (user.department_name) {
         sects = hierarchyData.departments.get(user.department_name) || [];
       }
@@ -253,84 +249,96 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-2xl p-0 border border-border bg-card shadow-2xl flex flex-col"
+        className="max-w-2xl p-0 border-none bg-card shadow-2xl flex flex-col rounded-3xl overflow-hidden"
         dir="rtl"
       >
-        <DialogHeader className="p-4 sm:p-6 pb-4 text-right shrink-0">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4">
+        <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
             <div className="text-center sm:text-right">
-              <DialogTitle className="text-xl sm:text-2xl font-black text-foreground mb-1">
+              <DialogTitle className="text-2xl font-black text-foreground mb-1 tracking-tight">
                 סינון שוטרים מתקדם
               </DialogTitle>
-              <DialogDescription className="text-sm font-bold text-muted-foreground">
-                התאם את התצוגה לפי פרמטרים ארגוניים ואישיים
+              <DialogDescription className="text-sm font-bold text-muted-foreground italic tracking-tight">
+                התאם את התצוגה המבוקשת לפי מדרג ארגוני, סוג שירות או מאפיינים אישיים
               </DialogDescription>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shrink-0">
-              <Filter className="w-6 h-6" />
+            <div className="w-16 h-16 rounded-[24px] bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner shrink-0 scale-110 sm:scale-100">
+              <Filter className="w-8 h-8" />
             </div>
           </div>
 
-          <div className="relative mt-6">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+          <div className="relative mt-8 group">
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/40 transition-colors group-focus-within:text-primary" />
             <Input
-              placeholder="חיפוש חופשי לפי שם או מספר אישי..."
+              placeholder="חיפוש חופשי (שם, מנ'א, תפקיד)..."
               value={filters.searchText}
               onChange={(e) =>
                 setFilters({ ...filters, searchText: e.target.value })
               }
-              className="h-12 pr-11 pl-4 bg-muted/50 border-input rounded-2xl text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/20"
+              className="h-12 pr-12 pl-4 bg-background border-border/50 rounded-2xl text-sm font-black text-foreground focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/30"
             />
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 space-y-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-8 space-y-10 custom-scrollbar">
           {/* Organizational Structure */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <button
               onClick={() =>
                 setExpandedSection(expandedSection === "org" ? null : "org")
               }
               className="flex items-center justify-between w-full group"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                  <Layers className="w-4 h-4" />
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 shadow-sm">
+                  <Layers className="w-5 h-5" />
                 </div>
-                <span className="text-sm font-black text-foreground">
-                  מבנה ארגוני
-                </span>
+                <div className="flex flex-col text-right">
+                  <span className="text-base font-black text-foreground leading-none">
+                    מבנה ומדרג ארגוני
+                  </span>
+                  <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1">
+                    מחלקות, מדורים וחוליות
+                  </span>
+                </div>
               </div>
-              <ChevronDown
-                className={cn(
-                  "w-4 h-4 text-muted-foreground transition-transform",
-                  expandedSection === "org" && "rotate-180",
-                )}
-              />
+              <div className={cn(
+                "w-8 h-8 rounded-full border border-border/50 flex items-center justify-center transition-all",
+                expandedSection === "org" ? "bg-muted text-foreground" : "text-muted-foreground"
+              )}>
+                <ChevronDown
+                  className={cn(
+                    "w-4 h-4 transition-transform duration-300",
+                    expandedSection === "org" && "rotate-180",
+                  )}
+                />
+              </div>
             </button>
 
             {expandedSection === "org" && (
-              <div className="space-y-5 pr-2 sm:pr-11 animate-in fade-in slide-in-from-top-2 duration-300 pb-2">
-                {/* Departments - Only for Admins or if multiple depts exist */}
+              <div className="space-y-6 pr-2 sm:pr-14 animate-in fade-in slide-in-from-top-4 duration-500 pb-4">
+                {/* Departments */}
                 {(user?.is_admin || availableDepts.length > 1) && (
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block mb-2">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-indigo-600/70 uppercase tracking-widest flex items-center gap-2">
                       מחלקות
+                      <div className="h-px bg-indigo-100 flex-1 opacity-50" />
                     </Label>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2.5">
                       {availableDepts.map((dept) => (
-                        <button
+                        <Button
                           key={dept}
+                          variant="ghost"
                           onClick={() => toggleFilter("departments", dept)}
                           className={cn(
-                            "px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all",
+                            "h-9 px-4 rounded-xl text-xs font-black transition-all border",
                             filters.departments?.includes(dept)
-                              ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
-                              : "bg-muted/50 text-muted-foreground border border-border hover:border-indigo-200",
+                              ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 hover:text-white"
+                              : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-indigo-300 hover:text-indigo-600",
                           )}
                         >
                           {dept}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -339,24 +347,26 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 {/* Sections */}
                 {availableSections.length > 0 &&
                   (availableSections.length > 1 || user?.is_admin) && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block mb-2">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black text-blue-600/70 uppercase tracking-widest flex items-center gap-2">
                         מדורים
+                        <div className="h-px bg-blue-100 flex-1 opacity-50" />
                       </Label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2.5">
                         {availableSections.map((sect) => (
-                          <button
+                          <Button
                             key={sect}
+                            variant="ghost"
                             onClick={() => toggleFilter("sections", sect)}
                             className={cn(
-                              "px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all",
+                              "h-9 px-4 rounded-xl text-xs font-black transition-all border",
                               filters.sections?.includes(sect)
-                                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                                : "bg-muted/50 text-muted-foreground border border-border hover:border-blue-200",
+                                ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 hover:bg-blue-700 hover:text-white"
+                                : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-blue-300 hover:text-blue-600",
                             )}
                           >
                             {sect}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -364,105 +374,88 @@ export const FilterModal: React.FC<FilterModalProps> = ({
 
                 {/* Teams */}
                 {availableTeams.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block mb-2">
-                      חוליות
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-emerald-600/70 uppercase tracking-widest flex items-center gap-2">
+                      חוליות / צוותים
+                      <div className="h-px bg-emerald-100 flex-1 opacity-50" />
                     </Label>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2.5">
                       {availableTeams.map((team) => (
-                        <button
+                        <Button
                           key={team}
+                          variant="ghost"
                           onClick={() => toggleFilter("teams", team)}
                           className={cn(
-                            "px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all",
+                            "h-9 px-4 rounded-xl text-xs font-black transition-all border",
                             filters.teams?.includes(team)
-                              ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
-                              : "bg-muted/50 text-muted-foreground border border-border hover:border-emerald-200",
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 hover:text-white"
+                              : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-emerald-300 hover:text-emerald-600",
                           )}
                         >
                           {team}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* Roles */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-muted-foreground block mb-2">
-                    תפקידים
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {hierarchyData.roles.map((role) => (
-                      <button
-                        key={role}
-                        onClick={() => toggleFilter("roles", role)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all",
-                          filters.roles?.includes(role)
-                            ? "bg-foreground text-background"
-                            : "bg-muted/50 text-muted-foreground border border-border hover:border-border/80",
-                        )}
-                      >
-                        {role}
-                      </button>
-                    ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
+                  {/* Roles */}
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                      תפקידים נבחרים
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {hierarchyData.roles.map((role) => (
+                        <Button
+                          key={role}
+                          variant="outline"
+                          onClick={() => toggleFilter("roles", role)}
+                          className={cn(
+                            "h-8 px-3 rounded-lg text-[11px] font-black transition-all",
+                            filters.roles?.includes(role)
+                              ? "bg-foreground text-background border-foreground"
+                              : "bg-muted/30 text-muted-foreground border-border/50 hover:border-muted-foreground/30",
+                          )}
+                        >
+                          {role}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                {/* Service Types (Rank) */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-muted-foreground block mb-2">
-                    מעמד / מעמד
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {hierarchyData.serviceTypes.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => toggleFilter("serviceTypes", type)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all",
-                          filters.serviceTypes?.includes(type)
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted/50 text-muted-foreground border border-border hover:border-border/80",
-                        )}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Statuses */}
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-muted-foreground block mb-2">
-                    סטטוס נוכחות נוכחי
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {hierarchyData.statuses.map((status) => (
-                      <button
-                        key={status}
-                        onClick={() => toggleFilter("statuses", status)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all",
-                          filters.statuses?.includes(status)
-                            ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
-                            : "bg-muted/50 text-muted-foreground border border-border hover:border-emerald-200",
-                        )}
-                      >
-                        {status}
-                      </button>
-                    ))}
+                  {/* Service Types */}
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                      סוג שירות / מעמד
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {hierarchyData.serviceTypes.map((type) => (
+                        <Button
+                          key={type}
+                          variant="outline"
+                          onClick={() => toggleFilter("serviceTypes", type)}
+                          className={cn(
+                            "h-8 px-3 rounded-lg text-[11px] font-black transition-all",
+                            filters.serviceTypes?.includes(type)
+                              ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/10"
+                              : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/30",
+                          )}
+                        >
+                          {type}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="h-[1px] bg-border w-full" />
+          <div className="h-px bg-border/40 w-full" />
 
-          {/* Permissions & Badges */}
-          <div className="space-y-4">
+          {/* Permissions & Security */}
+          <div className="space-y-6">
             <button
               onClick={() =>
                 setExpandedSection(
@@ -471,40 +464,43 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               }
               className="flex items-center justify-between w-full group"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                  <ShieldCheck className="w-4 h-4" />
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 shadow-sm">
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
-                <span className="text-sm font-black text-foreground">
-                  הרשאות ומאפיינים
-                </span>
+                <div className="flex flex-col text-right">
+                  <span className="text-base font-black text-foreground leading-none">
+                    הרשאות ומאפיינים
+                  </span>
+                  <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1">
+                    דיווח, פיקוד וניהול
+                  </span>
+                </div>
               </div>
-              <ChevronDown
-                className={cn(
-                  "w-4 h-4 text-muted-foreground transition-transform",
-                  expandedSection === "security" && "rotate-180",
-                )}
-              />
+              <div className={cn(
+                "w-8 h-8 rounded-full border border-border/50 flex items-center justify-center transition-all",
+                expandedSection === "security" ? "bg-muted text-foreground" : "text-muted-foreground"
+              )}>
+                <ChevronDown
+                  className={cn(
+                    "w-4 h-4 transition-transform duration-300",
+                    expandedSection === "security" && "rotate-180",
+                  )}
+                />
+              </div>
             </button>
 
             {expandedSection === "security" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-2 sm:pr-11 animate-in fade-in slide-in-from-top-2 duration-300 pb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-2 sm:pr-14 animate-in fade-in slide-in-from-top-4 duration-500 pb-4">
                 {[
-                  { id: "isCommander", label: "מפקדים בלבד", color: "blue" },
-                  { id: "isAdmin", label: "מנהלי מערכת", color: "indigo" },
-                  {
-                    id: "hasSecurityClearance",
-                    label: "בעלי סיווג ביטחוני",
-                    color: "emerald",
-                  },
-                  {
-                    id: "hasPoliceRicense",
-                    label: "רישיון משטרה",
-                    color: "slate",
-                  },
+                  { id: "isCommander", label: "מפקדים בלבד", icon: ShieldCheck },
+                  { id: "isAdmin", label: "מנהלי מערכת", icon: CheckCircle2 },
+                  { id: "hasSecurityClearance", label: "בעלי סיווג ביטחוני", icon: CheckCircle2 },
+                  { id: "hasPoliceRicense", label: "רישיון נהיגה משטרתי", icon: CheckCircle2 },
                 ].map((item) => (
-                  <button
+                  <Button
                     key={item.id}
+                    variant="ghost"
                     onClick={() =>
                       toggleFilter(
                         item.id as any,
@@ -512,26 +508,26 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       )
                     }
                     className={cn(
-                      "flex items-center gap-3 p-3 rounded-2xl border transition-all text-right",
+                      "flex items-center justify-start gap-4 p-5 h-auto rounded-2xl border-2 transition-all text-right",
                       filters[item.id as keyof EmployeeFilters]
-                        ? "bg-foreground border-foreground text-background"
-                        : "bg-muted/30 border-border text-muted-foreground hover:border-border/80",
+                        ? "bg-emerald-600 border-emerald-600 text-white shadow-xl shadow-emerald-600/20"
+                        : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted hover:border-border/50",
                     )}
                   >
                     <div
                       className={cn(
-                        "w-5 h-5 rounded-md flex items-center justify-center border",
+                        "w-5 h-5 rounded-md flex items-center justify-center border transition-all",
                         filters[item.id as keyof EmployeeFilters]
-                          ? "bg-background/20 border-background/30"
-                          : "border-border",
+                          ? "bg-white/20 border-white/30"
+                          : "bg-background border-border/50",
                       )}
                     >
                       {filters[item.id as keyof EmployeeFilters] && (
-                        <Check className="w-3 h-3" />
+                        <Check className="w-3 h-3 text-white" />
                       )}
                     </div>
-                    <span className="text-[11px] font-bold">{item.label}</span>
-                  </button>
+                    <span className="text-xs font-black tracking-tight">{item.label}</span>
+                  </Button>
                 ))}
               </div>
             )}
@@ -544,29 +540,29 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 toggleFilter("showInactive", !filters.showInactive)
               }
               className={cn(
-                "w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
+                "w-full flex items-center justify-between p-5 rounded-3xl border-2 transition-all group",
                 filters.showInactive
-                  ? "bg-destructive/10 border-destructive/20 text-destructive"
-                  : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted",
+                  ? "bg-red-500/5 border-red-500/20 text-red-600 shadow-xl shadow-red-500/5"
+                  : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted/50 hover:border-border/30",
               )}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div
                   className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center",
+                    "w-10 h-10 rounded-2xl flex items-center justify-center transition-all",
                     filters.showInactive
-                      ? "bg-destructive text-destructive-foreground"
-                      : "bg-muted text-muted-foreground",
+                      ? "bg-red-600 text-white shadow-lg shadow-red-600/20"
+                      : "bg-background text-muted-foreground group-hover:text-foreground shadow-sm",
                   )}
                 >
-                  <UserMinus className="w-4 h-4" />
+                  <UserMinus className="w-5 h-5" />
                 </div>
                 <div className="flex flex-col text-right">
-                  <span className="text-xs font-black">
-                    הצג שוטרים שאינם פעילים
+                  <span className="text-sm font-black tracking-tight">
+                    הצגת שוטרים שאינם פעילים
                   </span>
-                  <span className="text-[10px] font-bold opacity-60">
-                    כולל שוטרים בתהליך שחרור או מושבתים
+                  <span className="text-[10px] font-black opacity-60 uppercase tracking-widest mt-0.5">
+                    כולל שוטרים בתהליך שחרור או מושבתים באופן זמני
                   </span>
                 </div>
               </div>
@@ -574,13 +570,13 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 className={cn(
                   "w-10 h-5 rounded-full relative transition-colors p-1",
                   filters.showInactive
-                    ? "bg-destructive"
+                    ? "bg-red-600"
                     : "bg-muted-foreground/30",
                 )}
               >
                 <div
                   className={cn(
-                    "w-3 h-3 bg-white rounded-full transition-transform shadow-sm",
+                    "w-3 h-3 bg-white rounded-full transition-all duration-300 shadow-sm",
                     filters.showInactive ? "translate-x-0" : "-translate-x-5",
                   )}
                 />
@@ -589,26 +585,26 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           </div>
         </div>
 
-        <div className="p-4 sm:p-8 bg-muted/30 border-t border-border flex flex-col sm:flex-row gap-3">
+        <div className="p-6 sm:p-10 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row gap-4 items-center">
           <Button
             onClick={handleApply}
-            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-12 shadow-xl shadow-primary/20 transition-all active:scale-95 gap-2 text-sm order-1 sm:order-2"
+            className="w-full sm:flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-14 shadow-2xl shadow-primary/20 transition-all active:scale-[0.98] gap-3 text-base"
           >
-            <Filter className="w-4 h-4" />
-            החל סינון מתקדם
+            <Filter className="w-5 h-5" />
+            החל את הגדרות הסינון
             {activeFiltersCount > 0 && (
-              <span className="mr-1 bg-primary-foreground/20 px-2 py-0.5 rounded-full text-[10px]">
+              <span className="bg-primary-foreground/20 px-2.5 py-0.5 rounded-full text-[11px] font-black mr-1">
                 {activeFiltersCount}
               </span>
             )}
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={handleReset}
-            className="w-full sm:w-auto px-8 border-border rounded-2xl h-12 font-bold text-muted-foreground hover:bg-muted transition-all shadow-sm gap-2 order-2 sm:order-1"
+            className="w-full sm:w-auto px-8 rounded-2xl h-14 font-black text-muted-foreground hover:text-foreground hover:bg-muted transition-all gap-2 text-sm"
           >
-            <RotateCcw className="w-4 h-4" />
-            איפוס
+            <RotateCcw className="w-4 h-4 opacity-70" />
+            איפוס הגדרות
           </Button>
         </div>
       </DialogContent>

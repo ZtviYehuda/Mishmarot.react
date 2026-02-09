@@ -77,6 +77,7 @@ def setup_database():
                 emergency_contact VARCHAR(100),
                 notif_sick_leave BOOLEAN DEFAULT TRUE,
                 notif_transfers BOOLEAN DEFAULT TRUE,
+                notif_morning_report BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );""",
             """CREATE TABLE IF NOT EXISTS attendance_logs (
@@ -160,6 +161,9 @@ def setup_database():
             )
             cur.execute(
                 "ALTER TABLE employees ADD COLUMN IF NOT EXISTS notif_transfers BOOLEAN DEFAULT TRUE;"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS notif_morning_report BOOLEAN DEFAULT TRUE;"
             )
             cur.execute(
                 "ALTER TABLE status_types ADD COLUMN IF NOT EXISTS code VARCHAR(50);"

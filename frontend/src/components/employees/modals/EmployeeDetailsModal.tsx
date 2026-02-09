@@ -1,5 +1,10 @@
 import React from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import type { Employee } from "@/types/employee.types";
 import { cn, cleanUnitName } from "@/lib/utils";
@@ -12,6 +17,7 @@ import {
   Cake,
   User,
   Mail,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -33,11 +39,11 @@ const InfoItem = ({
   value: React.ReactNode;
 }) => (
   <div className="flex flex-col gap-1">
-    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight flex items-center gap-1">
+    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 opacity-70">
       <Icon className="w-3 h-3" />
       {label}
     </span>
-    <span className="text-sm font-semibold text-foreground">
+    <span className="text-sm font-bold text-foreground">
       {value || "---"}
     </span>
   </div>
@@ -75,14 +81,13 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 overflow-hidden border border-border bg-card shadow-2xl"
+        className="max-w-xl p-0 overflow-hidden border border-border bg-card shadow-2xl rounded-3xl"
         dir="rtl"
       >
-        {/* Top Header Section */}
-        <div className="p-4 sm:p-6 pb-4 border-b border-border/50 bg-muted/20">
+        <DialogHeader className="p-6 border-b border-border/50 bg-muted/20 text-right">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-right">
             {/* Avatar */}
-            <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-3xl font-black shrink-0 shadow-inner">
+            <div className="w-20 h-20 rounded-[28px] bg-primary text-primary-foreground flex items-center justify-center text-3xl font-black shrink-0 shadow-lg shadow-primary/20">
               {employee.first_name[0]}
               {employee.last_name[0]}
             </div>
@@ -90,23 +95,23 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             {/* Title & Key Stats */}
             <div className="flex-1 min-w-0 pt-1">
               <div className="flex flex-col sm:flex-row items-center gap-2 mb-2 sm:mb-1">
-                <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight truncate">
+                <DialogTitle className="text-xl sm:text-2xl font-black text-foreground tracking-tight truncate">
                   {employee.first_name} {employee.last_name}
-                </h2>
+                </DialogTitle>
                 <Badge
                   variant="secondary"
-                  className="bg-primary/10 text-primary border-none font-bold text-[10px] h-5"
+                  className="bg-primary/10 text-primary border-none font-black text-[10px] h-5 rounded-full px-2.5"
                 >
                   {getProfessionalTitle(employee)}
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-muted-foreground">
-                <div className="flex items-center gap-1.5 text-xs font-bold">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-muted-foreground/60">
+                <div className="flex items-center gap-1.5 text-xs font-black">
                   <Contact className="w-3.5 h-3.5" />
                   <span>מ"א {employee.personal_number}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs font-bold">
+                <div className="flex items-center gap-1.5 text-xs font-black">
                   <div
                     className="w-2 h-2 rounded-full"
                     style={{
@@ -119,12 +124,11 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               </div>
             </div>
           </div>
-        </div>
+        </DialogHeader>
 
-        {/* Info Grid */}
-        <div className="p-4 sm:p-6 pt-6 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
+        <div className="p-6 pt-8 space-y-8 flex-1 overflow-y-auto custom-scrollbar">
           {/* Main Info Columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-8 gap-x-6">
             <InfoItem
               icon={Phone}
               label="טלפון"
@@ -184,33 +188,33 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                 }
 
                 return (
-                  <div className="bg-red-50/50 p-3 rounded-xl border border-red-100/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <div className="bg-red-100/50 p-2 rounded-lg text-red-500 shrink-0 mx-auto sm:mx-0">
-                      <Phone className="w-4 h-4" />
+                  <div className="bg-red-50/30 p-4 rounded-2xl border border-red-100/30 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <div className="bg-red-500/10 p-2.5 rounded-xl text-red-600 shrink-0 mx-auto sm:mx-0 shadow-sm">
+                      <Phone className="w-5 h-5" />
                     </div>
-                    <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full text-center sm:text-right">
+                    <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-6 w-full text-center sm:text-right">
                       <div>
-                        <span className="text-[10px] font-bold text-red-600/70 uppercase tracking-tight block">
+                        <span className="text-[10px] font-black text-red-600/60 uppercase tracking-widest mb-1 block">
                           איש קשר לחירום
                         </span>
-                        <span className="text-sm font-bold text-foreground truncate block">
+                        <span className="text-sm font-black text-foreground truncate block">
                           {name || "---"}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-red-600/70 uppercase tracking-tight block">
+                        <span className="text-[10px] font-black text-red-600/60 uppercase tracking-widest mb-1 block">
                           קרבה
                         </span>
-                        <span className="text-sm font-bold text-foreground truncate block">
+                        <span className="text-sm font-black text-foreground truncate block">
                           {relation || "---"}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-red-600/70 uppercase tracking-tight block">
+                        <span className="text-[10px] font-black text-red-600/60 uppercase tracking-widest mb-1 block">
                           טלפון
                         </span>
                         <span
-                          className="text-sm font-bold text-foreground truncate block"
+                          className="text-sm font-black text-foreground truncate block"
                           dir="ltr"
                         >
                           {phone || "---"}
@@ -223,21 +227,21 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             </div>
           </div>
 
-          <div className="h-px bg-border/50 w-full" />
+          <div className="h-px bg-border/40 w-full" />
 
           {/* Organizational Block */}
           {(employee.department_name ||
             employee.section_name ||
             employee.team_name) && (
-              <div>
-                <h3 className="text-[11px] font-black text-primary uppercase tracking-widest mb-4 flex items-center justify-center sm:justify-start gap-2">
-                  <Building2 className="w-3.5 h-3.5" />
-                  מבנה ארגוני
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2 opacity-80">
+                  <Building2 className="w-4 h-4" />
+                  ניהול ומבנה ארגוני
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {employee.department_name && (
-                    <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                    <div className="bg-muted/30 p-4 rounded-2xl border border-border/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                      <p className="text-[9px] font-black text-muted-foreground uppercase opacity-70">
                         מחלקה
                       </p>
                       <p className="text-sm font-black text-center text-wrap break-words leading-tight">
@@ -246,8 +250,8 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                     </div>
                   )}
                   {employee.section_name && (
-                    <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                    <div className="bg-muted/30 p-4 rounded-2xl border border-border/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                      <p className="text-[9px] font-black text-muted-foreground uppercase opacity-70">
                         מדור
                       </p>
                       <p className="text-sm font-black text-center text-wrap break-words leading-tight">
@@ -256,8 +260,8 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                     </div>
                   )}
                   {employee.team_name && (
-                    <div className="bg-muted/50 p-3 rounded-xl border border-border/40 flex flex-col items-center justify-center gap-1">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                    <div className="bg-muted/30 p-4 rounded-2xl border border-border/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                      <p className="text-[9px] font-black text-muted-foreground uppercase opacity-70">
                         צוות / חוליה
                       </p>
                       <p className="text-sm font-black text-center text-wrap break-words leading-tight">
@@ -271,77 +275,56 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         </div>
 
         {/* Action Footer */}
-        <div className="p-4 bg-muted/30 border-t flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div className="p-6 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row justify-between items-center gap-4">
           <Button
             variant="default"
-            className="gap-2 font-bold shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground h-11 sm:h-10 px-6 rounded-xl w-full sm:flex-1"
+            className="gap-2.5 font-black shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground h-12 px-8 rounded-2xl w-full sm:w-auto transition-transform active:scale-95"
             onClick={() => {
               navigate(`/employees/${employee.id}`);
               onOpenChange(false);
             }}
           >
-            <User className="w-4 h-4" />
-            מעבר לפרופיל המלא
+            <ExternalLink className="w-4 h-4" />
+            צפייה בפרופיל מלא
           </Button>
 
-          {!employee.phone_number ? (
-            <WhatsAppButton
-              disabled
-              label="אין מספר טלפון זמין"
-              className="w-full sm:flex-1 bg-muted text-muted-foreground shadow-none"
-            />
-          ) : (
-            (() => {
-              const isBirthdayUpcoming = () => {
-                if (!employee.birth_date) return false;
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const birthDate = new Date(employee.birth_date);
-
-                // Create current year birthday date
-                const currentYearBirthday = new Date(
-                  today.getFullYear(),
-                  birthDate.getMonth(),
-                  birthDate.getDate(),
-                );
-
-                // Create next year birthday for edge cases (end of year)
-                const nextYearBirthday = new Date(
-                  today.getFullYear() + 1,
-                  birthDate.getMonth(),
-                  birthDate.getDate(),
-                );
-
-                const isUpcoming = (date: Date) => {
-                  const diffTime = date.getTime() - today.getTime();
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  return diffDays >= 0 && diffDays <= 7;
+          <div className="w-full sm:w-auto">
+            {!employee.phone_number ? (
+              <WhatsAppButton
+                disabled
+                label="אין מספר טלפון"
+                className="w-full h-12 rounded-2xl bg-muted text-muted-foreground/50 cursor-not-allowed opacity-50"
+              />
+            ) : (
+              (() => {
+                const checkBirthday = () => {
+                  if (!employee.birth_date) return false;
+                  const today = new Date();
+                  const birthDate = new Date(employee.birth_date);
+                  return today.getMonth() === birthDate.getMonth() && today.getDate() === birthDate.getDate();
                 };
 
+                const isBirthday = checkBirthday();
+                const message = isBirthday
+                  ? `היי ${employee.first_name}, המון מזל טוב ליום הולדתך! 🎉 מאחלים לך הרבה אושר, בריאות והצלחה בכל! 🎂`
+                  : `היי ${employee.first_name}, `;
+
                 return (
-                  isUpcoming(currentYearBirthday) ||
-                  isUpcoming(nextYearBirthday)
+                  <WhatsAppButton
+                    phoneNumber={employee.phone_number}
+                    message={message}
+                    title={isBirthday ? "שלח ברכת מזל טוב" : "וואטסאפ"}
+                    className={cn(
+                      "h-12 px-8 rounded-2xl shadow-lg transition-all font-black text-xs gap-2.5 active:scale-95",
+                      isBirthday
+                        ? "bg-pink-600 hover:bg-pink-700 text-white shadow-pink-500/20"
+                        : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+                    )}
+                  />
                 );
-              };
-
-              const isBirthday = isBirthdayUpcoming();
-              const message = isBirthday
-                ? `היי ${employee.first_name}, המון מזל טוב ליום הולדתך! 🎉 מאחלים לך הרבה אושר, בריאות והצלחה בכל! 🎂`
-                : `היי ${employee.first_name}, `;
-
-              return (
-                <WhatsAppButton
-                  phoneNumber={employee.phone_number}
-                  message={message}
-                  title={isBirthday ? "שלח ברכת יום הולדת" : "שלח הודעה"}
-                  className={cn(
-                    "w-12 h-12 rounded-full shadow-lg transition-transform",
-                    isBirthday ? "bg-pink-600 hover:bg-pink-700 shadow-pink-500/20" : "shadow-emerald-500/20"
-                  )}
-                />
-              );
-            })()
-          )}
+              })()
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

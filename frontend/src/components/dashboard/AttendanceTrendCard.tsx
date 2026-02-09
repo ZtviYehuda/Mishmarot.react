@@ -6,13 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   XAxis,
@@ -24,6 +17,7 @@ import {
   AreaChart,
   BarChart,
   Bar,
+  Cell,
 } from "recharts";
 import { format, parseISO, startOfMonth } from "date-fns";
 import { he } from "date-fns/locale";
@@ -31,7 +25,7 @@ import {
   Download,
   TrendingUp,
   Users,
-  Calendar,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toPng, toBlob } from "html-to-image";
@@ -49,10 +43,10 @@ interface AttendanceTrendCardProps {
   data: TrendData[];
   loading?: boolean;
   range: number;
-  onRangeChange: (range: number) => void;
   className?: string;
   unitName?: string;
   subtitle?: string;
+  selectedDate?: Date;
 }
 
 export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
@@ -61,10 +55,10 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       data,
       loading,
       range,
-      onRangeChange,
       className,
       unitName = "כלל היחידה",
       subtitle,
+      selectedDate = new Date(),
     },
     ref,
   ) => {
@@ -74,8 +68,6 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       download: handleDownload,
       share: handleWhatsAppShare,
     }));
-
-    // ... (rest of useMemo logic)
 
     const chartData = useMemo(() => {
       if (range < 365) return data;
@@ -110,7 +102,6 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       }));
     }, [data, range]);
 
-    // Statistics calculation
     const stats = useMemo(() => {
       if (!data.length) return null;
       const avgPresence = Math.round(
@@ -133,7 +124,18 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
         const dataUrl = await toPng(cardRef.current, {
           cacheBust: true,
           backgroundColor: "#ffffff",
-        });
+          onClone: (clonedNode: any) => {
+            const dateEl = clonedNode.querySelector(".export-date-hidden");
+            if (dateEl) {
+              dateEl.style.position = "static";
+              dateEl.style.opacity = "1";
+            }
+            const hideEls = clonedNode.querySelectorAll(".export-hide");
+            hideEls.forEach((el: any) => (el.style.display = "none"));
+            const noExportEls = clonedNode.querySelectorAll(".no-export");
+            noExportEls.forEach((el: any) => (el.style.display = "none"));
+          },
+        } as any);
         const link = document.createElement("a");
         link.download = `attendance-trend-${range}-days.png`;
         link.href = dataUrl;
@@ -149,11 +151,21 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       if (cardRef.current === null) return;
 
       try {
-        // 1. Capture Image as Blob
         const blob = await toBlob(cardRef.current, {
           cacheBust: true,
           backgroundColor: "#ffffff",
-        });
+          onClone: (clonedNode: any) => {
+            const dateEl = clonedNode.querySelector(".export-date-hidden");
+            if (dateEl) {
+              dateEl.style.position = "static";
+              dateEl.style.opacity = "1";
+            }
+            const hideEls = clonedNode.querySelectorAll(".export-hide");
+            hideEls.forEach((el: any) => (el.style.display = "none"));
+            const noExportEls = clonedNode.querySelectorAll(".no-export");
+            noExportEls.forEach((el: any) => (el.style.display = "none"));
+          },
+        } as any);
 
         if (!blob) throw new Error("Failed to capture image");
 
@@ -165,7 +177,6 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
         const title = `דוח מגמת זמינות ${rangeText} - ${unitName}`;
         const message = `*${title}*\nתאריך: ${format(new Date(), "dd/MM/yyyy")}${filterText}${statsText}`;
 
-        // 2. Try Web Share API (Mobile/Modern OS Support)
         const file = new File([blob], `trend-${range}.png`, { type: "image/png" });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -176,18 +187,16 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
               text: message,
             });
             toast.success("הדוח שותף בהצלחה");
-            return; // Exit if shared via native API
+            return;
           } catch (shareErr) {
-            // If user cancelled or error, we don't return, we try fallback
             if ((shareErr as Error).name !== "AbortError") {
               console.warn("Web Share failed:", shareErr);
             } else {
-              return; // User cancelled
+              return;
             }
           }
         }
 
-        // 3. FALLBACK: Copy to Clipboard + WhatsApp Link
         try {
           const item = new ClipboardItem({ "image/png": blob });
           await navigator.clipboard.write([item]);
@@ -195,8 +204,20 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
           console.warn("Clipboard copy failed:", clipErr);
         }
 
-        // Also trigger a backup download
-        const dataUrl = await toPng(cardRef.current, { backgroundColor: "#ffffff" });
+        const dataUrl = await toPng(cardRef.current, {
+          backgroundColor: "#ffffff",
+          onClone: (clonedNode: any) => {
+            const dateEl = clonedNode.querySelector(".export-date-hidden");
+            if (dateEl) {
+              dateEl.style.position = "static";
+              dateEl.style.opacity = "1";
+            }
+            const hideEls = clonedNode.querySelectorAll(".export-hide");
+            hideEls.forEach((el: any) => (el.style.display = "none"));
+            const noExportEls = clonedNode.querySelectorAll(".no-export");
+            noExportEls.forEach((el: any) => (el.style.display = "none"));
+          },
+        } as any);
         const link = document.createElement("a");
         link.download = `מגמת_זמינות_${format(new Date(), "dd-MM-yyyy")}.png`;
         link.href = dataUrl;
@@ -213,16 +234,47 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
     };
 
     const getAxisTickFormatter = (value: string) => {
-      if (range === 7) return value;
-      if (range === 30) {
+      if (!value) return "";
+      try {
         const date = parseISO(value);
-        return !isNaN(date.getTime()) ? format(date, "d/M") : value;
+        if (!isNaN(date.getTime())) {
+          return format(date, "dd/MM");
+        }
+      } catch (e) {
+        // ignore
       }
-      return value; // For yearly view, date_str is already the month name
+      return value;
+    };
+
+    const maxTotal = useMemo(() => {
+      if (!chartData || chartData.length === 0) return 10;
+      const max = Math.max(
+        ...chartData.map((d) => d.total_employees || 0),
+        10
+      );
+      return max;
+    }, [chartData]);
+
+    const getBarColor = (present: number, total: number) => {
+      if (!total) return "#ef4444";
+      const percentage = (present / total) * 100;
+      if (percentage >= 70) return "#10b981";
+      if (percentage >= 50) return "#f97316";
+      return "#ef4444";
     };
 
     if (loading) {
-      // ... existing loading state ...
+      return (
+        <Card className={cn("h-full", className)}>
+          <CardHeader>
+            <CardTitle className="text-lg animate-pulse bg-muted h-6 w-32 rounded"></CardTitle>
+            <CardDescription className="animate-pulse bg-muted h-4 w-48 rounded mt-2"></CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </CardContent>
+        </Card>
+      );
     }
 
     return (
@@ -245,18 +297,19 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
               {subtitle && (
                 <>
                   {" "}
-                  | <span>{subtitle}</span>
+                  | <span className="export-hide">{subtitle}</span>
                 </>
               )}
               <div className="text-[10px] text-muted-foreground mt-0.5">
                 {range === 7
-                  ? "מעקב יומי ב-7 הימים האחרונים"
+                  ? "7 ימים אחרונים"
                   : range === 30
-                    ? "מעקב יומי ב-30 הימים האחרונים"
-                    : "מגמה ממוצעת לפי חודשים"}
+                    ? "30 ימים אחרונים"
+                    : "מגמה שנתית"}
               </div>
             </CardDescription>
           </div>
+
           <div className="flex items-center gap-1.5 no-export">
             <Button
               variant="ghost"
@@ -271,29 +324,16 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
             <WhatsAppButton
               onClick={handleWhatsAppShare}
               variant="outline"
-              className="h-8 w-8 p-0 rounded-lg border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+              className="h-8 w-8 p-0 rounded-lg text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm border border-emerald-500/20 bg-emerald-50/50"
               skipDirectLink={true}
             />
-
-            <Select
-              value={range.toString()}
-              onValueChange={(val) => onRangeChange(parseInt(val))}
-            >
-              <SelectTrigger className="h-8 w-[90px] text-[11px] font-bold rounded-lg bg-background border-primary/20">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">שבועי</SelectItem>
-                <SelectItem value="30">חודשי</SelectItem>
-                <SelectItem value="365">שנתי</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 pb-2">
-          <div className="h-[220px] w-full" dir="ltr">
+
+        <CardContent className="p-4 pt-2 flex-1 min-h-0 flex flex-col">
+          <div className="w-full h-full min-h-[250px] flex-1">
             <ResponsiveContainer width="100%" height="100%">
-              {range < 365 ? (
+              {range <= 30 ? (
                 <AreaChart
                   data={chartData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -302,12 +342,12 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                     <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
                       <stop
                         offset="5%"
-                        stopColor="hsl(var(--primary))"
+                        stopColor="#10b981"
                         stopOpacity={0.3}
                       />
                       <stop
                         offset="95%"
-                        stopColor="hsl(var(--primary))"
+                        stopColor="#10b981"
                         stopOpacity={0}
                       />
                     </linearGradient>
@@ -315,46 +355,48 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="hsl(var(--border))"
+                    stroke="var(--border)"
                     strokeOpacity={0.4}
                   />
                   <XAxis
-                    dataKey="date_str"
+                    dataKey="date"
                     tickFormatter={getAxisTickFormatter}
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 500 }}
                     tickLine={false}
                     axisLine={false}
                     dy={10}
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 500 }}
                     tickLine={false}
                     axisLine={false}
+                    domain={[0, (dataMax: number) => Math.max(dataMax, maxTotal)]}
                   />
                   <Tooltip
+                    cursor={{ stroke: "var(--primary)", strokeWidth: 2 }}
                     contentStyle={{
                       borderRadius: "12px",
-                      border: "1px solid hsl(var(--border))",
-                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "var(--card)",
                       boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
                       fontSize: "12px",
                     }}
+                    labelFormatter={(label) => format(parseISO(label), "dd/MM/yyyy")}
                     itemStyle={{ fontWeight: "bold", padding: "2px 0" }}
-                    labelStyle={{ fontWeight: "bold", marginBottom: "4px", color: "hsl(var(--muted-foreground))" }}
-                    cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }}
+                    labelStyle={{ fontWeight: "bold", marginBottom: "4px", color: "var(--muted-foreground)" }}
                   />
                   <Area
                     type="monotone"
                     dataKey="present_count"
-                    stroke="hsl(var(--primary))"
+                    stroke="#10b981"
                     strokeWidth={3}
                     fillOpacity={1}
                     fill="url(#colorPresent)"
                     animationDuration={1500}
                     activeDot={{
                       r: 6,
-                      fill: "hsl(var(--primary))",
-                      stroke: "hsl(var(--background))",
+                      fill: "#10b981",
+                      stroke: "var(--background)",
                       strokeWidth: 2,
                     }}
                   />
@@ -364,55 +406,54 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   data={chartData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
-                  <defs>
-                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
-                    </linearGradient>
-                  </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="hsl(var(--border))"
+                    stroke="var(--border)"
                     strokeOpacity={0.4}
                   />
                   <XAxis
                     dataKey="date_str"
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 500 }}
                     tickLine={false}
                     axisLine={false}
                     dy={10}
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 500 }}
                     tickLine={false}
                     axisLine={false}
                   />
                   <Tooltip
-                    cursor={{ fill: "hsl(var(--primary))", opacity: 0.05, radius: 8 }}
+                    cursor={{ fill: "var(--primary)", opacity: 0.05, radius: 8 }}
                     contentStyle={{
                       borderRadius: "12px",
-                      border: "1px solid hsl(var(--border))",
-                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "var(--card)",
                       boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
                       fontSize: "12px",
                     }}
                     itemStyle={{ fontWeight: "bold", padding: "2px 0" }}
-                    labelStyle={{ fontWeight: "bold", marginBottom: "4px", color: "hsl(var(--muted-foreground))" }}
+                    labelStyle={{ fontWeight: "bold", marginBottom: "4px", color: "var(--muted-foreground)" }}
                   />
                   <Bar
                     dataKey="present_count"
                     radius={[6, 6, 0, 0]}
                     barSize={range === 365 ? 24 : 16}
-                    fill="url(#barGradient)"
                     animationDuration={1500}
-                  />
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={getBarColor(entry.present_count, entry.total_employees)}
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               )}
             </ResponsiveContainer>
           </div>
 
-          {/* Statistics Summary Row */}
           {stats && (
             <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-border/50">
               <div className="flex flex-col items-center text-center">
@@ -435,7 +476,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] mb-0.5">
-                  <Calendar className="w-3 h-3" />
+                  <CalendarIcon className="w-3 h-3" />
                   <span>יום שיא</span>
                 </div>
                 <span className="text-sm font-bold text-foreground font-mono">
@@ -444,6 +485,9 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
               </div>
             </div>
           )}
+          <div className="export-date-hidden absolute opacity-0 -z-50 text-center mt-4 pt-2 border-t border-border/50 text-sm font-bold text-muted-foreground">
+            תאריך דוח: {format(selectedDate, "dd/MM/yyyy")}
+          </div>
         </CardContent>
       </Card>
     );

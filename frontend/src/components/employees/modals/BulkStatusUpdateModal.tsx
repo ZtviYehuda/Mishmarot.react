@@ -23,6 +23,7 @@ import {
   AlertCircle,
   ArrowLeft,
   Filter,
+  Check,
 } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
 import type { Employee } from "@/types/employee.types";
@@ -128,6 +129,24 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     }
   }, [open, getStatusTypes, getServiceTypes, employees, initialSelectedIds]);
 
+  const filteredList = useMemo(() => {
+    return employees.filter((emp) => {
+      if (showSelectedOnly && !selectedIds.includes(emp.id)) return false;
+
+      const matchesSearch =
+        `${emp.first_name} ${emp.last_name}`
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        emp.personal_number.includes(searchTerm);
+
+      const matchesService =
+        filterServiceType === "all" ||
+        emp.service_type_id?.toString() === filterServiceType;
+
+      return matchesSearch && matchesService;
+    });
+  }, [employees, searchTerm, filterServiceType, showSelectedOnly, selectedIds]);
+
   const handleSubmit = async () => {
     setLoading(true);
 
@@ -202,24 +221,6 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
       [empId]: { ...prev[empId], [field]: value, touched: true },
     }));
   };
-
-  const filteredList = useMemo(() => {
-    return employees.filter((emp) => {
-      if (showSelectedOnly && !selectedIds.includes(emp.id)) return false;
-
-      const matchesSearch =
-        `${emp.first_name} ${emp.last_name}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        emp.personal_number.includes(searchTerm);
-
-      const matchesService =
-        filterServiceType === "all" ||
-        emp.service_type_id?.toString() === filterServiceType;
-
-      return matchesSearch && matchesService;
-    });
-  }, [employees, searchTerm, filterServiceType, showSelectedOnly, selectedIds]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -315,16 +316,16 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
       onOpenChange={(v) => (!v ? handleCloseAttempt() : onOpenChange(v))}
     >
       <DialogContent
-        className="max-w-[100vw] sm:max-w-7xl p-0 border-none bg-card shadow-2xl flex flex-col"
+        className="max-w-[100vw] sm:max-w-7xl p-0 border-none bg-card shadow-2xl flex flex-col rounded-3xl overflow-hidden"
         dir="rtl"
       >
-        <DialogHeader className="px-6 py-4 border-b bg-muted/10 text-right shrink-0 relative">
-          <div className="flex items-center justify-between gap-4 mb-4 text-right">
-            <div>
-              <DialogTitle className="text-2xl font-black text-foreground mb-1 text-right tracking-tight">
+        <DialogHeader className="px-6 py-6 border-b border-border/50 bg-muted/20 text-right shrink-0 relative">
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="text-right">
+              <DialogTitle className="text-2xl font-black text-foreground mb-1 tracking-tight">
                 עדכון נוכחות יחידתי
               </DialogTitle>
-              <DialogDescription className="text-sm font-bold text-muted-foreground text-right italic">
+              <DialogDescription className="text-sm font-bold text-muted-foreground italic">
                 {employees.length} שוטרים מופיעים ברשימה
               </DialogDescription>
             </div>
@@ -336,33 +337,33 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
             </button>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 transition-colors group-focus-within:text-primary" />
               <input
                 type="text"
                 placeholder="חיפוש לפי שם או מספר אישי..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-10 pr-10 pl-4 bg-muted/50 border-input border rounded-xl text-sm font-bold text-foreground focus:ring-2 focus:ring-ring/20 outline-none transition-all"
+                className="w-full h-11 pr-11 pl-4 bg-background border-border/50 border rounded-2xl text-sm font-black text-foreground focus:ring-2 focus:ring-primary/10 outline-none transition-all"
               />
             </div>
 
-            <div className="w-[160px]">
+            <div className="w-full sm:w-[200px]">
               <Select
                 value={filterServiceType}
                 onValueChange={setFilterServiceType}
               >
-                <SelectTrigger className="h-10 bg-muted/50 border-input font-bold text-xs rounded-xl">
+                <SelectTrigger className="h-11 bg-background border-border/50 font-black text-xs rounded-2xl">
                   <div className="flex items-center gap-2">
                     <Filter className="w-3.5 h-3.5 text-muted-foreground" />
                     <SelectValue placeholder="סינון לפי מעמד" />
                   </div>
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">כל המעמדות</SelectItem>
+                <SelectContent dir="rtl">
+                  <SelectItem value="all" className="font-black text-xs">כל המעמדות</SelectItem>
                   {serviceTypes.map((st) => (
-                    <SelectItem key={st.id} value={st.id.toString()}>
+                    <SelectItem key={st.id} value={st.id.toString()} className="font-black text-xs">
                       {st.name}
                     </SelectItem>
                   ))}
@@ -372,18 +373,20 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {fetching ? (
-            <div className="py-20 flex flex-col items-center justify-center gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <span className="text-xs font-bold text-muted-foreground">
-                טוען נתונים...
+            <div className="py-20 flex flex-col items-center justify-center gap-4">
+              <Loader2 className="w-10 h-10 animate-spin text-primary/30" />
+              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+                טוען רשימת שוטרים...
               </span>
             </div>
           ) : filteredList.length === 0 ? (
-            <div className="py-20 flex flex-col items-center justify-center text-muted-foreground gap-2">
-              <AlertCircle className="w-8 h-8 opacity-20" />
-              <span className="text-sm font-bold">לא נמצאו שוטרים</span>
+            <div className="py-20 flex flex-col items-center justify-center text-muted-foreground gap-4">
+              <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center">
+                <AlertCircle className="w-8 h-8 opacity-20" />
+              </div>
+              <span className="text-sm font-black uppercase tracking-widest">לא נמצאו שוטרים התואמים לחיפוש</span>
             </div>
           ) : (
             <>
@@ -391,11 +394,11 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
               <div className="hidden lg:block">
                 <Table>
                   <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-sm">
-                    <TableRow className="hover:bg-transparent border-b">
-                      <TableHead className="w-[60px] text-center px-2">
+                    <TableRow className="hover:bg-transparent border-b border-border/50">
+                      <TableHead className="w-[80px] text-center px-4">
                         <div className="flex items-center justify-center">
                           <Checkbox
-                            className="w-5 h-5 border-2 border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-lg transition-all shadow-sm"
+                            className="w-6 h-6 border-2 border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-lg transition-all shadow-sm"
                             checked={
                               filteredList.length > 0 &&
                               selectedIds.length === filteredList.length
@@ -406,13 +409,13 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                           />
                         </div>
                       </TableHead>
-                      <TableHead className="text-right min-w-[200px] font-black text-xs uppercase text-muted-foreground">
-                        שוטר
+                      <TableHead className="text-right min-w-[200px] font-black text-[10px] uppercase text-muted-foreground tracking-widest">
+                        שוטר / מ"א
                       </TableHead>
-                      <TableHead className="text-right min-w-[200px] w-[25%] font-black text-xs uppercase text-muted-foreground">
-                        סטטוס נוכחי
+                      <TableHead className="text-right min-w-[200px] w-[25%] font-black text-[10px] uppercase text-muted-foreground tracking-widest">
+                        סטטוס דיווח
                       </TableHead>
-                      <TableHead className="text-right min-w-[300px] font-black text-xs uppercase text-muted-foreground">
+                      <TableHead className="text-right min-w-[300px] font-black text-[10px] uppercase text-muted-foreground tracking-widest">
                         טווח תאריכים
                       </TableHead>
                     </TableRow>
@@ -426,17 +429,17 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                           key={emp.id}
                           data-state={isSelected ? "selected" : "unchecked"}
                           className={cn(
-                            "transition-all hover:bg-muted/40 border-b last:border-0",
+                            "transition-all hover:bg-muted/40 border-b border-border/30 last:border-0",
                             isSelected && "bg-primary/5 hover:bg-primary/10",
                             current?.isChanged &&
                             "bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-900/10",
                           )}
                         >
-                          <TableCell className="text-center px-2 py-4 align-middle">
+                          <TableCell className="text-center px-4 py-4 align-middle">
                             <div className="flex items-center justify-center">
                               <Checkbox
                                 className={cn(
-                                  "w-5 h-5 border-2 border-muted-foreground/30 rounded-lg transition-all shadow-sm",
+                                  "w-6 h-6 border-2 border-muted-foreground/30 rounded-lg transition-all shadow-sm",
                                   isSelected
                                     ? "bg-primary border-primary text-primary-foreground"
                                     : "bg-background hover:border-primary/50",
@@ -448,17 +451,17 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               />
                             </div>
                           </TableCell>
-                          <TableCell className="font-medium align-middle py-4">
+                          <TableCell className="font-medium align-middle py-4 px-4">
                             <div className="flex items-center gap-4">
                               <div
                                 className={cn(
-                                  "w-10 h-10 rounded-xl shadow-sm flex items-center justify-center transition-transform hover:scale-105 shrink-0",
+                                  "w-11 h-11 rounded-2xl shadow-sm flex items-center justify-center transition-transform hover:scale-105 shrink-0 font-black",
                                   current?.isChanged
                                     ? "bg-primary text-primary-foreground"
-                                    : "bg-white dark:bg-muted/50 text-muted-foreground border border-border/50",
+                                    : "bg-background text-muted-foreground border border-border/50",
                                 )}
                               >
-                                <User className="w-5 h-5" />
+                                {emp.first_name[0]}{emp.last_name[0]}
                               </div>
                               <div className="flex flex-col text-right gap-0.5">
                                 <span
@@ -471,13 +474,13 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                 >
                                   {emp.first_name} {emp.last_name}
                                 </span>
-                                <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
-                                  <span className="tracking-wider bg-muted/50 px-1.5 py-0.5 rounded-md">
+                                <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-black opacity-60">
+                                  <span className="tracking-widest">
                                     {emp.personal_number}
                                   </span>
                                   {emp.service_type_name && (
                                     <>
-                                      <span className="w-1 h-1 rounded-full bg-border" />
+                                      <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                                       <span>{emp.service_type_name}</span>
                                     </>
                                   )}
@@ -485,7 +488,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="align-middle py-4">
+                          <TableCell className="align-middle py-4 px-4">
                             <Select
                               value={current?.status_id.toString()}
                               onValueChange={(val) =>
@@ -493,7 +496,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               }
                             >
                               <SelectTrigger
-                                className="h-10 text-right font-bold text-xs bg-muted/40 border-input hover:bg-muted/60 transition-colors rounded-xl w-full"
+                                className="h-10 text-right font-black text-xs bg-muted/30 border-border/50 hover:bg-muted/50 transition-colors rounded-xl w-full"
                                 dir="rtl"
                               >
                                 <SelectValue placeholder="בחר סטטוס" />
@@ -503,7 +506,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                   <SelectItem
                                     key={type.id}
                                     value={type.id.toString()}
-                                    className="text-right font-bold text-xs"
+                                    className="text-right font-black text-xs"
                                   >
                                     <div className="flex items-center gap-2">
                                       <div
@@ -521,10 +524,10 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               </SelectContent>
                             </Select>
                           </TableCell>
-                          <TableCell className="align-top py-3">
-                            {current?.isChanged || current?.touched ? (
-                              <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
-                                <div className="relative flex-1 max-w-[140px]">
+                          <TableCell className="align-middle py-4 px-4">
+                            {current?.isChanged || current?.touched || isSelected ? (
+                              <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-2">
+                                <div className="relative flex-1 max-w-[160px]">
                                   <input
                                     type="date"
                                     value={current.start_date}
@@ -535,11 +538,11 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                         e.target.value,
                                       )
                                     }
-                                    className="w-full bg-muted/30 hover:bg-muted/50 transition-colors border border-input rounded-xl h-10 text-xs font-medium px-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                    className="w-full bg-muted/30 hover:bg-muted/50 transition-colors border border-border/50 rounded-xl h-10 text-xs font-black px-4 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none"
                                   />
                                 </div>
-                                <ArrowLeft className="w-3 h-3 text-muted-foreground" />
-                                <div className="relative flex-1 max-w-[140px]">
+                                <ArrowLeft className="w-4 h-4 text-muted-foreground/30" />
+                                <div className="relative flex-1 max-w-[160px]">
                                   <input
                                     type="date"
                                     value={current.end_date || ""}
@@ -550,14 +553,14 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                         e.target.value,
                                       )
                                     }
-                                    className="w-full bg-muted/30 hover:bg-muted/50 transition-colors border border-input rounded-xl h-10 text-xs font-medium px-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none placeholder:text-muted-foreground/50"
+                                    className="w-full bg-muted/30 hover:bg-muted/50 transition-colors border border-border/50 rounded-xl h-10 text-xs font-black px-4 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none placeholder:text-muted-foreground/30"
                                     placeholder="סיום (אופציונלי)"
                                   />
                                 </div>
                               </div>
                             ) : (
-                              <span className="text-[10px] text-muted-foreground/40 font-medium">
-                                --
+                              <span className="text-[10px] text-muted-foreground/30 font-black uppercase tracking-widest pr-4">
+                                ---
                               </span>
                             )}
                           </TableCell>
@@ -574,7 +577,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="select-all-mobile"
-                      className="w-5 h-5 rounded-md"
+                      className="w-6 h-6 rounded-lg"
                       checked={
                         filteredList.length > 0 &&
                         selectedIds.length === filteredList.length
@@ -585,12 +588,12 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                     />
                     <label
                       htmlFor="select-all-mobile"
-                      className="text-xs font-bold text-muted-foreground"
+                      className="text-xs font-black text-muted-foreground"
                     >
-                      בחר את כל המוצגים
+                      בחר הכל
                     </label>
                   </div>
-                  <span className="text-[10px] font-bold text-muted-foreground/60">
+                  <span className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest">
                     מוצגים {filteredList.length} שוטרים
                   </span>
                 </div>
@@ -602,48 +605,46 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                     <div
                       key={emp.id}
                       className={cn(
-                        "rounded-2xl border transition-all duration-200 overflow-hidden",
+                        "rounded-[24px] border transition-all duration-300 overflow-hidden",
                         isSelected
-                          ? "border-primary bg-primary/5 shadow-sm"
-                          : "border-border bg-card",
+                          ? "border-primary bg-primary/5 shadow-lg shadow-primary/5"
+                          : "border-border/50 bg-card shadow-sm",
                         current?.isChanged &&
                         !isSelected &&
-                        "border-blue-200 bg-blue-50/30",
+                        "border-blue-200 bg-blue-50/10",
                       )}
                     >
-                      <div className="p-4 space-y-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="p-5 space-y-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
                             <Checkbox
-                              className="w-5 h-5 rounded-md shrink-0"
+                              className="w-6 h-6 rounded-lg shrink-0"
                               checked={isSelected}
                               onCheckedChange={(checked) =>
                                 handleSelectOne(emp.id, checked as boolean)
                               }
                             />
                             <div className="flex flex-col text-right truncate">
-                              <span className="text-[15px] font-black text-foreground truncate leading-none mb-1">
+                              <span className="text-base font-black text-foreground truncate leading-tight mb-0.5">
                                 {emp.first_name} {emp.last_name}
                               </span>
-                              <span className="text-[11px] font-bold text-muted-foreground/60">
-                                {emp.personal_number}{" "}
-                                <span className="opacity-30">•</span>{" "}
-                                {emp.service_type_name}
+                              <span className="text-[11px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                                {emp.personal_number} <span className="mx-1 opacity-30">•</span> {emp.service_type_name}
                               </span>
                             </div>
                           </div>
                           <div
-                            className="w-3 h-3 rounded-full mt-1.5 shadow-sm ring-4 ring-muted"
+                            className="w-3.5 h-3.5 rounded-full mt-1.5 shadow-sm border-2 border-background"
                             style={{
                               backgroundColor: current?.color || "#94a3b8",
                             }}
                           />
                         </div>
 
-                        <div className="space-y-3">
-                          <div className="flex flex-col gap-1.5">
-                            <span className="text-[10px] font-bold text-muted-foreground pr-1">
-                              עדכון סטטוס:
+                        <div className="space-y-4">
+                          <div className="flex flex-col gap-2">
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1">
+                              סטטוס דיווח:
                             </span>
                             <Select
                               value={current?.status_id.toString()}
@@ -652,7 +653,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               }
                             >
                               <SelectTrigger
-                                className="h-10 text-right font-bold text-xs bg-muted/40 border-input rounded-xl"
+                                className="h-11 text-right font-black text-xs bg-muted/30 border-border/50 rounded-2xl"
                                 dir="rtl"
                               >
                                 <SelectValue placeholder="בחר סטטוס" />
@@ -662,7 +663,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                   <SelectItem
                                     key={type.id}
                                     value={type.id.toString()}
-                                    className="text-right font-bold text-xs"
+                                    className="text-right font-black text-xs"
                                   >
                                     <div className="flex items-center gap-2">
                                       <div
@@ -679,11 +680,11 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             </Select>
                           </div>
 
-                          {(current?.isChanged || current?.touched) && (
-                            <div className="grid grid-cols-2 gap-3 pt-2 animate-in fade-in slide-in-from-top-2 tracking-tighter">
-                              <div className="space-y-1">
-                                <span className="text-[9px] font-bold text-primary pr-1">
-                                  תאריך התחלה:
+                          {(current?.isChanged || current?.touched || isSelected) && (
+                            <div className="grid grid-cols-2 gap-4 pt-2 animate-in fade-in slide-in-from-top-4">
+                              <div className="space-y-2">
+                                <span className="text-[10px] font-black text-primary uppercase tracking-widest pr-1">
+                                  התחלה:
                                 </span>
                                 <input
                                   type="date"
@@ -695,12 +696,12 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                       e.target.value,
                                     )
                                   }
-                                  className="w-full bg-white dark:bg-muted/50 border border-primary/20 rounded-lg h-9 text-[11px] font-bold px-2 outline-none"
+                                  className="w-full bg-background border border-border/50 rounded-xl h-10 text-[11px] font-black px-3 focus:border-primary outline-none"
                                 />
                               </div>
-                              <div className="space-y-1">
-                                <span className="text-[9px] font-bold text-muted-foreground pr-1">
-                                  תאריך סיום:
+                              <div className="space-y-2">
+                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1">
+                                  סיום:
                                 </span>
                                 <input
                                   type="date"
@@ -712,7 +713,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                       e.target.value,
                                     )
                                   }
-                                  className="w-full bg-white dark:bg-muted/50 border border-border rounded-lg h-9 text-[11px] font-bold px-2 outline-none"
+                                  className="w-full bg-background border border-border/50 rounded-xl h-10 text-[11px] font-black px-3 focus:border-primary outline-none"
                                   placeholder="אופציונלי"
                                 />
                               </div>
@@ -728,52 +729,49 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
           )}
         </div>
 
-        <div className="p-4 border-t bg-muted/20 flex flex-col gap-3 shrink-0">
-          {/* Batch Actions Bar */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-card border rounded-xl shadow-sm animate-in slide-in-from-bottom-2">
-            <span className="text-xs font-black text-muted-foreground whitespace-nowrap px-2">
-              נבחרו {selectedIds.length} שוטרים:
-            </span>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Select
-                value={batchStatusId}
-                onValueChange={handleBatchStatusChange}
-              >
-                <SelectTrigger className="h-9 flex-1 sm:w-[180px] text-right font-bold text-xs bg-muted/30 border-input rounded-lg">
-                  <SelectValue placeholder="בחר סטטוס לכולם..." />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  {statusTypes.map((type) => (
-                    <SelectItem
-                      key={type.id}
-                      value={type.id.toString()}
-                      className="text-xs font-bold"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: type.color }}
-                        />
-                        {type.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="p-6 border-t border-border/50 bg-muted/20 flex flex-col gap-4 shrink-0">
+          {/* Multiple Selection Action Bar */}
+          {selectedIds.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-background border border-border/50 rounded-[28px] shadow-xl animate-in slide-in-from-bottom-4">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-black">
+                  {selectedIds.length}
+                </div>
+                <span className="text-xs font-black text-foreground">
+                  שוטרים נבחרו
+                </span>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto flex-1">
+                <Select
+                  value={batchStatusId}
+                  onValueChange={handleBatchStatusChange}
+                >
+                  <SelectTrigger className="h-11 flex-1 sm:w-[220px] text-right font-black text-xs bg-muted/30 border-border/50 rounded-2xl">
+                    <SelectValue placeholder="עדכון סטטוס גורף..." />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    {statusTypes.map((type) => (
+                      <SelectItem
+                        key={type.id}
+                        value={type.id.toString()}
+                        className="text-xs font-black"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: type.color }}
+                          />
+                          {type.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            {alertContext?.commander_phone && selectedIds.length === 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNudge}
-                className="mr-auto h-9 rounded-lg border-emerald-500/30 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 font-bold text-xs gap-2"
-              >
-                שלח תזכורת בוואטסאפ
-              </Button>
-            )}
-          </div>
+          )}
 
-          <div className="flex flex-col sm:flex-row gap-3 mt-1">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Button
               onClick={handleSubmit}
               disabled={
@@ -783,23 +781,38 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                 ) &&
                   batchStatusId === "")
               }
-              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-14 sm:h-12 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 text-sm"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-14 shadow-2xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-30 text-base"
             >
               {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                <Loader2 className="w-6 h-6 animate-spin gap-3" />
               ) : (
-                <CheckCircle2 className="w-5 h-5 mr-2" />
+                <Check className="w-6 h-6 gap-3" />
               )}
-              עדכן את כל הדיווחים
+              שמור ועדכן את כל השינויים
             </Button>
+
             <Button
               variant="outline"
               onClick={handleCloseAttempt}
-              className="px-6 border-input bg-card rounded-2xl h-14 sm:h-12 font-black text-muted-foreground hover:bg-muted transition-all text-sm hidden sm:flex"
+              className="px-10 border-border/50 bg-background rounded-2xl h-14 font-black text-muted-foreground hover:bg-muted hover:text-foreground transition-all text-base hidden sm:flex"
             >
-              ביטול
+              חזרה וביטול
             </Button>
           </div>
+
+          {alertContext?.commander_phone && selectedIds.length === 0 && (
+            <div className="pt-2 flex justify-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleNudge}
+                className="rounded-full text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 font-black text-[11px] gap-2.5 uppercase tracking-widest"
+              >
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                שלח תזכורת דיווח למפקד בוואטסאפ
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

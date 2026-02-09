@@ -188,6 +188,56 @@ class NotificationModel:
                         }
                     )
 
+
+            # 3. Check for Missing Morning Reports (if enabled)
+            if requesting_user.get("notif_morning_report", True) and (requesting_user.get("is_commander") or requesting_user.get("is_admin")):
+                missing_query = """
+                    SELECT COUNT(e.id) as count
+                    FROM employees e
+                    LEFT JOIN teams t ON e.team_id = t.id
+                    LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                    LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    WHERE e.is_active = TRUE 
+                      AND e.personal_number != 'admin'
+                      AND e.id != %s
+                      AND NOT EXISTS (
+                          SELECT 1 FROM attendance_logs al
+                          WHERE al.employee_id = e.id
+                          AND DATE(al.start_datetime) <= CURRENT_DATE
+                          AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE)
+                          AND (
+                              DATE(al.start_datetime) = CURRENT_DATE
+                              OR al.status_type_id IN (2, 4, 5, 6) -- Items that persist (Vacation, Course, etc.)
+                          )
+                      )
+                """
+                params_missing = [requesting_user["id"]]
+
+                if not requesting_user.get("is_admin"):
+                    missing_query += """
+                      AND (
+                          (d.id = %s) OR
+                          (s.id = %s) OR
+                          (t.id = %s)
+                      )
+                    """
+                    params_missing.extend([
+                        requesting_user.get("commands_department_id"),
+                        requesting_user.get("commands_section_id"),
+                        requesting_user.get("commands_team_id")
+                    ])
+
+                cur.execute(missing_query, params_missing)
+                res_missing = cur.fetchone()
+                if res_missing and res_missing["count"] > 0:
+                    alerts.append({
+                        "id": "missing-reports",
+                        "type": "warning",
+                        "title": "אי-דיווח בוקר ביחידה",
+                        "description": f"ישנם {res_missing['count']} שוטרים ביחידתך שטרם הוזן להם סטטוס להיום",
+                        "link": "/attendance"
+                    })
+
             # 4. Check for Internal Messages
             query_msgs = """
                 SELECT um.id, um.title, um.description, um.created_at, 

@@ -2,9 +2,9 @@ import { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Filter, Download } from "lucide-react";
@@ -12,6 +12,7 @@ import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 interface EmployeesChartProps {
   stats: {
@@ -26,6 +27,7 @@ interface EmployeesChartProps {
   onFilterClick?: () => void;
   title?: string;
   description?: string;
+  selectedDate?: Date;
 }
 
 export const EmployeesChart = forwardRef<any, EmployeesChartProps>((
@@ -37,6 +39,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>((
     onFilterClick,
     title = "מצבת כוח אדם",
     description = "סטטוס נוכחות בזמן אמת",
+    selectedDate = new Date(),
   },
   ref
 ) => {
@@ -51,23 +54,34 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>((
 
     try {
       const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
         backgroundColor: "white",
-        style: {
-          borderRadius: "0",
-        },
-        filter: (node) => {
-          if (
-            node instanceof HTMLElement &&
-            node.classList.contains("no-export")
-          ) {
-            return false;
+        onClone: (clonedNode: any) => {
+          const dateEl = clonedNode.querySelector(".export-date-hidden");
+          if (dateEl) {
+            dateEl.style.position = "absolute";
+            dateEl.style.top = "20px";
+            dateEl.style.left = "20px";
+            dateEl.style.opacity = "1";
+            dateEl.style.zIndex = "50";
+            dateEl.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
+            dateEl.style.padding = "4px 12px";
+            dateEl.style.borderRadius = "8px";
+            dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+            dateEl.style.border = "1px solid #e2e8f0";
+            dateEl.style.color = "#0f172a";
+            dateEl.innerText = `תאריך: ${format(selectedDate, "dd/MM/yyyy")}`;
+
           }
-          return true;
+          const hideEls = clonedNode.querySelectorAll(".export-hide");
+          hideEls.forEach((el: any) => (el.style.display = "none"));
+          const noExportEls = clonedNode.querySelectorAll(".no-export");
+          noExportEls.forEach((el: any) => (el.style.display = "none"));
         },
-      });
+      } as any);
 
       const link = document.createElement("a");
-      link.download = `attendance-snapshot-${new Date().getTime()}.png`;
+      link.download = `attendance-snapshot-${format(selectedDate, "yyyy-MM-dd")}.png`;
       link.href = dataUrl;
       link.click();
       toast.success("גרף הורד בהצלחה");
@@ -138,78 +152,6 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>((
     return null;
   };
 
-  // Custom label renderer for pie chart
-  const renderCustomLabel = (entry: any) => {
-    // Only show label if value is not too small
-    if (entry.payload.percentage < 5) return null;
-
-    // Calculate angle for label positioning
-    const RADIAN = Math.PI / 180;
-    const radius = window.innerWidth < 640 ? 115 : 135; // Increased radius to correct overlap
-    const angle = entry.startAngle + (entry.endAngle - entry.startAngle) / 2;
-
-    const x = entry.cx + radius * Math.cos(-angle * RADIAN);
-    const y = entry.cy + radius * Math.sin(-angle * RADIAN);
-
-    const isMobile = window.innerWidth < 640;
-
-    return (
-      <g
-        className="cursor-pointer outline-none"
-        onClick={() => {
-          if (
-            onStatusClick &&
-            entry.payload.id !== undefined &&
-            entry.payload.id !== null
-          ) {
-            onStatusClick(
-              entry.payload.id,
-              entry.payload.name,
-              entry.payload.fill,
-            );
-          }
-        }}
-      >
-        <text
-          x={x}
-          y={y - (isMobile ? 12 : 14)}
-          fill="currentColor"
-          className="fill-muted-foreground"
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize={isMobile ? "9" : "11"}
-          fontWeight="700"
-        >
-          {entry.payload.name}
-        </text>
-        <text
-          x={x}
-          y={y}
-          fill="currentColor"
-          className="fill-foreground"
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize={isMobile ? "11" : "13"}
-          fontWeight="800"
-        >
-          {entry.payload.value}
-        </text>
-        <text
-          x={x}
-          y={y + (isMobile ? 12 : 14)}
-          fill="currentColor"
-          className="fill-muted-foreground"
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize={isMobile ? "8" : "10"}
-          fontWeight="600"
-        >
-          {entry.payload.percentage}%
-        </text>
-      </g>
-    );
-  };
-
   if (loading) {
     return (
       <Card className="border border-border shadow-sm bg-card">
@@ -229,7 +171,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>((
     <Card
       ref={cardRef}
       id="attendance-snapshot-card"
-      className="border border-border shadow-sm flex flex-col bg-card overflow-hidden h-full"
+      className="border border-border shadow-sm flex flex-col bg-card overflow-hidden h-full relative"
     >
       <CardHeader className="pb-3 border-b border-border/40 mb-2">
         <div className="space-y-2">
@@ -277,72 +219,95 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>((
           </div>
           <CardDescription className="font-bold text-[10px] sm:text-xs text-muted-foreground whitespace-pre-line text-right leading-relaxed opacity-80">
             {description}
+            {/* subtitle showing date if needed, but separate date field is better for export */}
           </CardDescription>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col min-h-0 relative">
         {total === 0 ? (
-          <div className="py-12 text-center">
+          <div className="flex-1 flex items-center justify-center py-12 text-center">
             <p className="text-sm text-muted-foreground">אין נתונים להצגה</p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {/* Pie Chart with Donut Style */}
-            <div className="w-full flex flex-col items-center">
-              <div
-                className="relative w-full h-[280px] sm:h-[350px]"
-                style={{ direction: "ltr" }} // Recharts works better with LTR
-              >
-                {/* Ensure parent has explicit height for Recharts */}
-                <ResponsiveContainer width="100%" height="100%" minHeight={280}>
-                  <PieChart
-                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                  >
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={renderCustomLabel}
-                      outerRadius={window.innerWidth < 640 ? 75 : 95}
-                      innerRadius={window.innerWidth < 640 ? 45 : 55}
-                      fill="#8884d8"
-                      dataKey="value"
-                      paddingAngle={2}
-                    >
-                      {chartData.map((item, index) => (
-                        <Cell
-                          key={`cell-${item.id || index}`}
-                          fill={item.fill}
-                          className="outline-none hover:opacity-80 transition-opacity cursor-pointer"
+          <div className="flex-1 w-full flex flex-col items-center min-h-0">
+            <div
+              className="relative w-full flex-1 min-h-[300px]"
+              style={{ direction: "ltr" }} // Recharts works better with LTR
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart
+                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                >
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(props: any) => {
+                      if (props.payload.percentage < 5) return null;
+                      const RADIAN = Math.PI / 180;
+                      // Dynamic radius based on actual chart size
+                      const radius = props.outerRadius * 1.35;
+                      const x = props.cx + radius * Math.cos(-props.midAngle * RADIAN);
+                      const y = props.cy + radius * Math.sin(-props.midAngle * RADIAN);
+                      const isMobile = window.innerWidth < 640;
+
+                      return (
+                        <g
+                          className="cursor-pointer outline-none"
                           onClick={() => {
-                            if (
-                              onStatusClick &&
-                              item.id !== undefined &&
-                              item.id !== null
-                            ) {
-                              onStatusClick(item.id, item.name, item.fill);
+                            if (onStatusClick && props.payload.id !== null) {
+                              onStatusClick(props.payload.id, props.payload.name, props.payload.fill);
                             }
                           }}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Center Display */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <div className="text-3xl font-black text-foreground">
-                    {total}
-                  </div>
-                  <div className="text-xs font-semibold text-muted-foreground mt-1">
-                    סך הכל
-                  </div>
+                        >
+                          <text x={x} y={y - (isMobile ? 12 : 14)} fill="currentColor" className="fill-muted-foreground" textAnchor="middle" dominantBaseline="middle" fontSize={isMobile ? "9" : "11"} fontWeight="700">{props.payload.name}</text>
+                          <text x={x} y={y} fill="currentColor" className="fill-foreground" textAnchor="middle" dominantBaseline="middle" fontSize={isMobile ? "11" : "13"} fontWeight="800">{props.payload.value}</text>
+                          <text x={x} y={y + (isMobile ? 12 : 14)} fill="currentColor" className="fill-muted-foreground" textAnchor="middle" dominantBaseline="middle" fontSize={isMobile ? "8" : "10"} fontWeight="600">{props.payload.percentage}%</text>
+                        </g>
+                      );
+                    }}
+                    outerRadius="75%"
+                    innerRadius="45%"
+                    fill="#8884d8"
+                    dataKey="value"
+                    paddingAngle={2}
+                  >
+                    {chartData.map((item, index) => (
+                      <Cell
+                        key={`cell-${item.id || index}`}
+                        fill={item.fill}
+                        className="outline-none hover:opacity-80 transition-opacity cursor-pointer"
+                        onClick={() => {
+                          if (
+                            onStatusClick &&
+                            item.id !== undefined &&
+                            item.id !== null
+                          ) {
+                            onStatusClick(item.id, item.name, item.fill);
+                          }
+                        }}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Center Display */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div className="text-3xl font-black text-foreground">
+                  {total}
+                </div>
+                <div className="text-xs font-semibold text-muted-foreground mt-1">
+                  סך הכל
                 </div>
               </div>
             </div>
           </div>
         )}
+        <div className="export-date-hidden absolute opacity-0 -z-50 left-0 top-0">
+          תאריך דוח: {format(selectedDate, "dd/MM/yyyy")}
+        </div>
       </CardContent>
     </Card>
   );

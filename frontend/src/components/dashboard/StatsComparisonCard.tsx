@@ -13,13 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -42,11 +35,11 @@ interface StatsComparisonCardProps {
   data: ComparisonStat[];
   loading?: boolean;
   days: number;
-  onDaysChange: (days: number) => void;
   className?: string;
   onShare?: () => void;
   unitName?: string;
   subtitle?: string;
+  selectedDate?: Date;
 }
 
 export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
@@ -55,10 +48,10 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
       data,
       loading,
       days,
-      onDaysChange,
       className,
       unitName = "כלל היחידה",
       subtitle,
+      selectedDate = new Date(),
     },
     ref,
   ) => {
@@ -76,7 +69,27 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
         const dataUrl = await toPng(cardRef.current, {
           cacheBust: true,
           backgroundColor: "#ffffff",
-        });
+          onClone: (clonedNode: any) => {
+            const dateEl = clonedNode.querySelector(".export-date-hidden");
+            if (dateEl) {
+              dateEl.style.position = "absolute";
+              dateEl.style.top = "20px";
+              dateEl.style.left = "20px";
+              dateEl.style.opacity = "1";
+              dateEl.style.zIndex = "50";
+              dateEl.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
+              dateEl.style.padding = "4px 12px";
+              dateEl.style.borderRadius = "8px";
+              dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              dateEl.style.border = "1px solid #e2e8f0";
+              dateEl.style.color = "#0f172a";
+            }
+            const hideEls = clonedNode.querySelectorAll(".export-hide");
+            hideEls.forEach((el: any) => (el.style.display = "none"));
+            const noExportEls = clonedNode.querySelectorAll(".no-export");
+            noExportEls.forEach((el: any) => (el.style.display = "none"));
+          },
+        } as any);
         const link = document.createElement("a");
         link.download = `unit-comparison-${days}-days.png`;
         link.href = dataUrl;
@@ -92,11 +105,30 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
       if (cardRef.current === null) return;
 
       try {
-        // 1. Capture Image as Blob
         const blob = await toBlob(cardRef.current, {
           cacheBust: true,
           backgroundColor: "#ffffff",
-        });
+          onClone: (clonedNode: any) => {
+            const dateEl = clonedNode.querySelector(".export-date-hidden");
+            if (dateEl) {
+              dateEl.style.position = "absolute";
+              dateEl.style.top = "20px";
+              dateEl.style.left = "20px";
+              dateEl.style.opacity = "1";
+              dateEl.style.zIndex = "50";
+              dateEl.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
+              dateEl.style.padding = "4px 12px";
+              dateEl.style.borderRadius = "8px";
+              dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              dateEl.style.border = "1px solid #e2e8f0";
+              dateEl.style.color = "#0f172a";
+            }
+            const hideEls = clonedNode.querySelectorAll(".export-hide");
+            hideEls.forEach((el: any) => (el.style.display = "none"));
+            const noExportEls = clonedNode.querySelectorAll(".no-export");
+            noExportEls.forEach((el: any) => (el.style.display = "none"));
+          },
+        } as any);
 
         if (!blob) throw new Error("Failed to capture image");
 
@@ -108,7 +140,6 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
         const title = `דוח השוואת כוח אדם (${rangeText}) - ${unitName}`;
         const message = `*${title}*\nתאריך: ${format(new Date(), "dd/MM/yyyy")}${filterText}${statsSummary}`;
 
-        // 2. Try Web Share API (Mobile/Modern OS/App Support)
         const file = new File([blob], `comparison-${days}.png`, { type: "image/png" });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -119,17 +150,16 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               text: message,
             });
             toast.success("הדוח שותף בהצלחה");
-            return; // Shared!
+            return;
           } catch (shareErr) {
             if ((shareErr as Error).name !== "AbortError") {
               console.warn("Web Share failed:", shareErr);
             } else {
-              return; // User cancelled
+              return;
             }
           }
         }
 
-        // 3. FALLBACK: Copy to Clipboard + WhatsApp Link
         try {
           const item = new ClipboardItem({ "image/png": blob });
           await navigator.clipboard.write([item]);
@@ -137,8 +167,29 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
           console.warn("Clipboard copy failed", clipErr);
         }
 
-        // Trigger a backup download
-        const dataUrl = await toPng(cardRef.current, { backgroundColor: "#ffffff" });
+        const dataUrl = await toPng(cardRef.current, {
+          backgroundColor: "#ffffff",
+          onClone: (clonedNode: any) => {
+            const dateEl = clonedNode.querySelector(".export-date-hidden");
+            if (dateEl) {
+              dateEl.style.position = "absolute";
+              dateEl.style.top = "20px";
+              dateEl.style.left = "20px";
+              dateEl.style.opacity = "1";
+              dateEl.style.zIndex = "50";
+              dateEl.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
+              dateEl.style.padding = "4px 12px";
+              dateEl.style.borderRadius = "8px";
+              dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              dateEl.style.border = "1px solid #e2e8f0";
+              dateEl.style.color = "#0f172a";
+            }
+            const hideEls = clonedNode.querySelectorAll(".export-hide");
+            hideEls.forEach((el: any) => (el.style.display = "none"));
+            const noExportEls = clonedNode.querySelectorAll(".no-export");
+            noExportEls.forEach((el: any) => (el.style.display = "none"));
+          },
+        } as any);
         const link = document.createElement("a");
         link.download = `השוואת_כוחות_${format(new Date(), "dd-MM-yyyy")}.png`;
         link.href = dataUrl;
@@ -205,7 +256,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               {subtitle && (
                 <>
                   {" "}
-                  | <span>{subtitle}</span>
+                  | <span className="export-hide">{subtitle}</span>
                 </>
               )}
               <div className="text-[10px] text-muted-foreground mt-0.5">
@@ -230,24 +281,9 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
             <WhatsAppButton
               onClick={handleWhatsAppShare}
               variant="outline"
-              className="h-8 w-8 p-0 rounded-lg border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+              className="h-8 w-8 p-0 rounded-lg text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm border border-emerald-500/20 bg-emerald-50/50"
               skipDirectLink={true}
             />
-
-            <Select
-              value={days.toString()}
-              onValueChange={(val) => onDaysChange(parseInt(val))}
-            >
-              <SelectTrigger className="h-8 w-[90px] text-[11px] font-bold rounded-lg bg-background border-primary/20">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">יומי</SelectItem>
-                <SelectItem value="7">שבועי</SelectItem>
-                <SelectItem value="30">חודשי</SelectItem>
-                <SelectItem value="365">שנתי</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardHeader>
 
@@ -263,10 +299,16 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                   ? Math.round((item.present_count / item.total_count) * 100)
                   : 0;
 
-              // Context color based on availability
-              let progressColor = "bg-green-500";
-              if (availability < 50) progressColor = "bg-red-500";
-              else if (availability < 75) progressColor = "bg-yellow-500";
+              let progressColor = "bg-emerald-500";
+              let textColor = "text-emerald-600 dark:text-emerald-400";
+
+              if (availability < 50) {
+                progressColor = "bg-red-500";
+                textColor = "text-red-500 dark:text-red-400";
+              } else if (availability < 70) {
+                progressColor = "bg-orange-500";
+                textColor = "text-orange-500 dark:text-orange-400";
+              }
 
               return (
                 <div key={item.unit_id} className="space-y-2">
@@ -288,11 +330,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                       <span
                         className={cn(
                           "ml-1 font-bold",
-                          availability < 50
-                            ? "text-red-500 dark:text-red-400"
-                            : availability < 75
-                              ? "text-yellow-600 dark:text-yellow-400"
-                              : "text-emerald-600 dark:text-emerald-400",
+                          textColor
                         )}
                       >
                         ({availability}%)
@@ -308,7 +346,11 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               );
             })
           )}
+          <div className="export-date-hidden absolute opacity-0 -z-50 text-center mt-4 pt-2 border-t border-border/50 text-sm font-bold text-muted-foreground">
+            תאריך דוח: {format(selectedDate, "dd/MM/yyyy")}
+          </div>
         </CardContent>
       </Card>
     );
-  });
+  }
+);

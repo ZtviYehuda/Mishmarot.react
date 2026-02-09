@@ -9,7 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { Calendar, User, Clock, ClipboardCheck } from "lucide-react";
+import { Calendar, User, Clock, ClipboardCheck, ArrowLeft, Thermometer } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SickEmployee {
     id: number;
@@ -39,46 +40,60 @@ export const SickLeaveDetailsDialog: React.FC<SickLeaveDetailsDialogProps> = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-xl border-white/20 shadow-2xl p-0 overflow-hidden gap-0 rounded-3xl" dir="rtl">
-                <DialogHeader className="p-6 bg-gradient-to-br from-red-50 to-orange-50/50 border-b border-red-100">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm">
-                            <Clock className="w-5 h-5" />
+            <DialogContent
+                className="max-w-xl p-0 border-none bg-card shadow-2xl flex flex-col rounded-3xl overflow-hidden"
+                dir="rtl"
+            >
+                <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                        <div className="w-16 h-16 rounded-[24px] bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-600 shadow-inner shrink-0 rotate-3">
+                            <Thermometer className="w-8 h-8" />
                         </div>
-                        <DialogTitle className="text-xl font-black text-red-950">
-                            מחלה ממושכת
-                        </DialogTitle>
+                        <div className="flex-1 min-w-0 pt-1 text-center sm:text-right">
+                            <DialogTitle className="text-2xl font-black text-foreground tracking-tight mb-1">
+                                שוטרים במחלה ממושכת
+                            </DialogTitle>
+                            <DialogDescription className="text-sm font-bold text-muted-foreground italic">
+                                רשימת המשרתים הנמצאים בימי מחלה מעל 4 ימים ברציפות
+                            </DialogDescription>
+                        </div>
                     </div>
-                    <DialogDescription className="text-red-900/70 font-medium mr-1.5">
-                        רשימת שוטרים הנמצאים במחלה מעל 4 ימים
-                    </DialogDescription>
                 </DialogHeader>
 
-                <div className="max-h-[60vh] overflow-y-auto p-4 sm:p-6 bg-background/50 custom-scrollbar">
-                    <div className="space-y-3">
-                        {employees.map((emp) => (
+                <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-4 custom-scrollbar bg-background/50">
+                    {employees.length === 0 ? (
+                        <div className="py-24 flex flex-col items-center text-muted-foreground/30 gap-4">
+                            <div className="w-16 h-16 rounded-full bg-muted/20 flex items-center justify-center">
+                                <ClipboardCheck className="w-8 h-8 opacity-20" />
+                            </div>
+                            <p className="font-black text-lg uppercase tracking-tight">
+                                אין שוטרים במחלה ממושכת כעת
+                            </p>
+                        </div>
+                    ) : (
+                        employees.map((emp) => (
                             <div
                                 key={emp.id}
-                                className="group relative overflow-hidden bg-card border border-border/60 hover:border-red-200 hover:shadow-md hover:shadow-red-500/5 transition-all rounded-2xl p-4 flex items-center justify-between gap-4"
+                                className="group relative overflow-hidden bg-card border border-border/50 hover:border-red-500/30 hover:shadow-xl hover:shadow-red-500/5 transition-all duration-300 rounded-[28px] p-5 flex items-center justify-between gap-4"
                             >
-                                <div className="flex items-center gap-4 min-w-0">
-                                    <div className="h-12 w-12 shrink-0 rounded-full border-2 border-background shadow-sm ring-2 ring-red-50 flex items-center justify-center bg-red-50 text-red-700 font-bold overflow-hidden text-sm">
+                                <div className="flex items-center gap-5 min-w-0">
+                                    <div className="h-14 w-14 shrink-0 rounded-2xl border border-border/50 flex items-center justify-center bg-muted/30 text-red-700 font-black text-xs group-hover:scale-110 transition-transform shadow-sm">
                                         {emp.first_name?.[0]}
                                         {emp.last_name?.[0]}
                                     </div>
                                     <div className="min-w-0 leading-tight">
-                                        <h4 className="font-bold text-foreground truncate text-sm sm:text-base">
+                                        <h4 className="font-black text-foreground truncate text-base mb-1.5">
                                             {emp.first_name} {emp.last_name}
                                         </h4>
-                                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-muted-foreground font-medium mt-1">
-                                            <div className="flex items-center gap-1.5 text-red-600/80 bg-red-50 px-2 py-0.5 rounded-md w-fit">
-                                                <Clock className="w-3 h-3" />
-                                                <span>{emp.days_sick} ימים במחלה</span>
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs">
+                                            <div className="flex items-center gap-2 text-red-600 font-black bg-red-500/10 px-3 py-1 rounded-full w-fit">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                <span>{emp.days_sick} ימים רצופים</span>
                                             </div>
-                                            <div className="flex items-center gap-1.5 opacity-80">
-                                                <Calendar className="w-3 h-3" />
+                                            <div className="flex items-center gap-2 text-muted-foreground font-bold opacity-60 mr-1">
+                                                <Calendar className="w-3.5 h-3.5" />
                                                 <span>
-                                                    מ-
+                                                    מתאריך:{" "}
                                                     {emp.start_date
                                                         ? format(new Date(emp.start_date), "dd/MM/yyyy")
                                                         : "לא ידוע"}
@@ -88,57 +103,47 @@ export const SickLeaveDetailsDialog: React.FC<SickLeaveDetailsDialogProps> = ({
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col gap-2 shrink-0">
+                                <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                                    <Button
+                                        size="icon"
+                                        variant="outline"
+                                        className="h-11 w-11 rounded-2xl border-border/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                        onClick={() => handleNavigate(emp.id)}
+                                        title="פרופיל אישי"
+                                    >
+                                        <User className="w-5 h-5" />
+                                    </Button>
                                     <Button
                                         size="sm"
                                         variant="default"
-                                        className="h-7 px-3 rounded-lg text-[10px] uppercase font-bold tracking-wider shadow-sm hover:shadow transition-all bg-red-600 hover:bg-red-700 text-white"
+                                        className="h-11 px-5 rounded-2xl font-black text-xs bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/20 gap-2 transition-all active:scale-95"
                                         onClick={() => {
                                             onOpenChange(false);
-                                            navigate('/attendance', {
+                                            navigate("/attendance", {
                                                 state: {
                                                     openBulkModal: true,
-                                                    // Passing missingIds will trigger the modal on AttendancePage
-                                                    // and filter only this employee if logic allows, 
-                                                    // or generally open bulk update.
-                                                    // Based on AttendancePage line 99: setAlertContext({ missing_ids: location.state.missingIds })
-                                                    // line 250: employeesForModal filters by missing_ids
-                                                    missingIds: [emp.id]
-                                                }
+                                                    missingIds: [emp.id],
+                                                },
                                             });
                                         }}
                                     >
-                                        עדכון
-                                        <ClipboardCheck className="w-3 h-3 mr-1.5" />
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-7 px-3 rounded-lg text-[10px] uppercase font-bold tracking-wider hover:bg-muted text-muted-foreground border border-transparent hover:border-border"
-                                        onClick={() => handleNavigate(emp.id)}
-                                    >
-                                        פרופיל
-                                        <User className="w-3 h-3 mr-1.5" />
+                                        <ClipboardCheck className="w-4 h-4" />
+                                        <span className="hidden xs:inline">עדכון סטטוס</span>
                                     </Button>
                                 </div>
                             </div>
-                        ))}
-
-                        {employees.length === 0 && (
-                            <div className="text-center py-12 text-muted-foreground">
-                                <p>אין נתונים להצגה</p>
-                            </div>
-                        )}
-                    </div>
+                        ))
+                    )}
                 </div>
 
-                <div className="p-4 bg-muted/30 border-t border-border/50 text-center">
+                <div className="p-6 sm:p-8 bg-muted/20 border-t border-border/50 flex justify-end shrink-0">
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => onOpenChange(false)}
-                        className="w-full sm:w-auto min-w-[120px] rounded-xl font-bold"
+                        className="h-10 text-[10px] font-black text-muted-foreground hover:text-foreground hover:bg-background transition-all uppercase tracking-widest gap-2"
                     >
-                        סגור
+                        <ArrowLeft className="w-4 h-4" />
+                        סגור חלון
                     </Button>
                 </div>
             </DialogContent>

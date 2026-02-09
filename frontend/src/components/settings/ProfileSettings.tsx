@@ -91,34 +91,6 @@ export function ProfileSettings({
               </div>
             </div>
           </CompactCard>
-
-          <div className="bg-card rounded-lg border border-border/60 shadow-sm overflow-hidden text-sm">
-            <div className="p-3 bg-muted/30 font-medium text-xs text-muted-foreground uppercase tracking-wider">
-              ניווט מהיר
-            </div>
-            <div className="divide-y divide-border/40">
-              <button
-                onClick={() => scrollToSection("personal")}
-                className="w-full text-right px-4 py-3 hover:bg-muted/50 transition-colors flex items-center gap-2"
-              >
-                <User className="w-4 h-4 text-muted-foreground" /> פרטים אישיים
-              </button>
-              <button
-                onClick={() => scrollToSection("emergency")}
-                className="w-full text-right px-4 py-3 hover:bg-muted/50 transition-colors flex items-center gap-2"
-              >
-                <HeartPulse className="w-4 h-4 text-muted-foreground" /> חירום
-                ורפואה
-              </button>
-              <button
-                onClick={() => scrollToSection("service")}
-                className="w-full text-right px-4 py-3 hover:bg-muted/50 transition-colors flex items-center gap-2"
-              >
-                <Shield className="w-4 h-4 text-muted-foreground" /> שירות
-                והרשאות
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Main Content */}
@@ -129,7 +101,7 @@ export function ProfileSettings({
               <CompactCard
                 title={
                   <span className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-primary" /> מידע אישי בסיסי
+                    <User className="w-4 h-4 text-primary" /> מידע אישי
                   </span>
                 }
               >
@@ -182,6 +154,16 @@ export function ProfileSettings({
                       onChange={(v) => handleFieldChange("birth_date", v)}
                     />
                   </div>
+                  <div className="sm:col-span-2 lg:col-span-1">
+                    <FormField
+                      field={{
+                        name: "city",
+                        label: "עיר מגורים",
+                      }}
+                      value={formData.city}
+                      onChange={(v) => handleFieldChange("city", v)}
+                    />
+                  </div>
                 </div>
               </CompactCard>
             </div>
@@ -208,11 +190,6 @@ export function ProfileSettings({
                     field={{ name: "email", label: "אימייל", type: "email" }}
                     value={formData.email}
                     onChange={(v) => handleFieldChange("email", v)}
-                  />
-                  <FormField
-                    field={{ name: "city", label: "עיר מגורים" }}
-                    value={formData.city}
-                    onChange={(v) => handleFieldChange("city", v)}
                   />
                 </div>
               </CompactCard>

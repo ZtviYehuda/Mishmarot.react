@@ -5,8 +5,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Employee } from "@/types/employee.types";
-import { History } from "lucide-react";
+import { History, ArrowLeft } from "lucide-react";
 import StatusHistoryList from "../StatusHistoryList";
+import { Button } from "@/components/ui/button";
 
 interface StatusHistoryModalProps {
   open: boolean;
@@ -24,26 +25,44 @@ export default function StatusHistoryModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl border-border shadow-2xl"
+        className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 border-none bg-card shadow-2xl rounded-3xl"
         dir="rtl"
       >
-        <DialogHeader className="p-6 border-b border-border bg-card">
-          <DialogTitle className="flex items-center gap-3 text-xl font-black text-foreground">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-sm">
-              <History className="w-5 h-5" />
+        <DialogHeader className="p-6 sm:p-8 border-b border-border/50 bg-muted/20 text-right shrink-0">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shadow-inner shrink-0 rotate-3">
+              <History className="w-7 h-7" />
             </div>
             <div className="flex flex-col text-right">
-              <span>היסטוריית סטטוסים</span>
-              <span className="text-xs font-bold text-muted-foreground mt-0.5">
-                {employee.first_name} {employee.last_name} |{" "}
-                {employee.personal_number}
-              </span>
+              <DialogTitle className="text-2xl font-black text-foreground tracking-tight">
+                היסטוריית סטטוסים
+              </DialogTitle>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-sm font-black text-muted-foreground italic">
+                  {employee.first_name} {employee.last_name}
+                </span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                <span className="text-[10px] font-bold text-muted-foreground font-mono tracking-widest">
+                  {employee.personal_number}
+                </span>
+              </div>
             </div>
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-muted/20">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar bg-background/50">
           <StatusHistoryList employeeId={employee.id} />
+        </div>
+
+        <div className="p-6 bg-muted/20 border-t border-border/50 flex justify-end shrink-0">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="h-10 text-[10px] font-black text-muted-foreground hover:text-foreground hover:bg-background transition-all uppercase tracking-widest gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            סגור חלון
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
