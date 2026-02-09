@@ -26,8 +26,8 @@ interface BirthdayEmployee {
 interface BirthdayGreetingsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // We now accept the full list of weekly birthdays
-  weeklyBirthdays: BirthdayEmployee[];
+  weeklyBirthdays?: BirthdayEmployee[];
+  targetEmployee?: BirthdayEmployee;
 }
 
 interface Preset {
@@ -61,6 +61,7 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
   open,
   onOpenChange,
   weeklyBirthdays = [],
+  targetEmployee,
 }) => {
   const { user } = useAuthContext();
   const { markBirthdaySent } = useEmployees();
@@ -71,14 +72,21 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [viewMode, setViewMode] = useState<"today" | "week">("today");
 
-  // Filter employees for "Today"
-  const employeesToday = (weeklyBirthdays || []).filter((emp: any) => {
-    const today = new Date();
-    return emp.day === today.getDate() && emp.month === today.getMonth() + 1;
-  });
+  // Determine employees to display
+  let employeesToday: BirthdayEmployee[] = [];
+  let displayedEmployees: BirthdayEmployee[] = [];
 
-  const displayedEmployees =
-    viewMode === "today" ? employeesToday : weeklyBirthdays;
+  if (targetEmployee) {
+    employeesToday = [targetEmployee];
+    displayedEmployees = [targetEmployee];
+  } else {
+    employeesToday = (weeklyBirthdays || []).filter((emp: any) => {
+      const today = new Date();
+      return emp.day === today.getDate() && emp.month === today.getMonth() + 1;
+    });
+    displayedEmployees =
+      viewMode === "today" ? employeesToday : weeklyBirthdays;
+  }
 
   const commanderName = user ? `${user.first_name} ${user.last_name}` : "המפקד";
   const storageKey = user?.id
@@ -159,38 +167,42 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
             <MessageCircle className="w-5 h-5 text-primary" />
             שליחת ברכות יום הולדת
           </DialogTitle>
-          <p className="text-xs text-muted-foreground font-bold mt-1 uppercase tracking-tight">
-            היום חוגגים {employeesToday.length} אנשים | השבוע{" "}
-            {weeklyBirthdays.length} אנשים
-          </p>
+          {!targetEmployee && (
+            <p className="text-xs text-muted-foreground font-bold mt-1 uppercase tracking-tight">
+              היום חוגגים {employeesToday.length} אנשים | השבוע{" "}
+              {weeklyBirthdays.length} אנשים
+            </p>
+          )}
         </div>
 
         <div className="p-6 space-y-6">
-          {/* View Mode Selection */}
-          <div className="flex p-1 bg-muted/50 rounded-lg">
-            <button
-              onClick={() => setViewMode("today")}
-              className={cn(
-                "flex-1 py-1.5 text-xs font-black rounded-md transition-all",
-                viewMode === "today"
-                  ? "bg-background text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              חוגגים היום ({employeesToday.length})
-            </button>
-            <button
-              onClick={() => setViewMode("week")}
-              className={cn(
-                "flex-1 py-1.5 text-xs font-black rounded-md transition-all",
-                viewMode === "week"
-                  ? "bg-background text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              חוגגים השבוע ({weeklyBirthdays.length})
-            </button>
-          </div>
+          {/* View Mode Selection - Only show if not targeting specific employee */}
+          {!targetEmployee && (
+            <div className="flex p-1 bg-muted/50 rounded-lg">
+              <button
+                onClick={() => setViewMode("today")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-black rounded-md transition-all",
+                  viewMode === "today"
+                    ? "bg-background text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                חוגגים היום ({employeesToday.length})
+              </button>
+              <button
+                onClick={() => setViewMode("week")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-black rounded-md transition-all",
+                  viewMode === "week"
+                    ? "bg-background text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                חוגגים השבוע ({weeklyBirthdays.length})
+              </button>
+            </div>
+          )}
           {/* Presets Selection */}
           <div className="flex gap-2 mb-2">
             {presets.map((p) => (

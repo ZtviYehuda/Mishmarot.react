@@ -1,17 +1,32 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEmployees } from "@/hooks/useEmployees";
+import apiClient from "@/config/api.client";
+import * as endpoints from "@/config/employees.endpoints";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Loader2,
+  UserPlus,
+  Save,
+  X,
+  User,
+  Building2,
+  Shield,
+  Phone,
+  HeartPulse,
+  Cake,
+  Calendar,
+  MapPin,
+  BadgeCheck,
+  Mail,
+  Briefcase,
+  FileCheck,
+  Award,
+  Bell,
+  ArrowLeft,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useAuthContext } from "@/context/AuthContext";
 import type {
   CreateEmployeePayload,
   DepartmentNode,
@@ -19,197 +34,475 @@ import type {
   SectionNode,
   TeamNode,
 } from "@/types/employee.types";
+import { CompactCard } from "@/components/forms/EmployeeFormComponents";
 import {
-  Loader2,
-  UserPlus,
-  User,
-  Calendar,
-  Phone,
-  Shield,
-  Building2,
-  Save,
-  AlertTriangle,
-  ArrowRight,
-  BadgeCheck,
-} from "lucide-react";
-import { cn, cleanUnitName } from "@/lib/utils";
-import { useAuthContext } from "@/context/AuthContext";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { differenceInYears } from "date-fns";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { toast } from "sonner";
-import { AnimatePresence, motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-// --- Styled Components (Identical to EditPage) ---
+// --- Tab Components ---
 
-const SectionHeader = ({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-}) => (
-  <div className="flex items-start gap-4 mb-6" dir="rtl">
-    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-primary/80 shadow-lg shadow-primary/20 flex items-center justify-center text-primary-foreground shrink-0">
-      <Icon className="w-6 h-6" />
-    </div>
-    <div>
-      <h2 className="text-xl font-black text-foreground leading-tight text-right">
-        {title}
-      </h2>
-      <p className="text-sm text-muted-foreground font-bold pt-1 text-right">
-        {description}
-      </p>
-    </div>
-  </div>
-);
-
-const FormField = ({
-  label,
-  children,
-  required,
-  error,
-}: {
-  label: string;
-  children: React.ReactNode;
-  required?: boolean;
-  error?: string;
-}) => (
-  <div className="space-y-2 group" dir="rtl">
-    <label className="text-sm font-bold text-muted-foreground/80 flex items-center gap-1 group-focus-within:text-primary transition-colors">
-      {label}
-      {required && <span className="text-destructive">*</span>}
-    </label>
-    <div className="relative">
-      {children}
-      {error && (
-        <span className="text-xs text-destructive absolute -bottom-5 right-0 font-medium">
-          {error}
-        </span>
-      )}
-    </div>
-  </div>
-);
-
-const ToggleCard = ({
-  label,
-  checked,
-  onChange,
-  icon: Icon,
-  description,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  icon?: React.ElementType;
-  description?: string;
-}) => (
-  <div
-    onClick={() => onChange(!checked)}
-    className={cn(
-      "relative overflow-hidden flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer select-none group hover:shadow-md",
-      checked
-        ? "bg-primary/5 border-primary shadow-sm"
-        : "bg-card border-border hover:border-accent",
-    )}
-    dir="rtl"
-  >
-    <div className="flex items-center gap-4 relative z-10">
-      {Icon && (
-        <div
-          className={cn(
-            "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-            checked
-              ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-              : "bg-muted text-muted-foreground",
-          )}
-        >
-          <Icon className="w-5 h-5" />
-        </div>
-      )}
-      <div>
-        <span
-          className={cn(
-            "block text-base font-bold transition-colors text-right",
-            checked ? "text-primary" : "text-foreground/80",
-          )}
-        >
-          {label}
-        </span>
-        {description && (
-          <span className="text-xs text-muted-foreground/60 font-medium text-right block">
-            {description}
+const PersonalFormTab = ({
+  formData,
+  handleFieldChange,
+  emergencyDetails,
+  setEmergencyDetails,
+  relations,
+}: any) => {
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <CompactCard
+        title={
+          <span className="flex items-center gap-2 text-primary font-black text-lg">
+            <User className="w-5 h-5" /> פרטים אישיים
           </span>
-        )}
-      </div>
-    </div>
-    <div
-      className={cn(
-        "w-12 h-7 rounded-full relative transition-colors duration-300 shadow-inner",
-        checked ? "bg-primary" : "bg-muted-foreground/20",
-      )}
-    >
-      <div
-        className={cn(
-          "w-5 h-5 bg-white rounded-full absolute top-1 transition-all duration-300 shadow-sm",
-          checked ? "left-1" : "left-6",
-        )}
-      />
-    </div>
-  </div>
-);
+        }
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <InputItem label="שם פרטי" required>
+            <Input
+              value={formData.first_name || ""}
+              onChange={(e) => handleFieldChange("first_name", e.target.value)}
+            />
+          </InputItem>
+          <InputItem label="שם משפחה" required>
+            <Input
+              value={formData.last_name || ""}
+              onChange={(e) => handleFieldChange("last_name", e.target.value)}
+            />
+          </InputItem>
+          <InputItem label="מספר אישי" required icon={BadgeCheck}>
+            <Input
+              value={formData.personal_number || ""}
+              onChange={(e) =>
+                handleFieldChange("personal_number", e.target.value)
+              }
+            />
+          </InputItem>
+          <InputItem label="תעודת זהות" required icon={BadgeCheck}>
+            <Input
+              value={formData.national_id || ""}
+              onChange={(e) => handleFieldChange("national_id", e.target.value)}
+            />
+          </InputItem>
+          <InputItem label="תאריך לידה" required icon={Calendar}>
+            <Input
+              type="date"
+              value={
+                formData.birth_date ? formData.birth_date.split("T")[0] : ""
+              }
+              onChange={(e) => handleFieldChange("birth_date", e.target.value)}
+            />
+          </InputItem>
+          <InputItem label="עיר מגורים" icon={MapPin}>
+            <Input
+              value={formData.city || ""}
+              onChange={(e) => handleFieldChange("city", e.target.value)}
+            />
+          </InputItem>
+        </div>
+      </CompactCard>
 
-// --- Main Page ---
+      <CompactCard
+        title={
+          <span className="flex items-center gap-2 text-primary font-black text-lg">
+            <Phone className="w-5 h-5" /> פרטי קשר וחירום
+          </span>
+        }
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-muted-foreground flex items-center gap-2 pb-2 border-b">
+              פרטי התקשרות
+            </h4>
+            <InputItem label="טלפון נייד" icon={Phone}>
+              <Input
+                value={formData.phone_number || ""}
+                onChange={(e) =>
+                  handleFieldChange("phone_number", e.target.value)
+                }
+              />
+            </InputItem>
+            <InputItem label="דואר אלקטרוני" icon={Mail}>
+              <Input
+                value={formData.email || ""}
+                onChange={(e) => handleFieldChange("email", e.target.value)}
+              />
+            </InputItem>
+          </div>
+
+          <div className="bg-red-50/60 rounded-2xl p-5 border border-red-100 dark:bg-red-950/10 dark:border-red-900/20">
+            <h4 className="text-sm font-black text-red-600 flex items-center gap-2 pb-2 mb-4 border-b border-red-200/50">
+              <HeartPulse className="w-4 h-4" /> איש קשר לחירום
+            </h4>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <InputItem label="שם מלא" className="bg-transparent">
+                  <Input
+                    value={emergencyDetails.name}
+                    onChange={(e) =>
+                      setEmergencyDetails({
+                        ...emergencyDetails,
+                        name: e.target.value,
+                      })
+                    }
+                    className="bg-transparent border-red-200/50 focus-visible:ring-red-500/30"
+                  />
+                </InputItem>
+                <InputItem label="קרבה" className="bg-transparent">
+                  <Select
+                    value={emergencyDetails.relation}
+                    onValueChange={(val) =>
+                      setEmergencyDetails({
+                        ...emergencyDetails,
+                        relation: val,
+                      })
+                    }
+                  >
+                    <SelectTrigger className="bg-transparent border-red-200/50">
+                      <SelectValue placeholder="בחר" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {relations.map((r: string) => (
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </InputItem>
+              </div>
+              <InputItem
+                label="טלפון חירום"
+                icon={Phone}
+                className="bg-transparent"
+              >
+                <Input
+                  value={emergencyDetails.phone}
+                  onChange={(e) =>
+                    setEmergencyDetails({
+                      ...emergencyDetails,
+                      phone: e.target.value,
+                    })
+                  }
+                  className="bg-transparent border-red-200/50 focus-visible:ring-red-500/30 font-mono"
+                  dir="ltr"
+                />
+              </InputItem>
+            </div>
+          </div>
+        </div>
+      </CompactCard>
+    </div>
+  );
+};
+
+const OrganizationFormTab = ({
+  formData,
+  handleFieldChange,
+  structure,
+  selectedDeptId,
+  setSelectedDeptId,
+  selectedSectionId,
+  setSelectedSectionId,
+  sections,
+  teams,
+  serviceTypes,
+  isUserRestricted,
+}: any) => {
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <CompactCard
+        title={
+          <span className="flex items-center gap-2 text-primary font-black text-lg">
+            <Building2 className="w-5 h-5" /> מבנה ארגוני
+          </span>
+        }
+      >
+        <div className="py-6">
+          <div className="flex flex-col md:flex-row items-end justify-center gap-4 relative">
+            <div className="hidden md:block absolute top-[43px] left-10 right-10 h-0.5 bg-gradient-to-l from-transparent via-border to-transparent z-0" />
+
+            <OrgSelectBox
+              title="מחלקה"
+              icon={Building2}
+              disabled={isUserRestricted}
+            >
+              <Select
+                value={selectedDeptId}
+                onValueChange={(val) => {
+                  setSelectedDeptId(val);
+                  handleFieldChange("department_id", parseInt(val));
+                  setSelectedSectionId("");
+                }}
+                disabled={isUserRestricted}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="בחר מחלקה" />
+                </SelectTrigger>
+                <SelectContent>
+                  {structure.map((d: any) => (
+                    <SelectItem key={d.id} value={d.id.toString()}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </OrgSelectBox>
+
+            <ArrowLeft className="hidden md:block w-5 h-5 text-muted-foreground/40 z-10 mb-3" />
+
+            <OrgSelectBox
+              title="מדור"
+              icon={Building2}
+              disabled={!selectedDeptId}
+            >
+              <Select
+                value={selectedSectionId}
+                onValueChange={(val) => {
+                  setSelectedSectionId(val);
+                  handleFieldChange("section_id", parseInt(val));
+                }}
+                disabled={!selectedDeptId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="בחר מדור" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sections.map((s: any) => (
+                    <SelectItem key={s.id} value={s.id.toString()}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </OrgSelectBox>
+
+            <ArrowLeft className="hidden md:block w-5 h-5 text-muted-foreground/40 z-10 mb-3" />
+
+            <OrgSelectBox
+              title="חוליה"
+              icon={Building2}
+              disabled={!selectedSectionId}
+            >
+              <Select
+                value={formData.team_id?.toString() || ""}
+                onValueChange={(val) =>
+                  handleFieldChange("team_id", parseInt(val))
+                }
+                disabled={!selectedSectionId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="בחר חוליה" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teams.map((t: any) => (
+                    <SelectItem key={t.id} value={t.id.toString()}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </OrgSelectBox>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-6 border-t border-border/50">
+            <InputItem label="תפקיד" icon={Briefcase}>
+              <Input
+                value={formData.role_name || ""}
+                onChange={(e) => handleFieldChange("role_name", e.target.value)}
+              />
+            </InputItem>
+            <InputItem label="סוג שירות" icon={FileCheck}>
+              <Select
+                value={formData.service_type_id?.toString() || ""}
+                onValueChange={(val) =>
+                  handleFieldChange("service_type_id", parseInt(val))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="בחר סוג שירות" />
+                </SelectTrigger>
+                <SelectContent>
+                  {serviceTypes.map((st: any) => (
+                    <SelectItem key={st.id} value={st.id.toString()}>
+                      {st.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </InputItem>
+          </div>
+        </div>
+      </CompactCard>
+
+      <CompactCard
+        title={
+          <span className="flex items-center gap-2 text-primary font-black text-lg">
+            <Calendar className="w-5 h-5" /> ציר זמן שירות
+          </span>
+        }
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <InputItem label="תאריך גיוס" icon={Calendar}>
+            <Input
+              type="date"
+              value={
+                formData.enlistment_date
+                  ? formData.enlistment_date.split("T")[0]
+                  : ""
+              }
+              onChange={(e) =>
+                handleFieldChange("enlistment_date", e.target.value)
+              }
+            />
+          </InputItem>
+          <InputItem label="כניסה לתפקיד" icon={Calendar}>
+            <Input
+              type="date"
+              value={
+                formData.assignment_date
+                  ? formData.assignment_date.split("T")[0]
+                  : ""
+              }
+              onChange={(e) =>
+                handleFieldChange("assignment_date", e.target.value)
+              }
+            />
+          </InputItem>
+          <InputItem label="שחרור צפוי (תש''ש)" icon={Calendar}>
+            <Input
+              type="date"
+              value={
+                formData.discharge_date
+                  ? formData.discharge_date.split("T")[0]
+                  : ""
+              }
+              onChange={(e) =>
+                handleFieldChange("discharge_date", e.target.value)
+              }
+            />
+          </InputItem>
+        </div>
+      </CompactCard>
+    </div>
+  );
+};
+
+const SettingsFormTab = ({ formData, handleFieldChange, user }: any) => {
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <CompactCard
+        title={
+          <span className="flex items-center gap-2 text-primary font-black text-lg">
+            <Award className="w-5 h-5" /> הגדרות והרשאות
+          </span>
+        }
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-muted-foreground flex items-center gap-2 pb-2 border-b">
+              <Shield className="w-4 h-4" /> הרשאות ואישורים
+            </h4>
+            <div className="grid grid-cols-1 gap-3">
+              <SwitchItem
+                label="סיווג ביטחוני"
+                checked={!!formData.security_clearance}
+                onChange={(c: boolean) =>
+                  handleFieldChange("security_clearance", c)
+                }
+              />
+              <SwitchItem
+                label="רישיון נהיגה משטרתי"
+                checked={!!formData.police_license}
+                onChange={(c: boolean) =>
+                  handleFieldChange("police_license", c)
+                }
+              />
+              <SwitchItem
+                label="אישור העסקה"
+                checked={!!formData.employment_clearance}
+                onChange={(c: boolean) =>
+                  handleFieldChange("employment_clearance", c)
+                }
+              />
+              {user?.is_admin && (
+                <>
+                  <SwitchItem
+                    label="מפקד יחידה"
+                    checked={!!formData.is_commander}
+                    onChange={(c: boolean) =>
+                      handleFieldChange("is_commander", c)
+                    }
+                    highlight
+                  />
+                  <SwitchItem
+                    label="מנהל מערכת"
+                    checked={!!formData.is_admin}
+                    onChange={(c: boolean) => handleFieldChange("is_admin", c)}
+                    highlight
+                  />
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-muted-foreground flex items-center gap-2 pb-2 border-b">
+              <Bell className="w-4 h-4" /> התראות מערכת
+            </h4>
+            <div className="grid grid-cols-1 gap-3">
+              <SwitchItem
+                label="קבלת התראות מחלה"
+                checked={!!formData.notif_sick_leave}
+                onChange={(c: boolean) =>
+                  handleFieldChange("notif_sick_leave", c)
+                }
+              />
+              <SwitchItem
+                label="קבלת התראות העברות"
+                checked={!!formData.notif_transfers}
+                onChange={(c: boolean) =>
+                  handleFieldChange("notif_transfers", c)
+                }
+              />
+            </div>
+          </div>
+        </div>
+      </CompactCard>
+    </div>
+  );
+};
 
 export default function CreateEmployeePage() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
-  const { createEmployee, getStructure, getServiceTypes } = useEmployees();
-  const [loading, setLoading] = useState(false);
+  const { createEmployee, getStructure, updateEmployee } = useEmployees();
+  // Note: updateEmployee is unused but kept if needed by hook signature, usually not needed for create page
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("personal");
+
   const [structure, setStructure] = useState<DepartmentNode[]>([]);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
 
-  // Selection States
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
   const [selectedSectionId, setSelectedSectionId] = useState<string>("");
 
-  // Tab State
-  const [activeTab, setActiveTab] = useState("personal");
-
-  const [formData, setFormData] = useState<CreateEmployeePayload>({
-    first_name: "",
-    last_name: "",
-    personal_number: "",
-    national_id: "",
-    phone_number: "",
-    email: "",
-    city: "",
-    birth_date: "",
-    enlistment_date: "",
-    discharge_date: "",
-    assignment_date: "",
-    team_id: undefined,
-    section_id: undefined,
-    department_id: undefined,
-    role_id: undefined,
-    service_type_id: undefined,
-    is_commander: false,
-    is_admin: false,
-    security_clearance: false,
-    police_license: false,
-    employment_clearance: false,
-    notif_sick_leave: true,
-    notif_transfers: true,
-    emergency_contact: "",
+  const [formData, setFormData] = useState<Partial<CreateEmployeePayload>>({
     is_active: true,
   });
 
-  const [commanderWarning, setCommanderWarning] = useState<{
-    name: string;
-    unitType: string;
-  } | null>(null);
-
-  // Emergency Contact State
   const [emergencyDetails, setEmergencyDetails] = useState({
     name: "",
     relation: "",
@@ -226,58 +519,43 @@ export default function CreateEmployeePage() {
     "אחר",
   ];
 
-  // Fetch Data
   useEffect(() => {
     const fetchData = async () => {
-      const [structData, srvData] = await Promise.all([
-        getStructure(),
-        getServiceTypes(),
-      ]);
+      try {
+        const [structResp, serviceResp] = await Promise.all([
+          getStructure(),
+          apiClient.get(endpoints.EMPLOYEES_SERVICE_TYPES_ENDPOINT),
+        ]);
+        if (structResp) setStructure(structResp);
+        if (serviceResp?.data) setServiceTypes(serviceResp.data);
 
-      if (structData) setStructure(structData);
-      if (srvData) setServiceTypes(srvData);
-    };
-    fetchData();
-  }, [getStructure, getServiceTypes]);
-
-  // Scoping Effect
-  useEffect(() => {
-    if (!user || user.is_admin || structure.length === 0) return;
-
-    if (user.commands_team_id) {
-      const teamId = user.commands_team_id;
-      for (const dept of structure) {
-        for (const sec of dept.sections) {
-          const team = sec.teams.find((t: TeamNode) => t.id === teamId);
-          if (team) {
-            setSelectedDeptId(dept.id.toString());
-            setSelectedSectionId(sec.id.toString());
-            setFormData((prev) => ({ ...prev, team_id: teamId }));
-            return;
+        // Pre-fill user's dept if restricted
+        if (user && !user.is_admin) {
+          if (user.commands_department_id) {
+            setSelectedDeptId(user.commands_department_id.toString());
+            setFormData((prev) => ({
+              ...prev,
+              department_id: user.commands_department_id,
+            }));
+          }
+          if (user.commands_section_id) {
+            setSelectedSectionId(user.commands_section_id.toString());
+            setFormData((prev) => ({
+              ...prev,
+              section_id: user.commands_section_id,
+            }));
           }
         }
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        toast.error("שגיאה בטעינת נתונים");
+      } finally {
+        setLoading(false);
       }
-    } else if (user.commands_section_id) {
-      const secId = user.commands_section_id;
-      for (const dept of structure) {
-        const sec = dept.sections.find((s: SectionNode) => s.id === secId);
-        if (sec) {
-          setSelectedDeptId(dept.id.toString());
-          setSelectedSectionId(secId.toString());
-          return;
-        }
-      }
-    } else if (user.commands_department_id) {
-      setSelectedDeptId(user.commands_department_id.toString());
-    } else if (user.assigned_department_id) {
-      setSelectedDeptId(user.assigned_department_id.toString());
-      if (user.assigned_section_id) {
-        setSelectedSectionId(user.assigned_section_id.toString());
-      }
-    }
-  }, [user, structure]);
+    };
+    fetchData();
+  }, [getStructure, user]);
 
-  // Update formData when emergency details change
   useEffect(() => {
     const { name, relation, phone } = emergencyDetails;
     if (name || relation || phone) {
@@ -285,862 +563,272 @@ export default function CreateEmployeePage() {
         ...prev,
         emergency_contact: `${name} (${relation}) - ${phone}`,
       }));
-    } else {
-      setFormData((prev) => ({ ...prev, emergency_contact: "" }));
     }
   }, [emergencyDetails]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setLoading(true);
-
-    if (
-      !formData.first_name ||
-      !formData.last_name ||
-      !formData.personal_number
-    ) {
-      toast.error("נא למלא את כל שדות החובה");
-      setLoading(false);
+  const handleSubmit = async () => {
+    setSaving(true);
+    if (!formData.national_id || !formData.birth_date) {
+      toast.error("ת.ז ותאריך לידה הינם שדות חובה");
+      setSaving(false);
+      return;
+    }
+    const age = differenceInYears(new Date(), new Date(formData.birth_date));
+    if (age < 17) {
+      toast.error("גיל השוטר חייב להיות 17 ומעלה");
+      setSaving(false);
       return;
     }
 
-    const payload = {
-      ...formData,
-      section_id: selectedSectionId ? parseInt(selectedSectionId) : undefined,
-      department_id: selectedDeptId ? parseInt(selectedDeptId) : undefined,
-    };
-
+    const payload = { ...formData } as CreateEmployeePayload;
     const success = await createEmployee(payload);
-    setLoading(false);
+    setSaving(false);
+
     if (success) {
-      toast.success("שוטר נוסף בהצלחה");
+      toast.success("השוטר נוצר בהצלחה");
       navigate("/employees");
     }
   };
 
-  // Derived Options
+  const handleFieldChange = (name: string, value: any) => {
+    setFormData({ ...formData, [name]: value });
+  };
+
   const sections =
     structure.find((d) => d.id.toString() === selectedDeptId)?.sections || [];
   const teams =
     sections.find((s) => s.id.toString() === selectedSectionId)?.teams || [];
+  const isUserRestricted =
+    !user?.is_admin &&
+    !!(
+      user?.commands_department_id ||
+      user?.commands_section_id ||
+      user?.commands_team_id
+    );
 
-  const TabButton = ({
-    value,
-    label,
-    icon: Icon,
-  }: {
-    value: string;
-    label: string;
-    icon: any;
-  }) => (
-    <TabsTrigger
-      value={value}
-      className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 px-1 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary rounded-xl transition-all border border-transparent data-[state=active]:border-border font-bold text-[10px] sm:text-sm w-full h-full hover:bg-muted hover:text-foreground/80 leading-tight text-center"
-    >
-      <Icon className="w-4 h-4 sm:w-4 sm:h-4 mb-0.5 sm:mb-0" />
-      <span className="truncate w-full">{label}</span>
-    </TabsTrigger>
-  );
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
 
   return (
     <div
-      className="min-h-screen bg-background pb-20 animate-in fade-in duration-500"
+      className="min-h-screen bg-background/50 pb-20 animate-in fade-in duration-500"
       dir="rtl"
     >
-      <div className="px-6">
-        <div className="max-w-7xl mx-auto">
+      <div className="bg-background border-b border-border/60 py-8 shadow-sm">
+        <div className="max-w-[1600px] mx-auto px-6">
           <PageHeader
             icon={UserPlus}
             title="הוספת שוטר חדש"
-            subtitle="יצירת כרטיס שוטר חדש במערכת, הגדרת הרשאות ושיוך ארגוני"
+            subtitle="יצירת כרטיס אישי והגדרת פרטים"
             category="ניהול שוטרים"
             categoryLink="/employees"
-            iconClassName="from-primary/10 to-primary/5 border-primary/20"
-            badge={
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/employees")}
-                  className="border-input hover:bg-muted h-11 px-6 rounded-xl font-bold shadow-sm text-muted-foreground"
-                >
-                  ביטול
-                </Button>
-                <Button
-                  onClick={() => handleSubmit()}
-                  disabled={loading}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 rounded-xl px-8 h-11 font-black transition-all"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Save className="w-5 h-5 ml-2" />
-                      שמור שוטר
-                    </>
-                  )}
-                </Button>
-              </div>
-            }
           />
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
-        {/* Visual Sidebar Profile Summary (Starts Hidden on Mobile) */}
-        <div className="hidden lg:block lg:col-span-3 space-y-6">
-          <div className="lg:sticky lg:top-24 space-y-6">
-            <Card className="border-none shadow-lg shadow-primary/5 bg-card rounded-3xl overflow-hidden ring-1 ring-border">
-              <div className="p-8 flex flex-col items-center text-center">
-                {/* Minimal Avatar */}
-                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-3xl font-bold text-foreground/70 mb-5 ring-4 ring-background shadow-sm">
-                  {formData.first_name?.[0] || "?"}
-                  {formData.last_name?.[0] || "?"}
+      <div className="max-w-[1600px] mx-auto px-6 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* RIGHT SIDEBAR (Sticky) */}
+          <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6 order-1">
+            <div className="bg-card rounded-3xl border border-primary/10 shadow-lg shadow-primary/5 overflow-hidden">
+              <div className="h-24 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative">
+                <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
+                <div className="absolute top-3 left-4 w-8 h-8 rounded-full bg-background/50 flex items-center justify-center">
+                  <Cake className="w-4 h-4 text-muted-foreground/30" />
                 </div>
-
-                {/* User Info */}
-                <h2 className="text-xl font-bold text-foreground mb-2">
-                  {formData.first_name || "שם פרטי"}{" "}
-                  {formData.last_name || "משפחה"}
+              </div>
+              <div className="px-6 pb-8 text-center -mt-12 relative">
+                <div className="w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-black mb-4 mx-auto shadow-md border-4 border-card bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+                  {formData.first_name?.[0]}
+                  {formData.last_name?.[0]}
+                </div>
+                <h2 className="text-xl font-black text-foreground mb-1 min-h-[28px]">
+                  {formData.first_name} {formData.last_name}
                 </h2>
-                <span className="px-3 py-1 rounded-full bg-muted text-xs font-mono font-medium text-muted-foreground tracking-wide">
-                  {formData.personal_number || "-------"}
-                </span>
+                <p className="text-sm text-muted-foreground mb-6 font-mono">
+                  {formData.personal_number || "מספר אישי"}
+                </p>
 
-                {/* Divider */}
-                <div className="w-full h-px bg-border my-6" />
-
-                {/* Stats List - Clean */}
-                <div className="w-full space-y-4">
-                  {/* Hierarchy Info */}
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">מחלקה</span>
-                    <span className="font-medium text-foreground">
-                      {cleanUnitName(
-                        structure.find(
-                          (d) => d.id === Number(formData.department_id),
-                        )?.name,
-                      )}
+                <div className="space-y-3 text-sm text-right bg-muted/30 p-4 rounded-xl border border-border/50">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Building2 className="w-4 h-4" />
+                    <span className="font-bold text-foreground text-xs">
+                      שיוך יחידתי
                     </span>
                   </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">מדור</span>
-                    <span className="font-medium text-foreground">
-                      {cleanUnitName(
-                        structure
-                          .find((d) => d.id === Number(formData.department_id))
-                          ?.sections.find(
-                            (s) => s.id === Number(formData.section_id),
-                          )?.name,
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">חוליה</span>
-                    <span className="font-medium text-foreground">
-                      {cleanUnitName(
-                        structure
-                          .find((d) => d.id === Number(formData.department_id))
-                          ?.sections.find(
-                            (s) => s.id === Number(formData.section_id),
-                          )
-                          ?.teams.find((t) => t.id === Number(formData.team_id))
-                          ?.name,
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="w-full h-px bg-border/50 my-2" />
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">דרגה/תפקיד</span>
-                    <div className="flex items-center gap-2 font-medium text-foreground">
-                      <span>חדש</span>
-                      <BadgeCheck className="w-4 h-4 text-primary" />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">סיווג ביטחוני</span>
-                    <div className="flex gap-1 items-center">
-                      <span
-                        className={cn(
-                          "font-medium",
-                          formData.security_clearance
-                            ? "text-primary"
-                            : "text-muted-foreground/60",
-                        )}
-                      >
-                        {formData.security_clearance ? "קיים" : "חסר"}
+                  <div className="h-px bg-border/50" />
+                  <div className="grid grid-cols-1 gap-2 text-xs">
+                    <div className="flex justify-between">
+                      <span>מחלקה:</span>
+                      <span className="font-bold text-foreground">
+                        {structure.find(
+                          (d) => d.id.toString() === selectedDeptId,
+                        )?.name || "-"}
                       </span>
-                      {formData.security_clearance && (
-                        <Shield className="w-3.5 h-3.5 text-primary" />
-                      )}
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">סטטוס ניהולי</span>
-                    <span
-                      className={cn(
-                        "font-medium",
-                        formData.is_commander
-                          ? "text-primary"
-                          : "text-muted-foreground/60",
-                      )}
-                    >
-                      {formData.is_commander ? "מפקד" : "רגיל"}
-                    </span>
+                    <div className="flex justify-between">
+                      <span>מדור:</span>
+                      <span className="font-bold text-foreground">
+                        {sections.find(
+                          (s) => s.id.toString() === selectedSectionId,
+                        )?.name || "-"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </Card>
-          </div>
-        </div>
-
-        {/* Main Form Area */}
-        <div className="lg:col-span-9">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            dir="rtl"
-            className="w-full"
-          >
-            <div className="bg-muted/50 p-1 rounded-2xl mb-6 w-full mx-auto">
-              <TabsList className="bg-transparent h-auto p-0 grid grid-cols-3 gap-1 w-full justify-stretch">
-                <TabButton value="personal" label="פרטים אישיים" icon={User} />
-                <TabButton value="org" label="שיוך יחידתי" icon={Building2} />
-                <TabButton
-                  value="service_security"
-                  label="שירות ואבטחה"
-                  icon={Shield}
-                />
-              </TabsList>
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
+            <div className="space-y-3">
+              <Button
+                onClick={handleSubmit}
+                disabled={saving}
+                className="w-full h-12 rounded-xl font-bold shadow-sm text-base"
               >
-                <TabsContent
-                  value="personal"
-                  className="mt-0 focus-visible:outline-none"
-                >
-                  <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
-                    <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8">
-                      <SectionHeader
-                        icon={User}
-                        title="מידע אישי בסיסי"
-                        description="הזנת פרטי זהות ופרטים אישיים"
+                {saving ? (
+                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 ml-2" />
+                )}{" "}
+                שמור שוטר
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/employees")}
+                className="w-full h-12 rounded-xl font-bold border-2"
+              >
+                <X className="w-4 h-4 ml-2" /> ביטול
+              </Button>
+            </div>
+          </div>
+
+          {/* LEFT CONTENT (Variable Content) */}
+          <div className="lg:col-span-9 space-y-8 order-2 min-h-[500px]">
+            {/* Tab Navigation (Sticky) */}
+            <div className="sticky top-4 z-30 bg-background/80 backdrop-blur-xl p-1.5 rounded-2xl shadow-sm border border-border/60 mx-1 mb-8">
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: "personal", label: "פרטים אישיים וקשר", icon: User },
+                  {
+                    id: "organization",
+                    label: "מבנה ארגוני ושירות",
+                    icon: Building2,
+                  },
+                  { id: "settings", label: "הגדרות והרשאות", icon: Award },
+                ].map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={cn(
+                        "flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 whitespace-nowrap border-2",
+                        isActive
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm scale-[1.02]"
+                          : "bg-card text-muted-foreground border-transparent hover:bg-muted hover:text-foreground",
+                      )}
+                    >
+                      <item.icon
+                        className={cn("w-4 h-4", isActive && "animate-pulse")}
                       />
+                      <span className="hidden sm:inline">{item.label}</span>
+                      <span className="sm:hidden">
+                        {item.label.split(" ")[0]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                        <FormField label="שם פרטי" required>
-                          <Input
-                            value={formData.first_name}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                first_name: e.target.value,
-                              })
-                            }
-                            className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl text-right"
-                            placeholder="הזן שם פרטי"
-                          />
-                        </FormField>
-                        <FormField label="שם משפחה" required>
-                          <Input
-                            value={formData.last_name}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                last_name: e.target.value,
-                              })
-                            }
-                            className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl text-right"
-                            placeholder="הזן שם משפחה"
-                          />
-                        </FormField>
-                        <FormField label="מספר אישי" required>
-                          <Input
-                            value={formData.personal_number}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                personal_number: e.target.value,
-                              })
-                            }
-                            className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl font-mono tracking-wide text-right"
-                            placeholder="1234567"
-                          />
-                        </FormField>
-                        <FormField label="תעודת זהות" required>
-                          <Input
-                            value={formData.national_id}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                national_id: e.target.value,
-                              })
-                            }
-                            className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl font-mono tracking-wide text-right"
-                            placeholder="012345678"
-                          />
-                        </FormField>
-                        <FormField label="תאריך לידה">
-                          <div className="relative">
-                            <Input
-                              type="date"
-                              value={formData.birth_date}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  birth_date: e.target.value,
-                                })
-                              }
-                              className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl text-right pr-4"
-                            />
-                            <Calendar className="absolute left-3 top-3.5 w-5 h-5 text-muted-foreground/50 pointer-events-none" />
-                          </div>
-                        </FormField>
-                      </div>
-
-                      <div className="w-full h-px bg-border my-8" />
-
-                      <SectionHeader
-                        icon={Phone}
-                        title="דרכי התקשרות"
-                        description="הזנת כתובת, טלפונים ואנשי קשר"
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                        <FormField label="כתובת אימייל">
-                          <div className="relative">
-                            <span className="absolute right-3 top-3.5 text-muted-foreground/50 font-bold">@</span>
-                            <Input
-                              value={formData.email || ""}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  email: e.target.value,
-                                })
-                              }
-                              className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl pr-10 text-right"
-                              placeholder="example@police.gov.il"
-                              type="email"
-                            />
-                          </div>
-                        </FormField>
-                        <FormField label="טלפון נייד">
-                          <div className="relative">
-                            <Phone className="absolute right-3 top-3.5 w-5 h-5 text-muted-foreground/50" />
-                            <Input
-                              value={formData.phone_number}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  phone_number: e.target.value,
-                                })
-                              }
-                              className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl pr-10 text-right"
-                              placeholder="05X-XXXXXXX"
-                            />
-                          </div>
-                        </FormField>
-                        <FormField label="עיר מגורים">
-                          <Input
-                            value={formData.city}
-                            onChange={(e) =>
-                              setFormData({ ...formData, city: e.target.value })
-                            }
-                            className="h-12 bg-muted/50 border-input focus:bg-card transition-all rounded-xl text-right"
-                            placeholder="לדוגמה: תל אביב"
-                          />
-                        </FormField>
-                        <div className="md:col-span-2">
-                          {/* Emergency Contact Group */}
-                          <div className="bg-card border border-border/60 rounded-xl overflow-hidden shadow-sm">
-                            <div className="bg-muted/30 px-4 py-3 border-b border-border/50 flex items-center gap-2">
-                              <div className="bg-primary/10 p-1.5 rounded-md text-primary">
-                                <Phone className="w-4 h-4" />
-                              </div>
-                              <h4 className="font-bold text-sm text-foreground/80">
-                                איש קשר לחירום
-                              </h4>
-                            </div>
-
-                            <div className="p-4 space-y-4">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField label="שם איש קשר">
-                                  <Input
-                                    value={emergencyDetails.name}
-                                    onChange={(e) =>
-                                      setEmergencyDetails((prev) => ({
-                                        ...prev,
-                                        name: e.target.value,
-                                      }))
-                                    }
-                                    placeholder="שם מלא"
-                                    className="bg-muted/30 border-input focus:bg-background transition-colors text-right"
-                                  />
-                                </FormField>
-
-                                <FormField label="קרבה">
-                                  <Select
-                                    value={emergencyDetails.relation}
-                                    onValueChange={(val) =>
-                                      setEmergencyDetails((prev) => ({
-                                        ...prev,
-                                        relation: val,
-                                      }))
-                                    }
-                                  >
-                                    <SelectTrigger className="bg-muted/30 border-input text-right focus:bg-background transition-colors h-10">
-                                      <SelectValue placeholder="בחר קרבה" />
-                                    </SelectTrigger>
-                                    <SelectContent dir="rtl">
-                                      {relations.map((rel) => (
-                                        <SelectItem key={rel} value={rel}>
-                                          {rel}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </FormField>
-                              </div>
-
-                              <FormField label="טלפון איש קשר">
-                                <Input
-                                  type="tel"
-                                  value={emergencyDetails.phone}
-                                  onChange={(e) =>
-                                    setEmergencyDetails((prev) => ({
-                                      ...prev,
-                                      phone: e.target.value,
-                                    }))
-                                  }
-                                  className="font-mono text-left ltr bg-muted/30 border-input focus:bg-background transition-colors"
-                                  placeholder="050-0000000"
-                                />
-                              </FormField>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col-reverse sm:flex-row justify-end pt-6 gap-3">
-                        <Button
-                          onClick={() => setActiveTab("org")}
-                          size="lg"
-                          type="button"
-                          className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
-                        >
-                          הבא: שיוך ארגוני{" "}
-                          <ArrowRight className="mr-2 w-4 h-4 rotate-180" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent
-                  value="org"
-                  className="mt-0 focus-visible:outline-none"
-                >
-                  <div className="space-y-6">
-                    <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
-                      <CardContent className="p-4 sm:p-8">
-                        <SectionHeader
-                          icon={Building2}
-                          title="מבנה ארגוני"
-                          description="הגדרת מיקום השוטר בעץ הארגוני (מחלקה -> מדור -> חולייה)"
-                        />
-
-                        <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <FormField label="מחלקה" required>
-                            <Select
-                              value={selectedDeptId}
-                              onValueChange={(val) => {
-                                setSelectedDeptId(val);
-                                setSelectedSectionId("");
-                                setFormData({
-                                  ...formData,
-                                  team_id: undefined,
-                                });
-                              }}
-                              disabled={
-                                !user?.is_admin &&
-                                !!(
-                                  user?.commands_department_id ||
-                                  user?.commands_section_id ||
-                                  user?.commands_team_id
-                                )
-                              }
-                            >
-                              <SelectTrigger className="text-right bg-white border-input h-14 text-lg font-medium px-4 shadow-sm">
-                                <SelectValue placeholder="בחר מחלקה" />
-                              </SelectTrigger>
-                              <SelectContent dir="rtl">
-                                {structure.map((dept) => (
-                                  <SelectItem
-                                    key={dept.id}
-                                    value={dept.id.toString()}
-                                    className="text-lg py-3"
-                                  >
-                                    {dept.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormField>
-
-                          <FormField label="מדור">
-                            <Select
-                              value={selectedSectionId}
-                              onValueChange={(val) => {
-                                setSelectedSectionId(val);
-                                setFormData({
-                                  ...formData,
-                                  team_id: undefined,
-                                });
-                              }}
-                              disabled={
-                                !selectedDeptId ||
-                                (!user?.is_admin &&
-                                  !!(
-                                    user?.commands_section_id ||
-                                    user?.commands_team_id
-                                  ))
-                              }
-                            >
-                              <SelectTrigger className="text-right bg-white border-input h-14 text-lg font-medium px-4 shadow-sm">
-                                <SelectValue
-                                  placeholder={
-                                    !selectedDeptId
-                                      ? "בחר מחלקה..."
-                                      : "בחר מדור"
-                                  }
-                                />
-                              </SelectTrigger>
-                              <SelectContent dir="rtl">
-                                {sections.map((sec) => (
-                                  <SelectItem
-                                    key={sec.id}
-                                    value={sec.id.toString()}
-                                    className="text-lg py-3"
-                                  >
-                                    {sec.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormField>
-
-                          <FormField label="חולייה">
-                            <Select
-                              value={formData.team_id?.toString() || ""}
-                              onValueChange={(val) =>
-                                setFormData({
-                                  ...formData,
-                                  team_id: parseInt(val),
-                                })
-                              }
-                              disabled={
-                                !selectedSectionId ||
-                                (!user?.is_admin && !!user?.commands_team_id)
-                              }
-                            >
-                              <SelectTrigger className="text-right bg-white border-input h-14 text-lg font-medium px-4 shadow-sm">
-                                <SelectValue
-                                  placeholder={
-                                    !selectedSectionId
-                                      ? "בחר מדור..."
-                                      : "בחר חולייה"
-                                  }
-                                />
-                              </SelectTrigger>
-                              <SelectContent dir="rtl">
-                                {teams.map((t) => (
-                                  <SelectItem
-                                    key={t.id}
-                                    value={t.id.toString()}
-                                    className="text-lg py-3"
-                                  >
-                                    {t.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormField>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <div className="flex flex-col-reverse sm:flex-row justify-between pt-4 gap-3">
-                      <Button
-                        variant="outline"
-                        onClick={() => setActiveTab("personal")}
-                        size="lg"
-                        type="button"
-                        className="rounded-xl px-8 border-2 w-full sm:w-auto"
-                      >
-                        חזור לפרטים אישיים
-                      </Button>
-                      <Button
-                        onClick={() => setActiveTab("service_security")}
-                        size="lg"
-                        type="button"
-                        className="rounded-xl px-8 bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
-                      >
-                        הבא: שירות ואבטחה{" "}
-                        <ArrowRight className="mr-2 w-4 h-4 rotate-180" />
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent
-                  value="service_security"
-                  className="mt-0 focus-visible:outline-none"
-                >
-                  <Card className="border-none shadow-sm overflow-hidden rounded-3xl bg-card">
-                    <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8">
-                      <SectionHeader
-                        icon={Calendar}
-                        title="נתוני שירות, תפקיד והרשאות"
-                        description="הגדרת תאריכים, סוג שירות והרשאות מערכת"
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                        <FormField label="סוג שירות" required>
-                          <Select
-                            value={
-                              formData.service_type_id?.toString() || "1" // Default to Hova or first one
-                            }
-                            onValueChange={(val) =>
-                              setFormData({
-                                ...formData,
-                                service_type_id: parseInt(val),
-                              })
-                            }
-                          >
-                            <SelectTrigger className="text-right bg-muted/50 border-input h-12 rounded-xl">
-                              <SelectValue placeholder="בחר סוג שירות" />
-                            </SelectTrigger>
-                            <SelectContent dir="rtl">
-                              {serviceTypes.map((st) => (
-                                <SelectItem
-                                  key={st.id}
-                                  value={st.id.toString()}
-                                >
-                                  {st.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormField>
-
-                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <FormField label="תאריך גיוס">
-                            <Input
-                              type="date"
-                              value={formData.enlistment_date}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  enlistment_date: e.target.value,
-                                })
-                              }
-                              className="bg-muted/50 border-input rounded-xl"
-                            />
-                          </FormField>
-                          <FormField label="תאריך הצבה">
-                            <Input
-                              type="date"
-                              value={formData.assignment_date}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  assignment_date: e.target.value,
-                                })
-                              }
-                              className="bg-muted/50 border-input rounded-xl"
-                            />
-                          </FormField>
-                          <FormField label="תאריך שחרור (צפוי)">
-                            <Input
-                              type="date"
-                              value={formData.discharge_date}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  discharge_date: e.target.value,
-                                })
-                              }
-                              className="bg-muted/50 border-input rounded-xl"
-                            />
-                          </FormField>
-                        </div>
-                      </div>
-
-                      <div className="w-full h-px bg-border my-8" />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <ToggleCard
-                          label="בעל סיווג ביטחוני"
-                          description="האם לשוטר יש סיווג בתוקף?"
-                          checked={formData.security_clearance || false}
-                          onChange={(v) =>
-                            setFormData({ ...formData, security_clearance: v })
-                          }
-                          icon={Shield}
-                        />
-
-                        <div className="space-y-4">
-                          <ToggleCard
-                            label="מפקד יחידה"
-                            description="הגדרת השוטר כמפקד (מדור/מחלקה)"
-                            checked={formData.is_commander || false}
-                            onChange={(v) => {
-                              if (v) {
-                                // Logic to check if commander exists...
-                                let existingName = "";
-                                let unitType = "";
-                                if (formData.team_id) {
-                                  const t = teams.find(
-                                    (x) => x.id === formData.team_id,
-                                  );
-                                  if (t?.commander_id) {
-                                    existingName = t.commander_name || "";
-                                    unitType = "חולייה";
-                                  }
-                                } else if (selectedSectionId) {
-                                  const s = sections.find(
-                                    (x) =>
-                                      x.id.toString() === selectedSectionId,
-                                  );
-                                  if (s?.commander_id) {
-                                    existingName = s.commander_name || "";
-                                    unitType = "מדור";
-                                  }
-                                } else if (selectedDeptId) {
-                                  const d = structure.find(
-                                    (x) => x.id.toString() === selectedDeptId,
-                                  );
-                                  if (d?.commander_id) {
-                                    existingName = d.commander_name || "";
-                                    unitType = "מחלקה";
-                                  }
-                                }
-
-                                if (existingName) {
-                                  setCommanderWarning({
-                                    name: existingName,
-                                    unitType,
-                                  });
-                                  return;
-                                }
-                              }
-                              setFormData({ ...formData, is_commander: v });
-                            }}
-                            icon={BadgeCheck}
-                          />
-
-                          {commanderWarning && (
-                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 animate-in fade-in slide-in-from-top-2">
-                              <div className="flex items-start gap-3">
-                                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
-                                <div>
-                                  <p className="text-sm text-amber-900 font-bold">
-                                    שים לב: קיים מפקד ביחידה
-                                  </p>
-                                  <p className="text-xs text-amber-800 mt-1">
-                                    השוטר {commanderWarning.name} כבר מוגדר
-                                    כמפקד ה{commanderWarning.unitType}. האם
-                                    להחליף?
-                                  </p>
-                                  <div className="flex gap-2 mt-3">
-                                    <Button
-                                      size="sm"
-                                      type="button"
-                                      className="bg-amber-600 hover:bg-amber-700 text-white h-8 text-xs"
-                                      onClick={() => {
-                                        setFormData({
-                                          ...formData,
-                                          is_commander: true,
-                                        });
-                                        setCommanderWarning(null);
-                                      }}
-                                    >
-                                      כן, החלף מפקד
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      type="button"
-                                      className="text-amber-700 hover:text-amber-800 hover:bg-amber-100 h-8 text-xs"
-                                      onClick={() => setCommanderWarning(null)}
-                                    >
-                                      ביטול
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <ToggleCard
-                          label="רישיון משטרתי"
-                          description="האם השוטר מחזיק ברישיון נהיגה משטרתי?"
-                          checked={formData.police_license || false}
-                          onChange={(v) =>
-                            setFormData({ ...formData, police_license: v })
-                          }
-                          icon={AlertTriangle} // Or Car icon if available
-                        />
-
-
-                      </div>
-
-                      <div className="flex flex-col-reverse sm:flex-row justify-between pt-6 gap-3">
-                        <Button
-                          variant="outline"
-                          onClick={() => setActiveTab("org")}
-                          size="lg"
-                          type="button"
-                          className="rounded-xl px-8 border-2 w-full sm:w-auto"
-                        >
-                          חזור למבנה ארגוני
-                        </Button>
-                        <Button
-                          onClick={() => handleSubmit()}
-                          disabled={loading}
-                          size="lg"
-                          className="rounded-xl px-12 bg-primary text-primary-foreground hover:bg-primary/90 font-black shadow-lg shadow-primary/20 w-full sm:w-auto"
-                        >
-                          {loading ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <>
-                              <Save className="w-5 h-5 ml-2" />
-                              שמור שוטר חדש
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </motion.div>
-            </AnimatePresence>
-          </Tabs>
+            {/* Tab Content Area */}
+            <div key={activeTab}>
+              {activeTab === "personal" && (
+                <PersonalFormTab
+                  formData={formData}
+                  handleFieldChange={handleFieldChange}
+                  emergencyDetails={emergencyDetails}
+                  setEmergencyDetails={setEmergencyDetails}
+                  relations={relations}
+                />
+              )}
+              {activeTab === "organization" && (
+                <OrganizationFormTab
+                  formData={formData}
+                  handleFieldChange={handleFieldChange}
+                  structure={structure}
+                  selectedDeptId={selectedDeptId}
+                  setSelectedDeptId={setSelectedDeptId}
+                  selectedSectionId={selectedSectionId}
+                  setSelectedSectionId={setSelectedSectionId}
+                  sections={sections}
+                  teams={teams}
+                  serviceTypes={serviceTypes}
+                  isUserRestricted={isUserRestricted}
+                />
+              )}
+              {activeTab === "settings" && (
+                <SettingsFormTab
+                  formData={formData}
+                  handleFieldChange={handleFieldChange}
+                  user={user}
+                />
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+// --- Helper Components ---
+const InputItem = ({
+  label,
+  icon: Icon,
+  required,
+  children,
+  className,
+}: any) => (
+  <div className={cn("space-y-1.5", className)}>
+    <Label className="flex items-center gap-2 text-xs text-muted-foreground font-semibold">
+      {Icon && <Icon className="w-3.5 h-3.5" />} {label}{" "}
+      {required && <span className="text-red-500">*</span>}
+    </Label>
+    {children}
+  </div>
+);
+const OrgSelectBox = ({ title, icon: Icon, children, disabled }: any) => (
+  <div
+    className={cn(
+      "relative z-10 flex-1 w-full bg-card border border-border p-3 rounded-xl shadow-sm transition-all text-center min-w-[140px]",
+      disabled && "opacity-60 grayscale",
+    )}
+  >
+    <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-2">
+      <span className="text-[10px] font-bold uppercase tracking-wider">
+        {title}
+      </span>
+    </div>
+    {children}
+  </div>
+);
+const SwitchItem = ({ label, checked, onChange, highlight }: any) => (
+  <div
+    className={cn(
+      "flex items-center justify-between p-3 rounded-xl border transition-colors",
+      checked
+        ? highlight
+          ? "bg-primary/5 border-primary/20"
+          : "bg-muted/50 border-primary/20"
+        : "bg-transparent border-border/50 hover:bg-muted/30",
+    )}
+  >
+    <Label className="cursor-pointer flex-1 font-medium text-sm">{label}</Label>
+    <Switch checked={checked} onCheckedChange={onChange} />
+  </div>
+);

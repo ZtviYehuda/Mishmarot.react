@@ -277,7 +277,7 @@ export const EmployeeTable = ({
                   שיוך ארגוני
                 </TableHead>
                 <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">
-                  סוג שירות
+                  מעמד
                 </TableHead>
                 <TableHead className="text-center font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">
                   פעולות
@@ -619,7 +619,7 @@ export const EmployeeTable = ({
                   </div>
                   <div className="bg-muted/50 rounded-lg p-2 text-right">
                     <span className="text-[10px] text-muted-foreground block mb-0.5">
-                      סוג שירות
+                      מעמד
                     </span>
                     <span className="font-medium text-foreground text-xs">
                       {emp.service_type_name || "-"}

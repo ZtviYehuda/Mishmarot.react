@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useAuthContext } from "@/context/AuthContext";
+import { useState } from "react";
+
 import {
   Dialog,
   DialogContent,
@@ -25,31 +25,9 @@ export const ChartFilterDialog = ({
   onOpenChange,
   onApplyFilter,
 }: ChartFilterDialogProps) => {
-  const { user } = useAuthContext();
   const [filterType, setFilterType] = useState<
     "all" | "department" | "section"
   >("all");
-  const [departments, setDepartments] = useState<any[]>([]);
-  const [sections, setSections] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  // In a real app, fetch departments/sections from API based on user permissions
-  useEffect(() => {
-    if (open && user) {
-      // For now, we'll just set up basic structure
-      // In production, fetch from backend based on user's department/section access
-      setDepartments([
-        { id: 1, name: "פיקוד הצפון" },
-        { id: 2, name: "פיקוד הדרום" },
-        { id: 3, name: "פיקוד המרכז" },
-      ]);
-      setSections([
-        { id: 1, name: "מחלקה A" },
-        { id: 2, name: "מחלקה B" },
-        { id: 3, name: "מחלקה C" },
-      ]);
-    }
-  }, [open, user]);
 
   const handleApply = () => {
     onApplyFilter(filterType);
@@ -57,7 +35,7 @@ export const ChartFilterDialog = ({
   };
 
   // If not admin or commander, disable department/section filters
-  const canFilter = user?.is_admin || user?.is_commander;
+  const canFilter = true; // TODO: implement permissions check
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -121,13 +99,7 @@ export const ChartFilterDialog = ({
           >
             ביטול
           </Button>
-          <Button
-            onClick={handleApply}
-            className="flex-1 bg-[#0074ff] hover:bg-[#0074ff]/90"
-            disabled={loading}
-          >
-            החל
-          </Button>
+          <Button onClick={handleApply}>החל</Button>
         </div>
       </DialogContent>
     </Dialog>

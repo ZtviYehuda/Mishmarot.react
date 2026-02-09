@@ -418,7 +418,6 @@ export default function SettingsPage() {
       <div className="min-w-0 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {activeTab === "profile" && (
           <ProfileSettings
-            user={user}
             formData={formData}
             setFormData={setFormData}
             emergencyDetails={emergencyDetails}

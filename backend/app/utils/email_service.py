@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import logging
 
+
 def send_email(to_email, subject, body_html):
     """
     Generic function to send generic emails via SMTP or simulate in console.
@@ -12,6 +13,9 @@ def send_email(to_email, subject, body_html):
     smtp_password = os.environ.get("SMTP_PASSWORD")
 
     if smtp_email and smtp_password:
+        smtp_password = smtp_password.replace(
+            " ", ""
+        )  # Remove spaces from App Password
         try:
             msg = MIMEMultipart()
             msg["From"] = smtp_email
@@ -19,6 +23,7 @@ def send_email(to_email, subject, body_html):
             msg["Subject"] = subject
             msg.attach(MIMEText(body_html, "html"))
 
+            print(f"   [SMTP] Connecting to Gmail as {smtp_email}...")
             server = smtplib.SMTP("smtp.gmail.com", 587)
             server.starttls()
             server.login(smtp_email, smtp_password)
@@ -30,15 +35,16 @@ def send_email(to_email, subject, body_html):
             print(f"❌ Failed to send real email: {e}")
             logging.error(f"Failed to send email: {e}")
             # Fallback to console simulation below
-    
+
     # Development Fallback
-    print("\n" + "█"*60)
+    print("\n" + "█" * 60)
     print(f"📧 [EMAIL SIMULATION]")
     print(f"👉 To: {to_email}")
     print(f"📝 Subject: {subject}")
     print(f"📄 Body Preview: {body_html[:100]}...")
-    print("█"*60 + "\n")
+    print("█" * 60 + "\n")
     return True
+
 
 def send_verification_email(to_email, code):
     """

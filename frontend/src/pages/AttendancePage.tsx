@@ -474,8 +474,8 @@ export default function AttendancePage() {
         }
       />
       {/* Summary Stats & Progress */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="bg-card rounded-[32px] p-6 sm:p-8 border border-border shadow-2xl lg:col-span-2 order-2 lg:order-1 relative overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-card rounded-[32px] p-6 sm:p-8 border border-border shadow-2xl lg:col-span-3 order-2 lg:order-1 relative overflow-hidden">
           {/* Subtle Background Pattern */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
 
@@ -533,41 +533,37 @@ export default function AttendancePage() {
                   }}
                   className={cn(
                     "relative flex flex-col items-center justify-center transition-all cursor-pointer group rounded-2xl border aspect-square sm:aspect-auto sm:h-28",
-                    "lg:flex-1 lg:h-24 lg:p-4 lg:rounded-none lg:border-0 lg:bg-transparent",
+                    "lg:flex-1 lg:h-24 lg:p-4 lg:rounded-none",
                     selectedStatusId === s.status_id.toString()
-                      ? "bg-primary border-primary shadow-xl shadow-primary/20 scale-[1.02] z-10"
-                      : "bg-muted/30 border-transparent hover:bg-muted/50",
+                      ? "bg-primary border-primary shadow-xl shadow-primary/20 scale-[1.02] z-10 lg:bg-primary lg:border-primary"
+                      : "bg-muted/30 border-transparent hover:bg-muted/50 lg:bg-transparent lg:border-0",
                   )}
                 >
                   <span
                     className={cn(
                       "text-xl sm:text-2xl lg:text-3xl font-black",
                       selectedStatusId === s.status_id.toString()
-                        ? "text-primary-foreground"
+                        ? "text-white"
                         : "text-foreground",
                     )}
                   >
                     {s.count}
                   </span>
                   <span
-                    className={cn(
-                      "text-[9px] sm:text-[11px] lg:text-xs font-black uppercase text-center leading-tight mt-1",
-                      selectedStatusId === s.status_id.toString()
-                        ? "text-primary-foreground/90"
-                        : "",
-                    )}
-                    style={
-                      selectedStatusId === s.status_id.toString()
-                        ? {}
-                        : { color: s.color || "var(--muted-foreground)" }
-                    }
+                    className="text-[9px] sm:text-[11px] lg:text-xs font-black uppercase text-center leading-tight mt-1"
+                    style={{
+                      color:
+                        selectedStatusId === s.status_id.toString()
+                          ? "#ffffff"
+                          : s.color || "var(--muted-foreground)",
+                    }}
                   >
                     {s.status_name}
                   </span>
 
                   {/* Desktop Selection Bar */}
                   {selectedStatusId === s.status_id.toString() && (
-                    <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-1 bg-primary-foreground transition-all" />
+                    <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-1 bg-white transition-all" />
                   )}
                 </div>
               ))}
@@ -575,16 +571,16 @@ export default function AttendancePage() {
         </div>
 
         {!isAllReported ? (
-          <div className="hidden lg:flex bg-gradient-to-br from-primary to-primary/80 rounded-2xl lg:rounded-3xl p-3 lg:p-6 text-primary-foreground shadow-xl shadow-primary/20 flex-row lg:flex-col items-center lg:items-start justify-between gap-3 lg:gap-4 order-1 lg:order-2">
+          <div className="hidden lg:flex bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl lg:rounded-3xl p-3 lg:p-6 text-white shadow-xl shadow-rose-500/20 flex-row lg:flex-col items-center lg:items-start justify-between gap-3 lg:gap-4 order-1 lg:order-2">
             <div className="flex items-center lg:block gap-3">
               <div className="p-2 lg:p-0 bg-white/10 lg:bg-transparent rounded-xl flex items-center justify-center shrink-0">
                 <Clock className="w-5 h-5 lg:w-8 lg:h-8 opacity-90 lg:opacity-50" />
               </div>
               <div className="space-y-0 lg:space-y-2">
-                <h3 className="text-xs lg:text-xl font-black leading-none">
+                <h3 className="text-xs lg:text-xl font-black leading-none text-white">
                   תזכורת דיווח
                 </h3>
-                <p className="hidden lg:block text-sm text-primary-foreground/80 font-medium leading-relaxed">
+                <p className="hidden lg:block text-sm text-white/80 font-medium leading-relaxed">
                   יש להשלים את דיווחי הנוכחות של כלל השוטרים במחלקה עד השעה
                   09:00.
                 </p>
@@ -598,8 +594,8 @@ export default function AttendancePage() {
               className="bg-white/10 h-10 lg:h-auto px-4 lg:p-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:bg-white/20 transition-colors border border-white/10 shrink-0"
               onClick={() => setBulkModalOpen(true)}
             >
-              <AlertCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-foreground/70" />
-              <span className="text-[10px] lg:text-xs font-black text-primary-foreground underline decoration-primary-foreground/30 underline-offset-4 whitespace-nowrap">
+              <AlertCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-white/90" />
+              <span className="text-[10px] lg:text-xs font-black text-white underline decoration-white/30 underline-offset-4 whitespace-nowrap">
                 נותרו: {totalCount - updatedTodayCount}
               </span>
             </div>

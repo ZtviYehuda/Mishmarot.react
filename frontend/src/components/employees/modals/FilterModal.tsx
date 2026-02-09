@@ -413,7 +413,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 {/* Service Types (Rank) */}
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold text-muted-foreground block mb-2">
-                    מעמד / סוג שירות
+                    מעמד / מעמד
                   </Label>
                   <div className="flex flex-wrap gap-2">
                     {hierarchyData.serviceTypes.map((type) => (

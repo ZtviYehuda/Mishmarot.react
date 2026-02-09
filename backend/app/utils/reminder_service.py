@@ -5,7 +5,7 @@ from app.utils.db import get_db_connection
 from psycopg2.extras import RealDictCursor
 
 
-def check_and_send_morning_reminders(force_now=False):
+def check_and_send_morning_reminders(force_now=False, force_time=None):
     """
     Checks which commanders haven't updated attendance today and sends them a reminder email.
     """
@@ -29,6 +29,13 @@ def check_and_send_morning_reminders(force_now=False):
             deadline_str = row["value"] if row and row["value"] else "09:00"
 
             now = datetime.now()
+
+            # Allow simulation of a specific time
+            if force_time:
+                # force_time should be "HH:MM" string
+                h, m = map(int, force_time.split(":"))
+                now = now.replace(hour=h, minute=m, second=0, microsecond=0)
+
             try:
                 d_time = datetime.strptime(deadline_str, "%H:%M").time()
                 deadline_dt = datetime.combine(now.date(), d_time)
@@ -70,6 +77,7 @@ def check_and_send_morning_reminders(force_now=False):
         commanders = cur.fetchall()
 
         reminders_sent = 0
+        sent_emails_set = set()
 
         print(f"DEBUG: Found {len(commanders)} potential active commanders/admins.")
 
@@ -78,6 +86,9 @@ def check_and_send_morning_reminders(force_now=False):
 
             if not email:
                 continue  # Skip if no email
+
+            if email in sent_emails_set:
+                continue
 
             has_command = (
                 cmdr["commands_team_id"]
@@ -158,8 +169,9 @@ def check_and_send_morning_reminders(force_now=False):
                 try:
                     from app.utils.email_service import send_email
 
-                    send_email(email, subject, body)
-                    reminders_sent += 1
+                    if send_email(email, subject, body):
+                        reminders_sent += 1
+                        sent_emails_set.add(email)
                 except Exception as e:
                     print(f"   [ERROR] Failed to send email to {email}: {e}")
             else:
@@ -235,7 +247,9 @@ def check_and_send_weekly_birthday_report():
             print("   [INFO] No birthdays this week.")
             return
 
-        print(f"   [INFO] Found {len(upcoming_birthdays)} total birthdays for this week.")
+        print(
+            f"   [INFO] Found {len(upcoming_birthdays)} total birthdays for this week."
+        )
 
         # Sort by date
         upcoming_birthdays.sort(key=lambda x: x["celebrate_date"])
@@ -270,10 +284,15 @@ def check_and_send_weekly_birthday_report():
             6: "ראשון",
         }
 
+        sent_emails_set = set()
+
         for cmdr in commanders:
+            if cmdr["email"] in sent_emails_set:
+                continue
+
             # Filter birthdays for this commander
             relevant_birthdays = []
-            
+
             has_command = (
                 cmdr["commands_team_id"]
                 or cmdr["commands_section_id"]
@@ -288,17 +307,26 @@ def check_and_send_weekly_birthday_report():
                 for b in upcoming_birthdays:
                     # Skip self? (Optional, usually we want to know our own birthday?)
                     # Let's keep self.
-                    
+
                     is_relevant = False
-                    if cmdr["commands_department_id"] and b["department_id"] == cmdr["commands_department_id"]:
-                         is_relevant = True
-                    elif cmdr["commands_section_id"] and b["section_id"] == cmdr["commands_section_id"]:
-                         is_relevant = True
-                    elif cmdr["commands_team_id"] and b["team_id"] == cmdr["commands_team_id"]:
-                         is_relevant = True
-                    # Also include if they are simply Admin (but they have a command, so we prioritized command? 
+                    if (
+                        cmdr["commands_department_id"]
+                        and b["department_id"] == cmdr["commands_department_id"]
+                    ):
+                        is_relevant = True
+                    elif (
+                        cmdr["commands_section_id"]
+                        and b["section_id"] == cmdr["commands_section_id"]
+                    ):
+                        is_relevant = True
+                    elif (
+                        cmdr["commands_team_id"]
+                        and b["team_id"] == cmdr["commands_team_id"]
+                    ):
+                        is_relevant = True
+                    # Also include if they are simply Admin (but they have a command, so we prioritized command?
                     # The logic in MorningReminder suggests strict filtering if has_command exists.
-                    
+
                     if is_relevant:
                         relevant_birthdays.append(b)
 
@@ -311,9 +339,11 @@ def check_and_send_weekly_birthday_report():
                 d = b["celebrate_date"]
                 wd = days_map[d.weekday()]
                 date_str = d.strftime("%d/%m")
-                
+
                 # Logic for Unit Display
-                unit_str = b["team_name"] or b["section_name"] or b["department_name"] or "מטה"
+                unit_str = (
+                    b["team_name"] or b["section_name"] or b["department_name"] or "מטה"
+                )
                 age = d.year - b["birth_date"].year
 
                 items_html += f"""
@@ -354,15 +384,16 @@ def check_and_send_weekly_birthday_report():
             """
 
             try:
-                send_email(
+                if send_email(
                     cmdr["email"],
                     f"🎉 ימי הולדת השבוע - {len(relevant_birthdays)} חוגגים",
                     body,
-                )
-                emails_sent += 1
+                ):
+                    sent_emails_set.add(cmdr["email"])
+                    emails_sent += 1
             except Exception as e:
                 print(f"   [ERROR] Failed to send to {cmdr['email']}: {e}")
-        
+
         print(f"   [INFO] Sent birthday reports to {emails_sent} commanders.")
 
     except Exception as e:

@@ -271,7 +271,7 @@ export const DashboardFilters = ({
         {/* Service Type Filter */}
         <div className="space-y-1.5">
           <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-1">
-            סוג שירות
+            מעמד
           </label>
           <div className="flex flex-wrap gap-1.5 p-2 bg-muted/20 rounded-lg border border-dashed hover:border-primary/30 transition-colors">
             {serviceTypes.map((st) => {
