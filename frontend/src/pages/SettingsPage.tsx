@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import apiClient from "@/config/api.client";
@@ -12,8 +11,6 @@ import {
   ShieldCheck,
   Bell,
   Database,
-  Menu,
-  X,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 
@@ -36,12 +33,8 @@ export default function SettingsPage() {
     setFontSize,
   } = useTheme();
 
-  const { isSidebarOpen } = useOutletContext<{ isSidebarOpen: boolean }>() || {
-    isSidebarOpen: false,
-  };
-
   const [activeTab, setActiveTab] = useState("profile");
-  const [mobileNavOpen, setMobileNavOpen] = useState(true);
+  // const [mobileNavOpen, setMobileNavOpen] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isServerBackingUp, setIsServerBackingUp] = useState(false);
@@ -510,77 +503,68 @@ export default function SettingsPage() {
         )}
       </div>
 
-      {/* Mobile Floating Bottom Dock Container - hidden when sidebar is open */}
-      <div
-        className={`lg:hidden fixed bottom-6 left-4 right-4 z-50 flex flex-col items-end gap-3 safe-area-bottom pointer-events-none transition-all duration-300 ${isSidebarOpen ? "translate-y-[200%] opacity-0" : "translate-y-0 opacity-100"}`}
-      >
-        {/* Toggle Button */}
-        <Button
-          size="icon"
-          className="rounded-full h-12 w-12 shadow-xl shadow-primary/20 pointer-events-auto bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all"
-          onClick={() => setMobileNavOpen(!mobileNavOpen)}
-        >
-          {mobileNavOpen ? (
-            <X className="w-5 h-5" />
-          ) : (
-            <Menu className="w-5 h-5" />
-          )}
-        </Button>
-
-        {/* The Dock */}
-        {mobileNavOpen && (
-          <div className="w-full bg-background/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-2xl p-2 flex items-center justify-between ring-1 ring-black/5 dark:ring-white/5 pointer-events-auto animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 origin-bottom-right">
-            <MobileBottomTab
-              label="פרופיל"
-              icon={User}
-              active={activeTab === "profile"}
-              onClick={() => {
-                setActiveTab("profile");
-                setMobileNavOpen(false);
-              }}
-            />
-            <MobileBottomTab
-              label="תצוגה"
-              icon={Palette}
-              active={activeTab === "appearance"}
-              onClick={() => {
-                setActiveTab("appearance");
-                setMobileNavOpen(false);
-              }}
-            />
-            <MobileBottomTab
-              label="אבטחה"
-              icon={ShieldCheck}
-              active={activeTab === "security"}
-              onClick={() => {
-                setActiveTab("security");
-                setMobileNavOpen(false);
-              }}
-            />
-            <MobileBottomTab
-              label="התראות"
-              icon={Bell}
-              active={activeTab === "notifications"}
-              onClick={() => {
-                setActiveTab("notifications");
-                setMobileNavOpen(false);
-              }}
-            />
-            {user?.is_admin && (
-              <MobileBottomTab
-                label="גיבוי"
-                icon={Database}
-                active={activeTab === "backup"}
-                onClick={() => {
-                  setActiveTab("backup");
-                  setMobileNavOpen(false);
-                }}
-              />
-            )}
-          </div>
+      {/* Mobile Bottom Navigation Bar - Standard Fixed */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2 safe-area-bottom">
+        <MobileBottomNavLink
+          label="פרופיל"
+          icon={User}
+          active={activeTab === "profile"}
+          onClick={() => setActiveTab("profile")}
+        />
+        <MobileBottomNavLink
+          label="תצוגה"
+          icon={Palette}
+          active={activeTab === "appearance"}
+          onClick={() => setActiveTab("appearance")}
+        />
+        <MobileBottomNavLink
+          label="אבטחה"
+          icon={ShieldCheck}
+          active={activeTab === "security"}
+          onClick={() => setActiveTab("security")}
+        />
+        <MobileBottomNavLink
+          label="התראות"
+          icon={Bell}
+          active={activeTab === "notifications"}
+          onClick={() => setActiveTab("notifications")}
+        />
+        {user?.is_admin && (
+          <MobileBottomNavLink
+            label="גיבוי"
+            icon={Database}
+            active={activeTab === "backup"}
+            onClick={() => setActiveTab("backup")}
+          />
         )}
       </div>
     </div>
+  );
+}
+
+function MobileBottomNavLink({
+  label,
+  icon: Icon,
+  active,
+  onClick,
+}: {
+  label: string;
+  icon: any;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+        }`}
+    >
+      <div className={`p-1.5 rounded-xl transition-all ${active ? "bg-primary/10" : "bg-transparent"}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <span className="text-[10px] font-bold">{label}</span>
+      {active && <span className="absolute bottom-0 w-8 h-1 bg-primary rounded-t-full shadow-[0_-2px_8px_rgba(59,130,246,0.3)]" />}
+    </button>
   );
 }
 
@@ -598,10 +582,9 @@ function TabItem({
       onClick={onClick}
       className={`
         relative px-4 py-2.5 rounded-lg transition-all duration-200 font-bold text-sm whitespace-nowrap
-        ${
-          active
-            ? "text-primary bg-primary/10"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+        ${active
+          ? "text-primary bg-primary/10"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
         }
       `}
     >
@@ -613,43 +596,4 @@ function TabItem({
   );
 }
 
-function MobileBottomTab({
-  label,
-  icon: Icon,
-  active,
-  onClick,
-}: {
-  label: string;
-  icon: any;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`
-        flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all duration-300 relative flex-1
-        ${
-          active
-            ? "text-primary bg-primary/10"
-            : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
-        }
-      `}
-    >
-      <div
-        className={`p-1.5 rounded-full transition-all duration-300 ${active ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-110" : ""}`}
-      >
-        <Icon className={`w-5 h-5`} />
-      </div>
-      <span
-        className={`text-[10px] font-black tracking-tight ${active ? "opacity-100" : "opacity-0 h-0 overflow-hidden w-0"}`}
-      >
-        {label}
-      </span>
 
-      {active && (
-        <span className="absolute -top-1 w-8 h-1 bg-primary rounded-b-full shadow-sm shadow-primary/50" />
-      )}
-    </button>
-  );
-}

@@ -11,6 +11,7 @@ export interface Employee {
   birth_date: string | null;
   enlistment_date: string | null;
   discharge_date: string | null;
+  gender: 'male' | 'female' | null;
 
   // Address/Emergency
   city: string | null;
@@ -59,6 +60,7 @@ export interface CreateEmployeePayload {
   last_name: string;
   personal_number: string;
   national_id: string;
+  gender?: 'male' | 'female';
   phone_number?: string;
   email?: string;
   city?: string;

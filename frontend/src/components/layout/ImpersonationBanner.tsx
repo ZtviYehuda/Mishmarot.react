@@ -15,6 +15,7 @@ export const ImpersonationBanner = () => {
     if (adminToken) {
       localStorage.setItem("token", adminToken);
       localStorage.removeItem("admin_token");
+      localStorage.removeItem("dashboard_filters"); // Clear filters to reset view for admin
       window.location.href = "/";
     } else {
       logout();

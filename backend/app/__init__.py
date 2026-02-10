@@ -22,6 +22,8 @@ def create_app():
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://moments-accomplish-soon-guestbook.trycloudflare.com",
+        "https://easy-ravens-fix.loca.lt",
+        "https://mishmarot-app-123.loca.lt",
     ]
 
     CORS(

@@ -79,6 +79,11 @@ const PersonalTab = ({ employee }: { employee: Employee }) => {
           <DetailBox label="שם פרטי" value={employee.first_name} icon={User} />
           <DetailBox label="שם משפחה" value={employee.last_name} icon={User} />
           <DetailBox
+            label="מין"
+            value={employee.gender === "male" ? "גבר" : employee.gender === "female" ? "אישה" : "לא מוגדר"}
+            icon={User}
+          />
+          <DetailBox
             label="תאריך לידה"
             value={formatDate(employee.birth_date)}
             subValue={calculateAge(employee.birth_date)}
@@ -303,7 +308,6 @@ export default function EmployeeViewPage() {
   const { user } = useAuthContext();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("personal");
   const [showBirthdayModal, setShowBirthdayModal] = useState(false);
 
   useEffect(() => {
@@ -345,18 +349,18 @@ export default function EmployeeViewPage() {
         targetEmployee={
           employee
             ? {
-                id: employee.id,
-                first_name: employee.first_name,
-                last_name: employee.last_name,
-                phone_number: employee.phone_number || "",
-                birth_date: employee.birth_date,
-                day: employee.birth_date
-                  ? new Date(employee.birth_date).getDate()
-                  : 1,
-                month: employee.birth_date
-                  ? new Date(employee.birth_date).getMonth() + 1
-                  : 1,
-              }
+              id: employee.id,
+              first_name: employee.first_name,
+              last_name: employee.last_name,
+              phone_number: employee.phone_number || "",
+              birth_date: employee.birth_date,
+              day: employee.birth_date
+                ? new Date(employee.birth_date).getDate()
+                : 1,
+              month: employee.birth_date
+                ? new Date(employee.birth_date).getMonth() + 1
+                : 1,
+            }
             : undefined
         }
       />
@@ -385,7 +389,7 @@ export default function EmployeeViewPage() {
       <div className="max-w-[1600px] mx-auto px-6 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* RIGHT SIDEBAR (Sticky) */}
-          <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6 order-1">
+          <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6 order-2">
             <div className="bg-card rounded-3xl border border-primary/10 shadow-lg shadow-primary/5 overflow-hidden">
               <div className="h-24 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative">
                 <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
@@ -491,55 +495,12 @@ export default function EmployeeViewPage() {
           </div>
 
           {/* LEFT CONTENT (Variable Content) */}
-          <div className="lg:col-span-9 space-y-8 order-2 min-h-[500px]">
-            {/* Tab Navigation (Sticky) */}
-            <div className="sticky top-4 z-30 bg-background/80 backdrop-blur-xl p-1.5 rounded-2xl shadow-sm border border-border/60 mx-1 mb-8">
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: "personal", label: "פרטים אישיים וקשר", icon: User },
-                  {
-                    id: "organization",
-                    label: "מבנה ארגוני ושירות",
-                    icon: Building2,
-                  },
-                  { id: "history", label: "היסטוריה", icon: HistoryIcon },
-                ]
-                  .filter(
-                    (tab) => !(tab.id === "history" && user?.is_temp_commander),
-                  )
-                  .map((item) => {
-                    const isActive = activeTab === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => setActiveTab(item.id)}
-                        className={cn(
-                          "flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 whitespace-nowrap border-2",
-                          isActive
-                            ? "bg-primary text-primary-foreground border-primary shadow-sm scale-[1.02]"
-                            : "bg-card text-muted-foreground border-transparent hover:bg-muted hover:text-foreground",
-                        )}
-                      >
-                        <item.icon
-                          className={cn("w-4 h-4", isActive && "animate-pulse")}
-                        />
-                        <span className="hidden sm:inline">{item.label}</span>
-                        <span className="sm:hidden">
-                          {item.label.split(" ")[0]}
-                        </span>
-                      </button>
-                    );
-                  })}
-              </div>
-            </div>
-
-            {/* Tab Content Area */}
-            <div key={activeTab}>
-              {activeTab === "personal" && <PersonalTab employee={employee} />}
-              {activeTab === "organization" && (
-                <OrganizationTab employee={employee} />
-              )}
-              {activeTab === "history" && (
+          <div className="lg:col-span-9 space-y-8 order-1 min-h-[500px]">
+            {/* Main Content - Stacked Cards */}
+            <div className="space-y-8">
+              <PersonalTab employee={employee} />
+              <OrganizationTab employee={employee} />
+              {!user?.is_temp_commander && (
                 <HistoryTab employeeId={employee.id} />
               )}
             </div>

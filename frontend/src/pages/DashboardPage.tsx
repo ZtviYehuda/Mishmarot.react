@@ -143,6 +143,7 @@ export default function DashboardPage() {
   // Save filters to localStorage when they change
   useEffect(() => {
     if (!isInitialized) return; // Wait until loaded
+    if (user?.is_impersonated) return; // Don't save filters when impersonating
 
     const filters = {
       deptId: selectedDeptId,
@@ -159,6 +160,7 @@ export default function DashboardPage() {
     selectedTeamId,
     selectedStatusData,
     selectedServiceTypes,
+    user?.is_impersonated,
   ]);
 
   // Initialize filters based on user permissions (only if no saved filters AND initialized)
@@ -551,11 +553,12 @@ export default function DashboardPage() {
         category="לוח בקרה"
         categoryLink="/"
         badge={
-          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full lg:w-auto">
-            <DateHeader className="w-full justify-end lg:justify-start" />
+          <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 w-full lg:w-auto">
+            <DateHeader className="col-span-2 w-full justify-center sm:w-auto" />
             <ReportHub
+              className="w-full sm:w-auto justify-center"
               onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
-              onShareTrend={() => trendRef.current?.share()} // Only used for legacy/direct sharing if needed, otherwise ReportHub handles it internally via hidden ref
+              onShareTrend={() => trendRef.current?.share()}
               onShareComparison={() => comparisonRef.current?.share()}
               onShareBirthdays={() => birthdaysRef.current?.share()}
               initialViewMode={viewMode}
@@ -573,7 +576,7 @@ export default function DashboardPage() {
               variant={isReportedToday ? "default" : "outline"}
               size="sm"
               className={cn(
-                "h-10 rounded-xl gap-2 font-black transition-all px-4 shrink-0 shadow-sm",
+                "h-10 rounded-xl gap-2 font-black transition-all px-4 shrink-0 shadow-sm w-full sm:w-auto justify-center",
                 isReportedToday
                   ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white shadow-emerald-500/20"
                   : "border-primary/20 bg-primary/5 text-primary",

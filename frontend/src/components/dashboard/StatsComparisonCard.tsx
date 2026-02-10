@@ -183,6 +183,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
               dateEl.style.border = "1px solid #e2e8f0";
               dateEl.style.color = "#0f172a";
+              dateEl.innerText = `תאריך: ${format(selectedDate, "dd/MM/yyyy")}`;
             }
             const hideEls = clonedNode.querySelectorAll(".export-hide");
             hideEls.forEach((el: any) => (el.style.display = "none"));
@@ -191,7 +192,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
           },
         } as any);
         const link = document.createElement("a");
-        link.download = `השוואת_כוחות_${format(new Date(), "dd-MM-yyyy")}.png`;
+        link.download = `השוואת_כוחות_${format(selectedDate, "yyyy-MM-dd")}.png`;
         link.href = dataUrl;
         link.click();
 
@@ -288,10 +289,12 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
         </CardHeader>
 
         <CardContent className="space-y-6 flex-1 overflow-auto">
-          {data.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">
-              אין נתונים להשוואה
-            </p>
+          {!data || data.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-48 text-center bg-muted/20 rounded-xl border border-dashed border-border/50">
+              <Info className="w-8 h-8 text-muted-foreground/50 mb-2" />
+              <p className="text-sm font-bold text-muted-foreground">אין נתונים להשוואה</p>
+              <p className="text-xs text-muted-foreground">לא נמצאו יחידות להשוואה בחתך הנבחר</p>
+            </div>
           ) : (
             data.map((item) => {
               const availability =

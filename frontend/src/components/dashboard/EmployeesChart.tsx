@@ -231,7 +231,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>((
         ) : (
           <div className="flex-1 w-full flex flex-col items-center min-h-0">
             <div
-              className="relative w-full flex-1 min-h-[300px]"
+              className="relative w-full flex-1 min-h-[250px] sm:min-h-[300px]"
               style={{ direction: "ltr" }} // Recharts works better with LTR
             >
               <ResponsiveContainer width="100%" height="100%">
@@ -247,7 +247,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>((
                       if (props.payload.percentage < 5) return null;
                       const RADIAN = Math.PI / 180;
                       // Dynamic radius based on actual chart size
-                      const radius = props.outerRadius * 1.35;
+                      const radius = props.outerRadius * 1.2;
                       const x = props.cx + radius * Math.cos(-props.midAngle * RADIAN);
                       const y = props.cy + radius * Math.sin(-props.midAngle * RADIAN);
                       const isMobile = window.innerWidth < 640;
@@ -267,7 +267,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>((
                         </g>
                       );
                     }}
-                    outerRadius="75%"
+                    outerRadius="70%"
                     innerRadius="45%"
                     fill="#8884d8"
                     dataKey="value"

@@ -13,7 +13,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -25,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 
 interface ProfileSettingsProps {
   formData: any;
@@ -52,9 +50,10 @@ export function ProfileSettings({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto pb-24">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto pb-24 lg:pb-0 lg:space-y-6">
+
+      {/* Header Actions (Desktop Only) */}
+      <div className="hidden lg:flex flex-row items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-xl">
@@ -62,7 +61,7 @@ export function ProfileSettings({
             </div>
             פרופיל אישי
           </h2>
-          <p className="text-muted-foreground mt-1 text-sm font-medium mr-12 md:mr-0">
+          <p className="text-muted-foreground mt-1 text-sm font-medium">
             נהל את הפרטים האישיים, פרטי ההתקשרות ונתוני השירות שלך
           </p>
         </div>
@@ -88,7 +87,179 @@ export function ProfileSettings({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* ============================================================================== */}
+      {/* MOBILE CONTENT (Clean & Minimalist) */}
+      {/* ============================================================================== */}
+      <div className="lg:hidden flex flex-col gap-6">
+
+        {/* Floating Island Header */}
+        <div className="relative mt-4">
+          <div className="mx-auto w-full max-w-[85%] bg-card/50 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-3xl p-6 flex flex-col items-center text-center gap-3 relative overflow-hidden">
+
+            {/* Background Decor */}
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+
+            {/* Avatar */}
+            <div className="relative">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/20 flex items-center justify-center text-3xl font-black text-primary-foreground shrink-0 rotate-3 transition-transform hover:rotate-0">
+                {formData.first_name?.[0]}{formData.last_name?.[0]}
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-card rounded-full shadow-sm animate-pulse"></div>
+            </div>
+
+            {/* User Details */}
+            <div className="space-y-1 relative z-10">
+              <h3 className="text-2xl font-black tracking-tight text-foreground">
+                {formData.first_name} {formData.last_name}
+              </h3>
+              <p className="text-sm font-bold text-primary/80 uppercase tracking-wide">
+                {formData.role || "משתמש מערכת"}
+              </p>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-muted/50 rounded-full border border-border/50 shadow-sm mt-1">
+                <span className="text-xs font-mono font-medium text-muted-foreground tracking-wider">
+                  {formData.personal_number || "-------"}
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Forms Stack - Unified Design */}
+        <div className="space-y-4">
+
+          {/* Personal Info */}
+          <Card className="border shadow-sm">
+            <CardHeader className="py-4 px-5 border-b bg-muted/20">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <User className="w-4 h-4 text-muted-foreground" />
+                מידע אישי
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 grid gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">שם פרטי</Label>
+                  <Input value={formData.first_name} onChange={(e) => handleFieldChange("first_name", e.target.value)} className="h-10 bg-muted/40" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">שם משפחה</Label>
+                  <Input value={formData.last_name} onChange={(e) => handleFieldChange("last_name", e.target.value)} className="h-10 bg-muted/40" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">מין</Label>
+                <Select value={formData.gender || "male"} onValueChange={(val) => handleFieldChange("gender", val)}>
+                  <SelectTrigger className="h-10 bg-muted/40"><SelectValue placeholder="בחר מין" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">גבר</SelectItem>
+                    <SelectItem value="female">אישה</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">תעודת זהות</Label>
+                <Input value={formData.national_id} onChange={(e) => handleFieldChange("national_id", e.target.value)} className="h-10 bg-muted/40 font-mono" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">עיר מגורים</Label>
+                <Input value={formData.city} onChange={(e) => handleFieldChange("city", e.target.value)} className="h-10 bg-muted/40" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact Info */}
+          <Card className="border shadow-sm">
+            <CardHeader className="py-4 px-5 border-b bg-muted/20">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <Phone className="w-4 h-4 text-muted-foreground" />
+                פרטי קשר
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 grid gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">טלפון נייד</Label>
+                <Input type="tel" value={formData.phone_number} onChange={(e) => handleFieldChange("phone_number", e.target.value)} className="h-10 bg-muted/40 font-mono" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">אימייל</Label>
+                <Input type="email" value={formData.email} onChange={(e) => handleFieldChange("email", e.target.value)} className="h-10 bg-muted/40" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Emergency Info */}
+          <Card className="border shadow-sm">
+            <CardHeader className="py-4 px-5 border-b bg-muted/20">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <HeartPulse className="w-4 h-4 text-muted-foreground" />
+                חירום
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 grid gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">שם מלא</Label>
+                <Input value={emergencyDetails.name} onChange={(e) => setEmergencyDetails({ ...emergencyDetails, name: e.target.value })} className="h-10 bg-muted/40" placeholder="איש קשר..." />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">קרבה</Label>
+                <Select value={emergencyDetails.relation} onValueChange={(val) => setEmergencyDetails({ ...emergencyDetails, relation: val })}>
+                  <SelectTrigger className="h-10 bg-muted/40"><SelectValue placeholder="בחר" /></SelectTrigger>
+                  <SelectContent>{relations.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">טלפון</Label>
+                <Input type="tel" value={emergencyDetails.phone} onChange={(e) => setEmergencyDetails({ ...emergencyDetails, phone: e.target.value })} className="h-10 bg-muted/40 font-mono" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Service Settings */}
+          <Card className="border shadow-sm mb-20">
+            <CardHeader className="py-4 px-5 border-b bg-muted/20">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <Shield className="w-4 h-4 text-muted-foreground" />
+                שירות
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">סיווג ביטחוני</span>
+                <Switch checked={formData.security_clearance} onCheckedChange={(v) => handleFieldChange("security_clearance", v)} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">רישיון משטרתי</span>
+                <Switch checked={formData.police_license} onCheckedChange={(v) => handleFieldChange("police_license", v)} />
+              </div>
+
+            </CardContent>
+          </Card>
+
+          <Button
+            onClick={handleSaveProfile}
+            disabled={isSaving}
+            className="w-full h-12 rounded-xl shadow-md text-base font-bold mb-8"
+          >
+            {isSaving ? (
+              <Loader2 className="animate-spin ml-2 h-4 w-4" />
+            ) : (
+              <Save className="ml-2 h-4 w-4" />
+            )}
+            שמור שינויים
+          </Button>
+
+        </div>
+
+        {/* Floating Save Button */}
+
+
+      </div>
+
+      {/* ============================================================================== */}
+      {/* DESKTOP CONTENT (Original Grid) */}
+      {/* ============================================================================== */}
+      <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6">
         {/* Main User Info Card */}
         <div className="lg:col-span-2 space-y-6">
           {/* Personal Info */}
@@ -109,6 +280,21 @@ export function ProfileSettings({
                   }
                   className="bg-muted/20 focus:bg-background"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>מין</Label>
+                <Select
+                  value={formData.gender || "male"}
+                  onValueChange={(val) => handleFieldChange("gender", val)}
+                >
+                  <SelectTrigger className="bg-muted/20 focus:bg-background">
+                    <SelectValue placeholder="בחר מין" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">גבר</SelectItem>
+                    <SelectItem value="female">אישה</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>שם משפחה</Label>

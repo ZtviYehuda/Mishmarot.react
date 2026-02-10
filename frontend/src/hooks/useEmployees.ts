@@ -278,7 +278,7 @@ export const useEmployees = () => {
         try {
           const params = new URLSearchParams();
           if (date) params.append("date", date);
-          if (days && days > 1) params.append("days", days.toString());
+          if (days) params.append("days", days.toString());
           if (filters?.department_id)
             params.append("department_id", filters.department_id);
           if (filters?.section_id)

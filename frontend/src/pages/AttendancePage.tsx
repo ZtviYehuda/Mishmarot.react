@@ -331,7 +331,7 @@ export default function AttendancePage() {
     (emp) =>
       emp.last_status_update &&
       new Date(emp.last_status_update).toDateString() ===
-        selectedDate.toDateString(),
+      selectedDate.toDateString(),
   ).length;
 
   const totalCount = scopeEmployees.length;
@@ -351,7 +351,7 @@ export default function AttendancePage() {
   const isReportedToday =
     currentUserEmp?.last_status_update &&
     new Date(currentUserEmp.last_status_update).toDateString() ===
-      selectedDate.toDateString();
+    selectedDate.toDateString();
 
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
@@ -540,9 +540,23 @@ export default function AttendancePage() {
                     "relative flex flex-col items-center justify-center transition-all cursor-pointer group rounded-2xl border aspect-square sm:aspect-auto sm:h-28",
                     "lg:flex-1 lg:h-24 lg:p-4 lg:rounded-none",
                     selectedStatusId === s.status_id.toString()
-                      ? "bg-primary border-primary shadow-xl shadow-primary/20 scale-[1.02] z-10 lg:bg-primary lg:border-primary"
+                      ? "text-white shadow-xl scale-[1.02] z-10"
                       : "bg-muted/30 border-transparent hover:bg-muted/50 lg:bg-transparent lg:border-0",
                   )}
+                  style={{
+                    backgroundColor:
+                      selectedStatusId === s.status_id.toString()
+                        ? s.color
+                        : undefined,
+                    borderColor:
+                      selectedStatusId === s.status_id.toString()
+                        ? s.color
+                        : undefined,
+                    boxShadow:
+                      selectedStatusId === s.status_id.toString()
+                        ? `0 20px 25px -5px ${s.color}40`
+                        : undefined,
+                  }}
                 >
                   <span
                     className={cn(
@@ -1075,7 +1089,7 @@ export default function AttendancePage() {
                   const isUpdatedToday =
                     emp.last_status_update &&
                     new Date(emp.last_status_update).toDateString() ===
-                      selectedDate.toDateString();
+                    selectedDate.toDateString();
                   const isSelected = selectedEmployeeIds.includes(emp.id);
 
                   return (
@@ -1086,9 +1100,9 @@ export default function AttendancePage() {
                         "group hover:bg-muted/50 transition-colors border-b border-border",
                         isSelected && "bg-primary/5 hover:bg-primary/10",
                         user &&
-                          emp.id === user.id &&
-                          !isSelected &&
-                          "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
+                        emp.id === user.id &&
+                        !isSelected &&
+                        "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
                       )}
                     >
                       <TableCell className="text-center px-4 py-4 align-middle">
@@ -1214,7 +1228,7 @@ export default function AttendancePage() {
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span className="text-xs font-bold">
                               {selectedDate.toDateString() ===
-                              new Date().toDateString()
+                                new Date().toDateString()
                                 ? "היום"
                                 : format(selectedDate, "dd/MM")}
                               ,{" "}
@@ -1310,7 +1324,7 @@ export default function AttendancePage() {
               const isUpdatedToday =
                 emp.last_status_update &&
                 new Date(emp.last_status_update).toDateString() ===
-                  selectedDate.toDateString();
+                selectedDate.toDateString();
               const isSelected = selectedEmployeeIds.includes(emp.id);
 
               return (

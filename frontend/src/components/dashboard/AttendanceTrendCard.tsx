@@ -129,6 +129,8 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
             if (dateEl) {
               dateEl.style.position = "static";
               dateEl.style.opacity = "1";
+              dateEl.style.marginTop = "1rem";
+              dateEl.innerText = `תאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}`;
             }
             const hideEls = clonedNode.querySelectorAll(".export-hide");
             hideEls.forEach((el: any) => (el.style.display = "none"));
@@ -159,6 +161,8 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
             if (dateEl) {
               dateEl.style.position = "static";
               dateEl.style.opacity = "1";
+              dateEl.style.marginTop = "1rem";
+              dateEl.innerText = `תאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}`;
             }
             const hideEls = clonedNode.querySelectorAll(".export-hide");
             hideEls.forEach((el: any) => (el.style.display = "none"));

@@ -210,8 +210,8 @@ export default function MainLayout() {
           >
             <div className="w-10 h-10 flex items-center justify-center shrink-0">
               <img
-                src="/organization-logo.jpg"
-                alt="Organization Logo"
+                src="/unit-logo.jpg?v=2"
+                alt="Unit Logo"
                 className="w-full h-full object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
@@ -256,7 +256,6 @@ export default function MainLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => setIsSidebarOpen(false)}
                 onDoubleClick={() => setIsSidebarOpen(true)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative overflow-hidden select-none",
@@ -298,7 +297,6 @@ export default function MainLayout() {
           {/* User Profile Area */}
           <Link
             to={`/settings`}
-            onClick={() => setIsSidebarOpen(false)}
             onDoubleClick={() => setIsSidebarOpen(true)}
             className={cn(
               "flex items-center gap-3 rounded-xl transition-all select-none",
@@ -396,13 +394,13 @@ export default function MainLayout() {
                   {location.pathname === "/"
                     ? "לוח בקרה מרכזי"
                     : navItems.find((n) => n.path === location.pathname)
-                        ?.name || "דף מערכת"}
+                      ?.name || "דף מערכת"}
                 </h2>
               </div>
 
               <div className="flex items-center justify-center w-8 h-8 md:w-12 md:h-12 shrink-0 overflow-hidden rounded-lg bg-white/50 border border-border/50 shadow-sm ml-2">
                 <img
-                  src="/unit-logo.jpg"
+                  src="unit-logo.jpg"
                   alt="Unit Logo"
                   className="w-full h-full object-contain"
                   onError={(e) => (e.currentTarget.style.display = "none")}
@@ -598,7 +596,7 @@ export default function MainLayout() {
                               {isMorningReport &&
                                 (alert as any).data?.commander_id &&
                                 user?.id !==
-                                  (alert as any).data.commander_id && (
+                                (alert as any).data.commander_id && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -624,7 +622,7 @@ export default function MainLayout() {
                               {isMorningReport &&
                                 (alert as any).data?.commander_phone &&
                                 user?.id !==
-                                  (alert as any).data.commander_id && (
+                                (alert as any).data.commander_id && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -844,9 +842,9 @@ export default function MainLayout() {
                   style={
                     selectedAlert
                       ? {
-                          backgroundColor: getAlertConfig(selectedAlert).bg,
-                          color: getAlertConfig(selectedAlert).color,
-                        }
+                        backgroundColor: getAlertConfig(selectedAlert).bg,
+                        color: getAlertConfig(selectedAlert).color,
+                      }
                       : {}
                   }
                 >

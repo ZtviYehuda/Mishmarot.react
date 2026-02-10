@@ -63,7 +63,7 @@ class EmployeeModel:
                        e.enlistment_date, e.discharge_date, e.assignment_date,
                        e.security_clearance, e.police_license, e.is_active,
                        e.must_change_password, e.is_admin, e.is_commander,
-                       e.last_password_change,
+                       e.last_password_change, e.gender,
                        e.service_type_id, svt.name as service_type_name,
                        COALESCE(d.name, d_s_dir.name, d_dir.name) as department_name, 
                        COALESCE(s.name, s_dir.name) as section_name, 
@@ -220,7 +220,7 @@ class EmployeeModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
                 SELECT DISTINCT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number, e.email,
-                       e.birth_date, e.is_commander, e.security_clearance, e.police_license,
+                       e.birth_date, e.is_commander, e.security_clearance, e.police_license, e.gender,
                        e.is_active, e.department_id, e.section_id, e.team_id,
                        t.name as team_name, 
                        COALESCE(s.name, s_dir.name) as section_name, 
@@ -426,9 +426,9 @@ class EmployeeModel:
                     city, birth_date, enlistment_date, discharge_date, assignment_date,
                     team_id, section_id, department_id, role_id, service_type_id, 
                     is_commander, is_admin, 
-                    password_hash, must_change_password, security_clearance, police_license,
+                    password_hash, must_change_password, security_clearance, police_license, gender,
                     employment_clearance, notif_sick_leave, notif_transfers, notif_morning_report
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """
             cur.execute(
@@ -456,6 +456,7 @@ class EmployeeModel:
                     must_change,
                     data.get("security_clearance", 0),
                     data.get("police_license", False),
+                    data.get("gender", "male"),
                     data.get("employment_clearance", False),
                     data.get("notif_sick_leave", True),
                     data.get("notif_transfers", True),
@@ -578,6 +579,7 @@ class EmployeeModel:
                 "service_type_id": "service_type_id",
                 "security_clearance": "security_clearance",
                 "police_license": "police_license",
+                "gender": "gender",
                 "emergency_contact": "emergency_contact",
                 "is_commander": "is_commander",
                 "is_admin": "is_admin",
