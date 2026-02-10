@@ -325,5 +325,7 @@ export function ProfileSettings({
             </CardContent>
           </Card>
         </div>
-      </div
-      
+      </div>
+    </div>
+  );
+}
