@@ -22,6 +22,7 @@ import {
   HeartPulse,
   Cake,
 } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -208,7 +209,7 @@ const OrganizationTab = ({ employee }: { employee: Employee }) => {
               icon={Briefcase}
             />
             <DetailBox
-              label="סוג שירות"
+              label="מעמד"
               value={employee.service_type_name}
               icon={FileCheck}
             />
@@ -299,6 +300,7 @@ const HistoryTab = ({ employeeId }: { employeeId: number }) => {
 export default function EmployeeViewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuthContext();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("personal");
@@ -388,15 +390,44 @@ export default function EmployeeViewPage() {
               <div className="h-24 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative">
                 <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
 
-                {/* Prominent Birthday Button */}
-                <Button
-                  size="icon"
-                  className="absolute top-3 left-4 w-12 h-12 rounded-full shadow-lg bg-gradient-to-tr from-pink-500 to-rose-400 text-white hover:scale-110 hover:shadow-xl hover:shadow-pink-500/30 transition-all duration-300 ring-4 ring-white/50 animate-pulse"
-                  onClick={() => setShowBirthdayModal(true)}
-                  title="שלח ברכת יום הולדת"
-                >
-                  <Cake className="w-6 h-6" />
-                </Button>
+                {/* Prominent Birthday Button - Only shows on birthday */}
+                {(() => {
+                  if (!employee.birth_date) return null;
+                  const today = new Date();
+                  const birthDate = new Date(employee.birth_date);
+                  const isBirthdayToday =
+                    today.getDate() === birthDate.getDate() &&
+                    today.getMonth() === birthDate.getMonth();
+
+                  if (!isBirthdayToday) return null;
+
+                  return (
+                    <div
+                      className="absolute top-4 left-4 group cursor-pointer"
+                      onClick={() => setShowBirthdayModal(true)}
+                      title="שלח ברכת יום הולדת"
+                    >
+                      <div className="relative">
+                        {/* Badge Container */}
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border-2 border-amber-200 dark:border-amber-800/50 shadow-sm group-hover:shadow-md transition-all duration-300 group-hover:scale-105">
+                          <Cake className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                          <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                            יום הולדת
+                          </span>
+                        </div>
+
+                        {/* Subtle shimmer effect */}
+                        <div
+                          className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/40 to-transparent dark:via-white/10 animate-shimmer pointer-events-none"
+                          style={{
+                            backgroundSize: "200% 100%",
+                            animation: "shimmer 3s infinite",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
               <div className="px-6 pb-8 text-center -mt-12 relative">
                 <div
@@ -447,14 +478,16 @@ export default function EmployeeViewPage() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <Button
-                onClick={() => navigate(`/employees/edit/${employee.id}`)}
-                className="w-full h-12 rounded-xl font-bold shadow-sm text-base"
-              >
-                <Edit className="w-4 h-4 ml-2" /> עריכת כרטיס
-              </Button>
-            </div>
+            {!user?.is_temp_commander && (
+              <div className="space-y-3">
+                <Button
+                  onClick={() => navigate(`/employees/edit/${employee.id}`)}
+                  className="w-full h-12 rounded-xl font-bold shadow-sm text-base"
+                >
+                  <Edit className="w-4 h-4 ml-2" /> עריכת כרטיס
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* LEFT CONTENT (Variable Content) */}
@@ -470,29 +503,33 @@ export default function EmployeeViewPage() {
                     icon: Building2,
                   },
                   { id: "history", label: "היסטוריה", icon: HistoryIcon },
-                ].map((item) => {
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={cn(
-                        "flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 whitespace-nowrap border-2",
-                        isActive
-                          ? "bg-primary text-primary-foreground border-primary shadow-sm scale-[1.02]"
-                          : "bg-card text-muted-foreground border-transparent hover:bg-muted hover:text-foreground",
-                      )}
-                    >
-                      <item.icon
-                        className={cn("w-4 h-4", isActive && "animate-pulse")}
-                      />
-                      <span className="hidden sm:inline">{item.label}</span>
-                      <span className="sm:hidden">
-                        {item.label.split(" ")[0]}
-                      </span>
-                    </button>
-                  );
-                })}
+                ]
+                  .filter(
+                    (tab) => !(tab.id === "history" && user?.is_temp_commander),
+                  )
+                  .map((item) => {
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setActiveTab(item.id)}
+                        className={cn(
+                          "flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 whitespace-nowrap border-2",
+                          isActive
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm scale-[1.02]"
+                            : "bg-card text-muted-foreground border-transparent hover:bg-muted hover:text-foreground",
+                        )}
+                      >
+                        <item.icon
+                          className={cn("w-4 h-4", isActive && "animate-pulse")}
+                        />
+                        <span className="hidden sm:inline">{item.label}</span>
+                        <span className="sm:hidden">
+                          {item.label.split(" ")[0]}
+                        </span>
+                      </button>
+                    );
+                  })}
               </div>
             </div>
 

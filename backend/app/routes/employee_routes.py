@@ -407,3 +407,21 @@ def mark_birthday_sent_route(emp_id):
     except Exception as e:
         print(f"Error marking birthday sent: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+@emp_bp.route("/delegation-candidates", methods=["GET"])
+@jwt_required()
+def get_delegation_candidates():
+    """Get candidate employees for delegation (team members of current commander)"""
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+
+    candidates = EmployeeModel.get_team_members_for_commander(user_id)
+    return jsonify(candidates)

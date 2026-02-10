@@ -34,6 +34,9 @@ export interface AuthUser {
   assignment_date?: string | null;
   police_license?: boolean;
   security_clearance?: boolean;
+  last_password_change?: string | null;
+  is_temp_commander?: boolean;
+  active_delegate_id?: number;
 }
 
 export interface LoginResponse {

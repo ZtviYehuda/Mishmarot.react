@@ -187,6 +187,9 @@ def setup_database():
             cur.execute(
                 "ALTER TABLE employees ADD COLUMN IF NOT EXISTS email VARCHAR(255);"
             )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS last_password_change TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"
+            )
 
             cur.execute(
                 """

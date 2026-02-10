@@ -6,11 +6,22 @@ import {
   Lock,
   RefreshCw,
   Loader2,
+  AlertTriangle,
+  History,
+  CheckCircle2,
+  HelpCircle,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface SecuritySettingsProps {
   user: any;
@@ -22,6 +33,8 @@ interface SecuritySettingsProps {
   handleChangePassword: () => void;
   isResetting: boolean;
   handleResetImpersonatedPassword: () => void;
+  onForgotPassword: () => void;
+  handleConfirmCurrentPassword: () => Promise<void>;
 }
 
 export function SecuritySettings({
@@ -34,170 +47,269 @@ export function SecuritySettings({
   handleChangePassword,
   isResetting,
   handleResetImpersonatedPassword,
+  onForgotPassword,
+  handleConfirmCurrentPassword,
 }: SecuritySettingsProps) {
+  // Calculate days since last password change
+  const daysSinceChange = user?.last_password_change
+    ? Math.floor(
+        (new Date().getTime() - new Date(user.last_password_change).getTime()) /
+          (1000 * 3600 * 24),
+      )
+    : 0;
+
+  const shouldShowAlert = daysSinceChange > 180;
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300 text-right">
-      <Card className="border-0 shadow-sm ring-1 ring-border bg-card overflow-hidden">
-        <div className="bg-muted/30 p-6 border-b border-border">
-          <div className="flex items-center gap-4 text-right">
-            <div className="p-2.5 bg-background rounded-xl border border-border/50 shadow-sm shrink-0">
-              <ShieldCheck className="w-5 h-5 text-primary" />
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-xl">
+              <ShieldCheck className="w-6 h-6 text-primary" />
             </div>
-            <div>
-              <h3 className="text-xl font-black text-foreground">
-                אבטחה ופרטיות
-              </h3>
-              <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                נהל את אמצעי האבטחה של חשבונך
-              </p>
-            </div>
-          </div>
+            אבטחה ופרטיות
+          </h2>
+          <p className="text-muted-foreground mt-1 text-sm font-medium mr-12 md:mr-0">
+            נהל את הגדרות האבטחה, הסיסמאות והגישה לחשבונך
+          </p>
         </div>
+      </div>
 
-        <CardContent className="p-6 md:p-8">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            {/* Password Change Column */}
-            <div className="space-y-4 p-6 rounded-2xl border border-muted bg-muted/20 h-fit">
-              <div className="text-right mb-2">
-                <h5 className="text-base font-black text-foreground flex items-center gap-2 justify-end">
-                  החלפת סיסמה
-                  <KeyRound className="w-4 h-4 text-primary" />
-                </h5>
-                <p className="text-xs text-muted-foreground font-bold">
-                  הגדר סיסמה חדשה לכניסה למערכת
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">
-                    סיסמה חדשה
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type={showPasswords ? "text" : "password"}
-                      value={passwordData.new_password}
-                      onChange={(e) =>
-                        setPasswordData({
-                          ...passwordData,
-                          new_password: e.target.value,
-                        })
-                      }
-                      className="h-10 rounded-lg bg-background border-border font-bold pr-4 text-sm"
-                      placeholder="לפחות 6 תווים"
-                    />
-                    <button
-                      onClick={() => setShowPasswords(!showPasswords)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-primary transition-colors"
-                    >
-                      {showPasswords ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
+      {/* Alerts Area */}
+      {(user?.is_impersonated || shouldShowAlert) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {user?.is_impersonated && (
+            <Card className="border-destructive/30 bg-destructive/5 shadow-sm">
+              <CardContent className="p-4 flex items-start gap-4">
+                <div className="p-2 rounded-full bg-destructive/10 shrink-0">
+                  <Lock className="w-5 h-5 text-destructive" />
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">
-                    אימות סיסמה
-                  </Label>
+                <div className="space-y-1 flex-1">
+                  <h4 className="font-bold text-destructive">
+                    מצב התחזות פעיל
+                  </h4>
+                  <p className="text-xs text-destructive/80 leading-relaxed">
+                    אתה מחובר כמשתמש אחר. באפשרותך לאפס את הסיסמה לתעודת הזהות
+                    המקורית.
+                  </p>
+                  <Button
+                    onClick={handleResetImpersonatedPassword}
+                    disabled={isResetting}
+                    variant="destructive"
+                    size="sm"
+                    className="mt-2 h-8 text-xs font-bold w-fit"
+                  >
+                    {isResetting && (
+                      <Loader2 className="w-3 h-3 ml-2 animate-spin" />
+                    )}
+                    אפס סיסמה לת.ז.
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {shouldShowAlert && (
+            <Card className="border-amber-500/30 bg-amber-500/5 shadow-sm">
+              <CardContent className="p-4 flex items-start gap-4">
+                <div className="p-2 rounded-full bg-amber-500/10 shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="space-y-1 flex-1">
+                  <h4 className="font-bold text-amber-700">
+                    נדרשת החלפת סיסמה
+                  </h4>
+                  <p className="text-xs text-amber-700/80 leading-relaxed">
+                    חלפו {daysSinceChange} ימים מאז השינוי האחרון. מומלץ להחליף
+                    סיסמה כל 180 יום לשמירה על אבטחת החשבון.
+                  </p>
+                  <Button
+                    onClick={() => handleConfirmCurrentPassword()}
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 h-8 text-xs font-bold border-amber-500/30 text-amber-700 hover:bg-amber-500/10 hover:text-amber-800 w-fit"
+                  >
+                    דלג הפעם
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Password Change Card */}
+        <Card className="lg:col-span-2 border shadow-sm overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <KeyRound className="w-5 h-5 text-primary" />
+              שינוי סיסמה
+            </CardTitle>
+            <CardDescription>
+              בחר סיסמה חזקה הכוללת לפחות 6 תווים
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 md:p-8 space-y-6">
+            {/* Old Password */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="current-password">סיסמה נוכחית</Label>
+                <button
+                  onClick={onForgotPassword}
+                  className="text-xs font-medium text-primary hover:underline focus:outline-none"
+                >
+                  שכחתי סיסמה
+                </button>
+              </div>
+              <div className="relative">
+                <Input
+                  id="current-password"
+                  type={showPasswords ? "text" : "password"}
+                  value={passwordData.old_password || ""}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      old_password: e.target.value,
+                    })
+                  }
+                  className="pl-10 h-11 bg-muted/20 focus:bg-background transition-all"
+                  placeholder="הזן את הסיסמה הנוכחית שלך..."
+                />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+              </div>
+            </div>
+
+            <div className="h-px bg-border/50" />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* New Password */}
+              <div className="space-y-2">
+                <Label htmlFor="new-password">סיסמה חדשה</Label>
+                <div className="relative">
                   <Input
+                    id="new-password"
                     type={showPasswords ? "text" : "password"}
-                    value={passwordData.confirm_password}
+                    value={passwordData.new_password}
                     onChange={(e) =>
                       setPasswordData({
                         ...passwordData,
-                        confirm_password: e.target.value,
+                        new_password: e.target.value,
                       })
                     }
-                    className="h-10 rounded-lg bg-background border-border font-bold text-sm"
-                    placeholder="הקלד שוב..."
+                    className="pl-10 h-11 bg-muted/20 focus:bg-background transition-all"
+                    placeholder="לפחות 6 תווים"
                   />
-                </div>
-
-                <div className="pt-2">
-                  <Button
-                    onClick={handleChangePassword}
-                    disabled={isChangingPassword || !passwordData.new_password}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-10 rounded-xl font-bold shadow-md transition-all active:scale-95"
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords(!showPasswords)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-primary transition-colors"
                   >
-                    {isChangingPassword ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                    {showPasswords ? (
+                      <EyeOff className="w-4 h-4" />
                     ) : (
-                      "עדכן סיסמה"
+                      <Eye className="w-4 h-4" />
                     )}
-                  </Button>
+                  </button>
                 </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">אימות סיסמה חדשה</Label>
+                <Input
+                  id="confirm-password"
+                  type={showPasswords ? "text" : "password"}
+                  value={passwordData.confirm_password}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      confirm_password: e.target.value,
+                    })
+                  }
+                  className="h-11 bg-muted/20 focus:bg-background transition-all"
+                  placeholder="הזן שוב את הסיסמה החדשה"
+                />
               </div>
             </div>
 
-            {/* Alerts Column */}
-            <div className="space-y-4 flex flex-col">
-              {user?.is_impersonated && (
-                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3 text-right transition-colors">
-                  <div className="p-2 rounded-lg bg-destructive/20 shrink-0">
-                    <Lock className="w-4 h-4 text-destructive" />
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <div>
-                      <h4 className="text-sm font-black text-destructive text-right">
-                        איפוס סיסמה למשתמש
-                      </h4>
-                      <p className="text-xs text-destructive/80 font-bold leading-relaxed text-right mt-1">
-                        במצב התחזות באפשרותך לאפס את סיסמת המשתמש לתעודת הזהות
-                        שלו.
-                      </p>
-                    </div>
-                    <Button
-                      onClick={handleResetImpersonatedPassword}
-                      disabled={isResetting}
-                      variant="destructive"
-                      size="sm"
-                      className="font-bold shadow-sm h-8 w-full"
-                    >
-                      {isResetting ? (
-                        <Loader2 className="w-3 h-3 animate-spin ml-2" />
-                      ) : (
-                        <RefreshCw className="w-3 h-3 ml-2" />
-                      )}
-                      אפס לת.ז.
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3 text-right">
-                <div className="p-2 rounded-lg bg-amber-500/20 shrink-0">
-                  <ShieldCheck className="w-4 h-4 text-amber-600" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-black text-amber-700 text-right">
-                    החלפת סיסמה תקופתית
-                  </h4>
-                  <p className="text-xs text-amber-700/80 font-bold mt-0.5">
-                    חלפו 45 ימים מאז החלפת הסיסמה האחרונה.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-4 rounded-xl border border-muted opacity-60">
-                <div className="w-10 h-5 bg-muted-foreground/20 rounded-full relative p-1 cursor-not-allowed shrink-0">
-                  <div className="w-3 h-3 bg-background rounded-full transition-all"></div>
-                </div>
-                <div className="text-right flex-1">
-                  <h5 className="text-sm font-black text-foreground">
-                    אימות דו-שלבי (2FA)
-                  </h5>
-                  <p className="text-xs text-muted-foreground font-bold">
-                    פיצ'ר זה אינו פעיל כרגע בארגון
-                  </p>
-                </div>
-              </div>
+            <div className="flex justify-end pt-4">
+              <Button
+                onClick={handleChangePassword}
+                disabled={
+                  isChangingPassword ||
+                  !passwordData.new_password ||
+                  !passwordData.old_password
+                }
+                className="w-full md:w-auto min-w-[160px] font-bold h-11 shadow-lg shadow-primary/20"
+              >
+                {isChangingPassword ? (
+                  <>
+                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                    מעדכן...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 ml-2" />
+                    עדכן סיסמה
+                  </>
+                )}
+              </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Side Info Panel */}
+        <div className="space-y-6">
+          <Card className="bg-primary/5 border-primary/10 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                סטטוס אבטחה
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="flex items-center justify-between py-2 border-b border-primary/10">
+                <span className="text-muted-foreground">שינוי אחרון</span>
+                <span className="font-mono font-bold">
+                  {daysSinceChange} ימים
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-primary/10">
+                <span className="text-muted-foreground">חוזק סיסמה</span>
+                <Badge
+                  variant="outline"
+                  className="bg-background font-normal border-green-200 text-green-700"
+                >
+                  תקין
+                </Badge>
+              </div>
+              <div className="bg-background/50 p-3 rounded-lg text-xs text-muted-foreground leading-relaxed">
+                <span className="font-bold block mb-1 text-primary">
+                  טיפ לאבטחה:
+                </span>
+                השתמש בסיסמה ייחודית המשלבת אותיות, מספרים וסימנים מיוחדים.
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <History className="w-4 h-4 text-muted-foreground" />
+                פעילות אחרונה
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-muted-foreground text-center py-6">
+                אין פעילות חשודה בחשבון זה
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

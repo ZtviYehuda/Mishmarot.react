@@ -322,7 +322,7 @@ const OrganizationFormTab = ({
                 onChange={(e) => handleFieldChange("role_name", e.target.value)}
               />
             </InputItem>
-            <InputItem label="סוג שירות" icon={FileCheck}>
+            <InputItem label="מעמד" icon={FileCheck}>
               <Select
                 value={formData.service_type_id?.toString() || ""}
                 onValueChange={(val) =>
@@ -330,7 +330,7 @@ const OrganizationFormTab = ({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="בחר סוג שירות" />
+                  <SelectValue placeholder="בחר מעמד" />
                 </SelectTrigger>
                 <SelectContent>
                   {serviceTypes.map((st: any) => (

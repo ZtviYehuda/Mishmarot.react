@@ -176,6 +176,7 @@ export const useEmployees = () => {
     note?: string;
     start_date?: string;
     end_date?: string;
+    delegation?: { delegate_id: number };
   }) => {
     setLoading(true);
     try {
@@ -346,5 +347,16 @@ export const useEmployees = () => {
       }
     }, []),
     markBirthdaySent,
+    getDelegationCandidates: useCallback(async () => {
+      try {
+        const { data } = await apiClient.get<Partial<Employee>[]>(
+          `${endpoints.EMPLOYEES_BASE_ENDPOINT}/delegation-candidates`,
+        );
+        return data;
+      } catch (err: any) {
+        console.error("Failed to fetch delegation candidates", err);
+        return [];
+      }
+    }, []),
   };
 };

@@ -34,9 +34,11 @@ def login():
             )
 
         # שלב 2: קבלת פרופיל מלא ובדיקת הרשאות
-        print(f"DEBUG LOGIN: Credentials OK for ID {user_basic['id']}. Fetching full profile...")
+        print(
+            f"DEBUG LOGIN: Credentials OK for ID {user_basic['id']}. Fetching full profile..."
+        )
         user = EmployeeModel.get_employee_by_id(user_basic["id"])
-        
+
         if not user:
             print("DEBUG LOGIN: Full profile fetch failed (User is None)")
             return (
@@ -45,8 +47,10 @@ def login():
                 ),
                 500,
             )
-        
-        print(f"DEBUG LOGIN: Profile fetched. Admin={user.get('is_admin')}, Commander={user.get('is_commander')}")
+
+        print(
+            f"DEBUG LOGIN: Profile fetched. Admin={user.get('is_admin')}, Commander={user.get('is_commander')}"
+        )
 
         # הערה: אם תרצה לאפשר לכל המשתמשים להתחבר, הסר את התנאי הבא
         if not user.get("is_admin") and not user.get("is_commander"):
@@ -85,6 +89,8 @@ def login():
                     "personal_number": user.get("personal_number"),
                     "phone_number": user.get("phone_number"),
                     "email": user.get("email"),
+                    "email": user.get("email"),
+                    "last_password_change": user.get("last_password_change"),
                     "must_change_password": user.get("must_change_password", False),
                     "is_admin": user.get("is_admin", False),
                     "is_commander": user.get("is_commander", False),
@@ -163,6 +169,9 @@ def get_current_user():
                 "personal_number": user["personal_number"],
                 "phone_number": user.get("phone_number"),
                 "email": user.get("email"),
+                "phone_number": user.get("phone_number"),
+                "email": user.get("email"),
+                "last_password_change": user.get("last_password_change"),
                 "must_change_password": (
                     False if is_impersonated else user["must_change_password"]
                 ),
@@ -194,6 +203,8 @@ def get_current_user():
                 "assignment_date": user.get("assignment_date"),
                 "police_license": user.get("police_license"),
                 "security_clearance": user.get("security_clearance"),
+                "is_temp_commander": user.get("is_temp_commander", False),
+                "active_delegate_id": user.get("active_delegate_id"),
             }
         )
     return jsonify({"error": "User not found"}), 404
@@ -217,13 +228,44 @@ def change_password():
 
     data = request.get_json()
     new_pass = data.get("new_password")
+    old_pass = data.get("old_password")
 
     if not new_pass or len(new_pass) < 6:
         return jsonify({"success": False, "error": "Password too short"}), 400
 
-    if EmployeeModel.update_password(user_id, new_pass):
+    if not old_pass:
+        return jsonify({"success": False, "error": "Missing old password"}), 400
+
+    success, msg = EmployeeModel.update_password(
+        user_id, new_pass, old_password=old_pass
+    )
+
+    if success:
         return jsonify({"success": True, "message": "הסיסמה עודכנה בהצלחה"})
-    return jsonify({"success": False, "error": "שגיאה בעדכון הסיסמה"}), 500
+    return jsonify({"success": False, "error": msg or "שגיאה בעדכון הסיסמה"}), 400
+
+
+@auth_bp.route("/confirm-password", methods=["POST"])
+@jwt_required()
+def confirm_password():
+    """
+    Allows user to confirm they want to keep their current password, resetting the timer.
+    """
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+
+    success, msg = EmployeeModel.confirm_current_password(user_id)
+
+    if success:
+        return jsonify({"success": True, "message": "תוקף הסיסמה הוארך"})
+    return jsonify({"success": False, "error": msg}), 400
 
 
 @auth_bp.route("/reset-impersonated-password", methods=["POST"])
@@ -320,14 +362,14 @@ def update_profile():
     return jsonify({"success": False, "error": "שגיאה בעדכון הפרופיל"}), 500
 
 
-
-
 import random
 import string
 from datetime import datetime, timedelta
 
+
 def generate_code(length=6):
-    return ''.join(random.choices(string.digits, k=length))
+    return "".join(random.choices(string.digits, k=length))
+
 
 @auth_bp.route("/forgot-password", methods=["POST"])
 def forgot_password():
@@ -347,14 +389,15 @@ def forgot_password():
         return jsonify({"success": False, "error": "Missing fields"}), 400
 
     from app.utils.db import get_db_connection
+
     conn = get_db_connection()
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        
+
         # 1. Verify User
-        # We assume users might NOT have email set in DB yet, so we trust the input email 
+        # We assume users might NOT have email set in DB yet, so we trust the input email
         # IF the user exists. (In a strict system, we would match DB email).
-        # For this prototype: Update the user's email if it's missing? 
+        # For this prototype: Update the user's email if it's missing?
         # Better: Check if user exists.
         cur.execute(
             "SELECT id, first_name, last_name, email FROM employees WHERE personal_number = %s",
@@ -363,20 +406,27 @@ def forgot_password():
         user = cur.fetchone()
 
         if not user:
-             # Security: Fake success
-             return jsonify({"success": True, "message": "Code sent"})
+            # Security: Fake success
+            return jsonify({"success": True, "message": "Code sent"})
 
-        # If user has email in DB, verify it matches? 
+        # If user has email in DB, verify it matches?
         # For now, we'll ALLOW updating email if it is null (First time setup)
         # BUT if it exists and doesn't match, we block.
         db_email = user.get("email")
         if db_email and db_email.lower().strip() != email.lower().strip():
-             return jsonify({"success": False, "error": "Email does not match our records"}), 400
-        
+            return (
+                jsonify(
+                    {"success": False, "error": "Email does not match our records"}
+                ),
+                400,
+            )
+
         # If DB email is empty, we set it now (Lazy registration)
         if not db_email:
-             cur.execute("UPDATE employees SET email = %s WHERE id = %s", (email, user["id"]))
-             conn.commit()
+            cur.execute(
+                "UPDATE employees SET email = %s WHERE id = %s", (email, user["id"])
+            )
+            conn.commit()
 
         # 2. Generate Code
         code = generate_code()
@@ -385,17 +435,16 @@ def forgot_password():
         # 3. Save Code
         cur.execute(
             "INSERT INTO verification_codes (email, code, expires_at) VALUES (%s, %s, %s)",
-            (email, code, expires)
+            (email, code, expires),
         )
         conn.commit()
 
         # 4. Send Email
         from app.utils.email_service import send_verification_email
+
         send_verification_email(email, code)
 
         return jsonify({"success": True, "message": "Code sent successfully"})
-
-
 
     except Exception as e:
         print(f"Error in forgot-password: {e}")
@@ -418,18 +467,22 @@ def verify_reset_code():
         return jsonify({"success": False, "error": "Missing fields"}), 400
 
     from app.utils.db import get_db_connection
+
     conn = get_db_connection()
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        
-        cur.execute("""
+
+        cur.execute(
+            """
             SELECT id FROM verification_codes 
             WHERE email = %s AND code = %s AND is_used = FALSE AND expires_at > NOW()
             ORDER BY created_at DESC LIMIT 1
-        """, (email, code))
-        
+        """,
+            (email, code),
+        )
+
         valid = cur.fetchone()
-        
+
         if valid:
             return jsonify({"success": True, "message": "Code is valid"})
         else:
@@ -459,40 +512,56 @@ def reset_password_with_code():
         return jsonify({"success": False, "error": "Password too short"}), 400
 
     from app.utils.db import get_db_connection
+
     conn = get_db_connection()
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        
+
         # Verify code again atomically
-        cur.execute("""
+        cur.execute(
+            """
             SELECT id FROM verification_codes 
             WHERE email = %s AND code = %s AND is_used = FALSE AND expires_at > NOW()
             FOR UPDATE
-        """, (email, code))
+        """,
+            (email, code),
+        )
         record = cur.fetchone()
-        
+
         if not record:
-             return jsonify({"success": False, "error": "Invalid or expired session"}), 400
+            return (
+                jsonify({"success": False, "error": "Invalid or expired session"}),
+                400,
+            )
 
         # Mark code as used
-        cur.execute("UPDATE verification_codes SET is_used = TRUE WHERE id = %s", (record["id"],))
+        cur.execute(
+            "UPDATE verification_codes SET is_used = TRUE WHERE id = %s",
+            (record["id"],),
+        )
 
         # Update Password
         from werkzeug.security import generate_password_hash
+
         new_hash = generate_password_hash(new_password)
-        
+
         # We need to find the user by email
         # Note: If multiple users have same email (shouldn't happen), this resets all??
         # Better: We trusted personal_number earlier. Ideally we pass personal_number here too.
         # But assuming unique email per user:
         cur.execute(
-            "UPDATE employees SET password_hash = %s, must_change_password = FALSE WHERE email = %s",
-            (new_hash, email)
+            "UPDATE employees SET password_hash = %s, must_change_password = FALSE, last_password_change = NOW() WHERE email = %s",
+            (new_hash, email),
         )
-        
+
         if cur.rowcount == 0:
-             conn.rollback()
-             return jsonify({"success": False, "error": "User not found associated with email"}), 404
+            conn.rollback()
+            return (
+                jsonify(
+                    {"success": False, "error": "User not found associated with email"}
+                ),
+                404,
+            )
 
         conn.commit()
         return jsonify({"success": True, "message": "Password updated successfully"})
@@ -520,10 +589,12 @@ def verify_token():
 @jwt_required()
 def impersonate_user():
     """
-    Admin only: Generate a login token for another user to view the system as them.
+    Admin or Commander: Generate a login token for another user to view the system as them.
+    - Admins can impersonate anyone
+    - Commanders can impersonate members of their commanded unit
     """
     try:
-        # 1. Verify Admin Status
+        # 1. Get requesting user
         identity_raw = get_jwt_identity()
         try:
             identity = (
@@ -536,11 +607,26 @@ def impersonate_user():
 
         requesting_id = identity["id"] if isinstance(identity, dict) else identity
 
-        # Check against DB to be sure
-        admin_user = EmployeeModel.get_employee_by_id(requesting_id)
-        if not admin_user or not admin_user.get("is_admin"):
+        # Check against DB
+        requesting_user = EmployeeModel.get_employee_by_id(requesting_id)
+        if not requesting_user:
             return (
-                jsonify({"success": False, "error": "Unauthorized: Admins only"}),
+                jsonify({"success": False, "error": "User not found"}),
+                404,
+            )
+
+        is_admin = requesting_user.get("is_admin", False)
+        is_commander = requesting_user.get("is_commander", False)
+
+        # Must be admin or commander
+        if not is_admin and not is_commander:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Unauthorized: Admins or Commanders only",
+                    }
+                ),
                 403,
             )
 
@@ -552,7 +638,39 @@ def impersonate_user():
         if not target_user:
             return jsonify({"success": False, "error": "User not found"}), 404
 
-        # 3. Generate Token for Target
+        # 3. Authorization check for commanders
+        # Commanders can only impersonate members of their commanded unit
+        if is_commander and not is_admin:
+            target_dept = target_user.get("department_id")
+            target_section = target_user.get("section_id")
+            target_team = target_user.get("team_id")
+
+            commander_dept = requesting_user.get("commands_department_id")
+            commander_section = requesting_user.get("commands_section_id")
+            commander_team = requesting_user.get("commands_team_id")
+
+            # Check if target is within commander's scope
+            is_in_scope = False
+
+            if commander_dept and target_dept == commander_dept:
+                is_in_scope = True
+            elif commander_section and target_section == commander_section:
+                is_in_scope = True
+            elif commander_team and target_team == commander_team:
+                is_in_scope = True
+
+            if not is_in_scope:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "Unauthorized: Commanders can only impersonate members of their commanded unit",
+                        }
+                    ),
+                    403,
+                )
+
+        # 4. Generate Token for Target
         token = create_access_token(
             identity=json.dumps(
                 {
@@ -587,7 +705,9 @@ def impersonate_user():
                     "commands_team_id": target_user.get("commands_team_id"),
                     "notif_sick_leave": target_user.get("notif_sick_leave", True),
                     "notif_transfers": target_user.get("notif_transfers", True),
-                    "notif_morning_report": target_user.get("notif_morning_report", True),
+                    "notif_morning_report": target_user.get(
+                        "notif_morning_report", True
+                    ),
                     "city": target_user.get("city"),
                     "birth_date": target_user.get("birth_date"),
                     "emergency_contact": target_user.get("emergency_contact"),

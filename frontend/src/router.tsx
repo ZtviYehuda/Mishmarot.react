@@ -4,6 +4,7 @@ import {
   RouterProvider,
   Navigate,
   Outlet,
+  useLocation,
 } from "react-router-dom";
 import { useAuthContext } from "@/context/AuthContext";
 
@@ -23,25 +24,14 @@ import AttendancePage from "@/pages/AttendancePage";
 import SettingsPage from "@/pages/SettingsPage";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
 import MainLayout from "@/components/layout/MainLayout";
-import { Loader2 } from "lucide-react";
-import { useLocation } from "react-router-dom";
 import { EmployeeProvider } from "@/context/EmployeeContext";
+import { LoadingScreen } from "@/components/layout/LoadingScreen";
 
 const ProtectedRoute = () => {
   const { user, loading } = useAuthContext();
   const location = useLocation();
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f3f6f9]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-[#003d7e] animate-spin" />
-          <span className="text-sm font-bold text-slate-500 animate-pulse">
-            מאמת פרטי גישה...
-          </span>
-        </div>
-      </div>
-    );
+  if (loading) return <LoadingScreen />;
 
   if (!user) return <Navigate to="/login" replace />;
 

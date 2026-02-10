@@ -23,6 +23,7 @@ import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
+import { ForgotPasswordDialog } from "@/components/settings/ForgotPasswordDialog";
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuthContext();
@@ -217,12 +218,14 @@ export default function SettingsPage() {
   ];
 
   const [passwordData, setPasswordData] = useState({
+    old_password: "",
     new_password: "",
     confirm_password: "",
   });
   const [showPasswords, setShowPasswords] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -327,11 +330,16 @@ export default function SettingsPage() {
     setIsChangingPassword(true);
     try {
       const { data } = await apiClient.post("/auth/change-password", {
+        old_password: passwordData.old_password,
         new_password: passwordData.new_password,
       });
       if (data.success) {
         toast.success("הסיסמה עודכנה בהצלחה");
-        setPasswordData({ new_password: "", confirm_password: "" });
+        setPasswordData({
+          old_password: "",
+          new_password: "",
+          confirm_password: "",
+        });
       } else {
         toast.error(data.error || "שגיאה בעדכון הסיסמה");
       }
@@ -363,6 +371,20 @@ export default function SettingsPage() {
       toast.error("שגיאה באיפוס הסיסמה");
     } finally {
       setIsResetting(false);
+    }
+  };
+
+  const handleConfirmCurrentPassword = async () => {
+    try {
+      const { data } = await apiClient.post("/auth/confirm-password");
+      if (data.success) {
+        await refreshUser();
+        toast.success("תוקף הסיסמה הוארך ב-6 חודשים");
+      } else {
+        toast.error(data.error);
+      }
+    } catch (err) {
+      toast.error("שגיאה בתקשורת עם השרת");
     }
   };
 
@@ -441,17 +463,27 @@ export default function SettingsPage() {
         )}
 
         {activeTab === "security" && (
-          <SecuritySettings
-            user={user}
-            passwordData={passwordData}
-            setPasswordData={setPasswordData}
-            showPasswords={showPasswords}
-            setShowPasswords={setShowPasswords}
-            isChangingPassword={isChangingPassword}
-            handleChangePassword={handleChangePassword}
-            isResetting={isResetting}
-            handleResetImpersonatedPassword={handleResetImpersonatedPassword}
-          />
+          <>
+            <SecuritySettings
+              user={user}
+              passwordData={passwordData}
+              setPasswordData={setPasswordData}
+              showPasswords={showPasswords}
+              setShowPasswords={setShowPasswords}
+              isChangingPassword={isChangingPassword}
+              handleChangePassword={handleChangePassword}
+              isResetting={isResetting}
+              handleResetImpersonatedPassword={handleResetImpersonatedPassword}
+              onForgotPassword={() => setShowForgotPassword(true)}
+              handleConfirmCurrentPassword={handleConfirmCurrentPassword}
+            />
+
+            <ForgotPasswordDialog
+              open={showForgotPassword}
+              onOpenChange={setShowForgotPassword}
+              user={user}
+            />
+          </>
         )}
 
         {activeTab === "notifications" && (

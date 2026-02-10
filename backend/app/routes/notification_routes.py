@@ -29,10 +29,10 @@ def get_alerts():
             return jsonify({"error": "User not found"}), 404
 
         # Get all alerts
-        all_alerts = NotificationModel.get_alerts(user)
+        all_alerts = NotificationModel.get_alerts(user) or []
 
         # Get notifications this user has already read
-        read_notifications = NotificationModel.get_read_notifications(user_id)
+        read_notifications = NotificationModel.get_read_notifications(user_id) or []
 
         print(
             f"DEBUG: User {user_id} - All Alerts IDs: {[a['id'] for a in all_alerts]}"

@@ -259,7 +259,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 סינון שוטרים מתקדם
               </DialogTitle>
               <DialogDescription className="text-sm font-bold text-muted-foreground italic tracking-tight">
-                התאם את התצוגה המבוקשת לפי מדרג ארגוני, סוג שירות או מאפיינים אישיים
+                התאם את התצוגה המבוקשת לפי מדרג ארגוני, מעמד או מאפיינים אישיים
               </DialogDescription>
             </div>
             <div className="w-16 h-16 rounded-[24px] bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner shrink-0 scale-110 sm:scale-100">
@@ -302,10 +302,14 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   </span>
                 </div>
               </div>
-              <div className={cn(
-                "w-8 h-8 rounded-full border border-border/50 flex items-center justify-center transition-all",
-                expandedSection === "org" ? "bg-muted text-foreground" : "text-muted-foreground"
-              )}>
+              <div
+                className={cn(
+                  "w-8 h-8 rounded-full border border-border/50 flex items-center justify-center transition-all",
+                  expandedSection === "org"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground",
+                )}
+              >
                 <ChevronDown
                   className={cn(
                     "w-4 h-4 transition-transform duration-300",
@@ -427,7 +431,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   {/* Service Types */}
                   <div className="space-y-3">
                     <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                      סוג שירות / מעמד
+                      מעמד / מעמד
                     </Label>
                     <div className="flex flex-wrap gap-2">
                       {hierarchyData.serviceTypes.map((type) => (
@@ -477,10 +481,14 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   </span>
                 </div>
               </div>
-              <div className={cn(
-                "w-8 h-8 rounded-full border border-border/50 flex items-center justify-center transition-all",
-                expandedSection === "security" ? "bg-muted text-foreground" : "text-muted-foreground"
-              )}>
+              <div
+                className={cn(
+                  "w-8 h-8 rounded-full border border-border/50 flex items-center justify-center transition-all",
+                  expandedSection === "security"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground",
+                )}
+              >
                 <ChevronDown
                   className={cn(
                     "w-4 h-4 transition-transform duration-300",
@@ -493,10 +501,22 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             {expandedSection === "security" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-2 sm:pr-14 animate-in fade-in slide-in-from-top-4 duration-500 pb-4">
                 {[
-                  { id: "isCommander", label: "מפקדים בלבד", icon: ShieldCheck },
+                  {
+                    id: "isCommander",
+                    label: "מפקדים בלבד",
+                    icon: ShieldCheck,
+                  },
                   { id: "isAdmin", label: "מנהלי מערכת", icon: CheckCircle2 },
-                  { id: "hasSecurityClearance", label: "בעלי סיווג ביטחוני", icon: CheckCircle2 },
-                  { id: "hasPoliceRicense", label: "רישיון נהיגה משטרתי", icon: CheckCircle2 },
+                  {
+                    id: "hasSecurityClearance",
+                    label: "בעלי סיווג ביטחוני",
+                    icon: CheckCircle2,
+                  },
+                  {
+                    id: "hasPoliceRicense",
+                    label: "רישיון נהיגה משטרתי",
+                    icon: CheckCircle2,
+                  },
                 ].map((item) => (
                   <Button
                     key={item.id}
@@ -526,7 +546,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                         <Check className="w-3 h-3 text-white" />
                       )}
                     </div>
-                    <span className="text-xs font-black tracking-tight">{item.label}</span>
+                    <span className="text-xs font-black tracking-tight">
+                      {item.label}
+                    </span>
                   </Button>
                 ))}
               </div>

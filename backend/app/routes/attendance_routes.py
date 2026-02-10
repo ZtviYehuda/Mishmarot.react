@@ -4,6 +4,7 @@ from app.models.attendance_model import AttendanceModel
 import json
 import pandas as pd
 import io
+from datetime import datetime
 
 att_bp = Blueprint("attendance", __name__)
 
@@ -209,6 +210,24 @@ def log_status():
         start_date=start_date,
         end_date=end_date,
     )
+
+    if success:
+        # Handle Delegation (New Feature)
+        delegation = data.get("delegation")
+        if delegation and delegation.get("delegate_id"):
+            try:
+                from app.models.employee_model import EmployeeModel
+
+                del_id = delegation["delegate_id"]
+                # Use status dates for delegation period
+                d_start = start_date or datetime.now()
+                d_end = end_date
+
+                EmployeeModel.create_delegation(current_user_id, del_id, d_start, d_end)
+                print(f"[INFO] Created delegation from {current_user_id} to {del_id}")
+            except Exception as e:
+                print(f"[ERROR] Failed to create delegation: {e}")
+                # We don't fail the request, just log it. The status was updated.
 
     if success:
         return jsonify({"success": True, "message": "הסטטוס עודכן"})

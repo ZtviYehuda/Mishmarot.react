@@ -401,24 +401,28 @@ export const EmployeeTable = ({
 
                     <TableCell className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
-                        {user?.is_admin &&
-                          (emp.is_commander || emp.is_admin) && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
-                              onClick={() =>
-                                handleImpersonate(
-                                  emp.id,
-                                  `${emp.first_name} ${emp.last_name}`,
-                                )
-                              }
-                              title="התחבר כמשתמש זה"
-                            >
-                              <LogIn className="w-3.5 h-3.5 ml-1" />
-                              התחבר
-                            </Button>
-                          )}
+                        {((user?.is_admin &&
+                          (emp.is_commander || emp.is_admin)) ||
+                          (user?.is_commander &&
+                            !user?.is_admin &&
+                            !user?.is_temp_commander &&
+                            user?.active_delegate_id === emp.id)) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
+                            onClick={() =>
+                              handleImpersonate(
+                                emp.id,
+                                `${emp.first_name} ${emp.last_name}`,
+                              )
+                            }
+                            title="התחבר כמשתמש זה"
+                          >
+                            <LogIn className="w-3.5 h-3.5 ml-1" />
+                            התחבר
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -428,15 +432,19 @@ export const EmployeeTable = ({
                           <User className="w-3.5 h-3.5 ml-1" />
                           פרופיל
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
-                          onClick={() => navigate(`/employees/edit/${emp.id}`)}
-                        >
-                          <Pencil className="w-3.5 h-3.5 ml-1" />
-                          עריכה
-                        </Button>
+                        {!user?.is_temp_commander && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
+                            onClick={() =>
+                              navigate(`/employees/edit/${emp.id}`)
+                            }
+                          >
+                            <Pencil className="w-3.5 h-3.5 ml-1" />
+                            עריכה
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -630,7 +638,11 @@ export const EmployeeTable = ({
                 {/* Actions */}
                 <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                   <div className="flex items-center gap-1.5">
-                    {user?.is_admin && (emp.is_commander || emp.is_admin) && (
+                    {((user?.is_admin && (emp.is_commander || emp.is_admin)) ||
+                      (user?.is_commander &&
+                        !user?.is_admin &&
+                        !user?.is_temp_commander &&
+                        user?.active_delegate_id === emp.id)) && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -655,15 +667,17 @@ export const EmployeeTable = ({
                       <User className="w-3.5 h-3.5 ml-1" />
                       פרופיל
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
-                      onClick={() => navigate(`/employees/edit/${emp.id}`)}
-                    >
-                      <Pencil className="w-3.5 h-3.5 ml-1" />
-                      עריכה
-                    </Button>
+                    {!user?.is_temp_commander && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
+                        onClick={() => navigate(`/employees/edit/${emp.id}`)}
+                      >
+                        <Pencil className="w-3.5 h-3.5 ml-1" />
+                        עריכה
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

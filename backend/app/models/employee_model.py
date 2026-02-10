@@ -63,6 +63,7 @@ class EmployeeModel:
                        e.enlistment_date, e.discharge_date, e.assignment_date,
                        e.security_clearance, e.police_license, e.is_active,
                        e.must_change_password, e.is_admin, e.is_commander,
+                       e.last_password_change,
                        e.service_type_id, svt.name as service_type_name,
                        COALESCE(d.name, d_s_dir.name, d_dir.name) as department_name, 
                        COALESCE(s.name, s_dir.name) as section_name, 
@@ -142,6 +143,63 @@ class EmployeeModel:
                     print(
                         f"[DEBUG] get_employee_by_id - Final command IDs: dept={user.get('commands_department_id')}, sec={user.get('commands_section_id')}, team={user.get('commands_team_id')}"
                     )
+
+                # --- DELEGATION LOGIC ---
+                # Check if this user is an active delegate for someone else
+                cur.execute(
+                    """
+                    SELECT d.commander_id, d.start_date, d.end_date,
+                           e.team_id as commander_team_id
+                    FROM delegations d
+                    JOIN employees e ON d.commander_id = e.id
+                    WHERE d.delegate_id = %s 
+                      AND d.start_date <= NOW() 
+                      AND (d.end_date IS NULL OR d.end_date >= NOW())
+                      AND d.is_active = TRUE
+                    LIMIT 1
+                """,
+                    (emp_id,),
+                )
+                delegation = cur.fetchone()
+
+                if delegation:
+                    # User is a temporary commander!
+                    user["is_temp_commander"] = True
+                    user["delegated_from_commander_id"] = delegation["commander_id"]
+
+                    # Grant them the commander's team scope (read-only command)
+                    # We override commands_team_id to allow them to see the team in stats/tables
+                    # But we add is_temp_commander flag so frontend/backend knows to limit permissions
+                    user["commands_team_id"] = delegation["commander_team_id"]
+
+                    # Ensure they don't get other command scopes unless they already had them (unlikely for a temp)
+                    # If they are just a regular soldier, these should be None anyway.
+
+                    print(
+                        f"[DEBUG] User {emp_id} is TEMP COMMANDER for team {delegation['commander_team_id']}"
+                    )
+
+                # --- CHECK IF USER IS A COMMANDER WITH ACTIVE DELEGATE ---
+                # If this user is a commander who has delegated to someone else
+                if user.get("is_commander") and not user.get("is_temp_commander"):
+                    cur.execute(
+                        """
+                        SELECT delegate_id
+                        FROM delegations
+                        WHERE commander_id = %s 
+                          AND start_date <= NOW() 
+                          AND (end_date IS NULL OR end_date >= NOW())
+                          AND is_active = TRUE
+                        LIMIT 1
+                    """,
+                        (emp_id,),
+                    )
+                    active_delegation = cur.fetchone()
+                    if active_delegation:
+                        user["active_delegate_id"] = active_delegation["delegate_id"]
+                        print(
+                            f"[DEBUG] Commander {emp_id} has active delegate: {active_delegation['delegate_id']}"
+                        )
 
                 # Convert dates to strings for JSON serialization
                 for key, value in user.items():
@@ -763,22 +821,119 @@ class EmployeeModel:
             conn.close()
 
     @staticmethod
-    def update_password(user_id, new_password):
+    def update_password(user_id, new_password, old_password=None):
         conn = get_db_connection()
         if not conn:
-            return False
+            return False, "Database connection failed"
         try:
-            cur = conn.cursor()
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            # If old_password is provided, we must verify it first
+            if old_password:
+                cur.execute(
+                    "SELECT password_hash FROM employees WHERE id = %s", (user_id,)
+                )
+                user = cur.fetchone()
+                if not user or not user["password_hash"]:
+                    return False, "User not found"
+
+                if not check_password_hash(user["password_hash"], old_password):
+                    return False, "הסיסמה הישנה שגויה"
+
             new_hash = generate_password_hash(new_password)
             cur.execute(
-                "UPDATE employees SET password_hash = %s, must_change_password = FALSE WHERE id = %s",
+                "UPDATE employees SET password_hash = %s, must_change_password = FALSE, last_password_change = NOW() WHERE id = %s",
                 (new_hash, user_id),
             )
             conn.commit()
-            return True
-        except Exception:
+            return True, "Success"
+        except Exception as e:
             conn.rollback()
-            return False
+            print(f"Error changing password: {e}")
+            return False, str(e)
+        finally:
+            conn.close()
+
+    @staticmethod
+    def create_delegation(commander_id, delegate_id, start_date, end_date):
+        conn = get_db_connection()
+        if not conn:
+            return False, "Database connection failed"
+        try:
+            cur = conn.cursor()
+
+            # Verify commander has a team
+            cur.execute(
+                "SELECT team_id FROM employees WHERE id = %s AND is_commander = TRUE",
+                (commander_id,),
+            )
+            res = cur.fetchone()
+            if not res or not res[0]:
+                return False, "Commander does not command a valid team"
+
+            # Insert delegation
+            cur.execute(
+                """
+                INSERT INTO delegations (commander_id, delegate_id, start_date, end_date)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (commander_id, delegate_id, start_date) DO NOTHING
+            """,
+                (commander_id, delegate_id, start_date, end_date),
+            )
+
+            conn.commit()
+            return True, "Delegation created"
+        except Exception as e:
+            conn.rollback()
+            print(f"Error create_delegation: {e}")
+            return False, str(e)
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_team_members_for_commander(commander_id):
+        conn = get_db_connection()
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            # Find the team this commander commands
+            cur.execute("SELECT team_id FROM employees WHERE id = %s", (commander_id,))
+            res = cur.fetchone()
+            if not res or not res["team_id"]:
+                return []
+
+            team_id = res["team_id"]
+
+            # Fetch candidates (active, not the commander themselves)
+            cur.execute(
+                """
+                SELECT id, first_name, last_name, personal_number 
+                FROM employees 
+                WHERE team_id = %s AND is_active = TRUE AND id != %s
+                ORDER BY first_name ASC
+            """,
+                (team_id, commander_id),
+            )
+            return cur.fetchall()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def confirm_current_password(user_id):
+        conn = get_db_connection()
+        if not conn:
+            return False, "Database connection failed"
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE employees SET last_password_change = NOW() WHERE id = %s",
+                (user_id,),
+            )
+            conn.commit()
+            return True, "Success"
+        except Exception as e:
+            conn.rollback()
+            print(f"Error confirming password: {e}")
+            return False, str(e)
         finally:
             conn.close()
 

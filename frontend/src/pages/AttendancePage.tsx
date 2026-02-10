@@ -142,6 +142,7 @@ export default function AttendancePage() {
 
       if (user) {
         const me = await getEmployeeById(user.id);
+        console.log("[DEBUG] getEmployeeById result:", me);
         setCurrentUserEmp(me);
       }
     };
@@ -388,6 +389,10 @@ export default function AttendancePage() {
                       : "border-primary/20 bg-primary/5 text-primary",
                   )}
                   onClick={() => {
+                    console.log(
+                      "[DEBUG] Self-report clicked. currentUserEmp:",
+                      currentUserEmp,
+                    );
                     if (currentUserEmp) {
                       handleOpenStatusModal(currentUserEmp);
                     } else {
@@ -571,33 +576,54 @@ export default function AttendancePage() {
         </div>
 
         {!isAllReported ? (
-          <div className="hidden lg:flex bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl lg:rounded-3xl p-3 lg:p-6 text-white shadow-xl shadow-rose-500/20 flex-row lg:flex-col items-center lg:items-start justify-between gap-3 lg:gap-4 order-1 lg:order-2">
-            <div className="flex items-center lg:block gap-3">
-              <div className="p-2 lg:p-0 bg-white/10 lg:bg-transparent rounded-xl flex items-center justify-center shrink-0">
-                <Clock className="w-5 h-5 lg:w-8 lg:h-8 opacity-90 lg:opacity-50" />
+          <div className="hidden lg:flex bg-card/40 dark:bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-lg flex-row lg:flex-col items-center lg:items-start justify-between gap-4 order-1 lg:order-2 hover:shadow-xl hover:border-border transition-all duration-300">
+            {/* Header Section */}
+            <div className="flex items-start gap-3 lg:gap-4 flex-1">
+              <div className="relative">
+                {/* Icon Container with subtle pulse */}
+                <div className="relative p-2.5 lg:p-3 bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 rounded-xl lg:rounded-2xl border border-primary/20 dark:border-primary/30">
+                  <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-primary" />
+                  {/* Pulse ring */}
+                  <div className="absolute inset-0 rounded-xl lg:rounded-2xl bg-primary/20 animate-ping opacity-20" />
+                </div>
+                {/* Corner accent */}
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
               </div>
-              <div className="space-y-0 lg:space-y-2">
-                <h3 className="text-xs lg:text-xl font-black leading-none text-white">
-                  תזכורת דיווח
-                </h3>
-                <p className="hidden lg:block text-sm text-white/80 font-medium leading-relaxed">
-                  יש להשלים את דיווחי הנוכחות של כלל השוטרים במחלקה עד השעה
-                  09:00.
+
+              <div className="flex-1 space-y-1 lg:space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm lg:text-lg font-black text-foreground">
+                    תזכורת דיווח
+                  </h3>
+                  <div className="hidden lg:block px-2 py-0.5 bg-primary/10 dark:bg-primary/20 rounded-full">
+                    <span className="text-[10px] font-bold text-primary">
+                      דחוף
+                    </span>
+                  </div>
+                </div>
+                <p className="hidden lg:block text-xs lg:text-sm text-muted-foreground font-medium leading-relaxed">
+                  יש להשלים את דיווחי הנוכחות של כלל השוטרים במחלקה עד השעה{" "}
+                  <span className="font-black text-foreground">09:00</span>
                 </p>
-                <p className="lg:hidden text-[9px] font-bold opacity-80 leading-none mt-1">
-                  השלמה עד 09:00
+                <p className="lg:hidden text-[10px] text-muted-foreground font-medium">
+                  השלמה עד{" "}
+                  <span className="font-black text-foreground">09:00</span>
                 </p>
               </div>
             </div>
 
-            <div
-              className="bg-white/10 h-10 lg:h-auto px-4 lg:p-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:bg-white/20 transition-colors border border-white/10 shrink-0"
-              onClick={() => setBulkModalOpen(true)}
-            >
-              <AlertCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-white/90" />
-              <span className="text-[10px] lg:text-xs font-black text-white underline decoration-white/30 underline-offset-4 whitespace-nowrap">
-                נותרו: {totalCount - updatedTodayCount}
-              </span>
+            {/* Action Button */}
+            <div className="w-full lg:flex lg:justify-center">
+              <button
+                className="group relative h-10 lg:h-11 w-full lg:w-auto px-4 lg:px-6 bg-primary hover:bg-primary/90 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] shrink-0"
+                onClick={() => setBulkModalOpen(true)}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
+                <AlertCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-foreground relative z-10" />
+                <span className="text-xs lg:text-sm font-black text-primary-foreground whitespace-nowrap relative z-10">
+                  נותרו: {totalCount - updatedTodayCount}
+                </span>
+              </button>
             </div>
           </div>
         ) : (
@@ -1209,14 +1235,16 @@ export default function AttendancePage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
-                            onClick={() => handleOpenHistoryModal(emp)}
-                          >
-                            <History className="w-4 h-4" />
-                          </Button>
+                          {!user?.is_temp_commander && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                              onClick={() => handleOpenHistoryModal(emp)}
+                            >
+                              <History className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -1412,16 +1440,18 @@ export default function AttendancePage() {
                       <ClipboardCheck className="w-3.5 h-3.5" />
                       עדכן נוכחות
                     </button>
-                    <button
-                      className="flex-1 py-3 text-[11px] font-black text-muted-foreground hover:bg-muted/50 active:bg-muted transition-colors flex items-center justify-center gap-2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenHistoryModal(emp);
-                      }}
-                    >
-                      <History className="w-3.5 h-3.5" />
-                      היסטוריה
-                    </button>
+                    {!user?.is_temp_commander && (
+                      <button
+                        className="flex-1 py-3 text-[11px] font-black text-muted-foreground hover:bg-muted/50 active:bg-muted transition-colors flex items-center justify-center gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenHistoryModal(emp);
+                        }}
+                      >
+                        <History className="w-3.5 h-3.5" />
+                        היסטוריה
+                      </button>
+                    )}
                   </div>
                 </div>
               );
