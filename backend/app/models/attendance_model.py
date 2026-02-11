@@ -155,7 +155,9 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def get_unit_comparison_stats(requesting_user=None, date=None, days=1, filters=None):
+    def get_unit_comparison_stats(
+        requesting_user=None, date=None, days=1, filters=None
+    ):
         conn = get_db_connection()
         if not conn:
             return []
@@ -166,7 +168,7 @@ class AttendanceModel:
             grouping_col = "d.name"
             grouping_id = "d.id"
             grouping_label = "department"
-            
+
             # 2. Base Scoping (Security)
             scoping_clause = ""
             scoping_params = []
@@ -185,7 +187,11 @@ class AttendanceModel:
                     scoping_clause = " AND s.id = %s"
                     scoping_params.append(requesting_user["commands_section_id"])
                 elif requesting_user.get("commands_team_id"):
-                    return []
+                    grouping_col = "e.first_name || ' ' || e.last_name"
+                    grouping_id = "e.id"
+                    grouping_label = "employee"
+                    scoping_clause = " AND t.id = %s"
+                    scoping_params.append(requesting_user["commands_team_id"])
 
             # 3. Dynamic Filtering & Drill-down Adjustment
             if filters:
@@ -196,7 +202,7 @@ class AttendanceModel:
                     grouping_col = "s.name"
                     grouping_id = "s.id"
                     grouping_label = "section"
-                
+
                 if filters.get("section_id"):
                     scoping_clause += " AND s.id = %s"
                     scoping_params.append(filters["section_id"])
@@ -234,9 +240,9 @@ class AttendanceModel:
                     WITH RECURSIVE date_range AS (
                         SELECT DATE(%s) as date_val
                         UNION ALL
-                        SELECT date_val - INTERVAL '1 day'
+                        SELECT (date_val - INTERVAL '1 day')::date
                         FROM date_range
-                        WHERE date_val > DATE(%s) - INTERVAL '%s day' + INTERVAL '1 day'
+                        WHERE date_val > DATE(%s) - (INTERVAL '1 day' * %s) + INTERVAL '1 day'
                     ),
                     daily_presence AS (
                         SELECT 
@@ -284,6 +290,7 @@ class AttendanceModel:
                 base_date = date if date else "CURRENT_DATE"
                 userId = requesting_user["id"] if requesting_user else None
                 final_params = [base_date, base_date, days] + scoping_params + [userId]
+
                 cur.execute(query, tuple(final_params))
             else:
                 # Original Snapshot logic for single day
@@ -332,6 +339,7 @@ class AttendanceModel:
                 cur.execute(query, tuple(final_params))
 
             results = cur.fetchall()
+            print(f"[DEBUG] Comparison stats results count: {len(results)}")
             for r in results:
                 r["level"] = grouping_label
             return results
@@ -375,7 +383,7 @@ class AttendanceModel:
                 if filters.get("team_id"):
                     scoping_clause += " AND t.id = %s"
                     scoping_params.append(filters["team_id"])
-                
+
                 if filters.get("serviceTypes"):
                     srv_list = (
                         filters["serviceTypes"].split(",")

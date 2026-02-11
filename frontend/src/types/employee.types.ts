@@ -11,7 +11,7 @@ export interface Employee {
   birth_date: string | null;
   enlistment_date: string | null;
   discharge_date: string | null;
-  gender: 'male' | 'female' | null;
+  gender: "male" | "female" | null;
 
   // Address/Emergency
   city: string | null;
@@ -21,7 +21,6 @@ export interface Employee {
   is_commander: boolean;
   is_admin: boolean;
   security_clearance: boolean;
-  employment_clearance: boolean;
   police_license: boolean;
   notif_sick_leave: boolean;
   notif_transfers: boolean;
@@ -60,7 +59,7 @@ export interface CreateEmployeePayload {
   last_name: string;
   personal_number: string;
   national_id: string;
-  gender?: 'male' | 'female';
+  gender?: "male" | "female";
   phone_number?: string;
   email?: string;
   city?: string;
@@ -79,7 +78,6 @@ export interface CreateEmployeePayload {
   police_license?: boolean;
   emergency_contact?: string;
   is_active?: boolean;
-  employment_clearance?: boolean;
   notif_sick_leave?: boolean;
   notif_transfers?: boolean;
   notif_morning_report?: boolean;

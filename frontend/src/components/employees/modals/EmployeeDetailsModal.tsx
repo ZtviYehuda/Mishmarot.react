@@ -43,9 +43,7 @@ const InfoItem = ({
       <Icon className="w-3 h-3" />
       {label}
     </span>
-    <span className="text-sm font-bold text-foreground">
-      {value || "---"}
-    </span>
+    <span className="text-sm font-bold text-foreground">{value || "---"}</span>
   </div>
 );
 
@@ -60,8 +58,9 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const getProfessionalTitle = (emp: Employee) => {
     if (emp.is_admin && emp.is_commander) return "מנהל מערכת בכיר";
     if (emp.is_commander) {
-      if (emp.department_name && emp.section_name) return "ראש מדור";
-      if (emp.department_name) return "ראש מחלקה";
+      if (emp.commands_team_id || emp.team_name) return "מפקד חוליה";
+      if (emp.commands_section_id || emp.section_name) return "ראש מדור";
+      if (emp.commands_department_id || emp.department_name) return "ראש מחלקה";
       return "מפקד יחידה";
     }
     return "שוטר";
@@ -164,8 +163,8 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               value={
                 employee.assignment_date
                   ? new Date(employee.assignment_date).toLocaleDateString(
-                    "he-IL",
-                  )
+                      "he-IL",
+                    )
                   : null
               }
             />
@@ -233,45 +232,45 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
           {(employee.department_name ||
             employee.section_name ||
             employee.team_name) && (
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2 opacity-80">
-                  <Building2 className="w-4 h-4" />
-                  ניהול ומבנה ארגוני
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {employee.department_name && (
-                    <div className="bg-muted/30 p-4 rounded-2xl border border-border/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
-                      <p className="text-[9px] font-black text-muted-foreground uppercase opacity-70">
-                        מחלקה
-                      </p>
-                      <p className="text-sm font-black text-center text-wrap break-words leading-tight">
-                        {cleanUnitName(employee.department_name)}
-                      </p>
-                    </div>
-                  )}
-                  {employee.section_name && (
-                    <div className="bg-muted/30 p-4 rounded-2xl border border-border/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
-                      <p className="text-[9px] font-black text-muted-foreground uppercase opacity-70">
-                        מדור
-                      </p>
-                      <p className="text-sm font-black text-center text-wrap break-words leading-tight">
-                        {cleanUnitName(employee.section_name)}
-                      </p>
-                    </div>
-                  )}
-                  {employee.team_name && (
-                    <div className="bg-muted/30 p-4 rounded-2xl border border-border/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
-                      <p className="text-[9px] font-black text-muted-foreground uppercase opacity-70">
-                        צוות / חוליה
-                      </p>
-                      <p className="text-sm font-black text-center text-wrap break-words leading-tight">
-                        {cleanUnitName(employee.team_name)}
-                      </p>
-                    </div>
-                  )}
-                </div>
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2 opacity-80">
+                <Building2 className="w-4 h-4" />
+                ניהול ומבנה ארגוני
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {employee.department_name && (
+                  <div className="bg-muted/30 p-4 rounded-2xl border border-border/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                    <p className="text-[9px] font-black text-muted-foreground uppercase opacity-70">
+                      מחלקה
+                    </p>
+                    <p className="text-sm font-black text-center text-wrap break-words leading-tight">
+                      {cleanUnitName(employee.department_name)}
+                    </p>
+                  </div>
+                )}
+                {employee.section_name && (
+                  <div className="bg-muted/30 p-4 rounded-2xl border border-border/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                    <p className="text-[9px] font-black text-muted-foreground uppercase opacity-70">
+                      מדור
+                    </p>
+                    <p className="text-sm font-black text-center text-wrap break-words leading-tight">
+                      {cleanUnitName(employee.section_name)}
+                    </p>
+                  </div>
+                )}
+                {employee.team_name && (
+                  <div className="bg-muted/30 p-4 rounded-2xl border border-border/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                    <p className="text-[9px] font-black text-muted-foreground uppercase opacity-70">
+                      צוות / חוליה
+                    </p>
+                    <p className="text-sm font-black text-center text-wrap break-words leading-tight">
+                      {cleanUnitName(employee.team_name)}
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+          )}
         </div>
 
         {/* Action Footer */}
@@ -301,12 +300,15 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                   if (!employee.birth_date) return false;
                   const today = new Date();
                   const birthDate = new Date(employee.birth_date);
-                  return today.getMonth() === birthDate.getMonth() && today.getDate() === birthDate.getDate();
+                  return (
+                    today.getMonth() === birthDate.getMonth() &&
+                    today.getDate() === birthDate.getDate()
+                  );
                 };
 
                 const isBirthday = checkBirthday();
                 const message = isBirthday
-                  ? `היי ${employee.first_name}, המון מזל טוב ליום הולדתך! 🎉 מאחלים לך הרבה אושר, בריאות והצלחה בכל! 🎂`
+                  ? `היי ${employee.first_name}, המון מזל טוב ליום הולדתך! מאחלים לך הרבה אושר, בריאות והצלחה בכל!`
                   : `היי ${employee.first_name}, `;
 
                 return (
@@ -318,7 +320,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                       "h-12 px-8 rounded-2xl shadow-lg transition-all font-black text-xs gap-2.5 active:scale-95",
                       isBirthday
                         ? "bg-pink-600 hover:bg-pink-700 text-white shadow-pink-500/20"
-                        : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+                        : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20",
                     )}
                   />
                 );

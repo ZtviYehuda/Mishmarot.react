@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.models.attendance_model import AttendanceModel
+from app.models.audit_log_model import AuditLogModel
 import json
 import pandas as pd
 import io
@@ -230,6 +231,19 @@ def log_status():
                 # We don't fail the request, just log it. The status was updated.
 
     if success:
+        AuditLogModel.log_action(
+            user_id=current_user_id,
+            action_type="STATUS_UPDATE",
+            description=f"Updated status for employee {target_id} to {status_id}",
+            target_id=target_id,
+            ip_address=request.remote_addr,
+            metadata={
+                "status_id": status_id,
+                "start_date": start_date,
+                "end_date": end_date,
+                "note": note,
+            },
+        )
         return jsonify({"success": True, "message": "הסטטוס עודכן"})
     return jsonify({"success": False, "error": "Failed to log status"}), 500
 
@@ -255,6 +269,13 @@ def bulk_log_status():
     success = AttendanceModel.log_bulk_status(updates, reported_by=current_user_id)
 
     if success:
+        AuditLogModel.log_action(
+            user_id=current_user_id,
+            action_type="BULK_STATUS_UPDATE",
+            description=f"Updated status for {len(updates)} employees",
+            ip_address=request.remote_addr,
+            metadata={"count": len(updates)},
+        )
         return jsonify({"success": True, "message": "כלל הסטטוסים עודכנו"})
     return jsonify({"success": False, "error": "Failed to bulk log status"}), 500
 

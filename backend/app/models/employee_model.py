@@ -427,10 +427,22 @@ class EmployeeModel:
                     team_id, section_id, department_id, role_id, service_type_id, 
                     is_commander, is_admin, 
                     password_hash, must_change_password, security_clearance, police_license, gender,
-                    employment_clearance, notif_sick_leave, notif_transfers, notif_morning_report
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    notif_sick_leave, notif_transfers, notif_morning_report
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """
+
+            # Convert boolean security_clearance to int (0/1) for legacy DB column
+            security_val = 0
+            if "security_clearance" in data:
+                if isinstance(data["security_clearance"], bool):
+                    security_val = 1 if data["security_clearance"] else 0
+                else:
+                    try:
+                        security_val = int(data["security_clearance"])
+                    except (ValueError, TypeError):
+                        security_val = 0
+
             cur.execute(
                 query,
                 (
@@ -454,10 +466,9 @@ class EmployeeModel:
                     data.get("is_admin", False),
                     pw_hash,
                     must_change,
-                    data.get("security_clearance", 0),
+                    security_val,
                     data.get("police_license", False),
                     data.get("gender", "male"),
-                    data.get("employment_clearance", False),
                     data.get("notif_sick_leave", True),
                     data.get("notif_transfers", True),
                     data.get("notif_morning_report", True),
@@ -588,7 +599,6 @@ class EmployeeModel:
                 "notif_sick_leave": "notif_sick_leave",
                 "notif_transfers": "notif_transfers",
                 "notif_morning_report": "notif_morning_report",
-                "employment_clearance": "employment_clearance",
             }
 
             # Business Rule: If commander status changes, sync must_change_password

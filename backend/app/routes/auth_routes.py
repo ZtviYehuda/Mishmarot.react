@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.models.employee_model import EmployeeModel
+from app.models.audit_log_model import AuditLogModel
 import logging
 import json
 from psycopg2.extras import RealDictCursor
@@ -77,6 +78,14 @@ def login():
             )
         )
         print("DEBUG LOGIN: Token generated successfully.")
+
+        # Log Login
+        AuditLogModel.log_action(
+            user_id=user["id"],
+            action_type="LOGIN",
+            description="User logged in",
+            ip_address=request.remote_addr,
+        )
 
         return jsonify(
             {
@@ -241,6 +250,12 @@ def change_password():
     )
 
     if success:
+        AuditLogModel.log_action(
+            user_id=user_id,
+            action_type="PASSWORD_CHANGE",
+            description="User changed own password",
+            ip_address=request.remote_addr,
+        )
         return jsonify({"success": True, "message": "הסיסמה עודכנה בהצלחה"})
     return jsonify({"success": False, "error": msg or "שגיאה בעדכון הסיסמה"}), 400
 
@@ -295,6 +310,14 @@ def reset_impersonated_password():
     success, error = EmployeeModel.reset_password_to_national_id(user_id)
 
     if success:
+        real_admin_id = identity.get("real_admin_id")
+        AuditLogModel.log_action(
+            user_id=real_admin_id,
+            action_type="PASSWORD_RESET_IMPERSONATED",
+            description=f"Admin reset password for user {user_id}",
+            target_id=user_id,
+            ip_address=request.remote_addr,
+        )
         return jsonify(
             {"success": True, "message": "הסיסמה אופסה בהצלחה לתעודת הזהות של המשתמש"}
         )
@@ -358,6 +381,13 @@ def update_profile():
         return jsonify({"success": True, "message": "No changes to update"})
 
     if EmployeeModel.update_employee(user_id, allowed_data):
+        AuditLogModel.log_action(
+            user_id=user_id,
+            action_type="PROFILE_UPDATE",
+            description="User updated profile details",
+            metadata=allowed_data,
+            ip_address=request.remote_addr,
+        )
         return jsonify({"success": True, "message": "הפרופיל עודכן בהצלחה"})
     return jsonify({"success": False, "error": "שגיאה בעדכון הפרופיל"}), 500
 
@@ -681,6 +711,15 @@ def impersonate_user():
                     "real_admin_id": requesting_id,
                 }
             )
+        )
+
+        # Log Impersonation
+        AuditLogModel.log_action(
+            user_id=requesting_id,
+            action_type="IMPERSONATION_START",
+            description=f"User started impersonating employee {target_id}",
+            target_id=target_id,
+            ip_address=request.remote_addr,
         )
 
         # 4. Return as if logged in

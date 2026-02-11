@@ -1,7 +1,9 @@
 import React from "react";
 import { useEmployeeContext } from "@/context/EmployeeContext";
+import { useAuthContext } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/employee.types";
+import { toast } from "sonner";
 
 interface EmployeeLinkProps {
   employee: Employee | number;
@@ -17,6 +19,7 @@ export const EmployeeLink: React.FC<EmployeeLinkProps> = ({
   showIcon = false,
 }) => {
   const { openProfile } = useEmployeeContext();
+  const { user } = useAuthContext();
 
   const displayName =
     name ||
@@ -29,6 +32,12 @@ export const EmployeeLink: React.FC<EmployeeLinkProps> = ({
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (user?.is_temp_commander) {
+          toast.error("אין לך הרשאה לצפות בפרופיל שוטר");
+          return;
+        }
+
         openProfile(employee);
       }}
       className={cn(

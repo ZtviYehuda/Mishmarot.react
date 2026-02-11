@@ -162,6 +162,10 @@ export const EmployeeTable = ({
   );
 
   const handleViewDetails = (employee: Employee) => {
+    if (user?.is_temp_commander && employee.is_commander) {
+      toast.error("אין לך הרשאה לצפות בפרופיל של מפקד");
+      return;
+    }
     navigate(`/employees/${employee.id}`);
   };
 
@@ -241,13 +245,15 @@ export const EmployeeTable = ({
             )}
           </Button>
 
-          <Button
-            className="h-9 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 rounded-xl w-full sm:w-auto justify-center sm:mr-auto"
-            onClick={() => navigate("/employees/new")}
-          >
-            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
-            הוספה
-          </Button>
+          {!user?.is_temp_commander && (
+            <Button
+              className="h-9 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 rounded-xl w-full sm:w-auto justify-center sm:mr-auto"
+              onClick={() => navigate("/employees/new")}
+            >
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
+              הוספה
+            </Button>
+          )}
         </div>
       </div>
 
@@ -309,7 +315,7 @@ export const EmployeeTable = ({
                     className={cn(
                       "group transition-all duration-200 hover:bg-muted/50 border-b border-border",
                       !emp.is_active &&
-                      "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-2 border-r-destructive",
+                        "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-2 border-r-destructive",
                     )}
                   >
                     <TableCell className="px-6 py-4 text-right">
@@ -373,20 +379,20 @@ export const EmployeeTable = ({
                           </span>
                           {((emp.section_name && emp.section_name !== "מטה") ||
                             (emp.team_name && emp.team_name !== "מטה")) && (
-                              <span className="text-[10px] text-muted-foreground">
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  `מדור ${cleanUnitName(emp.section_name)}`}
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  " • "}
-                                {emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  `חוליה ${cleanUnitName(emp.team_name)}`}
-                              </span>
-                            )}
+                            <span className="text-[10px] text-muted-foreground">
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                `מדור ${cleanUnitName(emp.section_name)}`}
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                " • "}
+                              {emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                `חוליה ${cleanUnitName(emp.team_name)}`}
+                            </span>
+                          )}
                         </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
@@ -406,31 +412,33 @@ export const EmployeeTable = ({
                             !user?.is_admin &&
                             !user?.is_temp_commander &&
                             user?.active_delegate_id === emp.id)) && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
-                              onClick={() =>
-                                handleImpersonate(
-                                  emp.id,
-                                  `${emp.first_name} ${emp.last_name}`,
-                                )
-                              }
-                              title="התחבר כמשתמש זה"
-                            >
-                              <LogIn className="w-3.5 h-3.5 ml-1" />
-                              התחבר
-                            </Button>
-                          )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
-                          onClick={() => handleViewDetails(emp)}
-                        >
-                          <User className="w-3.5 h-3.5 ml-1" />
-                          פרופיל
-                        </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
+                            onClick={() =>
+                              handleImpersonate(
+                                emp.id,
+                                `${emp.first_name} ${emp.last_name}`,
+                              )
+                            }
+                            title="התחבר כמשתמש זה"
+                          >
+                            <LogIn className="w-3.5 h-3.5 ml-1" />
+                            התחבר
+                          </Button>
+                        )}
+                        {!user?.is_temp_commander && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
+                            onClick={() => handleViewDetails(emp)}
+                          >
+                            <User className="w-3.5 h-3.5 ml-1" />
+                            פרופיל
+                          </Button>
+                        )}
                         {!user?.is_temp_commander && (
                           <Button
                             variant="ghost"
@@ -523,7 +531,7 @@ export const EmployeeTable = ({
               className={cn(
                 "bg-card rounded-2xl border border-border shadow-sm overflow-hidden",
                 !emp.is_active &&
-                "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-4 border-r-destructive",
+                  "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-4 border-r-destructive",
               )}
             >
               <div className="p-3 space-y-2.5">
@@ -603,21 +611,21 @@ export const EmployeeTable = ({
                           {cleanUnitName(emp.department_name)}
                           {((emp.section_name && emp.section_name !== "מטה") ||
                             (emp.team_name && emp.team_name !== "מטה")) && (
-                              <>
-                                {" • "}
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  `מדור ${cleanUnitName(emp.section_name)}`}
-                                {emp.section_name &&
-                                  emp.section_name !== "מטה" &&
-                                  emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  " • "}
-                                {emp.team_name &&
-                                  emp.team_name !== "מטה" &&
-                                  `חוליה ${cleanUnitName(emp.team_name)}`}
-                              </>
-                            )}
+                            <>
+                              {" • "}
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                `מדור ${cleanUnitName(emp.section_name)}`}
+                              {emp.section_name &&
+                                emp.section_name !== "מטה" &&
+                                emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                " • "}
+                              {emp.team_name &&
+                                emp.team_name !== "מטה" &&
+                                `חוליה ${cleanUnitName(emp.team_name)}`}
+                            </>
+                          )}
                         </>
                       ) : (
                         "-"
@@ -642,30 +650,32 @@ export const EmployeeTable = ({
                         !user?.is_admin &&
                         !user?.is_temp_commander &&
                         user?.active_delegate_id === emp.id)) && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 flex-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
-                          onClick={() =>
-                            handleImpersonate(
-                              emp.id,
-                              `${emp.first_name} ${emp.last_name}`,
-                            )
-                          }
-                        >
-                          <LogIn className="w-3.5 h-3.5 ml-1" />
-                          התחבר
-                        </Button>
-                      )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2 flex-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
-                      onClick={() => handleViewDetails(emp)}
-                    >
-                      <User className="w-3.5 h-3.5 ml-1" />
-                      פרופיל
-                    </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 flex-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
+                        onClick={() =>
+                          handleImpersonate(
+                            emp.id,
+                            `${emp.first_name} ${emp.last_name}`,
+                          )
+                        }
+                      >
+                        <LogIn className="w-3.5 h-3.5 ml-1" />
+                        התחבר
+                      </Button>
+                    )}
+                    {!user?.is_temp_commander && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 flex-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg text-[10px]"
+                        onClick={() => handleViewDetails(emp)}
+                      >
+                        <User className="w-3.5 h-3.5 ml-1" />
+                        פרופיל
+                      </Button>
+                    )}
                     {!user?.is_temp_commander && (
                       <Button
                         variant="ghost"

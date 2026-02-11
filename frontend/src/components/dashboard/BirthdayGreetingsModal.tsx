@@ -6,14 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Check,
-  Send,
-  Edit2,
-  RotateCcw,
-  Save,
-  PartyPopper,
-} from "lucide-react";
+import { Check, Send, Edit2, RotateCcw, Save, PartyPopper } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
 import { cn } from "@/lib/utils";
@@ -45,17 +38,17 @@ const INITIAL_PRESETS: Preset[] = [
   {
     id: 1,
     label: "ברכה 1",
-    text: "מזל טוב [שם] יקר! 🎂 מאחלים לך יום הולדת שמח, המון בריאות, אושר והצלחה מהיחידה! ❤️\n\nבברכה, [שם_המפקד]",
+    text: "מזל טוב [שם] יקר! מאחלים לך יום הולדת שמח, המון בריאות, אושר והצלחה מהיחידה!\n\nבברכה, [שם_המפקד]",
   },
   {
     id: 2,
     label: "ברכה 2",
-    text: "יום הולדת שמח [שם]! 🎉 מאחלים לך שנה מלאה בחוויות טובות, חיוכים והמון כיף. מזל טוב! 🎈\n\nממני, [שם_המפקד]",
+    text: "יום הולדת שמח [שם]! מאחלים לך שנה מלאה בחוויות טובות, חיוכים והמון כיף. מזל טוב!\n\nממני, [שם_המפקד]",
   },
   {
     id: 3,
     label: "ברכה 3",
-    text: "מזל טוב [שם]! 🎂 מאחלים לך יום הולדת שמח ומכל הלב! 🎈\n\n[שם_המפקד]",
+    text: "מזל טוב [שם]! מאחלים לך יום הולדת שמח ומכל הלב!\n\n[שם_המפקד]",
   },
 ];
 
@@ -187,7 +180,9 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                 onClick={() => setViewMode("today")}
                 className={cn(
                   "flex-1 h-9 rounded-xl text-xs font-black shadow-none transition-all",
-                  viewMode === "today" ? "bg-background text-primary shadow-sm hover:bg-background" : "text-muted-foreground",
+                  viewMode === "today"
+                    ? "bg-background text-primary shadow-sm hover:bg-background"
+                    : "text-muted-foreground",
                 )}
               >
                 חוגגים היום ({employeesToday.length})
@@ -197,7 +192,9 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                 onClick={() => setViewMode("week")}
                 className={cn(
                   "flex-1 h-9 rounded-xl text-xs font-black shadow-none transition-all",
-                  viewMode === "week" ? "bg-background text-primary shadow-sm hover:bg-background" : "text-muted-foreground",
+                  viewMode === "week"
+                    ? "bg-background text-primary shadow-sm hover:bg-background"
+                    : "text-muted-foreground",
                 )}
               >
                 חוגגים השבוע ({weeklyBirthdays.length})
@@ -274,7 +271,8 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
             <div className="mt-3">
               <p className="text-[9px] text-muted-foreground font-bold leading-relaxed opacity-70">
                 * <span className="text-primary">[שם]</span> = שם השוטר |
-                <span className="text-primary mr-1">[שם_המפקד]</span> = {commanderName}
+                <span className="text-primary mr-1">[שם_המפקד]</span> ={" "}
+                {commanderName}
               </p>
             </div>
           </div>
@@ -301,14 +299,18 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
               {displayedEmployees.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-2xl border border-dashed border-border/50">
                   <p className="text-[10px] font-black uppercase tracking-widest">
-                    {viewMode === "today" ? "אין ימי הולדת היום" : "אין ימי הולדת השבוע"}
+                    {viewMode === "today"
+                      ? "אין ימי הולדת היום"
+                      : "אין ימי הולדת השבוע"}
                   </p>
                 </div>
               ) : (
                 displayedEmployees.map((emp) => {
                   const isSent = sentList.includes(emp.id);
                   const today = new Date();
-                  const isToday = emp.day === today.getDate() && emp.month === today.getMonth() + 1;
+                  const isToday =
+                    emp.day === today.getDate() &&
+                    emp.month === today.getMonth() + 1;
 
                   return (
                     <div
@@ -318,7 +320,9 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                         isSent
                           ? "bg-muted/10 border-border/10 opacity-60"
                           : "bg-card border-border shadow-sm hover:border-primary/30 hover:shadow-md",
-                        isToday && viewMode === "week" ? "border-primary/20 bg-primary/5" : "",
+                        isToday && viewMode === "week"
+                          ? "border-primary/20 bg-primary/5"
+                          : "",
                       )}
                     >
                       <div className="flex flex-col">
@@ -326,13 +330,16 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                           <span className="text-sm font-black text-foreground">
                             {emp.first_name} {emp.last_name}
                           </span>
-                          {(isToday && viewMode === "week") && (
+                          {isToday && viewMode === "week" && (
                             <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-black">
                               היום!
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] font-bold text-muted-foreground/60" dir="ltr">
+                        <span
+                          className="text-[10px] font-bold text-muted-foreground/60"
+                          dir="ltr"
+                        >
                           {emp.phone_number || "---"}
                         </span>
                       </div>

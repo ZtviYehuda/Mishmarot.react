@@ -3,7 +3,6 @@ import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import apiClient from "@/config/api.client";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import {
   User,
   Settings as SettingsIcon,
@@ -33,7 +32,9 @@ export default function SettingsPage() {
     setFontSize,
   } = useTheme();
 
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(
+    user?.is_temp_commander ? "appearance" : "profile",
+  );
   // const [mobileNavOpen, setMobileNavOpen] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
@@ -192,6 +193,13 @@ export default function SettingsPage() {
     assignment_date: "",
     police_license: false,
     security_clearance: false,
+    // New fields for commander display
+    commands_department_id: null as number | null,
+    department_name: "",
+    commands_section_id: null as number | null,
+    section_name: "",
+    commands_team_id: null as number | null,
+    team_name: "",
   });
 
   const [emergencyDetails, setEmergencyDetails] = useState({
@@ -239,6 +247,13 @@ export default function SettingsPage() {
         assignment_date: user.assignment_date || "",
         police_license: !!user.police_license,
         security_clearance: !!user.security_clearance,
+        // Commander fields for UI display
+        commands_department_id: user.commands_department_id ?? null,
+        department_name: user.department_name ?? "",
+        commands_section_id: user.commands_section_id ?? null,
+        section_name: user.section_name ?? "",
+        commands_team_id: user.commands_team_id ?? null,
+        team_name: user.team_name ?? "",
       });
 
       // Parse Emergency Contact
@@ -388,7 +403,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pb-32 lg:pb-12">
+    <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pb-8 lg:pb-12">
       <PageHeader
         icon={SettingsIcon}
         title="הגדרות מערכת"
@@ -400,26 +415,32 @@ export default function SettingsPage() {
 
       {/* Desktop Horizontal Navigation (Replaces Sidebar) */}
       <div className="hidden lg:flex items-center gap-1 border-b border-border sticky top-0 bg-background/95 backdrop-blur z-50 pb-0 overflow-x-auto no-scrollbar pt-2">
-        <TabItem
-          label="פרופיל אישי"
-          active={activeTab === "profile"}
-          onClick={() => setActiveTab("profile")}
-        />
+        {!user?.is_temp_commander && (
+          <TabItem
+            label="פרופיל אישי"
+            active={activeTab === "profile"}
+            onClick={() => setActiveTab("profile")}
+          />
+        )}
         <TabItem
           label="מראה ותצוגה"
           active={activeTab === "appearance"}
           onClick={() => setActiveTab("appearance")}
         />
-        <TabItem
-          label="אבטחה"
-          active={activeTab === "security"}
-          onClick={() => setActiveTab("security")}
-        />
-        <TabItem
-          label="התראות"
-          active={activeTab === "notifications"}
-          onClick={() => setActiveTab("notifications")}
-        />
+        {!user?.is_temp_commander && (
+          <TabItem
+            label="אבטחה"
+            active={activeTab === "security"}
+            onClick={() => setActiveTab("security")}
+          />
+        )}
+        {!user?.is_temp_commander && (
+          <TabItem
+            label="התראות"
+            active={activeTab === "notifications"}
+            onClick={() => setActiveTab("notifications")}
+          />
+        )}
         {user?.is_admin && (
           <TabItem
             label="גיבוי ושחזור"
@@ -430,9 +451,10 @@ export default function SettingsPage() {
       </div>
 
       {/* Content Area */}
-      <div className="min-w-0 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {activeTab === "profile" && (
+      <div className="min-w-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {activeTab === "profile" && !user?.is_temp_commander && (
           <ProfileSettings
+            user={user}
             formData={formData}
             setFormData={setFormData}
             emergencyDetails={emergencyDetails}
@@ -441,6 +463,7 @@ export default function SettingsPage() {
             isSaving={isSaving}
             handleSaveProfile={handleSaveProfile}
             handleImageUpload={handleImageUpload}
+            readOnly={!!user?.is_temp_commander}
           />
         )}
 
@@ -455,7 +478,7 @@ export default function SettingsPage() {
           />
         )}
 
-        {activeTab === "security" && (
+        {activeTab === "security" && !user?.is_temp_commander && (
           <>
             <SecuritySettings
               user={user}
@@ -479,7 +502,7 @@ export default function SettingsPage() {
           </>
         )}
 
-        {activeTab === "notifications" && (
+        {activeTab === "notifications" && !user?.is_temp_commander && (
           <NotificationSettings
             user={user}
             formData={formData}
@@ -505,30 +528,36 @@ export default function SettingsPage() {
 
       {/* Mobile Bottom Navigation Bar - Standard Fixed */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2 safe-area-bottom">
-        <MobileBottomNavLink
-          label="פרופיל"
-          icon={User}
-          active={activeTab === "profile"}
-          onClick={() => setActiveTab("profile")}
-        />
+        {!user?.is_temp_commander && (
+          <MobileBottomNavLink
+            label="פרופיל"
+            icon={User}
+            active={activeTab === "profile"}
+            onClick={() => setActiveTab("profile")}
+          />
+        )}
         <MobileBottomNavLink
           label="תצוגה"
           icon={Palette}
           active={activeTab === "appearance"}
           onClick={() => setActiveTab("appearance")}
         />
-        <MobileBottomNavLink
-          label="אבטחה"
-          icon={ShieldCheck}
-          active={activeTab === "security"}
-          onClick={() => setActiveTab("security")}
-        />
-        <MobileBottomNavLink
-          label="התראות"
-          icon={Bell}
-          active={activeTab === "notifications"}
-          onClick={() => setActiveTab("notifications")}
-        />
+        {!user?.is_temp_commander && (
+          <MobileBottomNavLink
+            label="אבטחה"
+            icon={ShieldCheck}
+            active={activeTab === "security"}
+            onClick={() => setActiveTab("security")}
+          />
+        )}
+        {!user?.is_temp_commander && (
+          <MobileBottomNavLink
+            label="התראות"
+            icon={Bell}
+            active={activeTab === "notifications"}
+            onClick={() => setActiveTab("notifications")}
+          />
+        )}
         {user?.is_admin && (
           <MobileBottomNavLink
             label="גיבוי"
@@ -556,14 +585,19 @@ function MobileBottomNavLink({
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-        }`}
+      className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+      }`}
     >
-      <div className={`p-1.5 rounded-xl transition-all ${active ? "bg-primary/10" : "bg-transparent"}`}>
+      <div
+        className={`p-1.5 rounded-xl transition-all ${active ? "bg-primary/10" : "bg-transparent"}`}
+      >
         <Icon className="w-5 h-5" />
       </div>
       <span className="text-[10px] font-bold">{label}</span>
-      {active && <span className="absolute bottom-0 w-8 h-1 bg-primary rounded-t-full shadow-[0_-2px_8px_rgba(59,130,246,0.3)]" />}
+      {active && (
+        <span className="absolute bottom-0 w-8 h-1 bg-primary rounded-t-full shadow-[0_-2px_8px_rgba(59,130,246,0.3)]" />
+      )}
     </button>
   );
 }
@@ -582,9 +616,10 @@ function TabItem({
       onClick={onClick}
       className={`
         relative px-4 py-2.5 rounded-lg transition-all duration-200 font-bold text-sm whitespace-nowrap
-        ${active
-          ? "text-primary bg-primary/10"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+        ${
+          active
+            ? "text-primary bg-primary/10"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
         }
       `}
     >
@@ -595,5 +630,3 @@ function TabItem({
     </button>
   );
 }
-
-

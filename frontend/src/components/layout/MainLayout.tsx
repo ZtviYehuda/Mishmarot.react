@@ -175,8 +175,13 @@ export default function MainLayout() {
   const navItems = [
     { name: "לוח בקרה", path: "/", icon: LayoutDashboard },
     { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
-    { name: "ניהול שוטרים", path: "/employees", icon: Users },
-    { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
+    // Only show these if NOT a temp commander
+    ...(!user?.is_temp_commander
+      ? [
+          { name: "ניהול שוטרים", path: "/employees", icon: Users },
+          { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
+        ]
+      : []),
     { name: "הגדרות", path: "/settings", icon: Settings },
   ];
 
@@ -208,19 +213,21 @@ export default function MainLayout() {
             )}
             onDoubleClick={() => setIsSidebarOpen(true)}
           >
-            <div className="w-10 h-10 flex items-center justify-center shrink-0">
-              <img
-                src="/unit-logo.jpg?v=2"
-                alt="Unit Logo"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove(
-                    "hidden",
-                  );
-                }}
-              />
-              <div className="hidden w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+            <div className="w-10 h-10 flex items-center justify-center shrink-0 relative group">
+              <div className="absolute inset-0 rotate-0 transition-all duration-300 group-hover:rotate-6 group-hover:scale-110">
+                <img
+                  src="/organization-logo.jpg"
+                  alt="Organization Logo"
+                  className="w-full h-full object-contain drop-shadow-sm mix-blend-multiply dark:mix-blend-normal"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    e.currentTarget.parentElement?.nextElementSibling?.classList.remove(
+                      "hidden",
+                    );
+                  }}
+                />
+              </div>
+              <div className="hidden absolute inset-0 z-10 w-9 h-9 m-auto rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20 pointer-events-none">
                 <ShieldCheck className="w-5 h-5 text-primary-foreground" />
               </div>
             </div>
@@ -394,15 +401,15 @@ export default function MainLayout() {
                   {location.pathname === "/"
                     ? "לוח בקרה מרכזי"
                     : navItems.find((n) => n.path === location.pathname)
-                      ?.name || "דף מערכת"}
+                        ?.name || "דף מערכת"}
                 </h2>
               </div>
 
-              <div className="flex items-center justify-center w-8 h-8 md:w-12 md:h-12 shrink-0 overflow-hidden rounded-lg bg-white/50 border border-border/50 shadow-sm ml-2">
+              <div className="group relative flex items-center justify-center w-8 h-8 md:w-12 md:h-12 shrink-0 ml-2 transition-all duration-300 hover:scale-110 cursor-pointer">
                 <img
-                  src="unit-logo.jpg"
+                  src="/unit-logo-removebg-preview.png"
                   alt="Unit Logo"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain drop-shadow-md z-10 relative filter hover:brightness-110"
                   onError={(e) => (e.currentTarget.style.display = "none")}
                 />
               </div>
@@ -596,7 +603,7 @@ export default function MainLayout() {
                               {isMorningReport &&
                                 (alert as any).data?.commander_id &&
                                 user?.id !==
-                                (alert as any).data.commander_id && (
+                                  (alert as any).data.commander_id && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -622,7 +629,7 @@ export default function MainLayout() {
                               {isMorningReport &&
                                 (alert as any).data?.commander_phone &&
                                 user?.id !==
-                                (alert as any).data.commander_id && (
+                                  (alert as any).data.commander_id && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -842,9 +849,9 @@ export default function MainLayout() {
                   style={
                     selectedAlert
                       ? {
-                        backgroundColor: getAlertConfig(selectedAlert).bg,
-                        color: getAlertConfig(selectedAlert).color,
-                      }
+                          backgroundColor: getAlertConfig(selectedAlert).bg,
+                          color: getAlertConfig(selectedAlert).color,
+                        }
                       : {}
                   }
                 >

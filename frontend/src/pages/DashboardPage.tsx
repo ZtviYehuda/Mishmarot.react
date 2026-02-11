@@ -46,7 +46,7 @@ import { DateHeader } from "@/components/common/DateHeader";
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
-  const { selectedDate, setSelectedDate } = useDateContext();
+  const { selectedDate } = useDateContext();
 
   // Refs for reports
   const snapshotRef = useRef<any>(null);
@@ -78,25 +78,37 @@ export default function DashboardPage() {
   const [loadingExtras, setLoadingExtras] = useState(true);
   const [loadingTrend, setLoadingTrend] = useState(true);
 
-  const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
+  const [viewMode] = useState<"daily" | "weekly" | "monthly" | "yearly">(
+    "weekly",
+  );
 
   const trendRange = useMemo(() => {
     switch (viewMode) {
-      case 'daily': return 7;
-      case 'weekly': return 7;
-      case 'monthly': return 30;
-      case 'yearly': return 365;
-      default: return 7;
+      case "daily":
+        return 7;
+      case "weekly":
+        return 7;
+      case "monthly":
+        return 30;
+      case "yearly":
+        return 365;
+      default:
+        return 7;
     }
   }, [viewMode]);
 
   const comparisonRange = useMemo(() => {
     switch (viewMode) {
-      case 'daily': return 1;
-      case 'weekly': return 7;
-      case 'monthly': return 30;
-      case 'yearly': return 365;
-      default: return 1;
+      case "daily":
+        return 1;
+      case "weekly":
+        return 7;
+      case "monthly":
+        return 30;
+      case "yearly":
+        return 365;
+      default:
+        return 1;
     }
   }, [viewMode]);
   const [missingReportIds, setMissingReportIds] = useState<number[]>([]);
@@ -230,13 +242,17 @@ export default function DashboardPage() {
     const fetchComparison = async () => {
       setLoadingExtras(true);
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
-      const compData = await getComparisonStats(formattedDate, comparisonRange, {
-        department_id: selectedDeptId,
-        section_id: selectedSectionId,
-        team_id: selectedTeamId,
-        // status_id excluded as per request
-        serviceTypes: selectedServiceTypes.join(","),
-      });
+      const compData = await getComparisonStats(
+        formattedDate,
+        comparisonRange,
+        {
+          department_id: selectedDeptId,
+          section_id: selectedSectionId,
+          team_id: selectedTeamId,
+          // status_id excluded as per request
+          serviceTypes: selectedServiceTypes.join(","),
+        },
+      );
       setComparisonStats(compData);
       setLoadingExtras(false);
     };
@@ -411,7 +427,7 @@ export default function DashboardPage() {
   const isReportedToday =
     currentUserEmp?.last_status_update &&
     new Date(currentUserEmp.last_status_update).toDateString() ===
-    selectedDate.toDateString();
+      selectedDate.toDateString();
 
   // Comparison Matrix: Admin, Dept Commander, Section Commander (Hide for Team Commander)
   const showComparisonMatrix = useMemo(() => {
@@ -533,7 +549,9 @@ export default function DashboardPage() {
     }
     if (selectedSectionId) {
       for (const dept of structure) {
-        const sec = dept.sections.find((s) => s.id === Number(selectedSectionId));
+        const sec = dept.sections.find(
+          (s) => s.id === Number(selectedSectionId),
+        );
         if (sec) return sec.name;
       }
     }
@@ -545,7 +563,7 @@ export default function DashboardPage() {
   }, [selectedTeamId, selectedSectionId, selectedDeptId, structure]);
 
   return (
-    <div className="w-full h-full space-y-6">
+    <div className="w-full space-y-6">
       <PageHeader
         icon={LayoutDashboard}
         title="לוח בקרה מרכזי"
@@ -569,7 +587,7 @@ export default function DashboardPage() {
                 team_id: selectedTeamId?.toString() || "",
                 serviceTypes: selectedServiceTypes,
                 unitName: currentUnitName,
-                statusName: selectedStatusData?.name
+                statusName: selectedStatusData?.name,
               }}
             />
             <Button
@@ -664,7 +682,7 @@ export default function DashboardPage() {
 
         {/* Bottom Section: Wider Comparison & Trend Charts */}
         {(showComparisonMatrix || showTrendGraph) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch">
             {showComparisonMatrix && (
               <StatsComparisonCard
                 ref={comparisonRef}
@@ -730,8 +748,8 @@ export default function DashboardPage() {
           // efficient refresh?
           window.location.reload();
         }}
-      // The modal logic requires `employees` array to function.
-      // I need to fetch the specific missing employees to pass them.
+        // The modal logic requires `employees` array to function.
+        // I need to fetch the specific missing employees to pass them.
       />
 
       {selectedSelfEmp && (

@@ -132,15 +132,19 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
 
         if (!blob) throw new Error("Failed to capture image");
 
-        const rangeText = days === 1 ? "יומית" : days === 7 ? "שבועית" : "חודשית";
-        const statsSummary = data && data.length > 0
-          ? `\n📊 *סיכום:* ${data.length} יחידות מוצגות.`
-          : "";
-        const filterText = subtitle ? `\n🔍 *סינון:* ${subtitle}` : "";
+        const rangeText =
+          days === 1 ? "יומית" : days === 7 ? "שבועית" : "חודשית";
+        const statsSummary =
+          data && data.length > 0
+            ? `\n*סיכום:* ${data.length} יחידות מוצגות.`
+            : "";
+        const filterText = subtitle ? `\n*סינון:* ${subtitle}` : "";
         const title = `דוח השוואת כוח אדם (${rangeText}) - ${unitName}`;
         const message = `*${title}*\nתאריך: ${format(new Date(), "dd/MM/yyyy")}${filterText}${statsSummary}`;
 
-        const file = new File([blob], `comparison-${days}.png`, { type: "image/png" });
+        const file = new File([blob], `comparison-${days}.png`, {
+          type: "image/png",
+        });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
@@ -221,23 +225,31 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
       <Card
         ref={cardRef}
         id="stats-comparison-card"
-        className={cn("h-full border shadow-sm flex flex-col bg-card", className)}
+        className={cn(
+          "h-full border shadow-sm flex flex-col bg-card",
+          className,
+        )}
       >
         <CardHeader className="pb-4 flex flex-row items-center justify-between space-y-0">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-lg font-bold">השוואת כוח אדם</CardTitle>
+              <CardTitle className="text-lg font-bold">
+                השוואת כוח אדם
+              </CardTitle>
               <TooltipProvider>
                 <Tooltip delayDuration={300}>
                   <TooltipTrigger asChild>
                     <Info className="w-4 h-4 text-muted-foreground cursor-help" />
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-[250px] text-right" dir="rtl">
+                  <TooltipContent
+                    className="max-w-[250px] text-right"
+                    dir="rtl"
+                  >
                     <p className="font-bold mb-1">כיצד מחושב?</p>
                     <ul className="text-xs space-y-1 list-disc list-inside">
                       <li>
-                        <span className="font-semibold">נוכחים:</span> משרד, קורס,
-                        תגבור
+                        <span className="font-semibold">נוכחים:</span> משרד,
+                        קורס, תגבור
                       </li>
                       <li>
                         <span className="font-semibold">לא נוכחים:</span> חופשה,
@@ -292,8 +304,12 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
           {!data || data.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-center bg-muted/20 rounded-xl border border-dashed border-border/50">
               <Info className="w-8 h-8 text-muted-foreground/50 mb-2" />
-              <p className="text-sm font-bold text-muted-foreground">אין נתונים להשוואה</p>
-              <p className="text-xs text-muted-foreground">לא נמצאו יחידות להשוואה בחתך הנבחר</p>
+              <p className="text-sm font-bold text-muted-foreground">
+                אין נתונים להשוואה
+              </p>
+              <p className="text-xs text-muted-foreground">
+                לא נמצאו יחידות להשוואה בחתך הנבחר
+              </p>
             </div>
           ) : (
             data.map((item) => {
@@ -330,12 +346,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                       <span className="font-medium">
                         {Math.round(item.total_count)} תקן
                       </span>
-                      <span
-                        className={cn(
-                          "ml-1 font-bold",
-                          textColor
-                        )}
-                      >
+                      <span className={cn("ml-1 font-bold", textColor)}>
                         ({availability}%)
                       </span>
                     </div>
@@ -355,5 +366,5 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
         </CardContent>
       </Card>
     );
-  }
+  },
 );

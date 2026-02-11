@@ -14,25 +14,22 @@ import {
   Shield,
   Phone,
   HeartPulse,
-  Cake,
   Calendar,
   MapPin,
   BadgeCheck,
   Mail,
   Briefcase,
   FileCheck,
-  Award,
-  Bell,
   ArrowLeft,
+  ArrowRightLeft,
 } from "lucide-react";
+import { TransferRequestModal } from "@/components/employees/modals/TransferRequestModal";
 import { toast } from "sonner";
 import { useAuthContext } from "@/context/AuthContext";
 import type {
   CreateEmployeePayload,
   DepartmentNode,
   ServiceType,
-  SectionNode,
-  TeamNode,
 } from "@/types/employee.types";
 import { CompactCard } from "@/components/forms/EmployeeFormComponents";
 import {
@@ -57,6 +54,7 @@ const PersonalFormTab = ({
   emergencyDetails,
   setEmergencyDetails,
   relations,
+  serviceTypes,
 }: any) => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -67,45 +65,85 @@ const PersonalFormTab = ({
           </span>
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <InputItem label="שם פרטי" required>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+          <InputItem label="שם מלא (פרטי ומשפחה)" required icon={User}>
+            <div className="flex gap-2">
+              <Input
+                value={formData.first_name || ""}
+                onChange={(e) =>
+                  handleFieldChange("first_name", e.target.value)
+                }
+                placeholder="פרטי"
+                className="bg-background/50 focus:bg-background transition-colors flex-1 h-11"
+              />
+              <Input
+                value={formData.last_name || ""}
+                onChange={(e) => handleFieldChange("last_name", e.target.value)}
+                placeholder="משפחה"
+                className="bg-background/50 focus:bg-background transition-colors flex-1 h-11"
+              />
+            </div>
+          </InputItem>
+          <div className="flex gap-3 w-full">
+            <InputItem label="מין" required icon={User} className="flex-1">
+              <Select
+                value={formData.gender || ""}
+                onValueChange={(val) => handleFieldChange("gender", val)}
+              >
+                <SelectTrigger className="w-full bg-background/50 focus:bg-background transition-colors h-11">
+                  <SelectValue placeholder="בחר מין" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">גבר</SelectItem>
+                  <SelectItem value="female">אישה</SelectItem>
+                </SelectContent>
+              </Select>
+            </InputItem>
+            <InputItem label="מעמד" icon={FileCheck} className="flex-1">
+              <Select
+                value={formData.service_type_id?.toString() || ""}
+                onValueChange={(val) =>
+                  handleFieldChange("service_type_id", parseInt(val))
+                }
+              >
+                <SelectTrigger className="w-full bg-background/50 focus:bg-background transition-colors h-11">
+                  <SelectValue placeholder="בחר מעמד" />
+                </SelectTrigger>
+                <SelectContent>
+                  {serviceTypes.map((st: any) => (
+                    <SelectItem key={st.id} value={st.id.toString()}>
+                      {st.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </InputItem>
+          </div>
+          <InputItem label="עיר מגורים" icon={MapPin}>
             <Input
-              value={formData.first_name || ""}
-              onChange={(e) => handleFieldChange("first_name", e.target.value)}
+              value={formData.city || ""}
+              onChange={(e) => handleFieldChange("city", e.target.value)}
+              placeholder="ירושלים, ת''א..."
+              className="bg-background/50 focus:bg-background transition-colors h-11"
             />
           </InputItem>
-          <InputItem label="שם משפחה" required>
-            <Input
-              value={formData.last_name || ""}
-              onChange={(e) => handleFieldChange("last_name", e.target.value)}
-            />
-          </InputItem>
-          <InputItem label="מין" required>
-            <Select
-              value={formData.gender || ""}
-              onValueChange={(val) => handleFieldChange("gender", val)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="בחר מין" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="male">גבר</SelectItem>
-                <SelectItem value="female">אישה</SelectItem>
-              </SelectContent>
-            </Select>
-          </InputItem>
+
           <InputItem label="מספר אישי" required icon={BadgeCheck}>
             <Input
               value={formData.personal_number || ""}
               onChange={(e) =>
                 handleFieldChange("personal_number", e.target.value)
               }
+              placeholder="0000000"
+              className="font-mono bg-background/50 focus:bg-background transition-colors h-11"
             />
           </InputItem>
           <InputItem label="תעודת זהות" required icon={BadgeCheck}>
             <Input
               value={formData.national_id || ""}
               onChange={(e) => handleFieldChange("national_id", e.target.value)}
+              placeholder="000000000"
+              className="font-mono bg-background/50 focus:bg-background transition-colors h-11"
             />
           </InputItem>
           <InputItem label="תאריך לידה" required icon={Calendar}>
@@ -115,12 +153,7 @@ const PersonalFormTab = ({
                 formData.birth_date ? formData.birth_date.split("T")[0] : ""
               }
               onChange={(e) => handleFieldChange("birth_date", e.target.value)}
-            />
-          </InputItem>
-          <InputItem label="עיר מגורים" icon={MapPin}>
-            <Input
-              value={formData.city || ""}
-              onChange={(e) => handleFieldChange("city", e.target.value)}
+              className="bg-background/50 focus:bg-background transition-colors h-11"
             />
           </InputItem>
         </div>
@@ -150,6 +183,13 @@ const PersonalFormTab = ({
               <Input
                 value={formData.email || ""}
                 onChange={(e) => handleFieldChange("email", e.target.value)}
+              />
+            </InputItem>
+            <InputItem label="עיר מגורים" icon={MapPin}>
+              <Input
+                value={formData.city || ""}
+                onChange={(e) => handleFieldChange("city", e.target.value)}
+                placeholder="ירושלים, ת''א..."
               />
             </InputItem>
           </div>
@@ -219,37 +259,51 @@ const PersonalFormTab = ({
     </div>
   );
 };
-
-const OrganizationFormTab = ({
+const ProfessionalFormTab = ({
   formData,
   handleFieldChange,
   structure,
-  selectedDeptId,
   setSelectedDeptId,
-  selectedSectionId,
   setSelectedSectionId,
   sections,
   teams,
-  serviceTypes,
-  isUserRestricted,
+  user,
+  selectedDeptId,
+  selectedSectionId,
 }: any) => {
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const isDeptDisabled = !user.is_admin;
+  const isSectionDisabled = !user.is_admin && !user.commands_department_id;
+  const isTeamDisabled =
+    !user.is_admin && !user.commands_department_id && !user.commands_section_id;
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* 1. Organizational Structure Card */}
       <CompactCard
         title={
           <span className="flex items-center gap-2 text-primary font-black text-lg">
-            <Building2 className="w-5 h-5" /> מבנה ארגוני
+            <Building2 className="w-5 h-5" /> מבנה ארגוני ופיקוד
           </span>
         }
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 rounded-xl font-black text-[11px] transition-all active:scale-95"
+            onClick={() => setIsTransferModalOpen(true)}
+          >
+            <ArrowRightLeft className="w-3.5 h-3.5" />
+            בקשת העברה
+          </Button>
+        }
       >
-        <div className="py-6">
-          <div className="flex flex-col md:flex-row items-end justify-center gap-4 relative">
-            <div className="hidden md:block absolute top-[43px] left-10 right-10 h-0.5 bg-gradient-to-l from-transparent via-border to-transparent z-0" />
-
+        <div className="py-10 px-4">
+          <div className="relative flex flex-col md:flex-row items-center justify-center gap-8">
             <OrgSelectBox
               title="מחלקה"
               icon={Building2}
-              disabled={isUserRestricted}
+              disabled={isDeptDisabled}
             >
               <Select
                 value={selectedDeptId}
@@ -258,9 +312,9 @@ const OrganizationFormTab = ({
                   handleFieldChange("department_id", parseInt(val));
                   setSelectedSectionId("");
                 }}
-                disabled={isUserRestricted}
+                disabled={isDeptDisabled}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white/80 border-primary/10 font-bold h-11 shadow-sm rounded-xl focus:ring-primary/20">
                   <SelectValue placeholder="בחר מחלקה" />
                 </SelectTrigger>
                 <SelectContent>
@@ -273,12 +327,16 @@ const OrganizationFormTab = ({
               </Select>
             </OrgSelectBox>
 
-            <ArrowLeft className="hidden md:block w-5 h-5 text-muted-foreground/40 z-10 mb-3" />
+            <div className="hidden md:flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10 shadow-inner">
+                <ArrowLeft className="w-5 h-5 text-primary/40" />
+              </div>
+            </div>
 
             <OrgSelectBox
               title="מדור"
-              icon={Building2}
-              disabled={!selectedDeptId}
+              icon={Briefcase}
+              disabled={!selectedDeptId || isSectionDisabled}
             >
               <Select
                 value={selectedSectionId}
@@ -286,9 +344,9 @@ const OrganizationFormTab = ({
                   setSelectedSectionId(val);
                   handleFieldChange("section_id", parseInt(val));
                 }}
-                disabled={!selectedDeptId}
+                disabled={!selectedDeptId || isSectionDisabled}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white/80 border-primary/10 font-bold h-11 shadow-sm rounded-xl focus:ring-primary/20">
                   <SelectValue placeholder="בחר מדור" />
                 </SelectTrigger>
                 <SelectContent>
@@ -301,21 +359,25 @@ const OrganizationFormTab = ({
               </Select>
             </OrgSelectBox>
 
-            <ArrowLeft className="hidden md:block w-5 h-5 text-muted-foreground/40 z-10 mb-3" />
+            <div className="hidden md:flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10 shadow-inner">
+                <ArrowLeft className="w-5 h-5 text-primary/40" />
+              </div>
+            </div>
 
             <OrgSelectBox
               title="חוליה"
-              icon={Building2}
-              disabled={!selectedSectionId}
+              icon={User}
+              disabled={!selectedSectionId || isTeamDisabled}
             >
               <Select
                 value={formData.team_id?.toString() || ""}
                 onValueChange={(val) =>
                   handleFieldChange("team_id", parseInt(val))
                 }
-                disabled={!selectedSectionId}
+                disabled={!selectedSectionId || isTeamDisabled}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white/80 border-primary/10 font-bold h-11 shadow-sm rounded-xl focus:ring-primary/20">
                   <SelectValue placeholder="בחר חוליה" />
                 </SelectTrigger>
                 <SelectContent>
@@ -329,36 +391,87 @@ const OrganizationFormTab = ({
             </OrgSelectBox>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-6 border-t border-border/50">
+          {user?.is_admin && (
+            <div className="flex flex-col items-center gap-3 pt-4 border-t border-dashed">
+              <div className="w-full max-w-md">
+                <SwitchItem
+                  label={(() => {
+                    if (formData.team_id) return "מפקד חוליה (ראש חוליה)";
+                    if (selectedSectionId) return "ראש מדור";
+                    if (selectedDeptId) return "ראש מחלקה";
+                    return "מפקד יחידה";
+                  })()}
+                  checked={!!formData.is_commander}
+                  onChange={(c: boolean) =>
+                    handleFieldChange("is_commander", c)
+                  }
+                  highlight
+                />
+                <p className="text-[11px] text-muted-foreground mt-2 text-center bg-muted/30 py-1.5 rounded-lg border border-border/50">
+                  💡 <strong>טיפ:</strong> כאשר מסומן כמפקד, ניתן להשאיר רמות
+                  ארגוניות נמוכות יותר ריקות
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </CompactCard>
+
+      {/* 2. Professional Details & Permissions Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Professional Details */}
+        <CompactCard
+          title={
+            <span className="flex items-center gap-2 text-primary font-black text-lg">
+              <Briefcase className="w-5 h-5" /> פרטי תפקיד
+            </span>
+          }
+        >
+          <div className="space-y-4">
             <InputItem label="תפקיד" icon={Briefcase}>
               <Input
                 value={formData.role_name || ""}
                 onChange={(e) => handleFieldChange("role_name", e.target.value)}
+                placeholder="הזן שם תפקיד..."
               />
             </InputItem>
-            <InputItem label="מעמד" icon={FileCheck}>
-              <Select
-                value={formData.service_type_id?.toString() || ""}
-                onValueChange={(val) =>
-                  handleFieldChange("service_type_id", parseInt(val))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="בחר מעמד" />
-                </SelectTrigger>
-                <SelectContent>
-                  {serviceTypes.map((st: any) => (
-                    <SelectItem key={st.id} value={st.id.toString()}>
-                      {st.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </InputItem>
           </div>
-        </div>
-      </CompactCard>
+        </CompactCard>
 
+        {/* Permissions & Badges */}
+        <CompactCard
+          title={
+            <span className="flex items-center gap-2 text-primary font-black text-lg">
+              <Shield className="w-5 h-5" /> הרשאות ואישורים
+            </span>
+          }
+        >
+          <div className="space-y-3">
+            <SwitchItem
+              label="סיווג ביטחוני (פעיל)"
+              checked={!!formData.security_clearance}
+              onChange={(c: boolean) =>
+                handleFieldChange("security_clearance", c)
+              }
+            />
+            <SwitchItem
+              label="רישיון נהיגה משטרתי"
+              checked={!!formData.police_license}
+              onChange={(c: boolean) => handleFieldChange("police_license", c)}
+            />
+            {user?.is_admin && (
+              <SwitchItem
+                label="הרשאת מנהל מערכת (Admin)"
+                checked={!!formData.is_admin}
+                onChange={(c: boolean) => handleFieldChange("is_admin", c)}
+                highlight
+              />
+            )}
+          </div>
+        </CompactCard>
+      </div>
+
+      {/* 3. Service Timeline */}
       <CompactCard
         title={
           <span className="flex items-center gap-2 text-primary font-black text-lg">
@@ -408,91 +521,13 @@ const OrganizationFormTab = ({
           </InputItem>
         </div>
       </CompactCard>
-    </div>
-  );
-};
 
-const SettingsFormTab = ({ formData, handleFieldChange, user }: any) => {
-  return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <CompactCard
-        title={
-          <span className="flex items-center gap-2 text-primary font-black text-lg">
-            <Award className="w-5 h-5" /> הגדרות והרשאות
-          </span>
-        }
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <h4 className="text-sm font-bold text-muted-foreground flex items-center gap-2 pb-2 border-b">
-              <Shield className="w-4 h-4" /> הרשאות ואישורים
-            </h4>
-            <div className="grid grid-cols-1 gap-3">
-              <SwitchItem
-                label="סיווג ביטחוני"
-                checked={!!formData.security_clearance}
-                onChange={(c: boolean) =>
-                  handleFieldChange("security_clearance", c)
-                }
-              />
-              <SwitchItem
-                label="רישיון נהיגה משטרתי"
-                checked={!!formData.police_license}
-                onChange={(c: boolean) =>
-                  handleFieldChange("police_license", c)
-                }
-              />
-              <SwitchItem
-                label="אישור העסקה"
-                checked={!!formData.employment_clearance}
-                onChange={(c: boolean) =>
-                  handleFieldChange("employment_clearance", c)
-                }
-              />
-              {user?.is_admin && (
-                <>
-                  <SwitchItem
-                    label="מפקד יחידה"
-                    checked={!!formData.is_commander}
-                    onChange={(c: boolean) =>
-                      handleFieldChange("is_commander", c)
-                    }
-                    highlight
-                  />
-                  <SwitchItem
-                    label="מנהל מערכת"
-                    checked={!!formData.is_admin}
-                    onChange={(c: boolean) => handleFieldChange("is_admin", c)}
-                    highlight
-                  />
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="text-sm font-bold text-muted-foreground flex items-center gap-2 pb-2 border-b">
-              <Bell className="w-4 h-4" /> התראות מערכת
-            </h4>
-            <div className="grid grid-cols-1 gap-3">
-              <SwitchItem
-                label="קבלת התראות מחלה"
-                checked={!!formData.notif_sick_leave}
-                onChange={(c: boolean) =>
-                  handleFieldChange("notif_sick_leave", c)
-                }
-              />
-              <SwitchItem
-                label="קבלת התראות העברות"
-                checked={!!formData.notif_transfers}
-                onChange={(c: boolean) =>
-                  handleFieldChange("notif_transfers", c)
-                }
-              />
-            </div>
-          </div>
-        </div>
-      </CompactCard>
+      <TransferRequestModal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        employeeName={formData.full_name || "השוטר"}
+        structure={structure}
+      />
     </div>
   );
 };
@@ -500,7 +535,7 @@ const SettingsFormTab = ({ formData, handleFieldChange, user }: any) => {
 export default function CreateEmployeePage() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
-  const { createEmployee, getStructure, updateEmployee } = useEmployees();
+  const { createEmployee, getStructure } = useEmployees();
   // Note: updateEmployee is unused but kept if needed by hook signature, usually not needed for create page
 
   const [loading, setLoading] = useState(true);
@@ -521,6 +556,8 @@ export default function CreateEmployeePage() {
     relation: "",
     phone: "",
   });
+
+  const [activeTab, setActiveTab] = useState("personal");
 
   const relations = [
     "בן / בת זוג",
@@ -586,6 +623,24 @@ export default function CreateEmployeePage() {
       setSaving(false);
       return;
     }
+
+    // Validation for organizational affiliation
+    if (formData.is_commander) {
+      if (!selectedDeptId) {
+        toast.error("יש לבחור לפחות מחלקה עבור מפקד");
+        setSaving(false);
+        return;
+      }
+    } else {
+      // Not a commander - full affiliation required
+      if (!selectedDeptId || !selectedSectionId || !formData.team_id) {
+        toast.error(
+          "עבור שוטר שאינו מפקד, יש להזין שיוך ארגוני מלא (מחלקה, מדור וחוליה)",
+        );
+        setSaving(false);
+        return;
+      }
+    }
     const age = differenceInYears(new Date(), new Date(formData.birth_date));
     if (age < 17) {
       toast.error("גיל השוטר חייב להיות 17 ומעלה");
@@ -617,13 +672,6 @@ export default function CreateEmployeePage() {
     structure.find((d) => d.id.toString() === selectedDeptId)?.sections || [];
   const teams =
     sections.find((s) => s.id.toString() === selectedSectionId)?.teams || [];
-  const isUserRestricted =
-    !user?.is_admin &&
-    !!(
-      user?.commands_department_id ||
-      user?.commands_section_id ||
-      user?.commands_team_id
-    );
 
   if (loading)
     return (
@@ -632,130 +680,101 @@ export default function CreateEmployeePage() {
       </div>
     );
 
-  return (
-    <div
-      className="min-h-screen bg-background/50 pb-20 animate-in fade-in duration-500"
-      dir="rtl"
+  const TabButton = ({ active, onClick, icon: Icon, label }: any) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-sm font-semibold transition-all",
+        active
+          ? "bg-primary text-primary-foreground shadow-md"
+          : "text-muted-foreground hover:bg-muted/50",
+      )}
     >
+      {Icon && <Icon className="w-4 h-4" />} {label}
+    </button>
+  );
+
+  return (
+    <div className="bg-[#f8fafc] dark:bg-[#020617]">
       <div className="bg-background border-b border-border/60 py-8 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-6">
-          <PageHeader
-            icon={UserPlus}
-            title="הוספת שוטר חדש"
-            subtitle="יצירת כרטיס אישי והגדרת פרטים"
-            category="ניהול שוטרים"
-            categoryLink="/employees"
-          />
-        </div>
-      </div>
-
-      <div className="max-w-[1600px] mx-auto px-6 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* RIGHT SIDEBAR (Sticky) */}
-          <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6 order-2">
-            <div className="bg-card rounded-3xl border border-primary/10 shadow-lg shadow-primary/5 overflow-hidden">
-              <div className="h-24 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative">
-                <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
-                <div className="absolute top-3 left-4 w-8 h-8 rounded-full bg-background/50 flex items-center justify-center">
-                  <Cake className="w-4 h-4 text-muted-foreground/30" />
-                </div>
-              </div>
-              <div className="px-6 pb-8 text-center -mt-12 relative">
-                <div className="w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-black mb-4 mx-auto shadow-md border-4 border-card bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-                  {formData.first_name?.[0]}
-                  {formData.last_name?.[0]}
-                </div>
-                <h2 className="text-xl font-black text-foreground mb-1 min-h-[28px]">
-                  {formData.first_name} {formData.last_name}
-                </h2>
-                <p className="text-sm text-muted-foreground mb-6 font-mono">
-                  {formData.personal_number || "מספר אישי"}
-                </p>
-
-                <div className="space-y-3 text-sm text-right bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Building2 className="w-4 h-4" />
-                    <span className="font-bold text-foreground text-xs">
-                      שיוך יחידתי
-                    </span>
-                  </div>
-                  <div className="h-px bg-border/50" />
-                  <div className="grid grid-cols-1 gap-2 text-xs">
-                    <div className="flex justify-between">
-                      <span>מחלקה:</span>
-                      <span className="font-bold text-foreground">
-                        {structure.find(
-                          (d) => d.id.toString() === selectedDeptId,
-                        )?.name || "-"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>מדור:</span>
-                      <span className="font-bold text-foreground">
-                        {sections.find(
-                          (s) => s.id.toString() === selectedSectionId,
-                        )?.name || "-"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Button
-                onClick={handleSubmit}
-                disabled={saving}
-                className="w-full h-12 rounded-xl font-bold shadow-sm text-base"
-              >
-                {saving ? (
-                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4 ml-2" />
-                )}{" "}
-                שמור שוטר
-              </Button>
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <PageHeader
+              title="הוספת שוטר חדש"
+              subtitle="מילוי פרטים אישיים, שיוך ארגוני והגדרות מערכת"
+              icon={UserPlus}
+              category="ניהול שוטרים"
+              categoryLink="/employees"
+            />
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 onClick={() => navigate("/employees")}
-                className="w-full h-12 rounded-xl font-bold border-2"
+                className="hidden sm:flex gap-2"
               >
-                <X className="w-4 h-4 ml-2" /> ביטול
+                <X className="w-4 h-4" /> ביטול
+              </Button>
+              <Button
+                className="gap-2 shadow-lg shadow-primary/20"
+                onClick={handleSubmit}
+                disabled={saving}
+              >
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                {saving ? "שומר..." : "שמור שוטר"}
               </Button>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* LEFT CONTENT (Variable Content) */}
-          <div className="lg:col-span-9 space-y-8 order-1 min-h-[500px]">
-            {/* Main Content - Stacked Cards */}
-            <div className="space-y-8">
-              <PersonalFormTab
-                formData={formData}
-                handleFieldChange={handleFieldChange}
-                emergencyDetails={emergencyDetails}
-                setEmergencyDetails={setEmergencyDetails}
-                relations={relations}
-              />
-              <OrganizationFormTab
-                formData={formData}
-                handleFieldChange={handleFieldChange}
-                structure={structure}
-                selectedDeptId={selectedDeptId}
-                setSelectedDeptId={setSelectedDeptId}
-                selectedSectionId={selectedSectionId}
-                setSelectedSectionId={setSelectedSectionId}
-                sections={sections}
-                teams={teams}
-                serviceTypes={serviceTypes}
-                isUserRestricted={isUserRestricted}
-              />
-              <SettingsFormTab
-                formData={formData}
-                handleFieldChange={handleFieldChange}
-                user={user}
-              />
-            </div>
-          </div>
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 mt-8">
+        <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-1.5 flex gap-2 mb-8 overflow-x-auto">
+          <TabButton
+            active={activeTab === "personal"}
+            onClick={() => setActiveTab("personal")}
+            icon={User}
+            label="פרטים אישיים"
+          />
+          <TabButton
+            active={activeTab === "pro"}
+            onClick={() => setActiveTab("pro")}
+            icon={Briefcase}
+            label="מקצועי והרשאות"
+          />
+        </div>
+
+        <div className="space-y-6">
+          {activeTab === "personal" && (
+            <PersonalFormTab
+              formData={formData}
+              handleFieldChange={handleFieldChange}
+              emergencyDetails={emergencyDetails}
+              setEmergencyDetails={setEmergencyDetails}
+              relations={relations}
+              serviceTypes={serviceTypes}
+            />
+          )}
+
+          {activeTab === "pro" && (
+            <ProfessionalFormTab
+              formData={formData}
+              handleFieldChange={handleFieldChange}
+              structure={structure}
+              setSelectedDeptId={setSelectedDeptId}
+              setSelectedSectionId={setSelectedSectionId}
+              sections={sections}
+              teams={teams}
+              serviceTypes={serviceTypes}
+              user={user}
+              selectedDeptId={selectedDeptId}
+              selectedSectionId={selectedSectionId}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -778,19 +797,22 @@ const InputItem = ({
     {children}
   </div>
 );
-const OrgSelectBox = ({ title, icon: Icon, children, disabled }: any) => (
+const OrgSelectBox = ({ title, children, disabled, icon: Icon }: any) => (
   <div
     className={cn(
-      "relative z-10 flex-1 w-full bg-card border border-border p-3 rounded-xl shadow-sm transition-all text-center min-w-[140px]",
-      disabled && "opacity-60 grayscale",
+      "relative z-10 flex-1 bg-gradient-to-b from-primary/[0.07] to-primary/[0.02] border border-primary/20 pb-4 pt-2 px-1 rounded-2xl transition-all text-center shadow-sm",
+      disabled
+        ? "opacity-30 grayscale cursor-not-allowed"
+        : "hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 mt-4 group",
     )}
   >
-    <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-2">
-      <span className="text-[10px] font-bold uppercase tracking-wider">
+    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white border border-primary/20 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-transform group-hover:scale-110">
+      {Icon && <Icon className="w-3.5 h-3.5 text-primary animate-pulse" />}
+      <span className="text-[11px] font-black text-primary uppercase tracking-widest leading-none">
         {title}
       </span>
     </div>
-    {children}
+    <div className="pt-5 px-3">{children}</div>
   </div>
 );
 const SwitchItem = ({ label, checked, onChange, highlight }: any) => (

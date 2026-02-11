@@ -45,7 +45,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
     const handleSendWhatsApp = () => {
       if (!birthdays.length) return;
 
-      const title = `🎂 ימי הולדת השבוע (${birthdays.length})`;
+      const title = `ימי הולדת השבוע (${birthdays.length})`;
       const labels = [
         "ינואר",
         "פברואר",
@@ -70,7 +70,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
             : "";
           const phoneStr = cleanPhone ? ` (${cleanPhone})` : "";
 
-          return `• ${emp.first_name} ${emp.last_name} | ${dateStr}${phoneStr}`;
+          return `- ${emp.first_name} ${emp.last_name} | ${dateStr}${phoneStr}`;
         })
         .join("\n");
 

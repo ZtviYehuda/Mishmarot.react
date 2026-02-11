@@ -173,15 +173,18 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
 
         if (!blob) throw new Error("Failed to capture image");
 
-        const rangeText = range === 7 ? "שבועית" : range === 30 ? "חודשית" : "שנתית";
+        const rangeText =
+          range === 7 ? "שבועית" : range === 30 ? "חודשית" : "שנתית";
         const statsText = stats
-          ? `\n📊 *נתונים עיקריים:* \n• ממוצע נוכחות: ${stats.avgPresence} שוטרים\n• שיא נוכחות: ${stats.maxPresence} (${stats.peakDay})`
+          ? `\n*נתונים עיקריים:* \n- ממוצע נוכחות: ${stats.avgPresence} שוטרים\n- שיא נוכחות: ${stats.maxPresence} (${stats.peakDay})`
           : "";
-        const filterText = subtitle ? `\n🔍 *סינון:* ${subtitle}` : "";
+        const filterText = subtitle ? `\n*סינון:* ${subtitle}` : "";
         const title = `דוח מגמת זמינות ${rangeText} - ${unitName}`;
         const message = `*${title}*\nתאריך: ${format(new Date(), "dd/MM/yyyy")}${filterText}${statsText}`;
 
-        const file = new File([blob], `trend-${range}.png`, { type: "image/png" });
+        const file = new File([blob], `trend-${range}.png`, {
+          type: "image/png",
+        });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
@@ -252,10 +255,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
 
     const maxTotal = useMemo(() => {
       if (!chartData || chartData.length === 0) return 10;
-      const max = Math.max(
-        ...chartData.map((d) => d.total_employees || 0),
-        10
-      );
+      const max = Math.max(...chartData.map((d) => d.total_employees || 0), 10);
       return max;
     }, [chartData]);
 
@@ -343,17 +343,15 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
                   <defs>
-                    <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="#10b981"
-                        stopOpacity={0.3}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="#10b981"
-                        stopOpacity={0}
-                      />
+                    <linearGradient
+                      id="colorPresent"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -365,16 +363,27 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   <XAxis
                     dataKey="date"
                     tickFormatter={getAxisTickFormatter}
-                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 500 }}
+                    tick={{
+                      fontSize: 10,
+                      fill: "var(--muted-foreground)",
+                      fontWeight: 500,
+                    }}
                     tickLine={false}
                     axisLine={false}
                     dy={10}
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 500 }}
+                    tick={{
+                      fontSize: 10,
+                      fill: "var(--muted-foreground)",
+                      fontWeight: 500,
+                    }}
                     tickLine={false}
                     axisLine={false}
-                    domain={[0, (dataMax: number) => Math.max(dataMax, maxTotal)]}
+                    domain={[
+                      0,
+                      (dataMax: number) => Math.max(dataMax, maxTotal),
+                    ]}
                   />
                   <Tooltip
                     cursor={{ stroke: "var(--primary)", strokeWidth: 2 }}
@@ -385,9 +394,15 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                       boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
                       fontSize: "12px",
                     }}
-                    labelFormatter={(label) => format(parseISO(label), "dd/MM/yyyy")}
+                    labelFormatter={(label) =>
+                      format(parseISO(label), "dd/MM/yyyy")
+                    }
                     itemStyle={{ fontWeight: "bold", padding: "2px 0" }}
-                    labelStyle={{ fontWeight: "bold", marginBottom: "4px", color: "var(--muted-foreground)" }}
+                    labelStyle={{
+                      fontWeight: "bold",
+                      marginBottom: "4px",
+                      color: "var(--muted-foreground)",
+                    }}
                   />
                   <Area
                     type="monotone"
@@ -418,18 +433,30 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   />
                   <XAxis
                     dataKey="date_str"
-                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 500 }}
+                    tick={{
+                      fontSize: 10,
+                      fill: "var(--muted-foreground)",
+                      fontWeight: 500,
+                    }}
                     tickLine={false}
                     axisLine={false}
                     dy={10}
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "var(--muted-foreground)", fontWeight: 500 }}
+                    tick={{
+                      fontSize: 10,
+                      fill: "var(--muted-foreground)",
+                      fontWeight: 500,
+                    }}
                     tickLine={false}
                     axisLine={false}
                   />
                   <Tooltip
-                    cursor={{ fill: "var(--primary)", opacity: 0.05, radius: 8 }}
+                    cursor={{
+                      fill: "var(--primary)",
+                      opacity: 0.05,
+                      radius: 8,
+                    }}
                     contentStyle={{
                       borderRadius: "12px",
                       border: "1px solid var(--border)",
@@ -438,7 +465,11 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                       fontSize: "12px",
                     }}
                     itemStyle={{ fontWeight: "bold", padding: "2px 0" }}
-                    labelStyle={{ fontWeight: "bold", marginBottom: "4px", color: "var(--muted-foreground)" }}
+                    labelStyle={{
+                      fontWeight: "bold",
+                      marginBottom: "4px",
+                      color: "var(--muted-foreground)",
+                    }}
                   />
                   <Bar
                     dataKey="present_count"
@@ -449,7 +480,10 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                     {chartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={getBarColor(entry.present_count, entry.total_employees)}
+                        fill={getBarColor(
+                          entry.present_count,
+                          entry.total_employees,
+                        )}
                       />
                     ))}
                   </Bar>
@@ -495,5 +529,5 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
         </CardContent>
       </Card>
     );
-  }
+  },
 );

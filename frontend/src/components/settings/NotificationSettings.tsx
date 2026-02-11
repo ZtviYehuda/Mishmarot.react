@@ -8,7 +8,6 @@ import {
   Shield,
   Info,
   ChevronLeft,
-  Mail,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -58,47 +57,47 @@ export function NotificationSettings({
   ].filter(Boolean).length;
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto pb-24">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-[1920px] mx-auto pb-24 lg:pb-0">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b pb-6">
         <div>
-          <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-xl">
-              <Bell className="w-6 h-6 text-primary" />
+          <h2 className="text-3xl font-black text-foreground flex items-center gap-3">
+            <div className="p-2.5 bg-primary/10 rounded-2xl">
+              <Bell className="w-8 h-8 text-primary" />
             </div>
             מרכז ההתראות
           </h2>
-          <p className="text-muted-foreground mt-1 text-sm font-medium mr-12 md:mr-0">
+          <p className="text-muted-foreground mt-2 text-lg font-medium max-w-2xl">
             נהל את אופן קבלת ההתראות והעדכונים במערכת
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-background border px-3 py-1.5 rounded-full shadow-sm text-sm font-medium">
-          <span className="relative flex h-2.5 w-2.5">
+        <div className="flex items-center gap-3 bg-background border px-4 py-2.5 rounded-full shadow-sm text-base font-bold">
+          <span className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
           </span>
           {activeCount} התראות פעילות
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Notifications Area */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-12 gap-8">
+        {/* Main Notifications Area (8 Columns) */}
+        <div className="col-span-12 lg:col-span-8 space-y-8">
           <Card className="border shadow-sm overflow-hidden">
-            <CardHeader className="bg-muted/30 border-b pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Bell className="w-5 h-5 text-primary" />
+            <CardHeader className="bg-muted/10 border-b pb-6">
+              <CardTitle className="flex items-center gap-3 text-xl font-bold">
+                <Bell className="w-6 h-6 text-primary" />
                 התראות אישיות
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-base">
                 בחר אילו עדכונים ברצונך לקבל למייל ולמערכת
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border/50">
                 <NotificationItem
-                  icon={<AlertCircle className="w-5 h-5 text-rose-500" />}
+                  icon={<AlertCircle className="w-6 h-6 text-rose-500" />}
                   title="מחלה ממושכת"
                   description="קבל התראה כאשר שוטר נמצא בסטטוס מחלה מעל 4 ימים רצופים"
                   enabled={formData.notif_sick_leave}
@@ -107,7 +106,7 @@ export function NotificationSettings({
                   }
                 />
                 <NotificationItem
-                  icon={<ArrowRightLeft className="w-5 h-5 text-blue-500" />}
+                  icon={<ArrowRightLeft className="w-6 h-6 text-blue-500" />}
                   title="בקשות העברה חדשות"
                   description="קבל התראה כאשר מפקד מגיש בקשת העברה הממתינה לאישורך"
                   enabled={formData.notif_transfers}
@@ -116,7 +115,7 @@ export function NotificationSettings({
                   }
                 />
                 <NotificationItem
-                  icon={<Users className="w-5 h-5 text-amber-500" />}
+                  icon={<Users className="w-6 h-6 text-amber-500" />}
                   title="אי-דיווח בוקר ביחידה"
                   description="קבל התראה כאשר ישנם שוטרים ביחידתך שטרם הוזן להם סטטוס להיום"
                   enabled={formData.notif_morning_report}
@@ -130,40 +129,40 @@ export function NotificationSettings({
 
           {/* Admin Settings */}
           {user?.is_admin && (
-            <Card className="border-destructive/20 bg-destructive/5 shadow-sm overflow-hidden mt-8">
-              <CardHeader className="bg-destructive/10 border-b border-destructive/20 pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg text-destructive">
-                  <Shield className="w-5 h-5" />
+            <Card className="border-destructive/20 bg-destructive/5 shadow-sm overflow-hidden">
+              <CardHeader className="bg-destructive/10 border-b border-destructive/20 pb-6">
+                <CardTitle className="flex items-center gap-3 text-xl text-destructive font-bold">
+                  <Shield className="w-6 h-6" />
                   הגדרות מערכת (מנהלים בלבד)
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-background/50 rounded-xl shrink-0">
-                      <Clock className="w-6 h-6 text-destructive" />
+              <CardContent className="p-8">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="flex items-start gap-5">
+                    <div className="p-4 bg-background/80 rounded-2xl shrink-0 shadow-sm border border-destructive/10">
+                      <Clock className="w-8 h-8 text-destructive" />
                     </div>
-                    <div>
-                      <h4 className="font-bold text-destructive">
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-black text-destructive">
                         שעת יעד לדיווח בוקר
                       </h4>
-                      <p className="text-sm text-destructive/80 mt-1 max-w-md leading-relaxed">
+                      <p className="text-base text-destructive/80 max-w-xl leading-relaxed">
                         הגדר את השעה שבה המערכת תסמן חוסר דיווח כחריג ותשלח
                         התראות למפקדים באופן אוטומטי.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 bg-background p-2 rounded-lg border shadow-sm">
+                  <div className="flex items-center gap-4 bg-background p-3 rounded-xl border shadow-sm">
                     <Input
                       type="time"
                       value={localDeadline}
                       onChange={(e) => setLocalDeadline(e.target.value)}
-                      className="w-32 font-mono text-center h-9 border-0 focus-visible:ring-0 bg-transparent"
+                      className="w-40 font-mono text-center text-lg h-12 border-0 focus-visible:ring-0 bg-transparent font-bold tracking-widest"
                     />
-                    <div className="h-6 w-px bg-border mx-1" />
+                    <div className="h-8 w-px bg-border mx-2" />
                     <Button
-                      size="sm"
+                      size="lg"
                       disabled={!hasChanges}
                       onClick={() =>
                         updateSystemSetting(
@@ -173,12 +172,12 @@ export function NotificationSettings({
                       }
                       className={
                         hasChanges
-                          ? "bg-green-600 hover:bg-green-700 text-white shadow-sm h-8"
-                          : "h-8"
+                          ? "bg-green-600 hover:bg-green-700 text-white shadow-md font-bold"
+                          : "font-medium"
                       }
                       variant={hasChanges ? "default" : "ghost"}
                     >
-                      {hasChanges ? <Check className="w-4 h-4 ml-1" /> : null}
+                      {hasChanges ? <Check className="w-5 h-5 ml-2" /> : null}
                       {hasChanges ? "שמור שינוי" : "אין שינוי"}
                     </Button>
                   </div>
@@ -188,24 +187,58 @@ export function NotificationSettings({
           )}
         </div>
 
-        {/* Side Info Panel */}
-        <div className="space-y-6">
-          <Card className="bg-primary/5 border-primary/10 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Info className="w-4 h-4 text-primary" />
+        {/* Side Info Panel (4 Columns) */}
+        <div className="col-span-12 lg:col-span-4 space-y-8">
+          <Card className="bg-primary/5 border-primary/10 shadow-sm h-full">
+            <CardHeader className="pb-6 border-b bg-primary/5">
+              <CardTitle className="text-xl font-bold flex items-center gap-3">
+                <Info className="w-6 h-6 text-primary" />
                 מידע חשוב
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="bg-background/50 p-4 rounded-xl text-xs text-muted-foreground leading-relaxed flex gap-3">
-                <Mail className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <CardContent className="p-6 space-y-6 text-base">
+              <div className="flex gap-4 p-4 bg-background/50 rounded-xl border border-primary/10">
+                <div className="mt-1">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                </div>
                 <div>
-                  <span className="font-bold block mb-1 text-primary">
-                    לאן נשלחות ההתראות?
+                  <span className="font-bold block text-foreground mb-1">
+                    תדירות עדכונים
                   </span>
-                  ההתראות נשלחות בזמן אמת לכתובת המייל המוגדרת בפרופיל האישי
-                  שלך, וכן מופיעות במרכז העדכונים במערכת.
+                  <p className="text-muted-foreground">
+                    ההתראות נשלחות בזמן אמת למערכת, ופעם ביום כסיכום למייל
+                    האדום.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 p-4 bg-background/50 rounded-xl border border-primary/10">
+                <div className="mt-1">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                </div>
+                <div>
+                  <span className="font-bold block text-foreground mb-1">
+                    מקבלי התראות
+                  </span>
+                  <p className="text-muted-foreground">
+                    התראות על שוטרים כפופים נשלחות למפקד הישיר ולרמ"ד, בהתאם
+                    להגדרות.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 p-4 bg-background/50 rounded-xl border border-primary/10">
+                <div className="mt-1">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                </div>
+                <div>
+                  <span className="font-bold block text-foreground mb-1">
+                    התראות מערכת
+                  </span>
+                  <p className="text-muted-foreground">
+                    הודעות מערכת קריטיות (כגון שגיאות שרת) יישלחו תמיד, ללא תלות
+                    בהגדרות אלו.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -230,25 +263,25 @@ function NotificationItem({
   onChange: (val: boolean) => void;
 }) {
   return (
-    <div className="flex items-start gap-4 p-5 hover:bg-muted/30 transition-colors group">
-      <div
-        className={`mt-1 p-2 rounded-lg transition-colors ${enabled ? "bg-primary/10" : "bg-muted"}`}
-      >
-        {icon}
-      </div>
-      <div className="flex-1 space-y-1">
-        <div className="flex items-center justify-between">
-          <h4
-            className={`font-bold text-sm ${enabled ? "text-foreground" : "text-muted-foreground"}`}
-          >
-            {title}
-          </h4>
-          <Switch checked={enabled} onCheckedChange={onChange} />
+    <div className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors group">
+      <div className="flex items-start gap-5">
+        <div className="mt-1 p-3 bg-muted/50 rounded-xl group-hover:bg-background group-hover:shadow-sm transition-all duration-300">
+          {icon}
         </div>
-        <p className="text-xs text-muted-foreground leading-relaxed max-w-[90%]">
-          {description}
-        </p>
+        <div className="space-y-1.5">
+          <label className="text-lg font-bold text-foreground cursor-pointer block group-hover:text-primary transition-colors">
+            {title}
+          </label>
+          <p className="text-muted-foreground text-base max-w-2xl leading-relaxed">
+            {description}
+          </p>
+        </div>
       </div>
+      <Switch
+        checked={enabled}
+        onCheckedChange={onChange}
+        className="scale-125 ml-4 data-[state=checked]:bg-primary"
+      />
     </div>
   );
 }

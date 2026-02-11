@@ -19,7 +19,7 @@ import {
   RefreshCw,
   ArrowLeft,
   LayoutDashboard,
-  Check
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -81,7 +81,7 @@ export const WhatsAppReportDialog = ({
 
   const generateWhatsAppMessage = () => {
     const commander = user ? `${user.first_name} ${user.last_name}` : "מפקד";
-    let message = `📊 *דוח מצבת כוח אדם*\n`;
+    let message = `*דוח מצבת כוח אדם*\n`;
     message += `\n*מפקד/ת:* ${commander}\n`;
     message += `*תאריך:* ${new Date().toLocaleDateString("he-IL")}\n`;
     message += `*יחידה:* ${activeUnit}\n`;
@@ -96,7 +96,7 @@ export const WhatsAppReportDialog = ({
     reportData.byStatus.forEach(({ status_name, count }) => {
       const percentage =
         reportData.total > 0 ? Math.round((count / reportData.total) * 100) : 0;
-      message += `• ${status_name}: ${count} (${percentage}%)\n`;
+      message += `- ${status_name}: ${count} (${percentage}%)\n`;
     });
 
     return message;
@@ -144,23 +144,35 @@ export const WhatsAppReportDialog = ({
                   "p-5 rounded-2xl border-2 transition-all text-right group",
                   !isFullMode
                     ? "bg-primary border-primary text-primary-foreground shadow-xl shadow-primary/20"
-                    : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted"
+                    : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted",
                 )}
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className={cn(
-                    "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
-                    !isFullMode ? "bg-white/20 text-white" : "bg-background text-muted-foreground shadow-sm"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
+                      !isFullMode
+                        ? "bg-white/20 text-white"
+                        : "bg-background text-muted-foreground shadow-sm",
+                    )}
+                  >
                     <FilterX className="w-4 h-4" />
                   </div>
-                  {!isFullMode && <Check className="w-4 h-4 mr-auto opacity-50" />}
+                  {!isFullMode && (
+                    <Check className="w-4 h-4 mr-auto opacity-50" />
+                  )}
                 </div>
-                <span className="text-sm font-black block leading-tight">דוח מסונן</span>
-                <span className={cn(
-                  "text-[10px] font-bold block mt-1",
-                  !isFullMode ? "text-primary-foreground/70" : "text-muted-foreground/60"
-                )}>
+                <span className="text-sm font-black block leading-tight">
+                  דוח מסונן
+                </span>
+                <span
+                  className={cn(
+                    "text-[10px] font-bold block mt-1",
+                    !isFullMode
+                      ? "text-primary-foreground/70"
+                      : "text-muted-foreground/60",
+                  )}
+                >
                   ליחידה: {unitName}
                 </span>
               </button>
@@ -171,23 +183,33 @@ export const WhatsAppReportDialog = ({
                   "p-5 rounded-2xl border-2 transition-all text-right group",
                   isFullMode
                     ? "bg-amber-600 border-amber-600 text-white shadow-xl shadow-amber-600/20"
-                    : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted"
+                    : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted",
                 )}
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className={cn(
-                    "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
-                    isFullMode ? "bg-white/20 text-white" : "bg-background text-muted-foreground shadow-sm"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
+                      isFullMode
+                        ? "bg-white/20 text-white"
+                        : "bg-background text-muted-foreground shadow-sm",
+                    )}
+                  >
                     <LayoutDashboard className="w-4 h-4" />
                   </div>
-                  {isFullMode && <Check className="w-4 h-4 mr-auto opacity-50" />}
+                  {isFullMode && (
+                    <Check className="w-4 h-4 mr-auto opacity-50" />
+                  )}
                 </div>
-                <span className="text-sm font-black block leading-tight">דוח כללי</span>
-                <span className={cn(
-                  "text-[10px] font-bold block mt-1",
-                  isFullMode ? "text-white/70" : "text-muted-foreground/60"
-                )}>
+                <span className="text-sm font-black block leading-tight">
+                  דוח כללי
+                </span>
+                <span
+                  className={cn(
+                    "text-[10px] font-bold block mt-1",
+                    isFullMode ? "text-white/70" : "text-muted-foreground/60",
+                  )}
+                >
                   כלל שוטרי היחידה
                 </span>
               </button>
@@ -205,7 +227,9 @@ export const WhatsAppReportDialog = ({
                 {loadingFull ? (
                   <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
                     <RefreshCw className="w-6 h-6 animate-spin text-primary/40" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">טוען נתונים מלאים...</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      טוען נתונים מלאים...
+                    </span>
                   </div>
                 ) : (
                   generateWhatsAppMessage()
@@ -220,7 +244,9 @@ export const WhatsAppReportDialog = ({
               <Info className="w-5 h-5" />
             </div>
             <p className="text-[11px] text-blue-800 leading-normal font-black tracking-tight opacity-70">
-              הדוח כולל פילוח סטטיסטי מספרי בלבד. שמות שוטרים, מספרי טלפון ופרטים אישיים רגישים אינם נשלחים בווטסאפ מטעמי אבטחת מידע ושמירה על פרטיות.
+              הדוח כולל פילוח סטטיסטי מספרי בלבד. שמות שוטרים, מספרי טלפון
+              ופרטים אישיים רגישים אינם נשלחים בווטסאפ מטעמי אבטחת מידע ושמירה
+              על פרטיות.
             </p>
           </div>
         </div>
@@ -238,7 +264,7 @@ export const WhatsAppReportDialog = ({
           <WhatsAppButton
             onClick={handleSendWhatsApp}
             skipDirectLink={true}
-            text="שלח דוח כעת"
+            label="שלח דוח כעת"
             className="w-full sm:w-auto h-14 px-10 rounded-2xl shadow-2xl shadow-green-500/20 order-1 sm:order-2 font-black text-base"
           />
         </div>

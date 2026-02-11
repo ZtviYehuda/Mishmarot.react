@@ -57,7 +57,7 @@ export function ExportReportDialog({
     // we would ideally need to fetch that date's stats if it's not the current view.
     // simpler to just output "Daily Report for [Date]" for now or use current view if date matches.
 
-    let message = `📊 *דוח מצבת כוח אדם* - ${dateStr}\n`;
+    let message = `*דוח מצבת כוח אדם* - ${dateStr}\n`;
     message += `סה"כ שוטרים: ${total}\n`;
     // Add link or more info if needed
     return encodeURIComponent(message);

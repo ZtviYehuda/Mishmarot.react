@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   Share2,
   Info,
-  User
+  User,
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { useAuthContext } from "@/context/AuthContext";
@@ -72,15 +72,34 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
     if (sendOption === "current") return filteredEmployees;
 
     return filteredEmployees.filter((emp) => {
-      if (customFilters.departments.length > 0 && !customFilters.departments.includes(emp.department_name || "")) return false;
-      if (customFilters.sections.length > 0 && !customFilters.sections.includes(emp.section_name || "")) return false;
-      if (customFilters.statuses.length > 0 && !customFilters.statuses.includes(emp.status_name || "Unknown")) return false;
-      if (customFilters.roles.length > 0 && !customFilters.roles.includes(emp.role_name || "")) return false;
+      if (
+        customFilters.departments.length > 0 &&
+        !customFilters.departments.includes(emp.department_name || "")
+      )
+        return false;
+      if (
+        customFilters.sections.length > 0 &&
+        !customFilters.sections.includes(emp.section_name || "")
+      )
+        return false;
+      if (
+        customFilters.statuses.length > 0 &&
+        !customFilters.statuses.includes(emp.status_name || "Unknown")
+      )
+        return false;
+      if (
+        customFilters.roles.length > 0 &&
+        !customFilters.roles.includes(emp.role_name || "")
+      )
+        return false;
       return true;
     });
   };
 
-  const handleToggleFilter = (type: keyof typeof customFilters, value: string) => {
+  const handleToggleFilter = (
+    type: keyof typeof customFilters,
+    value: string,
+  ) => {
     setCustomFilters((prev) => ({
       ...prev,
       [type]: prev[type].includes(value)
@@ -91,12 +110,19 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
 
   const generateReportText = (employees: Employee[]) => {
     const now = new Date();
-    const dateStr = now.toLocaleDateString("he-IL", { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const timeStr = now.toLocaleTimeString("he-IL", { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString("he-IL", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+    const timeStr = now.toLocaleTimeString("he-IL", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-    let report = `📋 *דוח מצבת כוח אדם - ${dateStr}*\n`;
-    report += `⏰ שעת דיווח: ${timeStr}\n`;
-    report += `👥 סה"כ שוטרים: ${employees.length}\n\n`;
+    let report = `*דוח מצבת כוח אדם - ${dateStr}*\n`;
+    report += `שעת דיווח: ${timeStr}\n`;
+    report += `סה"כ שוטרים: ${employees.length}\n\n`;
 
     const byStatus: Record<string, Employee[]> = {};
     employees.forEach((emp) => {
@@ -105,17 +131,17 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
       byStatus[status].push(emp);
     });
 
-    report += "*📊 פילוח לפי סטטוס:*\n";
+    report += "*פילוח לפי סטטוס:*\n";
     Object.entries(byStatus).forEach(([status, emps]) => {
-      report += `• ${status}: ${emps.length}\n`;
+      report += `- ${status}: ${emps.length}\n`;
     });
 
-    report += "\n*📝 רשימה שמית:*\n";
+    report += "\n*רשימה שמית:*\n";
     employees.forEach((emp) => {
-      report += `• ${emp.first_name} ${emp.last_name} [${emp.status_name}]\n`;
+      report += `- ${emp.first_name} ${emp.last_name} [${emp.status_name}]\n`;
     });
 
-    report += `\n_הופק באמצעות מערכת משרות_ 🚀`;
+    report += `\n_הופק באמצעות מערכת משרות_`;
     return report;
   };
 
@@ -139,11 +165,18 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
 
       if (phoneNumber.trim()) {
         let formattedPhone = phoneNumber.replace(/\D/g, "");
-        if (!formattedPhone.startsWith("972") && !formattedPhone.startsWith("1")) {
-          if (formattedPhone.startsWith("0")) formattedPhone = "972" + formattedPhone.substring(1);
+        if (
+          !formattedPhone.startsWith("972") &&
+          !formattedPhone.startsWith("1")
+        ) {
+          if (formattedPhone.startsWith("0"))
+            formattedPhone = "972" + formattedPhone.substring(1);
           else formattedPhone = "972" + formattedPhone;
         }
-        window.open(`https://wa.me/${formattedPhone}?text=${encodedMessage}`, "_blank");
+        window.open(
+          `https://wa.me/${formattedPhone}?text=${encodedMessage}`,
+          "_blank",
+        );
         toast.success("פותח וואטסאפ עם הדוח...");
       } else {
         window.open("https://web.whatsapp.com", "_blank");
@@ -162,8 +195,10 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0 border-none bg-card shadow-2xl flex flex-col" dir="rtl">
-
+      <DialogContent
+        className="max-w-xl p-0 border-none bg-card shadow-2xl flex flex-col"
+        dir="rtl"
+      >
         <DialogHeader className="p-6 pb-4 text-right">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -182,7 +217,9 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
 
         <div className="flex-1 overflow-y-auto px-6 py-2 space-y-6 custom-scrollbar">
           <div className="space-y-3">
-            <Label className="text-xs font-black text-slate-400 uppercase tracking-widest block pr-1">סוג הדוח</Label>
+            <Label className="text-xs font-black text-slate-400 uppercase tracking-widest block pr-1">
+              סוג הדוח
+            </Label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setSendOption("current")}
@@ -190,11 +227,13 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                   "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-center",
                   sendOption === "current"
                     ? "bg-emerald-50 border-emerald-500 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500 dark:text-emerald-400 shadow-lg shadow-emerald-500/10"
-                    : "bg-slate-50 dark:bg-slate-900 border-transparent text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    : "bg-slate-50 dark:bg-slate-900 border-transparent text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800",
                 )}
               >
                 <Users className="w-6 h-6 mb-1" />
-                <span className="text-xs font-black">כל השוטרים ({filteredEmployees.length})</span>
+                <span className="text-xs font-black">
+                  כל השוטרים ({filteredEmployees.length})
+                </span>
               </button>
               <button
                 onClick={() => setSendOption("custom")}
@@ -202,7 +241,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                   "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-center",
                   sendOption === "custom"
                     ? "bg-indigo-50 border-indigo-500 text-indigo-700 dark:bg-indigo-900/20 dark:border-indigo-500 dark:text-indigo-400 shadow-lg shadow-indigo-500/10"
-                    : "bg-slate-50 dark:bg-slate-900 border-transparent text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    : "bg-slate-50 dark:bg-slate-900 border-transparent text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800",
                 )}
               >
                 <Filter className="w-6 h-6 mb-1" />
@@ -213,36 +252,47 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
 
           {sendOption === "custom" && (
             <div className="space-y-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 animate-in fade-in slide-in-from-top-2 duration-300">
-              {Object.entries(uniqueValues).map(([key, values]) => (
-                values.length > 0 && (
-                  <div key={key} className="space-y-2">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block pr-1">
-                      {key === 'departments' ? 'מחלקות' : key === 'sections' ? 'מדורים' : key === 'statuses' ? 'סטטוסים' : 'תפקידים'}
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {values.map((v) => (
-                        <button
-                          key={v}
-                          onClick={() => handleToggleFilter(key as any, v)}
-                          className={cn(
-                            "px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all",
-                            customFilters[key as keyof typeof customFilters].includes(v)
-                              ? "bg-slate-900 text-white dark:bg-indigo-600 shadow-md"
-                              : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-slate-700"
-                          )}
-                        >
-                          {v}
-                        </button>
-                      ))}
+              {Object.entries(uniqueValues).map(
+                ([key, values]) =>
+                  values.length > 0 && (
+                    <div key={key} className="space-y-2">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block pr-1">
+                        {key === "departments"
+                          ? "מחלקות"
+                          : key === "sections"
+                            ? "מדורים"
+                            : key === "statuses"
+                              ? "סטטוסים"
+                              : "תפקידים"}
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {values.map((v) => (
+                          <button
+                            key={v}
+                            onClick={() => handleToggleFilter(key as any, v)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all",
+                              customFilters[
+                                key as keyof typeof customFilters
+                              ].includes(v)
+                                ? "bg-slate-900 text-white dark:bg-indigo-600 shadow-md"
+                                : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-slate-700",
+                            )}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )
-              ))}
+                  ),
+              )}
             </div>
           )}
 
           <div className="space-y-3 pt-2">
-            <Label className="text-xs font-black text-slate-400 uppercase tracking-widest block pr-1">שליחה אל</Label>
+            <Label className="text-xs font-black text-slate-400 uppercase tracking-widest block pr-1">
+              שליחה אל
+            </Label>
             <div className="relative group">
               <Smartphone className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
               <Input
@@ -261,7 +311,8 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
             <div className="flex items-start gap-2 pr-1">
               <Info className="w-3 h-3 text-slate-300 mt-1" />
               <p className="text-[10px] font-medium text-slate-400 leading-relaxed">
-                אם תשאיר ריק, המערכת תבצע העתקה ללוח ותפתח את וואטסאפ ווב להדבקה ידנית.
+                אם תשאיר ריק, המערכת תבצע העתקה ללוח ותפתח את וואטסאפ ווב להדבקה
+                ידנית.
               </p>
             </div>
           </div>
@@ -274,8 +325,12 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                 <Users className="w-4 h-4" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-black text-slate-800 dark:text-slate-200">סיכום הדוח</span>
-                <span className="text-[10px] font-bold text-slate-400">{employeesToReportCount} שוטרים כלולים</span>
+                <span className="text-xs font-black text-slate-800 dark:text-slate-200">
+                  סיכום הדוח
+                </span>
+                <span className="text-[10px] font-bold text-slate-400">
+                  {employeesToReportCount} שוטרים כלולים
+                </span>
               </div>
             </div>
             <div className="text-emerald-600 dark:text-emerald-400">
