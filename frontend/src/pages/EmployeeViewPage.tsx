@@ -64,9 +64,19 @@ const PersonalTab = ({ employee }: { employee: Employee }) => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <CompactCard
         title={
-          <span className="flex items-center gap-2 text-primary font-black text-lg">
-            <User className="w-5 h-5" /> פרטים אישיים
-          </span>
+          <div className="flex items-center justify-between w-full">
+            <span className="flex items-center gap-2 text-primary font-black text-lg">
+              <User className="w-5 h-5" /> פרטים אישיים
+            </span>
+            {employee.is_commander && (
+              <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-none px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg shadow-amber-500/20 animate-in zoom-in duration-300">
+                <BadgeCheck className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-black uppercase tracking-wider">
+                  מפקד
+                </span>
+              </Badge>
+            )}
+          </div>
         }
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
@@ -107,6 +117,38 @@ const PersonalTab = ({ employee }: { employee: Employee }) => {
             subValue={calculateAge(employee.birth_date)}
             icon={Calendar}
           />
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-dashed border-border/60">
+          <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+            <BadgeCheck className="w-3.5 h-3.5" /> שיוך ארגוני (קבוע)
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
+              <span className="text-[10px] font-bold text-primary/60 block mb-1 uppercase">
+                מחלקה
+              </span>
+              <span className="font-black text-sm text-foreground">
+                {cleanUnitName(employee.department_name) || "—"}
+              </span>
+            </div>
+            <div className="p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
+              <span className="text-[10px] font-bold text-primary/60 block mb-1 uppercase">
+                מדור
+              </span>
+              <span className="font-black text-sm text-foreground">
+                {cleanUnitName(employee.section_name) || "—"}
+              </span>
+            </div>
+            <div className="p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
+              <span className="text-[10px] font-bold text-primary/60 block mb-1 uppercase">
+                חוליה
+              </span>
+              <span className="font-black text-sm text-foreground">
+                {cleanUnitName(employee.team_name) || "—"}
+              </span>
+            </div>
+          </div>
         </div>
       </CompactCard>
 

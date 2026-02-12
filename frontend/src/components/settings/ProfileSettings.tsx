@@ -167,17 +167,31 @@ export function ProfileSettings({
           {/* Personal Details */}
           <CompactCard
             title={
-              <span className="flex items-center gap-2 text-primary font-black text-lg">
-                <User className="w-5 h-5" /> פרטים אישיים
-              </span>
+              <div className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2 text-primary font-black text-lg">
+                  <User className="w-5 h-5" /> פרטים אישיים
+                </span>
+                {user?.is_commander && (
+                  <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full shadow-sm animate-in zoom-in duration-500">
+                    <BadgeCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-tighter">
+                      {(() => {
+                        if (user.commands_department_id)
+                          return `רמ"ח ${cleanUnitName(user.department_name)}`;
+                        if (user.commands_section_id)
+                          return `רמ"ד ${cleanUnitName(user.section_name)}`;
+                        if (user.commands_team_id)
+                          return `מ"ח ${cleanUnitName(user.team_name)}`;
+                        return "מפקד";
+                      })()}
+                    </span>
+                  </div>
+                )}
+              </div>
             }
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <InputItem
-                label="שם מלא (פרטי ומשפחה)"
-                required
-                icon={User}
-              >
+              <InputItem label="שם מלא (פרטי ומשפחה)" required icon={User}>
                 <div className="flex gap-2">
                   <Input
                     disabled={readOnly}
@@ -257,6 +271,38 @@ export function ProfileSettings({
                   className="h-11 bg-background/50 focus:bg-background transition-colors"
                 />
               </InputItem>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-dashed border-border/60">
+              <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Building2 className="w-3.5 h-3.5" /> שיוך ארגוני (קבוע)
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
+                  <span className="text-[10px] font-bold text-primary/60 block mb-1 uppercase">
+                    מחלקה
+                  </span>
+                  <span className="font-black text-sm text-foreground">
+                    {cleanUnitName(user?.department_name) || "—"}
+                  </span>
+                </div>
+                <div className="p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
+                  <span className="text-[10px] font-bold text-primary/60 block mb-1 uppercase">
+                    מדור
+                  </span>
+                  <span className="font-black text-sm text-foreground">
+                    {cleanUnitName(user?.section_name) || "—"}
+                  </span>
+                </div>
+                <div className="p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
+                  <span className="text-[10px] font-bold text-primary/60 block mb-1 uppercase">
+                    חוליה
+                  </span>
+                  <span className="font-black text-sm text-foreground">
+                    {cleanUnitName(user?.team_name) || "—"}
+                  </span>
+                </div>
+              </div>
             </div>
           </CompactCard>
 
