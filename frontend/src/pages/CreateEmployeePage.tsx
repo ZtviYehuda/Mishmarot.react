@@ -21,9 +21,7 @@ import {
   Briefcase,
   FileCheck,
   ArrowLeft,
-  ArrowRightLeft,
 } from "lucide-react";
-import { TransferRequestModal } from "@/components/employees/modals/TransferRequestModal";
 import { toast } from "sonner";
 import { useAuthContext } from "@/context/AuthContext";
 import type {
@@ -55,9 +53,10 @@ const PersonalFormTab = ({
   setEmergencyDetails,
   relations,
   serviceTypes,
+  onNext,
 }: any) => {
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 sm:pb-0">
       <CompactCard
         title={
           <span className="flex items-center gap-2 text-primary font-black text-lg">
@@ -189,13 +188,6 @@ const PersonalFormTab = ({
                 onChange={(e) => handleFieldChange("email", e.target.value)}
               />
             </InputItem>
-            <InputItem label="עיר מגורים" icon={MapPin}>
-              <Input
-                value={formData.city || ""}
-                onChange={(e) => handleFieldChange("city", e.target.value)}
-                placeholder="ירושלים, ת''א..."
-              />
-            </InputItem>
           </div>
 
           <div className="bg-red-50/60 rounded-2xl p-5 border border-red-100 dark:bg-red-950/10 dark:border-red-900/20">
@@ -263,6 +255,17 @@ const PersonalFormTab = ({
           </div>
         </div>
       </CompactCard>
+
+      {/* Mobile Navigation Button */}
+      <div className="sm:hidden mt-8">
+        <Button
+          className="w-full h-14 text-lg font-bold shadow-xl bg-primary text-primary-foreground rounded-2xl"
+          onClick={onNext}
+        >
+          המשך לשלב הבא
+          <ArrowLeft className="w-5 h-5 mr-2" />
+        </Button>
+      </div>
     </div>
   );
 };
@@ -277,32 +280,22 @@ const ProfessionalFormTab = ({
   user,
   selectedDeptId,
   selectedSectionId,
+  onSave,
+  saving,
 }: any) => {
-  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const isDeptDisabled = !user.is_admin;
   const isSectionDisabled = !user.is_admin && !user.commands_department_id;
   const isTeamDisabled =
     !user.is_admin && !user.commands_department_id && !user.commands_section_id;
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 sm:pb-0">
       {/* 1. Organizational Structure Card */}
       <CompactCard
         title={
           <span className="flex items-center gap-2 text-primary font-black text-lg">
             <Building2 className="w-5 h-5" /> מבנה ארגוני ופיקוד
           </span>
-        }
-        action={
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 rounded-xl font-black text-[11px] transition-all active:scale-95"
-            onClick={() => setIsTransferModalOpen(true)}
-          >
-            <ArrowRightLeft className="w-3.5 h-3.5" />
-            בקשת העברה
-          </Button>
         }
       >
         <div className="py-10 px-4">
@@ -529,12 +522,21 @@ const ProfessionalFormTab = ({
         </div>
       </CompactCard>
 
-      <TransferRequestModal
-        isOpen={isTransferModalOpen}
-        onClose={() => setIsTransferModalOpen(false)}
-        employeeName={formData.full_name || "השוטר"}
-        structure={structure}
-      />
+      {/* Mobile Save Button */}
+      <div className="sm:hidden mt-8">
+        <Button
+          className="w-full h-14 text-xl font-black shadow-xl bg-primary text-primary-foreground"
+          onClick={onSave}
+          disabled={saving}
+        >
+          {saving ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : (
+            <Save className="w-6 h-6 mr-2" />
+          )}
+          {saving ? "שומר..." : "שמור שוטר"}
+        </Button>
+      </div>
     </div>
   );
 };
@@ -687,23 +689,27 @@ export default function CreateEmployeePage() {
       </div>
     );
 
-  const TabButton = ({ active, onClick, icon: Icon, label }: any) => (
+  const TabButton = ({ active, onClick, icon: Icon, label, id }: any) => (
     <button
       type="button"
       onClick={onClick}
+      id={id}
       className={cn(
-        "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-sm font-semibold transition-all",
+        "flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 sm:py-2 px-2 sm:px-4 rounded-xl text-[10px] sm:text-sm font-bold sm:font-semibold transition-all",
         active
           ? "bg-primary text-primary-foreground shadow-md"
           : "text-muted-foreground hover:bg-muted/50",
       )}
     >
-      {Icon && <Icon className="w-4 h-4" />} {label}
+      {Icon && <Icon className="w-5 h-5 sm:w-4 sm:h-4" />} {label}
     </button>
   );
 
   return (
-    <div className="bg-[#f8fafc] dark:bg-[#020617]">
+    <div
+      id="create-page-root"
+      className="bg-[#f8fafc] dark:bg-[#020617] min-h-screen"
+    >
       <div className="bg-background border-b border-border/60 py-8 shadow-sm">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -723,7 +729,7 @@ export default function CreateEmployeePage() {
                 <X className="w-4 h-4" /> ביטול
               </Button>
               <Button
-                className="gap-2 shadow-lg shadow-primary/20"
+                className="gap-2 shadow-lg shadow-primary/20 hidden sm:flex"
                 onClick={handleSubmit}
                 disabled={saving}
               >
@@ -740,22 +746,26 @@ export default function CreateEmployeePage() {
       </div>
 
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 mt-8">
-        <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-1.5 flex gap-2 mb-8 overflow-x-auto">
-          <TabButton
-            active={activeTab === "personal"}
-            onClick={() => setActiveTab("personal")}
-            icon={User}
-            label="פרטים אישיים"
-          />
-          <TabButton
-            active={activeTab === "pro"}
-            onClick={() => setActiveTab("pro")}
-            icon={Briefcase}
-            label="מקצועי והרשאות"
-          />
+        <div className="fixed bottom-0 left-0 right-0 p-2 bg-background/80 backdrop-blur-xl border-t z-50 sm:relative sm:bottom-auto sm:bg-transparent sm:backdrop-blur-none sm:border-none sm:p-0 sm:z-0 container mx-auto mb-0 sm:mb-8">
+          <div className="bg-muted/50 sm:bg-card/50 sm:backdrop-blur-md border border-border/50 rounded-2xl p-1.5 flex gap-2">
+            <TabButton
+              active={activeTab === "personal"}
+              onClick={() => setActiveTab("personal")}
+              icon={User}
+              label="פרטים אישיים"
+              id="tab-btn-personal"
+            />
+            <TabButton
+              active={activeTab === "pro"}
+              onClick={() => setActiveTab("pro")}
+              icon={Briefcase}
+              label="מקצועי והרשאות"
+              id="tab-btn-pro"
+            />
+          </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 pb-24 sm:pb-0">
           {activeTab === "personal" && (
             <PersonalFormTab
               formData={formData}
@@ -764,6 +774,15 @@ export default function CreateEmployeePage() {
               setEmergencyDetails={setEmergencyDetails}
               relations={relations}
               serviceTypes={serviceTypes}
+              onNext={() => {
+                setActiveTab("pro");
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  document
+                    .getElementById("create-page-root")
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }, 100);
+              }}
             />
           )}
 
@@ -780,6 +799,8 @@ export default function CreateEmployeePage() {
               user={user}
               selectedDeptId={selectedDeptId}
               selectedSectionId={selectedSectionId}
+              onSave={handleSubmit}
+              saving={saving}
             />
           )}
         </div>

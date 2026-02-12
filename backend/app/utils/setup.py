@@ -77,6 +77,8 @@ def setup_database():
                 notif_sick_leave BOOLEAN DEFAULT TRUE,
                 notif_transfers BOOLEAN DEFAULT TRUE,
                 notif_morning_report BOOLEAN DEFAULT TRUE,
+                gender VARCHAR(20) DEFAULT 'male',
+                profile_picture TEXT,
                 theme VARCHAR(20) DEFAULT 'light',
                 accent_color VARCHAR(20) DEFAULT 'blue',
                 font_size VARCHAR(20) DEFAULT 'normal',
@@ -133,10 +135,44 @@ def setup_database():
                 status VARCHAR(20) DEFAULT 'open',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );""",
+            """CREATE TABLE IF NOT EXISTS audit_logs (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES employees(id),
+                action_type VARCHAR(50) NOT NULL,
+                description TEXT,
+                target_id INTEGER,
+                ip_address VARCHAR(45),
+                metadata JSONB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );""",
+            """CREATE TABLE IF NOT EXISTS delegations (
+                id SERIAL PRIMARY KEY,
+                commander_id INTEGER NOT NULL REFERENCES employees(id),
+                delegate_id INTEGER NOT NULL REFERENCES employees(id),
+                start_date TIMESTAMP NOT NULL,
+                end_date TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE,
+                CONSTRAINT unique_active_delegation UNIQUE (commander_id, delegate_id, start_date)
+            );""",
         ]
 
         for table in tables:
             cur.execute(table)
+
+        # 1b. Create Indexes
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);"
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);"
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_delegations_date_range ON delegations(start_date, end_date);"
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_delegations_delegate_id ON delegations(delegate_id);"
+        )
 
         # Insert default system settings
         cur.execute(
@@ -194,6 +230,12 @@ def setup_database():
             # --- Email & Verification Migrations ---
             cur.execute(
                 "ALTER TABLE employees ADD COLUMN IF NOT EXISTS email VARCHAR(255);"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS gender VARCHAR(20) DEFAULT 'male';"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS profile_picture TEXT;"
             )
             cur.execute(
                 "ALTER TABLE employees ADD COLUMN IF NOT EXISTS last_password_change TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"
