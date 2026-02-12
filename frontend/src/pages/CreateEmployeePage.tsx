@@ -21,7 +21,9 @@ import {
   Briefcase,
   FileCheck,
   ArrowLeft,
+  AlertTriangle,
 } from "lucide-react";
+import { useMemo } from "react";
 import { toast } from "sonner";
 import { useAuthContext } from "@/context/AuthContext";
 import type {
@@ -288,6 +290,43 @@ const ProfessionalFormTab = ({
   const isTeamDisabled =
     !user.is_admin && !user.commands_department_id && !user.commands_section_id;
 
+  const currentCommander = useMemo(() => {
+    if (!formData.is_commander) return null;
+
+    let unitWithCommander = null;
+    if (formData.team_id) {
+      unitWithCommander = teams.find((t: any) => t.id === formData.team_id);
+    } else if (selectedSectionId) {
+      unitWithCommander = sections.find(
+        (s: any) => s.id === parseInt(selectedSectionId),
+      );
+    } else if (selectedDeptId) {
+      unitWithCommander = structure.find(
+        (d: any) => d.id === parseInt(selectedDeptId),
+      );
+    }
+
+    if (
+      unitWithCommander?.commander_id &&
+      unitWithCommander.commander_id !== formData.id
+    ) {
+      return {
+        id: unitWithCommander.commander_id,
+        name: unitWithCommander.commander_name,
+      };
+    }
+    return null;
+  }, [
+    formData.is_commander,
+    formData.team_id,
+    selectedSectionId,
+    selectedDeptId,
+    structure,
+    sections,
+    teams,
+    formData.id,
+  ]);
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 sm:pb-0">
       {/* 1. Organizational Structure Card */}
@@ -391,9 +430,9 @@ const ProfessionalFormTab = ({
             </OrgSelectBox>
           </div>
 
-          {user?.is_admin && (
-            <div className="flex flex-col items-center gap-3 pt-4 border-t border-dashed">
-              <div className="w-full max-w-md">
+          {(user?.is_admin || user?.is_commander) && (
+            <div className="flex flex-col items-center gap-3 pt-8 border-t border-dashed mt-8">
+              <div className="w-full max-w-lg">
                 <SwitchItem
                   label={(() => {
                     if (formData.team_id) return "מפקד חוליה (ראש חוליה)";
@@ -407,7 +446,27 @@ const ProfessionalFormTab = ({
                   }
                   highlight
                 />
-                <p className="text-[11px] text-muted-foreground mt-2 text-center bg-muted/30 py-1.5 rounded-lg border border-border/50">
+
+                {currentCommander && (
+                  <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-2xl flex items-start gap-4 animate-in fade-in slide-in-from-top-2 duration-300 shadow-sm">
+                    <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-xl shrink-0">
+                      <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <h5 className="text-sm font-black text-amber-900 dark:text-amber-100 mb-1">
+                        החלפת מפקד קיים
+                      </h5>
+                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300 leading-relaxed">
+                        לתפקיד זה כבר מוגדר מפקד (
+                        <strong>{currentCommander.name}</strong>). שמירת השוטר
+                        החדש כמפקד תגרום להחלפת המפקד הנוכחי והעברתו לסטטוס שוטר
+                        רגיל.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[11px] text-muted-foreground mt-4 text-center bg-muted/30 py-2 rounded-xl border border-border/50">
                   💡 <strong>טיפ:</strong> כאשר מסומן כמפקד, ניתן להשאיר רמות
                   ארגוניות נמוכות יותר ריקות
                 </p>
@@ -590,19 +649,48 @@ export default function CreateEmployeePage() {
 
         // Pre-fill user's dept if restricted
         if (user && !user.is_admin) {
-          if (user.commands_department_id) {
-            setSelectedDeptId(user.commands_department_id.toString());
-            setFormData((prev) => ({
-              ...prev,
-              department_id: user.commands_department_id,
-            }));
+          let deptId = user.commands_department_id;
+          let sectId = user.commands_section_id;
+          let teamId = user.commands_team_id;
+
+          // Trace parent units from structure if only lower level is commanded
+          if (structResp) {
+            const structure = structResp as DepartmentNode[];
+
+            // If Team Commander, find Section and Department
+            if (teamId && !sectId) {
+              structure.forEach((d) => {
+                d.sections?.forEach((s) => {
+                  if (s.teams?.some((t) => t.id === teamId)) {
+                    sectId = s.id;
+                    deptId = d.id;
+                  }
+                });
+              });
+            }
+            // If Section Commander, find Department
+            else if (sectId && !deptId) {
+              const dept = structure.find((d) =>
+                d.sections?.some((s) => s.id === sectId),
+              );
+              if (dept) deptId = dept.id;
+            }
           }
-          if (user.commands_section_id) {
-            setSelectedSectionId(user.commands_section_id.toString());
-            setFormData((prev) => ({
-              ...prev,
-              section_id: user.commands_section_id,
-            }));
+
+          // Fallback to belonging unit if still not found but is commander
+          if (!deptId && user.is_commander) deptId = user.department_id;
+          if (!sectId && user.is_commander) sectId = user.section_id;
+
+          if (deptId) {
+            setSelectedDeptId(deptId.toString());
+            setFormData((prev) => ({ ...prev, department_id: deptId }));
+          }
+          if (sectId) {
+            setSelectedSectionId(sectId.toString());
+            setFormData((prev) => ({ ...prev, section_id: sectId }));
+          }
+          if (teamId) {
+            setFormData((prev) => ({ ...prev, team_id: teamId }));
           }
         }
       } catch (error) {

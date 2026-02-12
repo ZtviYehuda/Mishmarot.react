@@ -131,58 +131,90 @@ def create_employee():
 @emp_bp.route("/<int:emp_id>", methods=["PUT"])
 @jwt_required()
 def update_employee(emp_id):
-    identity_raw = get_jwt_identity()
     try:
-        identity = (
-            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        user_id = identity["id"] if isinstance(identity, dict) else identity
+        claims = identity if isinstance(identity, dict) else {}
+
+        current_user = EmployeeModel.get_employee_by_id(user_id)
+        if not current_user:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        is_admin = claims.get("is_admin", False)
+        is_commander = claims.get("is_commander", False)
+        if not (is_admin or is_commander):
+            return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No data received"}), 400
+
+        # Safe print for debugging to avoid encoding issues
+        try:
+            print(f"DEBUG: update_employee id={emp_id} data keys: {list(data.keys())}")
+        except:
+            print(f"DEBUG: update_employee id={emp_id} (could not print data keys)")
+
+        # Convert empty strings to None for optional fields to avoid DB errors (e.g. invalid date syntax)
+        for key in [
+            "phone_number",
+            "city",
+            "birth_date",
+            "enlistment_date",
+            "discharge_date",
+            "assignment_date",
+            "team_id",
+            "section_id",
+            "department_id",
+            "role_id",
+            "service_type_id",
+            "emergency_contact",
+        ]:
+            if key in data and data[key] == "":
+                data[key] = None
+
+        if EmployeeModel.update_employee(emp_id, data):
+            # Log Update
+            try:
+                AuditLogModel.log_action(
+                    user_id=user_id,
+                    action_type="EMPLOYEE_UPDATE",
+                    description=f"Updated employee details for ID {emp_id}",
+                    target_id=emp_id,
+                    ip_address=request.remote_addr,
+                    metadata=data,
+                )
+            except Exception as log_err:
+                print(f"⚠️ Audit logging failed: {log_err}")
+
+            return jsonify({"success": True, "message": "User updated"})
+        return jsonify({"success": False, "error": "Update failed in database"}), 500
+
+    except Exception as e:
+        import traceback
+
+        print(f"❌ CRITICAL ERROR in update_employee: {e}")
+        traceback.print_exc()
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": "Internal Server Error",
+                    "detail": str(e),
+                    "traceback": traceback.format_exc(),
+                }
+            ),
+            500,
         )
-    except (json.JSONDecodeError, TypeError):
-        identity = identity_raw
-
-    user_id = identity["id"] if isinstance(identity, dict) else identity
-    claims = identity if isinstance(identity, dict) else {}
-
-    current_user = EmployeeModel.get_employee_by_id(user_id)
-    if not current_user:
-        return jsonify({"success": False, "error": "User not found"}), 404
-
-    is_admin = claims.get("is_admin", False)
-    is_commander = claims.get("is_commander", False)
-    if not (is_admin or is_commander):
-        return jsonify({"success": False, "error": "Unauthorized"}), 403
-
-    data = request.get_json()
-
-    # Convert empty strings to None for optional fields to avoid DB errors (e.g. invalid date syntax)
-    for key in [
-        "phone_number",
-        "city",
-        "birth_date",
-        "enlistment_date",
-        "discharge_date",
-        "assignment_date",
-        "team_id",
-        "section_id",
-        "department_id",
-        "role_id",
-        "service_type_id",
-        "emergency_contact",
-    ]:
-        if key in data and data[key] == "":
-            data[key] = None
-
-    if EmployeeModel.update_employee(emp_id, data):
-        # Log Update
-        AuditLogModel.log_action(
-            user_id=user_id,
-            action_type="EMPLOYEE_UPDATE",
-            description=f"Updated employee details for ID {emp_id}",
-            target_id=emp_id,
-            ip_address=request.remote_addr,
-            metadata=data,
-        )
-        return jsonify({"success": True, "message": "User updated"})
-    return jsonify({"success": False, "error": "Update failed"}), 500
 
 
 @emp_bp.route("/<int:emp_id>", methods=["DELETE"])
@@ -454,6 +486,42 @@ def get_delegation_candidates():
 
     candidates = EmployeeModel.get_team_members_for_commander(user_id)
     return jsonify(candidates)
+
+
+@emp_bp.route("/delegation/cancel", methods=["POST"])
+@jwt_required()
+def cancel_delegation():
+    """Cancel a delegation (either by specific ID or current commander's active one)"""
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+    is_admin = identity.get("is_admin", False) if isinstance(identity, dict) else False
+
+    data = request.get_json() or {}
+    delegation_id = data.get("delegation_id")
+
+    # If they passed a specific delegation_id, check if they are admin OR the commander of that delegation
+    # For now, we'll let the model handle the logic or just assume current user's delegation if none provided
+    success, msg = EmployeeModel.cancel_delegation(
+        commander_id=user_id if not is_admin else None, delegation_id=delegation_id
+    )
+
+    if success:
+        AuditLogModel.log_action(
+            user_id=user_id,
+            action_type="DELEGATION_CANCEL",
+            description=f"Cancelled delegation (ID: {delegation_id or 'active current'})",
+            ip_address=request.remote_addr,
+            metadata={"delegation_id": delegation_id},
+        )
+        return jsonify({"success": True, "message": "הפיקוד הזמני הוסר בהצלחה"})
+    return jsonify({"success": False, "error": msg}), 500
 
 
 @emp_bp.route("/preferences", methods=["PUT"])

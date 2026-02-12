@@ -69,7 +69,12 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
   onSuccess,
 }) => {
   const { user, refreshUser } = useAuthContext();
-  const { getStatusTypes, logStatus, getDelegationCandidates } = useEmployees();
+  const {
+    getStatusTypes,
+    logStatus,
+    getDelegationCandidates,
+    cancelDelegation,
+  } = useEmployees();
   const [statusTypes, setStatusTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -112,6 +117,20 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
       }
     }
   }, [open, getStatusTypes, user, employee, getDelegationCandidates]);
+
+  const handleRevokeDelegation = async () => {
+    setLoading(true);
+    const ok = await cancelDelegation();
+    if (ok) {
+      toast.success("סמכויות הפיקוד הוחזרו אליך");
+      await refreshUser();
+      if (onSuccess) onSuccess();
+      onOpenChange(false);
+    } else {
+      toast.error("ביטול ההאצלה נכשל");
+    }
+    setLoading(false);
+  };
 
   const handleSubmit = async () => {
     if (!employee || !formData.status_type_id) {
@@ -303,80 +322,124 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
             </div>
           </div>
 
-          {/* Delegation Section - Only for Commanders updating themselves with Non-Office status */}
-          {user?.is_commander &&
-            employee?.id === user.id &&
-            candidates.length > 0 &&
-            (() => {
-              const status = statusTypes.find(
-                (s) => s.id.toString() === formData.status_type_id,
-              );
-              if (!status) return false;
-              const n = status.name.toLowerCase();
-              // Show if status implies absence
-              return !(
-                n.includes("משרד") ||
-                n.includes("נוכח") ||
-                n.includes("ביחידה") ||
-                n.includes("רגיל")
-              );
-            })() && (
-              <div className="pt-2 border-t border-border/40 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-sm font-black text-primary flex items-center gap-2">
-                        <UserPlus className="w-4 h-4" />
-                        מינוי מפקד מחליף
+          {/* Delegation Section - Only for Commanders updating themselves */}
+          {user?.is_commander && employee?.id === user.id && (
+            <div className="pt-4 border-t border-border/40 animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent rounded-3xl p-5 border border-primary/10 space-y-5 shadow-inner">
+                {employee.active_delegate_id ? (
+                  // Case: Already delegated
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-sm font-bold text-amber-600 flex items-center gap-2">
+                        <div className="p-1.5 bg-amber-100 rounded-lg">
+                          <UserPlus className="w-4 h-4" />
+                        </div>
+                        פיקוד מואצל פעיל
                       </Label>
-                      <p className="text-[10px] text-muted-foreground font-medium">
-                        האם תרצה למנות נציג מהחוליה שיחליף אותך בהיעדרותך?
+                      <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                        האצלת סמכויות ל:{" "}
+                        <span className="font-black text-foreground underline decoration-amber-500/30 underline-offset-2">
+                          {candidates.find(
+                            (c) => c.id === employee.active_delegate_id,
+                          )?.first_name || "ממלא מקום"}{" "}
+                          {candidates.find(
+                            (c) => c.id === employee.active_delegate_id,
+                          )?.last_name || ""}
+                        </span>
                       </p>
                     </div>
-                    <Switch
-                      checked={isDelegating}
-                      onCheckedChange={setIsDelegating}
-                      className="data-[state=checked]:bg-primary"
-                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 px-4 rounded-xl border-amber-600/20 bg-amber-600/10 text-amber-700 hover:bg-amber-600 hover:text-white transition-all text-[11px] font-black shadow-lg shadow-amber-600/5 active:scale-95 whitespace-nowrap"
+                      onClick={handleRevokeDelegation}
+                      disabled={loading}
+                    >
+                      ביטול האצלה
+                    </Button>
                   </div>
+                ) : (
+                  // Case: Not delegated, show option if status implies absence
+                  (() => {
+                    const status = statusTypes.find(
+                      (s) => s.id.toString() === formData.status_type_id,
+                    );
+                    if (!status) return null;
+                    const n = status.name.toLowerCase();
+                    const isAbsent = !(
+                      n.includes("משרד") ||
+                      n.includes("נוכח") ||
+                      n.includes("ביחידה") ||
+                      n.includes("רגיל")
+                    );
 
-                  {isDelegating && (
-                    <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
-                      <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1">
-                        בחר מחליף מהחוליה
-                      </Label>
-                      <Select
-                        value={delegateId}
-                        onValueChange={setDelegateId}
-                        dir="rtl"
-                      >
-                        <SelectTrigger className="h-11 rounded-xl bg-background border-primary/20 focus:ring-primary/20 text-right">
-                          <SelectValue placeholder="בחר חבר צוות..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {candidates.map((c) => (
-                            <SelectItem key={c.id} value={c.id.toString()}>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold">
-                                  {c.first_name} {c.last_name}
-                                </span>
-                                <span className="text-xs text-muted-foreground font-mono">
-                                  ({c.personal_number})
-                                </span>
+                    if (!isAbsent && candidates.length > 0) return null;
+
+                    return (
+                      <>
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <Label className="text-sm font-black text-primary flex items-center gap-2 tracking-tight">
+                              <div className="p-1.5 bg-primary/10 rounded-lg">
+                                <UserPlus className="w-4 h-4" />
                               </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-[10px] text-amber-600/80 font-medium pr-1">
-                        * למחליף תינתן הרשאת צפייה ודיווח עבור החוליה בלבד
-                        לתקופת ההיעדרות.
-                      </p>
-                    </div>
-                  )}
-                </div>
+                              מינוי מפקד מחליף
+                            </Label>
+                            <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                              האם תרצה למנות נציג מהחוליה שיחליף אותך בהיעדרותך?
+                            </p>
+                          </div>
+                          <Switch
+                            checked={isDelegating}
+                            onCheckedChange={setIsDelegating}
+                            className="scale-110 data-[state=checked]:bg-primary shadow-lg shadow-primary/20"
+                          />
+                        </div>
+
+                        {isDelegating && candidates.length > 0 && (
+                          <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1">
+                              בחר מחליף מהחוליה
+                            </Label>
+                            <Select
+                              value={delegateId}
+                              onValueChange={setDelegateId}
+                              dir="rtl"
+                            >
+                              <SelectTrigger className="h-11 rounded-xl bg-background border-primary/20 focus:ring-primary/20 text-right">
+                                <SelectValue placeholder="בחר חבר צוות..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {candidates.map((c) => (
+                                  <SelectItem
+                                    key={c.id}
+                                    value={c.id.toString()}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold">
+                                        {c.first_name} {c.last_name}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground font-mono">
+                                        ({c.personal_number})
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-[10px] text-amber-600/80 font-medium pr-1">
+                              * למחליף תינתן הרשאת צפייה ודיווח עבור החוליה בלבד
+                              לתקופת ההיעדרות.
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()
+                )}
               </div>
-            )}
+            </div>
+          )}
         </div>
 
         {/* Action Footer */}

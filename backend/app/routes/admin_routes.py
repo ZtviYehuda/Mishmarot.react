@@ -384,9 +384,9 @@ def trigger_birthday_report():
         return jsonify({"error": "Unauthorized"}), 403
 
     try:
-        from app.utils.reminder_service import check_and_send_weekly_birthday_report
+        from app.utils.reminder_service import check_and_send_morning_reminders
 
-        check_and_send_weekly_birthday_report()
+        check_and_send_morning_reminders(force_now=True)
         return jsonify(
             {
                 "success": True,

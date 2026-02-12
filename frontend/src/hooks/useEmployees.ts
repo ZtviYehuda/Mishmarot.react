@@ -374,5 +374,20 @@ export const useEmployees = () => {
       }
     }, []),
     updatePreferences,
+    cancelDelegation: async (delegationId?: number) => {
+      setLoading(true);
+      try {
+        await apiClient.post(endpoints.EMPLOYEES_CANCEL_DELEGATION_ENDPOINT, {
+          delegation_id: delegationId,
+        });
+        await fetchEmployees();
+        return true;
+      } catch (err: any) {
+        setError(err.response?.data?.error || "Failed to cancel delegation");
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
   };
 };

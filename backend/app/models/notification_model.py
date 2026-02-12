@@ -393,6 +393,50 @@ class NotificationModel:
                         }
                     )
 
+            # 7. Check for Active Delegations
+            # Case A: User IS a temp commander
+            if requesting_user.get("is_temp_commander"):
+                cur.execute(
+                    "SELECT first_name, last_name FROM employees WHERE id = %s",
+                    (requesting_user.get("delegated_from_commander_id"),),
+                )
+                orig = cur.fetchone()
+                orig_name = (
+                    f"{orig['first_name']} {orig['last_name']}" if orig else "המפקד"
+                )
+                alerts.append(
+                    {
+                        "id": "active-temp-commander",
+                        "type": "info",
+                        "title": "פיקוד זמני פעיל",
+                        "description": f"הנך ממלא מקום של {orig_name} ובעל סמכויות דיווח על הצוות",
+                        "link": "/",
+                    }
+                )
+
+            # Case B: User HAS delegated their command
+            if requesting_user.get("active_delegate_id"):
+                cur.execute(
+                    "SELECT first_name, last_name FROM employees WHERE id = %s",
+                    (requesting_user.get("active_delegate_id"),),
+                )
+                delegate = cur.fetchone()
+                delegate_name = (
+                    f"{delegate['first_name']} {delegate['last_name']}"
+                    if delegate
+                    else "ממלא מקום"
+                )
+                alerts.append(
+                    {
+                        "id": "command-delegated",
+                        "type": "warning",
+                        "title": "פיקוד מואצל",
+                        "description": f"האצלת את סמכויות הדיווח שלך ל{delegate_name}. ניתן לבטל זאת בכל עת.",
+                        "link": "/",
+                        "data": {"is_delegation": True, "delegate_name": delegate_name},
+                    }
+                )
+
         finally:
             conn.close()
 

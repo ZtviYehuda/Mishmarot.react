@@ -741,10 +741,14 @@ class EmployeeModel:
             return True
         except Exception as e:
             conn.rollback()
-            print(f"Error updating: {e}")
             import traceback
 
-            print(traceback.format_exc())
+            error_trace = traceback.format_exc()
+            print(f"❌ Error updating employee {emp_id}: {e}")
+            print(error_trace)
+            # Re-raising for the route to catch it if possible,
+            # or we can return False if we want to stick to the original pattern
+            # but now we have more logs.
             return False
         finally:
             conn.close()
@@ -868,6 +872,43 @@ class EmployeeModel:
         except Exception as e:
             conn.rollback()
             print(f"Error changing password: {e}")
+            return False, str(e)
+        finally:
+            conn.close()
+
+    @staticmethod
+    def cancel_delegation(commander_id=None, delegation_id=None):
+        conn = get_db_connection()
+        if not conn:
+            return False, "Database connection failed"
+        try:
+            cur = conn.cursor()
+            if delegation_id:
+                cur.execute(
+                    "UPDATE delegations SET is_active = FALSE WHERE id = %s",
+                    (delegation_id,),
+                )
+            elif commander_id:
+                # Cancel current active delegation for this commander
+                cur.execute(
+                    """
+                    UPDATE delegations 
+                    SET is_active = FALSE 
+                    WHERE commander_id = %s 
+                      AND is_active = TRUE
+                      AND start_date <= NOW() 
+                      AND (end_date IS NULL OR end_date >= NOW())
+                """,
+                    (commander_id,),
+                )
+            else:
+                return False, "Missing identifier for delegation"
+
+            conn.commit()
+            return True, "Delegation cancelled"
+        except Exception as e:
+            conn.rollback()
+            print(f"Error cancel_delegation: {e}")
             return False, str(e)
         finally:
             conn.close()

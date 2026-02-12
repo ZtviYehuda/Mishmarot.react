@@ -55,6 +55,11 @@ export interface Employee {
 
   // Profile Picture
   profile_picture?: string | null;
+
+  // Delegation
+  is_temp_commander?: boolean;
+  delegated_from_commander_id?: number | null;
+  active_delegate_id?: number | null;
 }
 
 export interface CreateEmployeePayload {
