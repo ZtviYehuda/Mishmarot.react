@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@100..900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -8,11 +8,15 @@
   font-family: "Noto Sans Hebrew", sans-serif;
 }
 
+html,
 body {
   direction: rtl;
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 /* Base transitions - scoped for better performance */
@@ -138,6 +142,18 @@ body {
     --secondary: #eff6ff;
     --accent: #eff6ff;
   }
+
+  &.accent-zinc {
+    --primary: #475569;
+    --secondary: #f1f5f9;
+    --accent: #f1f5f9;
+  }
+
+  &.accent-violet {
+    --primary: #7c3aed;
+    --secondary: #f5f3ff;
+    --accent: #f5f3ff;
+  }
 }
 
 .dark {
@@ -169,6 +185,18 @@ body {
     --primary: #0074ff;
     --secondary: #001e30;
     --accent: #001e30;
+  }
+
+  &.accent-zinc {
+    --primary: #94a3b8;
+    --secondary: #0f172a;
+    --accent: #0f172a;
+  }
+
+  &.accent-violet {
+    --primary: #a78bfa;
+    --secondary: #2e1065;
+    --accent: #2e1065;
   }
 }
 

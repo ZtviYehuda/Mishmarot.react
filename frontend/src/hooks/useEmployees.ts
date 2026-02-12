@@ -227,6 +227,21 @@ export const useEmployees = () => {
     }
   };
 
+  // Update Preferences
+  const updatePreferences = async (prefs: {
+    theme?: string;
+    accent_color?: string;
+    font_size?: string;
+  }) => {
+    try {
+      await apiClient.put(endpoints.EMPLOYEES_PREFERENCES_ENDPOINT, prefs);
+      return true;
+    } catch (err: any) {
+      console.error("Failed to update preferences", err);
+      return false;
+    }
+  };
+
   return {
     employees,
     loading,
@@ -358,5 +373,6 @@ export const useEmployees = () => {
         return [];
       }
     }, []),
+    updatePreferences,
   };
 };

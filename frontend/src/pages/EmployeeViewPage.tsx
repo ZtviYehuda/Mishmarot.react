@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import apiClient from "@/config/api.client";
 import type { Employee } from "@/types/employee.types";
 import {
@@ -71,7 +71,7 @@ const PersonalTab = ({ employee }: { employee: Employee }) => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
           <DetailBox
-            label="שם מלא"
+            label="שם מלא (פרטי ומשפחה)"
             value={`${employee.first_name} ${employee.last_name}`}
             icon={User}
             highlight
@@ -145,7 +145,7 @@ const PersonalTab = ({ employee }: { employee: Employee }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-xs font-semibold text-red-600/70 block mb-1">
-                    שם מלא
+                    שם מלא (פרטי ומשפחה)
                   </span>
                   <span className="font-bold text-foreground">
                     {emergencyName || "—"}
@@ -179,7 +179,13 @@ const PersonalTab = ({ employee }: { employee: Employee }) => {
   );
 };
 
-const HistoryTab = ({ employeeId }: { employeeId: number }) => {
+const HistoryTab = ({
+  employeeId,
+  initialDate,
+}: {
+  employeeId: number;
+  initialDate?: Date;
+}) => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <CompactCard
@@ -189,7 +195,11 @@ const HistoryTab = ({ employeeId }: { employeeId: number }) => {
           </span>
         }
       >
-        <StatusHistoryList employeeId={employeeId} />
+        <StatusHistoryList
+          employeeId={employeeId}
+          showControls
+          initialDate={initialDate}
+        />
       </CompactCard>
     </div>
   );
@@ -200,6 +210,20 @@ const HistoryTab = ({ employeeId }: { employeeId: number }) => {
 export default function EmployeeViewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const dateParam = searchParams.get("date");
+  const initialDate = useMemo(() => {
+    if (!dateParam) return undefined;
+    const parts = dateParam.split("-");
+    if (parts.length === 3) {
+      return new Date(
+        parseInt(parts[0]),
+        parseInt(parts[1]) - 1,
+        parseInt(parts[2]),
+      );
+    }
+    return undefined;
+  }, [dateParam]);
   const { user } = useAuthContext();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
@@ -265,7 +289,7 @@ export default function EmployeeViewPage() {
       />
 
       {/* Header */}
-      <div className="bg-background border-b border-border/60 py-8 shadow-sm">
+      <div className="bg-background/95 backdrop-blur-sm border-b border-border/60 py-8 shadow-sm sticky top-0 z-10">
         <div className="max-w-[1600px] mx-auto px-6">
           <PageHeader
             icon={User}
@@ -285,7 +309,7 @@ export default function EmployeeViewPage() {
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-6 mt-8">
+      <div className="max-w-[1600px] mx-auto px-6 mt-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* RIGHT SIDEBAR (Sticky) */}
           <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6 order-2">
@@ -449,7 +473,10 @@ export default function EmployeeViewPage() {
             <div className="space-y-8">
               <PersonalTab employee={employee} />
               {!user?.is_temp_commander && (
-                <HistoryTab employeeId={employee.id} />
+                <HistoryTab
+                  employeeId={employee.id}
+                  initialDate={initialDate}
+                />
               )}
             </div>
           </div>

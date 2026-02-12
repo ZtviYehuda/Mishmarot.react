@@ -4,6 +4,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/employee.types";
 import { toast } from "sonner";
+import { Cake, ShieldCheck } from "lucide-react";
 
 interface EmployeeLinkProps {
   employee: Employee | number;
@@ -51,6 +52,23 @@ export const EmployeeLink: React.FC<EmployeeLinkProps> = ({
         </span>
       )}
       <span>{displayName}</span>
+      {typeof employee === "object" && (
+        <div className="flex items-center gap-1 mr-1">
+          {employee.is_commander && (
+            <span title="מפקד">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 drop-shadow-sm" />
+            </span>
+          )}
+          {employee.birth_date &&
+            new Date(employee.birth_date).getDate() === new Date().getDate() &&
+            new Date(employee.birth_date).getMonth() ===
+              new Date().getMonth() && (
+              <span title="יום הולדת שמח!">
+                <Cake className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400 drop-shadow-sm animate-bounce" />
+              </span>
+            )}
+        </div>
+      )}
     </button>
   );
 };

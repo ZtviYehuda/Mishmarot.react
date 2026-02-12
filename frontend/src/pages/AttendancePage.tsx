@@ -46,6 +46,7 @@ import {
   StatusHistoryModal,
   ExportReportDialog,
 } from "@/components/employees/modals";
+import { DailyAttendanceModal } from "@/components/attendance/DailyAttendanceModal";
 import { History } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DateHeader } from "@/components/common/DateHeader";
@@ -86,6 +87,7 @@ export default function AttendancePage() {
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [dailyModalOpen, setDailyModalOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null,
@@ -327,11 +329,26 @@ export default function AttendancePage() {
     }
   };
 
-  const updatedTodayCount = scopeEmployees.filter(
-    (emp) =>
+  const isReportedOnDate = (emp: any, date: Date) => {
+    if (!emp.status_id) return false;
+    // Status started on the selected day
+    const isStartedOnDay =
       emp.last_status_update &&
-      new Date(emp.last_status_update).toDateString() ===
-      selectedDate.toDateString(),
+      new Date(emp.last_status_update).toDateString() === date.toDateString();
+    if (isStartedOnDay) return true;
+
+    // Planned Absence (Vacation, Sick, etc.) - counts as reported for the duration
+    if (emp.status_is_presence === false) return true;
+
+    // Status has a future/current end date (planned range)
+    if (emp.status_end_datetime && new Date(emp.status_end_datetime) >= date)
+      return true;
+
+    return false;
+  };
+
+  const updatedTodayCount = scopeEmployees.filter((emp) =>
+    isReportedOnDate(emp, selectedDate),
   ).length;
 
   const totalCount = scopeEmployees.length;
@@ -348,10 +365,9 @@ export default function AttendancePage() {
     return "שוטר";
   };
 
-  const isReportedToday =
-    currentUserEmp?.last_status_update &&
-    new Date(currentUserEmp.last_status_update).toDateString() ===
-    selectedDate.toDateString();
+  const isReportedToday = currentUserEmp
+    ? isReportedOnDate(currentUserEmp, selectedDate)
+    : false;
 
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
@@ -379,6 +395,14 @@ export default function AttendancePage() {
                 >
                   <Download className="w-4 h-4" />
                   <span className="text-sm">ייצוא</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-12 rounded-2xl border-input gap-2 font-black text-muted-foreground hover:bg-muted lg:px-6 lg:w-auto"
+                  onClick={() => setDailyModalOpen(true)}
+                >
+                  <CalendarDays className="w-4 h-4" />
+                  <span className="text-sm">יומן</span>
                 </Button>
                 <Button
                   variant={isReportedToday ? "default" : "outline"}
@@ -1086,10 +1110,7 @@ export default function AttendancePage() {
                 </TableRow>
               ) : (
                 filteredEmployees.map((emp) => {
-                  const isUpdatedToday =
-                    emp.last_status_update &&
-                    new Date(emp.last_status_update).toDateString() ===
-                    selectedDate.toDateString();
+                  const isUpdatedToday = isReportedOnDate(emp, selectedDate);
                   const isSelected = selectedEmployeeIds.includes(emp.id);
 
                   return (
@@ -1100,9 +1121,9 @@ export default function AttendancePage() {
                         "group hover:bg-muted/50 transition-colors border-b border-border",
                         isSelected && "bg-primary/5 hover:bg-primary/10",
                         user &&
-                        emp.id === user.id &&
-                        !isSelected &&
-                        "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
+                          emp.id === user.id &&
+                          !isSelected &&
+                          "bg-emerald-500/5 hover:bg-emerald-500/10 border-r-4 border-r-emerald-500",
                       )}
                     >
                       <TableCell className="text-center px-4 py-4 align-middle">
@@ -1228,7 +1249,7 @@ export default function AttendancePage() {
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span className="text-xs font-bold">
                               {selectedDate.toDateString() ===
-                                new Date().toDateString()
+                              new Date().toDateString()
                                 ? "היום"
                                 : format(selectedDate, "dd/MM")}
                               ,{" "}
@@ -1324,7 +1345,7 @@ export default function AttendancePage() {
               const isUpdatedToday =
                 emp.last_status_update &&
                 new Date(emp.last_status_update).toDateString() ===
-                selectedDate.toDateString();
+                  selectedDate.toDateString();
               const isSelected = selectedEmployeeIds.includes(emp.id);
 
               return (
@@ -1510,6 +1531,10 @@ export default function AttendancePage() {
       <ExportReportDialog
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
+      />
+      <DailyAttendanceModal
+        isOpen={dailyModalOpen}
+        onClose={() => setDailyModalOpen(false)}
       />
     </div>
   );

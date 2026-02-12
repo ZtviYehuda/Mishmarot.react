@@ -32,3 +32,12 @@ coverage/
 # Specific files
 frontend/.env
 backend/.env
+
+# Backups
+backend/backups/
+
+# Temporary / Scratch files
+*_snippet
+debug_query.py
+*.sql
+

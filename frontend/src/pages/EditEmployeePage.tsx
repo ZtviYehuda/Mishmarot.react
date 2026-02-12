@@ -103,7 +103,11 @@ const PersonalEditTab = ({
         }
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
-          <InputItem label="שם מלא (פרטי ומשפחה)" required icon={User}>
+          <InputItem
+            label="שם מלא (פרטי ומשפחה) (פרטי ומשפחה)"
+            required
+            icon={User}
+          >
             <div className="flex gap-2">
               <Input
                 value={formData.first_name || ""}
@@ -230,7 +234,10 @@ const PersonalEditTab = ({
             </h4>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <InputItem label="שם מלא" className="bg-transparent">
+                <InputItem
+                  label="שם מלא (פרטי ומשפחה)"
+                  className="bg-transparent"
+                >
                   <Input
                     value={emergencyDetails.name}
                     onChange={(e) =>

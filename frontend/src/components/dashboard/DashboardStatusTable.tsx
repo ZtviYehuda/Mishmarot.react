@@ -91,7 +91,7 @@ export const DashboardStatusTable = ({
                 <thead>
                   <tr className="bg-muted/50 border-b border-border">
                     <th className="px-6 py-3 text-xs font-black text-muted-foreground uppercase tracking-wider">
-                      שם מלא
+                      שם מלא (פרטי ומשפחה)
                     </th>
                     <th className="px-6 py-3 text-xs font-black text-muted-foreground uppercase tracking-wider">
                       מ.א

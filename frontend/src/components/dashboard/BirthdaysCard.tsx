@@ -193,6 +193,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                       <div className="flex-1 min-w-0">
                         <EmployeeLink
                           employee={employee.id}
+                          name={`${employee.first_name} ${employee.last_name}`}
                           className={cn(
                             "text-sm font-black truncate block hover:text-primary transition-colors",
                             isToday ? "text-primary" : "text-foreground",

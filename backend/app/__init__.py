@@ -80,14 +80,6 @@ def create_app():
         except Exception as e:
             print(f"⚠️ Database setup warning: {e}")
 
-    # Start Background Scheduler
-    try:
-        from app.utils.scheduler import start_scheduler
-
-        start_scheduler()
-    except Exception as e:
-        print(f"⚠️ Scheduler start warning: {e}")
-
     # --- רישום הנתיבים (Blueprints) ---
     # זה החלק שחסר או שגוי אצלך שגורם לשגיאת 404
     from app.routes.auth_routes import auth_bp

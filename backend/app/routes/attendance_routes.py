@@ -44,36 +44,36 @@ def get_status_types():
 def get_stats():
     try:
         identity_str = get_jwt_identity()
-        print(f"[DEBUG] identity_str: {identity_str}, type: {type(identity_str)}")
-
-        # Try to parse as JSON
         try:
             identity = (
                 json.loads(identity_str)
                 if isinstance(identity_str, str)
                 else identity_str
             )
-            user_id = identity.get("id") if isinstance(identity, dict) else identity
+            raw_id = identity.get("id") if isinstance(identity, dict) else identity
+            try:
+                user_id = int(raw_id)
+            except (ValueError, TypeError):
+                user_id = raw_id
         except (json.JSONDecodeError, AttributeError):
-            # If not JSON, treat as plain ID
             user_id = identity_str
-
-        print(f"[DEBUG] user_id: {user_id}")
 
         from app.models.employee_model import EmployeeModel
 
         requester = EmployeeModel.get_employee_by_id(user_id)
 
         # Parse filters for drill-down
-        # Parse filters for drill-down
         filters = {}
-        if request.args.get("department_id"):
+        if (
+            request.args.get("department_id")
+            and request.args.get("department_id").isdigit()
+        ):
             filters["department_id"] = int(request.args.get("department_id"))
-        if request.args.get("section_id"):
+        if request.args.get("section_id") and request.args.get("section_id").isdigit():
             filters["section_id"] = int(request.args.get("section_id"))
-        if request.args.get("team_id"):
+        if request.args.get("team_id") and request.args.get("team_id").isdigit():
             filters["team_id"] = int(request.args.get("team_id"))
-        if request.args.get("status_id"):
+        if request.args.get("status_id") and request.args.get("status_id").isdigit():
             filters["status_id"] = int(request.args.get("status_id"))
         if request.args.get("date"):
             filters["date"] = request.args.get("date")
@@ -174,6 +174,62 @@ def get_trend_stats():
         return jsonify(data)
     except Exception as e:
         print(f"❌ Error in /stats/trend: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@att_bp.route("/daily-log", methods=["GET"])
+@jwt_required()
+def get_daily_log():
+    try:
+        identity_str = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_str)
+                if isinstance(identity_str, str)
+                else identity_str
+            )
+            # Ensure user_id is an integer if possible
+            raw_id = identity.get("id") if isinstance(identity, dict) else identity
+            try:
+                user_id = int(raw_id)
+            except (ValueError, TypeError):
+                user_id = raw_id  # Fallback to original (could be PN)
+        except (json.JSONDecodeError, AttributeError):
+            user_id = identity_str
+
+        from app.models.employee_model import EmployeeModel
+
+        requester = EmployeeModel.get_employee_by_id(user_id)
+
+        date_str = request.args.get("date")
+        if not date_str:
+            return jsonify({"error": "Missing date parameter"}), 400
+
+        filters = {}
+        if (
+            request.args.get("department_id")
+            and request.args.get("department_id").isdigit()
+        ):
+            filters["department_id"] = int(request.args.get("department_id"))
+        if request.args.get("section_id") and request.args.get("section_id").isdigit():
+            filters["section_id"] = int(request.args.get("section_id"))
+        if request.args.get("team_id") and request.args.get("team_id").isdigit():
+            filters["team_id"] = int(request.args.get("team_id"))
+        if request.args.get("status_id") and request.args.get("status_id").isdigit():
+            filters["status_id"] = int(request.args.get("status_id"))
+
+        logs = AttendanceModel.get_daily_attendance_log(
+            date_str, requesting_user=requester, filters=filters
+        )
+        return jsonify(logs)
+    except Exception as e:
+        import traceback
+
+        with open("backend_error.log", "a") as f:
+            f.write(f"\n--- ERROR in /daily-log at {datetime.now()} ---\n")
+            f.write(traceback.format_exc())
+            f.write("\n")
+        print(f"❌ Error in /daily-log: {e}")
         return jsonify({"error": str(e)}), 500
 
 

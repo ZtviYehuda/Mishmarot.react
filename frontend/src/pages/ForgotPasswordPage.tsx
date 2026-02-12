@@ -2,7 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Mail, ShieldCheck, Loader2, KeyRound, CheckCircle2, Lock } from "lucide-react";
+import {
+  ArrowRight,
+  Mail,
+  ShieldCheck,
+  Loader2,
+  KeyRound,
+  CheckCircle2,
+  Lock,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -83,7 +91,7 @@ export default function ForgotPasswordPage() {
   return (
     <div
       className={cn(
-        "min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500",
+        "h-screen overflow-y-auto flex flex-col items-center justify-start py-12 md:py-20 p-4 relative transition-colors duration-500 custom-scrollbar",
         isDark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800",
       )}
       dir="rtl"
@@ -120,7 +128,7 @@ export default function ForgotPasswordPage() {
                   isDark
                     ? "bg-blue-500/10 text-blue-400"
                     : "bg-blue-50/50 text-blue-600",
-                  stage === "SUCCESS" && "bg-green-500/10 text-green-500"
+                  stage === "SUCCESS" && "bg-green-500/10 text-green-500",
                 )}
               >
                 {stage === "SUCCESS" ? (

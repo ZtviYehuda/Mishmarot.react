@@ -188,9 +188,10 @@ class NotificationModel:
                         }
                     )
 
-
             # 3. Check for Missing Morning Reports (if enabled)
-            if requesting_user.get("notif_morning_report", True) and (requesting_user.get("is_commander") or requesting_user.get("is_admin")):
+            if requesting_user.get("notif_morning_report", True) and (
+                requesting_user.get("is_commander") or requesting_user.get("is_admin")
+            ):
                 missing_query = """
                     SELECT COUNT(e.id) as count
                     FROM employees e
@@ -221,22 +222,26 @@ class NotificationModel:
                           (t.id = %s)
                       )
                     """
-                    params_missing.extend([
-                        requesting_user.get("commands_department_id"),
-                        requesting_user.get("commands_section_id"),
-                        requesting_user.get("commands_team_id")
-                    ])
+                    params_missing.extend(
+                        [
+                            requesting_user.get("commands_department_id"),
+                            requesting_user.get("commands_section_id"),
+                            requesting_user.get("commands_team_id"),
+                        ]
+                    )
 
                 cur.execute(missing_query, params_missing)
                 res_missing = cur.fetchone()
                 if res_missing and res_missing["count"] > 0:
-                    alerts.append({
-                        "id": "missing-reports",
-                        "type": "warning",
-                        "title": "אי-דיווח בוקר ביחידה",
-                        "description": f"ישנם {res_missing['count']} שוטרים ביחידתך שטרם הוזן להם סטטוס להיום",
-                        "link": "/attendance"
-                    })
+                    alerts.append(
+                        {
+                            "id": "missing-reports",
+                            "type": "warning",
+                            "title": "אי-דיווח בוקר ביחידה",
+                            "description": f"ישנם {res_missing['count']} שוטרים ביחידתך שטרם הוזן להם סטטוס להיום",
+                            "link": "/attendance",
+                        }
+                    )
 
             # 4. Check for Internal Messages
             query_msgs = """
@@ -369,6 +374,25 @@ class NotificationModel:
                             },
                         }
                     )
+
+            # 6. Check for Suspicious Activity (Admins Only)
+            if requesting_user.get("is_admin"):
+                from app.models.audit_log_model import AuditLogModel
+
+                suspicious_logs = AuditLogModel.get_suspicious_activity(limit=5)
+                if suspicious_logs:
+                    # Log IDs were used to avoid duplicates, but we need a unique ID for the alert
+                    # We'll use a hash or just 'suspicious-activity-alert'
+                    alerts.append(
+                        {
+                            "id": "suspicious-activity",
+                            "type": "danger",
+                            "title": "התראת אבטחה: פעילות חשודה",
+                            "description": f"זוהו {len(suspicious_logs)} אירועים חריגים במערכת הדורשים בדיקה",
+                            "link": "/settings?tab=security",
+                        }
+                    )
+
         finally:
             conn.close()
 

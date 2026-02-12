@@ -52,6 +52,9 @@ export interface Employee {
   commands_department_id?: number | null;
   commands_section_id?: number | null;
   commands_team_id?: number | null;
+
+  // Profile Picture
+  profile_picture?: string | null;
 }
 
 export interface CreateEmployeePayload {

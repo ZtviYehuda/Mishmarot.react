@@ -206,8 +206,7 @@ export function NotificationSettings({
                     תדירות עדכונים
                   </span>
                   <p className="text-muted-foreground">
-                    ההתראות נשלחות בזמן אמת למערכת, ופעם ביום כסיכום למייל
-                    האדום.
+                    ההתראות נשלחות בזמן אמת למערכת, ופעם ביום כסיכום למייל.
                   </p>
                 </div>
               </div>

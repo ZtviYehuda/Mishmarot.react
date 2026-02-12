@@ -10,13 +10,13 @@ import { DateProvider } from "./context/DateContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <ThemeProvider>
         <DateProvider>
           <AppRouter />
           <Toaster richColors position="top-center" dir="rtl" />
         </DateProvider>
-      </AuthProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </AuthProvider>
   </StrictMode>,
 );

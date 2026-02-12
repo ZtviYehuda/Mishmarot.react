@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.models.employee_model import EmployeeModel
+from app.models.audit_log_model import AuditLogModel
 import pandas as pd
 import io
 import json
@@ -104,6 +105,17 @@ def create_employee():
 
     try:
         new_id = EmployeeModel.create_employee(data)
+
+        # Log Creation
+        AuditLogModel.log_action(
+            user_id=user_id,
+            action_type="EMPLOYEE_CREATE",
+            description=f"Created new employee: {data.get('first_name')} {data.get('last_name')} (P-Num: {data.get('personal_number')})",
+            target_id=new_id,
+            ip_address=request.remote_addr,
+            metadata=data,
+        )
+
         return (
             jsonify({"success": True, "id": new_id, "message": "השוטר נוצר בהצלחה"}),
             201,
@@ -160,6 +172,15 @@ def update_employee(emp_id):
             data[key] = None
 
     if EmployeeModel.update_employee(emp_id, data):
+        # Log Update
+        AuditLogModel.log_action(
+            user_id=user_id,
+            action_type="EMPLOYEE_UPDATE",
+            description=f"Updated employee details for ID {emp_id}",
+            target_id=emp_id,
+            ip_address=request.remote_addr,
+            metadata=data,
+        )
         return jsonify({"success": True, "message": "User updated"})
     return jsonify({"success": False, "error": "Update failed"}), 500
 
@@ -187,6 +208,14 @@ def delete_employee(emp_id):
         return jsonify({"success": False, "error": "Admins only"}), 403
 
     if EmployeeModel.delete_employee(emp_id):
+        # Log Deletion
+        AuditLogModel.log_action(
+            user_id=user_id,
+            action_type="EMPLOYEE_DELETE",
+            description=f"Deleted employee with ID {emp_id}",
+            target_id=emp_id,
+            ip_address=request.remote_addr,
+        )
         return jsonify({"success": True, "message": "User deleted"})
     return jsonify({"success": False, "error": "Delete failed"}), 500
 
@@ -288,7 +317,7 @@ def export_excel():
         for emp in employees:
             eid = emp["id"]
             row = {
-                "שם מלא": f"{emp['first_name']} {emp['last_name']}",
+                "שם מלא (פרטי ומשפחה)": f"{emp['first_name']} {emp['last_name']}",
                 "מספר אישי": emp["personal_number"],
                 "מחלקה": emp["department_name"] or "-",
                 "מדור": emp["section_name"] or "-",
@@ -425,3 +454,29 @@ def get_delegation_candidates():
 
     candidates = EmployeeModel.get_team_members_for_commander(user_id)
     return jsonify(candidates)
+
+
+@emp_bp.route("/preferences", methods=["PUT"])
+@jwt_required()
+def update_preferences():
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "error": "No data provided"}), 400
+
+    theme = data.get("theme")
+    accent_color = data.get("accent_color")
+    font_size = data.get("font_size")
+
+    if EmployeeModel.update_preferences(user_id, theme, accent_color, font_size):
+        return jsonify({"success": True, "message": "Preferences updated"})
+    return jsonify({"success": False, "error": "Update failed"}), 500

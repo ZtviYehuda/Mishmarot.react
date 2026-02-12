@@ -204,38 +204,38 @@ export function AppearanceSettings({
               <div className="grid grid-cols-1 gap-3">
                 {[
                   {
-                    name: "zinc",
-                    label: "אפור (Default)",
-                    hex: "#18181b",
-                    class: "bg-zinc-950",
-                  },
-                  {
                     name: "blue",
-                    label: "כחול (Ocean)",
-                    hex: "#2563eb",
+                    label: "כחול (ברירת מחדל)",
+                    hex: "#0074ff",
                     class: "bg-blue-600",
                   },
                   {
+                    name: "zinc",
+                    label: "אפור",
+                    hex: "#475569",
+                    class: "bg-slate-600",
+                  },
+                  {
                     name: "emerald",
-                    label: "ירוק (Forest)",
+                    label: "ירוק",
                     hex: "#059669",
                     class: "bg-emerald-600",
                   },
                   {
                     name: "violet",
-                    label: "סגול (Royal)",
+                    label: "סגול",
                     hex: "#7c3aed",
                     class: "bg-violet-600",
                   },
                   {
                     name: "amber",
-                    label: "כתום (Sunset)",
+                    label: "כתום",
                     hex: "#d97706",
                     class: "bg-amber-600",
                   },
                   {
                     name: "rose",
-                    label: "אדום (Rose)",
+                    label: "אדום",
                     hex: "#e11d48",
                     class: "bg-rose-600",
                   },

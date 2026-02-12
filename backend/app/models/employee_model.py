@@ -13,7 +13,8 @@ class EmployeeModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
                 SELECT id, first_name, last_name, personal_number, 
-                       password_hash, must_change_password, is_admin, is_commander
+                       password_hash, must_change_password, is_admin, is_commander,
+                       theme, accent_color, font_size
                 FROM employees 
                 WHERE personal_number = %s AND is_active = TRUE
             """
@@ -64,6 +65,7 @@ class EmployeeModel:
                        e.security_clearance, e.police_license, e.is_active,
                        e.must_change_password, e.is_admin, e.is_commander,
                        e.last_password_change, e.gender,
+                       e.theme, e.accent_color, e.font_size,
                        e.service_type_id, svt.name as service_type_name,
                        COALESCE(d.name, d_s_dir.name, d_dir.name) as department_name, 
                        COALESCE(s.name, s_dir.name) as section_name, 
@@ -71,6 +73,8 @@ class EmployeeModel:
                        st.id as status_id,
                        st.name as status_name, 
                        st.color as status_color,
+                       st.is_presence as status_is_presence,
+                       al.end_datetime as status_end_datetime,
                        al.start_datetime as last_status_update,
                        r.name as role_name,
                        d.id as assigned_department_id,
@@ -93,7 +97,7 @@ class EmployeeModel:
                 LEFT JOIN service_types svt ON e.service_type_id = svt.id
                 -- Active Status
                 LEFT JOIN LATERAL (
-                    SELECT status_type_id, start_datetime FROM attendance_logs 
+                    SELECT status_type_id, start_datetime, end_datetime FROM attendance_logs 
                     WHERE employee_id = e.id AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)
                     ORDER BY start_datetime DESC, id DESC LIMIT 1
                 ) al ON true
@@ -228,6 +232,8 @@ class EmployeeModel:
                        st.id as status_id,
                        st.name as status_name,
                        st.color as status_color,
+                       st.is_presence as status_is_presence,
+                       last_log.end_datetime as status_end_datetime,
                        last_log.start_datetime as last_status_update,
                        e.service_type_id,
                        srv.name as service_type_name
@@ -243,7 +249,7 @@ class EmployeeModel:
                 LEFT JOIN service_types srv ON e.service_type_id = srv.id
                 -- Status Joins
                 LEFT JOIN LATERAL (
-                    SELECT status_type_id, start_datetime FROM attendance_logs 
+                    SELECT status_type_id, start_datetime, end_datetime FROM attendance_logs 
                     WHERE employee_id = e.id 
                     {status_condition}
                     ORDER BY start_datetime DESC, id DESC LIMIT 1
@@ -1016,5 +1022,38 @@ class EmployeeModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute("SELECT id, name, description FROM roles ORDER BY id")
             return cur.fetchall()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def update_preferences(employee_id, theme=None, accent_color=None, font_size=None):
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+            updates = []
+            params = []
+            if theme is not None:
+                updates.append("theme = %s")
+                params.append(theme)
+            if accent_color is not None:
+                updates.append("accent_color = %s")
+                params.append(accent_color)
+            if font_size is not None:
+                updates.append("font_size = %s")
+                params.append(font_size)
+
+            if not updates:
+                return True
+
+            params.append(employee_id)
+            query = f"UPDATE employees SET {', '.join(updates)} WHERE id = %s"
+            cur.execute(query, tuple(params))
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error updating preferences: {e}")
+            return False
         finally:
             conn.close()

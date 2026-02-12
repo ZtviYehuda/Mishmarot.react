@@ -18,24 +18,25 @@ class AttendanceModel:
             return False
         try:
             cur = conn.cursor()
+            now = datetime.now()
+            start = start_date
+            if not start_date:
+                start = now
+            elif isinstance(start_date, str) and len(start_date) == 10:
+                if start_date == now.strftime("%Y-%m-%d"):
+                    start = now
+
+            # Close previous status at the new status start time
             cur.execute(
                 """
                 UPDATE attendance_logs 
                 SET end_datetime = %s 
                 WHERE employee_id = %s AND end_datetime IS NULL
             """,
-                (datetime.now(), employee_id),
+                (start, employee_id),
             )
 
-            now = datetime.now()
-            start = start_date
-            if not start_date:
-                start = now
-            elif isinstance(start_date, str) and len(start_date) == 10:
-                # If provided string is just YYYY-MM-DD and matches today, use now()
-                if start_date == now.strftime("%Y-%m-%d"):
-                    start = now
-
+            # Insert new status
             cur.execute(
                 """
                 INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by)
@@ -43,6 +44,23 @@ class AttendanceModel:
             """,
                 (employee_id, status_type_id, start, end_date, note, reported_by),
             )
+
+            # --- COMMAND RETURN LOGIC ---
+            # If this is a presence status, automatically return command authority by ending active delegations
+            cur.execute(
+                "SELECT is_presence FROM status_types WHERE id = %s", (status_type_id,)
+            )
+            st_info = cur.fetchone()
+            if st_info and st_info[0]:  # If is_presence is True
+                cur.execute(
+                    """
+                    UPDATE delegations 
+                    SET is_active = FALSE, end_date = %s 
+                    WHERE commander_id = %s AND is_active = TRUE
+                """,
+                    (start, employee_id),
+                )
+
             conn.commit()
             return True
         except Exception as e:
@@ -70,16 +88,6 @@ class AttendanceModel:
                 if not employee_id or not status_type_id:
                     continue
 
-                # Close previous status
-                cur.execute(
-                    """
-                    UPDATE attendance_logs 
-                    SET end_datetime = %s 
-                    WHERE employee_id = %s AND end_datetime IS NULL
-                """,
-                    (now, employee_id),
-                )
-
                 # Insert new status
                 start = start_date
                 if not start_date:
@@ -88,6 +96,16 @@ class AttendanceModel:
                     if start_date == now.strftime("%Y-%m-%d"):
                         start = now
 
+                # Close previous status at the new status start time
+                cur.execute(
+                    """
+                    UPDATE attendance_logs 
+                    SET end_datetime = %s 
+                    WHERE employee_id = %s AND end_datetime IS NULL
+                """,
+                    (start, employee_id),
+                )
+
                 cur.execute(
                     """
                     INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by)
@@ -95,6 +113,23 @@ class AttendanceModel:
                 """,
                     (employee_id, status_type_id, start, end_date, note, reported_by),
                 )
+
+                # --- COMMAND RETURN LOGIC (Bulk) ---
+                cur.execute(
+                    "SELECT is_presence FROM status_types WHERE id = %s",
+                    (status_type_id,),
+                )
+                st_info = cur.fetchone()
+                if st_info and st_info[0]:
+                    cur.execute(
+                        """
+                        UPDATE delegations 
+                        SET is_active = FALSE, end_date = %s 
+                        WHERE commander_id = %s AND is_active = TRUE
+                    """,
+                        (start, employee_id),
+                    )
+
                 print(
                     f"DEBUG: Inserted log for emp {employee_id}, status {status_type_id}, start {start}"
                 )
@@ -752,5 +787,258 @@ class AttendanceModel:
 
             cur.execute(query, tuple(params))
             return cur.fetchall()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_employee_history(employee_id, limit=50):
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            query = """
+                WITH marked_changes AS (
+                    SELECT 
+                        al.id,
+                        al.status_type_id,
+                        al.start_datetime,
+                        al.end_datetime,
+                        al.note,
+                        al.reported_by,
+                        CASE 
+                            WHEN LAG(al.status_type_id) OVER (ORDER BY al.start_datetime) = al.status_type_id THEN 0 
+                            ELSE 1 
+                        END as is_new_group
+                    FROM attendance_logs al
+                    WHERE al.employee_id = %s
+                ),
+                grouped_logs AS (
+                    SELECT 
+                        *,
+                        SUM(is_new_group) OVER (ORDER BY start_datetime) as group_id
+                    FROM marked_changes
+                ),
+                aggregated_history AS (
+                    SELECT 
+                        MIN(gl.id) as id,
+                        st.name as status_name,
+                        st.color as status_color,
+                        MIN(gl.start_datetime) as start_datetime,
+                        CASE 
+                            WHEN BOOL_OR(gl.end_datetime IS NULL) THEN NULL 
+                            ELSE MAX(gl.end_datetime) 
+                        END as end_datetime,
+                        (ARRAY_AGG(gl.note ORDER BY gl.start_datetime))[1] as note,
+                        (ARRAY_AGG(gl.reported_by ORDER BY gl.start_datetime))[1] as reported_by_id
+                    FROM grouped_logs gl
+                    JOIN status_types st ON gl.status_type_id = st.id
+                    GROUP BY gl.group_id, st.id, st.name, st.color
+                )
+                SELECT 
+                    ah.id,
+                    ah.status_name,
+                    ah.status_color,
+                    ah.start_datetime,
+                    ah.end_datetime,
+                    ah.note,
+                    r.first_name || ' ' || r.last_name as reported_by_name
+                FROM aggregated_history ah
+                LEFT JOIN employees r ON ah.reported_by_id = r.id
+                ORDER BY ah.start_datetime DESC
+                LIMIT %s
+            """
+            cur.execute(query, (employee_id, limit))
+            return cur.fetchall()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_logs_for_employees(employee_ids, start_date, end_date):
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            # Find logs that overlap with the range [start, end]
+            # Overlap logic: LogStart <= RangeEnd AND (LogEnd IS NULL OR LogEnd >= RangeStart)
+            query = """
+                SELECT 
+                    al.employee_id,
+                    st.name as status_name,
+                    al.start_datetime,
+                    al.end_datetime
+                FROM attendance_logs al
+                JOIN status_types st ON al.status_type_id = st.id
+                WHERE al.employee_id = ANY(%s)
+                AND DATE(al.start_datetime) <= %s 
+                AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s)
+                ORDER BY al.start_datetime ASC
+            """
+            cur.execute(query, (list(employee_ids), end_date, start_date))
+            return cur.fetchall()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_employee_history_export(employee_id, start_date=None, end_date=None):
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            query = """
+                WITH marked_changes AS (
+                    SELECT 
+                        al.id,
+                        al.status_type_id,
+                        al.start_datetime,
+                        al.end_datetime,
+                        al.note,
+                        al.reported_by,
+                        CASE 
+                            WHEN LAG(al.status_type_id) OVER (ORDER BY al.start_datetime) = al.status_type_id THEN 0 
+                            ELSE 1 
+                        END as is_new_group
+                    FROM attendance_logs al
+                    WHERE al.employee_id = %s
+                ),
+                grouped_logs AS (
+                    SELECT 
+                        *,
+                        SUM(is_new_group) OVER (ORDER BY start_datetime) as group_id
+                    FROM marked_changes
+                ),
+                aggregated_history AS (
+                    SELECT 
+                        MIN(gl.id) as id,
+                        st.name as status_name,
+                        st.color as status_color,
+                        MIN(gl.start_datetime) as start_datetime,
+                        CASE 
+                            WHEN BOOL_OR(gl.end_datetime IS NULL) THEN NULL 
+                            ELSE MAX(gl.end_datetime) 
+                        END as end_datetime,
+                        (ARRAY_AGG(gl.note ORDER BY gl.start_datetime))[1] as note,
+                        (ARRAY_AGG(gl.reported_by ORDER BY gl.start_datetime))[1] as reported_by_id
+                    FROM grouped_logs gl
+                    JOIN status_types st ON gl.status_type_id = st.id
+                    GROUP BY gl.group_id, st.id, st.name, st.color
+                )
+                SELECT 
+                    ah.id,
+                    ah.status_name,
+                    ah.start_datetime,
+                    ah.end_datetime,
+                    ah.note,
+                    r.first_name || ' ' || r.last_name as reported_by_name
+                FROM aggregated_history ah
+                LEFT JOIN employees r ON ah.reported_by_id = r.id
+                WHERE 1=1
+            """
+
+            params = [employee_id]
+
+            if start_date:
+                query += " AND DATE(ah.start_datetime) >= %s"
+                params.append(start_date)
+
+            if end_date:
+                query += " AND DATE(ah.start_datetime) <= %s"
+                params.append(end_date)
+
+            query += " ORDER BY ah.start_datetime DESC"
+
+            cur.execute(query, tuple(params))
+            return cur.fetchall()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_daily_attendance_log(date, requesting_user=None, filters=None):
+        conn = get_db_connection()
+        if not conn:
+            return []
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            params = []
+
+            # Use the provided date for "snapshot"
+            # We want the status that was valid on 'date'.
+            # Similar to dashboard stats logic: start <= date AND (end >= date OR end IS NULL OR end < date + 1 day? NO.)
+            # "Status active on that date".
+            # Dashboard logic: DATE(start) <= date AND (end IS NULL OR DATE(end) >= date)
+            status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+            params.extend([date, date])
+
+            query = f"""
+                SELECT 
+                    e.id,
+                    e.first_name,
+                    e.last_name,
+                    e.personal_number,
+                    st.name as status_name,
+                    st.color as status_color,
+                    last_log.start_datetime,
+                    last_log.end_datetime,
+                    last_log.note,
+                    t.name as team_name,
+                    s.name as section_name
+                FROM employees e
+                LEFT JOIN teams t ON e.team_id = t.id
+                LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                LEFT JOIN service_types srv ON e.service_type_id = srv.id
+                LEFT JOIN LATERAL (
+                    SELECT status_type_id, start_datetime, end_datetime, note FROM attendance_logs 
+                    WHERE employee_id = e.id {status_condition}
+                    ORDER BY start_datetime DESC, id DESC LIMIT 1
+                ) last_log ON true
+                LEFT JOIN status_types st ON last_log.status_type_id = st.id
+                WHERE e.is_active = TRUE AND e.personal_number != 'admin'
+            """
+
+            # 1. Base Scoping (Security)
+            if requesting_user and not requesting_user.get("is_admin"):
+                if requesting_user.get("commands_department_id"):
+                    query += " AND d.id = %s"
+                    params.append(int(requesting_user["commands_department_id"]))
+                elif requesting_user.get("commands_section_id"):
+                    query += " AND s.id = %s"
+                    params.append(int(requesting_user["commands_section_id"]))
+                elif requesting_user.get("commands_team_id"):
+                    query += " AND t.id = %s"
+                    params.append(int(requesting_user["commands_team_id"]))
+                else:
+                    # Individual Fallback
+                    query += " AND e.id = %s"
+                    params.append(int(requesting_user["id"]))
+
+            # 2. Drill-down Filters (User Selection)
+            if filters:
+                if filters.get("department_id"):
+                    query += " AND d.id = %s"
+                    params.append(filters["department_id"])
+                if filters.get("section_id"):
+                    query += " AND s.id = %s"
+                    params.append(filters["section_id"])
+                if filters.get("team_id"):
+                    query += " AND t.id = %s"
+                    params.append(filters["team_id"])
+                if filters.get("status_id"):
+                    query += " AND st.id = %s"
+                    params.append(filters["status_id"])
+
+            query += " ORDER BY e.first_name, e.last_name"
+
+            cur.execute(query, tuple(params))
+            results = cur.fetchall()
+
+            # Convert dates/datetimes to ISO strings for JSON serialization
+            for row in results:
+                for key, value in row.items():
+                    if hasattr(value, "isoformat"):
+                        row[key] = value.isoformat()
+            return results
         finally:
             conn.close()

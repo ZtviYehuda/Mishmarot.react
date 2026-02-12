@@ -60,9 +60,9 @@ function getAlertConfig(alert: {
   if (isTransfer) {
     return {
       icon: ArrowLeftRight,
-      bg: "rgba(59, 130, 246, 0.1)",
-      color: "rgb(59, 130, 246)",
-    }; // Blue
+      bg: "color-mix(in srgb, var(--primary), transparent 90%)",
+      color: "var(--primary)",
+    };
   }
   if (isSick) {
     return {
@@ -74,8 +74,8 @@ function getAlertConfig(alert: {
   if (isMessage) {
     return {
       icon: Megaphone,
-      bg: "rgba(59, 130, 246, 0.1)",
-      color: "rgb(59, 130, 246)",
+      bg: "color-mix(in srgb, var(--primary), transparent 90%)",
+      color: "var(--primary)",
     };
   }
 
@@ -95,8 +95,8 @@ function getAlertConfig(alert: {
 
   return {
     icon: Info,
-    bg: "rgba(59, 130, 246, 0.1)",
-    color: "rgb(59, 130, 246)",
+    bg: "color-mix(in srgb, var(--primary), transparent 90%)",
+    color: "var(--primary)",
   };
 }
 
@@ -192,8 +192,9 @@ export default function MainLayout() {
     >
       {/* Sidebar - Official White Style */}
       <aside
+        onDoubleClick={() => setIsSidebarOpen((prev) => !prev)}
         className={cn(
-          "bg-card border-l border-border flex flex-col z-[100] shadow-[4px_0_24px_rgba(0,0,0,0.02)] fixed lg:sticky top-0 h-[100dvh] overflow-hidden transition-all duration-300 ease-in-out",
+          "bg-card border-l border-border flex flex-col z-[100] shadow-[4px_0_24px_rgba(0,0,0,0.02)] fixed lg:sticky top-0 h-[100dvh] overflow-hidden flex-shrink-0",
           isSidebarOpen
             ? "w-64 translate-x-0"
             : "w-0 lg:w-20 -translate-x-full lg:translate-x-0",
@@ -254,7 +255,7 @@ export default function MainLayout() {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-grow p-2.5 space-y-1 overflow-y-auto custom-scrollbar">
+        <nav className="flex-grow p-2.5 space-y-1 overflow-y-auto no-scrollbar custom-scrollbar">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -263,7 +264,11 @@ export default function MainLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                onDoubleClick={() => setIsSidebarOpen(true)}
+                onDoubleClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsSidebarOpen((prev) => !prev);
+                }}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative overflow-hidden select-none",
                   isActive
@@ -304,7 +309,11 @@ export default function MainLayout() {
           {/* User Profile Area */}
           <Link
             to={`/settings`}
-            onDoubleClick={() => setIsSidebarOpen(true)}
+            onDoubleClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsSidebarOpen((prev) => !prev);
+            }}
             className={cn(
               "flex items-center gap-3 rounded-xl transition-all select-none",
               isSidebarOpen
@@ -361,22 +370,13 @@ export default function MainLayout() {
       )}
 
       {/* Main Content Area */}
-      <div
-        className="flex-grow flex flex-col min-w-0"
-        onClick={() => {
-          // Close sidebar when clicking main content on desktop if it's open
-          if (isSidebarOpen && window.innerWidth >= 1024) {
-            setIsSidebarOpen(false);
-          }
-        }}
-      >
+      <div className="flex-grow flex flex-col min-w-0">
         <header className="h-20 bg-card border-b border-border px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-none flex-none">
           <div className="flex items-center gap-2 lg:gap-4 flex-1">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className={cn(
                 "w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted rounded-lg shrink-0 relative",
-                !isSidebarOpen && "animate-pulse",
               )}
               aria-label="תפריט ניווט"
             >
@@ -815,7 +815,7 @@ export default function MainLayout() {
         </header>
 
         {/* Content Page */}
-        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 flex-grow overflow-auto bg-background">
+        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 flex-grow overflow-y-auto bg-background custom-scrollbar">
           <div className="w-full max-w-full">
             <Outlet context={{ isSidebarOpen }} />
           </div>

@@ -85,6 +85,7 @@ export default function TransfersPage() {
 
   // Expanded Text State
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [historyFilter, setHistoryFilter] = useState<string | null>(null);
 
   const toggleRowExpansion = (id: number) => {
     const newExpanded = new Set(expandedRows);
@@ -144,6 +145,22 @@ export default function TransfersPage() {
     const rejected = history.filter((h) => h.status === "rejected").length;
     return { pending, approved, rejected };
   }, [pendingTransfers, history]);
+
+  const filteredHistory = useMemo(() => {
+    let result = history;
+    if (historyFilter) {
+      result = result.filter((h) => h.status === historyFilter);
+    }
+    if (searchTerm && activeTab === "history") {
+      const lowerSearch = searchTerm.toLowerCase();
+      result = result.filter(
+        (h) =>
+          h.employee_name?.toLowerCase().includes(lowerSearch) ||
+          h.personal_number?.includes(searchTerm),
+      );
+    }
+    return result;
+  }, [history, historyFilter, searchTerm, activeTab]);
 
   const handleCreateRequest = async () => {
     if (!selectedEmployee || !targetDeptId) {
@@ -240,12 +257,12 @@ export default function TransfersPage() {
   const statusBadge = (status: string) => {
     const styles: Record<string, string> = {
       approved:
-        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-emerald-500/20",
+        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
       rejected:
-        "bg-rose-500/10 text-rose-600 dark:text-rose-500 border-rose-500/20",
+        "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
       cancelled: "bg-muted text-muted-foreground border-border/50",
       pending:
-        "bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-500/20",
+        "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
     };
     const labels: Record<string, string> = {
       approved: "אושר",
@@ -293,13 +310,16 @@ export default function TransfersPage() {
               {stats.pending}
             </span>
           </div>
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
-            <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center">
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 dark:text-amber-400" />
           </div>
         </button>
 
         <button
-          onClick={() => setActiveTab("history")}
+          onClick={() => {
+            setActiveTab("history");
+            setHistoryFilter("approved");
+          }}
           className="bg-card rounded-[20px] p-4 sm:p-6 border border-border shadow-sm flex items-center justify-between hover:border-emerald-500/50 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
         >
           <div className="flex flex-col">
@@ -310,13 +330,16 @@ export default function TransfersPage() {
               {stats.approved}
             </span>
           </div>
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-400/10 flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500 dark:text-emerald-400" />
           </div>
         </button>
 
         <button
-          onClick={() => setActiveTab("history")}
+          onClick={() => {
+            setActiveTab("history");
+            setHistoryFilter("rejected");
+          }}
           className="bg-card rounded-[20px] p-4 sm:p-6 border border-border shadow-sm flex items-center justify-between hover:border-rose-500/50 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
         >
           <div className="flex flex-col">
@@ -327,8 +350,8 @@ export default function TransfersPage() {
               {stats.rejected}
             </span>
           </div>
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-rose-500/10 flex items-center justify-center">
-            <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-rose-500/10 dark:bg-rose-400/10 flex items-center justify-center">
+            <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500 dark:text-rose-400" />
           </div>
         </button>
       </div>
@@ -337,7 +360,10 @@ export default function TransfersPage() {
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 bg-card p-2 sm:pl-4 rounded-3xl sm:rounded-[16px] border border-border shadow-sm overflow-hidden">
         <Tabs
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={(val) => {
+            setActiveTab(val);
+            if (val !== "history") setHistoryFilter(null);
+          }}
           className="w-full md:w-auto"
         >
           <TabsList className="bg-muted p-1 h-10 sm:h-auto sm:p-1.5 rounded-full gap-1 border border-border/50 w-full sm:w-auto flex overflow-x-auto no-scrollbar justify-start sm:justify-center">
@@ -391,7 +417,7 @@ export default function TransfersPage() {
                   <CheckCircle2 className="w-8 h-8 text-muted-foreground/30" />
                 </div>
                 <p className="text-sm font-bold text-muted-foreground">
-                  אין בקשות פתוחות
+                  אין בקשות ממתינות
                 </p>
               </div>
             ) : (
@@ -513,12 +539,12 @@ export default function TransfersPage() {
                         colSpan={8}
                         className="h-[400px] text-center border-none"
                       >
-                        <div className="flex flex-col items-center justify-center gap-4 text-slate-300">
-                          <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center">
-                            <CheckCircle2 className="w-10 h-10 text-slate-200" />
+                        <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground/30">
+                          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
+                            <CheckCircle2 className="w-10 h-10 text-muted-foreground/40" />
                           </div>
                           <p className="text-lg font-bold text-slate-400">
-                            אין בקשות פתוחות
+                            אין בקשות ממתינות
                           </p>
                         </div>
                       </TableCell>
@@ -654,14 +680,16 @@ export default function TransfersPage() {
         <>
           {/* Mobile View - History Cards */}
           <div className="md:hidden space-y-3 animate-in fade-in duration-500">
-            {history.length === 0 ? (
+            {filteredHistory.length === 0 ? (
               <div className="bg-card rounded-2xl p-12 text-center border border-dashed border-border">
                 <p className="text-sm font-bold text-muted-foreground italic">
-                  אין היסטוריה זמינה
+                  {historyFilter
+                    ? "אין נתונים התומכים בסינון זה"
+                    : "אין היסטוריה זמינה"}
                 </p>
               </div>
             ) : (
-              history.map((req) => (
+              filteredHistory.map((req) => (
                 <div
                   key={req.id}
                   className="bg-card border border-border rounded-2xl p-4 shadow-sm"
@@ -750,17 +778,24 @@ export default function TransfersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {history.length === 0 ? (
+                  {filteredHistory.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={6}
-                        className="h-64 text-center opacity-30 italic"
+                        colSpan={7}
+                        className="h-64 text-center border-none"
                       >
-                        אין היסטוריה זמינה
+                        <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground/40">
+                          <History className="w-12 h-12 opacity-20" />
+                          <p className="text-sm font-bold italic">
+                            {historyFilter
+                              ? "אין בקשות שנדחו"
+                              : "אין היסטוריה זמינה"}
+                          </p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    history.map((req) => (
+                    filteredHistory.map((req) => (
                       <TableRow
                         key={req.id}
                         className="hover:bg-muted/10 border-b last:border-0 transition-colors"

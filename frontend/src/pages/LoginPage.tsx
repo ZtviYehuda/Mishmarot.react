@@ -38,17 +38,17 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
     const isDark = theme === "dark";
     const colors = isDark
       ? {
-        bg: "#020617", // slate-950
-        hexOutline: "rgba(30, 58, 138, 0.2)", // dark blue
-        hexActiveBlue: "rgba(59, 130, 246, 0.4)", // blue-500
-        hexActiveRed: "rgba(220, 38, 38, 0.4)", // red-600
-      }
+          bg: "#020617", // slate-950
+          hexOutline: "rgba(30, 58, 138, 0.2)", // dark blue
+          hexActiveBlue: "rgba(59, 130, 246, 0.4)", // blue-500
+          hexActiveRed: "rgba(220, 38, 38, 0.4)", // red-600
+        }
       : {
-        bg: "#f8fafc", // slate-50
-        hexOutline: "rgba(148, 163, 184, 0.2)", // slate-400
-        hexActiveBlue: "rgba(59, 130, 246, 0.2)", // blue-500
-        hexActiveRed: "rgba(220, 38, 38, 0.2)", // red-600
-      };
+          bg: "#f8fafc", // slate-50
+          hexOutline: "rgba(148, 163, 184, 0.2)", // slate-400
+          hexActiveBlue: "rgba(59, 130, 246, 0.2)", // blue-500
+          hexActiveRed: "rgba(220, 38, 38, 0.2)", // red-600
+        };
 
     let animationFrameId: number;
     const hexSize = 30; // Radius of hexagon
@@ -268,7 +268,7 @@ export default function LoginPage() {
   return (
     <div
       className={cn(
-        "min-h-screen flex flex-col font-sans overflow-hidden relative transition-colors duration-500",
+        "h-screen overflow-y-auto bg-background flex flex-col font-sans relative transition-colors duration-500 custom-scrollbar",
         isDark ? "text-slate-100" : "text-slate-800",
       )}
       dir="rtl"
@@ -292,7 +292,7 @@ export default function LoginPage() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-grow flex items-center justify-center p-4 relative z-10">
+      <main className="flex-grow flex flex-col items-center justify-start py-12 md:py-20 px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -346,9 +346,9 @@ export default function LoginPage() {
                     {lockedUser.last_name[0]}
                     <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-slate-900 shadow-lg" />
                   </div>
-                  <h2
+                  <div
                     className={cn(
-                      "text-2xl font-bold mb-1",
+                      "text-2xl font-bold mb-4",
                       isDark ? "text-white" : "text-slate-900",
                     )}
                   >
@@ -356,7 +356,7 @@ export default function LoginPage() {
                     <h2 className="text-2xl font-black mb-1">
                       {"המפקד/ת"} {lockedUser.first_name}
                     </h2>
-                  </h2>
+                  </div>
 
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2 text-right">

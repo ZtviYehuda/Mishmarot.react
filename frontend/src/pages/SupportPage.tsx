@@ -154,7 +154,7 @@ export default function SupportPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 text-right">
-                    <Label htmlFor="full_name">שם מלא</Label>
+                    <Label htmlFor="full_name">שם מלא (פרטי ומשפחה)</Label>
                     <Input
                       id="full_name"
                       value={formData.full_name}

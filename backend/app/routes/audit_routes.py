@@ -48,7 +48,6 @@ def get_all_activity():
         except (json.JSONDecodeError, TypeError):
             identity = identity_raw
 
-        # Check permissions (simplified, assuming frontend handles visibility, but backend should ideally enforce)
         is_admin = (
             identity.get("is_admin", False) if isinstance(identity, dict) else False
         )
@@ -59,7 +58,42 @@ def get_all_activity():
         if not (is_admin or is_commander):
             return jsonify({"error": "Unauthorized"}), 403
 
-        logs = AuditLogModel.get_recent_activity(limit=50)
+        from flask import request
+
+        filters = {
+            "user_id": request.args.get("user_id"),
+            "action_type": request.args.get("action_type"),
+        }
+
+        limit = request.args.get("limit", 100, type=int)
+
+        logs = AuditLogModel.get_recent_activity(limit=limit, filters=filters)
         return jsonify(logs)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@audit_bp.route("/suspicious", methods=["GET"])
+@jwt_required()
+def get_suspicious_activity():
+    """
+    Get detected anomalies for admin review.
+    """
+    try:
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        if not identity.get("is_admin", False):
+            return jsonify({"error": "Unauthorized: Admins only"}), 403
+
+        suspicious = AuditLogModel.get_suspicious_activity()
+        return jsonify(suspicious)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

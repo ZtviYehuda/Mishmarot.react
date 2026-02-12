@@ -173,7 +173,11 @@ export function ProfileSettings({
             }
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <InputItem label="שם מלא (פרטי ומשפחה)" required icon={User}>
+              <InputItem
+                label="שם מלא (פרטי ומשפחה)"
+                required
+                icon={User}
+              >
                 <div className="flex gap-2">
                   <Input
                     disabled={readOnly}
@@ -304,7 +308,10 @@ export function ProfileSettings({
                 </h4>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <InputItem label="שם מלא" className="bg-transparent">
+                    <InputItem
+                      label="שם מלא (פרטי ומשפחה)"
+                      className="bg-transparent"
+                    >
                       <Input
                         disabled={readOnly}
                         value={emergencyDetails.name}
@@ -449,12 +456,15 @@ export function ProfileSettings({
           {!readOnly && (
             <CompactCard
               title={
-                <span className="flex items-center gap-2 text-primary font-black text-lg">
-                  <History className="w-5 h-5" /> היסטוריית דיווחים אישית
-                </span>
+                <div className="flex items-center justify-between w-full">
+                  <span className="flex items-center gap-2 text-primary font-black text-lg">
+                    <History className="w-5 h-5" /> היסטוריית דיווחים אישית
+                  </span>
+                  <div className="flex gap-2"></div>
+                </div>
               }
             >
-              <StatusHistoryList employeeId={userId} />
+              <StatusHistoryList employeeId={userId} limit={10} showControls />
             </CompactCard>
           )}
         </div>

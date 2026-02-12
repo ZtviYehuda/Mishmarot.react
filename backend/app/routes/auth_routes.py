@@ -29,6 +29,24 @@ def login():
         user_basic = EmployeeModel.login_check(p_num, password)
         if not user_basic:
             print("DEBUG LOGIN: login_check failed")
+            # Log Failed Attempt
+            # Try to get user_id for logging if the personal_number exists
+            temp_conn = get_db_connection()
+            if temp_conn:
+                with temp_conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT id FROM employees WHERE personal_number = %s", (p_num,)
+                    )
+                    row = cur.fetchone()
+                    target_uid = row[0] if row else None
+                    AuditLogModel.log_action(
+                        user_id=target_uid,
+                        action_type="FAILED_LOGIN",
+                        description=f"Failed login attempt for P-Num: {p_num}",
+                        ip_address=request.remote_addr,
+                    )
+                temp_conn.close()
+
             return (
                 jsonify({"success": False, "error": "מספר אישי או סיסמה שגויים"}),
                 401,
@@ -83,8 +101,9 @@ def login():
         AuditLogModel.log_action(
             user_id=user["id"],
             action_type="LOGIN",
-            description="User logged in",
+            description=f"Successful login for {user['first_name']} {user['last_name']}",
             ip_address=request.remote_addr,
+            metadata={"browser": request.headers.get("User-Agent")},
         )
 
         return jsonify(
@@ -92,12 +111,11 @@ def login():
                 "success": True,
                 "token": token,
                 "user": {
-                    "id": user.get("id"),
-                    "first_name": user.get("first_name"),
-                    "last_name": user.get("last_name"),
-                    "personal_number": user.get("personal_number"),
+                    "id": user["id"],
+                    "first_name": user["first_name"],
+                    "last_name": user["last_name"],
+                    "personal_number": user["personal_number"],
                     "phone_number": user.get("phone_number"),
-                    "email": user.get("email"),
                     "email": user.get("email"),
                     "last_password_change": user.get("last_password_change"),
                     "must_change_password": user.get("must_change_password", False),
@@ -128,6 +146,9 @@ def login():
                     "assignment_date": user.get("assignment_date"),
                     "police_license": user.get("police_license"),
                     "security_clearance": user.get("security_clearance"),
+                    "theme": user.get("theme"),
+                    "accent_color": user.get("accent_color"),
+                    "font_size": user.get("font_size"),
                 },
             }
         )
@@ -214,6 +235,9 @@ def get_current_user():
                 "security_clearance": user.get("security_clearance"),
                 "is_temp_commander": user.get("is_temp_commander", False),
                 "active_delegate_id": user.get("active_delegate_id"),
+                "theme": user.get("theme"),
+                "accent_color": user.get("accent_color"),
+                "font_size": user.get("font_size"),
             }
         )
     return jsonify({"error": "User not found"}), 404
@@ -239,10 +263,16 @@ def change_password():
     new_pass = data.get("new_password")
     old_pass = data.get("old_password")
 
+    user = EmployeeModel.get_employee_by_id(user_id)
+    if not user:
+        return jsonify({"success": False, "error": "User not found"}), 404
+
+    must_change = user.get("must_change_password", False)
+
     if not new_pass or len(new_pass) < 6:
         return jsonify({"success": False, "error": "Password too short"}), 400
 
-    if not old_pass:
+    if not must_change and not old_pass:
         return jsonify({"success": False, "error": "Missing old password"}), 400
 
     success, msg = EmployeeModel.update_password(
@@ -255,6 +285,7 @@ def change_password():
             action_type="PASSWORD_CHANGE",
             description="User changed own password",
             ip_address=request.remote_addr,
+            metadata={"browser": request.headers.get("User-Agent")},
         )
         return jsonify({"success": True, "message": "הסיסמה עודכנה בהצלחה"})
     return jsonify({"success": False, "error": msg or "שגיאה בעדכון הסיסמה"}), 400
@@ -279,6 +310,14 @@ def confirm_password():
     success, msg = EmployeeModel.confirm_current_password(user_id)
 
     if success:
+        # Log Success
+        AuditLogModel.log_action(
+            user_id=user_id,
+            action_type="PASSWORD_CONFIRM",  # Changed action_type to reflect confirmation
+            description="Password confirmation successful, timer reset",
+            ip_address=request.remote_addr,
+            metadata={"browser": request.headers.get("User-Agent")},
+        )
         return jsonify({"success": True, "message": "תוקף הסיסמה הוארך"})
     return jsonify({"success": False, "error": msg}), 400
 
@@ -755,6 +794,9 @@ def impersonate_user():
                     "team_name": target_user.get("team_name"),
                     "role_name": target_user.get("role_name"),
                     "service_type_name": target_user.get("service_type_name"),
+                    "theme": target_user.get("theme"),
+                    "accent_color": target_user.get("accent_color"),
+                    "font_size": target_user.get("font_size"),
                 },
             }
         )

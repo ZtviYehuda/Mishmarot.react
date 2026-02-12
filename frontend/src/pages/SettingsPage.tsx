@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import apiClient from "@/config/api.client";
@@ -32,9 +33,18 @@ export default function SettingsPage() {
     setFontSize,
   } = useTheme();
 
+  const [searchParams] = useSearchParams();
+  const urlTab = searchParams.get("tab");
+
   const [activeTab, setActiveTab] = useState(
-    user?.is_temp_commander ? "appearance" : "profile",
+    urlTab || (user?.is_temp_commander ? "appearance" : "profile"),
   );
+
+  useEffect(() => {
+    if (urlTab) {
+      setActiveTab(urlTab);
+    }
+  }, [urlTab]);
   // const [mobileNavOpen, setMobileNavOpen] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);

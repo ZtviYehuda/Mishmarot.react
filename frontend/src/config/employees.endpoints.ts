@@ -10,3 +10,4 @@ export const updateEmployeeEndpoint = (id: number) => `/employees/${id}`;
 export const deleteEmployeeEndpoint = (id: number) => `/employees/${id}`;
 export const markBirthdaySentEndpoint = (id: number) =>
   `/employees/${id}/birthday-sent`;
+export const EMPLOYEES_PREFERENCES_ENDPOINT = "/employees/preferences";

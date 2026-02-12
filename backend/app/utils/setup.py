@@ -77,6 +77,9 @@ def setup_database():
                 notif_sick_leave BOOLEAN DEFAULT TRUE,
                 notif_transfers BOOLEAN DEFAULT TRUE,
                 notif_morning_report BOOLEAN DEFAULT TRUE,
+                theme VARCHAR(20) DEFAULT 'light',
+                accent_color VARCHAR(20) DEFAULT 'blue',
+                font_size VARCHAR(20) DEFAULT 'normal',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );""",
             """CREATE TABLE IF NOT EXISTS attendance_logs (
@@ -163,6 +166,15 @@ def setup_database():
             )
             cur.execute(
                 "ALTER TABLE employees ADD COLUMN IF NOT EXISTS notif_morning_report BOOLEAN DEFAULT TRUE;"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS theme VARCHAR(20) DEFAULT 'light';"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS accent_color VARCHAR(20) DEFAULT 'blue';"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS font_size VARCHAR(20) DEFAULT 'normal';"
             )
             cur.execute(
                 "ALTER TABLE status_types ADD COLUMN IF NOT EXISTS code VARCHAR(50);"

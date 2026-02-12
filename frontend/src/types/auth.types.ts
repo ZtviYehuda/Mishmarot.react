@@ -37,6 +37,9 @@ export interface AuthUser {
   last_password_change?: string | null;
   is_temp_commander?: boolean;
   active_delegate_id?: number;
+  theme?: string;
+  accent_color?: string;
+  font_size?: string;
 }
 
 export interface LoginResponse {

@@ -15,6 +15,7 @@ import {
   Laptop2,
   Clock,
   ShieldAlert,
+  Monitor,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import apiClient from "@/config/api.client";
@@ -23,11 +24,15 @@ import { he } from "date-fns/locale";
 
 interface AuditLog {
   id: number;
+  user_id: number;
+  user_name?: string;
   action_type: string;
   description: string;
   created_at: string;
   ip_address: string;
   metadata: any;
+  reason?: string; // For suspicious logs
+  target_name?: string;
 }
 import {
   Card,
@@ -77,13 +82,28 @@ export function SecuritySettings({
 
   // Activity Logs State
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [allActivity, setAllActivity] = useState<AuditLog[]>([]);
+  const [suspiciousActivity, setSuspiciousActivity] = useState<AuditLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
+  const [activeTab, setActiveTab] = useState<"my" | "all" | "suspicious">("my");
 
   useEffect(() => {
     const fetchLogs = async () => {
+      setLoadingLogs(true);
       try {
-        const res = await apiClient.get("/audit/my-activity");
-        setAuditLogs(res.data);
+        const [myRes, allRes, suspRes] = await Promise.all([
+          apiClient.get("/audit/my-activity"),
+          user?.is_admin || user?.is_commander
+            ? apiClient.get("/audit/all-activity")
+            : Promise.resolve({ data: [] }),
+          user?.is_admin
+            ? apiClient.get("/audit/suspicious")
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        setAuditLogs(myRes.data);
+        setAllActivity(allRes.data);
+        setSuspiciousActivity(suspRes.data);
       } catch (err) {
         console.error("Failed to fetch audit logs", err);
       } finally {
@@ -91,7 +111,14 @@ export function SecuritySettings({
       }
     };
     fetchLogs();
-  }, []);
+  }, [user]);
+
+  const displayedLogs =
+    activeTab === "my"
+      ? auditLogs
+      : activeTab === "all"
+        ? allActivity
+        : suspiciousActivity;
 
   const shouldShowAlert = daysSinceChange > 180;
 
@@ -390,94 +417,282 @@ export function SecuritySettings({
 
         {/* Activity Log Section (Full Width 12 Columns) */}
         <Card className="col-span-12 border shadow-sm overflow-hidden mt-8">
-          <CardHeader className="bg-muted/10 border-b pb-6">
-            <CardTitle className="flex items-center gap-3 text-xl font-bold">
-              <Activity className="w-6 h-6 text-primary" />
-              פעילות אחרונה בחשבון
-            </CardTitle>
-            <CardDescription className="text-base">
-              תיעוד פעולות שבוצעו בחשבון שלך (כניסות, שינויי סיסמה, דיווחים)
-            </CardDescription>
+          <CardHeader className="bg-muted/10 border-b pb-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-3 text-xl font-bold">
+                  <Activity className="w-6 h-6 text-primary" />
+                  {activeTab === "my"
+                    ? "פעילות אישית בחשבון"
+                    : activeTab === "all"
+                      ? "יומן אירועים מערכתי"
+                      : "מרכז ניטור חריגות בטיחות"}
+                </CardTitle>
+                <CardDescription className="text-base font-medium">
+                  {activeTab === "my"
+                    ? "תיעוד פעולות שבוצעו בחשבונך"
+                    : activeTab === "all"
+                      ? "סקירת פעולות של כלל המשתמשים במערכת"
+                      : "זיהוי וניתוח אוטומטי של פעילות חשודה"}
+                </CardDescription>
+              </div>
+
+              <div className="flex bg-muted p-1 rounded-xl">
+                <button
+                  onClick={() => setActiveTab("my")}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === "my" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  הפעילות שלי
+                </button>
+                {(user?.is_admin || user?.is_commander) && (
+                  <button
+                    onClick={() => setActiveTab("all")}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === "all" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    כלל המערכת
+                  </button>
+                )}
+                {user?.is_admin && (
+                  <button
+                    onClick={() => setActiveTab("suspicious")}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === "suspicious" ? "bg-background text-destructive shadow-sm" : "text-muted-foreground hover:text-destructive/80"}`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      {suspiciousActivity.length > 0 && (
+                        <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+                      )}
+                      פעילות חשודה
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             {loadingLogs ? (
-              <div className="p-8 flex justify-center text-muted-foreground">
-                <Loader2 className="w-6 h-6 animate-spin" />
-              </div>
-            ) : auditLogs.length === 0 ? (
-              <div className="p-12 text-center text-muted-foreground flex flex-col items-center gap-3">
-                <div className="p-3 bg-muted rounded-full">
-                  <ShieldCheck className="w-8 h-8 text-green-600" />
-                </div>
-                <p className="text-lg font-bold text-foreground">
-                  לא נמצאה פעילות חשודה
+              <div className="p-12 flex flex-col items-center gap-3 text-muted-foreground">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                <p className="font-medium animate-pulse">
+                  טוען יומני פעילות...
                 </p>
-                <p>לא נרשמו פעולות חריגות בחשבון זה בתקופה האחרונה.</p>
+              </div>
+            ) : displayedLogs.length === 0 ? (
+              <div className="p-12 text-center text-muted-foreground flex flex-col items-center gap-3">
+                <div className="p-4 bg-primary/5 rounded-full ring-8 ring-primary/5">
+                  <ShieldCheck className="w-10 h-10 text-primary/40" />
+                </div>
+                <p className="text-xl font-bold text-foreground">
+                  אין נתונים להצגה
+                </p>
+                <p className="max-w-md mx-auto">
+                  לא נמצאו רשומות רלוונטיות עבור הסינון שבחרת בתקופה האחרונה.
+                </p>
               </div>
             ) : (
-              <div className="divide-y">
-                {auditLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`p-2.5 rounded-lg shrink-0 mt-1 md:mt-0 ${
-                          log.action_type.includes("LOGIN")
-                            ? "bg-blue-100 text-blue-600"
-                            : log.action_type.includes("PASSWORD")
-                              ? "bg-amber-100 text-amber-600"
-                              : log.action_type.includes("IMPERSONATION")
-                                ? "bg-purple-100 text-purple-600"
-                                : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {log.action_type.includes("LOGIN") ? (
-                          <Laptop2 className="w-5 h-5" />
-                        ) : log.action_type.includes("PASSWORD") ? (
-                          <KeyRound className="w-5 h-5" />
-                        ) : log.action_type.includes("IMPERSONATION") ? (
-                          <Eye className="w-5 h-5" />
-                        ) : (
-                          <Activity className="w-5 h-5" />
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-foreground text-base">
-                          {log.action_type === "LOGIN"
-                            ? "התחברות למערכת"
-                            : log.action_type === "PASSWORD_CHANGE"
-                              ? "שינוי סיסמה"
-                              : log.action_type === "STATUS_UPDATE"
-                                ? "עדכון סטטוס נוכחות"
-                                : log.description}
-                        </h4>
-                        <p className="text-muted-foreground text-sm mt-0.5">
-                          {log.description}
-                        </p>
-                        {log.ip_address && (
-                          <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground/80">
-                            <ShieldAlert className="w-3 h-3" />
-                            <span>IP: {log.ip_address}</span>
-                          </div>
-                        )}
-                      </div>
+              <>
+                {activeTab === "suspicious" && (
+                  <div className="p-4 bg-destructive/5 border-b border-destructive/10 flex items-start gap-3">
+                    <div className="p-2 bg-destructive/10 rounded-lg text-destructive">
+                      <ShieldAlert className="w-5 h-5" />
                     </div>
-                    <div className="text-left md:text-right shrink-0 min-w-[140px]">
-                      <div className="flex items-center justify-end gap-1.5 text-sm font-medium text-foreground">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
-                      </div>
-                      <span className="text-xs text-muted-foreground block mt-1">
-                        {format(new Date(log.created_at), "EEEE", {
-                          locale: he,
-                        })}
-                      </span>
+                    <div>
+                      <h5 className="font-bold text-destructive text-sm">
+                        ניטור אנומליות ואבטחה
+                      </h5>
+                      <p className="text-xs text-destructive/70 mt-0.5 leading-relaxed">
+                        המערכת מזהה אוטומטית פעילויות חריגות כגון ניסיונות פריצה
+                        בתדירות גבוהה, החלפת כתובות IP מהירה של אותו משתמש, או
+                        פעולות קריטיות המבוצעות בשעות חריגות.
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
+                <div className="divide-y border-t lg:border-t-0">
+                  {displayedLogs.map((log, idx) => (
+                    <div
+                      key={`${log.id}-${idx}`}
+                      className={`p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:bg-muted/30 transition-all duration-200 group ${log.reason ? "bg-destructive/5" : ""}`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110 ${
+                            log.reason
+                              ? "bg-destructive/10 text-destructive shadow-sm shadow-destructive/10"
+                              : log.action_type === "LOGIN"
+                                ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                                : log.action_type.includes("PASSWORD")
+                                  ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+                                  : log.action_type.includes("IMPERSONATION")
+                                    ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
+                                    : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {log.reason ? (
+                            <ShieldAlert className="w-6 h-6" />
+                          ) : log.action_type === "LOGIN" ? (
+                            <Laptop2 className="w-6 h-6" />
+                          ) : log.action_type.includes("PASSWORD") ? (
+                            <KeyRound className="w-6 h-6" />
+                          ) : log.action_type.includes("IMPERSONATION") ? (
+                            <Eye className="w-6 h-6" />
+                          ) : (
+                            <Activity className="w-6 h-6" />
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4
+                              className={`font-bold text-lg leading-none ${log.reason ? "text-destructive" : "text-foreground"}`}
+                            >
+                              {log.reason ||
+                                (() => {
+                                  switch (log.action_type) {
+                                    case "LOGIN":
+                                      return "התחברות מוצלחת";
+                                    case "FAILED_LOGIN":
+                                      return "ניסיון התחברות שנכשל";
+                                    case "PASSWORD_CHANGE":
+                                      return "שינוי סיסמה";
+                                    case "PASSWORD_CONFIRM":
+                                      return "הארכת תוקף סיסמה";
+                                    case "STATUS_UPDATE":
+                                      return "עדכון סטטוס נוכחות";
+                                    case "BULK_STATUS_UPDATE":
+                                      return "עדכון סטטוס קבוצתי";
+                                    case "REPORT_STATUS":
+                                      return "דיווח נוכחות";
+                                    case "IMPERSONATION_START":
+                                      return "תחילת מצב התחזות";
+                                    case "IMPERSONATION_STOP":
+                                      return "סיום מצב התחזות";
+                                    case "EMPLOYEE_CREATE":
+                                      return "יצירת שוטר חדש";
+                                    case "EMPLOYEE_UPDATE":
+                                      return "עדכון פרטי שוטר";
+                                    case "EMPLOYEE_DELETE":
+                                      return "מחיקת שוטר מהמערכת";
+                                    case "PROFILE_UPDATE":
+                                      return "עדכון פרופיל אישי";
+                                    default:
+                                      return log.action_type;
+                                  }
+                                })()}
+                            </h4>
+                            {log.user_name && activeTab !== "my" && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-[10px] text-muted-foreground font-medium">
+                                  בוצע ע"י:
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wider ${log.reason ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary border border-primary/10"}`}
+                                >
+                                  {log.user_name}
+                                </span>
+                              </div>
+                            )}
+                            {log.target_name && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-[10px] text-muted-foreground font-medium">
+                                  עבור:
+                                </span>
+                                <span className="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-muted text-foreground border border-border">
+                                  {log.target_name}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-muted-foreground text-sm leading-relaxed max-w-xl">
+                            {log.description}
+                          </p>
+
+                          {/* Metadata / Changes Preview */}
+                          {log.metadata &&
+                            Object.keys(log.metadata).length > 0 && (
+                              <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border/50 space-y-2">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight mb-1">
+                                  פירוט השינויים / מידע נוסף:
+                                </p>
+                                <div className="flex flex-wrap gap-2 text-[11px]">
+                                  {Object.entries(log.metadata).map(
+                                    ([key, value]) => {
+                                      if (
+                                        key === "browser" ||
+                                        key === "updates"
+                                      )
+                                        return null;
+                                      if (value === null || value === undefined)
+                                        return null;
+                                      return (
+                                        <div
+                                          key={key}
+                                          className="flex items-center gap-1 bg-background px-1.5 py-0.5 rounded border shadow-sm"
+                                        >
+                                          <span className="font-bold text-primary">
+                                            {key}:
+                                          </span>
+                                          <span className="text-foreground truncate max-w-[150px]">
+                                            {String(value)}
+                                          </span>
+                                        </div>
+                                      );
+                                    },
+                                  )}
+                                  {log.metadata.updates &&
+                                    Array.isArray(log.metadata.updates) && (
+                                      <div className="w-full text-xs text-muted-foreground mt-1 bg-amber-500/5 px-2 py-1 rounded border border-amber-500/10">
+                                        בוצע עדכון ל-
+                                        {log.metadata.updates.length} רשומות
+                                        במקביל
+                                      </div>
+                                    )}
+                                </div>
+                              </div>
+                            )}
+                          <div className="flex items-center gap-4 mt-2">
+                            {log.ip_address && (
+                              <div className="flex items-center gap-1.5 text-xs font-mono bg-muted px-2 py-1 rounded text-muted-foreground select-all">
+                                <Shield className="w-3 h-3" />
+                                IP: {log.ip_address}
+                              </div>
+                            )}
+                            {log.metadata?.browser && (
+                              <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <Monitor className="w-3 h-3" />
+                                {log.metadata.browser}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-2 md:pl-2">
+                        <div className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          {format(
+                            new Date(log.created_at || new Date()),
+                            "HH:mm:ss",
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                            {format(
+                              new Date(log.created_at || new Date()),
+                              "dd/MM/yyyy",
+                            )}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground/60 font-medium">
+                            {format(
+                              new Date(log.created_at || new Date()),
+                              "EEEE",
+                              { locale: he },
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
