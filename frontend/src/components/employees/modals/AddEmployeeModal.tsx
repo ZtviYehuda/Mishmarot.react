@@ -20,9 +20,8 @@ import {
   CalendarDays,
   ShieldCheck,
   Check,
-  ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface AddEmployeeModalProps {
   open: boolean;
@@ -79,7 +78,15 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     }
   };
 
-  const InputGroup = ({ label, icon: Icon, children }: { label: string, icon: any, children: React.ReactNode }) => (
+  const InputGroup = ({
+    label,
+    icon: Icon,
+    children,
+  }: {
+    label: string;
+    icon: any;
+    children: React.ReactNode;
+  }) => (
     <div className="space-y-2">
       <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1 flex items-center gap-1.5 opacity-70">
         <Icon className="w-3 h-3" />
@@ -112,7 +119,11 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-10 custom-scrollbar">
-          <form id="add-employee-form" onSubmit={handleSubmit} className="space-y-10">
+          <form
+            id="add-employee-form"
+            onSubmit={handleSubmit}
+            className="space-y-10"
+          >
             {/* Identity Block */}
             <div className="space-y-6">
               <div className="flex items-center gap-3">
@@ -128,7 +139,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 <InputGroup label="שם פרטי *" icon={User}>
                   <Input
                     value={formData.first_name}
-                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, first_name: e.target.value })
+                    }
                     required
                     className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all"
                   />
@@ -136,7 +149,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 <InputGroup label="שם משפחה *" icon={User}>
                   <Input
                     value={formData.last_name}
-                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, last_name: e.target.value })
+                    }
                     required
                     className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all"
                   />
@@ -144,7 +159,12 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 <InputGroup label="מספר אישי *" icon={ShieldCheck}>
                   <Input
                     value={formData.personal_number}
-                    onChange={(e) => setFormData({ ...formData, personal_number: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        personal_number: e.target.value,
+                      })
+                    }
                     required
                     placeholder="מ״א"
                     className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono tracking-widest transition-all"
@@ -153,7 +173,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 <InputGroup label="תעודת זהות *" icon={ShieldCheck}>
                   <Input
                     value={formData.national_id}
-                    onChange={(e) => setFormData({ ...formData, national_id: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, national_id: e.target.value })
+                    }
                     required
                     placeholder="ת״ז"
                     className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono tracking-widest transition-all"
@@ -180,7 +202,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   <Input
                     type="email"
                     value={formData.email || ""}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     placeholder="example@police.gov.il"
                     className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all"
                   />
@@ -189,7 +213,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   <Input
                     type="tel"
                     value={formData.phone_number}
-                    onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone_number: e.target.value })
+                    }
                     placeholder="05x-xxxxxxx"
                     className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono transition-all"
                   />
@@ -197,7 +223,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 <InputGroup label="עיר מגורים" icon={MapPin}>
                   <Input
                     value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
                     className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all"
                   />
                 </InputGroup>
@@ -222,7 +250,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   <Input
                     type="date"
                     value={formData.birth_date}
-                    onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, birth_date: e.target.value })
+                    }
                     className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-xs transition-all"
                   />
                 </InputGroup>
@@ -230,7 +260,12 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   <Input
                     type="date"
                     value={formData.enlistment_date}
-                    onChange={(e) => setFormData({ ...formData, enlistment_date: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        enlistment_date: e.target.value,
+                      })
+                    }
                     className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-xs transition-all"
                   />
                 </InputGroup>

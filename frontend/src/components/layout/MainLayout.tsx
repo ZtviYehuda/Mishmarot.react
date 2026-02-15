@@ -194,10 +194,10 @@ export default function MainLayout() {
       <aside
         onDoubleClick={() => setIsSidebarOpen((prev) => !prev)}
         className={cn(
-          "bg-card border-l border-border flex flex-col z-[100] shadow-[4px_0_24px_rgba(0,0,0,0.02)] fixed lg:sticky top-0 h-[100dvh] overflow-hidden flex-shrink-0",
+          "bg-card/80 backdrop-blur-xl border-l border-primary/5 flex flex-col z-[100] fixed lg:sticky top-0 h-[100dvh] overflow-hidden flex-shrink-0 transition-all duration-500 ease-in-out",
           isSidebarOpen
-            ? "w-64 translate-x-0"
-            : "w-0 lg:w-20 -translate-x-full lg:translate-x-0",
+            ? "w-72 translate-x-0"
+            : "w-0 lg:w-24 -translate-x-full lg:translate-x-0",
         )}
       >
         {/* Sidebar Header */}
@@ -240,8 +240,16 @@ export default function MainLayout() {
                   : "opacity-0 w-0 overflow-hidden",
               )}
             >
-              <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1 whitespace-nowrap">
-                פורטל יחידה
+              <span className="text-[10px] font-black text-primary uppercase mt-1 whitespace-nowrap">
+                {user?.is_admin
+                  ? "פורטל ניהול"
+                  : user?.commands_team_id
+                    ? "פורטל חוליה"
+                    : user?.commands_section_id
+                      ? "פורטל מדור"
+                      : user?.commands_department_id
+                        ? "פורטל מחלקה"
+                        : "פורטל יחידה"}
               </span>
             </div>
           </div>
@@ -270,16 +278,16 @@ export default function MainLayout() {
                   setIsSidebarOpen((prev) => !prev);
                 }}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative overflow-hidden select-none",
+                  "flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group relative overflow-hidden select-none",
                   isActive
-                    ? "bg-primary/10 text-primary font-bold"
-                    : "text-muted-foreground hover:bg-muted hover:text-primary",
+                    ? "bg-primary/10 text-primary font-black shadow-lg shadow-primary/5"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-primary",
                 )}
                 title={!isSidebarOpen ? item.name : undefined}
               >
                 <Icon
                   className={cn(
-                    "w-5 h-5 shrink-0 transition-transform duration-300 group-hover:scale-105",
+                    "w-6 h-6 shrink-0 transition-transform duration-500 group-hover:scale-110",
                     isActive
                       ? "text-primary"
                       : "text-muted-foreground group-hover:text-primary",
@@ -288,7 +296,7 @@ export default function MainLayout() {
                 />
                 <span
                   className={cn(
-                    "text-sm font-bold tracking-tight truncate flex-1 text-right transition-all duration-300",
+                    "text-sm font-black tracking-tight truncate flex-1 text-right transition-all duration-500",
                     isSidebarOpen
                       ? "opacity-100 translate-x-0"
                       : "opacity-0 translate-x-10 absolute right-12 w-0",
@@ -337,7 +345,15 @@ export default function MainLayout() {
                 {user?.first_name} {user?.last_name}
               </span>
               <span className="text-[9px] font-bold text-muted-foreground truncate uppercase tracking-tighter">
-                {user?.is_admin ? "Administrator" : "Commander"}
+                {user?.is_admin
+                  ? "מנהל מערכת"
+                  : user?.commands_department_id
+                    ? "מפקד מחלקה"
+                    : user?.commands_section_id
+                      ? "מפקד מדור"
+                      : user?.commands_team_id
+                        ? "מפקד חוליה"
+                        : "מפקד"}
               </span>
             </div>
           </Link>
@@ -391,13 +407,13 @@ export default function MainLayout() {
             <div className="h-5 w-px bg-border hidden sm:block" />
             <div className="flex items-center gap-2 md:gap-5 flex-1 min-w-0">
               <div className="flex flex-col text-right border-r-[3px] border-primary pr-3 md:pr-5 leading-none flex-1 min-w-0 overflow-hidden">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[9px] md:text-[11px] font-black text-primary uppercase tracking-[0.1em] md:tracking-[0.15em] leading-none truncate">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[9px] md:text-[11px] font-black text-primary uppercase leading-none truncate">
                     מוקד שליטה ובקרה
                   </span>
-                  <div className="flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)] shrink-0" />
+                  <div className="flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0" />
                 </div>
-                <h2 className="text-lg md:text-xl font-black text-foreground tracking-tight py-0.5 leading-none truncate">
+                <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight py-0.5 leading-none truncate">
                   {location.pathname === "/"
                     ? "לוח בקרה מרכזי"
                     : navItems.find((n) => n.path === location.pathname)

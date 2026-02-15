@@ -28,6 +28,7 @@ interface EmployeesChartProps {
   title?: string;
   description?: string;
   selectedDate?: Date;
+  hideExportControls?: boolean;
 }
 
 export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
@@ -41,6 +42,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       title = "מצבת כוח אדם",
       description = "סטטוס נוכחות בזמן אמת",
       selectedDate = new Date(),
+      hideExportControls = false,
     },
     ref,
   ) => {
@@ -154,7 +156,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
 
     if (loading) {
       return (
-        <Card className="border border-border shadow-sm bg-card">
+        <Card className="overflow-hidden">
           <CardHeader className="pb-8">
             <CardTitle className="text-xl font-black text-card-foreground mb-1">
               {title}
@@ -171,7 +173,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       <Card
         ref={cardRef}
         id="attendance-snapshot-card"
-        className="border border-border shadow-sm flex flex-col bg-card overflow-hidden h-full relative"
+        className="flex flex-col overflow-hidden h-full relative"
       >
         <CardHeader className="pb-3 border-b border-border/40 mb-2">
           <div className="space-y-2">
@@ -188,30 +190,32 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                     variant="outline"
                     size="sm"
                     onClick={onFilterClick}
-                    className="lg:hidden h-8 w-8 p-0 rounded-lg bg-background hover:bg-muted border-primary/20 text-primary shadow-sm"
+                    className="lg:hidden h-8 w-8 p-0 rounded-xl bg-background hover:bg-muted border-primary/20 text-primary"
                     title="סינון נתונים"
                   >
                     <Filter className="w-4 h-4" />
                   </Button>
                 )}
 
-                {/* Download Button */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-primary rounded-lg transition-all"
-                  onClick={handleDownload}
-                  title="הורדה כתמונה"
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
+                {/* Download Button - HIDDEN for Temp Commanders */}
+                {!hideExportControls && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary rounded-lg transition-all"
+                    onClick={handleDownload}
+                    title="הורדה כתמונה"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                )}
 
-                {/* WhatsApp Button */}
-                {onOpenWhatsAppReport && (
+                {/* WhatsApp Button - HIDDEN for Temp Commanders */}
+                {!hideExportControls && onOpenWhatsAppReport && (
                   <WhatsAppButton
                     onClick={onOpenWhatsAppReport}
                     variant="outline"
-                    className="h-8 w-8 p-0 rounded-lg border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                    className="h-8 w-8 p-0 rounded-xl border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/10"
                     skipDirectLink={true}
                   />
                 )}

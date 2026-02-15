@@ -128,18 +128,16 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         className="max-w-xl p-0 overflow-hidden border border-border bg-card shadow-2xl rounded-3xl"
         dir="rtl"
       >
-        <DialogHeader className="p-5 border-b border-primary/10 bg-gradient-to-br from-primary/5 via-transparent to-transparent text-right relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -ml-16 -mt-16 pointer-events-none"></div>
+        <DialogHeader className="p-5 border-b border-border/40 bg-background/50 text-right relative overflow-hidden">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 text-center sm:text-right relative z-10">
             {/* Avatar */}
             <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-br from-primary to-primary-foreground rounded-[24px] blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
-              <div className="relative w-20 h-20 rounded-[20px] bg-primary text-primary-foreground flex items-center justify-center text-3xl font-black shrink-0 shadow-xl border-2 border-card">
+              <div className="relative w-20 h-20 rounded-[20px] bg-muted text-muted-foreground flex items-center justify-center text-3xl font-black shrink-0 shadow-sm border border-border">
                 {employee.first_name[0]}
                 {employee.last_name[0]}
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full border-2 border-card bg-emerald-500 shadow-md flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full border-2 border-background bg-emerald-500 shadow-sm flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-white/90" />
               </div>
             </div>
 
@@ -228,35 +226,33 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             </div>
             {/* Emergency Contact */}
             <div className="col-span-1 sm:col-span-2">
-              <div className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20 p-4 rounded-[22px] border-2 border-red-500/10 dark:border-rose-500/20 flex flex-col sm:flex-row gap-4 items-start sm:items-center group/contact overflow-hidden relative shadow-inner">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-red-500/5 blur-[80px] -mr-24 -mt-24 rounded-full pointer-events-none"></div>
-
-                <div className="bg-red-500 dark:bg-rose-500 p-2.5 rounded-xl text-white shrink-0 mx-auto sm:mx-0 shadow-xl shadow-red-500/20 group-hover/contact:rotate-12 transition-all">
-                  <Phone className="w-5 h-5" />
+              <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center overflow-hidden relative">
+                <div className="bg-muted text-muted-foreground p-2.5 rounded-xl shrink-0 mx-auto sm:mx-0">
+                  <Phone className="w-4 h-4" />
                 </div>
                 <div className="relative flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-4 w-full text-center sm:text-right">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] font-black text-red-600 dark:text-rose-400 uppercase tracking-[0.2em] block opacity-80">
+                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest block">
                       איש קשר לחירום
                     </span>
-                    <span className="text-sm font-black text-foreground tracking-tight truncate">
+                    <span className="text-sm font-bold text-foreground truncate">
                       {ecName || "---"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] font-black text-red-600 dark:text-rose-400 uppercase tracking-[0.2em] block opacity-80">
+                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest block">
                       קרבה
                     </span>
-                    <span className="text-sm font-black text-foreground tracking-tight truncate">
+                    <span className="text-sm font-bold text-foreground truncate">
                       {ecRelation || "---"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] font-black text-red-600 dark:text-rose-400 uppercase tracking-[0.2em] block opacity-80">
+                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest block">
                       טלפון
                     </span>
                     <span
-                      className="text-sm font-black text-foreground tracking-tighter truncate"
+                      className="text-sm font-bold text-foreground truncate"
                       dir="ltr"
                     >
                       {ecPhone || "---"}
@@ -274,37 +270,37 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             employee.section_name ||
             employee.team_name) && (
             <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2 opacity-80">
+              <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2 opacity-70">
                 <Building2 className="w-4 h-4" />
                 ניהול ומבנה ארגוני
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {employee.department_name && (
-                  <div className="bg-primary/5 dark:bg-primary/10 p-4 rounded-[20px] border border-primary/20 flex flex-col items-center justify-center gap-1.5 shadow-sm transition-all hover:bg-primary/10 dark:hover:bg-primary/20 group/item cursor-default">
-                    <p className="text-[8px] font-black text-primary uppercase tracking-[0.2em] transition-transform">
+                  <div className="bg-muted/30 p-3 rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 shadow-sm">
+                    <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest">
                       מחלקה
                     </p>
-                    <p className="text-xs font-black text-center text-wrap break-words leading-tight tracking-tight">
+                    <p className="text-xs font-bold text-center text-foreground text-wrap break-words leading-tight">
                       {cleanUnitName(employee.department_name)}
                     </p>
                   </div>
                 )}
                 {employee.section_name && (
-                  <div className="bg-primary/5 dark:bg-primary/10 p-4 rounded-[20px] border border-primary/20 flex flex-col items-center justify-center gap-1.5 shadow-sm transition-all hover:bg-primary/10 dark:hover:bg-primary/20 group/item cursor-default">
-                    <p className="text-[8px] font-black text-primary uppercase tracking-[0.2em] transition-transform">
+                  <div className="bg-muted/30 p-3 rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 shadow-sm">
+                    <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest">
                       מדור
                     </p>
-                    <p className="text-xs font-black text-center text-wrap break-words leading-tight tracking-tight">
+                    <p className="text-xs font-bold text-center text-foreground text-wrap break-words leading-tight">
                       {cleanUnitName(employee.section_name)}
                     </p>
                   </div>
                 )}
                 {employee.team_name && (
-                  <div className="bg-primary/5 dark:bg-primary/10 p-4 rounded-[20px] border border-primary/20 flex flex-col items-center justify-center gap-1.5 shadow-sm transition-all hover:bg-primary/10 dark:hover:bg-primary/20 group/item cursor-default">
-                    <p className="text-[8px] font-black text-primary uppercase tracking-[0.2em] transition-transform">
+                  <div className="bg-muted/30 p-3 rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 shadow-sm">
+                    <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest">
                       צוות / חוליה
                     </p>
-                    <p className="text-xs font-black text-center text-wrap break-words leading-tight tracking-tight">
+                    <p className="text-xs font-bold text-center text-foreground text-wrap break-words leading-tight">
                       {cleanUnitName(employee.team_name)}
                     </p>
                   </div>

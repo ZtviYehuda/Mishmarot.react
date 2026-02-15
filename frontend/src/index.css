@@ -27,7 +27,8 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -64,6 +65,9 @@ body {
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --shadow-premium: 0 20px 50px -12px rgba(var(--primary-rgb), 0.05);
+  --shadow-premium-hover: 0 30px 60px -12px rgba(var(--primary-rgb), 0.08);
 }
 
 :root {
@@ -87,6 +91,7 @@ body {
   --border: #e2e8f0;
   --input: #e2e8f0;
   --ring: var(--primary);
+  --primary-rgb: 0, 116, 255;
 }
 
 .dark {
@@ -109,6 +114,7 @@ body {
   --border: #001e30;
   --input: #001e30;
   --ring: var(--primary);
+  --primary-rgb: 0, 116, 255;
 }
 
 /* Accent Color Overrides - Highest Specificity */

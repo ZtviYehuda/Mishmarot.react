@@ -6,14 +6,10 @@ import {
   Download,
   Upload,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface BackupSettingsProps {
   backupConfig: any;
@@ -37,81 +33,98 @@ export function BackupSettings({
   handleRestore,
 }: BackupSettingsProps) {
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-[1920px] mx-auto pb-24 lg:pb-0">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b pb-6">
-        <div>
-          <h2 className="text-3xl font-black text-foreground flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 rounded-2xl">
-              <Database className="w-8 h-8 text-primary" />
-            </div>
-            גיבוי ושחזור
-          </h2>
-          <p className="text-muted-foreground mt-2 text-lg font-medium max-w-2xl">
-            נהל את גיבויי המערכת, בצע גיבוי ידני או שחזר מנקודת זמן קודמת
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 bg-background border px-4 py-2.5 rounded-full shadow-sm text-base font-bold">
-          <span
-            className={`relative flex h-3 w-3 ${backupConfig.enabled ? "" : "grayscale opacity-50"}`}
-          >
-            <span
-              className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${backupConfig.enabled ? "bg-green-400" : "bg-gray-400"}`}
-            ></span>
-            <span
-              className={`relative inline-flex rounded-full h-3 w-3 ${backupConfig.enabled ? "bg-green-500" : "bg-gray-500"}`}
-            ></span>
-          </span>
-          {backupConfig.enabled ? "גיבוי אוטומטי פעיל" : "גיבוי אוטומטי כבוי"}
-        </div>
-      </div>
-
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1600px] mx-auto pb-24 lg:pb-0">
       <div className="grid grid-cols-12 gap-8">
-        {/* Main Settings Area (8 Columns) */}
+        {/* Main Settings Area */}
         <div className="col-span-12 lg:col-span-8 space-y-8">
-          {/* Automatic Backup Configuration */}
-          <Card className="border shadow-sm overflow-hidden h-fit">
-            <CardHeader className="bg-muted/10 border-b pb-6">
-              <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                <RefreshCw
-                  className={`w-6 h-6 text-primary ${backupConfig.enabled ? "animate-spin-slow" : ""}`}
-                />
-                הגדרות גיבוי אוטומטי
-              </CardTitle>
-              <CardDescription className="text-base">
-                המערכת תבצע גיבוי של כל הנתונים באופן עצמאי בהתאם לתדירות שתבחר
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              <div className="flex items-center justify-between p-6 bg-muted/20 rounded-2xl border border-muted/30">
-                <div className="space-y-1">
-                  <span className="block font-bold text-lg text-foreground">
-                    הפעל גיבוי אוטומטי
-                  </span>
-                  <span className="text-sm text-muted-foreground font-medium">
-                    מומלץ להשאיר דלוק למניעת אובדן מידע
-                  </span>
-                </div>
-                <button
-                  onClick={() =>
-                    updateBackupConfig("enabled", !backupConfig.enabled)
-                  }
-                  className={`w-14 h-8 rounded-full relative transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 ${backupConfig.enabled ? "bg-primary shadow-lg shadow-primary/20" : "bg-muted-foreground/30 hover:bg-muted-foreground/40"}`}
-                >
-                  <div
-                    className={`w-6 h-6 bg-white rounded-full shadow-md absolute top-1 transition-all duration-300 ${backupConfig.enabled ? "right-1" : "right-[calc(100%-28px)]"}`}
+          <SectionCard
+            icon={RefreshCw}
+            title="גיבוי אוטומטי"
+            badge={
+              <div
+                className={cn(
+                  "flex items-center gap-2.5 px-4 py-1.5 rounded-full border shadow-lg text-[10px] font-black uppercase transition-all duration-500",
+                  backupConfig.enabled
+                    ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                    : "bg-muted/50 text-muted-foreground border-border",
+                )}
+              >
+                <div className="relative flex h-2 w-2">
+                  <span
+                    className={cn(
+                      "absolute inline-flex h-full w-full rounded-full opacity-75",
+                      backupConfig.enabled
+                        ? "animate-ping bg-emerald-400"
+                        : "bg-muted-foreground/30",
+                    )}
                   />
-                </button>
+                  <span
+                    className={cn(
+                      "relative inline-flex rounded-full h-2 w-2",
+                      backupConfig.enabled
+                        ? "bg-emerald-500"
+                        : "bg-muted-foreground/50",
+                    )}
+                  />
+                </div>
+                {backupConfig.enabled ? "פעיל ומוגן" : "כבוי - לא מומלץ"}
+              </div>
+            }
+          >
+            <div className="space-y-10">
+              <div
+                className={cn(
+                  "flex items-center justify-between p-8 rounded-[2rem] border transition-all duration-500",
+                  backupConfig.enabled
+                    ? "bg-primary/5 border-primary/20 shadow-2xl shadow-primary/5"
+                    : "bg-background border-border/50",
+                )}
+              >
+                <div className="flex items-start gap-5">
+                  <div
+                    className={cn(
+                      "p-4 rounded-2xl transition-all duration-500",
+                      backupConfig.enabled
+                        ? "bg-primary/10 text-primary scale-110 shadow-lg"
+                        : "bg-muted/40 text-muted-foreground",
+                    )}
+                  >
+                    <Database className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-xl font-black text-foreground tracking-tight">
+                      הפעלת מנגנון גיבוי
+                    </h4>
+                    <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-sm">
+                      המערכת תבצע גיבוי אוטומטי של כל מסד הנתונים והקבצים ללא
+                      צורך בהתערבות ידנית.
+                    </p>
+                  </div>
+                </div>
+
+                <Switch
+                  checked={backupConfig.enabled}
+                  onCheckedChange={(v) => updateBackupConfig("enabled", v)}
+                  className="data-[state=checked]:bg-primary"
+                />
               </div>
 
               <div
-                className={`space-y-4 transition-all duration-300 ${!backupConfig.enabled ? "opacity-50 pointer-events-none grayscale" : ""}`}
+                className={cn(
+                  "space-y-6 transition-all duration-700",
+                  !backupConfig.enabled &&
+                    "opacity-40 grayscale pointer-events-none scale-[0.98]",
+                )}
               >
-                <label className="text-base font-bold text-foreground flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-muted-foreground" />
-                  תדירות הגיבוי
-                </label>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-xl">
+                    <Clock className="w-4 h-4 text-primary" />
+                  </div>
+                  <h4 className="font-black text-base tracking-tight">
+                    תדירות גיבוי מתוזמן
+                  </h4>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   {[6, 12, 24].map((hours) => (
                     <button
@@ -119,114 +132,181 @@ export function BackupSettings({
                       onClick={() =>
                         updateBackupConfig("interval_hours", hours)
                       }
-                      className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all duration-200 hover:scale-[1.02]
-                                    ${
-                                      backupConfig.interval_hours === hours
-                                        ? "border-primary bg-primary/5 text-primary shadow-md ring-1 ring-primary/20"
-                                        : "border-border hover:border-primary/30 hover:bg-muted/30 bg-background"
-                                    }
-                                `}
+                      className={cn(
+                        "group relative p-8 rounded-[2rem] border-2 flex flex-col items-center gap-3 transition-all duration-500 hover:scale-[1.05] hover:shadow-2xl hover:shadow-primary/5",
+                        backupConfig.interval_hours === hours
+                          ? "border-primary bg-primary/5 shadow-2xl shadow-primary/10 ring-4 ring-primary/5"
+                          : "border-border/50 bg-background/50 hover:border-primary/20",
+                      )}
                     >
-                      <span className="text-3xl font-black">{hours}</span>
-                      <span className="font-medium text-sm text-muted-foreground">
+                      <span
+                        className={cn(
+                          "text-5xl font-black font-mono transition-transform duration-500 group-hover:scale-110",
+                          backupConfig.interval_hours === hours
+                            ? "text-primary"
+                            : "text-muted-foreground/40",
+                        )}
+                      >
+                        {hours}
+                      </span>
+                      <span className="font-black text-[10px] uppercase text-muted-foreground">
                         שעות
                       </span>
+
+                      {backupConfig.interval_hours === hours && (
+                        <motion.div
+                          layoutId="freq-check"
+                          className="absolute top-4 right-4 text-primary"
+                        >
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-lg shadow-primary/40" />
+                        </motion.div>
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </SectionCard>
         </div>
 
-        {/* Sidebar Actions Area (4 Columns) */}
+        {/* Sidebar Actions Area */}
         <div className="col-span-12 lg:col-span-4 space-y-8">
-          {/* Manual Backup */}
-          <Card className="bg-primary/5 border-primary/10 shadow-sm border-2 border-dashed">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-3 text-lg font-bold">
-                <Download className="w-5 h-5 text-primary" />
-                גיבוי ידני
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                צור נקודת שחזור מיידית ושמור אותה כקובץ במחשב שלך.
+          <SectionCard icon={Download} title="גיבוי ידני">
+            <div className="space-y-6 py-2">
+              <p className="text-muted-foreground text-sm font-medium leading-relaxed">
+                יצירת נקודת שחזור מיידית. מומלץ לבצע לפני שינויים משמעותיים
+                במערכת.
               </p>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-4">
                 <Button
                   onClick={handleServerBackupNow}
                   disabled={isServerBackingUp}
                   variant="outline"
-                  className="w-full font-bold h-11 border-primary/20 hover:bg-primary/10 text-primary hover:text-primary"
+                  className="h-14 rounded-2xl border-primary/20 bg-background font-black text-primary hover:bg-primary hover:text-white transition-all duration-500 group"
                 >
                   {isServerBackingUp ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    "גיבוי שרת"
+                    <>
+                      <RefreshCw className="w-5 h-5 ml-3 group-hover:rotate-180 transition-transform duration-700" />
+                      ביצוע גיבוי שרת
+                    </>
                   )}
                 </Button>
 
                 <Button
                   onClick={handleBackup}
                   disabled={isBackingUp}
-                  className="w-full font-bold h-11 shadow-lg shadow-primary/10"
+                  className="h-14 rounded-2xl bg-primary text-white shadow-2xl shadow-primary/20 font-black hover:scale-[1.02] transition-all"
                 >
                   {isBackingUp ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    "הורד קובץ"
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Restore */}
-          <Card className="border-destructive/20 bg-destructive/5 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-3 text-lg font-bold text-destructive">
-                <Upload className="w-5 h-5" />
-                שחזור מערכת
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-destructive/80">
-                שחזור נתונים מקובץ גיבוי קיים. פעולה זו תדרוס את הנתונים
-                הקיימים.
-              </p>
-
-              <div className="w-full">
-                <input
-                  type="file"
-                  id="restore-file"
-                  accept=".json"
-                  className="hidden"
-                  onChange={handleRestore}
-                />
-                <Button
-                  onClick={() =>
-                    document.getElementById("restore-file")?.click()
-                  }
-                  disabled={isRestoring}
-                  variant="destructive"
-                  className="w-full h-11 font-bold shadow-lg shadow-destructive/10"
-                >
-                  {isRestoring ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin ml-2" />
-                      משחזר נתונים...
+                      <Download className="w-5 h-5 ml-3" />
+                      הורדת קובץ גיבוי
                     </>
-                  ) : (
-                    "בחר קובץ לשחזור"
                   )}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </SectionCard>
+
+          <SectionCard icon={Upload} title="שחזור נתונים" variant="danger">
+            <div className="space-y-6 py-2">
+              <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl mb-4">
+                <p className="text-red-600/80 text-[11px] font-black leading-relaxed flex gap-2">
+                  <span className="shrink-0 text-lg">⚠️</span>
+                  אזהרה: שחזור ידרוס את כל הנתונים הקיימים במערכת ולא ניתן יהיה
+                  לבטל פעולה זו.
+                </p>
+              </div>
+
+              <input
+                type="file"
+                id="restore-file"
+                accept=".json"
+                className="hidden"
+                onChange={handleRestore}
+              />
+
+              <Button
+                onClick={() => document.getElementById("restore-file")?.click()}
+                disabled={isRestoring}
+                className="w-full h-16 rounded-[2rem] bg-red-500 text-white shadow-2xl shadow-red-500/20 font-black hover:bg-red-600 transition-all flex flex-col gap-1 items-center justify-center group"
+              >
+                {isRestoring ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Upload className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+                      <span className="text-lg">בחר קובץ לשחזור</span>
+                    </div>
+                    <span className="text-[10px] opacity-70 font-medium">
+                      תומך בקבצי JSON בלבד
+                    </span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </SectionCard>
         </div>
       </div>
     </div>
+  );
+}
+
+// --- Reusable Internal UI Components ---
+
+function SectionCard({
+  icon: Icon,
+  title,
+  children,
+  badge,
+  variant = "default",
+}: any) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border shadow-2xl shadow-primary/5 overflow-hidden",
+        variant === "danger" ? "border-red-500/10" : "border-primary/10",
+      )}
+    >
+      <div
+        className={cn(
+          "px-8 py-6 border-b flex items-center justify-between",
+          variant === "danger"
+            ? "bg-red-500/5 border-red-500/10"
+            : "bg-primary/5 border-primary/10",
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "p-2.5 rounded-2xl",
+              variant === "danger"
+                ? "bg-red-500/10 text-red-600"
+                : "bg-primary/10 text-primary",
+            )}
+          >
+            <Icon className="w-5 h-5" />
+          </div>
+          <h3
+            className={cn(
+              "text-xl font-black tracking-tight",
+              variant === "danger" ? "text-red-600" : "text-foreground",
+            )}
+          >
+            {title}
+          </h3>
+        </div>
+        {badge}
+      </div>
+      <div className="p-8">{children}</div>
+    </motion.div>
   );
 }

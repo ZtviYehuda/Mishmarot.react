@@ -46,6 +46,8 @@ export interface Employee {
   status_name?: string | null;
   status_color?: string | null;
   last_status_update?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
   is_active: boolean;
 
   // Command Hierarchy

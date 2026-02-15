@@ -23,29 +23,29 @@ export function PageHeader({
   return (
     <div className="flex flex-col gap-2 mb-3 sm:mb-6 lg:mb-8">
       {/* Breadcrumb style category - Hidden on mobile */}
-      <div className="hidden sm:flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1 text-right">
+      <div className="hidden sm:flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase leading-none mb-1 text-right">
         <span>ניהול מערכת</span>
         <ChevronLeft className="w-3 h-3 rotate-180" />
         <span className="text-primary transition-colors">{category}</span>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="flex items-center gap-3 w-full sm:w-auto min-w-0">
-          {/* Icon Container - Responsive Size */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-4 w-full sm:w-auto min-w-0">
+          {/* Icon Container - Premium Rounded */}
           <div
             className={cn(
-              "w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-muted/50 to-muted border border-border flex items-center justify-center shrink-0 shadow-sm",
+              "w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[1.5rem] bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex items-center justify-center shrink-0 shadow-xl shadow-primary/5",
               iconClassName,
             )}
           >
-            <Icon className="w-5 h-5 sm:w-7 sm:h-7 text-foreground/70" />
+            <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           </div>
 
           <div className="text-right min-w-0 flex-1">
-            <h1 className="text-xl sm:text-3xl font-black text-foreground tracking-tight mb-0.5 sm:mb-1 truncate">
+            <h1 className="text-2xl sm:text-4xl font-black text-foreground tracking-tight mb-1 truncate">
               {title}
             </h1>
-            <p className="text-xs sm:text-sm font-bold text-muted-foreground truncate">
+            <p className="text-xs sm:text-sm font-bold text-muted-foreground truncate opacity-80">
               {subtitle}
             </p>
           </div>

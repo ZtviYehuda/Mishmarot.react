@@ -110,6 +110,15 @@ def get_comparison_stats():
         from app.models.employee_model import EmployeeModel
 
         requester = EmployeeModel.get_employee_by_id(user_id)
+        if requester.get("is_temp_commander"):
+            return (
+                jsonify(
+                    {
+                        "error": "Unauthorized: Temp commanders cannot view comparison stats"
+                    }
+                ),
+                403,
+            )
 
         date = request.args.get("date")
         days = int(request.args.get("days", 1))
@@ -151,6 +160,13 @@ def get_trend_stats():
         from app.models.employee_model import EmployeeModel
 
         requester = EmployeeModel.get_employee_by_id(user_id)
+        if requester.get("is_temp_commander"):
+            return (
+                jsonify(
+                    {"error": "Unauthorized: Temp commanders cannot view trend stats"}
+                ),
+                403,
+            )
 
         days = int(request.args.get("days", 7))
         date = request.args.get("date")
@@ -270,21 +286,29 @@ def log_status():
 
     if success:
         # Handle Delegation (New Feature)
-        delegation = data.get("delegation")
-        if delegation and delegation.get("delegate_id"):
+        delegation_data = data.get("delegation")
+        if delegation_data and delegation_data.get("delegate_id"):
             try:
                 from app.models.employee_model import EmployeeModel
 
-                del_id = delegation["delegate_id"]
+                del_id = delegation_data["delegate_id"]
                 # Use status dates for delegation period
                 d_start = start_date or datetime.now()
                 d_end = end_date
 
-                EmployeeModel.create_delegation(current_user_id, del_id, d_start, d_end)
-                print(f"[INFO] Created delegation from {current_user_id} to {del_id}")
+                del_success, del_res = EmployeeModel.create_delegation(
+                    current_user_id, del_id, d_start, d_end
+                )
+                if del_success:
+                    print(
+                        f"[INFO] Created delegation from {current_user_id} to {del_id}"
+                    )
+                    # We'll attach this to the response
+                    delegation_info = del_res
+                else:
+                    print(f"[ERROR] Failed to create delegation: {del_res}")
             except Exception as e:
-                print(f"[ERROR] Failed to create delegation: {e}")
-                # We don't fail the request, just log it. The status was updated.
+                print(f"[ERROR] Exception creating delegation: {e}")
 
     if success:
         AuditLogModel.log_action(
@@ -300,7 +324,10 @@ def log_status():
                 "note": note,
             },
         )
-        return jsonify({"success": True, "message": "הסטטוס עודכן"})
+        resp = {"success": True, "message": "הסטטוס עודכן"}
+        if "delegation_info" in locals():
+            resp["delegation"] = delegation_info
+        return jsonify(resp)
     return jsonify({"success": False, "error": "Failed to log status"}), 500
 
 

@@ -180,12 +180,15 @@ export const useEmployees = () => {
   }) => {
     setLoading(true);
     try {
-      await apiClient.post(attEndpoints.ATTENDANCE_LOG_ENDPOINT, payload);
+      const { data } = await apiClient.post(
+        attEndpoints.ATTENDANCE_LOG_ENDPOINT,
+        payload,
+      );
       await fetchEmployees(); // Refresh list to see updated status
-      return true;
+      return data;
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to log status");
-      return false;
+      return null;
     } finally {
       setLoading(false);
     }

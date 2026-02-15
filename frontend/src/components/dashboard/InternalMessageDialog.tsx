@@ -10,10 +10,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Send, Loader2, User, MessageSquare, ArrowLeft, ShieldAlert } from "lucide-react";
+import {
+  Send,
+  Loader2,
+  User,
+  MessageSquare,
+  ArrowLeft,
+  ShieldAlert,
+} from "lucide-react";
 import apiClient from "@/config/api.client";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 interface InternalMessageDialogProps {
   open: boolean;
@@ -117,7 +123,10 @@ export function InternalMessageDialog({
 
               <div className="space-y-6">
                 <div className="grid gap-3">
-                  <Label htmlFor="title" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1">
+                  <Label
+                    htmlFor="title"
+                    className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1"
+                  >
                     נושא ההודעה
                   </Label>
                   <Input
@@ -130,7 +139,10 @@ export function InternalMessageDialog({
                 </div>
 
                 <div className="grid gap-3">
-                  <Label htmlFor="message" className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1">
+                  <Label
+                    htmlFor="message"
+                    className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pr-1"
+                  >
                     תוכן ההודעה
                   </Label>
                   <Textarea
@@ -149,7 +161,9 @@ export function InternalMessageDialog({
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <p className="text-[11px] text-indigo-800 leading-normal font-black tracking-tight opacity-70">
-                  הודעה זו תישלח בתוך המערכת בלבד ותוצג למפקד בכניסתו הבאה. מומלץ להימנע משליחת פרטים רגישים ביותר שאינם תואמים את רמת הסיווג של עמדת המחשב.
+                  הודעה זו תישלח בתוך המערכת בלבד ותוצג למפקד בכניסתו הבאה.
+                  מומלץ להימנע משליחת פרטים רגישים ביותר שאינם תואמים את רמת
+                  הסיווג של עמדת המחשב.
                 </p>
               </div>
             </>

@@ -1,6 +1,6 @@
 from app.utils.db import get_db_connection
 from psycopg2.extras import RealDictCursor
-from datetime import datetime
+from datetime import datetime, date
 
 
 class AttendanceModel:
@@ -334,7 +334,15 @@ class AttendanceModel:
                 )
                 status_params = []
                 if date:
-                    status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                    try:
+                        check_date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+                        today = datetime.now().date()
+                        if check_date_obj > today:
+                            status_condition = "AND DATE(start_datetime) <= %s AND end_datetime IS NOT NULL AND DATE(end_datetime) >= %s"
+                        else:
+                            status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                    except Exception:
+                        status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
                     status_params = [date, date]
 
                 query = f"""
@@ -464,7 +472,12 @@ class AttendanceModel:
                         JOIN status_types st ON al.status_type_id = st.id
                         WHERE {count_condition}
                         AND DATE(al.start_datetime) <= p.date
-                        AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= p.date)
+                        AND (
+                            CASE 
+                                WHEN p.date > CURRENT_DATE THEN al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= p.date
+                                ELSE (al.end_datetime IS NULL OR DATE(al.end_datetime) >= p.date)
+                            END
+                        )
                     ) as present_count
                 FROM params p
                 ORDER BY p.date ASC
@@ -492,8 +505,19 @@ class AttendanceModel:
             )
 
             if filters and filters.get("date"):
-                status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
-                params.extend([filters["date"], filters["date"]])
+                try:
+                    check_date_str = filters["date"]
+                    check_date_obj = datetime.strptime(
+                        check_date_str, "%Y-%m-%d"
+                    ).date()
+                    if check_date_obj > date.today():
+                        status_condition = "AND DATE(start_datetime) <= %s AND end_datetime IS NOT NULL AND DATE(end_datetime) >= %s"
+                    else:
+                        status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                    params.extend([check_date_str, check_date_str])
+                except:
+                    status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                    params.extend([filters["date"], filters["date"]])
 
             query = f"""
                 SELECT 

@@ -10,12 +10,17 @@ import { MonthPicker } from "@/components/common/MonthPicker";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 
 interface ReportToolbarProps {
-  viewMode: "daily" | "weekly" | "monthly" | "yearly";
-  onViewModeChange: (mode: "daily" | "weekly" | "monthly" | "yearly") => void;
+  viewMode: "daily" | "weekly" | "monthly" | "yearly" | "custom";
+  onViewModeChange: (
+    mode: "daily" | "weekly" | "monthly" | "yearly" | "custom",
+  ) => void;
   date: Date;
   onDateChange: (date: Date) => void;
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange | undefined) => void;
   maxDate?: Date;
 }
 
@@ -24,6 +29,8 @@ export function ReportToolbar({
   onViewModeChange,
   date,
   onDateChange,
+  dateRange,
+  onDateRangeChange,
   maxDate,
 }: ReportToolbarProps) {
   return (
@@ -40,6 +47,7 @@ export function ReportToolbar({
             { id: "weekly", label: "שבועי" },
             { id: "monthly", label: "חודשי" },
             { id: "yearly", label: "שנתי" },
+            { id: "custom", label: "טווח תאריכים" },
           ].map((tab) => (
             <TabsTrigger
               key={tab.id}
@@ -59,13 +67,28 @@ export function ReportToolbar({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full sm:w-auto min-w-[180px] justify-between text-right font-normal h-11 bg-background border-border/60 hover:bg-muted/50 rounded-xl transition-all shadow-sm"
+                className="w-full sm:w-auto min-w-[240px] justify-between text-right font-normal h-11 bg-background border-border/60 hover:bg-muted/50 rounded-xl transition-all shadow-sm"
               >
                 <span className="flex items-center gap-2 truncate">
                   <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
-                  {viewMode === "monthly"
-                    ? format(date, "MMMM yyyy", { locale: he })
-                    : format(date, "dd/MM/yyyy", { locale: he })}
+                  {viewMode === "monthly" ? (
+                    format(date, "MMMM yyyy", { locale: he })
+                  ) : viewMode === "custom" ? (
+                    dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "dd/MM/yy")} -{" "}
+                          {format(dateRange.to, "dd/MM/yy")}
+                        </>
+                      ) : (
+                        format(dateRange.from, "dd/MM/yyyy")
+                      )
+                    ) : (
+                      "בחר טווח תאריכים"
+                    )
+                  ) : (
+                    format(date, "dd/MM/yyyy", { locale: he })
+                  )}
                 </span>
               </Button>
             </PopoverTrigger>
@@ -75,6 +98,17 @@ export function ReportToolbar({
             >
               {viewMode === "monthly" ? (
                 <MonthPicker current={date} onSelect={onDateChange} />
+              ) : viewMode === "custom" ? (
+                <CalendarComponent
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={onDateRangeChange}
+                  locale={he}
+                  initialFocus
+                  numberOfMonths={2}
+                  disabled={(d) => (maxDate ? d > maxDate : false)}
+                  className="p-3 bg-background rounded-xl"
+                />
               ) : (
                 <CalendarComponent
                   mode="single"

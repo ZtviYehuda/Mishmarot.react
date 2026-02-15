@@ -85,7 +85,7 @@ export const DashboardFilters = ({
     selectedServiceTypes.length > 0;
 
   return (
-    <Card className="flex flex-col border border-border shadow-sm bg-card overflow-hidden h-full">
+    <Card className="flex flex-col overflow-hidden h-full">
       {/* Header */}
       <div
         className={`flex items-center justify-between p-4 border-b border-border/50 bg-muted/30 ${isMobile ? "px-10" : ""}`}
@@ -112,10 +112,10 @@ export const DashboardFilters = ({
       {/* Content - Vertical Stack */}
       <div className="p-4 flex flex-col gap-4 flex-1">
         {/* Organizational Filters Group */}
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1">
           {/* Department */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-1">
+            <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               מחלקה
             </label>
             <Select
@@ -148,7 +148,7 @@ export const DashboardFilters = ({
 
           {/* Section */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-1">
+            <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               מדור
             </label>
             <Select
@@ -187,7 +187,7 @@ export const DashboardFilters = ({
 
           {/* Team */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-1">
+            <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               חולייה
             </label>
             <Select
@@ -229,7 +229,7 @@ export const DashboardFilters = ({
 
         {/* Status Filter */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-1">
+          <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
             סינון לפי סטטוס
           </label>
           <Select
@@ -270,7 +270,7 @@ export const DashboardFilters = ({
 
         {/* Service Type Filter */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mr-1">
+          <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
             מעמד
           </label>
           <div className="flex flex-wrap gap-1.5 p-2 bg-muted/20 rounded-lg border border-dashed hover:border-primary/30 transition-colors">

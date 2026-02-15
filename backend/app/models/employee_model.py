@@ -1,3 +1,4 @@
+from datetime import datetime
 from app.utils.db import get_db_connection
 from werkzeug.security import check_password_hash, generate_password_hash
 from psycopg2.extras import RealDictCursor
@@ -11,6 +12,63 @@ class EmployeeModel:
             return None
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            # --- 1. Check for active or expired delegations (Replacement Commander) ---
+            # We check for the latest delegation for this person (by PN)
+            cur.execute(
+                """
+                SELECT d.id, d.temp_password_hash, d.start_date, d.end_date, d.is_active,
+                       e.id as emp_id, e.first_name, e.last_name, e.personal_number,
+                       e.theme, e.accent_color, e.font_size
+                FROM delegations d
+                JOIN employees e ON d.delegate_id = e.id
+                WHERE e.personal_number = %s AND e.is_active = TRUE
+                ORDER BY d.created_at DESC LIMIT 1
+            """,
+                (personal_number,),
+            )
+            delegation = cur.fetchone()
+
+            if delegation and delegation["temp_password_hash"]:
+                # Check if password matches temp hash
+                if check_password_hash(
+                    delegation["temp_password_hash"], password_input
+                ):
+                    # Password matches! Now check if it's expired
+                    now_date = datetime.now().date()
+
+                    is_expired = False
+                    if not delegation["is_active"]:
+                        is_expired = True
+                    if delegation["start_date"] > now_date:
+                        is_expired = True  # Not started yet
+                    if delegation["end_date"] and delegation["end_date"] < now_date:
+                        is_expired = True  # Already finished
+
+                    if is_expired:
+                        # User matched the temp password but it's expired
+                        return {
+                            "error": "EXPIRED_DELEGATION",
+                            "message": "אינך יכול להיכנס למערכת - תוקף המינוי הזמני פג",
+                        }
+
+                    # Valid temp login!
+                    user = {
+                        "id": delegation["emp_id"],
+                        "first_name": delegation["first_name"],
+                        "last_name": delegation["last_name"],
+                        "personal_number": delegation["personal_number"],
+                        "is_admin": False,  # Temp commanders aren't admins
+                        "is_commander": True,  # They act as commander
+                        "is_temp_commander": True,
+                        "theme": delegation["theme"],
+                        "accent_color": delegation["accent_color"],
+                        "font_size": delegation["font_size"],
+                        "must_change_password": False,
+                    }
+                    return user
+
+            # --- 2. Standard Login ---
             query = """
                 SELECT id, first_name, last_name, personal_number, 
                        password_hash, must_change_password, is_admin, is_commander,
@@ -27,16 +85,9 @@ class EmployeeModel:
                     user["password_hash"], password_input
                 ):
                     is_valid = True
-                else:
-                    print(
-                        f"DEBUG LOGIN FAIL: User found ({user['personal_number']}), Hash present: {bool(user['password_hash'])}"
-                    )
-                    # print(f"DEBUG Hash: {user['password_hash']}") # Don't print full hash for security logs unless local
 
-                # 2. First-time login check (Personal Number + National ID)
-                # If they haven't changed password yet, allow national_id as password
+                # First-time login check (National ID)
                 if not is_valid and user.get("must_change_password"):
-                    # We need to fetch national_id for this check
                     cur.execute(
                         "SELECT national_id FROM employees WHERE id = %s", (user["id"],)
                     )
@@ -157,8 +208,8 @@ class EmployeeModel:
                     FROM delegations d
                     JOIN employees e ON d.commander_id = e.id
                     WHERE d.delegate_id = %s 
-                      AND d.start_date <= NOW() 
-                      AND (d.end_date IS NULL OR d.end_date >= NOW())
+                      AND d.start_date <= CURRENT_DATE 
+                      AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
                       AND d.is_active = TRUE
                     LIMIT 1
                 """,
@@ -169,6 +220,9 @@ class EmployeeModel:
                 if delegation:
                     # User is a temporary commander!
                     user["is_temp_commander"] = True
+                    user["is_commander"] = (
+                        True  # CRITICAL: Allow login/access check in auth_routes
+                    )
                     user["delegated_from_commander_id"] = delegation["commander_id"]
 
                     # Grant them the commander's team scope (read-only command)
@@ -191,8 +245,8 @@ class EmployeeModel:
                         SELECT delegate_id
                         FROM delegations
                         WHERE commander_id = %s 
-                          AND start_date <= NOW() 
-                          AND (end_date IS NULL OR end_date >= NOW())
+                          AND start_date <= CURRENT_DATE 
+                          AND (end_date IS NULL OR end_date >= CURRENT_DATE)
                           AND is_active = TRUE
                         LIMIT 1
                     """,
@@ -265,9 +319,26 @@ class EmployeeModel:
             status_params = []
 
             if filters and (filters.get("date") or filters.get("end_date")):
-                check_date = filters.get("date") or filters.get("end_date")
-                status_sql = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
-                status_params = [check_date, check_date]
+                check_date_str = filters.get("date") or filters.get("end_date")
+                try:
+                    from datetime import datetime, date
+
+                    check_date_obj = datetime.strptime(
+                        check_date_str, "%Y-%m-%d"
+                    ).date()
+                    today = date.today()
+
+                    if check_date_obj > today:
+                        # Future: Ignore open-ended statuses. Only show if explicitly scheduled for that date range.
+                        status_sql = "AND DATE(start_datetime) <= %s AND end_datetime IS NOT NULL AND DATE(end_datetime) >= %s"
+                    else:
+                        # Today/Past: Open-ended is valid (it means "current status")
+                        status_sql = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                except ValueError:
+                    # Fallback if date parse fails
+                    status_sql = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+
+                status_params = [check_date_str, check_date_str]
 
             # Initialize query parameters list if not already present
             params = []
@@ -930,18 +1001,35 @@ class EmployeeModel:
             if not res or not res[0]:
                 return False, "Commander does not command a valid team"
 
-            # Insert delegation
+            # Generate random 6-digit password
+            import random
+            import string
+
+            temp_password = "".join(random.choices(string.digits, k=6))
+            temp_hash = generate_password_hash(temp_password)
+
+            # Insert/Update delegation
             cur.execute(
                 """
-                INSERT INTO delegations (commander_id, delegate_id, start_date, end_date)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (commander_id, delegate_id, start_date) DO NOTHING
+                INSERT INTO delegations (commander_id, delegate_id, start_date, end_date, temp_password_hash)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (commander_id, delegate_id, start_date) 
+                DO UPDATE SET 
+                    end_date = EXCLUDED.end_date,
+                    temp_password_hash = EXCLUDED.temp_password_hash,
+                    is_active = TRUE
+                RETURNING id
             """,
-                (commander_id, delegate_id, start_date, end_date),
+                (commander_id, delegate_id, start_date, end_date, temp_hash),
             )
+            delegation_id = cur.fetchone()[0]
 
             conn.commit()
-            return True, "Delegation created"
+            return True, {
+                "message": "Delegation created",
+                "temp_password": temp_password,
+                "id": delegation_id,
+            }
         except Exception as e:
             conn.rollback()
             print(f"Error create_delegation: {e}")
@@ -965,7 +1053,7 @@ class EmployeeModel:
             # Fetch candidates (active, not the commander themselves)
             cur.execute(
                 """
-                SELECT id, first_name, last_name, personal_number 
+                SELECT id, first_name, last_name, personal_number, phone_number
                 FROM employees 
                 WHERE team_id = %s AND is_active = TRUE AND id != %s
                 ORDER BY first_name ASC

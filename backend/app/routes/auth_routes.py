@@ -27,6 +27,22 @@ def login():
         # שלב 1: אימות פרטים בסיסי
         print(f"DEBUG LOGIN: Checking credentials for {p_num}")
         user_basic = EmployeeModel.login_check(p_num, password)
+
+        # Handle special error returns from login_check (e.g. EXPIRED_DELEGATION)
+        if isinstance(user_basic, dict) and "error" in user_basic:
+            error_code = user_basic["error"]
+            error_msg = user_basic.get("message", "שגיאת התחברות")
+
+            # Log specific block
+            AuditLogModel.log_action(
+                user_id=user_basic.get("id"),
+                action_type=f"BLOCKED_LOGIN_{error_code}",
+                description=f"Login blocked: {error_msg} for P-Num: {p_num}",
+                ip_address=request.remote_addr,
+            )
+
+            return jsonify({"success": False, "error": error_msg}), 403
+
         if not user_basic:
             print("DEBUG LOGIN: login_check failed")
             # Log Failed Attempt

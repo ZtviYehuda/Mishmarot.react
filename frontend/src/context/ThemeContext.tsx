@@ -32,7 +32,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuthContext();
+  const { user, refreshUser } = useAuthContext();
   const { updatePreferences } = useEmployees();
 
   // Track synchronization state to prevent infinite loops or redundant calls
@@ -111,10 +111,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           theme,
           accent_color: accentColor,
           font_size: fontSize,
+        }).then(() => {
+          refreshUser();
         });
       }
     }
-  }, [theme, accentColor, fontSize, user, updatePreferences]);
+  }, [theme, accentColor, fontSize, user, updatePreferences, refreshUser]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));

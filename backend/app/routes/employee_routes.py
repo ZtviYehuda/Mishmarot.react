@@ -276,6 +276,12 @@ def export_excel():
 
     requester = EmployeeModel.get_employee_by_id(user_id)
 
+    if requester.get("is_temp_commander"):
+        return (
+            jsonify({"error": "Unauthorized: Temp commanders cannot export reports"}),
+            403,
+        )
+
     # Check if this is a range request
     start_date_str = request.args.get("start_date")
     end_date_str = request.args.get("end_date")

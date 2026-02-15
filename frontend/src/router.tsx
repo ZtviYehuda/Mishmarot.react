@@ -54,6 +54,16 @@ const ProtectedRoute = () => {
     );
   }
 
+  // Redirect temp commanders away from management pages
+  const managementRoutes = ["/employees", "/transfers"];
+  const isManagementRoute = managementRoutes.some((route) =>
+    location.pathname.startsWith(route),
+  );
+
+  if (user.is_temp_commander && isManagementRoute) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <EmployeeProvider>
       <MainLayout />

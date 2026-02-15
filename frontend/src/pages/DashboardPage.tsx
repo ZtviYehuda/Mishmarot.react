@@ -64,7 +64,7 @@ export default function DashboardPage() {
   } = useEmployees();
 
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<any[]>([]);
+  // const [stats, setStats] = useState<any[]>([]); // Removed in favor of computedStats
   const [allStatuses, setAllStatuses] = useState<any[]>([]);
   const [birthdays, setBirthdays] = useState<any[]>([]);
   const [structure, setStructure] = useState<Department[]>([]);
@@ -249,7 +249,7 @@ export default function DashboardPage() {
           department_id: selectedDeptId,
           section_id: selectedSectionId,
           team_id: selectedTeamId,
-          // status_id excluded as per request
+          status_id: selectedStatusData?.id?.toString(),
           serviceTypes: selectedServiceTypes.join(","),
         },
       );
@@ -264,7 +264,7 @@ export default function DashboardPage() {
     selectedDeptId,
     selectedSectionId,
     selectedTeamId,
-    // selectedStatusData excluded
+    selectedStatusData?.id,
     selectedServiceTypes,
   ]);
 
@@ -277,7 +277,7 @@ export default function DashboardPage() {
         department_id: selectedDeptId,
         section_id: selectedSectionId,
         team_id: selectedTeamId,
-        // status_id excluded as per request
+        status_id: selectedStatusData?.id?.toString(),
         serviceTypes: selectedServiceTypes.join(","),
       });
       setTrendStats(trendData);
@@ -291,7 +291,7 @@ export default function DashboardPage() {
     selectedDeptId,
     selectedSectionId,
     selectedTeamId,
-    // selectedStatusData excluded
+    selectedStatusData?.id,
     selectedServiceTypes,
   ]);
 
@@ -341,7 +341,86 @@ export default function DashboardPage() {
     fetchEmployees,
   ]);
 
-  // Fetch Stats for the chart and table
+  // Calculate Stats CLIENT-SIDE to fix future date logic instantly
+  // Calculate Stats CLIENT-SIDE to fix future date logic instantly
+  const computedStats = useMemo(() => {
+    const statusMap = new Map<
+      string,
+      { status_id: number; status_name: string; color: string; count: number }
+    >();
+
+    // Initialize "Unreported" if needed, or let it be created dynamically
+    // We'll use ID -1 for Unreported
+    const unreportedKey = "unreported";
+
+    employees.forEach((emp) => {
+      const isToday = selectedDate.toDateString() === new Date().toDateString();
+      const statusName = emp.status_name?.trim() || "";
+
+      // Check if explicitly updated for this specific date
+      const isUpdatedToday =
+        emp.last_status_update &&
+        new Date(emp.last_status_update).toDateString() ===
+          selectedDate.toDateString();
+
+      // Allowlist: Only these statuses "stick" without explicit daily update
+      const isLongTermStatus = [
+        "חופש",
+        "מחלה",
+        "גימל",
+        "קורס",
+        "אבטחה",
+        "תגבור",
+        'חו"ל',
+        "סיפוח",
+        "הפניה",
+        "מיוחדת",
+      ].some((s) => statusName.includes(s));
+
+      let finalStatus = {
+        status_id: emp.status_id || 0,
+        status_name: statusName || "לא מדווח",
+        color: emp.status_color || "#cbd5e1",
+      };
+
+      // Apply Logic: Force "Unreported" for default statuses on non-updated days
+      if (!isToday && !isUpdatedToday && !isLongTermStatus) {
+        finalStatus = {
+          status_id: -1,
+          status_name: "לא דווח",
+          color: "#94a3b8", // Slate-400
+        };
+      }
+
+      // Aggregate
+      const key =
+        finalStatus.status_id === -1 ? unreportedKey : finalStatus.status_name; // Group by name to merge same statuses
+
+      if (!statusMap.has(key)) {
+        statusMap.set(key, {
+          status_id: finalStatus.status_id,
+          status_name: finalStatus.status_name,
+          color: finalStatus.color,
+          count: 0,
+        });
+      }
+
+      const entry = statusMap.get(key)!;
+      entry.count++;
+    });
+
+    const results = Array.from(statusMap.values()).sort(
+      (a, b) => b.count - a.count,
+    );
+
+    if (selectedStatusData) {
+      return results.filter((s) => s.status_id === selectedStatusData.id);
+    }
+
+    return results;
+  }, [employees, selectedDate, selectedStatusData]);
+
+  // Fetch Stats (Server-side) - ONLY for Birthdays now, since we compute stats client-side
   useEffect(() => {
     const fetchStatsData = async () => {
       setLoading(true);
@@ -355,7 +434,8 @@ export default function DashboardPage() {
       });
 
       if (data) {
-        setStats(data.stats || []);
+        // We DO NOT setStats here anymore to avoid conflicting with client-side logic
+        // setStats(data.stats || []);
         setBirthdays(data.birthdays || []);
       }
       setLoading(false);
@@ -470,11 +550,24 @@ export default function DashboardPage() {
     (t) => t.id.toString() === selectedTeamId,
   );
 
-  const unitName =
-    currentTeam?.name ||
-    currentSection?.name ||
-    currentDept?.name ||
-    "כלל היחידה";
+  const unitName = useMemo(() => {
+    if (selectedTeamId) return currentTeam?.name || "חוליה";
+    if (selectedSectionId) return currentSection?.name || "מדור";
+    if (selectedDeptId) return currentDept?.name || "מחלקה";
+
+    if (user?.commands_team_id) return "כלל החוליה";
+    if (user?.commands_section_id) return "כלל המדור";
+    if (user?.commands_department_id) return "כלל המחלקה";
+    return "כלל היחידה";
+  }, [
+    selectedTeamId,
+    selectedSectionId,
+    selectedDeptId,
+    currentTeam,
+    currentSection,
+    currentDept,
+    user,
+  ]);
 
   const serviceTypeLabel =
     selectedServiceTypes.length > 0
@@ -494,7 +587,13 @@ export default function DashboardPage() {
       title = `${serviceTypeLabel} | ${title}`;
     }
 
-    if (title === "כלל היחידה") return "נתוני כלל היחידה";
+    if (
+      title === "כלל היחידה" ||
+      title === "כלל החוליה" ||
+      title === "כלל המדור" ||
+      title === "כלל המחלקה"
+    )
+      return `נתוני ${title}`;
     return title;
   }, [unitName, selectedStatusData, serviceTypeLabel]);
 
@@ -559,8 +658,12 @@ export default function DashboardPage() {
       const dept = structure.find((d) => d.id === Number(selectedDeptId));
       if (dept) return dept.name;
     }
+
+    if (user?.commands_team_id) return "כלל החוליה";
+    if (user?.commands_section_id) return "כלל המדור";
+    if (user?.commands_department_id) return "כלל המחלקה";
     return "כלל היחידה";
-  }, [selectedTeamId, selectedSectionId, selectedDeptId, structure]);
+  }, [selectedTeamId, selectedSectionId, selectedDeptId, structure, user]);
 
   return (
     <div className="w-full space-y-6">
@@ -573,23 +676,23 @@ export default function DashboardPage() {
         badge={
           <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 w-full lg:w-auto">
             <DateHeader className="col-span-2 w-full justify-center sm:w-auto" />
-            <ReportHub
-              className="w-full sm:w-auto justify-center"
-              onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
-              onShareTrend={() => trendRef.current?.share()}
-              onShareComparison={() => comparisonRef.current?.share()}
-              onShareBirthdays={() => birthdaysRef.current?.share()}
-              initialViewMode={viewMode}
-              initialDate={selectedDate}
-              filters={{
-                department_id: selectedDeptId?.toString() || "",
-                section_id: selectedSectionId?.toString() || "",
-                team_id: selectedTeamId?.toString() || "",
-                serviceTypes: selectedServiceTypes,
-                unitName: currentUnitName,
-                statusName: selectedStatusData?.name,
-              }}
-            />
+            {!user?.is_temp_commander && (
+              <ReportHub
+                className="w-full sm:w-auto justify-center"
+                onShareBirthdays={() => birthdaysRef.current?.share()}
+                initialViewMode={viewMode}
+                initialDate={selectedDate}
+                filters={{
+                  department_id: selectedDeptId?.toString() || "",
+                  section_id: selectedSectionId?.toString() || "",
+                  team_id: selectedTeamId?.toString() || "",
+                  serviceTypes: selectedServiceTypes,
+                  unitName: currentUnitName,
+                  statusName: selectedStatusData?.name,
+                  status_id: selectedStatusData?.id?.toString(),
+                }}
+              />
+            )}
             <Button
               variant={isReportedToday ? "default" : "outline"}
               size="sm"
@@ -644,14 +747,21 @@ export default function DashboardPage() {
           <div className="flex flex-col xl:col-span-1">
             <EmployeesChart
               ref={snapshotRef}
-              stats={stats}
+              stats={computedStats} // Use computed stats
               loading={loading}
-              onOpenWhatsAppReport={() => setWhatsAppDialogOpen(true)}
+              onOpenWhatsAppReport={
+                user?.is_temp_commander
+                  ? undefined
+                  : () => setWhatsAppDialogOpen(true)
+              }
               onStatusClick={handleStatusClick}
-              onFilterClick={() => setFilterOpen(true)}
+              onFilterClick={
+                setFilterOpen ? () => setFilterOpen(true) : undefined
+              }
               title={chartTitle}
               description={chartDescription}
               selectedDate={selectedDate}
+              hideExportControls={user?.is_temp_commander}
             />
           </div>
 
@@ -680,40 +790,41 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Bottom Section: Wider Comparison & Trend Charts */}
-        {(showComparisonMatrix || showTrendGraph) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-            {showComparisonMatrix && (
-              <StatsComparisonCard
-                ref={comparisonRef}
-                data={comparisonStats}
-                loading={loadingExtras}
-                days={comparisonRange}
-                unitName={unitName}
-                subtitle={chartDescription}
-                selectedDate={selectedDate}
-              />
-            )}
-            {showTrendGraph && (
-              <AttendanceTrendCard
-                ref={trendRef}
-                data={trendStats}
-                loading={loadingTrend}
-                range={trendRange}
-                unitName={unitName}
-                subtitle={chartDescription}
-                selectedDate={selectedDate}
-                className={!showComparisonMatrix ? "md:col-span-2" : ""}
-              />
-            )}
-          </div>
-        )}
+        {/* Bottom Section: Wider Comparison & Trend Charts - HIDDEN FOR TEMP COMMANDERS */}
+        {!user?.is_temp_commander &&
+          (showComparisonMatrix || showTrendGraph) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch">
+              {showComparisonMatrix && (
+                <StatsComparisonCard
+                  ref={comparisonRef}
+                  data={comparisonStats}
+                  loading={loadingExtras}
+                  days={comparisonRange}
+                  unitName={unitName}
+                  subtitle={chartDescription}
+                  selectedDate={selectedDate}
+                />
+              )}
+              {showTrendGraph && (
+                <AttendanceTrendCard
+                  ref={trendRef}
+                  data={trendStats}
+                  loading={loadingTrend}
+                  range={trendRange}
+                  unitName={unitName}
+                  subtitle={chartDescription}
+                  selectedDate={selectedDate}
+                  className={!showComparisonMatrix ? "md:col-span-2" : ""}
+                />
+              )}
+            </div>
+          )}
       </div>
 
       <WhatsAppReportDialog
         open={whatsAppDialogOpen}
         onOpenChange={setWhatsAppDialogOpen}
-        currentStats={stats}
+        currentStats={computedStats} // Use computed stats
         unitName={unitName}
         isFiltered={hasActiveFilters}
       />
@@ -759,17 +870,17 @@ export default function DashboardPage() {
           employee={selectedSelfEmp}
           onSuccess={() => {
             refreshSelfStatus();
-            // Also refresh stats since report changed
-            getDashboardStats({
-              department_id: selectedDeptId,
-              section_id: selectedSectionId,
-              team_id: selectedTeamId,
-              date: format(selectedDate, "yyyy-MM-dd"),
-            }).then((data) => {
-              if (data) {
-                setStats(data.stats || []);
-              }
-            });
+            // Refresh employees list to update computed stats
+            fetchEmployees(
+              undefined,
+              selectedDeptId ? parseInt(selectedDeptId) : undefined,
+              undefined,
+              undefined,
+              selectedSectionId ? parseInt(selectedSectionId) : undefined,
+              selectedTeamId ? parseInt(selectedTeamId) : undefined,
+              format(selectedDate, "yyyy-MM-dd"),
+              selectedServiceTypes,
+            );
           }}
         />
       )}

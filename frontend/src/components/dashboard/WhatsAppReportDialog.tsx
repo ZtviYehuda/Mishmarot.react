@@ -9,10 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 import {
-  ShieldAlert,
   Info,
   FilterX,
   Send,
@@ -69,8 +67,15 @@ export const WhatsAppReportDialog = ({
     }
   }, [open, isFullMode, fullStats, getDashboardStats]);
 
+  const unitTypeLabel = useMemo(() => {
+    if (user?.commands_team_id) return "חוליה";
+    if (user?.commands_section_id) return "מדור";
+    if (user?.commands_department_id) return "מחלקה";
+    return "יחידה";
+  }, [user]);
+
   const activeStats = isFullMode ? fullStats || [] : currentStats;
-  const activeUnit = isFullMode ? "כלל היחידה" : unitName;
+  const activeUnit = isFullMode ? `כלל ה${unitTypeLabel}` : unitName;
 
   const reportData = useMemo(() => {
     let total = 0;
@@ -84,7 +89,7 @@ export const WhatsAppReportDialog = ({
     let message = `*דוח מצבת כוח אדם*\n`;
     message += `\n*מפקד/ת:* ${commander}\n`;
     message += `*תאריך:* ${new Date().toLocaleDateString("he-IL")}\n`;
-    message += `*יחידה:* ${activeUnit}\n`;
+    message += `*${unitTypeLabel}:* ${activeUnit}\n`;
 
     if (isFiltered && !isFullMode) {
       message += `_(תצוגה מסוננת)_\n`;
@@ -173,7 +178,7 @@ export const WhatsAppReportDialog = ({
                       : "text-muted-foreground/60",
                   )}
                 >
-                  ליחידה: {unitName}
+                  ל{unitTypeLabel}: {unitName}
                 </span>
               </button>
 
@@ -210,7 +215,7 @@ export const WhatsAppReportDialog = ({
                     isFullMode ? "text-white/70" : "text-muted-foreground/60",
                   )}
                 >
-                  כלל שוטרי היחידה
+                  כלל שוטרי ה{unitTypeLabel}
                 </span>
               </button>
             </div>

@@ -1,5 +1,4 @@
 import {
-  Check,
   Clock,
   AlertCircle,
   Users,
@@ -12,13 +11,6 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,296 +51,251 @@ export function NotificationSettings({
   ].filter(Boolean).length;
 
   return (
-    <div className="space-y-8 w-full max-w-[1920px] mx-auto pb-24 lg:pb-8">
-      {/* Header Section with Gradient Background */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/10 p-8 md:p-12 shadow-2xl shadow-primary/5"
-      >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl -ml-24 -mb-24" />
-
-        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-widest border border-primary/20">
-              <Sparkles className="w-3.5 h-3.5" />
-              Settings & Preferences
-            </div>
-            <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tight">
-              מרכז ההתראות
-            </h2>
-            <p className="text-muted-foreground text-lg font-medium max-w-2xl leading-relaxed">
-              התאם אישית את אופן קבלת העדכונים וההתראות במערכת כדי להישאר תמיד
-              בשליטה.
-            </p>
-          </div>
-
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="flex items-center gap-4 bg-background/50 backdrop-blur-xl border border-primary/10 px-6 py-4 rounded-[2rem] shadow-xl text-lg font-black"
-          >
-            <div className="relative flex h-4 w-4">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></span>
-            </div>
-            <span className="text-foreground">{activeCount} התראות פעילות</span>
-          </motion.div>
-        </div>
-      </motion.div>
-
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1600px] mx-auto pb-24 lg:pb-0">
       <div className="grid grid-cols-12 gap-8">
-        {/* Main Notifications Area */}
+        {/* RIGHT SIDE - Main Notifications */}
         <div className="col-span-12 lg:col-span-8 space-y-8">
-          <Card className="border-none bg-background/50 backdrop-blur-xl shadow-2xl shadow-black/5 rounded-[2.5rem] overflow-hidden border border-white/10">
-            <CardHeader className="p-8 md:p-10 bg-gradient-to-br from-muted/20 to-transparent border-b border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/10 rounded-2xl text-primary shadow-inner">
-                  <Bell className="w-7 h-7" />
+          <SectionCard
+            icon={Bell}
+            title="התראות אישיות"
+            badge={
+              <div className="flex items-center gap-3 bg-primary/5 border border-primary/10 px-4 py-1.5 rounded-full shadow-lg text-[10px] font-black uppercase">
+                <div className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </div>
-                <div>
-                  <CardTitle className="text-2xl font-black tracking-tight">
-                    התראות אישיות
-                  </CardTitle>
-                  <CardDescription className="text-lg font-medium mt-1">
-                    נהל את ההתראות שחשובות לך
-                  </CardDescription>
-                </div>
+                <span className="text-primary">{activeCount} פעילות</span>
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-border/30">
-                <NotificationItem
-                  icon={<AlertCircle className="w-6 h-6 text-rose-500" />}
-                  title="מחלה ממושכת"
-                  description="קבל התראה כאשר שוטר נמצא בסטטוס מחלה מעל 4 ימים רצופים לצורך מעקב רווחה"
-                  enabled={formData.notif_sick_leave}
-                  onChange={(val) =>
-                    setFormData({ ...formData, notif_sick_leave: val })
-                  }
-                  index={0}
-                />
-                <NotificationItem
-                  icon={<ArrowRightLeft className="w-6 h-6 text-blue-500" />}
-                  title="בקשות העברה חדשות"
-                  description="קבל עדכון מיידי כאשר מפקד אחר ביחידה מגיש בקשת העברה הממתינה לאישורך"
-                  enabled={formData.notif_transfers}
-                  onChange={(val) =>
-                    setFormData({ ...formData, notif_transfers: val })
-                  }
-                  index={1}
-                />
-                <NotificationItem
-                  icon={<Users className="w-6 h-6 text-amber-500" />}
-                  title="חוסר דיווח בוקר"
-                  description="קבל התראה על שוטרים כפופים שתקופת הדיווח שלהם הסתיימה וטרם הוזן להם סטטוס"
-                  enabled={formData.notif_morning_report}
-                  onChange={(val) =>
-                    setFormData({ ...formData, notif_morning_report: val })
-                  }
-                  index={2}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Admin Settings with Glass Effect */}
-          {user?.is_admin && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card className="border-none bg-destructive/5 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-destructive/10 shadow-2xl shadow-destructive/5">
-                <CardHeader className="bg-destructive/10 p-8 border-b border-destructive/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-destructive/10 rounded-2xl text-destructive shadow-inner">
-                        <Shield className="w-7 h-7" />
-                      </div>
-                      <CardTitle className="text-2xl font-black text-destructive tracking-tight">
-                        ניהול מערכת
-                      </CardTitle>
-                    </div>
-                    <Badge className="bg-destructive/20 text-destructive border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest">
-                      Admin Access
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-8 md:p-10">
-                  <div className="flex flex-col xl:flex-row items-center justify-between gap-10">
-                    <div className="flex items-start gap-6">
-                      <div className="p-5 bg-background shadow-2xl rounded-3xl shrink-0 border border-destructive/5 self-start md:self-center">
-                        <Clock className="w-10 h-10 text-destructive animate-pulse" />
-                      </div>
-                      <div className="space-y-2">
-                        <h4 className="text-xl font-black text-destructive leading-tight">
-                          שעת יעד לדיווח בוקר
-                        </h4>
-                        <p className="text-muted-foreground text-lg font-medium leading-relaxed max-w-xl">
-                          הגדר את השעה הרשמית שבה המערכת תסמן חוסר דיווח כחריג
-                          ותייצר התראות למפקדים.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
-                      <div className="relative w-full sm:w-auto group">
-                        <Input
-                          type="time"
-                          value={localDeadline}
-                          onChange={(e) => setLocalDeadline(e.target.value)}
-                          className="w-full sm:w-48 font-mono text-center text-2xl h-16 bg-background rounded-3xl border-2 border-border/50 group-hover:border-destructive/30 focus:border-destructive focus:ring-0 transition-all font-black tracking-widest"
-                        />
-                      </div>
-
-                      <AnimatePresence mode="wait">
-                        {hasChanges ? (
-                          <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="w-full sm:w-auto"
-                          >
-                            <Button
-                              size="lg"
-                              onClick={() =>
-                                updateSystemSetting(
-                                  "morning_report_deadline",
-                                  localDeadline,
-                                )
-                              }
-                              className="w-full h-16 rounded-3xl bg-destructive text-white hover:bg-destructive/90 shadow-xl shadow-destructive/20 font-black text-lg gap-3 px-8 transition-all active:scale-95"
-                            >
-                              <Save className="w-6 h-6" />
-                              שמור שינוי
-                            </Button>
-                          </motion.div>
-                        ) : (
-                          <div className="w-full sm:w-auto px-8 py-4 bg-muted/20 rounded-3xl text-muted-foreground font-black text-center border border-border/50">
-                            מעודכן
-                          </div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </div>
-
-        {/* Side Info Panel */}
-        <div className="col-span-12 lg:col-span-4 space-y-8">
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="h-full"
+            }
           >
-            <Card className="bg-gradient-to-b from-primary/5 to-background border-none shadow-2xl shadow-black/5 rounded-[2.5rem] h-full overflow-hidden border border-primary/5">
-              <CardHeader className="p-8 md:p-10 border-b border-primary/10">
-                <CardTitle className="text-2xl font-black flex items-center gap-3">
-                  <div className="p-2 bg-primary/20 rounded-xl">
-                    <Info className="w-6 h-6 text-primary" />
-                  </div>
-                  מרכז מידע
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 space-y-8">
-                <InfoFeature
-                  title="תדירות עדכונים"
-                  desc="ההתראות מוצגות בזמן אמת בלוח הבקרה, ובנוסף נשלח סיכום יומי למייל במידה והוגדר."
-                />
-                <InfoFeature
-                  title="מקבלי התראות"
-                  desc="התראות נשלחות רק למפקדים הרלוונטיים (חוליה, מדור, מחלקה) בהתאם למדרג הפיקודי."
-                />
-                <InfoFeature
-                  title="הודעות דחופות"
-                  desc="עדכוני אבטחה או הודעות מערכת קריטיות יישלחו תמיד, ללא קשר להגדרות ההתראות."
-                />
+            <div className="space-y-6">
+              <SwitchItem
+                label="התראות מחלה ממושכת"
+                desc="קבל התראה כאשר שוטר נמצא בסטטוס מחלה מעל 4 ימים רצופים"
+                checked={formData.notif_sick_leave}
+                onChange={(v: boolean) =>
+                  setFormData({ ...formData, notif_sick_leave: v })
+                }
+                icon={AlertCircle}
+              />
+              <SwitchItem
+                label="בקשות העברה חדשות"
+                desc="קבל עדכון כאשר מפקד מגיש בקשת העברה הממתינה לאישורך"
+                checked={formData.notif_transfers}
+                onChange={(v: boolean) =>
+                  setFormData({ ...formData, notif_transfers: v })
+                }
+                icon={ArrowRightLeft}
+              />
+              <SwitchItem
+                label="חוסר דיווח בוקר"
+                desc="התראה על שוטרים כפופים שטרם הוזן להם סטטוס נוכחות"
+                checked={formData.notif_morning_report}
+                onChange={(v: boolean) =>
+                  setFormData({ ...formData, notif_morning_report: v })
+                }
+                icon={Users}
+              />
+            </div>
+          </SectionCard>
 
-                <div className="pt-8 mt-8 border-t border-primary/10">
-                  <div className="p-6 bg-primary/10 rounded-3xl border border-primary/10">
-                    <p className="text-primary font-bold text-sm leading-relaxed">
-                      כל שינוי בהגדרות אלו נכנס לתוקף באופן מיידי עבור המשתמש
-                      שלך.
+          {/* Admin Settings Section */}
+          {user?.is_admin && (
+            <SectionCard
+              icon={Shield}
+              title="הגדרות מערכת קריטיות"
+              variant="danger"
+            >
+              <div className="flex flex-col md:flex-row items-center justify-between gap-8 p-6 bg-destructive/[0.03] rounded-[2rem] border border-destructive/10">
+                <div className="flex items-start gap-5">
+                  <div className="p-4 bg-background rounded-2xl shadow-xl shadow-destructive/5 shrink-0 border border-destructive/10">
+                    <Clock className="w-8 h-8 text-destructive" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-lg font-black text-destructive tracking-tight">
+                      שעת יעד לדיווח בוקר
+                    </h4>
+                    <p className="text-muted-foreground text-sm font-medium max-w-sm">
+                      קביעת השעה הרשמית בה המערכת תתחיל להפיץ התראות על חוסר
+                      דיווח בוקר.
                     </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <div className="relative group flex-1 md:flex-none text-right">
+                    <p className="text-[10px] font-black text-destructive/60 uppercase mb-1 mr-2">
+                      שעת יעד
+                    </p>
+                    <Input
+                      type="time"
+                      value={localDeadline}
+                      onChange={(e) => setLocalDeadline(e.target.value)}
+                      className="w-full md:w-36 h-14 bg-background rounded-2xl border-destructive/20 font-black text-2xl text-center focus:ring-destructive/20 transition-all font-mono"
+                    />
+                  </div>
+
+                  <AnimatePresence mode="wait">
+                    {hasChanges && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                      >
+                        <Button
+                          onClick={() =>
+                            updateSystemSetting(
+                              "morning_report_deadline",
+                              localDeadline,
+                            )
+                          }
+                          className="h-14 px-8 rounded-2xl bg-destructive text-white hover:bg-destructive/90 shadow-2xl shadow-destructive/20 font-black"
+                        >
+                          <Save className="w-5 h-5 ml-2" />
+                          עדכן
+                        </Button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </SectionCard>
+          )}
+        </div>
+
+        {/* LEFT SIDE - Info & Tips */}
+        <div className="col-span-12 lg:col-span-4 space-y-8">
+          <SectionCard icon={Info} title="מידע והנחיות">
+            <div className="space-y-8 py-4">
+              <InfoItemSimple
+                title="תדירות עדכונים"
+                desc="התראות המערכת נשלחות בזמן אמת ללוח הבקרה ולמייל האישי."
+              />
+              <InfoItemSimple
+                title="מדרג פיקודי"
+                desc="התראות נשלחות רק למפקדים הרלוונטיים בהתאם למדרג הארגוני."
+              />
+              <InfoItemSimple
+                title="הודעות חירום"
+                desc="עדכוני אבטחה וחירום יישלחו תמיד לכלל המשתמשים במערכת."
+              />
+
+              <div className="pt-8 border-t border-primary/5 text-center px-4">
+                <div className="inline-flex p-4 bg-primary/5 rounded-3xl border border-primary/10 mb-4">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                  אנחנו עובדים על הוספת התראות SMS וואטסאפ בגרסה הבאה של המערכת.
+                  הישארו מעודכנים!
+                </p>
+              </div>
+            </div>
+          </SectionCard>
         </div>
       </div>
     </div>
   );
 }
 
-function NotificationItem({
-  icon,
+// --- Internal UI Components ---
+
+function SectionCard({
+  icon: Icon,
   title,
-  description,
-  enabled,
-  onChange,
-  index = 0,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  enabled: boolean;
-  onChange: (val: boolean) => void;
-  index?: number;
-}) {
+  children,
+  badge,
+  variant = "default",
+}: any) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.1 * index }}
-      className="flex items-center justify-between p-8 md:p-10 hover:bg-primary/5 transition-all duration-300 group relative"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border shadow-2xl shadow-primary/5 overflow-hidden",
+        variant === "danger" ? "border-red-500/10" : "border-primary/10",
+      )}
     >
-      <div className="flex items-start gap-6 relative z-10">
-        <div className="mt-1 p-4 bg-muted/40 rounded-[1.5rem] group-hover:bg-background group-hover:shadow-2xl group-hover:shadow-black/5 transition-all duration-500 scale-100 group-hover:scale-110">
-          {icon}
-        </div>
-        <div className="space-y-2">
-          <label className="text-xl font-black text-foreground cursor-pointer block group-hover:text-primary transition-colors tracking-tight">
+      <div
+        className={cn(
+          "px-8 py-6 border-b flex items-center justify-between",
+          variant === "danger"
+            ? "bg-red-500/5 border-red-500/10"
+            : "bg-primary/5 border-primary/10",
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "p-2.5 rounded-2xl",
+              variant === "danger"
+                ? "bg-red-500/10 text-red-600"
+                : "bg-primary/10 text-primary",
+            )}
+          >
+            <Icon className="w-5 h-5" />
+          </div>
+          <h3
+            className={cn(
+              "text-xl font-black tracking-tight",
+              variant === "danger" ? "text-red-600" : "text-foreground",
+            )}
+          >
             {title}
-          </label>
-          <p className="text-muted-foreground text-lg font-medium max-w-2xl leading-relaxed">
-            {description}
-          </p>
+          </h3>
         </div>
+        {badge}
       </div>
-      <div className="relative z-10">
-        <Switch
-          checked={enabled}
-          onCheckedChange={onChange}
-          className="scale-150 ml-6 data-[state=checked]:bg-primary shadow-lg shadow-primary/20"
-        />
-      </div>
-
-      {/* Hover Background Sparkle */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <div className="p-8">{children}</div>
     </motion.div>
   );
 }
 
-function InfoFeature({ title, desc }: { title: string; desc: string }) {
+function SwitchItem({ label, desc, checked, onChange, icon: Icon }: any) {
   return (
-    <div className="flex gap-5 group">
-      <div className="mt-1.5 shrink-0">
-        <motion.div
-          whileHover={{ scale: 1.5 }}
-          className="w-3 h-3 rounded-full bg-primary/40 group-hover:bg-primary transition-colors ring-4 ring-primary/5"
-        />
+    <div
+      className={cn(
+        "flex items-center justify-between p-6 rounded-[2rem] border transition-all duration-300 group",
+        checked
+          ? "bg-primary/5 border-primary/20 shadow-xl shadow-primary/5"
+          : "bg-background border-border/50 hover:border-primary/20",
+      )}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className={cn(
+            "p-3 rounded-2xl transition-all duration-500",
+            checked
+              ? "bg-primary/10 text-primary scale-110"
+              : "bg-muted/40 text-muted-foreground group-hover:bg-muted",
+          )}
+        >
+          {Icon && <Icon className="w-5 h-5" />}
+        </div>
+        <div className="space-y-1">
+          <label className="font-black text-base tracking-tight cursor-pointer">
+            {label}
+          </label>
+          <p className="text-muted-foreground text-xs font-medium leading-relaxed max-w-sm">
+            {desc}
+          </p>
+        </div>
       </div>
+      <Switch
+        checked={checked}
+        onCheckedChange={onChange}
+        className="data-[state=checked]:bg-primary"
+      />
+    </div>
+  );
+}
+
+function InfoItemSimple({ title, desc }: any) {
+  return (
+    <div className="flex gap-4 group">
+      <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-1.5 shrink-0 group-hover:bg-primary transition-colors" />
       <div className="space-y-1">
-        <span className="font-black text-lg block text-foreground group-hover:text-primary transition-colors tracking-tight">
-          {title}
-        </span>
-        <p className="text-muted-foreground text-base leading-relaxed font-medium">
+        <h4 className="font-black text-sm tracking-tight">{title}</h4>
+        <p className="text-muted-foreground text-[11px] font-medium leading-relaxed">
           {desc}
         </p>
       </div>

@@ -10,7 +10,6 @@ import {
   Calendar,
   BadgeCheck,
   Mail,
-  Wallet,
   Building2,
   History,
 } from "lucide-react";
@@ -25,8 +24,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { CompactCard } from "@/components/forms/EmployeeFormComponents";
 import { cn, cleanUnitName } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface ProfileSettingsProps {
   formData: any;
@@ -59,159 +58,45 @@ export function ProfileSettings({
   const userId = user?.id || formData.id;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-[1920px] mx-auto pb-24 lg:pb-0">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b pb-6 mb-8">
-        <div>
-          <h2 className="text-3xl font-black text-foreground flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 rounded-2xl">
-              <User className="w-8 h-8 text-primary" />
-            </div>
-            פרופיל אישי
-          </h2>
-          <p className="text-muted-foreground mt-2 text-lg font-medium max-w-2xl">
-            נהל את המידע האישי שלך, פרטי קשר ונתוני שירות
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* RIGHT SIDEBAR (Sticky) - Order 2 in LTR, but visually Left in LTR? 
-           Wait. In EditEmployeePage (RTL): 
-           Sidebar (order-2) is last in DOM. 
-           Main (order-1) is first in DOM.
-           In RTL (grid), first item is on Right. Last item is on Left.
-           So Main (1) -> Right. Sidebar (2) -> Left.
-           So Sidebar is on the LEFT.
-           
-           I want Summary Card on the LEFT (Sidebar).
-           So I should use order-2 for Sidebar and order-1 for Main.
-        */}
-        <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6 order-2">
-          {/* User Summary Card */}
-          <div className="bg-card rounded-3xl border border-primary/10 shadow-lg shadow-primary/5 overflow-hidden">
-            <div className="h-24 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative">
-              <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
-            </div>
-            <div className="px-6 pb-8 text-center -mt-12 relative">
-              <div className="relative w-max mx-auto mb-4">
-                <div className="w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-black shadow-md border-4 border-card bg-gradient-to-br from-primary to-primary/80 text-primary-foreground transition-all duration-300">
-                  {formData.first_name?.[0]}
-                  {formData.last_name?.[0]}
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1600px] mx-auto pb-24 lg:pb-0">
+      <div className="grid grid-cols-12 gap-8">
+        {/* RIGHT SIDE (MAIN) - Personal, Contact, Service */}
+        <div className="col-span-12 lg:col-span-8 space-y-8 order-2 lg:order-1">
+          {/* Section 1: Personal Details */}
+          <SectionCard
+            icon={User}
+            title="פרטים אישיים"
+            badge={
+              user?.is_commander && (
+                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
+                  <BadgeCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-tighter">
+                    מפקד
+                  </span>
                 </div>
-                {/* Upload Button */}
-                {!readOnly && (
-                  <button
-                    onClick={handleImageUpload}
-                    className="absolute -bottom-2 -right-2 w-8 h-8 bg-muted text-muted-foreground hover:bg-primary hover:text-white rounded-full flex items-center justify-center shadow-lg transition-colors border-2 border-card"
-                    title="עדכן תמונה"
-                  >
-                    <User className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              <h2 className="text-xl font-black text-foreground mb-1 min-h-[28px]">
-                {formData.first_name} {formData.last_name}
-              </h2>
-
-              {(() => {
-                // If user object is available via context or passed in, use it
-                // formData might not have these fields if not explicitly added,
-                // but let's assume we want to show it if they exist
-                if (formData.commands_department_id)
-                  return (
-                    <div className="text-amber-600 dark:text-amber-400 font-bold text-sm mb-2">
-                      רמ"ח - {cleanUnitName(formData.department_name)}
-                    </div>
-                  );
-                if (formData.commands_section_id)
-                  return (
-                    <div className="text-amber-600 dark:text-amber-400 font-bold text-sm mb-2">
-                      רמ"ד - {cleanUnitName(formData.section_name)}
-                    </div>
-                  );
-                if (formData.commands_team_id)
-                  return (
-                    <div className="text-amber-600 dark:text-amber-400 font-bold text-sm mb-2">
-                      מ"ח - {cleanUnitName(formData.team_name)}
-                    </div>
-                  );
-                return null;
-              })()}
-
-              <p className="text-sm text-muted-foreground font-mono">
-                {formData.personal_number || "מספר אישי"}
-              </p>
-            </div>
-          </div>
-
-          {!readOnly && (
-            <Button
-              onClick={handleSaveProfile}
-              disabled={isSaving}
-              className="w-full h-12 rounded-xl font-bold shadow-sm text-base"
-            >
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 ml-2" />
-              )}
-              שמור שינויים
-            </Button>
-          )}
-        </div>
-
-        {/* MAIN CONTENT (Variable Content) - Order 1 */}
-        <div className="lg:col-span-9 space-y-8 order-1 min-h-[500px]">
-          {/* Personal Details */}
-          <CompactCard
-            title={
-              <div className="flex items-center justify-between w-full">
-                <span className="flex items-center gap-2 text-primary font-black text-lg">
-                  <User className="w-5 h-5" /> פרטים אישיים
-                </span>
-                {user?.is_commander && (
-                  <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full shadow-sm animate-in zoom-in duration-500">
-                    <BadgeCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                    <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-tighter">
-                      {(() => {
-                        if (user.commands_department_id)
-                          return `רמ"ח ${cleanUnitName(user.department_name)}`;
-                        if (user.commands_section_id)
-                          return `רמ"ד ${cleanUnitName(user.section_name)}`;
-                        if (user.commands_team_id)
-                          return `מ"ח ${cleanUnitName(user.team_name)}`;
-                        return "מפקד";
-                      })()}
-                    </span>
-                  </div>
-                )}
-              </div>
+              )
             }
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <InputItem label="שם מלא (פרטי ומשפחה)" required icon={User}>
-                <div className="flex gap-2">
-                  <Input
-                    disabled={readOnly}
-                    value={formData.first_name || ""}
-                    onChange={(e) =>
-                      handleFieldChange("first_name", e.target.value)
-                    }
-                    placeholder="פרטי"
-                    className="h-11 bg-background/50 focus:bg-background transition-colors flex-1"
-                  />
-                  <Input
-                    disabled={readOnly}
-                    value={formData.last_name || ""}
-                    onChange={(e) =>
-                      handleFieldChange("last_name", e.target.value)
-                    }
-                    placeholder="משפחה"
-                    className="h-11 bg-background/50 focus:bg-background transition-colors flex-1"
-                  />
-                </div>
+              <InputItem label="שם פרטי" required icon={User}>
+                <Input
+                  disabled={readOnly}
+                  value={formData.first_name || ""}
+                  onChange={(e) =>
+                    handleFieldChange("first_name", e.target.value)
+                  }
+                  className="h-12 bg-background/40 rounded-xl border-primary/5 focus:border-primary/20 transition-all font-bold"
+                />
+              </InputItem>
+              <InputItem label="שם משפחה" required icon={User}>
+                <Input
+                  disabled={readOnly}
+                  value={formData.last_name || ""}
+                  onChange={(e) =>
+                    handleFieldChange("last_name", e.target.value)
+                  }
+                  className="h-12 bg-background/40 rounded-xl border-primary/5 focus:border-primary/20 transition-all font-bold"
+                />
               </InputItem>
               <InputItem label="מין" required icon={User}>
                 <Select
@@ -219,8 +104,8 @@ export function ProfileSettings({
                   value={formData.gender || ""}
                   onValueChange={(val) => handleFieldChange("gender", val)}
                 >
-                  <SelectTrigger className="h-11 bg-background/50 focus:bg-background transition-colors">
-                    <SelectValue placeholder="בחר מין" />
+                  <SelectTrigger className="h-12 bg-background/40 rounded-xl border-primary/5 font-bold">
+                    <SelectValue placeholder="בחר" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="male">גבר</SelectItem>
@@ -228,16 +113,6 @@ export function ProfileSettings({
                   </SelectContent>
                 </Select>
               </InputItem>
-              <InputItem label="עיר מגורים" icon={MapPin}>
-                <Input
-                  disabled={readOnly}
-                  value={formData.city || ""}
-                  onChange={(e) => handleFieldChange("city", e.target.value)}
-                  placeholder="ירושלים, ת''א..."
-                  className="h-11 bg-background/50 focus:bg-background transition-colors"
-                />
-              </InputItem>
-
               <InputItem label="תעודת זהות" required icon={BadgeCheck}>
                 <Input
                   disabled={readOnly}
@@ -245,7 +120,7 @@ export function ProfileSettings({
                   onChange={(e) =>
                     handleFieldChange("national_id", e.target.value)
                   }
-                  className="h-11 bg-background/50 focus:bg-background transition-colors font-mono"
+                  className="h-12 bg-background/40 rounded-xl border-primary/5 font-mono font-bold"
                 />
               </InputItem>
               <InputItem label="מספר אישי" required icon={BadgeCheck}>
@@ -255,7 +130,7 @@ export function ProfileSettings({
                   onChange={(e) =>
                     handleFieldChange("personal_number", e.target.value)
                   }
-                  className="h-11 bg-background/50 focus:bg-background transition-colors font-mono"
+                  className="h-12 bg-background/40 rounded-xl border-primary/5 font-mono font-bold"
                 />
               </InputItem>
               <InputItem label="תאריך לידה" required icon={Calendar}>
@@ -268,173 +143,140 @@ export function ProfileSettings({
                   onChange={(e) =>
                     handleFieldChange("birth_date", e.target.value)
                   }
-                  className="h-11 bg-background/50 focus:bg-background transition-colors"
+                  className="h-12 bg-background/40 rounded-xl border-primary/5 font-bold"
                 />
               </InputItem>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-dashed border-border/60">
-              <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-                <Building2 className="w-3.5 h-3.5" /> שיוך ארגוני (קבוע)
+            {/* Organizational Context */}
+            <div className="mt-8 pt-6 border-t border-primary/5">
+              <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Building2 className="w-3.5 h-3.5" /> שיוך ארגוני
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
-                  <span className="text-[10px] font-bold text-primary/60 block mb-1 uppercase">
-                    מחלקה
-                  </span>
-                  <span className="font-black text-sm text-foreground">
-                    {cleanUnitName(user?.department_name) || "—"}
-                  </span>
-                </div>
-                <div className="p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
-                  <span className="text-[10px] font-bold text-primary/60 block mb-1 uppercase">
-                    מדור
-                  </span>
-                  <span className="font-black text-sm text-foreground">
-                    {cleanUnitName(user?.section_name) || "—"}
-                  </span>
-                </div>
-                <div className="p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
-                  <span className="text-[10px] font-bold text-primary/60 block mb-1 uppercase">
-                    חוליה
-                  </span>
-                  <span className="font-black text-sm text-foreground">
-                    {cleanUnitName(user?.team_name) || "—"}
-                  </span>
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <UnitBadge
+                  label="מחלקה"
+                  value={cleanUnitName(user?.department_name)}
+                />
+                <UnitBadge
+                  label="מדור"
+                  value={cleanUnitName(user?.section_name)}
+                />
+                <UnitBadge
+                  label="חוליה"
+                  value={cleanUnitName(user?.team_name)}
+                />
+                <UnitBadge
+                  label="עיר מגורים"
+                  value={formData.city}
+                  editable
+                  icon={MapPin}
+                  onChange={(v: string) => handleFieldChange("city", v)}
+                />
               </div>
             </div>
-          </CompactCard>
+          </SectionCard>
 
-          {/* Contact & Emergency */}
-          <CompactCard
-            title={
-              <span className="flex items-center gap-2 text-primary font-black text-lg">
-                <Phone className="w-5 h-5" /> פרטי קשר וחירום
-              </span>
-            }
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Contact */}
-              <div className="space-y-4">
-                <h4 className="text-sm font-bold text-muted-foreground flex items-center gap-2 pb-2 border-b">
-                  <Phone className="w-4 h-4" /> פרטי התקשרות
-                </h4>
-                <div className="grid grid-cols-1 gap-4">
-                  <InputItem label="טלפון נייד">
-                    <Input
-                      disabled={readOnly}
-                      type="tel"
-                      value={formData.phone_number || ""}
-                      onChange={(e) =>
-                        handleFieldChange("phone_number", e.target.value)
-                      }
-                      className="font-mono"
-                      dir="ltr"
-                    />
-                  </InputItem>
-                  <InputItem label="דואר אלקטרוני" icon={Mail}>
-                    <Input
-                      disabled={readOnly}
-                      type="email"
-                      value={formData.email || ""}
-                      onChange={(e) =>
-                        handleFieldChange("email", e.target.value)
-                      }
-                      dir="ltr"
-                    />
-                  </InputItem>
-                </div>
+          {/* Section 2: Contact & Emergency */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <SectionCard icon={Phone} title="פרטי התקשרות">
+              <div className="space-y-6">
+                <InputItem label="טלפון נייד" icon={Phone}>
+                  <Input
+                    disabled={readOnly}
+                    type="tel"
+                    value={formData.phone_number || ""}
+                    onChange={(e) =>
+                      handleFieldChange("phone_number", e.target.value)
+                    }
+                    className="h-12 bg-background/40 rounded-xl font-mono font-bold"
+                    dir="ltr"
+                  />
+                </InputItem>
+                <InputItem label="דואר אלקטרוני" icon={Mail}>
+                  <Input
+                    disabled={readOnly}
+                    type="email"
+                    value={formData.email || ""}
+                    onChange={(e) => handleFieldChange("email", e.target.value)}
+                    className="h-12 bg-background/40 rounded-xl font-mono font-bold"
+                    dir="ltr"
+                  />
+                </InputItem>
               </div>
+            </SectionCard>
 
-              {/* Emergency */}
-              <div className="bg-red-50/60 rounded-2xl p-5 border border-red-100 dark:bg-red-950/10 dark:border-red-900/20">
-                <h4 className="text-sm font-black text-red-600 flex items-center gap-2 pb-2 mb-4 border-b border-red-200/50">
-                  <HeartPulse className="w-4 h-4" /> איש קשר לחירום
-                </h4>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <InputItem
-                      label="שם מלא (פרטי ומשפחה)"
-                      className="bg-transparent"
-                    >
-                      <Input
-                        disabled={readOnly}
-                        value={emergencyDetails.name}
-                        onChange={(e) =>
-                          setEmergencyDetails({
-                            ...emergencyDetails,
-                            name: e.target.value,
-                          })
-                        }
-                        className="bg-transparent border-red-200/50 focus-visible:ring-red-500/30"
-                      />
-                    </InputItem>
-                    <InputItem label="קרבה" className="bg-transparent">
-                      <Select
-                        disabled={readOnly}
-                        value={emergencyDetails.relation}
-                        onValueChange={(val) =>
-                          setEmergencyDetails({
-                            ...emergencyDetails,
-                            relation: val,
-                          })
-                        }
-                      >
-                        <SelectTrigger className="bg-transparent border-red-200/50">
-                          <SelectValue placeholder="בחר" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {relations.map((r: string) => (
-                            <SelectItem key={r} value={r}>
-                              {r}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </InputItem>
-                  </div>
-                  <InputItem
-                    label="טלפון חירום"
-                    icon={Phone}
-                    className="bg-transparent"
-                  >
+            <SectionCard
+              icon={HeartPulse}
+              title="איש קשר לחירום"
+              variant="danger"
+            >
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <InputItem label="שם מלא">
                     <Input
                       disabled={readOnly}
-                      value={emergencyDetails.phone}
+                      value={emergencyDetails.name}
                       onChange={(e) =>
                         setEmergencyDetails({
                           ...emergencyDetails,
-                          phone: e.target.value,
+                          name: e.target.value,
                         })
                       }
-                      className="bg-transparent border-red-200/50 focus-visible:ring-red-500/30 font-mono"
-                      dir="ltr"
+                      className="h-12 bg-background/40 rounded-xl font-bold"
                     />
                   </InputItem>
+                  <InputItem label="קרבה">
+                    <Select
+                      disabled={readOnly}
+                      value={emergencyDetails.relation}
+                      onValueChange={(val) =>
+                        setEmergencyDetails({
+                          ...emergencyDetails,
+                          relation: val,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="h-12 bg-background/40 rounded-xl font-bold">
+                        <SelectValue placeholder="—" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {relations.map((r: string) => (
+                          <SelectItem key={r} value={r}>
+                            {r}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </InputItem>
                 </div>
+                <InputItem label="טלפון חירום" icon={Phone}>
+                  <Input
+                    disabled={readOnly}
+                    value={emergencyDetails.phone}
+                    onChange={(e) =>
+                      setEmergencyDetails({
+                        ...emergencyDetails,
+                        phone: e.target.value,
+                      })
+                    }
+                    className="h-12 bg-background/40 rounded-xl font-mono font-bold"
+                    dir="ltr"
+                  />
+                </InputItem>
               </div>
-            </div>
-          </CompactCard>
+            </SectionCard>
+          </div>
 
-          {/* Service & Security Data */}
-          <CompactCard
-            title={
-              <span className="flex items-center gap-2 text-primary font-black text-lg">
-                <Shield className="w-5 h-5" /> נתוני שירות ואבטחה
-              </span>
-            }
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Section 3: Service Dates & Security */}
+          <SectionCard icon={Shield} title="נתוני שירות ואבטחה">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-4">
-                <h4 className="text-sm font-bold text-muted-foreground flex items-center gap-2 pb-2 border-b">
+                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 mb-4">
                   <Calendar className="w-4 h-4" /> תאריכי שירות
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="flex items-center gap-2 text-xs text-muted-foreground font-semibold">
-                      תאריך גיוס
-                    </Label>
+                  <InputItem label="תאריך גיוס">
                     <Input
                       disabled={readOnly}
                       type="date"
@@ -446,12 +288,10 @@ export function ProfileSettings({
                       onChange={(e) =>
                         handleFieldChange("enlistment_date", e.target.value)
                       }
+                      className="h-11 bg-background/40 rounded-xl font-bold"
                     />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="flex items-center gap-2 text-xs text-muted-foreground font-semibold">
-                      שחרור צפוי
-                    </Label>
+                  </InputItem>
+                  <InputItem label="שחרור צפוי">
                     <Input
                       disabled={readOnly}
                       type="date"
@@ -463,92 +303,246 @@ export function ProfileSettings({
                       onChange={(e) =>
                         handleFieldChange("discharge_date", e.target.value)
                       }
+                      className="h-11 bg-background/40 rounded-xl font-bold"
                     />
-                  </div>
+                  </InputItem>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-sm font-bold text-muted-foreground flex items-center gap-2 pb-2 border-b">
-                  <Shield className="w-4 h-4" /> אישורים והרשאות
+                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <Shield className="w-4 h-4" /> הרשאות וסיווג
                 </h4>
                 <div className="space-y-3">
                   <SwitchItem
-                    disabled={readOnly}
-                    label="סיווג ביטחוני"
+                    label="סיווג ביטחוני בתוקף"
                     checked={!!formData.security_clearance}
-                    onChange={(c: boolean) =>
-                      handleFieldChange("security_clearance", c)
+                    onChange={(v: boolean) =>
+                      handleFieldChange("security_clearance", v)
                     }
                   />
-                  <div className="flex items-center justify-between p-3 rounded-xl border transition-colors bg-transparent border-border/50 hover:bg-muted/30">
-                    <Label className="cursor-pointer flex-1 font-medium text-sm">
-                      רישיון נהיגה משטרתי
-                    </Label>
-                    <Switch
-                      disabled={readOnly}
-                      checked={!!formData.police_license}
-                      onCheckedChange={(c: boolean) =>
-                        handleFieldChange("police_license", c)
-                      }
-                    />
-                  </div>
+                  <SwitchItem
+                    label="רישיון נהיגה משטרתי"
+                    checked={!!formData.police_license}
+                    onChange={(v: boolean) =>
+                      handleFieldChange("police_license", v)
+                    }
+                  />
                 </div>
               </div>
             </div>
-          </CompactCard>
+          </SectionCard>
 
-          {/* History Section - Added per user request */}
+          {/* Section 4: History (Full Width) */}
           {!readOnly && (
-            <CompactCard
-              title={
-                <div className="flex items-center justify-between w-full">
-                  <span className="flex items-center gap-2 text-primary font-black text-lg">
-                    <History className="w-5 h-5" /> היסטוריית דיווחים אישית
-                  </span>
-                  <div className="flex gap-2"></div>
-                </div>
-              }
-            >
-              <StatusHistoryList employeeId={userId} limit={10} showControls />
-            </CompactCard>
+            <SectionCard icon={History} title="היסטוריית דיווחים אישית">
+              <div className="mt-2">
+                <StatusHistoryList
+                  employeeId={userId}
+                  limit={10}
+                  showControls
+                />
+              </div>
+            </SectionCard>
           )}
+        </div>
+
+        {/* LEFT SIDE (SIDEBAR) - Summary & Actions */}
+        <div className="col-span-12 lg:col-span-4 space-y-8 order-1 lg:order-2">
+          {/* User Profile Summary Card */}
+          <div className="bg-card/50 backdrop-blur-2xl rounded-[2.5rem] border border-primary/10 shadow-2xl shadow-primary/5 overflow-hidden sticky top-8">
+            <div className="h-32 bg-gradient-to-br from-primary via-primary/80 to-primary/40 relative">
+              <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+            </div>
+
+            <div className="px-8 pb-10 text-center -mt-16 relative">
+              <div className="relative w-max mx-auto mb-6 group">
+                <div className="w-32 h-32 rounded-[2.2rem] flex items-center justify-center text-4xl font-black shadow-2xl border-4 border-card bg-gradient-to-br from-background to-muted text-primary transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+                  {formData.first_name?.[0]}
+                  {formData.last_name?.[0]}
+                </div>
+                {!readOnly && (
+                  <button
+                    onClick={handleImageUpload}
+                    className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white hover:scale-110 active:scale-95 rounded-2xl flex items-center justify-center shadow-2xl transition-all border-4 border-card"
+                  >
+                    <User className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-1 mb-8">
+                <h2 className="text-2xl font-black text-foreground tracking-tight">
+                  {formData.first_name} {formData.last_name}
+                </h2>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-sm font-bold text-muted-foreground/80 font-mono tracking-widest bg-muted px-3 py-0.5 rounded-full">
+                    {formData.personal_number}
+                  </span>
+                </div>
+              </div>
+
+              {/* Stats / Labels in Sidebar */}
+              <div className="grid grid-cols-2 gap-3 mb-8">
+                <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10">
+                  <p className="text-[10px] font-black text-primary/60 uppercase mb-1">
+                    ת. גיוס
+                  </p>
+                  <p className="font-bold text-sm">
+                    {formData.enlistment_date
+                      ? new Date(formData.enlistment_date).toLocaleDateString(
+                          "he-IL",
+                        )
+                      : "—"}
+                  </p>
+                </div>
+                <div className="p-4 bg-emerald-500/5 rounded-3xl border border-emerald-500/10">
+                  <p className="text-[10px] font-black text-emerald-600/60 uppercase mb-1">
+                    סטטוס
+                  </p>
+                  <p className="font-bold text-sm text-emerald-600">פעיל</p>
+                </div>
+              </div>
+
+              {!readOnly && (
+                <Button
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                  className="w-full h-14 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 transition-all hover:translate-y-[-2px] active:translate-y-[1px]"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-5 h-5 ml-3 animate-spin" />
+                  ) : (
+                    <Save className="w-5 h-5 ml-3" />
+                  )}
+                  שמור שינויים במערכת
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// --- Helper Components (Matches EditEmployeePage style) ---
+// --- Uniform UI Components for Settings ---
 
-const InputItem = ({
-  label,
+function SectionCard({
   icon: Icon,
-  required,
+  title,
   children,
-  className,
-}: any) => (
-  <div className={cn("space-y-1.5", className)}>
-    <Label className="flex items-center gap-2 text-xs text-muted-foreground font-semibold">
-      {Icon && <Icon className="w-3.5 h-3.5" />} {label}{" "}
-      {required && <span className="text-red-500">*</span>}
-    </Label>
-    {children}
-  </div>
-);
+  badge,
+  variant = "default",
+}: {
+  icon: any;
+  title: string;
+  children: React.ReactNode;
+  badge?: React.ReactNode;
+  variant?: "default" | "danger";
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "bg-card/50 backdrop-blur-xl rounded-[2rem] border shadow-2xl shadow-primary/5 overflow-hidden",
+        variant === "danger" ? "border-red-500/10" : "border-primary/10",
+      )}
+    >
+      <div
+        className={cn(
+          "px-8 py-6 border-b flex items-center justify-between",
+          variant === "danger"
+            ? "bg-red-500/5 border-red-500/10"
+            : "bg-primary/5 border-primary/10",
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "p-2.5 rounded-xl",
+              variant === "danger"
+                ? "bg-red-500/10 text-red-600"
+                : "bg-primary/10 text-primary",
+            )}
+          >
+            <Icon className="w-5 h-5" />
+          </div>
+          <h3
+            className={cn(
+              "text-xl font-black tracking-tight",
+              variant === "danger" ? "text-red-600" : "text-foreground",
+            )}
+          >
+            {title}
+          </h3>
+        </div>
+        {badge}
+      </div>
+      <div className="p-8">{children}</div>
+    </motion.div>
+  );
+}
 
-const SwitchItem = ({ label, checked, onChange, highlight }: any) => (
-  <div
-    className={cn(
-      "flex items-center justify-between p-3 rounded-xl border transition-colors",
-      checked
-        ? highlight
-          ? "bg-primary/5 border-primary/20"
-          : "bg-muted/50 border-primary/20"
-        : "bg-transparent border-border/50 hover:bg-muted/30",
-    )}
-  >
-    <Label className="cursor-pointer flex-1 font-medium text-sm">{label}</Label>
-    <Switch checked={checked} onCheckedChange={onChange} />
-  </div>
-);
+function UnitBadge({ label, value, editable, icon: Icon, onChange }: any) {
+  return (
+    <div className="group p-4 rounded-2xl bg-primary/[0.03] border border-primary/10 hover:bg-primary/[0.05] transition-all">
+      <span className="text-[10px] font-black text-primary/40 block mb-1 uppercase tracking-widest leading-none">
+        {label}
+      </span>
+      {editable ? (
+        <div className="flex items-center gap-2">
+          {Icon && <Icon className="w-3 h-3 text-primary/60" />}
+          <input
+            value={value || ""}
+            onChange={(e) => onChange?.(e.target.value)}
+            className="bg-transparent border-none p-0 h-auto text-sm font-black text-foreground focus:ring-0 w-full placeholder:text-muted-foreground/30"
+            placeholder="הזן..."
+          />
+        </div>
+      ) : (
+        <span className="font-black text-sm text-foreground block truncate">
+          {value || "—"}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function InputItem({ label, icon: Icon, required, children, className }: any) {
+  return (
+    <div className={cn("space-y-2", className)}>
+      <Label className="flex items-center gap-2 text-[10px] text-muted-foreground font-black uppercase tracking-widest pl-1">
+        {Icon && <Icon className="w-3 h-3 text-primary/60" />}
+        {label}
+        {required && <span className="text-red-500/80 mr-0.5">*</span>}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
+function SwitchItem({ label, checked, onChange, disabled }: any) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between p-4 rounded-2xl border transition-all duration-300",
+        checked
+          ? "bg-primary/5 border-primary/20 shadow-lg shadow-primary/5"
+          : "bg-muted/5 border-border/50 hover:border-primary/20",
+        disabled && "opacity-50 pointer-events-none",
+      )}
+    >
+      <Label className="cursor-pointer flex-1 font-black text-sm tracking-tight">
+        {label}
+      </Label>
+      <Switch
+        checked={checked}
+        onCheckedChange={onChange}
+        className="data-[state=checked]:bg-primary"
+      />
+    </div>
+  );
+}

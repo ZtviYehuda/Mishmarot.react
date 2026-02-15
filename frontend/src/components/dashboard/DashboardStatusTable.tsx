@@ -55,11 +55,11 @@ export const DashboardStatusTable = ({
   if (statusId === null || statusId === undefined) return null;
 
   return (
-    <Card className="border border-border bg-card mt-6 overflow-hidden">
+    <Card className="mt-6 overflow-hidden min-h-[300px]">
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex items-center gap-3">
           <div
-            className="w-3 h-3 rounded-full shadow-sm"
+            className="w-3 h-3 rounded-full shadow-lg shadow-current/20"
             style={{ backgroundColor: statusColor }}
           />
           <CardTitle className="text-lg font-black text-foreground">
@@ -90,19 +90,19 @@ export const DashboardStatusTable = ({
               <table className="w-full text-right border-collapse min-w-[700px]">
                 <thead>
                   <tr className="bg-muted/50 border-b border-border">
-                    <th className="px-6 py-3 text-xs font-black text-muted-foreground uppercase tracking-wider">
+                    <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
                       שם מלא (פרטי ומשפחה)
                     </th>
-                    <th className="px-6 py-3 text-xs font-black text-muted-foreground uppercase tracking-wider">
+                    <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
                       מ.א
                     </th>
-                    <th className="px-6 py-3 text-xs font-black text-muted-foreground uppercase tracking-wider">
+                    <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
                       מחלקה
                     </th>
-                    <th className="px-6 py-3 text-xs font-black text-muted-foreground uppercase tracking-wider">
+                    <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
                       מדור / חולייה
                     </th>
-                    <th className="px-6 py-3 text-xs font-black text-muted-foreground uppercase tracking-wider">
+                    <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
                       טלפון
                     </th>
                   </tr>

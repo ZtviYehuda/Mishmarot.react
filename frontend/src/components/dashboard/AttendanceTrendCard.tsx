@@ -286,7 +286,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
         ref={cardRef}
         id="attendance-trend-card"
         className={cn(
-          "h-full border shadow-sm flex flex-col overflow-hidden bg-card",
+          "h-full flex flex-col relative overflow-hidden",
           className,
         )}
       >

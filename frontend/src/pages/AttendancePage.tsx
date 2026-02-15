@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -46,7 +47,6 @@ import {
   StatusHistoryModal,
   ExportReportDialog,
 } from "@/components/employees/modals";
-import { DailyAttendanceModal } from "@/components/attendance/DailyAttendanceModal";
 import { History } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DateHeader } from "@/components/common/DateHeader";
@@ -87,7 +87,7 @@ export default function AttendancePage() {
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
-  const [dailyModalOpen, setDailyModalOpen] = useState(false);
+
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null,
@@ -258,6 +258,20 @@ export default function AttendancePage() {
     selectedServiceTypeId,
   ]);
 
+  const unitLabel = useMemo(() => {
+    if (user?.commands_team_id) return "חולייתי";
+    if (user?.commands_section_id) return "מדורי";
+    if (user?.commands_department_id) return "מחלקתי";
+    return "יחידתי";
+  }, [user]);
+
+  const unitTypeLabel = useMemo(() => {
+    if (user?.commands_team_id) return "חוליה";
+    if (user?.commands_section_id) return "מדור";
+    if (user?.commands_department_id) return "מחלקה";
+    return "יחידה";
+  }, [user]);
+
   const employeesForModal = useMemo(() => {
     if (alertContext && alertContext.missing_ids) {
       return employees.filter((e) => alertContext.missing_ids.includes(e.id));
@@ -379,7 +393,7 @@ export default function AttendancePage() {
       <PageHeader
         icon={CalendarDays}
         title="מעקב נוכחות יומי"
-        subtitle="ניהול ודיווח סטטוס נוכחות לכלל שוטרי היחידה"
+        subtitle={`ניהול ודיווח סטטוס נוכחות לכלל שוטרי ה${unitTypeLabel}`}
         category="נוכחות"
         categoryLink="/attendance"
         iconClassName="from-primary/10 to-primary/5 border-primary/20"
@@ -388,29 +402,23 @@ export default function AttendancePage() {
             <DateHeader className="self-end mb-1" />
             <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3 w-full lg:w-auto">
               <div className="grid grid-cols-2 lg:flex lg:flex-row gap-2 lg:gap-3 w-full lg:w-auto">
+                {!user?.is_temp_commander && (
+                  <Button
+                    variant="outline"
+                    className="h-12 rounded-2xl border-input gap-2 font-black text-muted-foreground hover:bg-muted lg:px-6 lg:w-auto"
+                    onClick={() => setExportDialogOpen(true)}
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="text-sm">ייצוא</span>
+                  </Button>
+                )}
+
                 <Button
                   variant="outline"
-                  className="h-12 rounded-2xl border-input gap-2 font-black text-muted-foreground hover:bg-muted lg:px-6 lg:w-auto"
-                  onClick={() => setExportDialogOpen(true)}
-                >
-                  <Download className="w-4 h-4" />
-                  <span className="text-sm">ייצוא</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-12 rounded-2xl border-input gap-2 font-black text-muted-foreground hover:bg-muted lg:px-6 lg:w-auto"
-                  onClick={() => setDailyModalOpen(true)}
-                >
-                  <CalendarDays className="w-4 h-4" />
-                  <span className="text-sm">יומן</span>
-                </Button>
-                <Button
-                  variant={isReportedToday ? "default" : "outline"}
                   className={cn(
-                    "h-12 rounded-2xl gap-2 font-black transition-all lg:px-6 lg:w-auto",
-                    isReportedToday
-                      ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20"
-                      : "border-primary/20 bg-primary/5 text-primary",
+                    "h-12 rounded-2xl border-input gap-2 font-black text-muted-foreground hover:bg-muted lg:px-6 lg:w-auto",
+                    isReportedToday &&
+                      "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-700",
                   )}
                   onClick={() => {
                     console.log(
@@ -434,11 +442,11 @@ export default function AttendancePage() {
               </div>
 
               <Button
+                variant="outline"
                 className={cn(
-                  "w-full lg:w-auto h-12 lg:px-8 rounded-2xl shadow-xl gap-2 font-black transition-all",
-                  selectedEmployeeIds.length > 0
-                    ? "bg-secondary text-secondary-foreground shadow-secondary/20"
-                    : "bg-primary text-primary-foreground shadow-primary/20",
+                  "w-full lg:w-auto h-12 lg:px-8 rounded-2xl border-input gap-2 font-black text-muted-foreground hover:bg-muted transition-all",
+                  selectedEmployeeIds.length > 0 &&
+                    "bg-secondary/10 text-secondary border-secondary/20 hover:bg-secondary/20",
                 )}
                 onClick={() => {
                   setAlertContext(null);
@@ -457,7 +465,7 @@ export default function AttendancePage() {
               <div className="lg:hidden mt-2 w-full">
                 {!isAllReported ? (
                   <div
-                    className="w-full bg-gradient-to-l from-rose-500 to-rose-600 rounded-2xl p-4 flex items-center justify-between text-white shadow-lg shadow-rose-500/20 cursor-pointer"
+                    className="w-full bg-gradient-to-l from-rose-500 to-rose-600 rounded-2xl p-4 flex items-center justify-between text-white cursor-pointer"
                     onClick={() => {
                       setAlertContext(null);
                       setBulkModalOpen(true);
@@ -489,7 +497,7 @@ export default function AttendancePage() {
                     </div>
                     <div className="flex flex-col text-right">
                       <h3 className="text-sm font-black leading-none italic">
-                        כל הכבוד! היחידה מדווחת
+                        כל הכבוד! ה${unitTypeLabel} מדווחת
                       </h3>
                       <span className="text-[10px] font-bold opacity-70 mt-1">
                         הושלמו כלל דיווחי הנוכחות להיום
@@ -504,14 +512,14 @@ export default function AttendancePage() {
       />
       {/* Summary Stats & Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-card rounded-[32px] p-6 sm:p-8 border border-border shadow-2xl lg:col-span-3 order-2 lg:order-1 relative overflow-hidden">
+        <Card className="p-6 sm:p-8 border border-border lg:col-span-3 order-2 lg:order-1 relative overflow-hidden">
           {/* Subtle Background Pattern */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
 
           <div className="flex items-center justify-between mb-8 relative z-10">
             <div className="flex flex-col gap-1 text-right">
               <span className="text-sm sm:text-base font-black text-foreground tracking-tight">
-                סיכום התייצבות יחידתי
+                סיכום התייצבות {unitLabel}
               </span>
               <span className="text-[11px] sm:text-sm text-muted-foreground font-bold italic">
                 מעקב דיווחים להיום,{" "}
@@ -529,15 +537,15 @@ export default function AttendancePage() {
                   / {totalCount}
                 </span>
               </div>
-              <span className="text-[10px] sm:text-[11px] font-black text-muted-foreground uppercase tracking-wider mt-1">
+              <span className="text-[10px] sm:text-[11px] font-black text-muted-foreground uppercase mt-1">
                 שוטרים מדווחים
               </span>
             </div>
           </div>
 
-          <div className="w-full h-3 bg-muted rounded-full overflow-hidden mb-8 relative shadow-inner">
+          <div className="w-full h-3 bg-muted rounded-full overflow-hidden mb-8 relative">
             <div
-              className="h-full bg-gradient-to-l from-primary via-primary/80 to-primary/60 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+              className="h-full bg-gradient-to-l from-primary via-primary/80 to-primary/60 transition-all duration-1000 ease-out"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -576,10 +584,6 @@ export default function AttendancePage() {
                       selectedStatusId === s.status_id.toString()
                         ? s.color
                         : undefined,
-                    boxShadow:
-                      selectedStatusId === s.status_id.toString()
-                        ? `0 20px 25px -5px ${s.color}40`
-                        : undefined,
                   }}
                 >
                   <span
@@ -611,10 +615,10 @@ export default function AttendancePage() {
                 </div>
               ))}
           </div>
-        </div>
+        </Card>
 
         {!isAllReported ? (
-          <div className="hidden lg:flex bg-card/40 dark:bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-lg flex-row lg:flex-col items-center lg:items-start justify-between gap-4 order-1 lg:order-2 hover:shadow-xl hover:border-border transition-all duration-300">
+          <div className="hidden lg:flex bg-card/40 dark:bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl lg:rounded-3xl p-4 lg:p-6 flex-row lg:flex-col items-center lg:items-start justify-between gap-4 order-1 lg:order-2 hover:border-border transition-all duration-300">
             {/* Header Section */}
             <div className="flex items-start gap-3 lg:gap-4 flex-1">
               <div className="relative">
@@ -653,7 +657,7 @@ export default function AttendancePage() {
             {/* Action Button */}
             <div className="w-full lg:flex lg:justify-center">
               <button
-                className="group relative h-10 lg:h-11 w-full lg:w-auto px-4 lg:px-6 bg-primary hover:bg-primary/90 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] shrink-0"
+                className="group relative h-10 lg:h-11 w-full lg:w-auto px-4 lg:px-6 bg-primary hover:bg-primary/90 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
                 onClick={() => setBulkModalOpen(true)}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
@@ -682,8 +686,9 @@ export default function AttendancePage() {
           </div>
         )}
       </div>
+
       {/* Filters Bar */}
-      <div className="bg-card p-4 sm:p-6 rounded-2xl border border-border shadow-sm">
+      <Card className="p-4 sm:p-6 overflow-hidden">
         {/* Mobile View: Search + Filter Button */}
         <div className="flex md:hidden gap-3 items-center">
           <div className="relative flex-1">
@@ -707,7 +712,7 @@ export default function AttendancePage() {
         {/* Desktop View: Full Filters */}
         <div className="hidden md:flex flex-row gap-4 items-end">
           <div className="flex-1 space-y-2 text-right">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
+            <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               חיפוש מהיר
             </label>
             <div className="relative">
@@ -722,7 +727,7 @@ export default function AttendancePage() {
           </div>
 
           <div className="w-36 lg:w-48 space-y-2 text-right">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
+            <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               מחלקה
             </label>
             <Select
@@ -749,7 +754,7 @@ export default function AttendancePage() {
           </div>
 
           <div className="w-36 lg:w-48 space-y-2 text-right">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
+            <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               מדור
             </label>
             <Select
@@ -779,7 +784,7 @@ export default function AttendancePage() {
           </div>
 
           <div className="w-36 lg:w-48 space-y-2 text-right">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
+            <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               חוליה
             </label>
             <Select
@@ -806,7 +811,7 @@ export default function AttendancePage() {
           </div>
 
           <div className="w-36 lg:w-48 space-y-2 text-right">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
+            <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               סטטוס
             </label>
             <Select
@@ -828,7 +833,7 @@ export default function AttendancePage() {
           </div>
 
           <div className="w-32 lg:w-36 space-y-2 text-right">
-            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
+            <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               מעמד
             </label>
             <Select
@@ -880,7 +885,7 @@ export default function AttendancePage() {
             <Filter className="w-4 h-4" />
           </Button>
         </div>
-      </div>
+      </Card>
 
       {/* Filter Modal for Mobile */}
       <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
@@ -1231,15 +1236,55 @@ export default function AttendancePage() {
                           <div
                             className="w-2 h-2 rounded-full"
                             style={{
-                              backgroundColor:
-                                emp.status_color || "var(--muted-foreground)",
+                              backgroundColor: (() => {
+                                const isToday =
+                                  selectedDate.toDateString() ===
+                                  new Date().toDateString();
+
+                                const statusName =
+                                  emp.status_name?.trim() || "";
+                                const isDefaultStatus = [
+                                  "משרד",
+                                  "נוכח",
+                                  "ביחידה",
+                                  "בבסיס",
+                                  "רגיל",
+                                ].some((s) => statusName.includes(s));
+
+                                if (!isToday && isDefaultStatus) {
+                                  return "var(--muted-foreground)"; // Gray for unreported
+                                }
+                                return (
+                                  emp.status_color || "var(--muted-foreground)"
+                                );
+                              })(),
                             }}
                           />
                           <Badge
                             variant="outline"
                             className="text-[10px] font-bold border-none bg-muted py-0.5 px-2 text-muted-foreground"
                           >
-                            {emp.status_name || "לא מדווח"}
+                            {(() => {
+                              const isToday =
+                                selectedDate.toDateString() ===
+                                new Date().toDateString();
+
+                              // Check if status is "Default" (Office/Present)
+                              const statusName = emp.status_name?.trim() || "";
+                              const isDefaultStatus = [
+                                "משרד",
+                                "נוכח",
+                                "ביחידה",
+                                "בבסיס",
+                                "רגיל",
+                              ].some((s) => statusName.includes(s));
+
+                              // Logic: If NOT today, and status is default -> It's a placeholder -> Show Unreported
+                              if (!isToday && isDefaultStatus) {
+                                return "לא דווח";
+                              }
+                              return statusName || "לא מדווח";
+                            })()}
                           </Badge>
                         </div>
                       </TableCell>
@@ -1402,7 +1447,38 @@ export default function AttendancePage() {
                                 : "animate-pulse ring-4 ring-rose-500/10",
                             )}
                             style={{
-                              backgroundColor: emp.status_color || "#cbd5e1",
+                              backgroundColor: (() => {
+                                const isToday =
+                                  selectedDate.toDateString() ===
+                                  new Date().toDateString();
+
+                                const statusName =
+                                  emp.status_name?.trim() || "";
+
+                                // Allowlist: Only these statuses "stick" without explicit daily update
+                                const isLongTermStatus = [
+                                  "חופש",
+                                  "מחלה",
+                                  "גימל",
+                                  "קורס",
+                                  "אבטחה",
+                                  "תגבור",
+                                  'חו"ל',
+                                  "סיפוח",
+                                  "הפניה",
+                                  "מיוחדת",
+                                ].some((s) => statusName.includes(s));
+
+                                // If not today, and not explicitly updated for this date, and NOT a long-term status -> Show Gray
+                                if (
+                                  !isToday &&
+                                  !isUpdatedToday &&
+                                  !isLongTermStatus
+                                ) {
+                                  return "#94a3b8"; // Slate-400
+                                }
+                                return emp.status_color || "#cbd5e1";
+                              })(),
                             }}
                           />
                         </div>
@@ -1443,10 +1519,64 @@ export default function AttendancePage() {
                                 "text-xs font-black",
                                 isUpdatedToday
                                   ? "text-emerald-700"
-                                  : "text-foreground",
+                                  : (() => {
+                                      const isToday =
+                                        selectedDate.toDateString() ===
+                                        new Date().toDateString();
+                                      const statusName =
+                                        emp.status_name?.trim() || "";
+                                      const isLongTermStatus = [
+                                        "חופש",
+                                        "מחלה",
+                                        "גימל",
+                                        "קורס",
+                                        "אבטחה",
+                                        "תגבור",
+                                        'חו"ל',
+                                        "סיפוח",
+                                        "הפניה",
+                                        "מיוחדת",
+                                      ].some((s) => statusName.includes(s));
+
+                                      if (
+                                        !isToday &&
+                                        !isUpdatedToday &&
+                                        !isLongTermStatus
+                                      ) {
+                                        return "text-muted-foreground";
+                                      }
+                                      return "text-foreground";
+                                    })(),
                               )}
                             >
-                              {emp.status_name || "טרם דווח"}
+                              {(() => {
+                                const isToday =
+                                  selectedDate.toDateString() ===
+                                  new Date().toDateString();
+                                const statusName =
+                                  emp.status_name?.trim() || "";
+                                const isLongTermStatus = [
+                                  "חופש",
+                                  "מחלה",
+                                  "גימל",
+                                  "קורס",
+                                  "אבטחה",
+                                  "תגבור",
+                                  'חו"ל',
+                                  "סיפוח",
+                                  "הפניה",
+                                  "מיוחדת",
+                                ].some((s) => statusName.includes(s));
+
+                                if (
+                                  !isToday &&
+                                  !isUpdatedToday &&
+                                  !isLongTermStatus
+                                ) {
+                                  return "לא דווח";
+                                }
+                                return statusName || "טרם דווח";
+                              })()}
                             </span>
                           </div>
                           {isUpdatedToday && (
@@ -1531,10 +1661,6 @@ export default function AttendancePage() {
       <ExportReportDialog
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
-      />
-      <DailyAttendanceModal
-        isOpen={dailyModalOpen}
-        onClose={() => setDailyModalOpen(false)}
       />
     </div>
   );

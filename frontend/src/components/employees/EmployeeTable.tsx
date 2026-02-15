@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Search,
   ChevronRight,
@@ -210,7 +211,7 @@ export const EmployeeTable = ({
   return (
     <div className="space-y-3 sm:space-y-5">
       {/* Search & Filter Bar */}
-      <div className="flex flex-col gap-2 bg-card p-3 sm:p-5 rounded-2xl shadow-sm border border-border">
+      <Card className="flex flex-col gap-2 p-3 sm:p-5">
         <div className="relative w-full">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -255,36 +256,36 @@ export const EmployeeTable = ({
             </Button>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Main Table - Desktop View */}
-      <div className="hidden lg:block bg-card rounded-2xl border border-border shadow-sm overflow-hidden backdrop-blur-sm">
+      <Card className="hidden lg:block overflow-hidden">
         <div className="overflow-x-auto">
           <Table className="min-w-full">
             <TableHeader className="bg-muted/50">
               <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-14 px-6">
                   שוטר
                 </TableHead>
-                <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-14 px-6">
                   מספר אישי
                 </TableHead>
-                <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-14 px-6">
                   טלפון
                 </TableHead>
-                <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-14 px-6">
                   תאריך לידה
                 </TableHead>
-                <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-14 px-6">
                   תפקיד/סמכות
                 </TableHead>
-                <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-14 px-6">
                   שיוך ארגוני
                 </TableHead>
-                <TableHead className="text-right font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">
+                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-14 px-6">
                   מעמד
                 </TableHead>
-                <TableHead className="text-center font-semibold text-foreground uppercase tracking-tighter text-xs h-14 px-6">
+                <TableHead className="text-center font-black text-muted-foreground uppercase text-[10px] h-14 px-6">
                   פעולות
                 </TableHead>
               </TableRow>
@@ -510,7 +511,7 @@ export const EmployeeTable = ({
             </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Mobile Card View */}
       <div className="lg:hidden space-y-2">

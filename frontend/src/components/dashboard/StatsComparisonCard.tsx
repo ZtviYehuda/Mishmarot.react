@@ -225,10 +225,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
       <Card
         ref={cardRef}
         id="stats-comparison-card"
-        className={cn(
-          "h-full border shadow-sm flex flex-col bg-card",
-          className,
-        )}
+        className={cn("h-full flex flex-col overflow-hidden", className)}
       >
         <CardHeader className="pb-4 flex flex-row items-center justify-between space-y-0">
           <div className="space-y-1">
