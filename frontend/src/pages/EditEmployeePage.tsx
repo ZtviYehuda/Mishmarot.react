@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEmployees } from "@/hooks/useEmployees";
 import apiClient from "@/config/api.client";
@@ -20,14 +21,13 @@ import {
   Mail,
   Briefcase,
   FileCheck,
-  ArrowLeft,
   ArrowRightLeft,
-  UserX,
-  CheckCircle2,
   AlertTriangle,
+  Cake,
 } from "lucide-react";
 import { useMemo } from "react";
 import { TransferRequestModal } from "@/components/employees/modals/TransferRequestModal";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { toast } from "sonner";
 import { useAuthContext } from "@/context/AuthContext";
 import type {
@@ -50,8 +50,180 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { BirthdayGreetingsModal } from "@/components/dashboard/BirthdayGreetingsModal";
 import { differenceInYears } from "date-fns";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { cn, cleanUnitName } from "@/lib/utils";
+
+const InputItem = ({
+  label,
+  icon: Icon,
+  children,
+  required,
+  className,
+}: any) => (
+  <div className={cn("space-y-1.5", className)}>
+    <Label className="text-[12px] font-bold text-slate-400 pr-1 flex items-center gap-2">
+      {Icon && <Icon className="w-3.5 h-3.5 opacity-60" />}
+      {label} {required && <span className="text-destructive">*</span>}
+    </Label>
+    <div className="relative">{children}</div>
+  </div>
+);
+
+const UnitPicker = ({
+  label,
+  value,
+  options = [],
+  onChange,
+  placeholder,
+  disabled,
+  icon: Icon,
+  onClear,
+  open,
+  onOpenChange,
+}: any) => {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (open && triggerRef.current) {
+      const timer = setTimeout(() => {
+        if (triggerRef.current?.getAttribute("data-state") !== "open") {
+          triggerRef.current?.click();
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
+  const selectedOption = options.find((o: any) => o.id.toString() === value);
+  const displayValue = selectedOption
+    ? cleanUnitName(selectedOption.name)
+    : placeholder;
+  const pickerId = `picker-${label}`;
+
+  return (
+    <div className="flex-1 min-w-[200px] space-y-1.5 group">
+      <div className="flex items-center justify-between px-1">
+        <label
+          onClick={() => !disabled && triggerRef.current?.click()}
+          className={cn(
+            "text-[10px] font-bold text-slate-400 uppercase tracking-widest transition-colors",
+            !disabled && "cursor-pointer hover:text-primary",
+          )}
+        >
+          {label}
+        </label>
+        {value && !disabled && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClear();
+            }}
+            className="text-[9px] font-bold text-primary hover:opacity-70 transition-opacity"
+          >
+            איפוס
+          </button>
+        )}
+      </div>
+
+      <Select
+        value={value}
+        onValueChange={onChange}
+        disabled={disabled}
+        onOpenChange={onOpenChange}
+      >
+        <SelectTrigger
+          ref={triggerRef}
+          id={pickerId}
+          className={cn(
+            "h-16 w-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl transition-all duration-200 px-4 hover:border-primary/30 focus:ring-0 cursor-pointer overflow-hidden",
+            !value && "bg-slate-50/30 border-dashed",
+            disabled && "opacity-30 grayscale pointer-events-none",
+          )}
+        >
+          <div className="flex items-center gap-4 w-full text-right pointer-events-none">
+            {Icon && (
+              <Icon
+                className={cn(
+                  "w-5 h-5 shrink-0",
+                  value ? "text-primary" : "text-slate-300",
+                )}
+              />
+            )}
+
+            <div className="flex-1 overflow-hidden">
+              <p
+                className={cn(
+                  "text-[15px] font-bold tracking-tight",
+                  value ? "text-slate-900 dark:text-white" : "text-slate-400",
+                )}
+              >
+                {displayValue}
+              </p>
+            </div>
+          </div>
+        </SelectTrigger>
+
+        <SelectContent
+          dir="rtl"
+          position="popper"
+          sideOffset={5}
+          className="rounded-xl border-slate-200 dark:border-slate-800 shadow-2xl p-1 bg-white dark:bg-slate-950 z-[150] min-w-[200px]"
+        >
+          {options.map((opt: any) => (
+            <SelectItem
+              key={opt.id}
+              value={opt.id.toString()}
+              className="rounded-lg py-2.5 px-4 font-bold text-slate-700 dark:text-slate-200 focus:bg-slate-50 dark:focus:bg-slate-900 focus:text-primary transition-all cursor-pointer"
+            >
+              {cleanUnitName(opt.name)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
+
+const SwitchItem = ({
+  label,
+  checked,
+  onCheckedChange,
+  icon: Icon,
+  description,
+}: any) => (
+  <div
+    className={cn(
+      "flex items-center justify-between p-4 rounded-2xl border border-slate-100 dark:border-slate-900 transition-colors",
+      checked
+        ? "bg-primary/[0.02] border-primary/10"
+        : "bg-white dark:bg-slate-950",
+    )}
+  >
+    <div className="flex items-center gap-4">
+      {Icon && (
+        <Icon
+          className={cn(
+            "w-5.5 h-5.5 shrink-0",
+            checked ? "text-primary" : "text-slate-300",
+          )}
+        />
+      )}
+      <div>
+        <p className="text-[15px] font-bold text-slate-900 dark:text-white leading-none">
+          {label}
+        </p>
+        <p className="text-[11px] text-slate-400 font-medium mt-1 truncate max-w-[280px]">
+          {description}
+        </p>
+      </div>
+    </div>
+    <Switch
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      className="scale-90"
+    />
+  </div>
+);
 
 // --- Tab Components ---
 
@@ -104,11 +276,12 @@ const PersonalEditTab = ({
           </div>
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <InputItem
-            label="שם מלא (פרטי ומשפחה) (פרטי ומשפחה)"
+            label="שם מלא (פרטי ומשפחה)"
             required
             icon={User}
+            className="lg:col-span-2"
           >
             <div className="flex gap-2">
               <Input
@@ -117,78 +290,61 @@ const PersonalEditTab = ({
                   handleFieldChange("first_name", e.target.value)
                 }
                 placeholder="פרטי"
-                className="bg-background/50 focus:bg-background transition-colors flex-1 h-11"
+                className="bg-background dark:bg-slate-900 border-border/40 focus:border-primary/50 transition-all flex-1 h-11 shadow-sm"
               />
               <Input
                 value={formData.last_name || ""}
                 onChange={(e) => handleFieldChange("last_name", e.target.value)}
                 placeholder="משפחה"
-                className="bg-background/50 focus:bg-background transition-colors flex-1 h-11"
+                className="bg-background dark:bg-slate-900 border-border/40 focus:border-primary/50 transition-all flex-1 h-11 shadow-sm"
               />
             </div>
           </InputItem>
-          <div className="flex gap-3 w-full">
-            <InputItem label="מין" required icon={User} className="flex-1">
-              <Select
-                value={formData.gender || ""}
-                onValueChange={(val) => handleFieldChange("gender", val)}
-              >
-                <SelectTrigger className="w-full bg-background/50 focus:bg-background transition-colors h-11">
-                  <SelectValue placeholder="בחר מין" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">גבר</SelectItem>
-                  <SelectItem value="female">אישה</SelectItem>
-                </SelectContent>
-              </Select>
-            </InputItem>
-            <InputItem label="מעמד" icon={FileCheck} className="flex-1">
-              <Select
-                value={formData.service_type_id?.toString() || ""}
-                onValueChange={(val) =>
-                  handleFieldChange("service_type_id", parseInt(val))
-                }
-              >
-                <SelectTrigger className="w-full bg-background/50 focus:bg-background transition-colors h-11">
-                  <SelectValue placeholder="בחר מעמד" />
-                </SelectTrigger>
-                <SelectContent>
-                  {serviceTypes.map((st: any) => (
-                    <SelectItem key={st.id} value={st.id.toString()}>
-                      {st.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </InputItem>
-          </div>
-          <InputItem label="עיר מגורים" icon={MapPin}>
-            <Input
-              value={formData.city || ""}
-              onChange={(e) => handleFieldChange("city", e.target.value)}
-              placeholder="ירושלים, ת''א..."
-              className="bg-background/50 focus:bg-background transition-colors h-11"
-            />
+
+          <InputItem label="מין" required icon={User}>
+            <Select
+              value={formData.gender || ""}
+              onValueChange={(val) => handleFieldChange("gender", val)}
+            >
+              <SelectTrigger className="w-full bg-background dark:bg-slate-900 border-border/40 focus:border-primary/50 transition-all h-11 text-right shadow-sm">
+                <SelectValue placeholder="בחר מין" />
+              </SelectTrigger>
+              <SelectContent dir="rtl">
+                <SelectItem value="male">גבר</SelectItem>
+                <SelectItem value="female">אישה</SelectItem>
+              </SelectContent>
+            </Select>
           </InputItem>
 
-          <InputItem label="מספר אישי" required icon={BadgeCheck}>
-            <Input
-              value={formData.personal_number || ""}
-              onChange={(e) =>
-                handleFieldChange("personal_number", e.target.value)
+          <InputItem label="מעמד" icon={FileCheck}>
+            <Select
+              value={formData.service_type_id?.toString() || ""}
+              onValueChange={(val) =>
+                handleFieldChange("service_type_id", parseInt(val))
               }
-              placeholder="0000000"
-              className="font-mono bg-background/50 focus:bg-background transition-colors h-11"
-            />
+            >
+              <SelectTrigger className="w-full bg-background dark:bg-slate-900 border-border/40 focus:border-primary/50 transition-all h-11 text-right shadow-sm">
+                <SelectValue placeholder="בחר מעמד" />
+              </SelectTrigger>
+              <SelectContent dir="rtl">
+                {serviceTypes.map((st: any) => (
+                  <SelectItem key={st.id} value={st.id.toString()}>
+                    {st.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </InputItem>
-          <InputItem label="תעודת זהות" required icon={BadgeCheck}>
+
+          <InputItem label="תעודת זהות" icon={BadgeCheck}>
             <Input
               value={formData.national_id || ""}
               onChange={(e) => handleFieldChange("national_id", e.target.value)}
               placeholder="000000000"
-              className="font-mono bg-background/50 focus:bg-background transition-colors h-11"
+              className="font-mono bg-background dark:bg-slate-900 border-border/40 focus:border-primary/50 transition-all h-11 shadow-sm"
             />
           </InputItem>
+
           <InputItem label="תאריך לידה" required icon={Calendar}>
             <Input
               type="date"
@@ -196,7 +352,27 @@ const PersonalEditTab = ({
                 formData.birth_date ? formData.birth_date.split("T")[0] : ""
               }
               onChange={(e) => handleFieldChange("birth_date", e.target.value)}
-              className="bg-background/50 focus:bg-background transition-colors h-11"
+              className="bg-background dark:bg-slate-900 border-border/40 focus:border-primary/50 transition-all h-11 w-full shadow-sm"
+            />
+          </InputItem>
+
+          <InputItem label="מספר אישי" icon={BadgeCheck}>
+            <Input
+              value={formData.personal_number || ""}
+              onChange={(e) =>
+                handleFieldChange("personal_number", e.target.value)
+              }
+              placeholder="0000000"
+              className="font-mono bg-background dark:bg-slate-900 border-border/40 focus:border-primary/50 transition-all h-11 shadow-sm"
+            />
+          </InputItem>
+
+          <InputItem label="עיר מגורים" icon={MapPin}>
+            <Input
+              value={formData.city || ""}
+              onChange={(e) => handleFieldChange("city", e.target.value)}
+              placeholder="ירושלים, ת''א..."
+              className="bg-background dark:bg-slate-900 border-border/40 focus:border-primary/50 transition-all h-11 shadow-sm"
             />
           </InputItem>
         </div>
@@ -230,15 +406,15 @@ const PersonalEditTab = ({
             </InputItem>
           </div>
 
-          <div className="bg-red-50/60 rounded-2xl p-5 border border-red-100 dark:bg-red-950/10 dark:border-red-900/20">
+          <div className="bg-red-50/60 rounded-2xl p-5 border border-red-100 dark:bg-red-900/10 dark:border-red-900/30 shadow-md">
             <h4 className="text-sm font-black text-red-600 flex items-center gap-2 pb-2 mb-4 border-b border-red-200/50">
               <HeartPulse className="w-4 h-4" /> איש קשר לחירום
             </h4>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-5 gap-4 w-full items-end">
                 <InputItem
                   label="שם מלא (פרטי ומשפחה)"
-                  className="bg-transparent"
+                  className="bg-transparent col-span-3"
                 >
                   <Input
                     value={emergencyDetails.name}
@@ -248,10 +424,10 @@ const PersonalEditTab = ({
                         name: e.target.value,
                       })
                     }
-                    className="bg-transparent border-red-200/50 focus-visible:ring-red-500/30"
+                    className="w-full h-11 bg-transparent border-red-200/50 focus-visible:ring-red-500/30 flex"
                   />
                 </InputItem>
-                <InputItem label="קרבה" className="bg-transparent">
+                <InputItem label="קרבה" className="bg-transparent col-span-2">
                   <Select
                     value={emergencyDetails.relation}
                     onValueChange={(val) =>
@@ -261,10 +437,10 @@ const PersonalEditTab = ({
                       })
                     }
                   >
-                    <SelectTrigger className="bg-transparent border-red-200/50">
+                    <SelectTrigger className="w-full h-11 bg-transparent border-red-200/50 text-right flex">
                       <SelectValue placeholder="בחר" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent dir="rtl">
                       {relations.map((r: string) => (
                         <SelectItem key={r} value={r}>
                           {r}
@@ -310,6 +486,9 @@ const ProfessionalEditTab = ({
   sections,
   teams,
   user,
+  setFormData,
+  openUnit,
+  setOpenUnit,
 }: any) => {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const isDeptDisabled = !user.is_admin;
@@ -356,163 +535,142 @@ const ProfessionalEditTab = ({
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* 1. Organizational Structure Card */}
-      <CompactCard
-        title={
-          <span className="flex items-center gap-2 text-primary font-black text-lg">
-            <Building2 className="w-5 h-5" /> מבנה ארגוני ופיקוד
-          </span>
-        }
-        action={
+      {/* 1. Organizational Affiliation - Compact & Professional */}
+      <div className="bg-white dark:bg-slate-950 rounded-[32px] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-950 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                שיוך יחידתי
+              </h3>
+              <p className="text-[11px] font-medium text-slate-500">
+                הגדר את המיקום הארגוני של השוטר בתוך היחידה
+              </p>
+            </div>
+          </div>
           <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 rounded-xl font-black text-[11px] transition-all active:scale-95"
+            variant="secondary"
+            className="h-10 px-4 gap-2 font-black bg-slate-100 dark:bg-slate-900 hover:bg-primary hover:text-white transition-all rounded-xl border-none shadow-sm text-xs"
             onClick={() => setIsTransferModalOpen(true)}
           >
-            <ArrowRightLeft className="w-3.5 h-3.5" />
-            בקשת העברה
+            <ArrowRightLeft className="w-4 h-4" />
+            <span>בקשת העברה</span>
           </Button>
-        }
-      >
-        <div className="py-10 px-4">
-          <div className="relative flex flex-col md:flex-row items-center justify-center gap-8">
-            <OrgSelectBox
-              title="מחלקה"
+        </div>
+
+        <div className="p-8 lg:p-10">
+          <div className="flex flex-col md:flex-row gap-6 lg:gap-8">
+            <UnitPicker
+              label="מחלקה"
+              value={selectedDeptId}
+              options={structure}
+              open={openUnit === "dept"}
+              onOpenChange={(o: boolean) => setOpenUnit(o ? "dept" : null)}
+              onChange={(val: any) => {
+                setSelectedDeptId(val);
+                setFormData((prev: any) => ({
+                  ...prev,
+                  department_id: parseInt(val),
+                  section_id: undefined,
+                  team_id: undefined,
+                }));
+                setSelectedSectionId("");
+              }}
+              placeholder="בחר מחלקה"
               icon={Building2}
               disabled={isDeptDisabled}
-            >
-              <Select
-                value={selectedDeptId}
-                onValueChange={(val) => {
-                  setSelectedDeptId(val);
-                  handleFieldChange("department_id", parseInt(val));
-                  setSelectedSectionId("");
-                }}
-                disabled={isDeptDisabled}
-              >
-                <SelectTrigger className="bg-white/80 border-primary/10 font-bold h-11 shadow-sm rounded-xl focus:ring-primary/20">
-                  <SelectValue placeholder="בחר מחלקה" />
-                </SelectTrigger>
-                <SelectContent>
-                  {structure.map((d: any) => (
-                    <SelectItem key={d.id} value={d.id.toString()}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </OrgSelectBox>
+              onClear={() => {
+                setSelectedDeptId("");
+                setFormData((prev: any) => ({
+                  ...prev,
+                  department_id: undefined,
+                  section_id: undefined,
+                  team_id: undefined,
+                }));
+                setSelectedSectionId("");
+              }}
+            />
 
-            <div className="hidden md:flex items-center justify-center">
-              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10 shadow-inner">
-                <ArrowLeft className="w-5 h-5 text-primary/40" />
-              </div>
-            </div>
-
-            <OrgSelectBox
-              title="מדור"
+            <UnitPicker
+              label="מדור"
+              value={selectedSectionId}
+              options={sections}
+              open={openUnit === "section"}
+              onOpenChange={(o: boolean) => setOpenUnit(o ? "section" : null)}
+              onChange={(val: any) => {
+                setSelectedSectionId(val);
+                setFormData((prev: any) => ({
+                  ...prev,
+                  section_id: parseInt(val),
+                  team_id: undefined,
+                }));
+              }}
+              placeholder="בחר מדור"
               icon={Briefcase}
               disabled={!selectedDeptId || isSectionDisabled}
-            >
-              <Select
-                value={selectedSectionId}
-                onValueChange={(val) => {
-                  setSelectedSectionId(val);
-                  handleFieldChange("section_id", parseInt(val));
-                }}
-                disabled={!selectedDeptId || isSectionDisabled}
-              >
-                <SelectTrigger className="bg-white/80 border-primary/10 font-bold h-11 shadow-sm rounded-xl focus:ring-primary/20">
-                  <SelectValue placeholder="בחר מדור" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sections.map((s: any) => (
-                    <SelectItem key={s.id} value={s.id.toString()}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </OrgSelectBox>
+              onClear={() => {
+                setSelectedSectionId("");
+                setFormData((prev: any) => ({
+                  ...prev,
+                  section_id: undefined,
+                  team_id: undefined,
+                }));
+              }}
+            />
 
-            <div className="hidden md:flex items-center justify-center">
-              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10 shadow-inner">
-                <ArrowLeft className="w-5 h-5 text-primary/40" />
-              </div>
-            </div>
-
-            <OrgSelectBox
-              title="חוליה"
+            <UnitPicker
+              label="חוליה"
+              value={formData.team_id?.toString() || ""}
+              options={teams}
+              open={openUnit === "team"}
+              onOpenChange={(o: boolean) => setOpenUnit(o ? "team" : null)}
+              onChange={(val: any) =>
+                handleFieldChange("team_id", parseInt(val))
+              }
+              placeholder="בחר חוליה"
               icon={User}
               disabled={!selectedSectionId || isTeamDisabled}
-            >
-              <Select
-                value={formData.team_id?.toString() || ""}
-                onValueChange={(val) =>
-                  handleFieldChange("team_id", parseInt(val))
-                }
-                disabled={!selectedSectionId || isTeamDisabled}
-              >
-                <SelectTrigger className="bg-white/80 border-primary/10 font-bold h-11 shadow-sm rounded-xl focus:ring-primary/20">
-                  <SelectValue placeholder="בחר חוליה" />
-                </SelectTrigger>
-                <SelectContent>
-                  {teams.map((t: any) => (
-                    <SelectItem key={t.id} value={t.id.toString()}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </OrgSelectBox>
+              onClear={() => handleFieldChange("team_id", undefined)}
+            />
           </div>
 
           {(user?.is_admin || user?.is_commander) && (
-            <div className="flex flex-col items-center gap-3 pt-8 border-t border-dashed mt-8">
-              <div className="w-full max-w-lg">
-                <SwitchItem
-                  label={(() => {
-                    if (formData.team_id) return "מפקד חוליה (ראש חוליה)";
-                    if (selectedSectionId) return "ראש מדור";
-                    if (selectedDeptId) return "ראש מחלקה";
-                    return "מפקד יחידה";
-                  })()}
-                  checked={!!formData.is_commander}
-                  onChange={(c: boolean) =>
-                    handleFieldChange("is_commander", c)
-                  }
-                  highlight
-                />
+            <div className="mt-12 space-y-6 max-w-xl mx-auto">
+              <SwitchItem
+                label="מינוי מפקד"
+                checked={!!formData.is_commander}
+                onCheckedChange={(c: boolean) =>
+                  handleFieldChange("is_commander", c)
+                }
+                icon={Shield}
+                description="הגדר שוטר זה כמפקד היחידה הארגונית שנבחרה"
+              />
 
-                {currentCommander && (
-                  <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-2xl flex items-start gap-4 animate-in fade-in slide-in-from-top-2 duration-300 shadow-sm">
-                    <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-xl shrink-0">
-                      <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <div>
-                      <h5 className="text-sm font-black text-amber-900 dark:text-amber-100 mb-1">
-                        החלפת מפקד קיים
-                      </h5>
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300 leading-relaxed">
-                        לתפקיד זה כבר מוגדר מפקד (
-                        <strong>{currentCommander.name}</strong>). שמירת
-                        השינויים תגרום להחלפת המפקד הנוכחי והורדת המפקד הקודם
-                        לדרגת שוטר רגיל.
-                      </p>
-                    </div>
+              {currentCommander && (
+                <div className="flex items-start gap-4 p-5 rounded-[24px] bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/20 animate-in slide-in-from-top-2 duration-500">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 shrink-0">
+                    <AlertTriangle className="w-5 h-5" />
                   </div>
-                )}
-
-                <p className="text-[11px] text-muted-foreground mt-4 text-center bg-muted/30 py-2 rounded-xl border border-border/50">
-                  💡 <strong>טיפ:</strong> כאשר מסומן כמפקד, ניתן להשאיר רמות
-                  ארגוניות נמוכות יותר ריקות
-                </p>
-              </div>
+                  <div className="space-y-1">
+                    <p className="text-[13px] font-black text-amber-900 dark:text-amber-200 leading-tight">
+                      שים לב: קיים מפקד פעיל ליחידה זו
+                    </p>
+                    <p className="text-[11px] font-bold text-amber-600/80 leading-tight">
+                      הגדרת שוטר זה כמפקד תבטל את מינויו של{" "}
+                      <span className="text-amber-700 dark:text-amber-300 underline decoration-2 underline-offset-2">
+                        {currentCommander.name}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
-      </CompactCard>
+      </div>
 
       <TransferRequestModal
         isOpen={isTransferModalOpen}
@@ -523,20 +681,55 @@ const ProfessionalEditTab = ({
 
       {/* 2. Professional Details & Permissions Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Professional Details */}
+        {/* Service Timeline */}
         <CompactCard
           title={
             <span className="flex items-center gap-2 text-primary font-black text-lg">
-              <Briefcase className="w-5 h-5" /> פרטי תפקיד
+              <Calendar className="w-5 h-5" /> ציר זמן שירות
             </span>
           }
         >
           <div className="space-y-4">
-            <InputItem label="תפקיד" icon={Briefcase}>
+            <InputItem label="תאריך גיוס" icon={Calendar}>
               <Input
-                value={formData.role_name || ""}
-                onChange={(e) => handleFieldChange("role_name", e.target.value)}
-                placeholder="הזן שם תפקיד..."
+                type="date"
+                value={
+                  formData.enlistment_date
+                    ? formData.enlistment_date.split("T")[0]
+                    : ""
+                }
+                onChange={(e) =>
+                  handleFieldChange("enlistment_date", e.target.value)
+                }
+                className="border-primary/20 bg-primary/5 focus:bg-background transition-colors"
+              />
+            </InputItem>
+            <InputItem label="כניסה לתפקיד" icon={Calendar}>
+              <Input
+                type="date"
+                value={
+                  formData.assignment_date
+                    ? formData.assignment_date.split("T")[0]
+                    : ""
+                }
+                onChange={(e) =>
+                  handleFieldChange("assignment_date", e.target.value)
+                }
+                className="border-primary/20 bg-primary/5 focus:bg-background transition-colors"
+              />
+            </InputItem>
+            <InputItem label="שחרור צפוי (תש''ש)" icon={Calendar}>
+              <Input
+                type="date"
+                value={
+                  formData.discharge_date
+                    ? formData.discharge_date.split("T")[0]
+                    : ""
+                }
+                onChange={(e) =>
+                  handleFieldChange("discharge_date", e.target.value)
+                }
+                className="border-primary/20 bg-primary/5 focus:bg-background transition-colors"
               />
             </InputItem>
           </div>
@@ -552,82 +745,22 @@ const ProfessionalEditTab = ({
         >
           <div className="space-y-3">
             <SwitchItem
-              label="סיווג ביטחוני (פעיל)"
+              label="סיווג ביטחוני"
               checked={!!formData.security_clearance}
-              onChange={(c: boolean) =>
+              onCheckedChange={(c: boolean) =>
                 handleFieldChange("security_clearance", c)
               }
             />
             <SwitchItem
               label="רישיון נהיגה משטרתי"
               checked={!!formData.police_license}
-              onChange={(c: boolean) => handleFieldChange("police_license", c)}
+              onCheckedChange={(c: boolean) =>
+                handleFieldChange("police_license", c)
+              }
             />
-            {user?.is_admin && (
-              <SwitchItem
-                label="הרשאת מנהל מערכת (Admin)"
-                checked={!!formData.is_admin}
-                onChange={(c: boolean) => handleFieldChange("is_admin", c)}
-                highlight
-              />
-            )}
           </div>
         </CompactCard>
       </div>
-
-      {/* 3. Service Timeline */}
-      <CompactCard
-        title={
-          <span className="flex items-center gap-2 text-primary font-black text-lg">
-            <Calendar className="w-5 h-5" /> ציר זמן שירות
-          </span>
-        }
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <InputItem label="תאריך גיוס" icon={Calendar}>
-            <Input
-              type="date"
-              value={
-                formData.enlistment_date
-                  ? formData.enlistment_date.split("T")[0]
-                  : ""
-              }
-              onChange={(e) =>
-                handleFieldChange("enlistment_date", e.target.value)
-              }
-              className="border-primary/20 bg-primary/5 focus:bg-background transition-colors"
-            />
-          </InputItem>
-          <InputItem label="כניסה לתפקיד" icon={Calendar}>
-            <Input
-              type="date"
-              value={
-                formData.assignment_date
-                  ? formData.assignment_date.split("T")[0]
-                  : ""
-              }
-              onChange={(e) =>
-                handleFieldChange("assignment_date", e.target.value)
-              }
-              className="border-primary/20 bg-primary/5 focus:bg-background transition-colors"
-            />
-          </InputItem>
-          <InputItem label="שחרור צפוי (תש''ש)" icon={Calendar}>
-            <Input
-              type="date"
-              value={
-                formData.discharge_date
-                  ? formData.discharge_date.split("T")[0]
-                  : ""
-              }
-              onChange={(e) =>
-                handleFieldChange("discharge_date", e.target.value)
-              }
-              className="border-primary/20 bg-primary/5 focus:bg-background transition-colors"
-            />
-          </InputItem>
-        </div>
-      </CompactCard>
     </div>
   );
 };
@@ -646,6 +779,7 @@ export default function EditEmployeePage() {
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [showBirthdayModal, setShowBirthdayModal] = useState(false);
   const [activeTab, setActiveTab] = useState("personal"); // New state for active tab
+  const [openUnit, setOpenUnit] = useState<string | null>(null);
 
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
   const [selectedSectionId, setSelectedSectionId] = useState<string>("");
@@ -726,8 +860,11 @@ export default function EditEmployeePage() {
     if (!id) return;
     setSaving(true);
 
-    if (!formData.national_id || !formData.birth_date) {
-      toast.error("ת.ז ותאריך לידה הינם שדות חובה");
+    if (
+      (!formData.national_id && !formData.personal_number) ||
+      !formData.birth_date
+    ) {
+      toast.error("יש להזין מספר אישי או ת.ז, ותאריך לידה");
       setSaving(false);
       return;
     }
@@ -824,18 +961,40 @@ export default function EditEmployeePage() {
       type="button"
       onClick={onClick}
       className={cn(
-        "flex-1 flex items-center justify-center gap-2 py-2.5 px-6 rounded-xl text-sm font-bold transition-all duration-300",
+        "flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-sm font-black transition-all duration-500 relative group overflow-hidden",
         active
-          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]"
-          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+          ? "text-primary"
+          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200",
       )}
     >
-      {Icon && <Icon className="w-4 h-4" />} {label}
+      {active && (
+        <motion.div
+          layoutId="activeTab"
+          className="absolute inset-0 bg-white dark:bg-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-none rounded-2xl border border-slate-200/50 dark:border-slate-700/50"
+          initial={false}
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
+      )}
+      <div className="relative z-10 flex items-center gap-3">
+        {Icon && (
+          <div
+            className={cn(
+              "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-500",
+              active
+                ? "bg-primary text-white scale-110 rotate-0 shadow-lg shadow-primary/20"
+                : "bg-white/50 dark:bg-slate-800/50 text-slate-400 group-hover:scale-110 group-hover:bg-white",
+            )}
+          >
+            <Icon className="w-4 h-4" />
+          </div>
+        )}
+        <span className="tracking-tight">{label}</span>
+      </div>
     </button>
   );
 
   return (
-    <div className="bg-[#f8fafc] dark:bg-[#020617]">
+    <div className="bg-background/50 animate-in fade-in duration-500" dir="rtl">
       <BirthdayGreetingsModal
         open={showBirthdayModal}
         onOpenChange={setShowBirthdayModal}
@@ -858,52 +1017,44 @@ export default function EditEmployeePage() {
         }
       />
 
-      <div className="bg-background border-b border-border/60 py-8 shadow-sm">
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6">
+      {/* Header */}
+      <div className="bg-background/95 backdrop-blur-sm border-b border-border/60 py-8 sticky top-0 z-30">
+        <div className="max-w-[1600px] mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <PageHeader
-              title={`עריכת שוטר: ${employee.first_name} ${employee.last_name}`}
-              subtitle="עדכון פרטים אישיים, שיוך ארגוני והרשאות"
               icon={Settings2}
+              title={`עריכת שוטר: ${formData.first_name || ""} ${formData.last_name || ""}`}
+              subtitle={`תיק אישי: ${formData.personal_number || employee.personal_number}`}
               category="ניהול שוטרים"
               categoryLink="/employees"
             />
-            <div className="flex items-center gap-3">
+
+            <div className="flex items-center gap-3 self-end md:self-auto">
+              <Button
+                variant="ghost"
+                onClick={() => navigate(`/employees/${id}`)}
+                className="h-11 px-5 rounded-xl font-bold text-muted-foreground hover:bg-muted"
+              >
+                <X className="w-4 h-4 ml-2" />
+                ביטול
+              </Button>
+
               <Button
                 variant="outline"
                 onClick={handleToggleActiveStatus}
                 disabled={actionLoading}
                 className={cn(
-                  "gap-2",
+                  "h-11 px-5 rounded-xl font-bold transition-all",
                   employee.is_active
-                    ? "text-destructive hover:text-destructive hover:bg-destructive/10"
-                    : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50",
+                    ? "text-destructive border-destructive/20 hover:bg-destructive hover:text-white"
+                    : "text-emerald-600 border-emerald-500/20 hover:bg-emerald-600 hover:text-white",
                 )}
               >
-                {actionLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : employee.is_active ? (
-                  <UserX className="w-4 h-4" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4" />
-                )}
-                <span className="hidden sm:inline">
-                  {employee.is_active ? "השבת שוטר" : "הפעל שוטר"}
-                </span>
+                {employee.is_active ? "הפוך ללא פעיל" : "החזר לפעילות"}
               </Button>
 
-              <div className="h-8 w-[1px] bg-border mx-1" />
-
               <Button
-                variant="outline"
-                onClick={() => navigate(`/employees/${id}`)}
-                className="gap-2"
-              >
-                <X className="w-4 h-4" />{" "}
-                <span className="hidden sm:inline">ביטול</span>
-              </Button>
-              <Button
-                className="gap-2 shadow-lg shadow-primary/20"
+                className="h-11 px-8 rounded-xl font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2"
                 onClick={handleSubmit}
                 disabled={saving}
               >
@@ -912,107 +1063,210 @@ export default function EditEmployeePage() {
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                {saving ? "מעדכן..." : "עדכן שוטר"}
+                <span>שמור שינויים</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6 mt-8">
-        <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-1.5 flex gap-2 mb-8 overflow-x-auto">
-          <TabButton
-            active={activeTab === "personal"}
-            onClick={() => setActiveTab("personal")}
-            icon={User}
-            label="פרטים אישיים"
-          />
-          <TabButton
-            active={activeTab === "pro"}
-            onClick={() => setActiveTab("pro")}
-            icon={Briefcase}
-            label="מקצועי והרשאות"
-          />
-        </div>
+      <div className="max-w-[1600px] mx-auto px-6 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* SIDEBAR (Match Profile Page) */}
+          <div className="lg:col-span-3 lg:sticky lg:top-[120px] space-y-6 order-2">
+            <div className="bg-card rounded-3xl border border-primary/10 overflow-hidden shadow-sm">
+              <div className="h-24 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative">
+                <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
 
-        <div className="space-y-6">
-          {activeTab === "personal" && (
-            <PersonalEditTab
-              formData={formData}
-              handleFieldChange={handleFieldChange}
-              emergencyDetails={emergencyDetails}
-              setEmergencyDetails={setEmergencyDetails}
-              relations={relations}
-              serviceTypes={serviceTypes}
-            />
-          )}
+                {(() => {
+                  if (!formData.birth_date) return null;
+                  const today = new Date();
+                  const birthDate = new Date(formData.birth_date);
+                  if (
+                    today.getDate() === birthDate.getDate() &&
+                    today.getMonth() === birthDate.getMonth()
+                  ) {
+                    return (
+                      <div className="absolute top-4 left-4">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200">
+                          <Cake className="w-4 h-4 text-amber-600" />
+                          <span className="text-xs font-bold text-amber-900">
+                            יום הולדת
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
 
-          {activeTab === "pro" && (
-            <ProfessionalEditTab
-              formData={formData}
-              handleFieldChange={handleFieldChange}
-              structure={structure}
-              selectedDeptId={selectedDeptId}
-              setSelectedDeptId={setSelectedDeptId}
-              selectedSectionId={selectedSectionId}
-              setSelectedSectionId={setSelectedSectionId}
-              sections={sections}
-              teams={teams}
-              user={user}
-            />
-          )}
+              <div className="px-6 pb-8 text-center -mt-12 relative text-right">
+                <div
+                  className={cn(
+                    "w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-black mb-4 mx-auto border-4 border-card bg-gradient-to-br from-primary to-primary/80 text-primary-foreground",
+                    !employee.is_active && "grayscale opacity-50",
+                  )}
+                >
+                  {formData.first_name?.[0]}
+                  {formData.last_name?.[0]}
+                </div>
+
+                <h2 className="text-xl font-black text-foreground mb-1 text-center">
+                  {formData.first_name} {formData.last_name}
+                </h2>
+
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <Badge variant="outline" className="font-mono bg-muted/50">
+                    {formData.personal_number}
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary border-primary/20"
+                  >
+                    {serviceTypes.find(
+                      (st) => st.id === formData.service_type_id,
+                    )?.name || "—"}
+                  </Badge>
+                </div>
+
+                <div className="pr-2 py-4 space-y-6 relative border-t border-dashed border-border/60">
+                  <div className="absolute right-[11px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-primary/30 via-primary/10 to-transparent" />
+
+                  <div
+                    className="relative pr-6 cursor-pointer group/item transition-all"
+                    onClick={() => {
+                      setActiveTab("pro");
+                      setTimeout(() => setOpenUnit("dept"), 150);
+                    }}
+                  >
+                    <div className="absolute right-0 top-1.5 w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-primary/10 group-hover/item:scale-125 transition-transform" />
+                    <span className="text-[10px] font-bold text-muted-foreground block mb-0.5 uppercase tracking-wider group-hover/item:text-primary transition-colors">
+                      מחלקה
+                    </span>
+                    <span className="font-bold text-sm text-foreground block group-hover/item:text-primary transition-colors">
+                      {cleanUnitName(
+                        structure.find(
+                          (d) => d.id.toString() === selectedDeptId,
+                        )?.name,
+                      ) || "לא נבחרה"}
+                    </span>
+                  </div>
+
+                  <div
+                    className={cn(
+                      "relative pr-6 transition-all",
+                      selectedDeptId
+                        ? "cursor-pointer group/item"
+                        : "opacity-40",
+                    )}
+                    onClick={() =>
+                      selectedDeptId &&
+                      (setActiveTab("pro"),
+                      setTimeout(() => setOpenUnit("section"), 150))
+                    }
+                  >
+                    <div className="absolute right-0 top-1.5 w-2.5 h-2.5 rounded-full bg-primary/60 ring-4 ring-primary/5 group-hover/item:scale-125 transition-transform" />
+                    <span className="text-[10px] font-bold text-muted-foreground block mb-0.5 uppercase tracking-wider group-hover/item:text-primary transition-colors">
+                      מדור
+                    </span>
+                    <span className="font-bold text-sm text-foreground block group-hover/item:text-primary transition-colors">
+                      {cleanUnitName(
+                        sections.find(
+                          (s) => s.id.toString() === selectedSectionId,
+                        )?.name,
+                      ) || "לא נבחר"}
+                    </span>
+                  </div>
+
+                  <div
+                    className={cn(
+                      "relative pr-6 transition-all",
+                      selectedSectionId
+                        ? "cursor-pointer group/item"
+                        : "opacity-40",
+                    )}
+                    onClick={() =>
+                      selectedSectionId &&
+                      (setActiveTab("pro"),
+                      setTimeout(() => setOpenUnit("team"), 150))
+                    }
+                  >
+                    <div className="absolute right-0 top-1.5 w-2.5 h-2.5 rounded-full bg-primary/30 ring-4 ring-primary/5 group-hover/item:scale-125 transition-transform" />
+                    <span className="text-[10px] font-bold text-muted-foreground block mb-0.5 uppercase tracking-wider group-hover/item:text-primary transition-colors">
+                      חוליה
+                    </span>
+                    <span className="font-bold text-sm text-foreground block group-hover/item:text-primary transition-colors">
+                      {cleanUnitName(
+                        teams.find((t) => t.id === formData.team_id)?.name,
+                      ) || "לא נבחרה"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* MAIN CONTENT Area */}
+          <div className="lg:col-span-9 space-y-8 order-1 min-h-[600px]">
+            {/* Tabs Selector */}
+            <div className="bg-slate-200/40 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-1.5 flex gap-1.5 max-w-md shadow-inner">
+              <TabButton
+                active={activeTab === "personal"}
+                onClick={() => setActiveTab("personal")}
+                icon={User}
+                label="פרטים אישיים"
+              />
+              <TabButton
+                active={activeTab === "pro"}
+                onClick={() => setActiveTab("pro")}
+                icon={Shield}
+                label="מקצועי והרשאות"
+              />
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6 pb-20"
+              >
+                {activeTab === "personal" && (
+                  <PersonalEditTab
+                    formData={formData}
+                    handleFieldChange={handleFieldChange}
+                    emergencyDetails={emergencyDetails}
+                    setEmergencyDetails={setEmergencyDetails}
+                    relations={relations}
+                    serviceTypes={serviceTypes}
+                  />
+                )}
+
+                {activeTab === "pro" && (
+                  <ProfessionalEditTab
+                    formData={formData}
+                    handleFieldChange={handleFieldChange}
+                    structure={structure}
+                    selectedDeptId={selectedDeptId}
+                    setSelectedDeptId={setSelectedDeptId}
+                    selectedSectionId={selectedSectionId}
+                    setSelectedSectionId={setSelectedSectionId}
+                    sections={sections}
+                    teams={teams}
+                    user={user}
+                    setFormData={setFormData}
+                    openUnit={openUnit}
+                    setOpenUnit={setOpenUnit}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
-// --- Helper Components ---
-const InputItem = ({
-  label,
-  icon: Icon,
-  required,
-  children,
-  className,
-}: any) => (
-  <div className={cn("space-y-1.5", className)}>
-    <Label className="flex items-center gap-2 text-xs text-muted-foreground font-semibold">
-      {Icon && <Icon className="w-3.5 h-3.5" />} {label}{" "}
-      {required && <span className="text-red-500">*</span>}
-    </Label>
-    {children}
-  </div>
-);
-const OrgSelectBox = ({ title, children, disabled, icon: Icon }: any) => (
-  <div
-    className={cn(
-      "relative z-10 flex-1 bg-gradient-to-b from-primary/[0.07] to-primary/[0.02] border border-primary/20 pb-4 pt-2 px-1 rounded-2xl transition-all text-center shadow-sm",
-      disabled
-        ? "opacity-30 grayscale cursor-not-allowed"
-        : "hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 mt-4 group",
-    )}
-  >
-    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white border border-primary/20 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-transform group-hover:scale-110">
-      {Icon && <Icon className="w-3.5 h-3.5 text-primary animate-pulse" />}
-      <span className="text-[11px] font-black text-primary uppercase tracking-widest leading-none">
-        {title}
-      </span>
-    </div>
-    <div className="pt-5 px-3">{children}</div>
-  </div>
-);
-const SwitchItem = ({ label, checked, onChange, highlight }: any) => (
-  <div
-    className={cn(
-      "flex items-center justify-between p-3 rounded-xl border transition-colors",
-      checked
-        ? highlight
-          ? "bg-primary/5 border-primary/20"
-          : "bg-muted/50 border-primary/20"
-        : "bg-transparent border-border/50 hover:bg-muted/30",
-    )}
-  >
-    <Label className="cursor-pointer flex-1 font-medium text-sm">{label}</Label>
-    <Switch checked={checked} onCheckedChange={onChange} />
-  </div>
-);

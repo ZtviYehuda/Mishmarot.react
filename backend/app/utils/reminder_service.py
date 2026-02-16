@@ -131,12 +131,10 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
             cur.execute(
                 """
                 SELECT 1 FROM attendance_logs al
+                JOIN status_types st ON al.status_type_id = st.id
                 WHERE al.employee_id = %s
-                AND (
-                    (DATE(al.start_datetime) = CURRENT_DATE)
-                    OR (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE)
-                    AND al.status_type_id IN (2, 4, 5, 6)
-                )
+                AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE)
+                AND (DATE(al.start_datetime) = CURRENT_DATE OR st.is_persistent = TRUE)
                 ORDER BY al.start_datetime DESC LIMIT 1
             """,
                 (emp["id"],),
@@ -156,8 +154,10 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
                     WHERE e.team_id = %s AND e.is_active = TRUE AND e.id != %s
                     AND NOT EXISTS (
                         SELECT 1 FROM attendance_logs al 
+                        JOIN status_types st ON al.status_type_id = st.id
                         WHERE al.employee_id = e.id 
-                        AND (DATE(al.start_datetime) = CURRENT_DATE OR (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE) AND al.status_type_id IN (2, 4, 5, 6))
+                        AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE)
+                        AND (DATE(al.start_datetime) = CURRENT_DATE OR st.is_persistent = TRUE)
                     )
                 """,
                     (emp["commands_team_id"], emp["id"]),
@@ -201,10 +201,10 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
                             WHERE e.team_id = %s AND e.is_active = TRUE 
                             AND NOT EXISTS (
                                 SELECT 1 FROM attendance_logs al 
+                                JOIN status_types st ON al.status_type_id = st.id
                                 WHERE al.employee_id = e.id 
-                                AND (DATE(al.start_datetime) = CURRENT_DATE 
-                                     OR (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE) 
-                                     AND al.status_type_id IN (2, 4, 5, 6))
+                                AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE) 
+                                AND (DATE(al.start_datetime) = CURRENT_DATE OR st.is_persistent = TRUE)
                             )
                             """,
                             (unit["id"],),

@@ -12,7 +12,7 @@ export const StatCards = ({ stats }: StatCardsProps) => {
       {stats.map((stat, idx) => (
         <Card
           key={idx}
-          className="border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all bg-white dark:bg-card dark:border-border group"
+          className="border border-slate-100  hover: transition-all bg-white dark:bg-card dark:border-border group"
         >
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-6">
@@ -45,7 +45,7 @@ export const StatCards = ({ stats }: StatCardsProps) => {
             <div className="mt-6 flex items-center gap-2">
               <div className="flex-grow h-1.5 bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full transition-all duration-1000 shadow-sm"
+                  className="h-full transition-all duration-1000 "
                   style={{
                     backgroundColor: stat.color || "#0074ff",
                     width: `${Math.min(100, (stat.count / 40) * 100)}%`,

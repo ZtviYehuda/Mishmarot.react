@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
@@ -385,7 +384,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
         onOpenChange={(v) => (!v ? handleCloseAttempt() : onOpenChange(v))}
       >
         <DialogContent
-          className="w-[100vw] h-[100dvh] sm:h-[85vh] sm:w-[95vw] sm:max-w-7xl p-0 border-none bg-background shadow-2xl flex flex-col sm:rounded-3xl overflow-hidden"
+          className="w-[100vw] h-[100dvh] sm:h-[85vh] sm:w-[95vw] sm:max-w-7xl p-0 border-none bg-background  flex flex-col sm:rounded-3xl overflow-hidden"
           dir="rtl"
         >
           {/* Sticky Header */}
@@ -424,7 +423,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                     placeholder="חיפוש לפי שם או מ''א..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-10 bg-muted/20 border border-border/40 rounded-xl pr-10 pl-4 text-sm font-bold focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/40 outline-none transition-all shadow-inner"
+                    className="w-full h-10 bg-muted/20 border border-border/40 rounded-xl pr-10 pl-4 text-sm font-bold focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/40 outline-none transition-all "
                   />
                 </div>
 
@@ -458,7 +457,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
-                    className="w-72 p-4 rounded-2xl shadow-2xl border-border/40"
+                    className="w-72 p-4 rounded-2xl  border-border/40"
                     align="end"
                     dir="rtl"
                   >
@@ -491,7 +490,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             value={filterServiceType}
                             onValueChange={setFilterServiceType}
                           >
-                            <SelectTrigger className="h-9 bg-muted/30 border-border/40 rounded-xl font-bold text-xs group-focus:ring-2">
+                            <SelectTrigger className="h-9 bg-muted/30 border-border/40 rounded-xl font-bold text-xs group-focus:ring-2 text-right">
                               <SelectValue placeholder="כל המעמדות" />
                             </SelectTrigger>
                             <SelectContent
@@ -529,7 +528,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                 value={filterSectionId}
                                 onValueChange={setFilterSectionId}
                               >
-                                <SelectTrigger className="h-9 bg-muted/30 border-border/40 rounded-xl font-bold text-xs">
+                                <SelectTrigger className="h-9 bg-muted/30 border-border/40 rounded-xl font-bold text-xs text-right">
                                   <SelectValue placeholder="כל המדורים" />
                                 </SelectTrigger>
                                 <SelectContent
@@ -568,7 +567,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                 value={filterTeamId}
                                 onValueChange={setFilterTeamId}
                               >
-                                <SelectTrigger className="h-9 bg-muted/30 border-border/40 rounded-xl font-bold text-xs">
+                                <SelectTrigger className="h-9 bg-muted/30 border-border/40 rounded-xl font-bold text-xs text-right">
                                   <SelectValue placeholder="כל החוליות" />
                                 </SelectTrigger>
                                 <SelectContent
@@ -604,7 +603,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                   className={cn(
                     "px-3 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shrink-0",
                     showSelectedOnly
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      ? "bg-primary text-primary-foreground  "
                       : "bg-muted/30 text-muted-foreground border border-border/40 hover:bg-muted/50",
                   )}
                 >
@@ -636,7 +635,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
             ) : (
               <>
                 {/* Desktop View */}
-                <div className="hidden lg:block w-full overflow-hidden rounded-2xl border border-border/40 shadow-sm bg-background/50">
+                <div className="hidden lg:block w-full overflow-hidden rounded-2xl border border-border/40  bg-background/50">
                   <Table className="table-fixed w-full">
                     <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-md">
                       <TableRow className="hover:bg-transparent border-b border-border/50">
@@ -679,7 +678,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             className={cn(
                               "group transition-all duration-300 border-b border-border/[0.06] last:border-0 relative",
                               isSelected
-                                ? "bg-primary/[0.02] hover:bg-primary/[0.04] shadow-[inset_4px_0_0_0_rgb(var(--primary))]"
+                                ? "bg-primary/[0.02] hover:bg-primary/[0.04] "
                                 : "hover:bg-muted/40",
                               !hasStatus && !isSelected && "bg-amber-[50]/10",
                             )}
@@ -696,7 +695,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                 className={cn(
                                   "w-5 h-5 rounded-lg border-muted-foreground/30 transition-all duration-300 scale-110",
                                   isSelected &&
-                                    "data-[state=checked]:bg-primary data-[state=checked]:border-primary shadow-lg shadow-primary/20",
+                                    "data-[state=checked]:bg-primary data-[state=checked]:border-primary  ",
                                 )}
                               />
                             </TableCell>
@@ -704,9 +703,9 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               <div className="flex items-center gap-3">
                                 <div
                                   className={cn(
-                                    "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-[11px] shrink-0 shadow-sm transition-all duration-500 group-hover:scale-105 group-hover:rotate-3",
+                                    "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-[11px] shrink-0  transition-all duration-500 group-hover:scale-105 group-hover:rotate-3",
                                     current?.isChanged
-                                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110"
+                                      ? "bg-primary text-primary-foreground   scale-110"
                                       : "bg-white border border-border/80 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary group-hover:bg-primary/5",
                                   )}
                                 >
@@ -750,9 +749,8 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                 }
                               >
                                 <SelectTrigger
-                                  dir="rtl"
                                   className={cn(
-                                    "h-10 w-full bg-background border border-border/60 hover:border-primary/50 focus:ring-2 focus:ring-primary/20 rounded-xl text-xs font-bold transition-all shadow-sm",
+                                    "h-10 w-full bg-background border border-border/60 hover:border-primary/50 focus:ring-2 focus:ring-primary/20 rounded-xl text-xs font-bold transition-all  text-right",
                                     current.status_id !== 0 &&
                                       "border-primary/30 bg-primary/5",
                                   )}
@@ -830,7 +828,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                             e.target.value,
                                           )
                                         }
-                                        className="w-full h-10 rounded-xl border border-border/60 bg-background/50 hover:bg-background hover:border-primary/40 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-[11px] font-black px-3 outline-none transition-all shadow-sm"
+                                        className="w-full h-10 rounded-xl border border-border/60 bg-background/50 hover:bg-background hover:border-primary/40 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-[11px] font-black px-3 outline-none transition-all "
                                       />
                                     </div>
                                     <div className="relative group/input">
@@ -847,14 +845,14 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                             e.target.value,
                                           )
                                         }
-                                        className="w-full h-10 rounded-xl border border-border/60 bg-background/50 hover:bg-background hover:border-primary/40 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-[11px] font-black px-3 outline-none transition-all shadow-sm placeholder:text-muted-foreground/30"
+                                        className="w-full h-10 rounded-xl border border-border/60 bg-background/50 hover:bg-background hover:border-primary/40 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-[11px] font-black px-3 outline-none transition-all  placeholder:text-muted-foreground/30"
                                       />
                                     </div>
                                   </div>
                                 </div>
                               ) : hasStatus ? (
                                 <div className="flex items-center justify-start h-10 animate-in fade-in zoom-in duration-500">
-                                  <div className="group/badge px-4 py-2 rounded-2xl bg-emerald-50/50 border border-emerald-100 hover:bg-emerald-50 hover:border-emerald-200 transition-all cursor-default shadow-sm hover:shadow-emerald-100/50">
+                                  <div className="group/badge px-4 py-2 rounded-2xl bg-emerald-50/50 border border-emerald-100 hover:bg-emerald-50 hover:border-emerald-200 transition-all cursor-default  hover:-100/50">
                                     <div className="flex items-center gap-2.5">
                                       <div className="relative">
                                         <div className="absolute -inset-1 bg-emerald-400/20 rounded-full blur-sm group-hover/badge:opacity-100 opacity-0 transition-opacity" />
@@ -907,7 +905,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                 <div className="lg:hidden flex flex-col p-4 gap-4 pb-32">
                   <div className="flex items-center justify-between px-1">
                     <div
-                      className="flex items-center gap-3 py-2 px-4 rounded-2xl bg-primary/[0.04] border border-primary/20 active:scale-95 transition-all cursor-pointer shadow-sm"
+                      className="flex items-center gap-3 py-2 px-4 rounded-2xl bg-primary/[0.04] border border-primary/20 active:scale-95 transition-all cursor-pointer "
                       onClick={() =>
                         handleSelectAll(
                           selectedIds.length !== filteredList.length,
@@ -946,8 +944,8 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                         className={cn(
                           "group rounded-[2rem] border transition-all duration-500 relative bg-background overflow-hidden",
                           isSelected
-                            ? "border-primary/40 shadow-xl shadow-primary/10 ring-1 ring-primary/20 -translate-y-1"
-                            : "border-border/40 shadow-sm",
+                            ? "border-primary/40   ring-1 ring-primary/20 -translate-y-1"
+                            : "border-border/40 ",
                         )}
                       >
                         {/* Compact Header */}
@@ -1000,7 +998,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             onCheckedChange={(c) =>
                               handleSelectOne(emp.id, !!c)
                             }
-                            className="w-6 h-6 rounded-xl border-muted-foreground/20 data-[state=checked]:bg-primary transition-all duration-300 scale-110 shadow-sm"
+                            className="w-6 h-6 rounded-xl border-muted-foreground/20 data-[state=checked]:bg-primary transition-all duration-300 scale-110 "
                           />
                         </div>
 
@@ -1024,15 +1022,12 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                 handleUpdateIndividual(emp.id, val)
                               }
                             >
-                              <SelectTrigger
-                                dir="rtl"
-                                className="h-12 w-full bg-background border-border/60 rounded-2xl text-xs font-black shadow-sm"
-                              >
+                              <SelectTrigger className="h-12 w-full bg-background border-border/60 rounded-2xl text-xs font-black  text-right">
                                 <SelectValue placeholder="עדכן סטטוס..." />
                               </SelectTrigger>
                               <SelectContent
                                 dir="rtl"
-                                className="rounded-2xl shadow-2xl"
+                                className="rounded-2xl "
                               >
                                 {statusTypes.map((t) => (
                                   <SelectItem
@@ -1068,7 +1063,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                     e.target.value,
                                   )
                                 }
-                                className="w-full h-10 bg-background border border-border/40 rounded-xl px-3 text-[11px] font-black shadow-sm outline-none focus:border-primary/50"
+                                className="w-full h-10 bg-background border border-border/40 rounded-xl px-3 text-[11px] font-black  outline-none focus:border-primary/50"
                               />
                             </div>
                             <div className="space-y-1">
@@ -1085,7 +1080,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                     e.target.value,
                                   )
                                 }
-                                className="w-full h-10 bg-background border border-border/40 rounded-xl px-3 text-[11px] font-black shadow-sm outline-none focus:border-primary/50 placeholder:text-muted-foreground/30"
+                                className="w-full h-10 bg-background border border-border/40 rounded-xl px-3 text-[11px] font-black  outline-none focus:border-primary/50 placeholder:text-muted-foreground/30"
                               />
                             </div>
                           </div>
@@ -1122,14 +1117,14 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
           </div>
 
           {/* Floating Action Bar (Sticky Footer) */}
-          <div className="flex-none p-4 sm:p-6 border-t border-border/40 bg-background/91 backdrop-blur-xl z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.03)] focus-within:shadow-[0_-10px_50px_rgba(0,105,255,0.08)] transition-all duration-500">
+          <div className="flex-none p-4 sm:p-6 border-t border-border/40 bg-background/91 backdrop-blur-xl z-20  focus-within: transition-all duration-500">
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
               {/* Batch Selection Controls */}
               {selectedIds.length > 0 ? (
-                <div className="flex items-center gap-4 bg-primary/[0.04] px-4 py-2.5 rounded-2xl border border-primary/20 animate-in slide-in-from-bottom-4 duration-500 shadow-sm">
+                <div className="flex items-center gap-4 bg-primary/[0.04] px-4 py-2.5 rounded-2xl border border-primary/20 animate-in slide-in-from-bottom-4 duration-500 ">
                   <div className="relative group/num">
                     <div className="absolute -inset-1.5 bg-primary/20 rounded-full blur-md opacity-0 group-hover/num:opacity-100 transition-opacity duration-500" />
-                    <div className="relative flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground text-xs font-black rounded-full shadow-lg shadow-primary/20 ring-4 ring-primary/10 transition-transform group-hover/num:rotate-12">
+                    <div className="relative flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground text-xs font-black rounded-full   ring-4 ring-primary/10 transition-transform group-hover/num:rotate-12">
                       {selectedIds.length}
                     </div>
                   </div>
@@ -1141,15 +1136,12 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                       value={batchStatusId}
                       onValueChange={handleBatchStatusChange}
                     >
-                      <SelectTrigger
-                        dir="rtl"
-                        className="h-10 min-w-[170px] bg-background border-primary/20 text-xs font-black rounded-xl hover:border-primary/40 focus:ring-4 focus:ring-primary/5 shadow-sm transition-all pr-4"
-                      >
+                      <SelectTrigger className="h-10 min-w-[170px] bg-background border-primary/20 text-xs font-black rounded-xl hover:border-primary/40 focus:ring-4 focus:ring-primary/5  transition-all pr-4 text-right">
                         <SelectValue placeholder="עדכון סטטוס מרוכז..." />
                       </SelectTrigger>
                       <SelectContent
                         dir="rtl"
-                        className="max-h-[300px] rounded-2xl shadow-2xl border-primary/10"
+                        className="max-h-[300px] rounded-2xl  border-primary/10"
                       >
                         {statusTypes.map((t) => (
                           <SelectItem
@@ -1159,7 +1151,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                           >
                             <div className="flex items-center gap-3">
                               <div
-                                className="w-2.5 h-2.5 rounded-full shadow-sm"
+                                className="w-2.5 h-2.5 rounded-full "
                                 style={{ backgroundColor: t.color }}
                               />
                               {t.name}
@@ -1176,7 +1168,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                       </span>
                       <input
                         type="date"
-                        className="h-10 w-[140px] bg-background border border-border/40 rounded-xl px-3 text-xs font-black shadow-sm outline-none focus:border-primary/40 transition-all"
+                        className="h-10 w-[140px] bg-background border border-border/40 rounded-xl px-3 text-xs font-black  outline-none focus:border-primary/40 transition-all"
                         onChange={(e) =>
                           handleBatchDateChange("start_date", e.target.value)
                         }
@@ -1186,7 +1178,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                       </span>
                       <input
                         type="date"
-                        className="h-10 w-[140px] bg-background border border-border/40 rounded-xl px-3 text-xs font-black shadow-sm outline-none focus:border-primary/40 transition-all"
+                        className="h-10 w-[140px] bg-background border border-border/40 rounded-xl px-3 text-xs font-black  outline-none focus:border-primary/40 transition-all"
                         placeholder="סיום"
                         onChange={(e) =>
                           handleBatchDateChange("end_date", e.target.value)
@@ -1249,7 +1241,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                     ) &&
                       batchStatusId === "")
                   }
-                  className="flex-1 sm:flex-none h-11 sm:h-10 px-8 rounded-xl font-black text-sm shadow-xl shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all order-last sm:order-none bg-primary hover:bg-primary/90"
+                  className="flex-1 sm:flex-none h-11 sm:h-10 px-8 rounded-xl font-black text-sm   hover: active:scale-95 transition-all order-last sm:order-none bg-primary hover:bg-primary/90"
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">
@@ -1276,7 +1268,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
 
       {/* Unsaved Changes Confirmation Dialog */}
       <Dialog open={showWarning} onOpenChange={setShowWarning}>
-        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-destructive/20 shadow-2xl z-[100] gap-0">
+        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-destructive/20  z-[100] gap-0">
           <div className="bg-destructive/5 p-6 flex flex-col items-center justify-center text-center gap-2 border-b border-destructive/10">
             <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-2 animate-in zoom-in duration-300">
               <AlertCircle className="w-6 h-6 text-destructive" />

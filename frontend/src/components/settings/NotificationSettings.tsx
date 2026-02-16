@@ -59,7 +59,7 @@ export function NotificationSettings({
             icon={Bell}
             title="התראות אישיות"
             badge={
-              <div className="flex items-center gap-3 bg-primary/5 border border-primary/10 px-4 py-1.5 rounded-full shadow-lg text-[10px] font-black uppercase">
+              <div className="flex items-center gap-3 bg-primary/5 border border-primary/10 px-4 py-1.5 rounded-full  text-[10px] font-black uppercase">
                 <div className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -108,7 +108,7 @@ export function NotificationSettings({
             >
               <div className="flex flex-col md:flex-row items-center justify-between gap-8 p-6 bg-destructive/[0.03] rounded-[2rem] border border-destructive/10">
                 <div className="flex items-start gap-5">
-                  <div className="p-4 bg-background rounded-2xl shadow-xl shadow-destructive/5 shrink-0 border border-destructive/10">
+                  <div className="p-4 bg-background rounded-2xl   shrink-0 border border-destructive/10">
                     <Clock className="w-8 h-8 text-destructive" />
                   </div>
                   <div className="space-y-1">
@@ -149,7 +149,7 @@ export function NotificationSettings({
                               localDeadline,
                             )
                           }
-                          className="h-14 px-8 rounded-2xl bg-destructive text-white hover:bg-destructive/90 shadow-2xl shadow-destructive/20 font-black"
+                          className="h-14 px-8 rounded-2xl bg-destructive text-white hover:bg-destructive/90   font-black"
                         >
                           <Save className="w-5 h-5 ml-2" />
                           עדכן
@@ -211,7 +211,7 @@ function SectionCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border shadow-2xl shadow-primary/5 overflow-hidden",
+        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border   overflow-hidden",
         variant === "danger" ? "border-red-500/10" : "border-primary/10",
       )}
     >
@@ -256,7 +256,7 @@ function SwitchItem({ label, desc, checked, onChange, icon: Icon }: any) {
       className={cn(
         "flex items-center justify-between p-6 rounded-[2rem] border transition-all duration-300 group",
         checked
-          ? "bg-primary/5 border-primary/20 shadow-xl shadow-primary/5"
+          ? "bg-primary/5 border-primary/20  "
           : "bg-background border-border/50 hover:border-primary/20",
       )}
     >

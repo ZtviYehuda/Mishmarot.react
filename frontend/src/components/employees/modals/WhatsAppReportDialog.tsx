@@ -41,7 +41,6 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
     departments: [] as string[],
     sections: [] as string[],
     statuses: [] as string[],
-    roles: [] as string[],
   });
 
   const [phoneNumber, setPhoneNumber] = useState(user?.phone_number || "");
@@ -51,20 +50,17 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
     const departments = new Set<string>();
     const sections = new Set<string>();
     const statuses = new Set<string>();
-    const roles = new Set<string>();
 
     filteredEmployees.forEach((emp) => {
       if (emp.department_name) departments.add(emp.department_name);
       if (emp.section_name) sections.add(emp.section_name);
       if (emp.status_name) statuses.add(emp.status_name);
-      if (emp.role_name) roles.add(emp.role_name);
     });
 
     return {
       departments: Array.from(departments).sort(),
       sections: Array.from(sections).sort(),
       statuses: Array.from(statuses).sort(),
-      roles: Array.from(roles).sort(),
     };
   }, [filteredEmployees]);
 
@@ -87,11 +83,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
         !customFilters.statuses.includes(emp.status_name || "Unknown")
       )
         return false;
-      if (
-        customFilters.roles.length > 0 &&
-        !customFilters.roles.includes(emp.role_name || "")
-      )
-        return false;
+      return false;
       return true;
     });
   };
@@ -196,7 +188,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 border-none bg-card shadow-2xl flex flex-col"
+        className="max-w-xl p-0 border-none bg-card  flex flex-col"
         dir="rtl"
       >
         <DialogHeader className="p-6 pb-4 text-right">
@@ -226,7 +218,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                 className={cn(
                   "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-center",
                   sendOption === "current"
-                    ? "bg-emerald-50 border-emerald-500 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500 dark:text-emerald-400 shadow-lg shadow-emerald-500/10"
+                    ? "bg-emerald-50 border-emerald-500 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500 dark:text-emerald-400  -500/10"
                     : "bg-slate-50 dark:bg-slate-900 border-transparent text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800",
                 )}
               >
@@ -240,7 +232,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                 className={cn(
                   "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-center",
                   sendOption === "custom"
-                    ? "bg-indigo-50 border-indigo-500 text-indigo-700 dark:bg-indigo-900/20 dark:border-indigo-500 dark:text-indigo-400 shadow-lg shadow-indigo-500/10"
+                    ? "bg-indigo-50 border-indigo-500 text-indigo-700 dark:bg-indigo-900/20 dark:border-indigo-500 dark:text-indigo-400  -500/10"
                     : "bg-slate-50 dark:bg-slate-900 border-transparent text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800",
                 )}
               >
@@ -275,7 +267,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
                               customFilters[
                                 key as keyof typeof customFilters
                               ].includes(v)
-                                ? "bg-slate-900 text-white dark:bg-indigo-600 shadow-md"
+                                ? "bg-slate-900 text-white dark:bg-indigo-600 "
                                 : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-slate-700",
                             )}
                           >
@@ -319,7 +311,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
         </div>
 
         <div className="p-6 bg-muted/30 border-t flex flex-col gap-3">
-          <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50">
+          <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-2xl  border border-slate-100 dark:border-slate-700/50">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
                 <Users className="w-4 h-4" />
@@ -344,12 +336,12 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
               isLoading={loading}
               disabled={employeesToReportCount === 0}
               skipDirectLink={true}
-              className="w-12 h-12 rounded-full shadow-lg shadow-emerald-500/20"
+              className="w-12 h-12 rounded-full  -500/20"
             />
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="px-8 border-slate-200 dark:border-slate-800 rounded-2xl h-12 font-bold text-slate-500 hover:bg-white transition-all shadow-sm"
+              className="px-8 border-slate-200 dark:border-slate-800 rounded-2xl h-12 font-bold text-slate-500 hover:bg-white transition-all "
             >
               ביטול
             </Button>

@@ -43,7 +43,7 @@ export function BackupSettings({
             badge={
               <div
                 className={cn(
-                  "flex items-center gap-2.5 px-4 py-1.5 rounded-full border shadow-lg text-[10px] font-black uppercase transition-all duration-500",
+                  "flex items-center gap-2.5 px-4 py-1.5 rounded-full border  text-[10px] font-black uppercase transition-all duration-500",
                   backupConfig.enabled
                     ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                     : "bg-muted/50 text-muted-foreground border-border",
@@ -76,7 +76,7 @@ export function BackupSettings({
                 className={cn(
                   "flex items-center justify-between p-8 rounded-[2rem] border transition-all duration-500",
                   backupConfig.enabled
-                    ? "bg-primary/5 border-primary/20 shadow-2xl shadow-primary/5"
+                    ? "bg-primary/5 border-primary/20  "
                     : "bg-background border-border/50",
                 )}
               >
@@ -85,7 +85,7 @@ export function BackupSettings({
                     className={cn(
                       "p-4 rounded-2xl transition-all duration-500",
                       backupConfig.enabled
-                        ? "bg-primary/10 text-primary scale-110 shadow-lg"
+                        ? "bg-primary/10 text-primary scale-110 "
                         : "bg-muted/40 text-muted-foreground",
                     )}
                   >
@@ -133,9 +133,9 @@ export function BackupSettings({
                         updateBackupConfig("interval_hours", hours)
                       }
                       className={cn(
-                        "group relative p-8 rounded-[2rem] border-2 flex flex-col items-center gap-3 transition-all duration-500 hover:scale-[1.05] hover:shadow-2xl hover:shadow-primary/5",
+                        "group relative p-8 rounded-[2rem] border-2 flex flex-col items-center gap-3 transition-all duration-500 hover:scale-[1.05] hover: hover:",
                         backupConfig.interval_hours === hours
-                          ? "border-primary bg-primary/5 shadow-2xl shadow-primary/10 ring-4 ring-primary/5"
+                          ? "border-primary bg-primary/5   ring-4 ring-primary/5"
                           : "border-border/50 bg-background/50 hover:border-primary/20",
                       )}
                     >
@@ -158,7 +158,7 @@ export function BackupSettings({
                           layoutId="freq-check"
                           className="absolute top-4 right-4 text-primary"
                         >
-                          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-lg shadow-primary/40" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary  " />
                         </motion.div>
                       )}
                     </button>
@@ -198,7 +198,7 @@ export function BackupSettings({
                 <Button
                   onClick={handleBackup}
                   disabled={isBackingUp}
-                  className="h-14 rounded-2xl bg-primary text-white shadow-2xl shadow-primary/20 font-black hover:scale-[1.02] transition-all"
+                  className="h-14 rounded-2xl bg-primary text-white   font-black hover:scale-[1.02] transition-all"
                 >
                   {isBackingUp ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -234,7 +234,7 @@ export function BackupSettings({
               <Button
                 onClick={() => document.getElementById("restore-file")?.click()}
                 disabled={isRestoring}
-                className="w-full h-16 rounded-[2rem] bg-red-500 text-white shadow-2xl shadow-red-500/20 font-black hover:bg-red-600 transition-all flex flex-col gap-1 items-center justify-center group"
+                className="w-full h-16 rounded-[2rem] bg-red-500 text-white  -500/20 font-black hover:bg-red-600 transition-all flex flex-col gap-1 items-center justify-center group"
               >
                 {isRestoring ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -272,7 +272,7 @@ function SectionCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border shadow-2xl shadow-primary/5 overflow-hidden",
+        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border   overflow-hidden",
         variant === "danger" ? "border-red-500/10" : "border-primary/10",
       )}
     >

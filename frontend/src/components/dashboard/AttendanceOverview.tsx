@@ -15,7 +15,7 @@ export const AttendanceOverview = ({ stats }: AttendanceOverviewProps) => {
   const total = stats.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
-    <Card className="border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] bg-white dark:bg-card dark:border-border h-full">
+    <Card className="border border-slate-100  bg-white dark:bg-card dark:border-border h-full">
       <CardHeader className="pb-8">
         <div className="flex justify-between items-start">
           <div>
@@ -38,7 +38,7 @@ export const AttendanceOverview = ({ stats }: AttendanceOverviewProps) => {
               <div className="flex justify-between items-end mb-3">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-1.5 h-6 rounded-full shadow-sm"
+                    className="w-1.5 h-6 rounded-full "
                     style={{ backgroundColor: s.color }}
                   />
                   <span className="text-sm font-black text-slate-700 dark:text-slate-200">
@@ -57,7 +57,7 @@ export const AttendanceOverview = ({ stats }: AttendanceOverviewProps) => {
               </div>
               <div className="w-full h-2.5 bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-100 dark:border-slate-700/50">
                 <div
-                  className="h-full rounded-full transition-all duration-[1500ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-sm"
+                  className="h-full rounded-full transition-all duration-[1500ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] "
                   style={{
                     backgroundColor: s.color,
                     width: `${total > 0 ? (s.count / total) * 100 : 0}%`,

@@ -105,12 +105,6 @@ export const EmployeeTable = ({
       }
     }
 
-    if (activeFilters.roles && activeFilters.roles.length > 0) {
-      if (!emp.role_name || !activeFilters.roles.includes(emp.role_name)) {
-        return false;
-      }
-    }
-
     if (activeFilters.serviceTypes && activeFilters.serviceTypes.length > 0) {
       if (
         !emp.service_type_name ||
@@ -248,7 +242,7 @@ export const EmployeeTable = ({
 
           {!user?.is_temp_commander && (
             <Button
-              className="h-9 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 rounded-xl w-full sm:w-auto justify-center sm:mr-auto"
+              className="h-9 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground   rounded-xl w-full sm:w-auto justify-center sm:mr-auto"
               onClick={() => navigate("/employees/new")}
             >
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
@@ -323,10 +317,10 @@ export const EmployeeTable = ({
                       <div className="flex items-center gap-3">
                         <div
                           className={cn(
-                            "w-10 h-10 rounded-xl flex items-center justify-center text-primary-foreground font-semibold text-xs shadow-md transition-colors",
+                            "w-10 h-10 rounded-xl flex items-center justify-center text-primary-foreground font-semibold text-xs  transition-colors",
                             emp.is_active
-                              ? "bg-gradient-to-br from-primary to-primary/80 shadow-primary/20"
-                              : "bg-muted text-muted-foreground shadow-sm",
+                              ? "bg-gradient-to-br from-primary to-primary/80 "
+                              : "bg-muted text-muted-foreground ",
                           )}
                         >
                           {emp.first_name[0]}
@@ -530,7 +524,7 @@ export const EmployeeTable = ({
             <div
               key={emp.id}
               className={cn(
-                "bg-card rounded-2xl border border-border shadow-sm overflow-hidden",
+                "bg-card rounded-2xl border border-border  overflow-hidden",
                 !emp.is_active &&
                   "bg-destructive/5 opacity-75 grayscale-[0.2] border-r-4 border-r-destructive",
               )}
@@ -540,10 +534,10 @@ export const EmployeeTable = ({
                 <div className="flex items-center gap-3">
                   <div
                     className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center text-primary-foreground font-semibold text-xs shadow-md transition-colors shrink-0",
+                      "w-10 h-10 rounded-xl flex items-center justify-center text-primary-foreground font-semibold text-xs  transition-colors shrink-0",
                       emp.is_active
-                        ? "bg-gradient-to-br from-primary to-primary/80 shadow-primary/20"
-                        : "bg-muted text-muted-foreground shadow-sm",
+                        ? "bg-gradient-to-br from-primary to-primary/80 "
+                        : "bg-muted text-muted-foreground ",
                     )}
                   >
                     {emp.first_name[0]}

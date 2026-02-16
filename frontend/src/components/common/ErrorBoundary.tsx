@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
             {/* Animated Icon Container */}
             <div className="mb-8 relative">
               <div className="absolute inset-0 bg-red-500 blur-3xl opacity-20 animate-pulse rounded-full" />
-              <div className="relative w-24 h-24 bg-gradient-to-br from-red-500/20 to-red-600/10 rounded-[32px] border border-red-500/30 flex items-center justify-center shadow-2xl backdrop-blur-sm">
+              <div className="relative w-24 h-24 bg-gradient-to-br from-red-500/20 to-red-600/10 rounded-[32px] border border-red-500/30 flex items-center justify-center  backdrop-blur-sm">
                 <ShieldAlert className="w-12 h-12 text-red-500" />
               </div>
             </div>
@@ -77,7 +77,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <Button
                 size="lg"
                 onClick={() => window.location.reload()}
-                className="bg-blue-600 hover:bg-blue-500 text-white border-none shadow-lg shadow-blue-600/25 h-12 px-8 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 gap-2"
+                className="bg-blue-600 hover:bg-blue-500 text-white border-none  -600/25 h-12 px-8 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 gap-2"
               >
                 <RefreshCw className="w-5 h-5 animate-spin-slow" />
                 רענון המערכת

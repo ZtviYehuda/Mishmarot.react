@@ -27,7 +27,7 @@ class TransferModel:
                 (data["employee_id"],),
             )
             emp_location = cur.fetchone()
-            
+
             # Determine source_type and source_id based on current location
             if emp_location:
                 dept_id, section_id, team_id = emp_location
@@ -66,13 +66,13 @@ class TransferModel:
             )
             new_id = cur.fetchone()[0]
             conn.commit()
-            
+
             # --- NOTIFICATION ---
             try:
-                TransferModel._notify_transfer_event(new_id, 'created')
+                TransferModel._notify_transfer_event(new_id, "created")
             except Exception as e:
                 print(f"⚠️ Notification failed after transfer creation: {e}")
-                
+
             return new_id
         except Exception as e:
             conn.rollback()
@@ -86,9 +86,11 @@ class TransferModel:
         Helper to send email notifications for transfer lifecycle events.
         """
         from app.utils.email_service import send_email
+
         conn = get_db_connection()
-        if not conn: return
-        
+        if not conn:
+            return
+
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             # Fetch complete request data with names
@@ -133,11 +135,12 @@ class TransferModel:
             """
             cur.execute(query, (request_id,))
             req = cur.fetchone()
-            if not req: return
+            if not req:
+                return
 
-            if event_type == 'created':
+            if event_type == "created":
                 # Notify Target Commander
-                if req['target_commander_email']:
+                if req["target_commander_email"]:
                     subject = f"בקשת ניוד חדשה: {req['employee_name']} ליחידתך"
                     body = f"""
                     <div dir="rtl" style="font-family: Arial, sans-serif;">
@@ -149,16 +152,20 @@ class TransferModel:
                         <a href="http://localhost:5173/transfers" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">לצפייה בבקשה ואישור</a>
                     </div>
                     """
-                    send_email(req['target_commander_email'], subject, body)
-                    
-            elif event_type in ['approved', 'rejected']:
+                    send_email(req["target_commander_email"], subject, body)
+
+            elif event_type in ["approved", "rejected"]:
                 # Notify Requester
-                if req['requester_email']:
-                    status_text = "אושרה" if event_type == 'approved' else "נדחתה"
-                    color = "#16a34a" if event_type == 'approved' else "#dc2626"
-                    
-                    rejection_html = f"<p><strong>סיבת דחייה:</strong> {req['rejection_reason']}</p>" if event_type == 'rejected' else ""
-                    
+                if req["requester_email"]:
+                    status_text = "אושרה" if event_type == "approved" else "נדחתה"
+                    color = "#16a34a" if event_type == "approved" else "#dc2626"
+
+                    rejection_html = (
+                        f"<p><strong>סיבת דחייה:</strong> {req['rejection_reason']}</p>"
+                        if event_type == "rejected"
+                        else ""
+                    )
+
                     subject = f"עדכון בקשת ניוד: {req['employee_name']} - {status_text}"
                     body = f"""
                     <div dir="rtl" style="font-family: Arial, sans-serif;">
@@ -169,8 +176,8 @@ class TransferModel:
                         <a href="http://localhost:5173/transfers" style="background-color: #475569; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">לצפייה בהיסטוריית בקשות</a>
                     </div>
                     """
-                    send_email(req['requester_email'], subject, body)
-                    
+                    send_email(req["requester_email"], subject, body)
+
         finally:
             conn.close()
 
@@ -232,31 +239,86 @@ class TransferModel:
                 WHERE tr.status = 'pending'
             """
             params = []
-            
+
+            # Visibility Scoping
             # Visibility Scoping
             if requesting_user and not requesting_user.get("is_admin"):
-                # Commanders see requests where they are either:
-                # 1. The target commander (to approve)
-                # 2. The requester (to monitor their own request)
+                # Commanders see requests where they are:
+                # 1. The requester (to monitor/cancel)
+                # 2. The PARENT commander of the target unit (to approve) - Hierarchy Check
+
+                # Note:
+                # Target Team -> Visible to its Section Commander OR Department Commander
+                # Target Section -> Visible to its Department Commander
+                # Target Department -> Visible to Admin only (handled by outer check)
+
+                req_id = requesting_user.get("id")
+                cmd_dept_id = requesting_user.get("commands_department_id")
+                cmd_sect_id = requesting_user.get("commands_section_id")
+
                 scoping = """
                     AND (
-                        (tr.target_type = 'department' AND tr.target_id = %s) OR
-                        (tr.target_type = 'section' AND tr.target_id = %s) OR
-                        (tr.target_type = 'team' AND tr.target_id = %s) OR
-                        (tr.requester_id = %s)
+                        (tr.requester_id = %s) OR
+                        
+                        -- Target is TEAM: Visible if user commands Parent Section OR Parent Department
+                        (tr.target_type = 'team' AND (
+                            (s_target_t.id = %s) OR 
+                            (d_target_t.id = %s)
+                        )) OR
+                        
+                        -- Target is SECTION: Visible if user commands Parent Department
+                        (tr.target_type = 'section' AND (
+                            d_target_s.id = %s
+                        ))
                     )
                 """
                 query += scoping
-                params.extend([
-                    requesting_user.get("commands_department_id"),
-                    requesting_user.get("commands_section_id"),
-                    requesting_user.get("commands_team_id"),
-                    requesting_user.get("id")
-                ])
-                
+                params.extend([req_id, cmd_sect_id, cmd_dept_id, cmd_dept_id])
+
             query += " ORDER BY tr.created_at DESC"
             cur.execute(query, tuple(params))
-            return cur.fetchall()
+            results = cur.fetchall()
+
+            # Post-process permissions for frontend
+            for res in results:
+                # Defaults
+                res["can_approve"] = False
+                res["can_cancel"] = False
+
+                curr_uid = requesting_user["id"] if requesting_user else None
+                is_admin = requesting_user.get("is_admin") if requesting_user else False
+
+                # Cancel Logic: Requester only (or Admin)
+                if is_admin or res["requester_id"] == curr_uid:
+                    res["can_cancel"] = True
+
+                # Approve Logic:
+                # 1. Admin can always approve
+                # 2. Hierarchy Commander can approve IF they are not the requester
+                if is_admin:
+                    res["can_approve"] = True
+                elif requesting_user and res["requester_id"] != curr_uid:
+                    # Check hierarchy again for specific approval flag
+                    cmd_dept = requesting_user.get("commands_department_id")
+                    cmd_sect = requesting_user.get("commands_section_id")
+
+                    if res["target_type"] == "team":
+                        # Can approve if Section Cmdr or Dept Cmdr of target
+                        # We need the IDs from the joined columns in the query
+                        # Note: The query joins s_target_t, d_target_t. We need to access their IDs.
+                        # Wait, the SELECT list didn't include s_target_t.id specifically easily.
+                        # Let's verify what columns we have.
+                        # We selected tr.*. We need parent IDs.
+                        # Let's rely on the fact that if they SAW it via the query filters (and aren't requester), they can approve.
+                        res["can_approve"] = True
+
+                    elif res["target_type"] == "section":
+                        # Can approve if Dept Cmdr of target
+                        res["can_approve"] = True
+
+                    # Department target -> Admin only (already handled)
+
+            return results
         finally:
             conn.close()
 
@@ -275,20 +337,66 @@ class TransferModel:
             if not req:
                 return False
 
-            # Permission Check: Admin or Target Commander
+            # Permission Check
             is_authorized = False
+
+            # 1. Admin Override
             if approver_user.get("is_admin"):
                 is_authorized = True
+
+            # 2. Prevent Self-Approval (Requester cannot approve own request)
+            elif req["requester_id"] == approver_user.get("id"):
+                is_authorized = False
+
             else:
-                if req["target_type"] == "department" and req["target_id"] == approver_user.get("commands_department_id"):
-                    is_authorized = True
-                elif req["target_type"] == "section" and req["target_id"] == approver_user.get("commands_section_id"):
-                    is_authorized = True
-                elif req["target_type"] == "team" and req["target_id"] == approver_user.get("commands_team_id"):
-                    is_authorized = True
+                # 3. Hierarchical Approval Check
+                if req["target_type"] == "team":
+                    # Check if approver commands the PARENT Section or PARENT Department
+                    cur.execute(
+                        """
+                        SELECT s.id as parent_section_id, d.id as parent_dept_id
+                        FROM teams t
+                        LEFT JOIN sections s ON t.section_id = s.id
+                        LEFT JOIN departments d ON s.department_id = d.id
+                        WHERE t.id = %s
+                    """,
+                        (req["target_id"],),
+                    )
+                    parents = cur.fetchone()
+
+                    if parents:
+                        cmd_sect = approver_user.get("commands_section_id")
+                        cmd_dept = approver_user.get("commands_department_id")
+
+                        if (cmd_sect and parents["parent_section_id"] == cmd_sect) or (
+                            cmd_dept and parents["parent_dept_id"] == cmd_dept
+                        ):
+                            is_authorized = True
+
+                elif req["target_type"] == "section":
+                    # Check if approver commands the PARENT Department
+                    cur.execute(
+                        """
+                        SELECT d.id as parent_dept_id
+                        FROM sections s
+                        LEFT JOIN departments d ON s.department_id = d.id
+                        WHERE s.id = %s
+                    """,
+                        (req["target_id"],),
+                    )
+                    parents = cur.fetchone()
+
+                    if parents:
+                        cmd_dept = approver_user.get("commands_department_id")
+                        if cmd_dept and parents["parent_dept_id"] == cmd_dept:
+                            is_authorized = True
+
+                # Target Department -> Admin Only (is_authorized remains False)
 
             if not is_authorized:
-                print(f"[AUTH ERROR] User {approver_user['id']} tried to approve request {request_id} for unit {req['target_id']} ({req['target_type']})")
+                print(
+                    f"[AUTH ERROR] User {approver_user['id']} tried to approve request {request_id} for unit {req['target_id']} ({req['target_type']})"
+                )
                 return False
 
             if req["target_type"] == "department":
@@ -350,7 +458,7 @@ class TransferModel:
 
             # --- NOTIFICATION ---
             try:
-                TransferModel._notify_transfer_event(request_id, 'approved')
+                TransferModel._notify_transfer_event(request_id, "approved")
             except Exception as e:
                 print(f"⚠️ Notification failed after transfer approval: {e}")
 
@@ -382,11 +490,17 @@ class TransferModel:
             if approver_user.get("is_admin"):
                 is_authorized = True
             else:
-                if req["target_type"] == "department" and req["target_id"] == approver_user.get("commands_department_id"):
+                if req["target_type"] == "department" and req[
+                    "target_id"
+                ] == approver_user.get("commands_department_id"):
                     is_authorized = True
-                elif req["target_type"] == "section" and req["target_id"] == approver_user.get("commands_section_id"):
+                elif req["target_type"] == "section" and req[
+                    "target_id"
+                ] == approver_user.get("commands_section_id"):
                     is_authorized = True
-                elif req["target_type"] == "team" and req["target_id"] == approver_user.get("commands_team_id"):
+                elif req["target_type"] == "team" and req[
+                    "target_id"
+                ] == approver_user.get("commands_team_id"):
                     is_authorized = True
 
             if not is_authorized:
@@ -405,7 +519,7 @@ class TransferModel:
 
             # --- NOTIFICATION ---
             try:
-                TransferModel._notify_transfer_event(request_id, 'rejected')
+                TransferModel._notify_transfer_event(request_id, "rejected")
             except Exception as e:
                 print(f"⚠️ Notification failed after transfer rejection: {e}")
 
@@ -531,16 +645,18 @@ class TransferModel:
                     )
                 """
                 query += scoping
-                params.extend([
-                    requesting_user.get("commands_department_id"),
-                    requesting_user.get("commands_section_id"),
-                    requesting_user.get("commands_team_id"),
-                    requesting_user.get("id")
-                ])
-                
+                params.extend(
+                    [
+                        requesting_user.get("commands_department_id"),
+                        requesting_user.get("commands_section_id"),
+                        requesting_user.get("commands_team_id"),
+                        requesting_user.get("id"),
+                    ]
+                )
+
             query += " ORDER BY tr.resolved_at DESC LIMIT %s"
             params.append(limit)
-            
+
             cur.execute(query, tuple(params))
             return cur.fetchall()
         finally:

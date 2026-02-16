@@ -292,6 +292,7 @@ class AttendanceModel:
                                 WHERE al.employee_id = e.id
                                 AND DATE(al.start_datetime) <= dr.date_val
                                 AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= dr.date_val)
+                                AND (st.is_persistent = TRUE OR DATE(al.start_datetime) = dr.date_val)
                                 ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                             ) as is_present
                         FROM date_range dr
@@ -329,21 +330,21 @@ class AttendanceModel:
                 cur.execute(query, tuple(final_params))
             else:
                 # Original Snapshot logic for single day
-                status_condition = (
-                    "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
-                )
+                status_condition = "AND (al.end_datetime IS NULL OR al.end_datetime > CURRENT_TIMESTAMP) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = CURRENT_DATE)"
                 status_params = []
                 if date:
                     try:
                         check_date_obj = datetime.strptime(date, "%Y-%m-%d").date()
                         today = datetime.now().date()
                         if check_date_obj > today:
-                            status_condition = "AND DATE(start_datetime) <= %s AND end_datetime IS NOT NULL AND DATE(end_datetime) >= %s"
+                            status_condition = "AND DATE(al.start_datetime) <= %s AND al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s"
+                            status_params = [date, date]
                         else:
-                            status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                            status_condition = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
+                            status_params = [date, date, date]
                     except Exception:
-                        status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
-                    status_params = [date, date]
+                        status_condition = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
+                        status_params = [date, date, date]
 
                 query = f"""
                     SELECT 
@@ -359,9 +360,10 @@ class AttendanceModel:
                     LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
                     LEFT JOIN service_types srv ON e.service_type_id = srv.id
                     LEFT JOIN LATERAL (
-                        SELECT status_type_id, id FROM attendance_logs 
-                        WHERE employee_id = e.id {status_condition}
-                        ORDER BY start_datetime DESC, id DESC LIMIT 1
+                        SELECT al.status_type_id, al.id FROM attendance_logs al
+                        JOIN status_types sti ON al.status_type_id = sti.id
+                        WHERE al.employee_id = e.id {status_condition}
+                        ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                     ) al ON true
                     LEFT JOIN status_types st ON al.status_type_id = st.id
                     WHERE e.is_active = TRUE 
@@ -478,6 +480,7 @@ class AttendanceModel:
                                 ELSE (al.end_datetime IS NULL OR DATE(al.end_datetime) >= p.date)
                             END
                         )
+                        AND (st.is_persistent = TRUE OR DATE(al.start_datetime) = p.date)
                     ) as present_count
                 FROM params p
                 ORDER BY p.date ASC
@@ -500,9 +503,7 @@ class AttendanceModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             params = []
-            status_condition = (
-                "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
-            )
+            status_condition = "AND (al.end_datetime IS NULL OR al.end_datetime > CURRENT_TIMESTAMP) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = CURRENT_DATE)"
 
             if filters and filters.get("date"):
                 try:
@@ -511,13 +512,14 @@ class AttendanceModel:
                         check_date_str, "%Y-%m-%d"
                     ).date()
                     if check_date_obj > date.today():
-                        status_condition = "AND DATE(start_datetime) <= %s AND end_datetime IS NOT NULL AND DATE(end_datetime) >= %s"
+                        status_condition = "AND DATE(al.start_datetime) <= %s AND al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s"
+                        params.extend([check_date_str, check_date_str])
                     else:
-                        status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
-                    params.extend([check_date_str, check_date_str])
+                        status_condition = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
+                        params.extend([check_date_str, check_date_str, check_date_str])
                 except:
-                    status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
-                    params.extend([filters["date"], filters["date"]])
+                    status_condition = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
+                    params.extend([filters["date"], filters["date"], filters["date"]])
 
             query = f"""
                 SELECT 
@@ -530,11 +532,12 @@ class AttendanceModel:
                 LEFT JOIN teams t ON e.team_id = t.id
                 LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                 LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
-                -- Status Joins
+                -- Status Joins (Smart Continuity)
                 LEFT JOIN LATERAL (
-                    SELECT status_type_id FROM attendance_logs 
-                    WHERE employee_id = e.id {status_condition}
-                    ORDER BY start_datetime DESC, id DESC LIMIT 1
+                    SELECT al.status_type_id FROM attendance_logs al
+                    JOIN status_types sti ON al.status_type_id = sti.id
+                    WHERE al.employee_id = e.id {status_condition}
+                    ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
                 LEFT JOIN service_types srv ON e.service_type_id = srv.id
@@ -895,11 +898,16 @@ class AttendanceModel:
                 FROM attendance_logs al
                 JOIN status_types st ON al.status_type_id = st.id
                 WHERE al.employee_id = ANY(%s)
-                AND DATE(al.start_datetime) <= %s 
-                AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s)
+                AND (
+                    (st.is_persistent = TRUE AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s))
+                    OR
+                    (st.is_persistent = FALSE AND DATE(al.start_datetime) <= %s AND DATE(al.start_datetime) >= %s)
+                )
                 ORDER BY al.start_datetime ASC
             """
-            cur.execute(query, (list(employee_ids), end_date, start_date))
+            cur.execute(
+                query, (list(employee_ids), end_date, start_date, end_date, start_date)
+            )
             return cur.fetchall()
         finally:
             conn.close()
@@ -992,8 +1000,8 @@ class AttendanceModel:
             # Similar to dashboard stats logic: start <= date AND (end >= date OR end IS NULL OR end < date + 1 day? NO.)
             # "Status active on that date".
             # Dashboard logic: DATE(start) <= date AND (end IS NULL OR DATE(end) >= date)
-            status_condition = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
-            params.extend([date, date])
+            status_condition = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
+            params.extend([date, date, date])
 
             query = f"""
                 SELECT 
@@ -1014,9 +1022,11 @@ class AttendanceModel:
                 LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
                 LEFT JOIN service_types srv ON e.service_type_id = srv.id
                 LEFT JOIN LATERAL (
-                    SELECT status_type_id, start_datetime, end_datetime, note FROM attendance_logs 
-                    WHERE employee_id = e.id {status_condition}
-                    ORDER BY start_datetime DESC, id DESC LIMIT 1
+                    SELECT al.status_type_id, al.start_datetime, al.end_datetime, al.note 
+                    FROM attendance_logs al
+                    JOIN status_types sti ON al.status_type_id = sti.id
+                    WHERE al.employee_id = e.id {status_condition}
+                    ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
                 WHERE e.is_active = TRUE AND e.personal_number != 'admin'

@@ -304,7 +304,7 @@ export default function LoginPage() {
             <h1
               className={cn(
                 "text-4xl md:text-6xl font-black bg-clip-text text-transparent tracking-tight mb-2 md:mb-3 uppercase transition-all duration-700",
-                "drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                "",
                 isDark
                   ? "bg-gradient-to-br from-white via-white to-slate-500"
                   : "bg-gradient-to-br from-slate-950 via-slate-800 to-slate-600",
@@ -326,8 +326,8 @@ export default function LoginPage() {
             className={cn(
               "backdrop-blur-xl border rounded-[2rem] md:rounded-[2.5rem] overflow-hidden ring-1 transition-all duration-300",
               isDark
-                ? "bg-slate-900/60 border-white/10 shadow-2xl ring-white/5"
-                : "bg-white/70 border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.1)] ring-black/5",
+                ? "bg-slate-900/60 border-white/10  ring-white/5"
+                : "bg-white/70 border-white/50  ring-black/5",
             )}
           >
             <div className="p-6 md:p-10">
@@ -336,7 +336,7 @@ export default function LoginPage() {
                 <div className="text-center animate-in fade-in zoom-in-95 duration-300">
                   <div
                     className={cn(
-                      "w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center border-2 shadow-inner font-black text-2xl relative group",
+                      "w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center border-2  font-black text-2xl relative group",
                       isDark
                         ? "bg-slate-800 border-slate-600 text-blue-400"
                         : "bg-slate-100 border-slate-200 text-blue-600",
@@ -344,7 +344,7 @@ export default function LoginPage() {
                   >
                     {lockedUser.first_name[0]}
                     {lockedUser.last_name[0]}
-                    <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-slate-900 shadow-lg" />
+                    <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-slate-900 " />
                   </div>
                   <div
                     className={cn(
@@ -401,7 +401,7 @@ export default function LoginPage() {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg active:scale-[0.98] relative overflow-hidden group"
+                      className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all  active:scale-[0.98] relative overflow-hidden group"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                       {isLoading ? (
@@ -437,7 +437,7 @@ export default function LoginPage() {
                           <Label
                             htmlFor="personal_number"
                             className={cn(
-                              "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border shadow-sm",
+                              "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border ",
                               isDark
                                 ? "bg-slate-900/90 text-blue-400 border-slate-700"
                                 : "bg-white text-blue-600 border-slate-200",
@@ -481,7 +481,7 @@ export default function LoginPage() {
                           <Label
                             htmlFor="password"
                             className={cn(
-                              "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border shadow-sm",
+                              "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border ",
                               isDark
                                 ? "bg-slate-900/90 text-blue-400 border-slate-700"
                                 : "bg-white text-blue-600 border-slate-200",
@@ -560,7 +560,7 @@ export default function LoginPage() {
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-14 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-black text-lg rounded-2xl transition-all shadow-lg active:scale-[0.98] border border-white/10 relative overflow-hidden group"
+                        className="w-full h-14 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-black text-lg rounded-2xl transition-all  active:scale-[0.98] border border-white/10 relative overflow-hidden group"
                       >
                         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
                         <div className="relative flex items-center gap-2">

@@ -104,14 +104,23 @@ export function ProfileSettings({
                   value={formData.gender || ""}
                   onValueChange={(val) => handleFieldChange("gender", val)}
                 >
-                  <SelectTrigger className="h-12 bg-background/40 rounded-xl border-primary/5 font-bold">
+                  <SelectTrigger className="h-12 bg-background/40 rounded-xl border-primary/5 font-bold text-right">
                     <SelectValue placeholder="בחר" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent dir="rtl">
                     <SelectItem value="male">גבר</SelectItem>
                     <SelectItem value="female">אישה</SelectItem>
                   </SelectContent>
                 </Select>
+              </InputItem>
+              <InputItem label="עיר מגורים" icon={MapPin}>
+                <Input
+                  disabled={readOnly}
+                  value={formData.city || ""}
+                  onChange={(e) => handleFieldChange("city", e.target.value)}
+                  className="h-12 bg-background/40 rounded-xl border-primary/5 focus:border-primary/20 transition-all font-bold"
+                  placeholder="הזן עיר..."
+                />
               </InputItem>
               <InputItem label="תעודת זהות" required icon={BadgeCheck}>
                 <Input
@@ -153,7 +162,7 @@ export function ProfileSettings({
               <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
                 <Building2 className="w-3.5 h-3.5" /> שיוך ארגוני
               </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <UnitBadge
                   label="מחלקה"
                   value={cleanUnitName(user?.department_name)}
@@ -165,13 +174,6 @@ export function ProfileSettings({
                 <UnitBadge
                   label="חוליה"
                   value={cleanUnitName(user?.team_name)}
-                />
-                <UnitBadge
-                  label="עיר מגורים"
-                  value={formData.city}
-                  editable
-                  icon={MapPin}
-                  onChange={(v: string) => handleFieldChange("city", v)}
                 />
               </div>
             </div>
@@ -212,8 +214,8 @@ export function ProfileSettings({
               variant="danger"
             >
               <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <InputItem label="שם מלא">
+                <div className="grid grid-cols-5 gap-4 w-full items-end">
+                  <InputItem label="שם מלא" className="col-span-3">
                     <Input
                       disabled={readOnly}
                       value={emergencyDetails.name}
@@ -223,10 +225,10 @@ export function ProfileSettings({
                           name: e.target.value,
                         })
                       }
-                      className="h-12 bg-background/40 rounded-xl font-bold"
+                      className="w-full h-12 bg-background/40 rounded-xl font-bold flex"
                     />
                   </InputItem>
-                  <InputItem label="קרבה">
+                  <InputItem label="קרבה" className="col-span-2">
                     <Select
                       disabled={readOnly}
                       value={emergencyDetails.relation}
@@ -237,10 +239,10 @@ export function ProfileSettings({
                         })
                       }
                     >
-                      <SelectTrigger className="h-12 bg-background/40 rounded-xl font-bold">
+                      <SelectTrigger className="w-full h-12 bg-background/40 rounded-xl font-bold text-right flex">
                         <SelectValue placeholder="—" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent dir="rtl">
                         {relations.map((r: string) => (
                           <SelectItem key={r} value={r}>
                             {r}
@@ -350,7 +352,7 @@ export function ProfileSettings({
         {/* LEFT SIDE (SIDEBAR) - Summary & Actions */}
         <div className="col-span-12 lg:col-span-4 space-y-8 order-1 lg:order-2">
           {/* User Profile Summary Card */}
-          <div className="bg-card/50 backdrop-blur-2xl rounded-[2.5rem] border border-primary/10 shadow-2xl shadow-primary/5 overflow-hidden sticky top-8">
+          <div className="bg-card/50 backdrop-blur-2xl rounded-[2.5rem] border border-primary/10   overflow-hidden sticky top-8">
             <div className="h-32 bg-gradient-to-br from-primary via-primary/80 to-primary/40 relative">
               <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-20" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
@@ -358,14 +360,14 @@ export function ProfileSettings({
 
             <div className="px-8 pb-10 text-center -mt-16 relative">
               <div className="relative w-max mx-auto mb-6 group">
-                <div className="w-32 h-32 rounded-[2.2rem] flex items-center justify-center text-4xl font-black shadow-2xl border-4 border-card bg-gradient-to-br from-background to-muted text-primary transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
+                <div className="w-32 h-32 rounded-[2.2rem] flex items-center justify-center text-4xl font-black  border-4 border-card bg-gradient-to-br from-background to-muted text-primary transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
                   {formData.first_name?.[0]}
                   {formData.last_name?.[0]}
                 </div>
                 {!readOnly && (
                   <button
                     onClick={handleImageUpload}
-                    className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white hover:scale-110 active:scale-95 rounded-2xl flex items-center justify-center shadow-2xl transition-all border-4 border-card"
+                    className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white hover:scale-110 active:scale-95 rounded-2xl flex items-center justify-center  transition-all border-4 border-card"
                   >
                     <User className="w-4 h-4" />
                   </button>
@@ -409,7 +411,7 @@ export function ProfileSettings({
                 <Button
                   onClick={handleSaveProfile}
                   disabled={isSaving}
-                  className="w-full h-14 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 transition-all hover:translate-y-[-2px] active:translate-y-[1px]"
+                  className="w-full h-14 rounded-2xl font-black text-lg   transition-all hover:translate-y-[-2px] active:translate-y-[1px]"
                 >
                   {isSaving ? (
                     <Loader2 className="w-5 h-5 ml-3 animate-spin" />
@@ -447,7 +449,7 @@ function SectionCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "bg-card/50 backdrop-blur-xl rounded-[2rem] border shadow-2xl shadow-primary/5 overflow-hidden",
+        "bg-card/50 backdrop-blur-xl rounded-[2rem] border   overflow-hidden",
         variant === "danger" ? "border-red-500/10" : "border-primary/10",
       )}
     >
@@ -530,7 +532,7 @@ function SwitchItem({ label, checked, onChange, disabled }: any) {
       className={cn(
         "flex items-center justify-between p-4 rounded-2xl border transition-all duration-300",
         checked
-          ? "bg-primary/5 border-primary/20 shadow-lg shadow-primary/5"
+          ? "bg-primary/5 border-primary/20  "
           : "bg-muted/5 border-border/50 hover:border-primary/20",
         disabled && "opacity-50 pointer-events-none",
       )}

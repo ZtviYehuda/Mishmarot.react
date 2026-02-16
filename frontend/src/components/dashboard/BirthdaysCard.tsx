@@ -139,7 +139,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                 <WhatsAppButton
                   onClick={handleSendWhatsApp}
                   variant="outline"
-                  className="h-8 w-8 p-0 rounded-lg border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                  className="h-8 w-8 p-0 rounded-lg border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all "
                   skipDirectLink={true}
                 />
               )}
@@ -220,9 +220,9 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                         <div
                           key={employee.id}
                           className={cn(
-                            "flex items-center gap-3 p-3 rounded-2xl border transition-all hover:shadow-md",
+                            "flex items-center gap-3 p-3 rounded-2xl border transition-all hover:",
                             isToday
-                              ? "bg-primary/5 border-primary/20 shadow-sm"
+                              ? "bg-primary/5 border-primary/20 "
                               : "bg-muted/30 border-border/40 hover:bg-muted/50",
                           )}
                         >
@@ -230,7 +230,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                             className={cn(
                               "w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2",
                               isToday
-                                ? "bg-white border-primary text-primary shadow-inner"
+                                ? "bg-white border-primary text-primary "
                                 : "bg-muted border-border/60 text-muted-foreground",
                             )}
                           >
@@ -266,7 +266,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
             {showScrollHint && (
               <button
                 onClick={scrollToBottom}
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 animate-bounce bg-primary text-primary-foreground p-1.5 rounded-full shadow-xl border border-primary-foreground/20 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 animate-bounce bg-primary text-primary-foreground p-1.5 rounded-full  border border-primary-foreground/20 hover:scale-110 active:scale-95 transition-all cursor-pointer"
                 title="גלול לסוף הרשימה"
               >
                 <ChevronDown className="w-4 h-4" />

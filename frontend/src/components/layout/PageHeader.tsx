@@ -34,7 +34,7 @@ export function PageHeader({
           {/* Icon Container - Premium Rounded */}
           <div
             className={cn(
-              "w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[1.5rem] bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex items-center justify-center shrink-0 shadow-xl shadow-primary/5",
+              "w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[1.5rem] bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex items-center justify-center shrink-0  ",
               iconClassName,
             )}
           >

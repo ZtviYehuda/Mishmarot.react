@@ -59,7 +59,7 @@ export const DashboardStatusTable = ({
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex items-center gap-3">
           <div
-            className="w-3 h-3 rounded-full shadow-lg shadow-current/20"
+            className="w-3 h-3 rounded-full  "
             style={{ backgroundColor: statusColor }}
           />
           <CardTitle className="text-lg font-black text-foreground">

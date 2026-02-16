@@ -63,7 +63,7 @@ export default function PrivacyPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className={cn(
-              "p-4 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-4 border shadow-sm",
+              "p-4 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-4 border ",
               isDark
                 ? "bg-slate-900 border-white/10 text-white"
                 : "bg-white border-slate-200 text-slate-900",
@@ -89,8 +89,8 @@ export default function PrivacyPage() {
               className={cn(
                 "p-8 rounded-[2.5rem] border backdrop-blur-sm transition-all hover:border-blue-500/50",
                 isDark
-                  ? "bg-slate-900/50 border-white/10 shadow-lg"
-                  : "bg-white border-slate-200 shadow-xl",
+                  ? "bg-slate-900/50 border-white/10 "
+                  : "bg-white border-slate-200 ",
               )}
             >
               <div className="flex items-start gap-5">

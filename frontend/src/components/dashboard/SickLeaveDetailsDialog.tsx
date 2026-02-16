@@ -47,12 +47,12 @@ export const SickLeaveDetailsDialog: React.FC<SickLeaveDetailsDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 border-none bg-card shadow-2xl flex flex-col rounded-3xl overflow-hidden"
+        className="max-w-xl p-0 border-none bg-card  flex flex-col rounded-3xl overflow-hidden"
         dir="rtl"
       >
         <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="w-16 h-16 rounded-[24px] bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-600 shadow-inner shrink-0 rotate-3">
+            <div className="w-16 h-16 rounded-[24px] bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-600  shrink-0 rotate-3">
               <Thermometer className="w-8 h-8" />
             </div>
             <div className="flex-1 min-w-0 pt-1 text-center sm:text-right">
@@ -80,10 +80,10 @@ export const SickLeaveDetailsDialog: React.FC<SickLeaveDetailsDialogProps> = ({
             employees.map((emp) => (
               <div
                 key={emp.id}
-                className="group relative overflow-hidden bg-card border border-border/50 hover:border-red-500/30 hover:shadow-xl hover:shadow-red-500/5 transition-all duration-300 rounded-[28px] p-5 flex items-center justify-between gap-4"
+                className="group relative overflow-hidden bg-card border border-border/50 hover:border-red-500/30 hover: hover:-500/5 transition-all duration-300 rounded-[28px] p-5 flex items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-5 min-w-0">
-                  <div className="h-14 w-14 shrink-0 rounded-2xl border border-border/50 flex items-center justify-center bg-muted/30 text-red-700 font-black text-xs group-hover:scale-110 transition-transform shadow-sm">
+                  <div className="h-14 w-14 shrink-0 rounded-2xl border border-border/50 flex items-center justify-center bg-muted/30 text-red-700 font-black text-xs group-hover:scale-110 transition-transform ">
                     {emp.first_name?.[0]}
                     {emp.last_name?.[0]}
                   </div>
@@ -122,7 +122,7 @@ export const SickLeaveDetailsDialog: React.FC<SickLeaveDetailsDialogProps> = ({
                   <Button
                     size="sm"
                     variant="default"
-                    className="h-11 px-5 rounded-2xl font-black text-xs bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/20 gap-2 transition-all active:scale-95"
+                    className="h-11 px-5 rounded-2xl font-black text-xs bg-red-600 hover:bg-red-700 text-white  -500/20 gap-2 transition-all active:scale-95"
                     onClick={() => {
                       onOpenChange(false);
                       navigate("/attendance", {

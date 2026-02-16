@@ -49,9 +49,9 @@ export function AppearanceSettings({
                   key={item.id}
                   onClick={() => setTheme(item.id)}
                   className={cn(
-                    "cursor-pointer group relative overflow-hidden rounded-[2.5rem] border-2 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/5",
+                    "cursor-pointer group relative overflow-hidden rounded-[2.5rem] border-2 transition-all duration-500 hover:scale-[1.02] hover: hover:",
                     theme === item.id
-                      ? "border-primary bg-primary/5 shadow-2xl shadow-primary/10 ring-4 ring-primary/5"
+                      ? "border-primary bg-primary/5   ring-4 ring-primary/5"
                       : "border-border/50 bg-background/50 hover:border-primary/30",
                   )}
                 >
@@ -63,7 +63,7 @@ export function AppearanceSettings({
                   >
                     <div
                       className={cn(
-                        "p-6 rounded-3xl bg-background/10 backdrop-blur-md border shadow-2xl transition-all duration-500 group-hover:scale-110",
+                        "p-6 rounded-3xl bg-background/10 backdrop-blur-md border  transition-all duration-500 group-hover:scale-110",
                         item.border,
                       )}
                     >
@@ -85,7 +85,7 @@ export function AppearanceSettings({
                   {theme === item.id && (
                     <motion.div
                       layoutId="theme-check"
-                      className="absolute top-4 right-4 bg-primary text-white rounded-full p-2 shadow-xl"
+                      className="absolute top-4 right-4 bg-primary text-white rounded-full p-2 "
                     >
                       <Check className="w-4 h-4 stroke-[3px]" />
                     </motion.div>
@@ -127,16 +127,16 @@ export function AppearanceSettings({
                 <label
                   key={item.value}
                   className={cn(
-                    "relative flex flex-col items-center gap-6 p-8 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 hover:shadow-xl group",
+                    "relative flex flex-col items-center gap-6 p-8 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 hover: group",
                     fontSize === item.value
-                      ? "border-primary bg-primary/5 shadow-primary/10"
+                      ? "border-primary bg-primary/5 "
                       : "border-border/50 hover:border-primary/20 bg-background/50",
                   )}
                 >
                   <RadioGroupItem value={item.value} className="sr-only" />
                   <div
                     className={cn(
-                      "w-16 h-16 rounded-2xl bg-background flex items-center justify-center border shadow-sm transition-all duration-500 group-hover:scale-110",
+                      "w-16 h-16 rounded-2xl bg-background flex items-center justify-center border  transition-all duration-500 group-hover:scale-110",
                       fontSize === item.value
                         ? "border-primary/30 text-primary"
                         : "border-border/50 text-muted-foreground",
@@ -159,7 +159,7 @@ export function AppearanceSettings({
                   {fontSize === item.value && (
                     <motion.div
                       layoutId="size-dot"
-                      className="absolute top-4 right-4 w-3.5 h-3.5 rounded-full bg-primary shadow-lg shadow-primary/40"
+                      className="absolute top-4 right-4 w-3.5 h-3.5 rounded-full bg-primary  "
                     />
                   )}
                 </label>
@@ -194,14 +194,14 @@ export function AppearanceSettings({
                   className={cn(
                     "flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 group",
                     accentColor === color.name
-                      ? "border-primary bg-primary/5 shadow-lg shadow-primary/5 ring-4 ring-primary/5"
+                      ? "border-primary bg-primary/5   ring-4 ring-primary/5"
                       : "border-border/50 bg-background/50 hover:border-primary/20",
                   )}
                 >
                   <div className="flex items-center gap-4">
                     <div
                       className={cn(
-                        "w-10 h-10 rounded-xl shadow-inner transition-transform duration-500 group-hover:scale-110",
+                        "w-10 h-10 rounded-xl  transition-transform duration-500 group-hover:scale-110",
                         color.color,
                       )}
                     />
@@ -210,7 +210,7 @@ export function AppearanceSettings({
                     </span>
                   </div>
                   {accentColor === color.name && (
-                    <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center ">
                       <Check className="w-3 h-3 stroke-[3px]" />
                     </div>
                   )}
@@ -231,7 +231,7 @@ function SectionCard({ icon: Icon, title, children, badge }: any) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card/50 backdrop-blur-xl rounded-[2.5rem] border border-primary/10 shadow-2xl shadow-primary/5 overflow-hidden"
+      className="bg-card/50 backdrop-blur-xl rounded-[2.5rem] border border-primary/10   overflow-hidden"
     >
       <div className="px-8 py-6 border-b border-primary/10 bg-primary/5 flex items-center justify-between">
         <div className="flex items-center gap-3">

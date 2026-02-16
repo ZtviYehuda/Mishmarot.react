@@ -26,11 +26,11 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-200 border-slate-200 dark:border-slate-700 hover:border-[#0074ff]/30 dark:hover:border-[#0074ff]/50 bg-white dark:bg-slate-800/50">
+    <Card className="group hover: transition-all duration-200 border-slate-200 dark:border-slate-700 hover:border-[#0074ff]/30 dark:hover:border-[#0074ff]/50 bg-white dark:bg-slate-800/50">
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0074ff] to-[#0060d5] flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-500/20">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0074ff] to-[#0060d5] flex items-center justify-center text-white font-black text-sm  -500/20">
               {employee.first_name[0]}
               {employee.last_name[0]}
             </div>

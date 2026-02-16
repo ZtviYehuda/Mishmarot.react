@@ -116,8 +116,8 @@ export default function ForgotPasswordPage() {
           className={cn(
             "backdrop-blur-xl border rounded-[2rem] overflow-hidden transition-all duration-300",
             isDark
-              ? "bg-slate-900/60 border-white/10 shadow-2xl"
-              : "bg-white/70 border-white/50 shadow-xl",
+              ? "bg-slate-900/60 border-white/10 "
+              : "bg-white/70 border-white/50 ",
           )}
         >
           <div className="p-8">
@@ -226,7 +226,7 @@ export default function ForgotPasswordPage() {
                         <Input
                           value={code}
                           onChange={(e) => setCode(e.target.value)}
-                          className="h-14 w-48 text-center text-2xl tracking-[0.5em] font-mono rounded-xl bg-slate-50 dark:bg-slate-900 border-2 focus:border-blue-500 transition-all shadow-inner"
+                          className="h-14 w-48 text-center text-2xl tracking-[0.5em] font-mono rounded-xl bg-slate-50 dark:bg-slate-900 border-2 focus:border-blue-500 transition-all "
                           maxLength={6}
                           placeholder="000000"
                           autoFocus

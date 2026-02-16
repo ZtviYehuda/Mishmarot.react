@@ -363,19 +363,9 @@ export default function DashboardPage() {
         new Date(emp.last_status_update).toDateString() ===
           selectedDate.toDateString();
 
-      // Allowlist: Only these statuses "stick" without explicit daily update
-      const isLongTermStatus = [
-        "חופש",
-        "מחלה",
-        "גימל",
-        "קורס",
-        "אבטחה",
-        "תגבור",
-        'חו"ל',
-        "סיפוח",
-        "הפניה",
-        "מיוחדת",
-      ].some((s) => statusName.includes(s));
+      // Use Backend flag for persistence
+      // If status_is_persistent is true, it "sticks" without daily update
+      const isPersistent = emp.status_is_persistent === true;
 
       let finalStatus = {
         status_id: emp.status_id || 0,
@@ -384,7 +374,7 @@ export default function DashboardPage() {
       };
 
       // Apply Logic: Force "Unreported" for default statuses on non-updated days
-      if (!isToday && !isUpdatedToday && !isLongTermStatus) {
+      if (!isToday && !isUpdatedToday && !isPersistent) {
         finalStatus = {
           status_id: -1,
           status_name: "לא דווח",
@@ -697,9 +687,9 @@ export default function DashboardPage() {
               variant={isReportedToday ? "default" : "outline"}
               size="sm"
               className={cn(
-                "h-10 rounded-xl gap-2 font-black transition-all px-4 shrink-0 shadow-sm w-full sm:w-auto justify-center",
+                "h-10 rounded-xl gap-2 font-black transition-all px-4 shrink-0  w-full sm:w-auto justify-center",
                 isReportedToday
-                  ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white shadow-emerald-500/20"
+                  ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white -500/20"
                   : "border-primary/20 bg-primary/5 text-primary",
               )}
               onClick={handleOpenSelfReport}
@@ -831,7 +821,7 @@ export default function DashboardPage() {
 
       {/* Mobile Filter Dialog */}
       <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-[340px] w-full mx-auto">
+        <DialogContent className="p-0 border-none bg-transparent  max-w-[340px] w-full mx-auto">
           <DashboardFilters
             structure={structure}
             statuses={allStatuses}

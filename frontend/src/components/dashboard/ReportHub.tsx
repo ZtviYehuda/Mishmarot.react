@@ -234,7 +234,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     onWhatsApp: () => void;
     hasDownload?: boolean;
   }) => (
-    <div className="group relative bg-card/50 hover:bg-card border border-border/50 hover:border-primary/20 rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:shadow-lg active:scale-[0.99] overflow-hidden flex flex-col h-full">
+    <div className="group relative bg-card/50 hover:bg-card border border-border/50 hover:border-primary/20 rounded-2xl p-4 sm:p-5 transition-all duration-300 hover: active:scale-[0.99] overflow-hidden flex flex-col h-full">
       {/* Background Glow */}
       <div
         className={cn(
@@ -246,7 +246,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
       <div className="flex items-start gap-3 sm:gap-4 flex-1">
         <div
           className={cn(
-            "p-2.5 sm:p-3 rounded-xl sm:rounded-2xl shrink-0 shadow-sm transition-transform group-hover:scale-110 duration-300",
+            "p-2.5 sm:p-3 rounded-xl sm:rounded-2xl shrink-0  transition-transform group-hover:scale-110 duration-300",
             colorClass.replace("bg-", "bg-").replace("text-", "text-"),
           )}
         >
@@ -303,7 +303,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
           <Button
             variant="outline"
             className={cn(
-              "h-10 rounded-xl gap-2 font-black transition-all px-4 shrink-0 shadow-sm border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95",
+              "h-10 rounded-xl gap-2 font-black transition-all px-4 shrink-0  border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95",
               className,
             )}
           >
@@ -314,14 +314,14 @@ export const ReportHub: React.FC<ReportHubProps> = ({
         </DialogTrigger>
 
         <DialogContent
-          className="w-[95vw] max-w-[95vw] sm:max-w-2xl p-0 overflow-hidden border-none bg-background rounded-2xl sm:rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
+          className="w-[95vw] max-w-[95vw] sm:max-w-2xl p-0 overflow-hidden border-none bg-background rounded-2xl sm:rounded-3xl  animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
           showCloseButton={true}
         >
           {/* Header Section with Gradient */}
           <div className="bg-gradient-to-br from-primary/10 via-background to-background p-5 sm:p-8 pb-4 shrink-0">
             <DialogHeader className="text-right">
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 sm:p-2.5 bg-primary rounded-xl sm:rounded-2xl shadow-lg shadow-primary/20 rotate-3 shrink-0">
+                <div className="p-2 sm:p-2.5 bg-primary rounded-xl sm:rounded-2xl   rotate-3 shrink-0">
                   <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div className="min-w-0">

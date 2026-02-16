@@ -121,7 +121,7 @@ export function ForgotPasswordDialog({
       }}
     >
       <DialogContent
-        className="sm:max-w-[420px] p-0 overflow-hidden gap-0 border-border/50 shadow-2xl"
+        className="sm:max-w-[420px] p-0 overflow-hidden gap-0 border-border/50 "
         dir="rtl"
       >
         {/* Header Decor */}
@@ -129,7 +129,7 @@ export function ForgotPasswordDialog({
 
         <div className="p-6 md:p-8 pb-2">
           <DialogHeader className="text-right space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm border border-primary/20 mb-2">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary  border border-primary/20 mb-2">
               {stage === "SUCCESS" ? (
                 <CheckCircle2 className="w-7 h-7" />
               ) : stage === "PASSWORD" ? (
@@ -180,7 +180,7 @@ export function ForgotPasswordDialog({
               >
                 <div className="p-5 rounded-2xl bg-muted/40 border border-border/50 flex items-center gap-4 relative overflow-hidden group hover:bg-muted/60 transition-colors">
                   <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="bg-background p-3 rounded-xl border shadow-sm relative z-10 text-primary">
+                  <div className="bg-background p-3 rounded-xl border  relative z-10 text-primary">
                     <Mail className="w-5 h-5" />
                   </div>
                   <div className="relative z-10 text-right">
@@ -196,7 +196,7 @@ export function ForgotPasswordDialog({
                 <Button
                   onClick={handleSendEmail}
                   disabled={isLoading}
-                  className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] bg-gradient-to-r from-primary to-primary/90"
+                  className="w-full h-12 rounded-xl text-base font-bold   transition-all hover:scale-[1.02] active:scale-[0.98] bg-gradient-to-r from-primary to-primary/90"
                 >
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -223,7 +223,7 @@ export function ForgotPasswordDialog({
                     <Input
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      className="h-16 w-52 text-center text-3xl tracking-[0.5em] font-mono rounded-2xl bg-muted/30 border-2 focus:border-primary/50 focus:bg-background transition-all text-primary font-black shadow-inner"
+                      className="h-16 w-52 text-center text-3xl tracking-[0.5em] font-mono rounded-2xl bg-muted/30 border-2 focus:border-primary/50 focus:bg-background transition-all text-primary font-black "
                       maxLength={6}
                       placeholder="••••••"
                       autoFocus
@@ -233,7 +233,7 @@ export function ForgotPasswordDialog({
                   <div className="space-y-3">
                     <Button
                       type="submit"
-                      className="w-full h-12 rounded-xl text-base font-bold shadow-md transition-all active:scale-[0.98]"
+                      className="w-full h-12 rounded-xl text-base font-bold  transition-all active:scale-[0.98]"
                       disabled={isLoading || code.length < 6}
                     >
                       {isLoading ? (
@@ -284,7 +284,7 @@ export function ForgotPasswordDialog({
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20"
+                    className="w-full h-12 rounded-xl text-base font-bold  "
                     disabled={isLoading}
                   >
                     {isLoading ? (

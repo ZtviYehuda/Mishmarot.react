@@ -117,12 +117,12 @@ export const WhatsAppReportDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 border-none bg-card shadow-2xl flex flex-col rounded-3xl overflow-hidden"
+        className="max-w-xl p-0 border-none bg-card  flex flex-col rounded-3xl overflow-hidden"
         dir="rtl"
       >
         <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="w-16 h-16 rounded-[24px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner shrink-0 rotate-3">
+            <div className="w-16 h-16 rounded-[24px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary  shrink-0 rotate-3">
               <Send className="w-8 h-8" />
             </div>
             <div className="flex-1 min-w-0 pt-1 text-center sm:text-right">
@@ -148,7 +148,7 @@ export const WhatsAppReportDialog = ({
                 className={cn(
                   "p-5 rounded-2xl border-2 transition-all text-right group",
                   !isFullMode
-                    ? "bg-primary border-primary text-primary-foreground shadow-xl shadow-primary/20"
+                    ? "bg-primary border-primary text-primary-foreground  "
                     : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted",
                 )}
               >
@@ -158,7 +158,7 @@ export const WhatsAppReportDialog = ({
                       "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
                       !isFullMode
                         ? "bg-white/20 text-white"
-                        : "bg-background text-muted-foreground shadow-sm",
+                        : "bg-background text-muted-foreground ",
                     )}
                   >
                     <FilterX className="w-4 h-4" />
@@ -187,7 +187,7 @@ export const WhatsAppReportDialog = ({
                 className={cn(
                   "p-5 rounded-2xl border-2 transition-all text-right group",
                   isFullMode
-                    ? "bg-amber-600 border-amber-600 text-white shadow-xl shadow-amber-600/20"
+                    ? "bg-amber-600 border-amber-600 text-white  -600/20"
                     : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted",
                 )}
               >
@@ -197,7 +197,7 @@ export const WhatsAppReportDialog = ({
                       "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
                       isFullMode
                         ? "bg-white/20 text-white"
-                        : "bg-background text-muted-foreground shadow-sm",
+                        : "bg-background text-muted-foreground ",
                     )}
                   >
                     <LayoutDashboard className="w-4 h-4" />
@@ -228,7 +228,7 @@ export const WhatsAppReportDialog = ({
             </h3>
             <div className="relative group overflow-hidden">
               <div className="absolute top-0 right-0 w-2 h-2 rounded-tr-xl bg-muted z-10" />
-              <div className="bg-muted/30 p-6 rounded-2xl border border-border/50 text-[13px] font-bold text-foreground whitespace-pre-wrap leading-relaxed shadow-inner min-h-[160px] max-h-[280px] overflow-y-auto custom-scrollbar">
+              <div className="bg-muted/30 p-6 rounded-2xl border border-border/50 text-[13px] font-bold text-foreground whitespace-pre-wrap leading-relaxed  min-h-[160px] max-h-[280px] overflow-y-auto custom-scrollbar">
                 {loadingFull ? (
                   <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
                     <RefreshCw className="w-6 h-6 animate-spin text-primary/40" />
@@ -244,7 +244,7 @@ export const WhatsAppReportDialog = ({
           </div>
 
           {/* Info Card */}
-          <div className="flex items-start gap-4 bg-blue-50/50 p-5 rounded-2xl border border-blue-100 shadow-sm">
+          <div className="flex items-start gap-4 bg-blue-50/50 p-5 rounded-2xl border border-blue-100 ">
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0">
               <Info className="w-5 h-5" />
             </div>
@@ -270,7 +270,7 @@ export const WhatsAppReportDialog = ({
             onClick={handleSendWhatsApp}
             skipDirectLink={true}
             label="שלח דוח כעת"
-            className="w-full sm:w-auto h-14 px-10 rounded-2xl shadow-2xl shadow-green-500/20 order-1 sm:order-2 font-black text-base"
+            className="w-full sm:w-auto h-14 px-10 rounded-2xl  -500/20 order-1 sm:order-2 font-black text-base"
           />
         </div>
       </DialogContent>

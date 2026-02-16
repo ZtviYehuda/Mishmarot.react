@@ -44,10 +44,11 @@ import {
   Calendar,
   MoreHorizontal,
   FileText,
+  CornerDownLeft,
 } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, cleanUnitName } from "@/lib/utils";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { Employee } from "@/types/employee.types";
@@ -65,6 +66,7 @@ export default function TransfersPage() {
     createTransfer,
     approveTransfer,
     rejectTransfer,
+    cancelTransfer,
   } = useTransfers();
 
   const [activeTab, setActiveTab] = useState("pending");
@@ -95,6 +97,88 @@ export default function TransfersPage() {
       newExpanded.add(id);
     }
     setExpandedRows(newExpanded);
+  };
+
+  const renderUnitCell = (
+    source: string,
+    target: string,
+    type: "source" | "target",
+  ) => {
+    const sParts = (source || "").split(" / ").map((p) => p.trim());
+    const tParts = (target || "").split(" / ").map((p) => p.trim());
+
+    const isTarget = type === "target";
+    const deptCommon = sParts[0] === tParts[0];
+    const sectCommon = deptCommon && sParts[1] === tParts[1];
+
+    const currentParts = isTarget ? tParts : sParts;
+    const [dept, sect, team] = currentParts;
+
+    const showDept = !isTarget || !deptCommon;
+    const showSect = !isTarget || !sectCommon;
+
+    const hasBottomLine = (sect && showSect) || team;
+
+    return (
+      <div
+        className="flex flex-col text-right group/unit min-w-[140px]"
+        dir="rtl"
+      >
+        {/* Department Name */}
+        {showDept && dept && dept !== "מטה" ? (
+          <span
+            className={cn(
+              "text-[13px] font-black tracking-tight leading-tight",
+              isTarget ? "text-primary" : "text-foreground",
+            )}
+          >
+            {cleanUnitName(dept)}
+          </span>
+        ) : (
+          isTarget &&
+          !showDept && (
+            <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-tighter mb-0.5">
+              באותה מחלקה
+            </span>
+          )
+        )}
+
+        {/* Section & Team Line */}
+        {hasBottomLine && (
+          <div className="flex items-center gap-1.5 mt-1 justify-start">
+            {isTarget && (
+              <div className="w-1 h-1 rounded-full bg-primary shrink-0 animate-pulse ml-1" />
+            )}
+            <span
+              className={cn(
+                "text-[10px] whitespace-nowrap",
+                isTarget
+                  ? "text-primary/80 font-bold"
+                  : "text-muted-foreground font-medium",
+              )}
+            >
+              {showSect &&
+                sect &&
+                sect !== "מטה" &&
+                `מדור ${cleanUnitName(sect)}`}
+              {showSect && sect && sect !== "מטה" && team && team !== "מטה" && (
+                <span className="mx-1 opacity-30 select-none">•</span>
+              )}
+              {team && team !== "מטה" && `חוליה ${cleanUnitName(team)}`}
+            </span>
+          </div>
+        )}
+
+        {/* Arrow for Target context */}
+        {isTarget && !showDept && !hasBottomLine && (
+          <div className="flex items-center gap-2 mt-0.5">
+            <div className="px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-[9px] font-black text-primary">
+              ללא שינוי נוסף
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Form State
@@ -223,6 +307,17 @@ export default function TransfersPage() {
     }
   };
 
+  const handleCancel = async (id: number) => {
+    if (confirm("האם אתה בתוך שברצונך לבטל את הבקשה?")) {
+      if (await cancelTransfer(id)) {
+        toast.info("הבקשה בוטלה");
+        setSelectedRequest(null);
+        fetchPending();
+        fetchHistory();
+      }
+    }
+  };
+
   const handleSnooze = async () => {
     if (!snoozeDate || !selectedRequest) return;
 
@@ -300,7 +395,7 @@ export default function TransfersPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <button
           onClick={() => setActiveTab("pending")}
-          className="bg-card rounded-[20px] p-4 sm:p-6 border border-border shadow-sm flex items-center justify-between hover:border-amber-500/50 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
+          className="bg-card rounded-[20px] p-4 sm:p-6 border border-border  flex items-center justify-between hover:border-amber-500/50 hover: transition-all active:scale-[0.98] cursor-pointer"
         >
           <div className="flex flex-col">
             <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
@@ -320,7 +415,7 @@ export default function TransfersPage() {
             setActiveTab("history");
             setHistoryFilter("approved");
           }}
-          className="bg-card rounded-[20px] p-4 sm:p-6 border border-border shadow-sm flex items-center justify-between hover:border-emerald-500/50 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
+          className="bg-card rounded-[20px] p-4 sm:p-6 border border-border  flex items-center justify-between hover:border-emerald-500/50 hover: transition-all active:scale-[0.98] cursor-pointer"
         >
           <div className="flex flex-col">
             <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
@@ -340,7 +435,7 @@ export default function TransfersPage() {
             setActiveTab("history");
             setHistoryFilter("rejected");
           }}
-          className="bg-card rounded-[20px] p-4 sm:p-6 border border-border shadow-sm flex items-center justify-between hover:border-rose-500/50 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
+          className="bg-card rounded-[20px] p-4 sm:p-6 border border-border  flex items-center justify-between hover:border-rose-500/50 hover: transition-all active:scale-[0.98] cursor-pointer"
         >
           <div className="flex flex-col">
             <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
@@ -357,7 +452,7 @@ export default function TransfersPage() {
       </div>
 
       {/* Main Toolbar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 bg-card p-2 sm:pl-4 rounded-3xl sm:rounded-[16px] border border-border shadow-sm overflow-hidden">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 bg-card p-2 sm:pl-4 rounded-3xl sm:rounded-[16px] border border-border  overflow-hidden">
         <Tabs
           value={activeTab}
           onValueChange={(val) => {
@@ -369,21 +464,21 @@ export default function TransfersPage() {
           <TabsList className="bg-muted p-1 h-10 sm:h-auto sm:p-1.5 rounded-full gap-1 border border-border/50 w-full sm:w-auto flex overflow-x-auto no-scrollbar justify-start sm:justify-center">
             <TabsTrigger
               value="history"
-              className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border whitespace-nowrap"
+              className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]: text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border whitespace-nowrap"
             >
               <History className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
               <span>ארכיון</span>
             </TabsTrigger>
             <TabsTrigger
               value="pending"
-              className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border whitespace-nowrap"
+              className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]: text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border whitespace-nowrap"
             >
               <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
               <span>ממתינות</span>
             </TabsTrigger>
             <TabsTrigger
               value="new"
-              className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border hover:text-primary whitespace-nowrap"
+              className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]: text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border hover:text-primary whitespace-nowrap"
             >
               <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
               <span>בקשה חדשה</span>
@@ -424,7 +519,7 @@ export default function TransfersPage() {
               pendingTransfers.map((req) => (
                 <div
                   key={req.id}
-                  className="bg-card border border-border rounded-2xl p-4 shadow-sm hover:border-primary/20 transition-all active:scale-[0.98]"
+                  className="bg-card border border-border rounded-2xl p-4  hover:border-primary/20 transition-all active:scale-[0.98]"
                   onClick={() => setSelectedRequest(req)}
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -449,22 +544,26 @@ export default function TransfersPage() {
                     </Badge>
                   </div>
 
-                  <div className="bg-muted/30 rounded-xl p-3 mb-4 space-y-2">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-muted-foreground font-bold">
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-muted/30 rounded-xl p-2.5 text-right flex flex-col justify-center min-h-[60px]">
+                      <span className="text-[8px] font-black text-muted-foreground/60 uppercase block mb-1">
                         מעבר מ:
                       </span>
-                      <span className="font-bold text-foreground truncate max-w-[150px]">
-                        {req.source_name}
-                      </span>
+                      {renderUnitCell(
+                        req.source_name,
+                        req.target_name,
+                        "source",
+                      )}
                     </div>
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-primary font-black opacity-70">
+                    <div className="bg-primary/5 rounded-xl p-2.5 text-right flex flex-col justify-center min-h-[60px] border border-primary/10">
+                      <span className="text-[8px] font-black text-primary/60 uppercase block mb-1">
                         אל יעד:
                       </span>
-                      <span className="font-black text-primary truncate max-w-[150px]">
-                        {req.target_name}
-                      </span>
+                      {renderUnitCell(
+                        req.source_name,
+                        req.target_name,
+                        "target",
+                      )}
                     </div>
                   </div>
 
@@ -492,7 +591,7 @@ export default function TransfersPage() {
           </div>
 
           {/* Desktop View - Pending Table */}
-          <div className="hidden md:block bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="hidden md:block bg-card rounded-2xl border border-border  overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="bg-muted/50 border-b border-border sticky top-0 z-10 backdrop-blur-sm">
@@ -518,8 +617,8 @@ export default function TransfersPage() {
                     <TableHead className="text-right px-6 font-bold text-muted-foreground text-xs h-14 w-[15%]">
                       מידע נוסף
                     </TableHead>
-                    <TableHead className="text-center px-6 font-bold text-muted-foreground text-xs h-14 w-[8%]">
-                      פעולות
+                    <TableHead className="text-center px-6 font-bold text-muted-foreground text-xs h-14 w-[10%]">
+                      הצגת הבקשה
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -560,7 +659,7 @@ export default function TransfersPage() {
                             onClick={() => openProfile(req.employee_id)}
                             className="flex items-center gap-3 text-right hover:bg-muted/50 p-2 -mr-2 rounded-xl transition-colors outline-none group/btn max-w-full"
                           >
-                            <div className="w-9 h-9 rounded-full bg-background border border-border flex items-center justify-center font-black text-xs text-muted-foreground shadow-sm group-hover/btn:scale-110 transition-transform shrink-0">
+                            <div className="w-9 h-9 rounded-full bg-background border border-border flex items-center justify-center font-black text-xs text-muted-foreground  group-hover/btn:scale-110 transition-transform shrink-0">
                               {req.employee_name?.[0]}
                             </div>
                             <div className="flex flex-col min-w-0">
@@ -574,25 +673,18 @@ export default function TransfersPage() {
                           </button>
                         </TableCell>
                         <TableCell className="px-6 py-4 align-middle">
-                          <div className="flex items-center">
-                            <Badge
-                              variant="outline"
-                              className="font-medium text-[10px] bg-muted/30 text-muted-foreground border-border/50 max-w-[140px] truncate block text-center"
-                            >
-                              {req.source_name}
-                            </Badge>
-                          </div>
+                          {renderUnitCell(
+                            req.source_name,
+                            req.target_name,
+                            "source",
+                          )}
                         </TableCell>
                         <TableCell className="px-6 py-4 align-middle">
-                          <div className="flex items-center gap-2">
-                            <ArrowLeft className="w-3 h-3 text-primary/40 shrink-0" />
-                            <Badge
-                              variant="outline"
-                              className="font-bold text-[10px] bg-primary/5 text-primary border-primary/20 max-w-[140px] truncate block text-center"
-                            >
-                              {req.target_name}
-                            </Badge>
-                          </div>
+                          {renderUnitCell(
+                            req.source_name,
+                            req.target_name,
+                            "target",
+                          )}
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <div className="flex flex-col leading-tight">
@@ -610,7 +702,7 @@ export default function TransfersPage() {
                         <TableCell className="px-6 py-4">
                           <Badge
                             variant="secondary"
-                            className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-200 shadow-sm rounded-lg px-2"
+                            className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-200  rounded-lg px-2"
                           >
                             <Clock className="w-3 h-3 ml-1" />
                             ממתין
@@ -655,15 +747,17 @@ export default function TransfersPage() {
                           )}
                         </TableCell>
                         <TableCell className="px-6 py-4">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 rounded-full hover:bg-muted"
-                            onClick={() => setSelectedRequest(req)}
-                            title="צפייה בפרטים מלאים"
-                          >
-                            <FileText className="w-4 h-4 text-muted-foreground" />
-                          </Button>
+                          <div className="flex justify-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 w-9 p-0 rounded-full hover:bg-primary/5 hover:text-primary transition-colors border border-transparent hover:border-primary/10"
+                              onClick={() => setSelectedRequest(req)}
+                              title="צפייה בפרטים מלאים"
+                            >
+                              <FileText className="w-4.5 h-4.5" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -692,7 +786,7 @@ export default function TransfersPage() {
               filteredHistory.map((req) => (
                 <div
                   key={req.id}
-                  className="bg-card border border-border rounded-2xl p-4 shadow-sm"
+                  className="bg-card border border-border rounded-2xl p-4 "
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -712,21 +806,25 @@ export default function TransfersPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-muted/30 rounded-xl p-2 text-center">
-                      <span className="text-[8px] font-black text-muted-foreground uppercase block mb-1">
+                    <div className="bg-muted/30 rounded-xl p-2.5 text-right flex flex-col justify-center min-h-[60px]">
+                      <span className="text-[8px] font-black text-muted-foreground/60 uppercase block mb-1">
                         מעבר מ:
                       </span>
-                      <span className="text-[10px] font-bold truncate block">
-                        {req.source_name}
-                      </span>
+                      {renderUnitCell(
+                        req.source_name,
+                        req.target_name,
+                        "source",
+                      )}
                     </div>
-                    <div className="bg-primary/5 rounded-xl p-2 text-center border border-primary/10">
-                      <span className="text-[8px] font-black text-primary uppercase block mb-1">
+                    <div className="bg-primary/5 rounded-xl p-2.5 text-right flex flex-col justify-center min-h-[60px] border border-primary/10">
+                      <span className="text-[8px] font-black text-primary/60 uppercase block mb-1">
                         אל יעד:
                       </span>
-                      <span className="text-[10px] font-black text-primary truncate block">
-                        {req.target_name}
-                      </span>
+                      {renderUnitCell(
+                        req.source_name,
+                        req.target_name,
+                        "target",
+                      )}
                     </div>
                   </div>
 
@@ -749,7 +847,7 @@ export default function TransfersPage() {
           </div>
 
           {/* Desktop View - History Table */}
-          <div className="hidden md:block bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="hidden md:block bg-card rounded-2xl border border-border  overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="bg-muted/30">
@@ -805,7 +903,7 @@ export default function TransfersPage() {
                             onClick={() => openProfile(req.employee_id)}
                             className="flex items-center gap-3 text-right hover:bg-muted/50 p-2 -mr-2 rounded-xl transition-colors outline-none group/btn max-w-full"
                           >
-                            <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center font-black text-[10px] text-muted-foreground shadow-sm shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center font-black text-[10px] text-muted-foreground  shrink-0">
                               {req.employee_name?.[0]}
                             </div>
                             <div className="flex flex-col min-w-0">
@@ -819,23 +917,18 @@ export default function TransfersPage() {
                           </button>
                         </TableCell>
                         <TableCell className="px-6 py-4 align-middle">
-                          <Badge
-                            variant="outline"
-                            className="font-medium text-[10px] bg-muted/30 text-muted-foreground border-border/50 max-w-[140px] truncate block text-center"
-                          >
-                            {req.source_name}
-                          </Badge>
+                          {renderUnitCell(
+                            req.source_name,
+                            req.target_name,
+                            "source",
+                          )}
                         </TableCell>
                         <TableCell className="px-6 py-4 align-middle">
-                          <div className="flex items-center gap-2">
-                            <ArrowLeft className="w-3 h-3 text-muted-foreground/30 shrink-0" />
-                            <Badge
-                              variant="outline"
-                              className="font-bold text-[10px] bg-primary/5 text-primary border-primary/20 max-w-[140px] truncate block text-center"
-                            >
-                              {req.target_name}
-                            </Badge>
-                          </div>
+                          {renderUnitCell(
+                            req.source_name,
+                            req.target_name,
+                            "target",
+                          )}
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <div className="flex flex-col leading-tight">
@@ -877,7 +970,7 @@ export default function TransfersPage() {
       {activeTab === "new" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-card rounded-[20px] border border-border shadow-sm overflow-hidden">
+            <div className="bg-card rounded-[20px] border border-border  overflow-hidden">
               <div className="px-4 sm:px-8 py-5 sm:py-6 border-b border-border/50">
                 <h2 className="text-lg sm:text-xl font-bold text-foreground">
                   הגשת בקשת ניוד
@@ -909,7 +1002,7 @@ export default function TransfersPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
                       {filteredEmployeesList.length > 0 && searchTerm && (
-                        <div className="absolute top-full mt-2 w-full z-50 bg-popover border border-border rounded-xl sm:rounded-2xl shadow-xl overflow-hidden ring-4 ring-muted/10 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="absolute top-full mt-2 w-full z-50 bg-popover border border-border rounded-xl sm:rounded-2xl  overflow-hidden ring-4 ring-muted/10 animate-in fade-in zoom-in-95 duration-200">
                           {filteredEmployeesList.map((emp) => (
                             <button
                               key={emp.id}
@@ -940,7 +1033,7 @@ export default function TransfersPage() {
                   ) : (
                     <div className="p-3 sm:p-4 border border-primary/20 bg-primary/5 rounded-xl sm:rounded-2xl flex items-center justify-between">
                       <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-base sm:text-lg shadow-sm">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-base sm:text-lg ">
                           {selectedEmployee.first_name[0]}
                           {selectedEmployee.last_name[0]}
                         </div>
@@ -991,10 +1084,13 @@ export default function TransfersPage() {
                           setTargetTeamId("");
                         }}
                       >
-                        <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-xs sm:text-sm transition-all focus:bg-background">
+                        <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-xs sm:text-sm transition-all focus:bg-background text-right">
                           <SelectValue placeholder="בחר מחלקה..." />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
+                        <SelectContent
+                          className="rounded-xl border-border  bg-popover"
+                          dir="rtl"
+                        >
                           {structure.map((d) => (
                             <SelectItem
                               key={d.id}
@@ -1020,10 +1116,13 @@ export default function TransfersPage() {
                         }}
                         disabled={!targetDeptId}
                       >
-                        <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-xs sm:text-sm transition-all focus:bg-background disabled:opacity-50">
+                        <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-xs sm:text-sm transition-all focus:bg-background disabled:opacity-50 text-right">
                           <SelectValue placeholder="בחר מדור..." />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
+                        <SelectContent
+                          className="rounded-xl border-border  bg-popover"
+                          dir="rtl"
+                        >
                           {structure
                             .find((d) => d.id.toString() === targetDeptId)
                             ?.sections.map((s: any) => (
@@ -1048,10 +1147,13 @@ export default function TransfersPage() {
                         onValueChange={setTargetTeamId}
                         disabled={!targetSectionId}
                       >
-                        <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-xs sm:text-sm transition-all focus:bg-background disabled:opacity-50">
+                        <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-xs sm:text-sm transition-all focus:bg-background disabled:opacity-50 text-right">
                           <SelectValue placeholder="בחר חוליה..." />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-border shadow-lg bg-popover">
+                        <SelectContent
+                          className="rounded-xl border-border  bg-popover"
+                          dir="rtl"
+                        >
                           {structure
                             .find((d) => d.id.toString() === targetDeptId)
                             ?.sections.find(
@@ -1098,7 +1200,7 @@ export default function TransfersPage() {
                     disabled={
                       isSubmitting || !selectedEmployee || !targetDeptId
                     }
-                    className="w-full h-12 sm:h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl sm:rounded-2xl shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 active:scale-[0.98] text-sm sm:text-base"
+                    className="w-full h-12 sm:h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl sm:rounded-2xl   transition-all hover: active:scale-[0.98] text-sm sm:text-base"
                   >
                     {isSubmitting ? "בתהליך שליחה..." : "שלח בקשת ניוד לאישור"}
                   </Button>
@@ -1109,7 +1211,7 @@ export default function TransfersPage() {
 
           {/* Sidebar Guidelines */}
           <div className="space-y-4 sm:space-y-6">
-            <div className="bg-gradient-to-br from-primary/5 to-background rounded-[20px] p-5 sm:p-6 border border-border/50 shadow-sm">
+            <div className="bg-gradient-to-br from-primary/5 to-background rounded-[20px] p-5 sm:p-6 border border-border/50 ">
               <div className="flex items-center gap-3 text-primary mb-4 sm:mb-6">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -1135,7 +1237,7 @@ export default function TransfersPage() {
               </ul>
             </div>
 
-            <div className="bg-card border border-border rounded-[20px] p-5 sm:p-6 flex items-center gap-4 sm:gap-5 shadow-sm">
+            <div className="bg-card border border-border rounded-[20px] p-5 sm:p-6 flex items-center gap-4 sm:gap-5 ">
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
                 <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" />
               </div>
@@ -1158,7 +1260,7 @@ export default function TransfersPage() {
         onOpenChange={(open) => !open && setViewingEmployee(null)}
       >
         <DialogContent
-          className="max-w-lg p-0 overflow-hidden border border-border shadow-2xl rounded-2xl bg-background"
+          className="max-w-lg p-0 overflow-hidden border border-border  rounded-2xl bg-background"
           dir="rtl"
         >
           {viewingEmployee && (
@@ -1182,7 +1284,7 @@ export default function TransfersPage() {
                   </div>
                   <Badge
                     className={cn(
-                      "px-3 py-1 text-[10px] font-black rounded-full border-none shadow-sm",
+                      "px-3 py-1 text-[10px] font-black rounded-full border-none ",
                       viewingEmployee?.is_active
                         ? "bg-emerald-500 text-white"
                         : "bg-rose-500 text-white",
@@ -1369,68 +1471,155 @@ export default function TransfersPage() {
         onOpenChange={(open) => !open && setSelectedRequest(null)}
       >
         <DialogContent
-          className="max-w-4xl p-0 overflow-hidden border border-border shadow-2xl rounded-2xl bg-background flex flex-col max-h-[90vh]"
+          className="max-w-4xl p-0 overflow-hidden border border-border rounded-2xl bg-background flex flex-col max-h-[90vh]"
           dir="rtl"
         >
           {selectedRequest && (
             <div className="flex flex-col h-full">
-              <div className="px-6 py-4 border-b border-border/40 bg-muted/20 flex items-center justify-between shrink-0">
+              <div className="px-6 py-5 border-b border-border/40 bg-muted/20 flex items-center justify-between shrink-0 pl-12">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-sm shadow-sm border border-primary/10">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-base border border-primary/10">
                     {selectedRequest.employee_name?.[0]}
                   </div>
                   <div>
-                    <h2 className="text-lg font-black text-foreground leading-none">
+                    <h2 className="text-xl font-black text-foreground leading-none mb-1.5">
                       {selectedRequest.employee_name}
                     </h2>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground font-mono">
-                        #{selectedRequest.id}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground font-bold border border-border">
+                    <div className="flex items-center flex-wrap gap-2">
+                      <Badge
+                        variant="secondary"
+                        className="bg-primary/5 text-primary border-primary/10 text-[10px] px-1.5 h-5"
+                      >
                         {selectedRequest.rank || "שוטר"}
-                      </span>
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="bg-background text-muted-foreground border-border/50 text-[10px] px-1.5 h-auto py-0.5 flex items-center gap-1"
+                      >
+                        <Calendar className="w-3 h-3 text-muted-foreground/70 ml-1" />
+                        <span>
+                          הוגשה ב:{" "}
+                          {new Date(
+                            selectedRequest.created_at,
+                          ).toLocaleDateString("he-IL")}
+                        </span>
+                      </Badge>
                     </div>
                   </div>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="bg-background px-2.5 py-0.5 text-xs font-mono"
-                >
-                  {new Date(selectedRequest.created_at).toLocaleDateString(
-                    "he-IL",
-                  )}
-                </Badge>
               </div>
 
               <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1">
-                {/* Movement Flow - Compact */}
-                <div className="bg-muted/30 border border-border/50 rounded-xl p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 min-w-0 text-center">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider block mb-1">
-                        מערך נוכחי
-                      </span>
-                      <span
-                        className="text-sm font-bold text-foreground truncate block"
-                        title={selectedRequest.source_name}
-                      >
-                        {selectedRequest.source_name}
-                      </span>
-                    </div>
-                    <ArrowLeft className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-                    <div className="flex-1 min-w-0 text-center">
-                      <span className="text-[10px] font-black text-emerald-600/70 uppercase tracking-wider block mb-1">
-                        מערך יעד
-                      </span>
-                      <span
-                        className="text-sm font-bold text-emerald-700 truncate block"
-                        title={selectedRequest.target_name}
-                      >
-                        {selectedRequest.target_name}
-                      </span>
-                    </div>
-                  </div>
+                {/* Movement Flow - Enhanced Contextual */}
+                <div className="bg-muted/30 border border-border/50 rounded-xl p-4 sm:p-5">
+                  {(() => {
+                    const sourceParts = (
+                      selectedRequest.source_name || ""
+                    ).split(" / ");
+                    const targetParts = (
+                      selectedRequest.target_name || ""
+                    ).split(" / ");
+
+                    // Find common prefix
+                    let commonIndex = 0;
+                    while (
+                      commonIndex < sourceParts.length &&
+                      commonIndex < targetParts.length &&
+                      sourceParts[commonIndex] === targetParts[commonIndex]
+                    ) {
+                      commonIndex++;
+                    }
+
+                    // Diverging parts calculations removed as we iterate full path
+                    return (
+                      <div className="flex flex-col gap-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 relative">
+                          {/* Source Unit */}
+                          <div className="flex-1 w-full text-right bg-background/50 rounded-xl p-3 border border-border/30 relative overflow-hidden group hover:border-border/60 transition-all">
+                            <div className="absolute top-0 right-0 w-1 h-full bg-slate-300 dark:bg-slate-700" />
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                              <MapPin className="w-3 h-3" />
+                              יחידה נוכחית
+                            </span>
+                            <div className="flex flex-col gap-1 pr-1">
+                              {sourceParts.map((part: string, i: number) => {
+                                const isCommon = i < commonIndex;
+                                return (
+                                  <div
+                                    key={i}
+                                    className={cn(
+                                      "flex items-center gap-1.5",
+                                      i > 0 && "mr-3",
+                                      isCommon && "opacity-60",
+                                    )}
+                                  >
+                                    {i > 0 && (
+                                      <CornerDownLeft className="w-3 h-3 text-muted-foreground/40" />
+                                    )}
+                                    <span
+                                      className={cn(
+                                        "break-words leading-tight transition-all",
+                                        isCommon
+                                          ? "text-xs font-bold text-muted-foreground"
+                                          : "text-sm font-black text-foreground",
+                                      )}
+                                    >
+                                      {part}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Arrow Indicator */}
+                          <div className="flex flex-col items-center justify-center shrink-0 z-10 -my-2 sm:my-0">
+                            <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
+                              <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-90 sm:rotate-0 transition-transform duration-300" />
+                            </div>
+                          </div>
+
+                          {/* Target Unit */}
+                          <div className="flex-1 w-full text-right bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl p-3 border border-emerald-100 dark:border-emerald-800/30 relative overflow-hidden group hover:border-emerald-200 dark:hover:border-emerald-700/50 transition-all">
+                            <div className="absolute top-0 right-0 w-1 h-full bg-emerald-500" />
+                            <span className="text-[10px] font-black text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3 h-3" />
+                              יחידה מבוקשת
+                            </span>
+                            <div className="flex flex-col gap-1 pr-1">
+                              {targetParts.map((part: string, i: number) => {
+                                const isCommon = i < commonIndex;
+                                return (
+                                  <div
+                                    key={i}
+                                    className={cn(
+                                      "flex items-center gap-1.5",
+                                      i > 0 && "mr-3",
+                                      isCommon && "opacity-60",
+                                    )}
+                                  >
+                                    {i > 0 && (
+                                      <CornerDownLeft className="w-3 h-3 text-emerald-500/40" />
+                                    )}
+                                    <span
+                                      className={cn(
+                                        "break-words leading-tight transition-all",
+                                        isCommon
+                                          ? "text-xs font-bold text-emerald-700/70 dark:text-emerald-400/70"
+                                          : "text-sm font-black text-emerald-900 dark:text-emerald-100",
+                                      )}
+                                    >
+                                      {part}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Reason Section */}
@@ -1441,7 +1630,7 @@ export default function TransfersPage() {
                       נימוקי הבקשה
                     </span>
                   </div>
-                  <div className="p-4 rounded-xl bg-muted/40 border border-border/50 text-sm leading-relaxed text-muted-foreground min-h-[100px] shadow-sm break-words whitespace-pre-wrap">
+                  <div className="p-4 rounded-xl bg-muted/40 border border-border/50 text-sm leading-relaxed text-muted-foreground min-h-[100px]  break-words whitespace-pre-wrap">
                     {selectedRequest.reason || "לא צורפו הערות לבקשה זו."}
                   </div>
                 </div>
@@ -1519,7 +1708,7 @@ export default function TransfersPage() {
                       </Button>
                     </div>
                   </div>
-                ) : (
+                ) : selectedRequest.can_approve ? (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
                     <Button
                       variant="outline"
@@ -1540,7 +1729,7 @@ export default function TransfersPage() {
                     </Button>
 
                     <Button
-                      className="w-full h-12 sm:h-11 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20 rounded-xl"
+                      className="w-full h-12 sm:h-11 bg-emerald-600 hover:bg-emerald-700 text-white  -600/20 rounded-xl"
                       onClick={() => {
                         handleApprove(selectedRequest.id);
                         setSelectedRequest(null);
@@ -1549,6 +1738,23 @@ export default function TransfersPage() {
                       <CheckCircle className="w-4 h-4 ml-2" />
                       אישור והעברה
                     </Button>
+                  </div>
+                ) : selectedRequest.can_cancel ? (
+                  <div className="w-full">
+                    <Button
+                      variant="destructive"
+                      className="w-full h-12 sm:h-11 rounded-xl "
+                      onClick={() => handleCancel(selectedRequest.id)}
+                    >
+                      <XCircle className="w-4 h-4 ml-2" />
+                      ביטול בקשה
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="w-full p-3 bg-muted/20 border border-muted text-center rounded-xl">
+                    <span className="text-xs text-muted-foreground font-bold">
+                      אין פעולות זמינות עבור בקשה זו
+                    </span>
                   </div>
                 )}
               </div>

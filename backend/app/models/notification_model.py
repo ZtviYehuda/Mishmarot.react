@@ -203,12 +203,13 @@ class NotificationModel:
                       AND e.id != %s
                       AND NOT EXISTS (
                           SELECT 1 FROM attendance_logs al
+                          JOIN status_types st ON al.status_type_id = st.id
                           WHERE al.employee_id = e.id
                           AND DATE(al.start_datetime) <= CURRENT_DATE
                           AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE)
                           AND (
                               DATE(al.start_datetime) = CURRENT_DATE
-                              OR al.status_type_id IN (2, 4, 5, 6) -- Items that persist (Vacation, Course, etc.)
+                              OR st.is_persistent = TRUE
                           )
                       )
                 """

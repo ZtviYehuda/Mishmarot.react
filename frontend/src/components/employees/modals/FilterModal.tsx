@@ -35,7 +35,6 @@ export interface EmployeeFilters {
   departments?: string[];
   sections?: string[];
   teams?: string[];
-  roles?: string[];
   serviceTypes?: string[];
   statuses?: string[];
   isCommander?: boolean;
@@ -57,7 +56,6 @@ export const FilterModal: React.FC<FilterModalProps> = ({
     departments: [],
     sections: [],
     teams: [],
-    roles: [],
     serviceTypes: [],
     statuses: [],
     isCommander: false,
@@ -75,12 +73,10 @@ export const FilterModal: React.FC<FilterModalProps> = ({
     const departments = new Map<string, Set<string>>();
     const sections = new Map<string, Set<string>>();
     const teams = new Set<string>();
-    const roles = new Set<string>();
     const srvTypes = new Set<string>();
     const currStatuses = new Set<string>();
 
     employees.forEach((emp) => {
-      if (emp.role_name) roles.add(emp.role_name);
       if (emp.team_name) teams.add(emp.team_name);
       if (emp.service_type_name) srvTypes.add(emp.service_type_name);
       if (emp.status_name) currStatuses.add(emp.status_name);
@@ -122,7 +118,6 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           .sort(),
       ),
       teams: Array.from(teams).sort(),
-      roles: Array.from(roles).sort(),
       serviceTypes: Array.from(srvTypes).sort(),
       statuses: Array.from(currStatuses).sort(),
     };
@@ -205,7 +200,6 @@ export const FilterModal: React.FC<FilterModalProps> = ({
         : undefined,
       sections: filters.sections?.length ? filters.sections : undefined,
       teams: filters.teams?.length ? filters.teams : undefined,
-      roles: filters.roles?.length ? filters.roles : undefined,
       serviceTypes: filters.serviceTypes?.length
         ? filters.serviceTypes
         : undefined,
@@ -225,7 +219,6 @@ export const FilterModal: React.FC<FilterModalProps> = ({
       departments: [],
       sections: [],
       teams: [],
-      roles: [],
       serviceTypes: [],
       statuses: [],
       isCommander: false,
@@ -249,7 +242,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-2xl p-0 border-none bg-card shadow-2xl flex flex-col rounded-3xl overflow-hidden"
+        className="max-w-2xl p-0 border-none bg-card  flex flex-col rounded-3xl overflow-hidden"
         dir="rtl"
       >
         <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
@@ -262,7 +255,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 התאם את התצוגה המבוקשת לפי מדרג ארגוני, מעמד או מאפיינים אישיים
               </DialogDescription>
             </div>
-            <div className="w-16 h-16 rounded-[24px] bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner shrink-0 scale-110 sm:scale-100">
+            <div className="w-16 h-16 rounded-[24px] bg-primary/10 flex items-center justify-center text-primary border border-primary/20  shrink-0 scale-110 sm:scale-100">
               <Filter className="w-8 h-8" />
             </div>
           </div>
@@ -290,7 +283,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               className="flex items-center justify-between w-full group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 shadow-sm">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 ">
                   <Layers className="w-5 h-5" />
                 </div>
                 <div className="flex flex-col text-right">
@@ -337,7 +330,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                           className={cn(
                             "h-9 px-4 rounded-xl text-xs font-black transition-all border",
                             filters.departments?.includes(dept)
-                              ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 hover:text-white"
+                              ? "bg-indigo-600 text-white border-indigo-600  -600/20 hover:bg-indigo-700 hover:text-white"
                               : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-indigo-300 hover:text-indigo-600",
                           )}
                         >
@@ -365,7 +358,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                             className={cn(
                               "h-9 px-4 rounded-xl text-xs font-black transition-all border",
                               filters.sections?.includes(sect)
-                                ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 hover:bg-blue-700 hover:text-white"
+                                ? "bg-blue-600 text-white border-blue-600  -600/20 hover:bg-blue-700 hover:text-white"
                                 : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-blue-300 hover:text-blue-600",
                             )}
                           >
@@ -392,7 +385,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                           className={cn(
                             "h-9 px-4 rounded-xl text-xs font-black transition-all border",
                             filters.teams?.includes(team)
-                              ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 hover:text-white"
+                              ? "bg-emerald-600 text-white border-emerald-600  -600/20 hover:bg-emerald-700 hover:text-white"
                               : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-emerald-300 hover:text-emerald-600",
                           )}
                         >
@@ -404,30 +397,6 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
-                  {/* Roles */}
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                      תפקידים נבחרים
-                    </Label>
-                    <div className="flex flex-wrap gap-2">
-                      {hierarchyData.roles.map((role) => (
-                        <Button
-                          key={role}
-                          variant="outline"
-                          onClick={() => toggleFilter("roles", role)}
-                          className={cn(
-                            "h-8 px-3 rounded-lg text-[11px] font-black transition-all",
-                            filters.roles?.includes(role)
-                              ? "bg-foreground text-background border-foreground"
-                              : "bg-muted/30 text-muted-foreground border-border/50 hover:border-muted-foreground/30",
-                          )}
-                        >
-                          {role}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Service Types */}
                   <div className="space-y-3">
                     <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
@@ -442,7 +411,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                           className={cn(
                             "h-8 px-3 rounded-lg text-[11px] font-black transition-all",
                             filters.serviceTypes?.includes(type)
-                              ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/10"
+                              ? "bg-primary text-primary-foreground border-primary  "
                               : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/30",
                           )}
                         >
@@ -469,7 +438,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               className="flex items-center justify-between w-full group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 shadow-sm">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 ">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div className="flex flex-col text-right">
@@ -530,7 +499,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                     className={cn(
                       "flex items-center justify-start gap-4 p-5 h-auto rounded-2xl border-2 transition-all text-right",
                       filters[item.id as keyof EmployeeFilters]
-                        ? "bg-emerald-600 border-emerald-600 text-white shadow-xl shadow-emerald-600/20"
+                        ? "bg-emerald-600 border-emerald-600 text-white  -600/20"
                         : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted hover:border-border/50",
                     )}
                   >
@@ -564,7 +533,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               className={cn(
                 "w-full flex items-center justify-between p-5 rounded-3xl border-2 transition-all group",
                 filters.showInactive
-                  ? "bg-red-500/5 border-red-500/20 text-red-600 shadow-xl shadow-red-500/5"
+                  ? "bg-red-500/5 border-red-500/20 text-red-600  -500/5"
                   : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted/50 hover:border-border/30",
               )}
             >
@@ -573,8 +542,8 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   className={cn(
                     "w-10 h-10 rounded-2xl flex items-center justify-center transition-all",
                     filters.showInactive
-                      ? "bg-red-600 text-white shadow-lg shadow-red-600/20"
-                      : "bg-background text-muted-foreground group-hover:text-foreground shadow-sm",
+                      ? "bg-red-600 text-white  -600/20"
+                      : "bg-background text-muted-foreground group-hover:text-foreground ",
                   )}
                 >
                   <UserMinus className="w-5 h-5" />
@@ -598,7 +567,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               >
                 <div
                   className={cn(
-                    "w-3 h-3 bg-white rounded-full transition-all duration-300 shadow-sm",
+                    "w-3 h-3 bg-white rounded-full transition-all duration-300 ",
                     filters.showInactive ? "translate-x-0" : "-translate-x-5",
                   )}
                 />
@@ -610,7 +579,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
         <div className="p-6 sm:p-10 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row gap-4 items-center">
           <Button
             onClick={handleApply}
-            className="w-full sm:flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-14 shadow-2xl shadow-primary/20 transition-all active:scale-[0.98] gap-3 text-base"
+            className="w-full sm:flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-14   transition-all active:scale-[0.98] gap-3 text-base"
           >
             <Filter className="w-5 h-5" />
             החל את הגדרות הסינון

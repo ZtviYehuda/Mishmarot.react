@@ -79,12 +79,12 @@ export function InternalMessageDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 border-none bg-card shadow-2xl flex flex-col rounded-3xl overflow-hidden"
+        className="max-w-xl p-0 border-none bg-card  flex flex-col rounded-3xl overflow-hidden"
         dir="rtl"
       >
         <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="w-16 h-16 rounded-[24px] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 shadow-inner shrink-0 rotate-3">
+            <div className="w-16 h-16 rounded-[24px] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600  shrink-0 rotate-3">
               <MessageSquare className="w-8 h-8" />
             </div>
             <div className="flex-1 min-w-0 pt-1 text-center sm:text-right">
@@ -103,7 +103,7 @@ export function InternalMessageDialog({
             <>
               {/* Recipient Card */}
               <div className="p-5 rounded-2xl bg-muted/30 border border-border/50 flex items-center gap-4 transition-all hover:bg-muted/40">
-                <div className="w-12 h-12 rounded-xl bg-background border border-border/50 flex items-center justify-center text-muted-foreground shadow-sm">
+                <div className="w-12 h-12 rounded-xl bg-background border border-border/50 flex items-center justify-center text-muted-foreground ">
                   <User className="w-6 h-6" />
                 </div>
                 <div className="flex flex-col text-right">
@@ -184,7 +184,7 @@ export function InternalMessageDialog({
           <Button
             onClick={handleSend}
             disabled={loading || !title}
-            className="w-full sm:flex-1 h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-2xl shadow-indigo-500/20 transition-all active:scale-[0.98] disabled:opacity-30 text-base gap-3 order-1 sm:order-2"
+            className="w-full sm:flex-1 h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl  -500/20 transition-all active:scale-[0.98] disabled:opacity-30 text-base gap-3 order-1 sm:order-2"
           >
             {loading ? (
               <Loader2 className="w-6 h-6 animate-spin" />

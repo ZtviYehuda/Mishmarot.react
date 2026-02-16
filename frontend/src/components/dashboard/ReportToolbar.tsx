@@ -52,7 +52,7 @@ export function ReportToolbar({
             <TabsTrigger
               key={tab.id}
               value={tab.id}
-              className="flex-1 sm:flex-none min-w-[70px] rounded-lg px-3 py-2 text-xs sm:text-sm font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-300"
+              className="flex-1 sm:flex-none min-w-[70px] rounded-lg px-3 py-2 text-xs sm:text-sm font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]: transition-all duration-300"
             >
               {tab.label}
             </TabsTrigger>
@@ -67,7 +67,7 @@ export function ReportToolbar({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full sm:w-auto min-w-[240px] justify-between text-right font-normal h-11 bg-background border-border/60 hover:bg-muted/50 rounded-xl transition-all shadow-sm"
+                className="w-full sm:w-auto min-w-[240px] justify-between text-right font-normal h-11 bg-background border-border/60 hover:bg-muted/50 rounded-xl transition-all "
               >
                 <span className="flex items-center gap-2 truncate">
                   <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
@@ -93,7 +93,7 @@ export function ReportToolbar({
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-auto p-0 rounded-xl shadow-xl border-border/60"
+              className="w-auto p-0 rounded-xl  border-border/60"
               align="end"
             >
               {viewMode === "monthly" ? (
@@ -124,7 +124,7 @@ export function ReportToolbar({
           </Popover>
         )}
         {viewMode === "yearly" && (
-          <div className="w-full sm:w-auto min-w-[140px] flex items-center justify-center gap-2 text-sm font-bold border border-border/60 px-4 py-3 rounded-xl bg-background/50 shadow-sm">
+          <div className="w-full sm:w-auto min-w-[140px] flex items-center justify-center gap-2 text-sm font-bold border border-border/60 px-4 py-3 rounded-xl bg-background/50 ">
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             <span>שנת {format(date, "yyyy")}</span>
           </div>

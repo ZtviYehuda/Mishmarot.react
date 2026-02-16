@@ -30,14 +30,12 @@ export interface Employee {
   team_name: string | null;
   section_name: string | null;
   department_name: string | null;
-  role_name?: string;
   service_type_name?: string | null;
 
   // IDs for hierarchy
   team_id: number | null;
   section_id?: number | null;
   department_id?: number | null;
-  role_id: number | null;
   service_type_id?: number | null;
   assignment_date?: string | null;
 
@@ -45,6 +43,7 @@ export interface Employee {
   status_id?: number | null;
   status_name?: string | null;
   status_color?: string | null;
+  status_is_persistent?: boolean;
   last_status_update?: string | null;
   start_date?: string | null;
   end_date?: string | null;
@@ -80,7 +79,6 @@ export interface CreateEmployeePayload {
   team_id?: number | null;
   section_id?: number | null;
   department_id?: number | null;
-  role_id?: number | null;
   service_type_id?: number | null;
   is_commander?: boolean;
   is_admin?: boolean;

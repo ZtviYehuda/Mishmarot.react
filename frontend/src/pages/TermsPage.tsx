@@ -71,10 +71,10 @@ export default function TermsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               className={cn(
-                "p-8 rounded-[2.5rem] border backdrop-blur-sm transition-all hover:shadow-lg",
+                "p-8 rounded-[2.5rem] border backdrop-blur-sm transition-all hover:",
                 isDark
                   ? "bg-slate-900/50 border-white/10"
-                  : "bg-white border-slate-200 shadow-sm",
+                  : "bg-white border-slate-200 ",
               )}
             >
               <h2 className="text-xl font-bold mb-4 flex items-center gap-3">

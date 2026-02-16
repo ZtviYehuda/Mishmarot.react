@@ -255,7 +255,7 @@ export const DashboardFilters = ({
                 <SelectItem key={st.status_id} value={st.status_id.toString()}>
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-2.5 h-2.5 rounded-full shadow-sm"
+                      className="w-2.5 h-2.5 rounded-full "
                       style={{ backgroundColor: st.color }}
                     />
                     {st.status_name}
@@ -287,7 +287,7 @@ export const DashboardFilters = ({
                   }}
                   className={`px-2 py-1 rounded-md text-[10px] font-black transition-all border ${
                     isSelected
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      ? "bg-primary text-primary-foreground border-primary "
                       : "bg-background text-muted-foreground border-border hover:bg-muted"
                   }`}
                 >

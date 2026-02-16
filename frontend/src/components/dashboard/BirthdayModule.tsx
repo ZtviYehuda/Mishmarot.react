@@ -14,10 +14,10 @@ interface BirthdayModuleProps {
 
 export const BirthdayModule = ({ birthdays }: BirthdayModuleProps) => {
   return (
-    <Card className="border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] bg-white dark:bg-card dark:border-border h-full flex flex-col">
+    <Card className="border border-slate-100  bg-white dark:bg-card dark:border-border h-full flex flex-col">
       <CardHeader className="pb-6">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center border border-orange-100 dark:bg-orange-900/20 dark:border-orange-800 shadow-sm transition-transform hover:rotate-6">
+          <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center border border-orange-100 dark:bg-orange-900/20 dark:border-orange-800  transition-transform hover:rotate-6">
             <Cake className="w-5 h-5 text-orange-500" />
           </div>
           <div>
@@ -35,10 +35,10 @@ export const BirthdayModule = ({ birthdays }: BirthdayModuleProps) => {
           {birthdays.map((b, i) => (
             <div
               key={i}
-              className="flex items-center justify-between p-3 rounded-xl border border-transparent bg-slate-50/50 hover:bg-white hover:border-slate-100 hover:shadow-sm transition-all cursor-default dark:bg-slate-800/40 dark:border-transparent dark:hover:bg-slate-800 group"
+              className="flex items-center justify-between p-3 rounded-xl border border-transparent bg-slate-50/50 hover:bg-white hover:border-slate-100 hover: transition-all cursor-default dark:bg-slate-800/40 dark:border-transparent dark:hover:bg-slate-800 group"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center font-black text-xs text-[#0074ff] shadow-sm dark:bg-slate-700 dark:border-slate-600 transition-transform group-hover:scale-105">
+                <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center font-black text-xs text-[#0074ff]  dark:bg-slate-700 dark:border-slate-600 transition-transform group-hover:scale-105">
                   {b.first_name[0]}
                   {b.last_name[0]}
                 </div>

@@ -606,7 +606,7 @@ function MobileBottomNavLink({
       </div>
       <span className="text-[10px] font-bold">{label}</span>
       {active && (
-        <span className="absolute bottom-0 w-8 h-1 bg-primary rounded-t-full shadow-[0_-2px_8px_rgba(59,130,246,0.3)]" />
+        <span className="absolute bottom-0 w-8 h-1 bg-primary rounded-t-full " />
       )}
     </button>
   );

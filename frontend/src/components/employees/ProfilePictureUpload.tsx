@@ -87,8 +87,8 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         <div
           className={cn(
             sizeClasses[size],
-            "rounded-full overflow-hidden border-4 border-primary/20 shadow-lg relative bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center transition-all duration-300",
-            isHovering && "border-primary/40 shadow-xl scale-105",
+            "rounded-full overflow-hidden border-4 border-primary/20  relative bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center transition-all duration-300",
+            isHovering && "border-primary/40  scale-105",
           )}
         >
           {preview ? (
@@ -118,7 +118,7 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         {preview && (
           <button
             onClick={handleRemove}
-            className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110"
+            className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center  transition-all duration-200 hover:scale-110"
             title="הסר תמונה"
           >
             <X className="w-4 h-4" />

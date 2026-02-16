@@ -186,19 +186,19 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[95vw] sm:w-full max-w-lg p-0 border-none bg-card shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden"
+        className="w-[95vw] sm:w-full max-w-lg p-0 border-none bg-card dark:bg-[#0f172a] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl"
         dir="rtl"
       >
-        <DialogHeader className="p-5 sm:p-6 border-b border-border/50 bg-muted/20 text-right">
+        <DialogHeader className="p-5 sm:p-6 border-b border-border/50 bg-muted/10 dark:bg-slate-900/50 text-right">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner border border-primary/20 shrink-0">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary  border border-primary/20 shrink-0">
               <ClipboardList className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
             <div>
               <DialogTitle className="text-lg sm:text-xl font-black text-foreground mb-1">
                 עדכון סטטוס
               </DialogTitle>
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-background rounded-full border border-border shadow-sm">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-background rounded-full border border-border ">
                 <span className="text-xs font-black text-foreground">
                   {employee.first_name} {employee.last_name}
                 </span>
@@ -214,7 +214,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
         {delegationResult ? (
           <div className="p-8 space-y-8 animate-in zoom-in-95 duration-500 text-center">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-500/10 flex items-center justify-center text-emerald-600 shadow-xl shadow-emerald-500/10 border-2 border-emerald-500/20">
+              <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-500/10 flex items-center justify-center text-emerald-600  -500/10 border-2 border-emerald-500/20">
                 <Shield className="w-10 h-10" />
               </div>
               <div className="space-y-1">
@@ -297,7 +297,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                   }
                   onOpenChange(false);
                 }}
-                className="w-full h-14 rounded-2xl font-black text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/20 gap-2"
+                className="w-full h-14 rounded-2xl font-black text-sm bg-emerald-600 hover:bg-emerald-700 text-white  -600/20 gap-2"
               >
                 <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
@@ -353,7 +353,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             "flex items-center justify-start gap-3 p-2.5 sm:p-3 h-auto rounded-xl sm:rounded-2xl border-2 transition-all text-right group",
                             isSelected
                               ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
-                              : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted/50 hover:border-border/50",
+                              : "bg-background dark:bg-slate-900 border-border/40 text-muted-foreground hover:border-primary/40 hover:text-foreground",
                           )}
                         >
                           <div
@@ -361,7 +361,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                               "w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-300",
                               isSelected
                                 ? "bg-primary-foreground/20"
-                                : "bg-background shadow-sm",
+                                : "bg-background ",
                             )}
                           >
                             <Icon
@@ -406,7 +406,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             start_date: e.target.value,
                           }))
                         }
-                        className="h-11 bg-muted/30 border-border/50 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold transition-all w-full"
+                        className="h-11 bg-background dark:bg-slate-900 border-border/60 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold transition-all w-full shadow-sm"
                       />
                     </div>
                   </div>
@@ -426,7 +426,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                           }))
                         }
                         placeholder="לא חובה"
-                        className="h-11 bg-muted/30 border-border/50 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold transition-all w-full"
+                        className="h-11 bg-background dark:bg-slate-900 border-border/60 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold transition-all w-full shadow-sm"
                       />
                     </div>
                   </div>
@@ -447,7 +447,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                         }))
                       }
                       placeholder="הוסף הערה..."
-                      className="h-11 bg-muted/30 border-border/50 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold placeholder:text-muted-foreground/50 transition-all w-full"
+                      className="h-11 bg-background dark:bg-slate-900 border-border/60 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold placeholder:text-muted-foreground/50 transition-all w-full shadow-sm"
                     />
                   </div>
                 </div>
@@ -461,7 +461,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                 !user?.is_temp_commander &&
                 employee?.id === user.id && (
                   <div className="pt-4 border-t border-border/40 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-primary/10 space-y-4 sm:space-y-5 shadow-inner">
+                    <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-primary/10 space-y-4 sm:space-y-5 ">
                       {employee.active_delegate_id ? (
                         // Case: Already delegated
                         <div className="flex items-center justify-between gap-4">
@@ -484,7 +484,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-9 px-4 rounded-xl border-amber-600/20 bg-amber-600/10 text-amber-700 hover:bg-amber-600 hover:text-white transition-all text-[11px] font-black shadow-lg shadow-amber-600/5 active:scale-95 whitespace-nowrap"
+                            className="h-9 px-4 rounded-xl border-amber-600/20 bg-amber-600/10 text-amber-700 hover:bg-amber-600 hover:text-white transition-all text-[11px] font-black  -600/5 active:scale-95 whitespace-nowrap"
                             onClick={handleRevokeDelegation}
                             disabled={loading}
                           >
@@ -530,7 +530,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                 <Switch
                                   checked={isDelegating}
                                   onCheckedChange={setIsDelegating}
-                                  className="scale-90 sm:scale-100 data-[state=checked]:bg-primary shadow-lg shadow-primary/20 shrink-0"
+                                  className="scale-90 sm:scale-100 data-[state=checked]:bg-primary   shrink-0"
                                 />
                               </div>
 
@@ -547,7 +547,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                     <SelectTrigger className="h-11 rounded-xl bg-background border-primary/20 focus:ring-primary/20 text-right">
                                       <SelectValue placeholder="בחר חבר צוות..." />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent dir="rtl">
                                       {candidates.map((c) => (
                                         <SelectItem
                                           key={c.id}
@@ -581,7 +581,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
               <Button
                 onClick={handleSubmit}
                 disabled={loading || !formData.status_type_id}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl sm:rounded-2xl h-11 sm:h-12 shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-30 gap-2 text-sm"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl sm:rounded-2xl h-11 sm:h-12   transition-all active:scale-[0.98] disabled:opacity-30 gap-2 text-sm"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

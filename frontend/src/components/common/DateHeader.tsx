@@ -41,7 +41,7 @@ export function DateHeader({ className }: DateHeaderProps) {
           <Button
             variant="outline"
             className={cn(
-              "h-auto py-1 px-2.5 lg:py-2 lg:px-4 rounded-lg lg:rounded-xl border-input bg-background hover:bg-muted/50 transition-all shadow-sm",
+              "h-auto py-1 px-2.5 lg:py-2 lg:px-4 rounded-lg lg:rounded-xl border-input bg-background hover:bg-muted/50 transition-all ",
               !isCurrentDay &&
                 "border-amber-300 bg-amber-50 hover:bg-amber-100/80 text-amber-900",
             )}

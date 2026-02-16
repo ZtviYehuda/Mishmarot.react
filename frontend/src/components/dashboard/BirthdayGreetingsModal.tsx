@@ -149,7 +149,7 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 overflow-hidden border border-border bg-card shadow-2xl rounded-3xl"
+        className="max-w-xl p-0 overflow-hidden border border-border bg-card  rounded-3xl"
         dir="rtl"
       >
         <DialogHeader className="p-6 border-b border-border/50 bg-muted/20 text-right">
@@ -179,9 +179,9 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                 variant={viewMode === "today" ? "default" : "ghost"}
                 onClick={() => setViewMode("today")}
                 className={cn(
-                  "flex-1 h-9 rounded-xl text-xs font-black shadow-none transition-all",
+                  "flex-1 h-9 rounded-xl text-xs font-black  transition-all",
                   viewMode === "today"
-                    ? "bg-background text-primary shadow-sm hover:bg-background"
+                    ? "bg-background text-primary  hover:bg-background"
                     : "text-muted-foreground",
                 )}
               >
@@ -191,9 +191,9 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                 variant={viewMode === "week" ? "default" : "ghost"}
                 onClick={() => setViewMode("week")}
                 className={cn(
-                  "flex-1 h-9 rounded-xl text-xs font-black shadow-none transition-all",
+                  "flex-1 h-9 rounded-xl text-xs font-black  transition-all",
                   viewMode === "week"
-                    ? "bg-background text-primary shadow-sm hover:bg-background"
+                    ? "bg-background text-primary  hover:bg-background"
                     : "text-muted-foreground",
                 )}
               >
@@ -212,7 +212,7 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                 className={cn(
                   "flex-1 h-auto py-3 rounded-2xl text-[10px] font-black transition-all border flex flex-col items-center gap-1",
                   activePresetId === p.id
-                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
+                    ? "bg-primary text-primary-foreground border-primary  "
                     : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/50",
                 )}
               >
@@ -232,7 +232,7 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                 <Button
                   size="sm"
                   onClick={handleSavePreset}
-                  className="h-7 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-[9px] font-black gap-1.5 shadow-sm"
+                  className="h-7 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-[9px] font-black gap-1.5 "
                 >
                   <Save className="w-3 h-3" />
                   שמור שינויים
@@ -255,13 +255,13 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                 <textarea
                   value={template}
                   onChange={(e) => setTemplate(e.target.value)}
-                  className="w-full bg-card border border-border rounded-2xl p-4 text-sm font-semibold focus:ring-2 focus:ring-primary/20 outline-none transition-all h-32 custom-scrollbar resize-none shadow-inner"
+                  className="w-full bg-card border border-border rounded-2xl p-4 text-sm font-semibold focus:ring-2 focus:ring-primary/20 outline-none transition-all h-32 custom-scrollbar resize-none "
                   placeholder="הכנס את נוסח הברכה... השתמש ב-[שם] וב-[שם_המפקד]"
                 />
               ) : (
                 <div
                   onClick={() => setIsEditing(true)}
-                  className="bg-card border border-border/50 rounded-2xl p-4 text-sm font-bold text-foreground leading-relaxed cursor-text min-h-[100px] hover:border-primary/30 transition-colors group relative whitespace-pre-wrap shadow-sm"
+                  className="bg-card border border-border/50 rounded-2xl p-4 text-sm font-bold text-foreground leading-relaxed cursor-text min-h-[100px] hover:border-primary/30 transition-colors group relative whitespace-pre-wrap "
                 >
                   {template}
                 </div>
@@ -319,7 +319,7 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                         "flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300",
                         isSent
                           ? "bg-muted/10 border-border/10 opacity-60"
-                          : "bg-card border-border shadow-sm hover:border-primary/30 hover:shadow-md",
+                          : "bg-card border-border  hover:border-primary/30 hover:",
                         isToday && viewMode === "week"
                           ? "border-primary/20 bg-primary/5"
                           : "",
@@ -352,7 +352,7 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                           "h-9 px-4 rounded-xl gap-2 font-black text-[10px] transition-all",
                           isSent
                             ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20"
-                            : "bg-primary text-primary-foreground hover:scale-105 shadow-lg shadow-primary/20",
+                            : "bg-primary text-primary-foreground hover:scale-105  ",
                         )}
                         variant={isSent ? "outline" : "default"}
                       >

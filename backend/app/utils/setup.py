@@ -45,7 +45,8 @@ def setup_database():
                 name VARCHAR(50) NOT NULL,
                 code VARCHAR(50),
                 color VARCHAR(20),
-                is_presence BOOLEAN DEFAULT FALSE
+                is_presence BOOLEAN DEFAULT FALSE,
+                is_persistent BOOLEAN DEFAULT FALSE
             );""",
             """CREATE TABLE IF NOT EXISTS employees (
                 id SERIAL PRIMARY KEY,
@@ -215,6 +216,9 @@ def setup_database():
             cur.execute(
                 "ALTER TABLE status_types ADD COLUMN IF NOT EXISTS code VARCHAR(50);"
             )
+            cur.execute(
+                "ALTER TABLE status_types ADD COLUMN IF NOT EXISTS is_persistent BOOLEAN DEFAULT FALSE;"
+            )
 
             # Transfer Requests Migrations
             cur.execute(
@@ -269,13 +273,13 @@ def setup_database():
         if cur.fetchone()[0] == 0:
             cur.execute(
                 """
-                INSERT INTO status_types (name, color, is_presence) VALUES 
-                ('משרד', '#22c55e', TRUE),
-                ('חופשה', '#3b82f6', FALSE),
-                ('מחלה', '#ef4444', FALSE),
-                ('קורס', '#8b5cf6', TRUE),
-                ('תגבור', '#f59e0b', TRUE),
-                ('חו"ל', '#0ea5e9', FALSE)
+                INSERT INTO status_types (name, color, is_presence, is_persistent) VALUES 
+                ('משרד', '#22c55e', TRUE, FALSE),
+                ('חופשה', '#3b82f6', FALSE, TRUE),
+                ('מחלה', '#ef4444', FALSE, TRUE),
+                ('קורס', '#8b5cf6', TRUE, TRUE),
+                ('תגבור', '#f59e0b', TRUE, TRUE),
+                ('חו"ל', '#0ea5e9', FALSE, TRUE)
             """
             )
 

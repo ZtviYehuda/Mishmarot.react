@@ -139,7 +139,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       if (active && payload && payload.length) {
         const data = payload[0].payload;
         return (
-          <div className="bg-popover text-popover-foreground px-3 py-2 rounded shadow-lg text-sm border border-border">
+          <div className="bg-popover text-popover-foreground px-3 py-2 rounded  text-sm border border-border">
             <p className="font-semibold">{data.name}</p>
             <p className="text-sm">{data.value} שוטרים</p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -215,7 +215,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                   <WhatsAppButton
                     onClick={onOpenWhatsAppReport}
                     variant="outline"
-                    className="h-8 w-8 p-0 rounded-xl border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/10"
+                    className="h-8 w-8 p-0 rounded-xl border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all  -500/10"
                     skipDirectLink={true}
                   />
                 )}

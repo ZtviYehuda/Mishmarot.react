@@ -219,7 +219,7 @@ export default function MainLayout() {
                 <img
                   src="/organization-logo.jpg"
                   alt="Organization Logo"
-                  className="w-full h-full object-contain drop-shadow-sm mix-blend-multiply dark:mix-blend-normal"
+                  className="w-full h-full object-contain drop- mix-blend-multiply dark:mix-blend-normal"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
                     e.currentTarget.parentElement?.nextElementSibling?.classList.remove(
@@ -228,7 +228,7 @@ export default function MainLayout() {
                   }}
                 />
               </div>
-              <div className="hidden absolute inset-0 z-10 w-9 h-9 m-auto rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20 pointer-events-none">
+              <div className="hidden absolute inset-0 z-10 w-9 h-9 m-auto rounded-full bg-primary flex items-center justify-center   pointer-events-none">
                 <ShieldCheck className="w-5 h-5 text-primary-foreground" />
               </div>
             </div>
@@ -277,10 +277,13 @@ export default function MainLayout() {
                   e.stopPropagation();
                   setIsSidebarOpen((prev) => !prev);
                 }}
+                onClick={() => {
+                  if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                }}
                 className={cn(
                   "flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group relative overflow-hidden select-none",
                   isActive
-                    ? "bg-primary/10 text-primary font-black shadow-lg shadow-primary/5"
+                    ? "bg-primary/10 text-primary font-black  "
                     : "text-muted-foreground hover:bg-muted/50 hover:text-primary",
                 )}
                 title={!isSidebarOpen ? item.name : undefined}
@@ -322,6 +325,9 @@ export default function MainLayout() {
               e.stopPropagation();
               setIsSidebarOpen((prev) => !prev);
             }}
+            onClick={() => {
+              if (window.innerWidth < 1024) setIsSidebarOpen(false);
+            }}
             className={cn(
               "flex items-center gap-3 rounded-xl transition-all select-none",
               isSidebarOpen
@@ -329,7 +335,7 @@ export default function MainLayout() {
                 : "justify-center p-0 border-0 hover:scale-105",
             )}
           >
-            <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-primary font-black text-[10px] shrink-0 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-primary font-black text-[10px] shrink-0 ">
               {user?.first_name?.[0]}
               {user?.last_name?.[0]}
             </div>
@@ -387,7 +393,7 @@ export default function MainLayout() {
 
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col min-w-0">
-        <header className="h-20 bg-card border-b border-border px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-none flex-none">
+        <header className="h-20 bg-card border-b border-border px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40  transition-none flex-none">
           <div className="flex items-center gap-2 lg:gap-4 flex-1">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -411,7 +417,7 @@ export default function MainLayout() {
                   <span className="text-[9px] md:text-[11px] font-black text-primary uppercase leading-none truncate">
                     מוקד שליטה ובקרה
                   </span>
-                  <div className="flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0" />
+                  <div className="flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-emerald-500  shrink-0" />
                 </div>
                 <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight py-0.5 leading-none truncate">
                   {location.pathname === "/"
@@ -425,7 +431,7 @@ export default function MainLayout() {
                 <img
                   src="/unit-logo-removebg-preview.png"
                   alt="Unit Logo"
-                  className="w-full h-full object-contain drop-shadow-md z-10 relative filter hover:brightness-110"
+                  className="w-full h-full object-contain drop- z-10 relative filter hover:brightness-110"
                   onError={(e) => (e.currentTarget.style.display = "none")}
                 />
               </div>
@@ -439,14 +445,14 @@ export default function MainLayout() {
                 <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all">
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-primary text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card shadow-lg shadow-primary/40 animate-in zoom-in duration-300">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-primary text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card   animate-in zoom-in duration-300">
                       {unreadCount}
                     </span>
                   )}
                 </button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-[90vw] sm:w-[450px] p-0 overflow-hidden rounded-2xl border-border shadow-2xl mr-2"
+                className="w-[90vw] sm:w-[450px] p-0 overflow-hidden rounded-2xl border-border  mr-2"
                 align="start"
               >
                 <div className="p-4 border-b border-border bg-card sticky top-0 z-10">
@@ -580,7 +586,7 @@ export default function MainLayout() {
                               }}
                             >
                               <div
-                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0  transition-transform group-hover:scale-105"
                                 style={{
                                   backgroundColor: config.bg,
                                   color: config.color,
@@ -818,7 +824,7 @@ export default function MainLayout() {
 
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
 
-            <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/20 shadow-sm transition-all hover:bg-emerald-500/10">
+            <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/20  transition-all hover:bg-emerald-500/10">
               <div className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -861,7 +867,7 @@ export default function MainLayout() {
             <DialogHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 "
                   style={
                     selectedAlert
                       ? {

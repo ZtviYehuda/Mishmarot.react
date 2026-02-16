@@ -40,7 +40,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, cleanUnitName } from "@/lib/utils";
 import {
   BulkStatusUpdateModal,
   StatusUpdateModal,
@@ -572,7 +572,7 @@ export default function AttendancePage() {
                     "relative flex flex-col items-center justify-center transition-all cursor-pointer group rounded-2xl border aspect-square sm:aspect-auto sm:h-28",
                     "lg:flex-1 lg:h-24 lg:p-4 lg:rounded-none",
                     selectedStatusId === s.status_id.toString()
-                      ? "text-white shadow-xl scale-[1.02] z-10"
+                      ? "text-white  scale-[1.02] z-10"
                       : "bg-muted/30 border-transparent hover:bg-muted/50 lg:bg-transparent lg:border-0",
                   )}
                   style={{
@@ -739,10 +739,10 @@ export default function AttendancePage() {
               }}
               disabled={!!(user && !user.is_admin && user.department_id)}
             >
-              <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
+              <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
                 <SelectValue placeholder="כל המחלקות" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir="rtl">
                 <SelectItem value="all">כל המחלקות</SelectItem>
                 {departments.map((d) => (
                   <SelectItem key={d.id} value={d.id.toString()}>
@@ -769,10 +769,10 @@ export default function AttendancePage() {
                 !!(user && !user.is_admin && user.section_id)
               }
             >
-              <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
+              <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
                 <SelectValue placeholder="כל המדורים" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir="rtl">
                 <SelectItem value="all">כל המדורים</SelectItem>
                 {sections.map((s: any) => (
                   <SelectItem key={s.id} value={s.id.toString()}>
@@ -796,10 +796,10 @@ export default function AttendancePage() {
                 !!(user && !user.is_admin && user.team_id)
               }
             >
-              <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
+              <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
                 <SelectValue placeholder="כל החוליות" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir="rtl">
                 <SelectItem value="all">כל החוליות</SelectItem>
                 {teams.map((t: any) => (
                   <SelectItem key={t.id} value={t.id.toString()}>
@@ -818,10 +818,10 @@ export default function AttendancePage() {
               value={selectedStatusId}
               onValueChange={(val) => setSelectedStatusId(val)}
             >
-              <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
+              <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
                 <SelectValue placeholder="הכל" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir="rtl">
                 <SelectItem value="all">הכל</SelectItem>
                 {statusTypes.map((s: any) => (
                   <SelectItem key={s.id} value={s.id.toString()}>
@@ -840,10 +840,10 @@ export default function AttendancePage() {
               value={selectedServiceTypeId}
               onValueChange={(val) => setSelectedServiceTypeId(val)}
             >
-              <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold">
+              <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
                 <SelectValue placeholder="הכל" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir="rtl">
                 <SelectItem value="all">הכל</SelectItem>
                 {serviceTypes.map((s: any) => (
                   <SelectItem key={s.id} value={s.id.toString()}>
@@ -856,7 +856,8 @@ export default function AttendancePage() {
 
           <Button
             variant="ghost"
-            className="md:col-span-1 h-11 text-muted-foreground hover:text-foreground hover:bg-muted gap-2 w-auto"
+            className="md:col-span-1 h-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2 w-auto min-w-[44px]"
+            title="נקה סינון"
             onClick={() => {
               if (!user || user.is_admin) {
                 setSelectedDeptId("all");
@@ -882,7 +883,8 @@ export default function AttendancePage() {
               setSelectedEmployeeIds([]);
             }}
           >
-            <Filter className="w-4 h-4" />
+            <X className="w-4 h-4" />
+            <span className="hidden lg:inline text-xs font-bold">נקה</span>
           </Button>
         </div>
       </Card>
@@ -890,7 +892,7 @@ export default function AttendancePage() {
       {/* Filter Modal for Mobile */}
       <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
         <DialogContent className="w-[90vw] max-w-[340px] p-0 border-none bg-transparent">
-          <div className="bg-card border border-border flex flex-col rounded-2xl shadow-xl overflow-hidden max-h-[85vh]">
+          <div className="bg-card border border-border flex flex-col rounded-2xl  overflow-hidden max-h-[85vh]">
             <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
               <div className="flex items-center gap-2 font-black text-sm text-foreground">
                 <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
@@ -925,7 +927,7 @@ export default function AttendancePage() {
                   <SelectTrigger className="w-full text-right">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent dir="rtl">
                     <SelectItem value="all">כל המחלקות</SelectItem>
                     {departments.map((d) => (
                       <SelectItem key={d.id} value={d.id.toString()}>
@@ -951,7 +953,7 @@ export default function AttendancePage() {
                   <SelectTrigger className="w-full text-right">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent dir="rtl">
                     <SelectItem value="all">כל המדורים</SelectItem>
                     {sections.map((s: any) => (
                       <SelectItem key={s.id} value={s.id.toString()}>
@@ -974,7 +976,7 @@ export default function AttendancePage() {
                   <SelectTrigger className="w-full text-right">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent dir="rtl">
                     <SelectItem value="all">כל החוליות</SelectItem>
                     {teams.map((t: any) => (
                       <SelectItem key={t.id} value={t.id.toString()}>
@@ -996,7 +998,7 @@ export default function AttendancePage() {
                   <SelectTrigger className="w-full text-right">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent dir="rtl">
                     <SelectItem value="all">הכל</SelectItem>
                     {statusTypes.map((s: any) => (
                       <SelectItem key={s.id} value={s.id.toString()}>
@@ -1018,7 +1020,7 @@ export default function AttendancePage() {
                   <SelectTrigger className="w-full text-right">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent dir="rtl">
                     <SelectItem value="all">הכל</SelectItem>
                     {serviceTypes.map((s: any) => (
                       <SelectItem key={s.id} value={s.id.toString()}>
@@ -1055,7 +1057,7 @@ export default function AttendancePage() {
         </DialogContent>
       </Dialog>
       {/* Attendance Table - Desktop Only */}
-      <div className="hidden lg:block bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      <div className="hidden lg:block bg-card rounded-2xl border border-border  overflow-hidden">
         <div className="overflow-x-auto">
           <Table className="min-w-[800px]">
             <TableHeader className="bg-muted/50 h-14">
@@ -1063,7 +1065,7 @@ export default function AttendancePage() {
                 <TableHead className="w-[60px] text-center px-4">
                   <div className="flex items-center justify-center">
                     <Checkbox
-                      className="w-5 h-5 border-2 border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-lg transition-all shadow-sm"
+                      className="w-5 h-5 border-2 border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-lg transition-all "
                       checked={
                         filteredEmployees.length > 0 &&
                         selectedEmployeeIds.length === filteredEmployees.length
@@ -1135,7 +1137,7 @@ export default function AttendancePage() {
                         <div className="flex items-center justify-center">
                           <Checkbox
                             className={cn(
-                              "w-5 h-5 border-2 border-muted-foreground/30 rounded-lg transition-all shadow-sm",
+                              "w-5 h-5 border-2 border-muted-foreground/30 rounded-lg transition-all ",
                               isSelected
                                 ? "bg-primary border-primary text-primary-foreground"
                                 : "bg-background hover:border-primary/50",
@@ -1151,7 +1153,7 @@ export default function AttendancePage() {
                         <div className="flex items-center gap-3">
                           <div
                             className={cn(
-                              "w-10 h-10 rounded-xl shadow-sm flex items-center justify-center text-muted-foreground font-black text-[10px] uppercase transition-transform hover:scale-105 shrink-0",
+                              "w-10 h-10 rounded-xl  flex items-center justify-center text-muted-foreground font-black text-[10px] uppercase transition-transform hover:scale-105 shrink-0",
                               isSelected
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-white dark:bg-muted/50 border border-border/50",
@@ -1205,7 +1207,7 @@ export default function AttendancePage() {
                           <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 mt-0.5">
                             {emp.section_name && emp.section_name !== "מטה" && (
                               <span className="text-[10px] text-muted-foreground font-medium">
-                                מדור {emp.section_name}
+                                מדור {cleanUnitName(emp.section_name)}
                               </span>
                             )}
                             {emp.section_name &&
@@ -1218,7 +1220,7 @@ export default function AttendancePage() {
                               )}
                             {emp.team_name && emp.team_name !== "מטה" && (
                               <span className="text-[10px] text-muted-foreground font-medium">
-                                חוליה {emp.team_name}
+                                חוליה {cleanUnitName(emp.team_name)}
                               </span>
                             )}
                           </div>
@@ -1346,13 +1348,13 @@ export default function AttendancePage() {
 
       <div className="lg:hidden space-y-3">
         {loading ? (
-          <div className="bg-card rounded-2xl p-8 text-center border border-border shadow-sm">
+          <div className="bg-card rounded-2xl p-8 text-center border border-border ">
             <p className="text-xs font-bold text-muted-foreground">
               טוען נתונים...
             </p>
           </div>
         ) : filteredEmployees.length === 0 ? (
-          <div className="bg-card rounded-2xl p-8 text-center border border-border shadow-sm">
+          <div className="bg-card rounded-2xl p-8 text-center border border-border ">
             <p className="text-xs font-bold text-muted-foreground">
               לא נמצאו שוטרים
             </p>
@@ -1397,9 +1399,9 @@ export default function AttendancePage() {
                 <div
                   key={emp.id}
                   className={cn(
-                    "group bg-card rounded-[24px] border shadow-sm overflow-hidden transition-all active:scale-[0.98]",
+                    "group bg-card rounded-[24px] border  overflow-hidden transition-all active:scale-[0.98]",
                     isSelected
-                      ? "bg-primary/5 border-primary shadow-primary/10"
+                      ? "bg-primary/5 border-primary "
                       : "border-border",
                     !emp.is_active && "grayscale opacity-80",
                   )}
@@ -1441,7 +1443,7 @@ export default function AttendancePage() {
 
                           <div
                             className={cn(
-                              "w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 shadow-sm",
+                              "w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ",
                               isUpdatedToday
                                 ? "ring-4 ring-emerald-500/10"
                                 : "animate-pulse ring-4 ring-rose-500/10",

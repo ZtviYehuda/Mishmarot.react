@@ -99,12 +99,12 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-2xl p-0 border-none bg-card shadow-2xl flex flex-col rounded-3xl overflow-hidden"
+        className="max-w-2xl p-0 border-none bg-card  flex flex-col rounded-3xl overflow-hidden"
         dir="rtl"
       >
         <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="w-16 h-16 rounded-[24px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner shrink-0 rotate-3">
+            <div className="w-16 h-16 rounded-[24px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary  shrink-0 rotate-3">
               <UserPlus2 className="w-8 h-8" />
             </div>
             <div className="flex-1 min-w-0 pt-1 text-center sm:text-right">
@@ -290,7 +290,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
             form="add-employee-form"
             type="submit"
             disabled={loading}
-            className="w-full sm:flex-1 h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl shadow-2xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-30 text-base gap-3 order-1 sm:order-2"
+            className="w-full sm:flex-1 h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl   transition-all active:scale-[0.98] disabled:opacity-30 text-base gap-3 order-1 sm:order-2"
           >
             {loading ? (
               <Loader2 className="w-6 h-6 animate-spin" />

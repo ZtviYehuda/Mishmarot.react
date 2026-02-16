@@ -62,7 +62,7 @@ export default function ChangePasswordPage() {
     >
       {/* Official Top Bar */}
       <div className="w-full bg-primary h-1.5" />
-      <header className="w-full bg-card border-b border-border py-2 px-6 md:px-12 flex items-center justify-between shadow-sm">
+      <header className="w-full bg-card border-b border-border py-2 px-6 md:px-12 flex items-center justify-between ">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center border border-border">
             <ShieldCheck className="w-5 h-5 text-primary" />
@@ -96,7 +96,7 @@ export default function ChangePasswordPage() {
           </div>
 
           {/* Change Password Card */}
-          <div className="bg-card rounded-xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+          <div className="bg-card rounded-xl border border-border  overflow-hidden">
             <div className="p-6">
               <div className="mb-6 text-center">
                 <h1 className="text-xl font-bold text-foreground mb-1">
@@ -189,7 +189,7 @@ export default function ChangePasswordPage() {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base rounded-md transition-all shadow-md active:transform active:scale-[0.98]"
+                    className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base rounded-md transition-all  active:transform active:scale-[0.98]"
                   >
                     {isLoading ? (
                       <span className="flex items-center gap-2">

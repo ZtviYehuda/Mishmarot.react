@@ -127,7 +127,8 @@ class EmployeeModel:
                        st.is_presence as status_is_presence,
                        al.end_datetime as status_end_datetime,
                        al.start_datetime as last_status_update,
-                       r.name as role_name,
+                       al.end_datetime as status_end_datetime,
+                       al.start_datetime as last_status_update,
                        d.id as assigned_department_id,
                        s.id as assigned_section_id,
                        e.team_id, e.section_id, e.department_id,
@@ -144,13 +145,17 @@ class EmployeeModel:
                 LEFT JOIN sections s_dir ON e.section_id = s_dir.id
                 LEFT JOIN departments d_s_dir ON s_dir.department_id = d_s_dir.id
                 LEFT JOIN departments d_dir ON e.department_id = d_dir.id
-                LEFT JOIN roles r ON e.role_id = r.id
                 LEFT JOIN service_types svt ON e.service_type_id = svt.id
                 -- Active Status
+                -- Active Status (Smart Continuity: Persistent stays, Daily resets)
                 LEFT JOIN LATERAL (
-                    SELECT status_type_id, start_datetime, end_datetime FROM attendance_logs 
-                    WHERE employee_id = e.id AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)
-                    ORDER BY start_datetime DESC, id DESC LIMIT 1
+                    SELECT al.status_type_id, al.start_datetime, al.end_datetime 
+                    FROM attendance_logs al
+                    JOIN status_types sti ON al.status_type_id = sti.id
+                    WHERE al.employee_id = e.id 
+                      AND (al.end_datetime IS NULL OR al.end_datetime > CURRENT_TIMESTAMP)
+                      AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = CURRENT_DATE)
+                    ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                 ) al ON true
                 LEFT JOIN status_types st ON al.status_type_id = st.id
                 WHERE e.id = %s
@@ -287,6 +292,7 @@ class EmployeeModel:
                        st.name as status_name,
                        st.color as status_color,
                        st.is_presence as status_is_presence,
+                       st.is_persistent as status_is_persistent,
                        last_log.end_datetime as status_end_datetime,
                        last_log.start_datetime as last_status_update,
                        e.service_type_id,
@@ -302,20 +308,21 @@ class EmployeeModel:
                 -- Service Type
                 LEFT JOIN service_types srv ON e.service_type_id = srv.id
                 -- Status Joins
+                -- Status Joins (Smart Continuity: Persistent stays, Daily resets)
                 LEFT JOIN LATERAL (
-                    SELECT status_type_id, start_datetime, end_datetime FROM attendance_logs 
-                    WHERE employee_id = e.id 
+                    SELECT al.status_type_id, al.start_datetime, al.end_datetime 
+                    FROM attendance_logs al
+                    JOIN status_types sti ON al.status_type_id = sti.id
+                    WHERE al.employee_id = e.id 
                     {status_condition}
-                    ORDER BY start_datetime DESC, id DESC LIMIT 1
+                    ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
                 WHERE e.personal_number != 'admin'
             """
 
             # Prepare status condition
-            status_sql = (
-                "AND (end_datetime IS NULL OR end_datetime > CURRENT_TIMESTAMP)"
-            )
+            status_sql = "AND (al.end_datetime IS NULL OR al.end_datetime > CURRENT_TIMESTAMP) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = CURRENT_DATE)"
             status_params = []
 
             if filters and (filters.get("date") or filters.get("end_date")):
@@ -329,16 +336,17 @@ class EmployeeModel:
                     today = date.today()
 
                     if check_date_obj > today:
-                        # Future: Ignore open-ended statuses. Only show if explicitly scheduled for that date range.
-                        status_sql = "AND DATE(start_datetime) <= %s AND end_datetime IS NOT NULL AND DATE(end_datetime) >= %s"
+                        # Future: Only show if explicitly scheduled
+                        status_sql = "AND DATE(al.start_datetime) <= %s AND al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s"
+                        status_params = [check_date_str, check_date_str]
                     else:
-                        # Today/Past: Open-ended is valid (it means "current status")
-                        status_sql = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
+                        # Today/Past: Smart Continuity logic
+                        status_sql = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
+                        status_params = [check_date_str, check_date_str, check_date_str]
                 except ValueError:
-                    # Fallback if date parse fails
-                    status_sql = "AND DATE(start_datetime) <= %s AND (end_datetime IS NULL OR DATE(end_datetime) >= %s)"
-
-                status_params = [check_date_str, check_date_str]
+                    # Fallback
+                    status_sql = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
+                    status_params = [check_date_str, check_date_str, check_date_str]
 
             # Initialize query parameters list if not already present
             params = []
@@ -408,16 +416,6 @@ class EmployeeModel:
                     else:
                         query += " AND st.id = %s"
                         params.append(filters["status_id"])
-
-                # New Advanced Filters
-                if filters.get("roles"):
-                    roles_list = (
-                        filters["roles"].split(",")
-                        if isinstance(filters["roles"], str)
-                        else filters["roles"]
-                    )
-                    query += " AND EXISTS (SELECT 1 FROM roles r WHERE e.role_id = r.id AND r.name = ANY(%s))"
-                    params.append(roles_list)
 
                 if filters.get("serviceTypes"):
                     srv_list = (
@@ -501,11 +499,11 @@ class EmployeeModel:
                 INSERT INTO employees (
                     first_name, last_name, personal_number, national_id, phone_number, email,
                     city, birth_date, enlistment_date, discharge_date, assignment_date,
-                    team_id, section_id, department_id, role_id, service_type_id, 
+                    team_id, section_id, department_id, service_type_id, 
                     is_commander, is_admin, 
                     password_hash, must_change_password, security_clearance, police_license, gender,
                     notif_sick_leave, notif_transfers, notif_morning_report
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """
 
@@ -537,7 +535,6 @@ class EmployeeModel:
                     data.get("team_id") or None,
                     data.get("section_id") or None,
                     data.get("department_id") or None,
-                    data.get("role_id") or None,
                     data.get("service_type_id") or None,
                     data.get("is_commander", False),
                     data.get("is_admin", False),
@@ -663,7 +660,7 @@ class EmployeeModel:
                 "team_id": "team_id",
                 "section_id": "section_id",
                 "department_id": "department_id",
-                "role_id": "role_id",
+                "department_id": "department_id",
                 "service_type_id": "service_type_id",
                 "security_clearance": "security_clearance",
                 "police_license": "police_license",

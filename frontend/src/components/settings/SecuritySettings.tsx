@@ -322,7 +322,7 @@ export function SecuritySettings({
                 <Button
                   onClick={handleChangePassword}
                   disabled={isChangingPassword}
-                  className="h-14 px-10 rounded-2xl font-black text-lg shadow-xl shadow-primary/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-14 px-10 rounded-2xl font-black text-lg   transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {isChangingPassword ? (
                     <Loader2 className="w-5 h-5 ml-3 animate-spin" />
@@ -548,7 +548,7 @@ function SectionCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border shadow-2xl shadow-primary/5 overflow-hidden",
+        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border   overflow-hidden",
         variant === "danger" ? "border-red-500/10" : "border-primary/10",
       )}
     >
@@ -609,8 +609,8 @@ function TabButton({ active, label, onClick, isSuspicious }: any) {
         "px-5 py-2 rounded-xl text-xs font-black transition-all duration-300",
         active
           ? isSuspicious
-            ? "bg-destructive text-white shadow-xl shadow-destructive/20"
-            : "bg-background text-primary shadow-xl shadow-black/5"
+            ? "bg-destructive text-white  "
+            : "bg-background text-primary  "
           : "text-muted-foreground hover:text-foreground",
       )}
     >
@@ -624,7 +624,7 @@ function SecurityGuideItem({ icon: Icon, title, desc, color }: any) {
     <div className="flex gap-4 group">
       <div
         className={cn(
-          "p-3 bg-background rounded-2xl border border-border shadow-sm group-hover:scale-110 transition-transform h-fit",
+          "p-3 bg-background rounded-2xl border border-border  group-hover:scale-110 transition-transform h-fit",
           color.replace("text", "border"),
         )}
       >

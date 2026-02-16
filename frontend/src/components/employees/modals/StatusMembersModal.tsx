@@ -50,13 +50,13 @@ export const StatusMembersModal: React.FC<StatusMembersModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col p-0 border-none bg-card shadow-2xl rounded-3xl"
+        className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col p-0 border-none bg-card  rounded-3xl"
         dir="rtl"
       >
         <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
           <div className="flex items-center gap-5">
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg rotate-3 shrink-0"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white  rotate-3 shrink-0"
               style={{
                 backgroundColor: statusColor,
                 boxShadow: `0 8px 16px -4px ${statusColor}40`,
@@ -104,7 +104,7 @@ export const StatusMembersModal: React.FC<StatusMembersModalProps> = ({
                     <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">
                       שיוך ארגוני
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none text-left">
+                    <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none text-right">
                       דרכי התקשרות
                     </th>
                   </tr>
@@ -117,7 +117,7 @@ export const StatusMembersModal: React.FC<StatusMembersModalProps> = ({
                     >
                       <td className="px-6 py-5 whitespace-nowrap">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/10 flex items-center justify-center text-primary font-black text-[10px] shadow-sm group-hover:scale-110 transition-transform">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/10 flex items-center justify-center text-primary font-black text-[10px]  group-hover:scale-110 transition-transform">
                             {emp.first_name[0]}
                             {emp.last_name[0]}
                           </div>
@@ -150,7 +150,7 @@ export const StatusMembersModal: React.FC<StatusMembersModalProps> = ({
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-5 whitespace-nowrap text-left">
+                      <td className="px-6 py-5 whitespace-nowrap text-right">
                         {emp.phone_number ? (
                           <Button
                             variant="ghost"

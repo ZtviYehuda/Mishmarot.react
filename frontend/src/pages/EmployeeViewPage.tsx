@@ -69,7 +69,7 @@ const PersonalTab = ({ employee }: { employee: Employee }) => {
               <User className="w-5 h-5" /> פרטים אישיים
             </span>
             {employee.is_commander && (
-              <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-none px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg shadow-amber-500/20 animate-in zoom-in duration-300">
+              <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-none px-3 py-1 rounded-full flex items-center gap-1.5  -500/20 animate-in zoom-in duration-300">
                 <BadgeCheck className="w-3.5 h-3.5" />
                 <span className="text-[10px] font-black uppercase tracking-wider">
                   מפקד
@@ -331,7 +331,7 @@ export default function EmployeeViewPage() {
       />
 
       {/* Header */}
-      <div className="bg-background/95 backdrop-blur-sm border-b border-border/60 py-8 shadow-sm sticky top-0 z-10">
+      <div className="bg-background/95 backdrop-blur-sm border-b border-border/60 py-8  sticky top-0 z-10">
         <div className="max-w-[1600px] mx-auto px-6">
           <PageHeader
             icon={User}
@@ -355,7 +355,7 @@ export default function EmployeeViewPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* RIGHT SIDEBAR (Sticky) */}
           <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-6 order-2">
-            <div className="bg-card rounded-3xl border border-primary/10 shadow-lg shadow-primary/5 overflow-hidden">
+            <div className="bg-card rounded-3xl border border-primary/10   overflow-hidden">
               <div className="h-24 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative">
                 <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
 
@@ -378,7 +378,7 @@ export default function EmployeeViewPage() {
                     >
                       <div className="relative">
                         {/* Badge Container */}
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border-2 border-amber-200 dark:border-amber-800/50 shadow-sm group-hover:shadow-md transition-all duration-300 group-hover:scale-105">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border-2 border-amber-200 dark:border-amber-800/50  group-hover: transition-all duration-300 group-hover:scale-105">
                           <Cake className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                           <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
                             יום הולדת
@@ -401,7 +401,7 @@ export default function EmployeeViewPage() {
               <div className="px-6 pb-8 text-center -mt-12 relative">
                 <div
                   className={cn(
-                    "w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-black mb-4 mx-auto shadow-md border-4 border-card transition-transform hover:scale-105 duration-300 cursor-default",
+                    "w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-black mb-4 mx-auto  border-4 border-card transition-transform hover:scale-105 duration-300 cursor-default",
                     employee.is_active
                       ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground"
                       : "bg-muted text-muted-foreground",
@@ -419,7 +419,7 @@ export default function EmployeeViewPage() {
                       <div className="mb-4">
                         <Badge
                           variant="outline"
-                          className="bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-1.5 font-black text-xs shadow-sm uppercase tracking-wider"
+                          className="bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-1.5 font-black text-xs  uppercase tracking-wider"
                         >
                           רמ"ח - {cleanUnitName(employee.department_name)}
                         </Badge>
@@ -430,7 +430,7 @@ export default function EmployeeViewPage() {
                       <div className="mb-4">
                         <Badge
                           variant="outline"
-                          className="bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-1.5 font-black text-xs shadow-sm uppercase tracking-wider"
+                          className="bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-1.5 font-black text-xs  uppercase tracking-wider"
                         >
                           רמ"ד - {cleanUnitName(employee.section_name)}
                         </Badge>
@@ -441,7 +441,7 @@ export default function EmployeeViewPage() {
                       <div className="mb-4">
                         <Badge
                           variant="outline"
-                          className="bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-1.5 font-black text-xs shadow-sm uppercase tracking-wider"
+                          className="bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-1.5 font-black text-xs  uppercase tracking-wider"
                         >
                           מ"ח - {cleanUnitName(employee.team_name)}
                         </Badge>
@@ -501,7 +501,7 @@ export default function EmployeeViewPage() {
               <div className="space-y-3">
                 <Button
                   onClick={() => navigate(`/employees/edit/${employee.id}`)}
-                  className="w-full h-12 rounded-xl font-bold shadow-sm text-base"
+                  className="w-full h-12 rounded-xl font-bold  text-base"
                 >
                   <Edit className="w-4 h-4 ml-2" /> עריכת כרטיס
                 </Button>

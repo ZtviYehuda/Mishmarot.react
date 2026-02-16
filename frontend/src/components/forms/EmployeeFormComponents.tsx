@@ -186,7 +186,7 @@ export function TabNavigation({
             {tab.label}
           </div>
           {activeTab === tab.value && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary shadow-[0_-1px_6px_rgba(var(--primary),0.4)]" />
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary " />
           )}
         </button>
       ))}
@@ -203,7 +203,7 @@ export function FormContainer({ children, className }: FormContainerProps) {
   return (
     <Card
       className={cn(
-        "border-border/60 shadow-sm p-4 sm:p-5 transition-all hover:shadow-md h-full",
+        "border-border/60  p-4 sm:p-5 transition-all hover: h-full",
         className,
       )}
     >
@@ -235,7 +235,7 @@ export function CompactCard({
     <Card
       id={id}
       className={cn(
-        "border-border/60 shadow-sm hover:shadow-md transition-all h-full flex flex-col overflow-hidden bg-card/50",
+        "border-border/60  hover: transition-all h-full flex flex-col overflow-hidden bg-card/50",
         className,
       )}
     >

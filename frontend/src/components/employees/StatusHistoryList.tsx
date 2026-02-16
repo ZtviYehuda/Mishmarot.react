@@ -102,7 +102,7 @@ export default function StatusHistoryList({
           <CalendarDayButton {...(props as any)} />
           {dayLog && (
             <div
-              className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full z-20 shadow-sm"
+              className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full z-20 "
               style={{ backgroundColor: dayLog.status_color }}
             />
           )}
@@ -151,7 +151,7 @@ export default function StatusHistoryList({
               className={cn(
                 "p-1.5 rounded-md transition-all",
                 viewMode === "list"
-                  ? "bg-background shadow-sm text-primary"
+                  ? "bg-background  text-primary"
                   : "text-muted-foreground hover:text-foreground",
               )}
               title="רשימה"
@@ -163,7 +163,7 @@ export default function StatusHistoryList({
               className={cn(
                 "p-1.5 rounded-md transition-all",
                 viewMode === "calendar"
-                  ? "bg-background shadow-sm text-primary"
+                  ? "bg-background  text-primary"
                   : "text-muted-foreground hover:text-foreground",
               )}
               title="לוח שנה"
@@ -186,13 +186,13 @@ export default function StatusHistoryList({
                 className={cn(
                   "absolute right-4 top-4 w-3 h-3 rounded-full border-2 border-card z-10 transition-transform group-hover:scale-125",
                   idx === 0
-                    ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]"
+                    ? "bg-primary "
                     : "bg-muted-foreground/30",
                 )}
                 style={idx === 0 ? {} : { backgroundColor: log.status_color }}
               />
 
-              <div className="bg-card border border-border rounded-xl p-4 shadow-sm group-hover:shadow-md transition-all group-hover:border-primary/20">
+              <div className="bg-card border border-border rounded-xl p-4  group-hover: transition-all group-hover:border-primary/20">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                   <div className="flex items-center gap-2">
                     <div
@@ -236,7 +236,7 @@ export default function StatusHistoryList({
         </div>
       ) : (
         <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-          <div className="flex justify-center bg-card rounded-2xl border border-border/50 p-4 shadow-sm">
+          <div className="flex justify-center bg-card rounded-2xl border border-border/50 p-4 ">
             <Calendar
               mode="single"
               selected={selectedDate}

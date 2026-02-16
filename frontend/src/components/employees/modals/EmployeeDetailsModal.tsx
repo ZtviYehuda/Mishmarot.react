@@ -12,7 +12,6 @@ import {
   Phone,
   MapPin,
   Building2,
-  Contact,
   Cake,
   User,
   Mail,
@@ -42,24 +41,27 @@ const InfoItem = ({
   value: React.ReactNode;
   className?: string;
   noTruncate?: boolean;
-}) => (
-  <div className={cn("flex flex-col gap-2 group/info", className)}>
-    <span className="text-[10px] font-black text-muted-foreground dark:text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2 group-hover/info:text-primary transition-colors">
-      <Icon className="w-3.5 h-3.5" />
-      {label}
-    </span>
-    <span
-      className={cn(
-        "text-base font-black text-foreground tracking-tight leading-tight",
-        !noTruncate && "truncate",
-        noTruncate && "break-all",
-      )}
-      title={typeof value === "string" ? value : undefined}
-    >
-      {value || "---"}
-    </span>
-  </div>
-);
+}) => {
+  if (!value || value === "---") return null;
+  return (
+    <div className={cn("flex flex-col gap-2 group/info", className)}>
+      <span className="text-[10px] font-black text-muted-foreground dark:text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2 group-hover/info:text-primary transition-colors">
+        <Icon className="w-3.5 h-3.5" />
+        {label}
+      </span>
+      <span
+        className={cn(
+          "text-base font-black text-foreground tracking-tight leading-tight",
+          !noTruncate && "truncate",
+          noTruncate && "break-all",
+        )}
+        title={typeof value === "string" ? value : undefined}
+      >
+        {value}
+      </span>
+    </div>
+  );
+};
 
 export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   open,
@@ -125,57 +127,74 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 overflow-hidden border border-border bg-card shadow-2xl rounded-3xl"
+        className="max-w-xl p-0 overflow-hidden border border-border bg-card  rounded-[2.5rem]"
         dir="rtl"
       >
-        <DialogHeader className="p-5 border-b border-border/40 bg-background/50 text-right relative overflow-hidden">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 text-center sm:text-right relative z-10">
-            {/* Avatar */}
-            <div className="relative group">
-              <div className="relative w-20 h-20 rounded-[20px] bg-muted text-muted-foreground flex items-center justify-center text-3xl font-black shrink-0 shadow-sm border border-border">
+        <DialogHeader className="p-8 pb-6 border-b border-border/40 bg-gradient-to-br from-background via-background to-primary/5 text-right relative overflow-hidden">
+          {/* Decorative Background Elements */}
+          <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -ml-16 -mt-16" />
+          <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -mr-12 -mb-12" />
+
+          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-right relative z-10">
+            {/* Avatar with Integrated Status */}
+            <div className="relative shrink-0">
+              <div
+                className="relative w-24 h-24 rounded-[2rem] bg-muted flex items-center justify-center text-4xl font-black  border-2 border-background ring-1 ring-border"
+                style={{ color: employee.status_color || "inherit" }}
+              >
                 {employee.first_name[0]}
                 {employee.last_name[0]}
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full border-2 border-background bg-emerald-500 shadow-sm flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-white/90" />
+
+                {/* Status Dot */}
+                <div
+                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-4 border-background  flex items-center justify-center ring-1 ring-border"
+                  style={{
+                    backgroundColor: employee.status_color || "var(--primary)",
+                  }}
+                  title={employee.status_name || "סטטוס שוטר"}
+                />
               </div>
             </div>
 
-            {/* Title & Key Stats */}
-            <div className="flex-1 min-w-0 pt-2">
-              <div className="flex flex-col sm:flex-row items-center gap-3 mb-3">
-                <DialogTitle className="text-2xl sm:text-3xl font-black text-foreground tracking-tighter truncate leading-none flex items-center gap-2">
+            {/* Name & Quick Info */}
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 justify-center sm:justify-start">
+                <DialogTitle className="text-3xl sm:text-4xl font-black text-foreground tracking-tight flex items-center gap-2">
                   {employee.first_name} {employee.last_name}
-                  {employee.is_commander && (
-                    <ShieldCheck className="w-6 h-6 text-blue-500 dark:text-blue-400 drop-shadow-md" />
-                  )}
                   {isBirthday && (
-                    <Gift className="w-6 h-6 text-pink-500 dark:text-pink-400 drop-shadow-md animate-bounce" />
+                    <Gift className="w-6 h-6 text-pink-500 drop- animate-bounce" />
                   )}
                 </DialogTitle>
-                <Badge
-                  variant="secondary"
-                  className="bg-primary text-primary-foreground border-none font-black text-[10px] h-6 rounded-lg px-3 uppercase tracking-wider shadow-sm"
-                >
-                  {getProfessionalTitle(employee)}
-                </Badge>
+
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary border-primary/20 font-black text-[10px] h-6 rounded-full px-3 uppercase tracking-wider"
+                  >
+                    {getProfessionalTitle(employee)}
+                  </Badge>
+                  {employee.is_commander && (
+                    <div className="p-1 px-2 bg-blue-500/10 text-blue-600 rounded-full border border-blue-500/20">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-5 text-muted-foreground">
-                <div className="flex items-center gap-2 text-sm font-bold bg-muted/50 px-3 py-1.5 rounded-xl border border-border/50">
-                  <Contact className="w-4 h-4 text-primary" />
-                  <span className="tracking-widest">
-                    מ"א {employee.personal_number}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-muted-foreground/80">
+                <div className="flex items-center gap-2 text-sm font-black bg-muted/40 px-3 py-1 rounded-lg border border-border/30">
+                  <span className="text-[10px] opacity-50 font-bold uppercase tracking-widest pl-1 border-l border-border/50 ml-1">
+                    מ"א
+                  </span>
+                  <span className="tracking-widest font-mono">
+                    {employee.personal_number}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-sm font-bold bg-muted/50 px-3 py-1.5 rounded-xl border border-border/50">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]"
-                    style={{
-                      backgroundColor:
-                        employee.status_color || "var(--primary)",
-                    }}
-                  />
+
+                <div className="flex items-center gap-2 text-sm font-black bg-muted/40 px-3 py-1 rounded-lg border border-border/30">
+                  <span className="text-[10px] opacity-50 font-bold uppercase tracking-widest pl-1 border-l border-border/50 ml-1">
+                    סטטוס
+                  </span>
                   <span>{employee.status_name}</span>
                 </div>
               </div>
@@ -183,9 +202,9 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
           </div>
         </DialogHeader>
 
-        <div className="p-5 pt-4 space-y-6 flex-1 overflow-hidden">
+        <div className="p-8 pt-6 space-y-8 flex-1 overflow-hidden">
           {/* Main Info Columns */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-12">
             <InfoItem
               icon={Phone}
               label="טלפון"
@@ -195,16 +214,12 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             <InfoItem
               icon={Mail}
               label="אימייל"
-              value={employee.email || "---"}
+              value={employee.email}
               className="sm:col-span-1"
               noTruncate
             />
             <div className="grid grid-cols-3 col-span-1 sm:col-span-2 gap-8">
-              <InfoItem
-                icon={MapPin}
-                label="עיר מגורים"
-                value={employee.city}
-              />
+              <InfoItem icon={MapPin} label="עיר" value={employee.city} />
               <InfoItem
                 icon={User}
                 label="גיל"
@@ -225,82 +240,88 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               />
             </div>
             {/* Emergency Contact */}
-            <div className="col-span-1 sm:col-span-2">
-              <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center overflow-hidden relative">
-                <div className="bg-muted text-muted-foreground p-2.5 rounded-xl shrink-0 mx-auto sm:mx-0">
-                  <Phone className="w-4 h-4" />
-                </div>
-                <div className="relative flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-4 w-full text-center sm:text-right">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest block">
-                      איש קשר לחירום
-                    </span>
-                    <span className="text-sm font-bold text-foreground truncate">
-                      {ecName || "---"}
-                    </span>
+            {employee.emergency_contact && (
+              <div className="col-span-1 sm:col-span-2">
+                <div className="bg-muted/30 p-5 rounded-3xl border border-border/50 flex flex-col sm:flex-row gap-5 items-start sm:items-center overflow-hidden relative group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-12 -mt-12 transition-all group-hover:bg-primary/10" />
+
+                  <div className="bg-muted text-muted-foreground p-3 rounded-2xl shrink-0 mx-auto sm:mx-0 relative z-10 ">
+                    <Phone className="w-5 h-5" />
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest block">
-                      קרבה
-                    </span>
-                    <span className="text-sm font-bold text-foreground truncate">
-                      {ecRelation || "---"}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest block">
-                      טלפון
-                    </span>
-                    <span
-                      className="text-sm font-bold text-foreground truncate"
-                      dir="ltr"
-                    >
-                      {ecPhone || "---"}
-                    </span>
+                  <div className="relative flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 w-full text-center sm:text-right z-10">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block">
+                        איש קשר לחירום
+                      </span>
+                      <span className="text-sm font-black text-foreground truncate">
+                        {ecName}
+                      </span>
+                    </div>
+                    {ecRelation && (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block">
+                          קרבה
+                        </span>
+                        <span className="text-sm font-black text-foreground truncate">
+                          {ecRelation}
+                        </span>
+                      </div>
+                    )}
+                    {ecPhone && (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block">
+                          טלפון
+                        </span>
+                        <span
+                          className="text-base font-black text-primary truncate"
+                          dir="ltr"
+                        >
+                          {ecPhone}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
-
-          <div className="h-px bg-border/40 w-full my-2" />
 
           {/* Organizational Block */}
           {(employee.department_name ||
             employee.section_name ||
             employee.team_name) && (
-            <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2 opacity-70">
-                <Building2 className="w-4 h-4" />
+            <div className="space-y-5">
+              <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center justify-center sm:justify-start gap-2 opacity-70">
+                <Building2 className="w-4 h-4 text-primary" />
                 ניהול ומבנה ארגוני
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {employee.department_name && (
-                  <div className="bg-muted/30 p-3 rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 shadow-sm">
-                    <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest">
+                  <div className="bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5  hover:border-primary/20 transition-colors group">
+                    <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">
                       מחלקה
                     </p>
-                    <p className="text-xs font-bold text-center text-foreground text-wrap break-words leading-tight">
+                    <p className="text-sm font-black text-center text-foreground leading-tight group-hover:text-primary transition-colors">
                       {cleanUnitName(employee.department_name)}
                     </p>
                   </div>
                 )}
                 {employee.section_name && (
-                  <div className="bg-muted/30 p-3 rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 shadow-sm">
-                    <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest">
+                  <div className="bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5  hover:border-primary/20 transition-colors group">
+                    <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">
                       מדור
                     </p>
-                    <p className="text-xs font-bold text-center text-foreground text-wrap break-words leading-tight">
+                    <p className="text-sm font-black text-center text-foreground leading-tight group-hover:text-primary transition-colors">
                       {cleanUnitName(employee.section_name)}
                     </p>
                   </div>
                 )}
                 {employee.team_name && (
-                  <div className="bg-muted/30 p-3 rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 shadow-sm">
-                    <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest">
+                  <div className="bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5  hover:border-primary/20 transition-colors group">
+                    <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">
                       צוות / חוליה
                     </p>
-                    <p className="text-xs font-bold text-center text-foreground text-wrap break-words leading-tight">
+                    <p className="text-sm font-black text-center text-foreground leading-tight group-hover:text-primary transition-colors">
                       {cleanUnitName(employee.team_name)}
                     </p>
                   </div>
@@ -314,7 +335,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         <div className="p-5 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row gap-3">
           <Button
             variant="default"
-            className="flex-1 gap-2 font-black shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground h-11 rounded-xl transition-transform active:scale-95 text-sm order-2 sm:order-1"
+            className="flex-1 gap-2 font-black   bg-primary hover:bg-primary/90 text-primary-foreground h-11 rounded-xl transition-transform active:scale-95 text-sm order-2 sm:order-1"
             onClick={() => {
               navigate(`/employees/${employee.id}`);
               onOpenChange(false);
@@ -337,8 +358,8 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                 message={whatsappMessage}
                 title={isBirthday ? "שלח ברכת מזל טוב" : "וואטסאפ"}
                 className={cn(
-                  "w-full h-11 rounded-xl shadow-lg transition-all font-black text-sm gap-2 active:scale-95",
-                  "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20",
+                  "w-full h-11 rounded-xl  transition-all font-black text-sm gap-2 active:scale-95",
+                  "bg-emerald-600 hover:bg-emerald-700 text-white -500/20",
                 )}
               />
             )}

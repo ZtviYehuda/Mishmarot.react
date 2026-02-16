@@ -73,7 +73,7 @@ export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
 
     const isCustomVariant = variant && variant !== "default";
     const defaultClasses = cn(
-        "bg-[#25D366] hover:bg-[#128C7E] text-white font-bold transition-all active:scale-95 shadow-sm",
+        "bg-[#25D366] hover:bg-[#128C7E] text-white font-bold transition-all active:scale-95 ",
         label ? "rounded-xl gap-2 px-4 h-10" : "rounded-full w-9 h-9 flex items-center justify-center p-0"
     );
 

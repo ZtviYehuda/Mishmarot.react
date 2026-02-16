@@ -46,7 +46,7 @@ export const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
           <div
             key={alert.id}
             className={cn(
-              "relative overflow-hidden group rounded-[1.5rem] border backdrop-blur-md p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 transition-all duration-500 shadow-xl shadow-black/5",
+              "relative overflow-hidden group rounded-[1.5rem] border backdrop-blur-md p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 transition-all duration-500  ",
               alert.type === "danger"
                 ? "border-red-500/20 bg-red-500/5 hover:bg-red-500/10"
                 : alert.type === "warning" || alert.id === "command-delegated"
@@ -69,7 +69,7 @@ export const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
 
             <div
               className={cn(
-                "w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 shadow-inner",
+                "w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ",
                 alert.type === "danger"
                   ? "bg-red-500/10 border-red-500/20 text-red-600"
                   : alert.type === "warning" || alert.id === "command-delegated"
@@ -130,7 +130,7 @@ export const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
             {alert.data?.is_delegation ? (
               <button
                 onClick={handleCancelDelegation}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-amber-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20 flex items-center justify-center gap-2 group/btn active:scale-95"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-amber-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all  -600/20 flex items-center justify-center gap-2 group/btn active:scale-95"
               >
                 ביטול האצלה
                 <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-[-4px] transition-transform" />
@@ -147,7 +147,7 @@ export const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
                   setSickEmployees(alert.data.sick_employees);
                   setShowSickModal(true);
                 }}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-red-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2 group/btn active:scale-95"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-red-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-red-700 transition-all  -600/20 flex items-center justify-center gap-2 group/btn active:scale-95"
               >
                 פרטים נוספים
                 <Info className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" />
@@ -155,7 +155,7 @@ export const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
             ) : alert.data?.missing_ids && onOpenBulkUpdate ? (
               <button
                 onClick={() => onOpenBulkUpdate(alert.data.missing_ids)}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-red-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2 group/btn active:scale-95"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-red-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-red-700 transition-all  -600/20 flex items-center justify-center gap-2 group/btn active:scale-95"
               >
                 עדכון עכשיו
                 <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-[-4px] transition-transform" />
@@ -163,7 +163,7 @@ export const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
             ) : (
               <Link
                 to={alert.link}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-red-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2 group/btn active:scale-95"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-red-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-red-700 transition-all  -600/20 flex items-center justify-center gap-2 group/btn active:scale-95"
               >
                 עדכון עכשיו
                 <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-[-4px] transition-transform" />

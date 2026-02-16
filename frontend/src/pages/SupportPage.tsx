@@ -121,8 +121,8 @@ export default function SupportPage() {
           className={cn(
             "p-8 rounded-[2.5rem] border backdrop-blur-md",
             isDark
-              ? "bg-slate-900/60 border-white/10 shadow-2xl"
-              : "bg-white border-slate-200 shadow-xl",
+              ? "bg-slate-900/60 border-white/10 "
+              : "bg-white border-slate-200 ",
           )}
         >
           {isSuccess ? (

@@ -27,7 +27,7 @@ export function ThemeToggle({
       <button
         onClick={() => setTheme(theme === "light" ? "dark" : "light")}
         className={cn(
-          "w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm border border-transparent",
+          "w-9 h-9 rounded-full flex items-center justify-center transition-all  border border-transparent",
           theme === "dark"
             ? "bg-slate-800 text-blue-400 hover:bg-slate-700 border-slate-700"
             : "bg-amber-50 text-amber-600 hover:bg-amber-100 border-amber-200",
@@ -60,7 +60,7 @@ export function ThemeToggle({
       {/* Sliding Background Indicator */}
       <div
         className={cn(
-          "absolute inset-y-1 w-[calc(50%-4px)] rounded-full shadow-md transition-all duration-300 ease-spring",
+          "absolute inset-y-1 w-[calc(50%-4px)] rounded-full  transition-all duration-300 ease-spring",
           theme === "dark"
             ? "translate-x-[calc(100%+4px)] bg-slate-800"
             : "translate-x-0 ml-1 bg-white",

@@ -22,6 +22,8 @@ export interface TransferRequest {
   rejection_reason?: string;
   resolver_name?: string;
   resolver_unit?: string;
+  can_approve?: boolean;
+  can_cancel?: boolean;
 }
 
 export const useTransfers = () => {

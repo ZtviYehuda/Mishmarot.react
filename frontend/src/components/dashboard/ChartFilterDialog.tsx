@@ -43,7 +43,7 @@ export const ChartFilterDialog = ({
       className={cn(
         "relative flex items-center justify-between p-5 rounded-[28px] border-2 transition-all cursor-pointer group",
         filterType === value
-          ? cn("border-primary bg-primary/5 shadow-xl shadow-primary/5", colorClass)
+          ? cn("border-primary bg-primary/5  ", colorClass)
           : "border-transparent bg-muted/30 hover:bg-muted/50 hover:border-border/50 text-muted-foreground"
       )}
       onClick={() => setFilterType(value)}
@@ -51,7 +51,7 @@ export const ChartFilterDialog = ({
       <div className="flex items-center gap-5">
         <div className={cn(
           "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
-          filterType === value ? "bg-primary text-primary-foreground shadow-lg" : "bg-background text-muted-foreground shadow-sm"
+          filterType === value ? "bg-primary text-primary-foreground " : "bg-background text-muted-foreground "
         )}>
           <Icon className="w-6 h-6" />
         </div>
@@ -77,12 +77,12 @@ export const ChartFilterDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 border-none bg-card shadow-2xl flex flex-col rounded-3xl overflow-hidden"
+        className="max-w-xl p-0 border-none bg-card  flex flex-col rounded-3xl overflow-hidden"
         dir="rtl"
       >
         <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="w-16 h-16 rounded-[24px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner shrink-0 rotate-3">
+            <div className="w-16 h-16 rounded-[24px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary  shrink-0 rotate-3">
               <BarChart3 className="w-8 h-8" />
             </div>
             <div className="flex-1 min-w-0 pt-1 text-center sm:text-right">
@@ -144,7 +144,7 @@ export const ChartFilterDialog = ({
 
           <Button
             onClick={handleApply}
-            className="w-full sm:flex-1 h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl shadow-2xl shadow-primary/20 transition-all active:scale-[0.98] text-base gap-3 order-1 sm:order-2"
+            className="w-full sm:flex-1 h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl   transition-all active:scale-[0.98] text-base gap-3 order-1 sm:order-2"
           >
             <Check className="w-5 h-5" />
             עדכן תצוגת גרף

@@ -26,7 +26,7 @@ export const LoadingScreen = () => {
 
         {/* Central Logo Container */}
         <motion.div
-          className="relative z-10 w-24 h-24 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl flex items-center justify-center border border-slate-200 dark:border-slate-800"
+          className="relative z-10 w-24 h-24 bg-white dark:bg-slate-900 rounded-3xl  flex items-center justify-center border border-slate-200 dark:border-slate-800"
           initial={{ scale: 0.8, opacity: 0, rotate: -10 }}
           animate={{ scale: 1, opacity: 1, rotate: 0 }}
           transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
