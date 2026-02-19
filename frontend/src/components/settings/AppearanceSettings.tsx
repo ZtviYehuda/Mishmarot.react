@@ -1,5 +1,4 @@
-import { Palette, Check, Moon, Sun, Monitor, Type } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Palette, Moon, Sun, Monitor, Type, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -20,202 +19,156 @@ export function AppearanceSettings({
   fontSize,
   setFontSize,
 }: AppearanceSettingsProps) {
+  const accentColors = [
+    { id: "blue", label: "כחול", class: "bg-blue-600" },
+    { id: "zinc", label: "אפור", class: "bg-zinc-600" },
+    { id: "emerald", label: "ירוק", class: "bg-emerald-600" },
+    { id: "violet", label: "סגול", class: "bg-violet-600" },
+    { id: "amber", label: "כתום", class: "bg-amber-600" },
+    { id: "rose", label: "אדום", class: "bg-rose-600" },
+    { id: "indigo", label: "אינדיגו", class: "bg-indigo-600" },
+  ];
+
+  const fontSizes = [
+    { id: "small", label: "קטן" },
+    { id: "normal", label: "רגיל" },
+    { id: "large", label: "גדול" },
+  ];
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1600px] mx-auto pb-24 lg:pb-0">
-      <div className="grid grid-cols-12 gap-8">
+      <div className="grid grid-cols-12 gap-4 sm:gap-8">
         {/* Main Settings Area */}
-        <div className="col-span-12 lg:col-span-8 space-y-8">
-          <SectionCard icon={Monitor} title="מצב תצוגה">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              {[
-                {
-                  id: "light",
-                  label: "מצב בהיר",
-                  icon: Sun,
-                  color: "text-amber-500",
-                  bg: "bg-[#f8fafc]",
-                  border: "border-slate-200",
-                },
-                {
-                  id: "dark",
-                  label: "מצב כהה",
-                  icon: Moon,
-                  color: "text-indigo-400",
-                  bg: "bg-[#020617]",
-                  border: "border-slate-800",
-                },
-              ].map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => setTheme(item.id)}
+        <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-8">
+          <SectionCard icon={Palette} title="ערכת נושא">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
+              {["light", "dark"].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTheme(t as any)}
                   className={cn(
-                    "cursor-pointer group relative overflow-hidden rounded-[2.5rem] border-2 transition-all duration-500 hover:scale-[1.02] hover: hover:",
-                    theme === item.id
-                      ? "border-primary bg-primary/5   ring-4 ring-primary/5"
-                      : "border-border/50 bg-background/50 hover:border-primary/30",
+                    "group relative h-32 sm:h-48 rounded-[1.5rem] sm:rounded-[2rem] border-2 transition-all duration-500 overflow-hidden",
+                    theme === t
+                      ? "border-primary bg-primary/5 ring-4 ring-primary/5"
+                      : "border-border/50 bg-background/50 hover:border-primary/20",
+                  )}
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8">
+                    <div
+                      className={cn(
+                        "p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-500",
+                        theme === t
+                          ? "bg-primary text-white scale-110"
+                          : "bg-muted text-muted-foreground group-hover:bg-muted/80",
+                      )}
+                    >
+                      {t === "light" ? (
+                        <Sun className="w-5 h-5 sm:w-8 sm:h-8" />
+                      ) : (
+                        <Moon className="w-5 h-5 sm:w-8 sm:h-8" />
+                      )}
+                    </div>
+                    <span className="font-black text-sm sm:text-lg uppercase tracking-wider">
+                      {t === "light" ? "מראה יום" : "מראה לילה"}
+                    </span>
+                  </div>
+
+                  {theme === t && (
+                    <motion.div
+                      layoutId="active-theme"
+                      className="absolute top-3 right-3 sm:top-5 sm:right-5"
+                    >
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-primary" />
+                    </motion.div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard icon={Sparkles} title="צבע דגש">
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 sm:gap-4">
+              {accentColors.map((color) => (
+                <button
+                  key={color.id}
+                  onClick={() => setAccentColor(color.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all",
+                    accentColor === color.id
+                      ? "bg-primary/10 border border-primary/20"
+                      : "hover:bg-muted/50 border border-transparent",
                   )}
                 >
                   <div
                     className={cn(
-                      "w-full h-48 flex items-center justify-center p-8",
-                      item.bg,
+                      "w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-transform",
+                      color.class,
+                      accentColor === color.id
+                        ? "scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background"
+                        : "hover:scale-105",
                     )}
-                  >
-                    <div
-                      className={cn(
-                        "p-6 rounded-3xl bg-background/10 backdrop-blur-md border  transition-all duration-500 group-hover:scale-110",
-                        item.border,
-                      )}
-                    >
-                      <item.icon className={cn("w-12 h-12", item.color)} />
-                    </div>
-                  </div>
-
-                  <div className="p-6 text-center space-y-1">
-                    <span className="font-black text-xl tracking-tight block">
-                      {item.label}
-                    </span>
-                    <span className="text-sm text-muted-foreground font-medium">
-                      {item.id === "light"
-                        ? "צפייה אופטימלית ביום"
-                        : "צפייה נעימה בלילה"}
-                    </span>
-                  </div>
-
-                  {theme === item.id && (
-                    <motion.div
-                      layoutId="theme-check"
-                      className="absolute top-4 right-4 bg-primary text-white rounded-full p-2 "
-                    >
-                      <Check className="w-4 h-4 stroke-[3px]" />
-                    </motion.div>
-                  )}
-                </div>
+                  />
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase text-muted-foreground truncate w-full text-center">
+                    {color.label}
+                  </span>
+                </button>
               ))}
             </div>
           </SectionCard>
 
           <SectionCard icon={Type} title="גודל גופן">
-            <RadioGroup
-              value={fontSize}
-              onValueChange={(val) => setFontSize(val as any)}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-6"
-            >
-              {[
-                {
-                  value: "small",
-                  label: "קטן",
-                  size: "Aa",
-                  cls: "text-xl",
-                  desc: "לתצוגה צפופה",
-                },
-                {
-                  value: "normal",
-                  label: "רגיל",
-                  size: "Aa",
-                  cls: "text-2xl",
-                  desc: "ברירת מחדל",
-                },
-                {
-                  value: "large",
-                  label: "גדול",
-                  size: "Aa",
-                  cls: "text-4xl",
-                  desc: "לקריאה נוחה",
-                },
-              ].map((item) => (
-                <label
-                  key={item.value}
-                  className={cn(
-                    "relative flex flex-col items-center gap-6 p-8 rounded-[2rem] border-2 cursor-pointer transition-all duration-300 hover: group",
-                    fontSize === item.value
-                      ? "border-primary bg-primary/5 "
-                      : "border-border/50 hover:border-primary/20 bg-background/50",
-                  )}
-                >
-                  <RadioGroupItem value={item.value} className="sr-only" />
-                  <div
-                    className={cn(
-                      "w-16 h-16 rounded-2xl bg-background flex items-center justify-center border  transition-all duration-500 group-hover:scale-110",
-                      fontSize === item.value
-                        ? "border-primary/30 text-primary"
-                        : "border-border/50 text-muted-foreground",
-                    )}
-                  >
-                    <span className={cn("font-black font-sans", item.cls)}>
-                      {item.size}
-                    </span>
-                  </div>
-
-                  <div className="text-center space-y-1">
-                    <span className="text-lg font-black block tracking-tight">
-                      {item.label}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground font-medium block">
-                      {item.desc}
-                    </span>
-                  </div>
-
-                  {fontSize === item.value && (
-                    <motion.div
-                      layoutId="size-dot"
-                      className="absolute top-4 right-4 w-3.5 h-3.5 rounded-full bg-primary  "
-                    />
-                  )}
-                </label>
-              ))}
-            </RadioGroup>
-          </SectionCard>
-        </div>
-
-        {/* Sidebar Colors */}
-        <div className="col-span-12 lg:col-span-4 space-y-8">
-          <SectionCard icon={Palette} title="צבע דגש">
-            <div className="grid grid-cols-1 gap-4 py-2">
-              {[
-                { name: "blue", label: "כחול (ברירת מחדל)", color: "bg-blue-600" },
-                { name: "zinc", label: "אפור", color: "bg-slate-600" },
-                {
-                  name: "emerald",
-                  label: "ירוק",
-                  color: "bg-emerald-600",
-                },
-                {
-                  name: "violet",
-                  label: "סגול",
-                  color: "bg-violet-600",
-                },
-                { name: "amber", label: "כתום", color: "bg-amber-600" },
-                { name: "rose", label: "אדום", color: "bg-rose-600" },
-              ].map((color) => (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+              {fontSizes.map((size) => (
                 <button
-                  key={color.name}
-                  onClick={() => setAccentColor(color.name)}
+                  key={size.id}
+                  onClick={() => setFontSize(size.id as any)}
                   className={cn(
-                    "flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 group",
-                    accentColor === color.name
-                      ? "border-primary bg-primary/5   ring-4 ring-primary/5"
+                    "group relative p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] border-2 flex flex-col items-center gap-2 sm:gap-3 transition-all duration-500",
+                    fontSize === size.id
+                      ? "border-primary bg-primary/5 ring-4 ring-primary/5"
                       : "border-border/50 bg-background/50 hover:border-primary/20",
                   )}
                 >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={cn(
-                        "w-10 h-10 rounded-xl  transition-transform duration-500 group-hover:scale-110",
-                        color.color,
-                      )}
-                    />
-                    <span className="font-black text-sm tracking-tight">
-                      {color.label}
-                    </span>
-                  </div>
-                  {accentColor === color.name && (
-                    <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center ">
-                      <Check className="w-3 h-3 stroke-[3px]" />
-                    </div>
+                  <span
+                    className={cn(
+                      "font-black transition-all duration-500",
+                      size.id === "small" && "text-sm",
+                      size.id === "normal" && "text-base",
+                      size.id === "large" && "text-lg",
+                      fontSize === size.id
+                        ? "text-primary scale-110"
+                        : "text-muted-foreground/60 group-hover:text-muted-foreground",
+                    )}
+                  >
+                    אבג
+                  </span>
+                  <span className="font-black text-[9px] sm:text-[10px] uppercase text-muted-foreground">
+                    {size.label}
+                  </span>
+
+                  {fontSize === size.id && (
+                    <motion.div
+                      layoutId="active-font"
+                      className="absolute top-3 right-3 sm:top-4 sm:right-4"
+                    >
+                      <div className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-primary" />
+                    </motion.div>
                   )}
                 </button>
               ))}
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* Info Area */}
+        <div className="col-span-12 lg:col-span-4 space-y-4 sm:space-y-8">
+          <SectionCard icon={Monitor} title="תצוגה מקדימה">
+            <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-primary/20" />
+              <p className="text-sm font-black text-primary leading-relaxed relative z-10 transition-colors group-hover:text-primary/100">
+                שינויי העיצוב משפיעים על כל דפי המערכת באופן מיידי ומסונכרנים עם
+                חשבונך בכל המכשירים.
+              </p>
             </div>
           </SectionCard>
         </div>
@@ -226,25 +179,22 @@ export function AppearanceSettings({
 
 // --- Reusable Internal UI Components ---
 
-function SectionCard({ icon: Icon, title, children, badge }: any) {
+function SectionCard({ icon: Icon, title, children }: any) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card/50 backdrop-blur-xl rounded-[2.5rem] border border-primary/10   overflow-hidden"
+      className="bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border border-primary/10 overflow-hidden"
     >
-      <div className="px-8 py-6 border-b border-primary/10 bg-primary/5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-primary/10 text-primary">
-            <Icon className="w-5 h-5" />
-          </div>
-          <h3 className="text-xl font-black tracking-tight text-foreground">
-            {title}
-          </h3>
+      <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-primary/10 bg-primary/5 flex items-center gap-2 sm:gap-3">
+        <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-primary/10 text-primary">
+          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
-        {badge}
+        <h3 className="text-lg sm:text-xl font-black tracking-tight text-foreground">
+          {title}
+        </h3>
       </div>
-      <div className="p-8">{children}</div>
+      <div className="p-5 sm:p-8">{children}</div>
     </motion.div>
   );
 }

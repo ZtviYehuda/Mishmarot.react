@@ -173,7 +173,7 @@ export default function MainLayout() {
   }, []);
 
   const navItems = [
-    { name: "לוח בקרה", path: "/", icon: LayoutDashboard },
+    { name: "לוח בקרה ראשי", path: "/", icon: LayoutDashboard },
     { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
     // Only show these if NOT a temp commander
     ...(!user?.is_temp_commander
@@ -421,9 +421,9 @@ export default function MainLayout() {
                 </div>
                 <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight py-0.5 leading-none truncate">
                   {location.pathname === "/"
-                    ? "לוח בקרה מרכזי"
+                    ? "מערכת משמרות"
                     : navItems.find((n) => n.path === location.pathname)
-                        ?.name || "דף מערכת"}
+                      ?.name || "דף מערכת"}
                 </h2>
               </div>
 

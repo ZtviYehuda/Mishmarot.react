@@ -121,15 +121,15 @@ export default function TransfersPage() {
 
     return (
       <div
-        className="flex flex-col text-right group/unit min-w-[140px]"
+        className="flex flex-col text-right group/unit sm:min-w-[140px] w-full"
         dir="rtl"
       >
         {/* Department Name */}
         {showDept && dept && dept !== "מטה" ? (
           <span
             className={cn(
-              "text-[13px] font-black tracking-tight leading-tight",
-              isTarget ? "text-primary" : "text-foreground",
+              "text-[13px] sm:text-[13px] font-black tracking-tight leading-tight",
+              isTarget ? "text-primary dark:text-blue-400" : "text-foreground",
             )}
           >
             {cleanUnitName(dept)}
@@ -145,15 +145,15 @@ export default function TransfersPage() {
 
         {/* Section & Team Line */}
         {hasBottomLine && (
-          <div className="flex items-center gap-1.5 mt-1 justify-start">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 mt-1 justify-start">
             {isTarget && (
-              <div className="w-1 h-1 rounded-full bg-primary shrink-0 animate-pulse ml-1" />
+              <div className="w-1 h-1 rounded-full bg-primary shrink-0 animate-pulse ml-0.5 sm:ml-1" />
             )}
             <span
               className={cn(
-                "text-[10px] whitespace-nowrap",
+                "text-[10px] sm:text-[10px]",
                 isTarget
-                  ? "text-primary/80 font-bold"
+                  ? "text-primary font-black sm:font-bold dark:text-blue-400"
                   : "text-muted-foreground font-medium",
               )}
             >
@@ -544,9 +544,9 @@ export default function TransfersPage() {
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-muted/30 rounded-xl p-2.5 text-right flex flex-col justify-center min-h-[60px]">
-                      <span className="text-[8px] font-black text-muted-foreground/60 uppercase block mb-1">
+                  <div className="flex flex-col gap-2.5 mb-4">
+                    <div className="bg-muted/30 dark:bg-slate-900/50 rounded-2xl p-3 text-right flex flex-col justify-center min-h-[70px] border border-border/20">
+                      <span className="text-[9px] font-black text-muted-foreground uppercase block mb-1.5 tracking-widest pl-2">
                         מעבר מ:
                       </span>
                       {renderUnitCell(
@@ -555,8 +555,8 @@ export default function TransfersPage() {
                         "source",
                       )}
                     </div>
-                    <div className="bg-primary/5 rounded-xl p-2.5 text-right flex flex-col justify-center min-h-[60px] border border-primary/10">
-                      <span className="text-[8px] font-black text-primary/60 uppercase block mb-1">
+                    <div className="bg-primary/[0.03] dark:bg-primary/[0.05] rounded-2xl p-3 text-right flex flex-col justify-center min-h-[70px] border border-primary/10">
+                      <span className="text-[9px] font-black text-primary uppercase block mb-1.5 tracking-widest pl-2">
                         אל יעד:
                       </span>
                       {renderUnitCell(
@@ -805,9 +805,9 @@ export default function TransfersPage() {
                     {statusBadge(req.status)}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-muted/30 rounded-xl p-2.5 text-right flex flex-col justify-center min-h-[60px]">
-                      <span className="text-[8px] font-black text-muted-foreground/60 uppercase block mb-1">
+                  <div className="flex flex-col gap-2.5 mb-4">
+                    <div className="bg-muted/30 dark:bg-slate-900/50 rounded-2xl p-3 text-right flex flex-col justify-center min-h-[60px] border border-border/20">
+                      <span className="text-[9px] font-black text-muted-foreground uppercase block mb-1.5 tracking-widest pl-2">
                         מעבר מ:
                       </span>
                       {renderUnitCell(
@@ -816,8 +816,8 @@ export default function TransfersPage() {
                         "source",
                       )}
                     </div>
-                    <div className="bg-primary/5 rounded-xl p-2.5 text-right flex flex-col justify-center min-h-[60px] border border-primary/10">
-                      <span className="text-[8px] font-black text-primary/60 uppercase block mb-1">
+                    <div className="bg-primary/[0.03] dark:bg-primary/[0.05] rounded-2xl p-3 text-right flex flex-col justify-center min-h-[60px] border border-primary/10">
+                      <span className="text-[9px] font-black text-primary uppercase block mb-1.5 tracking-widest pl-2">
                         אל יעד:
                       </span>
                       {renderUnitCell(

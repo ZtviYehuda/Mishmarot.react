@@ -52,12 +52,14 @@ const InputItem = ({
   required,
   className,
 }: any) => (
-  <div className={cn("space-y-1.5", className)}>
+  <div className={cn("space-y-1.5 h-full flex flex-col", className)}>
     <Label className="text-[12px] font-bold text-slate-400 pr-1 flex items-center gap-2">
       {Icon && <Icon className="w-3.5 h-3.5 opacity-60" />}
       {label} {required && <span className="text-destructive">*</span>}
     </Label>
-    <div className="relative">{children}</div>
+    <div className="relative flex-1 flex flex-col justify-center">
+      {children}
+    </div>
   </div>
 );
 
@@ -79,7 +81,7 @@ const UnitPicker = ({
   return (
     <div className="flex-1 min-w-[200px] space-y-1.5">
       <div className="flex items-center justify-between px-1">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <span className="text-[11px] sm:text-[10px] font-black sm:font-bold text-slate-500 sm:text-slate-400 uppercase tracking-widest flex-1">
           {label}
         </span>
         {value && !disabled && (
@@ -209,29 +211,43 @@ const PersonalFormTab = ({
           </span>
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <InputItem
-            label="שם מלא (פרטי ומשפחה)"
-            required
-            icon={User}
-            className="lg:col-span-2"
-          >
-            <div className="flex gap-3">
-              <Input
-                value={formData.first_name || ""}
-                onChange={(e) =>
-                  handleFieldChange("first_name", e.target.value)
-                }
-                placeholder="פרטי"
-                className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all flex-1 h-12 shadow-sm rounded-xl font-bold"
-              />
-              <Input
-                value={formData.last_name || ""}
-                onChange={(e) => handleFieldChange("last_name", e.target.value)}
-                placeholder="משפחה"
-                className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all flex-1 h-12 shadow-sm rounded-xl font-bold"
-              />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <InputItem label="שם פרטי" required icon={User}>
+            <Input
+              value={formData.first_name || ""}
+              onChange={(e) => handleFieldChange("first_name", e.target.value)}
+              placeholder="פרטי"
+              className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl font-bold"
+            />
+          </InputItem>
+
+          <InputItem label="שם משפחה" required icon={User}>
+            <Input
+              value={formData.last_name || ""}
+              onChange={(e) => handleFieldChange("last_name", e.target.value)}
+              placeholder="משפחה"
+              className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl font-bold"
+            />
+          </InputItem>
+
+          <InputItem label="תעודת זהות" icon={BadgeCheck}>
+            <Input
+              value={formData.national_id || ""}
+              onChange={(e) => handleFieldChange("national_id", e.target.value)}
+              placeholder="000000000"
+              className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl text-lg font-black tracking-widest text-center"
+            />
+          </InputItem>
+
+          <InputItem label="מספר אישי" icon={BadgeCheck}>
+            <Input
+              value={formData.personal_number || ""}
+              onChange={(e) =>
+                handleFieldChange("personal_number", e.target.value)
+              }
+              placeholder="0000000"
+              className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl text-lg font-black tracking-widest text-center"
+            />
           </InputItem>
 
           <InputItem label="מין" required icon={User}>
@@ -254,26 +270,6 @@ const PersonalFormTab = ({
                 </SelectItem>
               </SelectContent>
             </Select>
-          </InputItem>
-
-          <InputItem label="מספר אישי" icon={BadgeCheck}>
-            <Input
-              value={formData.personal_number || ""}
-              onChange={(e) =>
-                handleFieldChange("personal_number", e.target.value)
-              }
-              placeholder="0000000"
-              className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl text-lg font-black tracking-widest text-center"
-            />
-          </InputItem>
-
-          <InputItem label="תעודת זהות" icon={BadgeCheck}>
-            <Input
-              value={formData.national_id || ""}
-              onChange={(e) => handleFieldChange("national_id", e.target.value)}
-              placeholder="000000000"
-              className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl text-lg font-black tracking-widest text-center"
-            />
           </InputItem>
 
           <InputItem label="תאריך לידה" required icon={Calendar}>
@@ -492,127 +488,114 @@ const ProfessionalFormTab = ({
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 sm:pb-0">
       {/* 1. Organizational Affiliation - Compact & Professional */}
-      <div className="bg-white dark:bg-slate-950 rounded-[32px] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-950 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                שיוך יחידתי
-              </h3>
-              <p className="text-[11px] font-medium text-slate-500">
-                בחר מחלקה, מדור וחוליה לצורך שיוך השוטר
-              </p>
-            </div>
-          </div>
+      {/* 1. Organizational Affiliation - Compact & Professional */}
+      <CompactCard
+        title={
+          <span className="flex items-center gap-2 text-primary font-black text-lg">
+            <Building2 className="w-5 h-5" /> שיוך יחידתי
+          </span>
+        }
+      >
+        <div className="flex flex-col md:flex-row gap-6 lg:gap-8">
+          <UnitPicker
+            label="מחלקה"
+            value={selectedDeptId}
+            options={structure}
+            onChange={(val: any) => {
+              setSelectedDeptId(val);
+              setFormData((prev: any) => ({
+                ...prev,
+                department_id: parseInt(val),
+                section_id: undefined,
+                team_id: undefined,
+              }));
+              setSelectedSectionId("");
+            }}
+            placeholder="בחר מחלקה"
+            icon={Building2}
+            disabled={isDeptDisabled}
+            onClear={() => {
+              setSelectedDeptId("");
+              setFormData((prev: any) => ({
+                ...prev,
+                department_id: undefined,
+                section_id: undefined,
+                team_id: undefined,
+              }));
+              setSelectedSectionId("");
+            }}
+          />
+
+          <UnitPicker
+            label="מדור"
+            value={selectedSectionId}
+            options={sections}
+            onChange={(val: any) => {
+              setSelectedSectionId(val);
+              setFormData((prev: any) => ({
+                ...prev,
+                section_id: parseInt(val),
+                team_id: undefined,
+              }));
+            }}
+            placeholder="בחר מדור"
+            icon={Briefcase}
+            disabled={!selectedDeptId || isSectionDisabled}
+            onClear={() => {
+              setSelectedSectionId("");
+              setFormData((prev: any) => ({
+                ...prev,
+                section_id: undefined,
+                team_id: undefined,
+              }));
+            }}
+          />
+
+          <UnitPicker
+            label="חוליה"
+            value={formData.team_id?.toString() || ""}
+            options={teams}
+            onChange={(val: any) => handleFieldChange("team_id", parseInt(val))}
+            placeholder="בחר חוליה"
+            icon={User}
+            disabled={!selectedSectionId || isTeamDisabled}
+            onClear={() => handleFieldChange("team_id", undefined)}
+          />
         </div>
 
-        <div className="p-8 lg:p-10">
-          <div className="flex flex-col md:flex-row gap-6 lg:gap-8">
-            <UnitPicker
-              label="מחלקה"
-              value={selectedDeptId}
-              options={structure}
-              onChange={(val: any) => {
-                setSelectedDeptId(val);
-                setFormData((prev: any) => ({
-                  ...prev,
-                  department_id: parseInt(val),
-                  section_id: undefined,
-                  team_id: undefined,
-                }));
-                setSelectedSectionId("");
-              }}
-              placeholder="בחר מחלקה"
-              icon={Building2}
-              disabled={isDeptDisabled}
-              onClear={() => {
-                setSelectedDeptId("");
-                setFormData((prev: any) => ({
-                  ...prev,
-                  department_id: undefined,
-                  section_id: undefined,
-                  team_id: undefined,
-                }));
-                setSelectedSectionId("");
-              }}
-            />
-
-            <UnitPicker
-              label="מדור"
-              value={selectedSectionId}
-              options={sections}
-              onChange={(val: any) => {
-                setSelectedSectionId(val);
-                setFormData((prev: any) => ({
-                  ...prev,
-                  section_id: parseInt(val),
-                  team_id: undefined,
-                }));
-              }}
-              placeholder="בחר מדור"
-              icon={Briefcase}
-              disabled={!selectedDeptId || isSectionDisabled}
-              onClear={() => {
-                setSelectedSectionId("");
-                setFormData((prev: any) => ({
-                  ...prev,
-                  section_id: undefined,
-                  team_id: undefined,
-                }));
-              }}
-            />
-
-            <UnitPicker
-              label="חוליה"
-              value={formData.team_id?.toString() || ""}
-              options={teams}
-              onChange={(val: any) =>
-                handleFieldChange("team_id", parseInt(val))
+        {(user?.is_admin || user?.is_commander) && (
+          <div className="mt-8 space-y-6 max-w-xl mx-auto border-t pt-6">
+            <SwitchItem
+              label="מינוי מפקד"
+              checked={!!formData.is_commander}
+              onCheckedChange={(c: boolean) =>
+                handleFieldChange("is_commander", c)
               }
-              placeholder="בחר חוליה"
-              icon={User}
-              disabled={!selectedSectionId || isTeamDisabled}
-              onClear={() => handleFieldChange("team_id", undefined)}
+              icon={Shield}
+              description="הגדר שוטר זה כמפקד היחידה הארגונית שנבחרה"
             />
-          </div>
 
-          {(user?.is_admin || user?.is_commander) && (
-            <div className="mt-12 space-y-6 max-w-xl mx-auto">
-              <SwitchItem
-                label="מינוי מפקד"
-                checked={!!formData.is_commander}
-                onCheckedChange={(c: boolean) =>
-                  handleFieldChange("is_commander", c)
-                }
-                icon={Shield}
-                description="הגדר שוטר זה כמפקד היחידה הארגונית שנבחרה"
-              />
-
-              {currentCommander && (
-                <div className="flex items-start gap-4 p-5 rounded-[24px] bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/20 animate-in slide-in-from-top-2 duration-500">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 shrink-0">
-                    <AlertTriangle className="w-5 h-5" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[13px] font-black text-amber-900 dark:text-amber-200 leading-tight">
-                      שים לב: קיים מפקד פעיל ליחידה זו
-                    </p>
-                    <p className="text-[11px] font-bold text-amber-600/80 leading-tight">
-                      הגדרת שוטר זה כמפקד תבטל את מינויו של{" "}
-                      <span className="text-amber-700 dark:text-amber-300 underline decoration-2 underline-offset-2">
-                        {currentCommander.name}
-                      </span>
-                    </p>
-                  </div>
+            {currentCommander && (
+              <div className="flex items-start gap-4 p-5 rounded-[24px] bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/20 animate-in slide-in-from-top-2 duration-500">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+                <div className="space-y-1">
+                  <p className="text-[13px] font-black text-amber-900 dark:text-amber-200 leading-tight">
+                    שים לב: קיים מפקד פעיל ליחידה זו
+                  </p>
+                  <p className="text-[11px] font-bold text-amber-600/80 leading-tight">
+                    הגדרת שוטר זה כמפקד תבטל את מינויו של{" "}
+                    <span className="text-amber-700 dark:text-amber-300 underline decoration-2 underline-offset-2">
+                      {currentCommander.name}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </CompactCard>
 
       {/* 2. Professional Details & Permissions Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -935,35 +918,36 @@ export default function CreateEmployeePage() {
     >
       <div className="bg-background dark:bg-slate-950 border-b border-border/60 py-4 sm:py-6 sticky top-0 z-30 backdrop-blur-md bg-background/95">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="hidden sm:flex w-12 h-12 rounded-xl bg-primary/10 items-center justify-center text-primary border border-primary/20 shrink-0">
-                <UserPlus className="w-6 h-6" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 items-center justify-center text-primary border border-primary/20 shrink-0">
+                <UserPlus className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div className="space-y-0.5">
-                <h1 className="text-xl font-black text-foreground tracking-tight">
-                  הוספת שוטר <span className="text-primary">חדש</span>
+                <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tight leading-tight">
+                  הוספת שוטר{" "}
+                  <span className="text-primary whitespace-nowrap">חדש</span>
                 </h1>
-                <p className="text-xs font-medium text-muted-foreground sm:block hidden">
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground hidden sm:block">
                   הזנת פרטים אישיים, שיוך ארגוני והגדרת הרשאות
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <Button
                 variant="ghost"
                 onClick={() => navigate("/employees")}
-                className="h-10 px-4 rounded-xl font-bold text-muted-foreground hover:text-foreground hover:bg-muted"
+                className="h-10 flex-1 sm:flex-none px-4 rounded-xl font-bold text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 <X className="w-4 h-4 ml-1.5" />
-                <span>ביטול</span>
+                <span className="text-xs sm:text-sm">ביטול</span>
               </Button>
 
               <div className="w-px h-6 bg-border/60 mx-1 hidden sm:block" />
 
               <Button
-                className="h-10 px-8 rounded-xl font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2"
+                className="h-10 flex-1 sm:flex-none px-6 sm:px-8 rounded-xl font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2"
                 onClick={handleSubmit}
                 disabled={saving}
               >
@@ -972,7 +956,9 @@ export default function CreateEmployeePage() {
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                <span>שמור שוטר</span>
+                <span className="text-xs sm:text-sm whitespace-nowrap">
+                  שמור שוטר
+                </span>
               </Button>
             </div>
           </div>
@@ -980,7 +966,7 @@ export default function CreateEmployeePage() {
       </div>
 
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 mt-6 sm:mt-8">
-        <div className="bg-slate-200/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-[28px] p-2 flex gap-2 mb-10 max-w-xl shadow-inner mx-auto lg:mx-0">
+        <div className="bg-slate-200/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-[24px] p-2 flex gap-4 mb-8 max-w-2xl shadow-sm mx-auto">
           <TabButton
             active={activeTab === "personal"}
             onClick={() => setActiveTab("personal")}

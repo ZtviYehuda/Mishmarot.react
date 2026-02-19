@@ -106,32 +106,32 @@ export function NotificationSettings({
               title="הגדרות מערכת קריטיות"
               variant="danger"
             >
-              <div className="flex flex-col md:flex-row items-center justify-between gap-8 p-6 bg-destructive/[0.03] rounded-[2rem] border border-destructive/10">
-                <div className="flex items-start gap-5">
-                  <div className="p-4 bg-background rounded-2xl   shrink-0 border border-destructive/10">
-                    <Clock className="w-8 h-8 text-destructive" />
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 p-4 sm:p-6 bg-destructive/[0.03] rounded-2xl sm:rounded-[2rem] border border-destructive/10">
+                <div className="flex items-start gap-4 sm:gap-5">
+                  <div className="p-3 sm:p-4 bg-background rounded-xl sm:rounded-2xl   shrink-0 border border-destructive/10">
+                    <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-destructive" />
                   </div>
                   <div className="space-y-1">
-                    <h4 className="text-lg font-black text-destructive tracking-tight">
+                    <h4 className="text-base sm:text-lg font-black text-destructive tracking-tight">
                       שעת יעד לדיווח בוקר
                     </h4>
-                    <p className="text-muted-foreground text-sm font-medium max-w-sm">
+                    <p className="text-muted-foreground text-xs sm:text-sm font-medium max-w-sm">
                       קביעת השעה הרשמית בה המערכת תתחיל להפיץ התראות על חוסר
                       דיווח בוקר.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 w-full md:w-auto">
+                <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto">
                   <div className="relative group flex-1 md:flex-none text-right">
-                    <p className="text-[10px] font-black text-destructive/60 uppercase mb-1 mr-2">
+                    <p className="text-[9px] sm:text-[10px] font-black text-destructive/60 uppercase mb-1 mr-2">
                       שעת יעד
                     </p>
                     <Input
                       type="time"
                       value={localDeadline}
                       onChange={(e) => setLocalDeadline(e.target.value)}
-                      className="w-full md:w-36 h-14 bg-background rounded-2xl border-destructive/20 font-black text-2xl text-center focus:ring-destructive/20 transition-all font-mono"
+                      className="w-full md:w-36 h-12 sm:h-14 bg-background rounded-xl sm:rounded-2xl border-destructive/20 font-black text-xl sm:text-2xl text-center focus:ring-destructive/20 transition-all font-mono"
                     />
                   </div>
 
@@ -149,9 +149,9 @@ export function NotificationSettings({
                               localDeadline,
                             )
                           }
-                          className="h-14 px-8 rounded-2xl bg-destructive text-white hover:bg-destructive/90   font-black"
+                          className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl sm:rounded-2xl bg-destructive text-white hover:bg-destructive/90   font-black text-sm sm:text-base"
                         >
-                          <Save className="w-5 h-5 ml-2" />
+                          <Save className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                           עדכן
                         </Button>
                       </motion.div>
@@ -177,7 +177,7 @@ export function NotificationSettings({
               />
               <InfoItemSimple
                 title="הודעות חירום"
-                desc="עדכוני אבטחה וחירום יישלחו תמיד לכלל המשתמשים במערכת."
+                desc="עדכוני אבטחה וחירום יישלחו למנהל המערכת."
               />
 
               <div className="pt-8 border-t border-primary/5 text-center px-4">
@@ -211,32 +211,32 @@ function SectionCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border   overflow-hidden",
+        "bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border overflow-hidden",
         variant === "danger" ? "border-red-500/10" : "border-primary/10",
       )}
     >
       <div
         className={cn(
-          "px-8 py-6 border-b flex items-center justify-between",
+          "px-5 py-4 sm:px-8 sm:py-6 border-b flex items-center justify-between",
           variant === "danger"
             ? "bg-red-500/5 border-red-500/10"
             : "bg-primary/5 border-primary/10",
         )}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div
             className={cn(
-              "p-2.5 rounded-2xl",
+              "p-2 sm:p-2.5 rounded-xl sm:rounded-2xl",
               variant === "danger"
                 ? "bg-red-500/10 text-red-600"
                 : "bg-primary/10 text-primary",
             )}
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <h3
             className={cn(
-              "text-xl font-black tracking-tight",
+              "text-lg sm:text-xl font-black tracking-tight",
               variant === "danger" ? "text-red-600" : "text-foreground",
             )}
           >
@@ -245,7 +245,7 @@ function SectionCard({
         </div>
         {badge}
       </div>
-      <div className="p-8">{children}</div>
+      <div className="p-5 sm:p-8">{children}</div>
     </motion.div>
   );
 }
@@ -254,28 +254,28 @@ function SwitchItem({ label, desc, checked, onChange, icon: Icon }: any) {
   return (
     <div
       className={cn(
-        "flex items-center justify-between p-6 rounded-[2rem] border transition-all duration-300 group",
+        "flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border transition-all duration-300 group",
         checked
           ? "bg-primary/5 border-primary/20  "
           : "bg-background border-border/50 hover:border-primary/20",
       )}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3 sm:gap-4">
         <div
           className={cn(
-            "p-3 rounded-2xl transition-all duration-500",
+            "p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-500",
             checked
               ? "bg-primary/10 text-primary scale-110"
               : "bg-muted/40 text-muted-foreground group-hover:bg-muted",
           )}
         >
-          {Icon && <Icon className="w-5 h-5" />}
+          {Icon && <Icon className="w-4 h-4 sm:w-5 sm:h-5" />}
         </div>
-        <div className="space-y-1">
-          <label className="font-black text-base tracking-tight cursor-pointer">
+        <div className="space-y-0.5 sm:space-y-1">
+          <label className="font-black text-sm sm:text-base tracking-tight cursor-pointer">
             {label}
           </label>
-          <p className="text-muted-foreground text-xs font-medium leading-relaxed max-w-sm">
+          <p className="text-muted-foreground text-[10px] sm:text-xs font-medium leading-relaxed max-w-sm">
             {desc}
           </p>
         </div>
@@ -283,7 +283,7 @@ function SwitchItem({ label, desc, checked, onChange, icon: Icon }: any) {
       <Switch
         checked={checked}
         onCheckedChange={onChange}
-        className="data-[state=checked]:bg-primary"
+        className="data-[state=checked]:bg-primary scale-90 sm:scale-100"
       />
     </div>
   );

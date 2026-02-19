@@ -460,17 +460,17 @@ def forgot_password():
     """
     Step 1: Request Password Reset
     - Receives personal_number + email
-    - Checks if they match
+    - Verifies they belong to the same person in the database
     - Generates 6-digit code
     - Saves to verification_codes
-    - Sends email (Simulation or SMTP)
+    - Sends email
     """
     data = request.get_json()
     personal_number = data.get("personal_number")
     email = data.get("email")
 
     if not personal_number or not email:
-        return jsonify({"success": False, "error": "Missing fields"}), 400
+        return jsonify({"success": False, "error": "נא להזין מספר אישי ואימייל"}), 400
 
     from app.utils.db import get_db_connection
 
@@ -478,39 +478,29 @@ def forgot_password():
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        # 1. Verify User
-        # We assume users might NOT have email set in DB yet, so we trust the input email
-        # IF the user exists. (In a strict system, we would match DB email).
-        # For this prototype: Update the user's email if it's missing?
-        # Better: Check if user exists.
+        # 1. Verify User and Email match
         cur.execute(
-            "SELECT id, first_name, last_name, email FROM employees WHERE personal_number = %s",
+            "SELECT id, email FROM employees WHERE personal_number = %s",
             (personal_number,),
         )
         user = cur.fetchone()
 
-        if not user:
-            # Security: Fake success
-            return jsonify({"success": True, "message": "Code sent"})
-
-        # If user has email in DB, verify it matches?
-        # For now, we'll ALLOW updating email if it is null (First time setup)
-        # BUT if it exists and doesn't match, we block.
-        db_email = user.get("email")
-        if db_email and db_email.lower().strip() != email.lower().strip():
+        # Check if user exists and has this exact email (case-insensitive)
+        if (
+            not user
+            or not user.get("email")
+            or user["email"].lower().strip() != email.lower().strip()
+        ):
+            # For security, we can return a generic message, but user specifically asked to verify details
             return (
                 jsonify(
-                    {"success": False, "error": "Email does not match our records"}
+                    {
+                        "success": False,
+                        "error": "פרטי האימות (מספר אישי או מייל) אינם תואמים את הרשומות שלנו",
+                    }
                 ),
                 400,
             )
-
-        # If DB email is empty, we set it now (Lazy registration)
-        if not db_email:
-            cur.execute(
-                "UPDATE employees SET email = %s WHERE id = %s", (email, user["id"])
-            )
-            conn.commit()
 
         # 2. Generate Code
         code = generate_code()
@@ -526,13 +516,24 @@ def forgot_password():
         # 4. Send Email
         from app.utils.email_service import send_verification_email
 
-        send_verification_email(email, code)
-
-        return jsonify({"success": True, "message": "Code sent successfully"})
+        if send_verification_email(email, code):
+            return jsonify(
+                {"success": True, "message": "קוד אימות נשלח בהצלחה לתיבת המייל שלך"}
+            )
+        else:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "נכשלה שליחת המייל. אנא פנה למנהל המערכת או נסה שנית מאוחר יותר.",
+                    }
+                ),
+                500,
+            )
 
     except Exception as e:
         print(f"Error in forgot-password: {e}")
-        return jsonify({"success": False, "error": "Server error"}), 500
+        return jsonify({"success": False, "error": "שגיאת שרת פנימית"}), 500
     finally:
         if conn:
             conn.close()
@@ -570,7 +571,10 @@ def verify_reset_code():
         if valid:
             return jsonify({"success": True, "message": "Code is valid"})
         else:
-            return jsonify({"success": False, "error": "Invalid or expired code"}), 400
+            return (
+                jsonify({"success": False, "error": "קוד אימות שגוי או פג תוקף"}),
+                400,
+            )
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -586,14 +590,18 @@ def reset_password_with_code():
     """
     data = request.get_json()
     email = data.get("email")
+    personal_number = data.get("personal_number")
     code = data.get("code")
     new_password = data.get("new_password")
 
-    if not email or not code or not new_password:
-        return jsonify({"success": False, "error": "Missing fields"}), 400
+    if not email or not code or not new_password or not personal_number:
+        return jsonify({"success": False, "error": "חסרים נתונים לביצוע האיפוס"}), 400
 
     if len(new_password) < 6:
-        return jsonify({"success": False, "error": "Password too short"}), 400
+        return (
+            jsonify({"success": False, "error": "הסיסמה קצרה מדי (מינימום 6 תווים)"}),
+            400,
+        )
 
     from app.utils.db import get_db_connection
 
@@ -614,38 +622,38 @@ def reset_password_with_code():
 
         if not record:
             return (
-                jsonify({"success": False, "error": "Invalid or expired session"}),
+                jsonify({"success": False, "error": "בקשת האיפוס פגה או אינה תקפה"}),
                 400,
             )
 
-        # Mark code as used
-        cur.execute(
-            "UPDATE verification_codes SET is_used = TRUE WHERE id = %s",
-            (record["id"],),
-        )
-
-        # Update Password
+        # Update Password - Ensuring both email AND personal_number match the user
         from werkzeug.security import generate_password_hash
 
         new_hash = generate_password_hash(new_password)
 
-        # We need to find the user by email
-        # Note: If multiple users have same email (shouldn't happen), this resets all??
-        # Better: We trusted personal_number earlier. Ideally we pass personal_number here too.
-        # But assuming unique email per user:
         cur.execute(
-            "UPDATE employees SET password_hash = %s, must_change_password = FALSE, last_password_change = NOW() WHERE email = %s",
-            (new_hash, email),
+            """
+            UPDATE employees 
+            SET password_hash = %s, must_change_password = FALSE, last_password_change = NOW() 
+            WHERE email = %s AND personal_number = %s
+            """,
+            (new_hash, email, personal_number),
         )
 
         if cur.rowcount == 0:
             conn.rollback()
             return (
                 jsonify(
-                    {"success": False, "error": "User not found associated with email"}
+                    {"success": False, "error": "לא נמצא משתמש תואם לפרטים שהוזנו"}
                 ),
                 404,
             )
+
+        # Mark code as used only after success
+        cur.execute(
+            "UPDATE verification_codes SET is_used = TRUE WHERE id = %s",
+            (record["id"],),
+        )
 
         conn.commit()
         return jsonify({"success": True, "message": "Password updated successfully"})

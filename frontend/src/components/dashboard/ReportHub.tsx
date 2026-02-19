@@ -308,13 +308,13 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             )}
           >
             <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">מרכז דוחות</span>
+            <span>מרכז דוחות</span>
             <Sparkles className="w-3 h-3 opacity-50 animate-pulse text-amber-500" />
           </Button>
         </DialogTrigger>
 
         <DialogContent
-          className="w-[95vw] max-w-[95vw] sm:max-w-2xl p-0 overflow-hidden border-none bg-background rounded-2xl sm:rounded-3xl  animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
+          className="w-[95vw] max-w-[95vw] sm:max-w-3xl p-0 overflow-hidden border-none bg-background rounded-2xl sm:rounded-3xl  animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
           showCloseButton={true}
         >
           {/* Header Section with Gradient */}
@@ -405,8 +405,9 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             ref={snapshotRef}
             stats={snapshotStats}
             loading={loading}
-            title={`מצבת כוח אדם - ${filters.unitName}`}
-            description={`דוח מערכת נכון לתאריך ${format(localDate, "dd/MM/yyyy")}`}
+            title={`מצבת כוח אדם`}
+            unitName={filters.unitName}
+            description={`דוח מערכת נכון לתאריך ${format(localDate, "dd/MM/yyyy")}\nהופק בתאריך: ${format(new Date(), "dd/MM/yyyy")}`}
             selectedDate={localDate}
           />
         </div>
@@ -417,7 +418,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             loading={loading}
             range={activeDaysRange}
             unitName={filters.unitName}
-            subtitle={`דוח הופק ב- ${format(localDate, "dd/MM/yyyy")}`}
+            subtitle={`דוח הופק ב- ${format(new Date(), "dd/MM/yyyy")}`}
             selectedDate={localDate}
           />
         </div>
@@ -428,7 +429,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             loading={loading}
             days={activeDaysRange}
             unitName={filters.unitName}
-            subtitle={`דוח הופק ב- ${format(localDate, "dd/MM/yyyy")}`}
+            subtitle={`דוח הופק ב- ${format(new Date(), "dd/MM/yyyy")}`}
             selectedDate={localDate}
           />
         </div>

@@ -21,6 +21,7 @@ def create_app():
     origins_list = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "https://blogging-lindsay-emails-happens.trycloudflare.com",
         "https://moments-accomplish-soon-guestbook.trycloudflare.com",
         "https://easy-ravens-fix.loca.lt",
         "https://mishmarot-app-123.loca.lt",

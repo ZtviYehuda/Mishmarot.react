@@ -118,21 +118,21 @@ export function SecuritySettings({
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1600px] mx-auto pb-24 lg:pb-0">
       {/* Alerts Area - Redesigned to be subtler but effective */}
       {(user?.is_impersonated || shouldShowAlert) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {user?.is_impersonated && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <div className="bg-destructive/5 border border-destructive/20 rounded-[2rem] p-6 flex items-start gap-4">
-                <div className="p-3 rounded-2xl bg-destructive/10 shrink-0">
-                  <Lock className="w-6 h-6 text-destructive" />
+              <div className="bg-destructive/5 border border-destructive/20 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-destructive/10 shrink-0">
+                  <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-destructive" />
                 </div>
-                <div className="space-y-2 flex-1">
-                  <h4 className="font-black text-destructive text-lg">
+                <div className="space-y-1 sm:space-y-2 flex-1">
+                  <h4 className="font-black text-destructive text-base sm:text-lg">
                     מצב התחזות פעיל
                   </h4>
-                  <p className="text-sm text-destructive/70 font-medium">
+                  <p className="text-xs sm:text-sm text-destructive/70 font-medium">
                     התחברת כשוטר אחר. ניתן לאפס את הסיסמה לתעודת הזהות המקורית.
                   </p>
                   <Button
@@ -140,7 +140,7 @@ export function SecuritySettings({
                     disabled={isResetting}
                     variant="destructive"
                     size="sm"
-                    className="mt-2 font-black rounded-xl h-10 px-6"
+                    className="mt-2 font-black rounded-lg sm:rounded-xl h-9 sm:h-10 px-4 sm:px-6"
                   >
                     {isResetting && (
                       <Loader2 className="w-4 h-4 ml-2 animate-spin" />
@@ -157,23 +157,23 @@ export function SecuritySettings({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <div className="bg-amber-500/5 border border-amber-500/20 rounded-[2rem] p-6 flex items-start gap-4">
-                <div className="p-3 rounded-2xl bg-amber-500/10 shrink-0">
-                  <AlertTriangle className="w-6 h-6 text-amber-600" />
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-500/10 shrink-0">
+                  <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
                 </div>
-                <div className="space-y-2 flex-1">
-                  <h4 className="font-black text-amber-700 text-lg">
+                <div className="space-y-1 sm:space-y-2 flex-1">
+                  <h4 className="font-black text-amber-700 text-base sm:text-lg">
                     נדרשת החלפת סיסמה
                   </h4>
-                  <p className="text-sm text-amber-700/70 font-medium leading-relaxed">
+                  <p className="text-xs sm:text-sm text-amber-700/70 font-medium leading-relaxed">
                     חלפו {daysSinceChange} יום מהחלפה אחרונה. מומלץ להחליף סיסמה
-                    כל 180 יום.
+                    כל מספר חודשים.
                   </p>
                   <Button
                     onClick={() => handleConfirmCurrentPassword()}
                     variant="outline"
                     size="sm"
-                    className="mt-2 font-black border-amber-500/20 text-amber-700 rounded-xl h-10 px-6 hover:bg-amber-500/10"
+                    className="mt-2 font-black border-amber-500/20 text-amber-700 rounded-lg sm:rounded-xl h-9 sm:h-10 px-4 sm:px-6 hover:bg-amber-500/10"
                   >
                     דלג הפעם
                   </Button>
@@ -214,10 +214,10 @@ export function SecuritySettings({
                           old_password: e.target.value,
                         })
                       }
-                      className="h-14 bg-background/40 rounded-2xl border-primary/5 pl-14 font-bold text-lg focus:bg-background transition-all"
+                      className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-14 font-bold text-base sm:text-lg focus:bg-background transition-all"
                       placeholder="••••••••"
                     />
-                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/30 group-focus-within:text-primary transition-colors" />
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/30 group-focus-within:text-primary transition-colors" />
                   </div>
                 </InputItem>
               </div>
@@ -236,10 +236,10 @@ export function SecuritySettings({
                           new_password: e.target.value,
                         })
                       }
-                      className="h-14 bg-background/40 rounded-2xl border-primary/5 pl-14 font-bold text-lg"
+                      className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-14 font-bold text-base sm:text-lg"
                       placeholder="לפחות 6 תווים"
                     />
-                    <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/30" />
+                    <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/30" />
                   </div>
                   {/* Strength Bar */}
                   <div className="flex gap-1 h-1.5 px-1 mt-3">
@@ -284,7 +284,7 @@ export function SecuritySettings({
                         })
                       }
                       className={cn(
-                        "h-14 bg-background/40 rounded-2xl border-primary/5 pl-14 font-bold text-lg",
+                        "h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-14 font-bold text-base sm:text-lg",
                         passwordData.confirm_password &&
                           passwordData.new_password !==
                             passwordData.confirm_password &&
@@ -292,7 +292,7 @@ export function SecuritySettings({
                       )}
                       placeholder="חזור על הסיסמה"
                     />
-                    <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/30" />
+                    <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/30" />
                   </div>
                   {passwordData.confirm_password &&
                     passwordData.new_password !==
@@ -322,12 +322,12 @@ export function SecuritySettings({
                 <Button
                   onClick={handleChangePassword}
                   disabled={isChangingPassword}
-                  className="h-14 px-10 rounded-2xl font-black text-lg   transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full sm:w-auto h-12 sm:h-14 px-8 sm:px-10 rounded-xl sm:rounded-2xl font-black text-base sm:text-lg   transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {isChangingPassword ? (
-                    <Loader2 className="w-5 h-5 ml-3 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3 animate-spin" />
                   ) : (
-                    <RefreshCw className="w-5 h-5 ml-3" />
+                    <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3" />
                   )}
                   שמור סיסמה חדשה
                 </Button>
@@ -407,14 +407,14 @@ export function SecuritySettings({
             <div className="space-y-8 py-4">
               <SecurityGuideItem
                 icon={CheckCircle2}
-                title="אורך סיסמה"
+                title="אורך הסיסמה המומלצת"
                 desc="לפחות 6 תווים הכוללים ספרות ואותיות."
                 color="text-emerald-600"
               />
               <SecurityGuideItem
                 icon={History}
                 title="תדירות החלפה"
-                desc="מומלץ להחליף סיסמה אחת ל-180 יום."
+                desc="מומלץ להחליף סיסמה אחת למספר חודשים."
                 color="text-blue-600"
               />
               <SecurityGuideItem
@@ -548,30 +548,30 @@ function SectionCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border   overflow-hidden",
+        "bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border overflow-hidden",
         variant === "danger" ? "border-red-500/10" : "border-primary/10",
       )}
     >
       <div
         className={cn(
-          "px-8 py-6 border-b flex items-center justify-between",
+          "px-5 py-4 sm:px-8 sm:py-6 border-b flex items-center justify-between",
           variant === "danger" ? "bg-red-500/5" : "bg-primary/5",
         )}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div
             className={cn(
-              "p-2.5 rounded-2xl",
+              "p-2 sm:p-2.5 rounded-xl sm:rounded-2xl",
               variant === "danger"
                 ? "bg-red-500/10 text-red-600"
                 : "bg-primary/10 text-primary",
             )}
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <h3
             className={cn(
-              "text-xl font-black tracking-tight",
+              "text-lg sm:text-xl font-black tracking-tight",
               variant === "danger" ? "text-red-600" : "text-foreground",
             )}
           >
@@ -580,7 +580,7 @@ function SectionCard({
         </div>
         {badge}
       </div>
-      <div className="p-8">{children}</div>
+      <div className="p-5 sm:p-8">{children}</div>
     </motion.div>
   );
 }

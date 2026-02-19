@@ -69,7 +69,6 @@ export default function AttendancePage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [structure, setStructure] = useState<any[]>([]);
-  const [stats, setStats] = useState<any[]>([]);
   const [selectedDeptId, setSelectedDeptId] = useState<string>("all");
   const [selectedSectionId, setSelectedSectionId] = useState<string>("all");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
@@ -129,13 +128,6 @@ export default function AttendancePage() {
       const struct = await getStructure();
       if (struct) setStructure(struct);
 
-      const dashboardStats = await getDashboardStats({
-        date: format(selectedDate, "yyyy-MM-dd"),
-      });
-      if (dashboardStats && dashboardStats.stats) {
-        setStats(dashboardStats.stats);
-      }
-
       const statuses = await getStatusTypes();
       if (statuses) setStatusTypes(statuses);
 
@@ -175,6 +167,27 @@ export default function AttendancePage() {
   //     }
   //   }
   // }, [user]);
+
+  // Helper function for date checking
+  const isReportedOnDate = (emp: any, date: Date) => {
+    if (!emp.status_id) return false;
+
+    // 1. Reported today?
+    const isStartedOnDay =
+      emp.last_status_update &&
+      new Date(emp.last_status_update).toDateString() === date.toDateString();
+    if (isStartedOnDay) return true;
+
+    // 2. Active Date Range?
+    if (emp.status_end_datetime) {
+      const endDate = new Date(emp.status_end_datetime);
+      endDate.setHours(23, 59, 59, 999);
+      if (date <= endDate) return true;
+    }
+
+    // 3. Persistent but no active range? -> Return false to force daily confirmation button
+    return false;
+  };
 
   // Calculate employees within user's command scope
   const scopeEmployees = useMemo(() => {
@@ -233,11 +246,9 @@ export default function AttendancePage() {
         return false;
 
       // Status Filter
-      if (
-        selectedStatusId !== "all" &&
-        emp.status_id !== parseInt(selectedStatusId)
-      )
-        return false;
+      if (selectedStatusId !== "all") {
+        if (emp.status_id !== parseInt(selectedStatusId)) return false;
+      }
 
       // Service Type Filter
       if (
@@ -256,6 +267,7 @@ export default function AttendancePage() {
     selectedTeamId,
     selectedStatusId,
     selectedServiceTypeId,
+    selectedDate,
   ]);
 
   const unitLabel = useMemo(() => {
@@ -304,12 +316,6 @@ export default function AttendancePage() {
       undefined,
       format(selectedDate, "yyyy-MM-dd"),
     );
-    const dashboardStats = await getDashboardStats({
-      date: format(selectedDate, "yyyy-MM-dd"),
-    });
-    if (dashboardStats && dashboardStats.stats) {
-      setStats(dashboardStats.stats);
-    }
     if (user) {
       const me = await getEmployeeById(user.id);
       setCurrentUserEmp(me);
@@ -343,29 +349,68 @@ export default function AttendancePage() {
     }
   };
 
-  const isReportedOnDate = (emp: any, date: Date) => {
-    if (!emp.status_id) return false;
-    // Status started on the selected day
-    const isStartedOnDay =
-      emp.last_status_update &&
-      new Date(emp.last_status_update).toDateString() === date.toDateString();
-    if (isStartedOnDay) return true;
+  // 1. Superset (For logic/missing checks - includes long-term statuses)
+  const activeEmployees = useMemo(() => {
+    return scopeEmployees.filter((emp) => isReportedOnDate(emp, selectedDate));
+  }, [scopeEmployees, selectedDate]);
 
-    // Planned Absence (Vacation, Sick, etc.) - counts as reported for the duration
-    if (emp.status_is_presence === false) return true;
+  const updatedTodayCount = activeEmployees.length;
 
-    // Status has a future/current end date (planned range)
-    if (emp.status_end_datetime && new Date(emp.status_end_datetime) >= date)
-      return true;
+  const computedStats = useMemo(() => {
+    const statusMap = new Map<
+      string,
+      { status_id: number; status_name: string; color: string; count: number }
+    >();
 
-    return false;
-  };
+    // 1. Initialize with all available status types
+    statusTypes.forEach((st) => {
+      const key = st.name; // status_name in db
+      statusMap.set(key, {
+        status_id: st.id,
+        status_name: st.name,
+        color: st.color || "#cbd5e1",
+        count: 0,
+      });
+    });
 
-  const updatedTodayCount = scopeEmployees.filter((emp) =>
-    isReportedOnDate(emp, selectedDate),
-  ).length;
+    // 2. Count active employees
+    activeEmployees.forEach((emp: any) => {
+      const statusName = emp.status_name?.trim();
+      if (!statusName) return;
+
+      const key = statusName;
+
+      // Handle custom statuses or mismatches by adding them (fallback) or just mapping
+      // If the status exists in types, increment. If not, maybe allow adding?
+      // Usually status_name comes from the same source.
+      if (statusMap.has(key)) {
+        statusMap.get(key)!.count++;
+      } else {
+        // Option: Add unknown status if needed, or ignore.
+        // Better to add to ensure we see everyone.
+        statusMap.set(key, {
+          status_id: emp.status_id,
+          status_name: statusName,
+          color: emp.status_color || "#cbd5e1",
+          count: 1,
+        });
+      }
+    });
+
+    return Array.from(statusMap.values()).sort((a, b) => {
+      // Sort by Count Descending, then by Name
+      if (b.count !== a.count) return b.count - a.count;
+      return a.status_name.localeCompare(b.status_name);
+    });
+  }, [activeEmployees, statusTypes]);
 
   const totalCount = scopeEmployees.length;
+
+  const missingEmployeeIds = useMemo(() => {
+    return scopeEmployees
+      .filter((emp) => !isReportedOnDate(emp, selectedDate))
+      .map((e) => e.id);
+  }, [scopeEmployees, selectedDate]);
 
   const getProfessionalTitle = (emp: Employee) => {
     if (emp.is_admin && emp.is_commander) return "מנהל מערכת בכיר";
@@ -386,7 +431,7 @@ export default function AttendancePage() {
   const progressPercent =
     totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
 
-  const isAllReported = totalCount > 0 && updatedTodayCount === totalCount;
+  const isAllReported = totalCount > 0 && activeEmployees.length === totalCount;
 
   return (
     <div className="space-y-6 pb-12" dir="rtl">
@@ -398,33 +443,31 @@ export default function AttendancePage() {
         categoryLink="/attendance"
         iconClassName="from-primary/10 to-primary/5 border-primary/20"
         badge={
-          <div className="flex flex-col gap-3 w-full items-end">
-            <DateHeader className="self-end mb-1" />
-            <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3 w-full lg:w-auto">
-              <div className="grid grid-cols-2 lg:flex lg:flex-row gap-2 lg:gap-3 w-full lg:w-auto">
+          <div className="flex flex-col gap-2 w-full lg:w-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto">
+              <DateHeader className="w-full justify-center sm:w-auto" />
+
+              <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 w-full lg:w-auto">
                 {!user?.is_temp_commander && (
                   <Button
                     variant="outline"
-                    className="h-12 rounded-2xl border-input gap-2 font-black text-muted-foreground hover:bg-muted lg:px-6 lg:w-auto"
+                    className="h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 gap-2 font-black px-4 w-full sm:w-auto justify-center transition-all bg-white"
                     onClick={() => setExportDialogOpen(true)}
                   >
                     <Download className="w-4 h-4" />
-                    <span className="text-sm">ייצוא</span>
+                    <span className="text-xs">ייצוא</span>
                   </Button>
                 )}
 
                 <Button
-                  variant="outline"
+                  variant={isReportedToday ? "default" : "outline"}
                   className={cn(
-                    "h-12 rounded-2xl border-input gap-2 font-black text-muted-foreground hover:bg-muted lg:px-6 lg:w-auto",
-                    isReportedToday &&
-                      "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-700",
+                    "h-10 rounded-xl gap-2 font-black transition-all px-4 w-full sm:w-auto justify-center",
+                    isReportedToday
+                      ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20"
+                      : "border-primary/20 bg-primary/5 text-primary bg-white hover:bg-primary/10",
                   )}
                   onClick={() => {
-                    console.log(
-                      "[DEBUG] Self-report clicked. currentUserEmp:",
-                      currentUserEmp,
-                    );
                     if (currentUserEmp) {
                       handleOpenStatusModal(currentUserEmp);
                     } else {
@@ -433,79 +476,65 @@ export default function AttendancePage() {
                   }}
                 >
                   {isReportedToday ? (
-                    <CheckCircle2 className="w-5 h-5" />
+                    <CheckCircle2 className="w-4 h-4" />
                   ) : (
                     <User className="w-4 h-4" />
                   )}
-                  <span className="text-sm">דיווח עצמי</span>
+                  <span className="text-xs">דיווח עצמי</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "h-10 rounded-xl border-input gap-2 font-black text-muted-foreground hover:bg-muted px-4 col-span-2 sm:w-auto justify-center bg-white transition-all",
+                    selectedEmployeeIds.length > 0 &&
+                      "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20",
+                  )}
+                  onClick={() => {
+                    setAlertContext(null);
+                    setBulkModalOpen(true);
+                  }}
+                >
+                  <ClipboardCheck className="w-4 h-4" />
+                  <span className="text-xs font-black">
+                    {selectedEmployeeIds.length > 0
+                      ? `עדכון לנבחרים (${selectedEmployeeIds.length})`
+                      : "עדכון נוכחות מרוכז"}
+                  </span>
                 </Button>
               </div>
+            </div>
 
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full lg:w-auto h-12 lg:px-8 rounded-2xl border-input gap-2 font-black text-muted-foreground hover:bg-muted transition-all",
-                  selectedEmployeeIds.length > 0 &&
-                    "bg-secondary/10 text-secondary border-secondary/20 hover:bg-secondary/20",
-                )}
-                onClick={() => {
-                  setAlertContext(null);
-                  setBulkModalOpen(true);
-                }}
-              >
-                <ClipboardCheck className="w-5 h-5" />
-                <span className="text-sm">
-                  {selectedEmployeeIds.length > 0
-                    ? `עדכון לנבחרים (${selectedEmployeeIds.length})`
-                    : "עדכון נוכחות מרוכז"}
-                </span>
-              </Button>
-
-              {/* Mobile Reminder Banner */}
-              <div className="lg:hidden mt-2 w-full">
-                {!isAllReported ? (
-                  <div
-                    className="w-full bg-gradient-to-l from-rose-500 to-rose-600 rounded-2xl p-4 flex items-center justify-between text-white cursor-pointer"
-                    onClick={() => {
-                      setAlertContext(null);
-                      setBulkModalOpen(true);
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-white/20 rounded-xl">
-                        <Clock className="w-5 h-5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-[13px] font-black leading-none">
-                          יש להשלים דיווחים
-                        </h3>
-                        <span className="text-[10px] font-bold opacity-80 mt-1">
-                          עד השעה 09:00
-                        </span>
-                      </div>
+            {/* Mobile Reminder Banner - Show only on small screens when not reported */}
+            <div className="lg:hidden w-full">
+              {!isAllReported && (
+                <div
+                  className="w-full bg-gradient-to-l from-rose-500 to-rose-600 rounded-xl p-3 flex items-center justify-between text-white cursor-pointer shadow-lg shadow-rose-500/20"
+                  onClick={() => {
+                    setAlertContext({ missing_ids: missingEmployeeIds });
+                    setBulkModalOpen(true);
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-1.5 bg-white/20 rounded-lg">
+                      <Clock className="w-4 h-4" />
                     </div>
-                    <div className="flex items-center gap-1.5 bg-white/20 h-8 px-3 rounded-full border border-white/10">
-                      <span className="text-[11px] font-black">
-                        נותרו: {totalCount - updatedTodayCount}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3 text-emerald-800">
-                    <div className="p-2.5 bg-emerald-500/20 rounded-xl">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="flex flex-col text-right">
-                      <h3 className="text-sm font-black leading-none italic">
-                        כל הכבוד! ה${unitTypeLabel} מדווחת
+                    <div className="flex flex-col">
+                      <h3 className="text-[12px] font-black leading-none">
+                        יש להשלים דיווחים
                       </h3>
-                      <span className="text-[10px] font-bold opacity-70 mt-1">
-                        הושלמו כלל דיווחי הנוכחות להיום
+                      <span className="text-[10px] font-bold opacity-80 mt-0.5">
+                        עד השעה 09:00
                       </span>
                     </div>
                   </div>
-                )}
-              </div>
+                  <div className="flex items-center gap-1 bg-white/20 h-7 px-3 rounded-full border border-white/10">
+                    <span className="text-[10px] font-black">
+                      נותרו: {totalCount - activeEmployees.length}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         }
@@ -552,28 +581,32 @@ export default function AttendancePage() {
 
           <div
             className={cn(
-              "grid grid-cols-3 gap-3",
+              "grid grid-cols-3 sm:grid-cols-4 gap-2",
               "lg:flex lg:flex-row lg:w-full lg:gap-0 lg:border lg:border-border/60 lg:rounded-3xl lg:overflow-hidden lg:divide-x lg:divide-x-reverse lg:divide-border/40 lg:bg-muted/5",
             )}
           >
-            {stats
+            {computedStats
               .filter((s: any) => s.status_id)
               .map((s: any) => (
                 <div
                   key={s.status_id}
                   onClick={() => {
-                    setSelectedStatusId((prev) =>
-                      prev === s.status_id.toString()
-                        ? "all"
-                        : s.status_id.toString(),
-                    );
+                    if (s.count > 0) {
+                      setSelectedStatusId((prev) =>
+                        prev === s.status_id.toString()
+                          ? "all"
+                          : s.status_id.toString(),
+                      );
+                    }
                   }}
                   className={cn(
-                    "relative flex flex-col items-center justify-center transition-all cursor-pointer group rounded-2xl border aspect-square sm:aspect-auto sm:h-28",
+                    "relative flex flex-col items-center justify-center transition-all cursor-pointer group rounded-xl border h-20 sm:h-24",
                     "lg:flex-1 lg:h-24 lg:p-4 lg:rounded-none",
                     selectedStatusId === s.status_id.toString()
-                      ? "text-white  scale-[1.02] z-10"
+                      ? "text-white scale-[1.02] z-10 shadow-md"
                       : "bg-muted/30 border-transparent hover:bg-muted/50 lg:bg-transparent lg:border-0",
+                    s.count === 0 &&
+                      "opacity-60 grayscale cursor-default hover:bg-muted/30",
                   )}
                   style={{
                     backgroundColor:
@@ -594,10 +627,10 @@ export default function AttendancePage() {
                         : "text-foreground",
                     )}
                   >
-                    {s.count}
+                    {s.count > 0 ? s.count : "-"}
                   </span>
                   <span
-                    className="text-[9px] sm:text-[11px] lg:text-xs font-black uppercase text-center leading-tight mt-1"
+                    className="text-[9px] sm:text-[10px] lg:text-xs font-black uppercase text-center leading-tight mt-1 px-1 truncate w-full"
                     style={{
                       color:
                         selectedStatusId === s.status_id.toString()
@@ -658,7 +691,10 @@ export default function AttendancePage() {
             <div className="w-full lg:flex lg:justify-center">
               <button
                 className="group relative h-10 lg:h-11 w-full lg:w-auto px-4 lg:px-6 bg-primary hover:bg-primary/90 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
-                onClick={() => setBulkModalOpen(true)}
+                onClick={() => {
+                  setAlertContext({ missing_ids: missingEmployeeIds });
+                  setBulkModalOpen(true);
+                }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
                 <AlertCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-foreground relative z-10" />
@@ -1300,12 +1336,21 @@ export default function AttendancePage() {
                                 ? "היום"
                                 : format(selectedDate, "dd/MM")}
                               ,{" "}
-                              {new Date(
-                                emp.last_status_update!,
-                              ).toLocaleTimeString("he-IL", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                              {activeEmployees.find(
+                                (e) =>
+                                  e.id === emp.id &&
+                                  new Date(
+                                    e.last_status_update!,
+                                  ).toDateString() !==
+                                    selectedDate.toDateString(),
+                              )
+                                ? "08:00"
+                                : new Date(
+                                    emp.last_status_update!,
+                                  ).toLocaleTimeString("he-IL", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
                             </span>
                           </div>
                         ) : (
@@ -1659,6 +1704,8 @@ export default function AttendancePage() {
             `נשלחה תזכורת למפקד ${alertContext?.commander_name || ""}`,
           );
         }}
+        selectedDate={selectedDate}
+        isReportedCheck={isReportedOnDate}
       />
       <ExportReportDialog
         open={exportDialogOpen}

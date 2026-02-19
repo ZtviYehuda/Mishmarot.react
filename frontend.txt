@@ -1462,7 +1462,7 @@ export default function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
 
   const navItems = [
-    { name: "לוח בקרה", path: "/", icon: LayoutDashboard },
+    { name: "מערכת משמרות", path: "/", icon: LayoutDashboard },
     { name: "ניהול עובדים", path: "/employees", icon: Users },
     { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
     { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
@@ -1610,7 +1610,7 @@ export default function MainLayout() {
               </span>
               <h2 className="text-sm font-black text-[#001e30] dark:text-white">
                 {location.pathname === "/"
-                  ? "לוח בקרה מרכזי"
+                  ? "מערכת משמרות"
                   : navItems.find((n) => n.path === location.pathname)?.name ||
                     "דף מערכת"}
               </h2>

@@ -13,9 +13,7 @@ def send_email(to_email, subject, body_html):
     smtp_password = os.environ.get("SMTP_PASSWORD")
 
     if smtp_email and smtp_password:
-        smtp_password = smtp_password.replace(
-            " ", ""
-        )  # Remove spaces from App Password
+        smtp_password = smtp_password.replace(" ", "")
         try:
             msg = MIMEMultipart()
             msg["From"] = smtp_email
@@ -23,7 +21,6 @@ def send_email(to_email, subject, body_html):
             msg["Subject"] = subject
             msg.attach(MIMEText(body_html, "html"))
 
-            print(f"   [SMTP] Connecting to Gmail as {smtp_email}...")
             server = smtplib.SMTP("smtp.gmail.com", 587)
             server.starttls()
             server.login(smtp_email, smtp_password)
@@ -34,9 +31,9 @@ def send_email(to_email, subject, body_html):
         except Exception as e:
             print(f"❌ Failed to send real email: {e}")
             logging.error(f"Failed to send email: {e}")
-            # Fallback to console simulation below
+            return False  # Return False here because we tried real SMTP and it failed
 
-    # Development Fallback
+    # Development Fallback (Simulation)
     print("\n" + "█" * 60)
     print(f"📧 [EMAIL SIMULATION]")
     print(f"👉 To: {to_email}")

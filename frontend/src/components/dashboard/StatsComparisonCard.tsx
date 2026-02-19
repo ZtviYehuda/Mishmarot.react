@@ -140,7 +140,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
             : "";
         const filterText = subtitle ? `\n*סינון:* ${subtitle}` : "";
         const title = `דוח השוואת כוח אדם (${rangeText}) - ${unitName}`;
-        const message = `*${title}*\nתאריך: ${format(new Date(), "dd/MM/yyyy")}${filterText}${statsSummary}`;
+        const message = `*${title}*\nתאריך הפקה: ${format(new Date(), "dd/MM/yyyy")}\nתאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}${filterText}${statsSummary}`;
 
         const file = new File([blob], `comparison-${days}.png`, {
           type: "image/png",
@@ -266,7 +266,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               {subtitle && (
                 <>
                   {" "}
-                  | <span className="export-hide">{subtitle}</span>
+                  | <span className="">{subtitle}</span>
                 </>
               )}
               <div className="text-[10px] text-muted-foreground mt-0.5">

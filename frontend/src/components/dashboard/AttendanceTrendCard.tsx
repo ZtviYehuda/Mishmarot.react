@@ -180,7 +180,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
           : "";
         const filterText = subtitle ? `\n*סינון:* ${subtitle}` : "";
         const title = `דוח מגמת זמינות ${rangeText} - ${unitName}`;
-        const message = `*${title}*\nתאריך: ${format(new Date(), "dd/MM/yyyy")}${filterText}${statsText}`;
+        const message = `*${title}*\nתאריך הפקה: ${format(new Date(), "dd/MM/yyyy")}\nתאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}${filterText}${statsText}`;
 
         const file = new File([blob], `trend-${range}.png`, {
           type: "image/png",
@@ -301,7 +301,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
               {subtitle && (
                 <>
                   {" "}
-                  | <span className="export-hide">{subtitle}</span>
+                  | <span className="">{subtitle}</span>
                 </>
               )}
               <div className="text-[10px] text-muted-foreground mt-0.5">

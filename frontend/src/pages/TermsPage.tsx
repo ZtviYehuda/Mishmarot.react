@@ -1,103 +1,132 @@
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
-  FileText,
+  Scale,
   ArrowRight,
   ShieldCheck,
-  Scale,
-  Clock,
-  Lock,
+  FileText,
+  CheckCircle2,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { useTheme } from "@/context/ThemeContext";
+import { cn } from "@/lib/utils";
 
 export default function TermsPage() {
+  const navigate = useNavigate();
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
   const sections = [
     {
-      title: "1. תנאי שימוש כלליים",
+      title: "אחריות המשתמש",
       content:
-        "השימוש במערכת 'Mishmarot' מיועד אך ורק למטרות ניהול כוח אדם, שיבוץ משמרות ומעקב נוכחות מבצעי. כל שימוש אחר במערכת או בנתוניה ללא אישור מפורש הינו אסור בהחלט.",
-      icon: <FileText className="w-5 h-5 text-blue-500" />,
+        "כל פעולה במערכת מתועדת ומזוהה אישית. המשתמש אחראי לדיוק הנתונים המוזנים על ידו ולשמירה על סודיות פרטי הגישה שלו.",
     },
     {
-      title: "2. אבטחת מידע וסודיות",
+      title: "אבטחת מידע",
       content:
-        "ידוע למשתמש כי המידע המוזן למערכת כולל נתונים רגישים על כוח אדם ושיבוצים מבצעיים. המשתמש מתחייב לשמור על סודיות פרטי הגישה שלו וחל איסור מוחלט על העברת פרטי המשתמש לצד שלישי.",
-      icon: <Lock className="w-5 h-5 text-indigo-500" />,
+        "המערכת מיועדת לשימוש מבצעי בלבד. אין להוציא נתונים מהמערכת ללא אישור מפורש מקצין ביטחון המידע היחידתי.",
     },
     {
-      title: "3. אחריות המשתמש",
+      title: "זמינות השירות",
       content:
-        "המשתמש אחראי לדיוק הנתונים המוזנים על ידו למערכת. במקרה של זיהוי טעויות או פעילות חשודה, על המשתמש לדווח על כך באופן מיידי למרכז התמיכה או לקצין האבטחה הרלוונטי.",
-      icon: <ShieldCheck className="w-5 h-5 text-cyan-500" />,
-    },
-    {
-      title: "4. שינויים במערכת ובתנאי השימוש",
-      content:
-        "המנהלת שומרת לעצמה את הזכות לעדכן את המערכת ואת תנאי השימוש מעת לעת. הודעה על שינויים מהותיים תפורסם במסך הכניסה למערכת.",
-      icon: <Clock className="w-5 h-5 text-emerald-500" />,
-    },
-    {
-      title: "5. סמכות שיפוט",
-      content:
-        "על תנאי שימוש אלה יחולו חוקי מדינת ישראל בלבד. כל מחלוקת הנוגעת לשימוש במערכת תידון בבתי המשפט המוסמכים במחוז תל אביב.",
-      icon: <Scale className="w-5 h-5 text-rose-500" />,
+        "אנו שואפים לזמינות של 99.9% מהזמן. תחזוקה מתוכננת תבוצע בשעות הלילה המאוחרות ותלווה בהודעה מראש.",
     },
   ];
 
   return (
     <div
       className={cn(
-        "min-h-screen py-16 px-4 relative overflow-hidden transition-colors duration-500",
-        isDark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-800",
+        "min-h-screen flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden",
+        isDark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900",
       )}
       dir="rtl"
     >
-      <div className="max-w-3xl mx-auto relative z-10">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-black mb-4 tracking-tight italic">
-            תנאי שימוש
-          </h1>
-        </div>
-
-        <div className="space-y-8">
-          {sections.map((section, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={cn(
-                "p-8 rounded-[2.5rem] border backdrop-blur-sm transition-all hover:",
-                isDark
-                  ? "bg-slate-900/50 border-white/10"
-                  : "bg-white border-slate-200 ",
-              )}
-            >
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-3">
-                {section.icon}
-                {section.title}
-              </h2>
-              <p className="leading-relaxed text-muted-foreground">
-                {section.content}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="mt-16 text-center pt-8 border-t border-slate-200/50 dark:border-slate-800/50">
-          <Link
-            to="/login"
-            className="text-sm font-bold text-blue-500 hover:text-blue-600 flex items-center justify-center gap-2 transition-colors uppercase tracking-widest"
-          >
-            <ArrowRight className="w-4 h-4 rotate-180" />
-            חזרה לדף הכניסה
-          </Link>
-        </div>
+      {/* Background Decor */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.05)_0%,transparent_50%)]" />
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-3xl relative z-10 my-10"
+      >
+        <Card
+          className={cn(
+            "border-none shadow-2xl rounded-[2.5rem] overflow-hidden backdrop-blur-xl",
+            isDark
+              ? "bg-slate-900/80 ring-1 ring-white/10"
+              : "bg-white/90 ring-1 ring-black/5",
+          )}
+        >
+          <div className="p-8 md:p-12">
+            <div className="flex items-center gap-6 mb-12">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <Scale className="w-8 h-8" />
+              </div>
+              <div className="text-right">
+                <h1 className="text-3xl font-black tracking-tight mb-2">
+                  תנאי שימוש
+                </h1>
+                <p className="text-sm font-bold text-muted-foreground">
+                  עודכן לאחרונה: פברואר 2026
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-10">
+              <div
+                className={cn(
+                  "p-6 rounded-[2rem] border",
+                  isDark
+                    ? "bg-blue-600/5 border-blue-500/10"
+                    : "bg-blue-50/50 border-blue-100",
+                )}
+              >
+                <div className="flex items-start gap-4">
+                  <ShieldCheck className="w-6 h-6 text-blue-500 shrink-0 mt-1" />
+                  <p className="text-sm font-bold leading-relaxed text-muted-foreground">
+                    השימוש במערכת כפוף לנהלי אבטחת המידע של היחידה ולפקודות
+                    הקבע. כניסה למערכת מהווה הסכמה לכל התנאים המפורטים להלן.
+                  </p>
+                </div>
+              </div>
+
+              {sections.map((section, idx) => (
+                <div key={idx} className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-black">{section.title}</h3>
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed pr-11">
+                    {section.content}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-16 pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-2 text-emerald-500 font-black text-sm">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>הנחיות מאושרות ע"י קב"ט</span>
+              </div>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/")}
+                className="h-12 px-8 rounded-xl font-black gap-2 hover:bg-muted"
+              >
+                <ArrowRight className="w-4 h-4" />
+                חזרה למסך הבית
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
     </div>
   );
 }

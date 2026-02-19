@@ -143,7 +143,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                       setFormData({ ...formData, first_name: e.target.value })
                     }
                     required
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
                   />
                 </InputGroup>
                 <InputGroup label="שם משפחה *" icon={User}>
@@ -153,7 +153,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                       setFormData({ ...formData, last_name: e.target.value })
                     }
                     required
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
                   />
                 </InputGroup>
                 <InputGroup label="מספר אישי *" icon={ShieldCheck}>
@@ -167,7 +167,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                     }
                     required
                     placeholder="מ״א"
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono tracking-widest transition-all"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono tracking-widest transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
                   />
                 </InputGroup>
                 <InputGroup label="תעודת זהות *" icon={ShieldCheck}>
@@ -178,7 +178,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                     }
                     required
                     placeholder="ת״ז"
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono tracking-widest transition-all"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono tracking-widest transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
                   />
                 </InputGroup>
               </div>
@@ -206,7 +206,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                       setFormData({ ...formData, email: e.target.value })
                     }
                     placeholder="example@police.gov.il"
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
                   />
                 </InputGroup>
                 <InputGroup label="מספר טלפון" icon={Phone}>
@@ -217,7 +217,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                       setFormData({ ...formData, phone_number: e.target.value })
                     }
                     placeholder="05x-xxxxxxx"
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono transition-all"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
                   />
                 </InputGroup>
                 <InputGroup label="עיר מגורים" icon={MapPin}>
@@ -226,7 +226,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                     onChange={(e) =>
                       setFormData({ ...formData, city: e.target.value })
                     }
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
                   />
                 </InputGroup>
               </div>
@@ -253,7 +253,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                     onChange={(e) =>
                       setFormData({ ...formData, birth_date: e.target.value })
                     }
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-xs transition-all"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-xs transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
                   />
                 </InputGroup>
                 <InputGroup label="תאריך גיוס" icon={CalendarDays}>
@@ -266,7 +266,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                         enlistment_date: e.target.value,
                       })
                     }
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-xs transition-all"
+                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-xs transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
                   />
                 </InputGroup>
               </div>

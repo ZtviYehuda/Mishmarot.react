@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import apiClient from "@/config/api.client";
 import * as endpoints from "@/config/auth.endpoints";
 import type { AuthUser, LoginResponse } from "@/types/auth.types";
@@ -8,9 +8,16 @@ export const useAuth = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isInitialLoad = useRef(true);
+
   // Function to fetch current user (Me)
   const fetchUser = useCallback(async () => {
-    setLoading(true);
+    // Only set global loading for the very first fetch
+    if (isInitialLoad.current) {
+      setLoading(true);
+      isInitialLoad.current = false;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {

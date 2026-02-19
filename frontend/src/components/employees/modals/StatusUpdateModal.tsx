@@ -406,7 +406,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             start_date: e.target.value,
                           }))
                         }
-                        className="h-11 bg-background dark:bg-slate-900 border-border/60 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold transition-all w-full shadow-sm"
+                        className="h-11 bg-background dark:bg-slate-900 border-border/60 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold transition-all w-full shadow-sm dark:text-white"
                       />
                     </div>
                   </div>
@@ -426,7 +426,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                           }))
                         }
                         placeholder="לא חובה"
-                        className="h-11 bg-background dark:bg-slate-900 border-border/60 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold transition-all w-full shadow-sm"
+                        className="h-11 bg-background dark:bg-slate-900 border-border/60 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold transition-all w-full shadow-sm dark:text-white"
                       />
                     </div>
                   </div>
@@ -447,7 +447,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                         }))
                       }
                       placeholder="הוסף הערה..."
-                      className="h-11 bg-background dark:bg-slate-900 border-border/60 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold placeholder:text-muted-foreground/50 transition-all w-full shadow-sm"
+                      className="h-11 bg-background dark:bg-slate-900 border-border/60 focus:ring-primary/20 focus:border-primary rounded-xl sm:rounded-2xl text-right pr-10 pl-3 text-xs font-bold placeholder:text-muted-foreground/50 transition-all w-full shadow-sm dark:text-white"
                     />
                   </div>
                 </div>
@@ -544,7 +544,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                     onValueChange={setDelegateId}
                                     dir="rtl"
                                   >
-                                    <SelectTrigger className="h-11 rounded-xl bg-background border-primary/20 focus:ring-primary/20 text-right">
+                                    <SelectTrigger className="h-11 rounded-xl bg-background border-primary/20 focus:ring-primary/20 text-right dark:bg-slate-900 dark:text-white">
                                       <SelectValue placeholder="בחר חבר צוות..." />
                                     </SelectTrigger>
                                     <SelectContent dir="rtl">

@@ -20,7 +20,6 @@ import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
-import { ForgotPasswordDialog } from "@/components/settings/ForgotPasswordDialog";
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuthContext();
@@ -413,7 +412,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pb-8 lg:pb-12">
+    <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pb-8 lg:pb-12">
       <PageHeader
         icon={SettingsIcon}
         title="הגדרות מערכת"
@@ -421,10 +420,11 @@ export default function SettingsPage() {
         category="הגדרות"
         categoryLink="/settings"
         iconClassName="from-primary/10 to-primary/5 border-primary/20"
+        className="mb-0 sm:mb-0 lg:mb-0"
       />
 
       {/* Desktop Horizontal Navigation (Replaces Sidebar) */}
-      <div className="hidden lg:flex items-center gap-1 border-b border-border sticky top-0 bg-background/95 backdrop-blur z-50 pb-0 overflow-x-auto no-scrollbar pt-2">
+      <div className="hidden lg:flex items-center gap-1 border-b border-border sticky top-14 bg-background/95 backdrop-blur z-50 pb-0 overflow-x-auto no-scrollbar pt-2">
         {!user?.is_temp_commander && (
           <TabItem
             label="פרופיל אישי"
@@ -461,7 +461,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Content Area */}
-      <div className="min-w-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="min-w-0 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">
         {activeTab === "profile" && !user?.is_temp_commander && (
           <ProfileSettings
             user={user}
@@ -500,14 +500,8 @@ export default function SettingsPage() {
               handleChangePassword={handleChangePassword}
               isResetting={isResetting}
               handleResetImpersonatedPassword={handleResetImpersonatedPassword}
-              onForgotPassword={() => setShowForgotPassword(true)}
               handleConfirmCurrentPassword={handleConfirmCurrentPassword}
-            />
-
-            <ForgotPasswordDialog
-              open={showForgotPassword}
-              onOpenChange={setShowForgotPassword}
-              user={user}
+              onForgotPassword={() => setShowForgotPassword(true)}
             />
           </>
         )}

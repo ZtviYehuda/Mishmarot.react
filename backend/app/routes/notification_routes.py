@@ -22,6 +22,7 @@ def get_alerts():
             identity = identity_raw
 
         user_id = identity["id"] if isinstance(identity, dict) else identity
+        print(f"DEBUG: get_alerts called for user_id: {user_id}")
 
         # Get full user to get their notification settings and command scope
         user = EmployeeModel.get_employee_by_id(user_id)

@@ -242,16 +242,16 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-2xl p-0 border-none bg-card  flex flex-col rounded-3xl overflow-hidden"
+        className="w-full sm:max-w-2xl h-[92vh] sm:h-auto sm:max-h-[85vh] p-0 border-none bg-card flex flex-col rounded-t-[32px] sm:rounded-3xl overflow-hidden !gap-0"
         dir="rtl"
       >
-        <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
+        <DialogHeader className="p-5 sm:p-8 pb-4 border-b border-border/50 bg-muted/20 text-right shrink-0 space-y-0">
           <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
-            <div className="text-center sm:text-right">
-              <DialogTitle className="text-2xl font-black text-foreground mb-1 tracking-tight">
+            <div className="text-center sm:text-right flex-1">
+              <DialogTitle className="text-xl sm:text-2xl font-black text-foreground mb-1 tracking-tight">
                 סינון שוטרים מתקדם
               </DialogTitle>
-              <DialogDescription className="text-sm font-bold text-muted-foreground italic tracking-tight">
+              <DialogDescription className="text-[11px] sm:text-sm font-bold text-muted-foreground italic tracking-tight leading-relaxed">
                 התאם את התצוגה המבוקשת לפי מדרג ארגוני, מעמד או מאפיינים אישיים
               </DialogDescription>
             </div>
@@ -260,7 +260,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             </div>
           </div>
 
-          <div className="relative mt-8 group">
+          <div className="relative mt-6 sm:mt-8 group">
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/40 transition-colors group-focus-within:text-primary" />
             <Input
               placeholder="חיפוש חופשי (שם, מנ'א, תפקיד)..."
@@ -268,12 +268,12 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               onChange={(e) =>
                 setFilters({ ...filters, searchText: e.target.value })
               }
-              className="h-12 pr-12 pl-4 bg-background border-border/50 rounded-2xl text-sm font-black text-foreground focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/30"
+              className="h-12 pr-11 pl-4 bg-background border-border/50 rounded-2xl text-sm font-black text-foreground focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/30"
             />
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-8 space-y-10 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-5 sm:px-10 py-6 sm:py-8 space-y-8 sm:space-y-10 custom-scrollbar">
           {/* Organizational Structure */}
           <div className="space-y-6">
             <button
@@ -317,9 +317,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 {/* Departments */}
                 {(user?.is_admin || availableDepts.length > 1) && (
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-indigo-600/70 uppercase tracking-widest flex items-center gap-2">
+                    <Label className="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
                       מחלקות
-                      <div className="h-px bg-indigo-100 flex-1 opacity-50" />
+                      <div className="h-px bg-indigo-100 flex-1 opacity-70" />
                     </Label>
                     <div className="flex flex-wrap gap-2.5">
                       {availableDepts.map((dept) => (
@@ -345,9 +345,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 {availableSections.length > 0 &&
                   (availableSections.length > 1 || user?.is_admin) && (
                     <div className="space-y-3">
-                      <Label className="text-[10px] font-black text-blue-600/70 uppercase tracking-widest flex items-center gap-2">
+                      <Label className="text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
                         מדורים
-                        <div className="h-px bg-blue-100 flex-1 opacity-50" />
+                        <div className="h-px bg-blue-100 flex-1 opacity-70" />
                       </Label>
                       <div className="flex flex-wrap gap-2.5">
                         {availableSections.map((sect) => (
@@ -372,9 +372,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 {/* Teams */}
                 {availableTeams.length > 0 && (
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-emerald-600/70 uppercase tracking-widest flex items-center gap-2">
+                    <Label className="text-[11px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
                       חוליות / צוותים
-                      <div className="h-px bg-emerald-100 flex-1 opacity-50" />
+                      <div className="h-px bg-emerald-100 flex-1 opacity-70" />
                     </Label>
                     <div className="flex flex-wrap gap-2.5">
                       {availableTeams.map((team) => (
@@ -576,15 +576,15 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           </div>
         </div>
 
-        <div className="p-6 sm:p-10 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row gap-4 items-center">
+        <div className="p-5 sm:p-10 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center shrink-0">
           <Button
             onClick={handleApply}
-            className="w-full sm:flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-14   transition-all active:scale-[0.98] gap-3 text-base"
+            className="w-full sm:flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-14 sm:h-14 transition-all active:scale-[0.98] gap-3 text-base"
           >
-            <Filter className="w-5 h-5" />
-            החל את הגדרות הסינון
+            <Filter className="w-5 h-5 shrink-0" />
+            <span className="truncate">החל את הגדרות הסינון</span>
             {activeFiltersCount > 0 && (
-              <span className="bg-primary-foreground/20 px-2.5 py-0.5 rounded-full text-[11px] font-black mr-1">
+              <span className="bg-primary-foreground/20 px-2.5 py-0.5 rounded-full text-[11px] font-black">
                 {activeFiltersCount}
               </span>
             )}
@@ -592,7 +592,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           <Button
             variant="ghost"
             onClick={handleReset}
-            className="w-full sm:w-auto px-8 rounded-2xl h-14 font-black text-muted-foreground hover:text-foreground hover:bg-muted transition-all gap-2 text-sm"
+            className="w-full sm:w-auto px-8 rounded-2xl h-12 sm:h-14 font-black text-muted-foreground hover:text-foreground hover:bg-muted transition-all gap-2 text-sm shadow-none"
           >
             <RotateCcw className="w-4 h-4 opacity-70" />
             איפוס הגדרות

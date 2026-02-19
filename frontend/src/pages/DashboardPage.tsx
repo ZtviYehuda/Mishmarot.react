@@ -13,16 +13,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { LayoutDashboard } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { CriticalAlerts } from "@/components/dashboard/CriticalAlerts";
-import {
-  BulkStatusUpdateModal,
-  StatusUpdateModal,
-} from "@/components/employees/modals";
-import { CheckCircle2, User } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import type { Employee } from "@/types/employee.types";
+
 import { ReportHub } from "@/components/dashboard/ReportHub";
 
 interface Team {
@@ -111,14 +102,8 @@ export default function DashboardPage() {
         return 1;
     }
   }, [viewMode]);
-  const [missingReportIds, setMissingReportIds] = useState<number[]>([]);
-  const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
-
   const [whatsAppDialogOpen, setWhatsAppDialogOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [currentUserEmp, setCurrentUserEmp] = useState<Employee | null>(null);
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [selectedSelfEmp, setSelectedSelfEmp] = useState<Employee | null>(null);
 
   // Filters
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
@@ -229,14 +214,6 @@ export default function DashboardPage() {
     fetchSelects();
   }, [getStructure, getServiceTypes]);
 
-  // Fetch current user separately since they are excluded from lists
-  const { getEmployeeById } = useEmployees();
-  useEffect(() => {
-    if (user) {
-      getEmployeeById(user.id).then(setCurrentUserEmp);
-    }
-  }, [user, getEmployeeById]);
-
   // Fetch Comparison Stats
   useEffect(() => {
     const fetchComparison = async () => {
@@ -341,67 +318,66 @@ export default function DashboardPage() {
     fetchEmployees,
   ]);
 
-  // Calculate Stats CLIENT-SIDE to fix future date logic instantly
-  // Calculate Stats CLIENT-SIDE to fix future date logic instantly
+  // --- STATISTICS (Unified Logic) ---
+  const isReportedOnDate = (emp: any, date: Date) => {
+    if (!emp.status_id) return false;
+    const isStartedOnDay =
+      emp.last_status_update &&
+      new Date(emp.last_status_update).toDateString() === date.toDateString();
+    if (isStartedOnDay) return true;
+    if (emp.status_end_datetime) {
+      const endDate = new Date(emp.status_end_datetime);
+      endDate.setHours(23, 59, 59, 999);
+      if (date <= endDate) return true;
+    }
+    return false;
+  };
+
   const computedStats = useMemo(() => {
     const statusMap = new Map<
       string,
       { status_id: number; status_name: string; color: string; count: number }
     >();
 
-    // Initialize "Unreported" if needed, or let it be created dynamically
-    // We'll use ID -1 for Unreported
-    const unreportedKey = "unreported";
+    let notReportedCount = 0;
 
-    employees.forEach((emp) => {
-      const isToday = selectedDate.toDateString() === new Date().toDateString();
-      const statusName = emp.status_name?.trim() || "";
+    employees.forEach((emp: any) => {
+      if (isReportedOnDate(emp, selectedDate)) {
+        const statusName = emp.status_name?.trim() || "ללא שם";
+        const key = statusName;
 
-      // Check if explicitly updated for this specific date
-      const isUpdatedToday =
-        emp.last_status_update &&
-        new Date(emp.last_status_update).toDateString() ===
-          selectedDate.toDateString();
+        if (!statusMap.has(key)) {
+          statusMap.set(key, {
+            status_id: emp.status_id,
+            status_name: statusName,
+            color: emp.status_color || "#cbd5e1",
+            count: 0,
+          });
+        }
 
-      // Use Backend flag for persistence
-      // If status_is_persistent is true, it "sticks" without daily update
-      const isPersistent = emp.status_is_persistent === true;
-
-      let finalStatus = {
-        status_id: emp.status_id || 0,
-        status_name: statusName || "לא מדווח",
-        color: emp.status_color || "#cbd5e1",
-      };
-
-      // Apply Logic: Force "Unreported" for default statuses on non-updated days
-      if (!isToday && !isUpdatedToday && !isPersistent) {
-        finalStatus = {
-          status_id: -1,
-          status_name: "לא דווח",
-          color: "#94a3b8", // Slate-400
-        };
+        const entry = statusMap.get(key)!;
+        entry.count++;
+      } else {
+        notReportedCount++;
       }
-
-      // Aggregate
-      const key =
-        finalStatus.status_id === -1 ? unreportedKey : finalStatus.status_name; // Group by name to merge same statuses
-
-      if (!statusMap.has(key)) {
-        statusMap.set(key, {
-          status_id: finalStatus.status_id,
-          status_name: finalStatus.status_name,
-          color: finalStatus.color,
-          count: 0,
-        });
-      }
-
-      const entry = statusMap.get(key)!;
-      entry.count++;
     });
 
-    const results = Array.from(statusMap.values()).sort(
-      (a, b) => b.count - a.count,
-    );
+    const results = Array.from(statusMap.values());
+
+    // Add "Not Reported" category if there are unreported employees or if the list is empty
+    if (
+      notReportedCount > 0 ||
+      (results.length === 0 && employees.length > 0)
+    ) {
+      results.push({
+        status_id: 0,
+        status_name: "לא דווח",
+        color: "#94a3b8", // Slate-400 equivalent for neutral gray
+        count: notReportedCount,
+      });
+    }
+
+    results.sort((a, b) => b.count - a.count);
 
     if (selectedStatusData) {
       return results.filter((s) => s.status_id === selectedStatusData.id);
@@ -409,6 +385,7 @@ export default function DashboardPage() {
 
     return results;
   }, [employees, selectedDate, selectedStatusData]);
+  // -----------------------------------------------------
 
   // Fetch Stats (Server-side) - ONLY for Birthdays now, since we compute stats client-side
   useEffect(() => {
@@ -494,11 +471,6 @@ export default function DashboardPage() {
     }
   };
 
-  const isReportedToday =
-    currentUserEmp?.last_status_update &&
-    new Date(currentUserEmp.last_status_update).toDateString() ===
-      selectedDate.toDateString();
-
   // Comparison Matrix: Admin, Dept Commander, Section Commander (Hide for Team Commander)
   const showComparisonMatrix = useMemo(() => {
     if (user?.is_admin) return true;
@@ -515,22 +487,6 @@ export default function DashboardPage() {
     if (user?.commands_team_id) return true;
     return false;
   }, [user]);
-
-  const handleOpenSelfReport = () => {
-    if (currentUserEmp) {
-      setSelectedSelfEmp(currentUserEmp);
-      setStatusModalOpen(true);
-    } else {
-      toast.error("לא ניתן לטעון את פרטי השוטר לדיווח");
-    }
-  };
-
-  const refreshSelfStatus = async () => {
-    if (user) {
-      const me = await getEmployeeById(user.id);
-      setCurrentUserEmp(me);
-    }
-  };
 
   const currentDept = structure.find((d) => d.id.toString() === selectedDeptId);
   const currentSection = currentDept?.sections.find(
@@ -656,19 +612,19 @@ export default function DashboardPage() {
   }, [selectedTeamId, selectedSectionId, selectedDeptId, structure, user]);
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6" dir="rtl">
       <PageHeader
         icon={LayoutDashboard}
-        title="לוח בקרה מרכזי"
+        title="לוח בקרה ראשי"
         subtitle="נתוני נוכחות, ימי הולדת וסטטיסטיקות כוח אדם"
-        category="לוח בקרה"
+        category="מערכת משמרות"
         categoryLink="/"
         badge={
-          <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 w-full lg:w-auto">
-            <DateHeader className="col-span-2 w-full justify-center sm:w-auto" />
+          <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full sm:w-auto">
+            <DateHeader className="w-full sm:w-auto flex-1" />
             {!user?.is_temp_commander && (
               <ReportHub
-                className="w-full sm:w-auto justify-center"
+                className="w-full sm:w-auto h-auto min-h-[44px] sm:min-h-0 rounded-xl border border-primary/10 bg-white text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all shadow-sm flex items-center justify-center"
                 onShareBirthdays={() => birthdaysRef.current?.share()}
                 initialViewMode={viewMode}
                 initialDate={selectedDate}
@@ -683,33 +639,8 @@ export default function DashboardPage() {
                 }}
               />
             )}
-            <Button
-              variant={isReportedToday ? "default" : "outline"}
-              size="sm"
-              className={cn(
-                "h-10 rounded-xl gap-2 font-black transition-all px-4 shrink-0  w-full sm:w-auto justify-center",
-                isReportedToday
-                  ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white -500/20"
-                  : "border-primary/20 bg-primary/5 text-primary",
-              )}
-              onClick={handleOpenSelfReport}
-            >
-              {isReportedToday ? (
-                <CheckCircle2 className="w-4 h-4" />
-              ) : (
-                <User className="w-4 h-4" />
-              )}
-              <span className="text-xs">דיווח עצמי</span>
-            </Button>
           </div>
         }
-      />
-
-      <CriticalAlerts
-        onOpenBulkUpdate={(missingIds) => {
-          setMissingReportIds(missingIds);
-          setIsBulkUpdateOpen(true);
-        }}
       />
 
       <div className="space-y-6">
@@ -735,6 +666,7 @@ export default function DashboardPage() {
 
           {/* Main Attendance Chart */}
           <div className="flex flex-col xl:col-span-1">
+            {/* Main Attendance Chart */}
             <EmployeesChart
               ref={snapshotRef}
               stats={computedStats} // Use computed stats
@@ -839,41 +771,6 @@ export default function DashboardPage() {
           />
         </DialogContent>
       </Dialog>
-
-      <BulkStatusUpdateModal
-        open={isBulkUpdateOpen}
-        onOpenChange={setIsBulkUpdateOpen}
-        employees={employees}
-        initialSelectedIds={missingReportIds}
-        onSuccess={() => {
-          // efficient refresh?
-          window.location.reload();
-        }}
-        // The modal logic requires `employees` array to function.
-        // I need to fetch the specific missing employees to pass them.
-      />
-
-      {selectedSelfEmp && (
-        <StatusUpdateModal
-          open={statusModalOpen}
-          onOpenChange={setStatusModalOpen}
-          employee={selectedSelfEmp}
-          onSuccess={() => {
-            refreshSelfStatus();
-            // Refresh employees list to update computed stats
-            fetchEmployees(
-              undefined,
-              selectedDeptId ? parseInt(selectedDeptId) : undefined,
-              undefined,
-              undefined,
-              selectedSectionId ? parseInt(selectedSectionId) : undefined,
-              selectedTeamId ? parseInt(selectedTeamId) : undefined,
-              format(selectedDate, "yyyy-MM-dd"),
-              selectedServiceTypes,
-            );
-          }}
-        />
-      )}
     </div>
   );
 }

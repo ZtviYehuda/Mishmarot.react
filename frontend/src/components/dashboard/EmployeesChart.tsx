@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Filter, Download } from "lucide-react";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { toPng } from "html-to-image";
+import { toPng, toBlob } from "html-to-image";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -29,6 +29,7 @@ interface EmployeesChartProps {
   description?: string;
   selectedDate?: Date;
   hideExportControls?: boolean;
+  unitName?: string;
 }
 
 export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
@@ -43,6 +44,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       description = "סטטוס נוכחות בזמן אמת",
       selectedDate = new Date(),
       hideExportControls = false,
+      unitName = "כלל היחידה",
     },
     ref,
   ) => {
@@ -50,6 +52,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
 
     useImperativeHandle(ref, () => ({
       download: handleDownload,
+      share: handleWhatsAppShare,
     }));
 
     const handleDownload = async () => {
@@ -73,7 +76,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
               dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
               dateEl.style.border = "1px solid #e2e8f0";
               dateEl.style.color = "#0f172a";
-              dateEl.innerText = `תאריך: ${format(selectedDate, "dd/MM/yyyy")}`;
+              dateEl.innerText = `תאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}`;
             }
             const hideEls = clonedNode.querySelectorAll(".export-hide");
             hideEls.forEach((el: any) => (el.style.display = "none"));
@@ -90,6 +93,80 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       } catch (err) {
         console.error("Download failed", err);
         toast.error("שגיאה בהורדת הגרף");
+      }
+    };
+
+    const handleWhatsAppShare = async () => {
+      if (cardRef.current === null) return;
+
+      try {
+        const blob = await toBlob(cardRef.current, {
+          cacheBust: true,
+          backgroundColor: "#ffffff",
+          onClone: (clonedNode: any) => {
+            const dateEl = clonedNode.querySelector(".export-date-hidden");
+            if (dateEl) {
+              dateEl.style.position = "absolute";
+              dateEl.style.top = "20px";
+              dateEl.style.left = "20px";
+              dateEl.style.opacity = "1";
+              dateEl.style.zIndex = "50";
+              dateEl.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
+              dateEl.style.padding = "4px 12px";
+              dateEl.style.borderRadius = "8px";
+              dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              dateEl.style.border = "1px solid #e2e8f0";
+              dateEl.style.color = "#0f172a";
+              dateEl.innerText = `תאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}`;
+            }
+            const hideEls = clonedNode.querySelectorAll(".export-hide");
+            hideEls.forEach((el: any) => (el.style.display = "none"));
+            const noExportEls = clonedNode.querySelectorAll(".no-export");
+            noExportEls.forEach((el: any) => (el.style.display = "none"));
+          },
+        } as any);
+
+        if (!blob) throw new Error("Failed to capture image");
+
+        const titleText = `${title} - ${unitName}`;
+        const message = `*${titleText}*\nתאריך הפקה: ${format(new Date(), "dd/MM/yyyy")}\nתאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}\n\nסיכום: ${total} שוטרים ביחידה.`;
+
+        const file = new File([blob], `attendance-snapshot.png`, {
+          type: "image/png",
+        });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: titleText,
+              text: message,
+            });
+            toast.success("הדוח שותף בהצלחה");
+            return;
+          } catch (shareErr) {
+            if ((shareErr as Error).name !== "AbortError") {
+              console.warn("Web Share failed:", shareErr);
+            } else {
+              return;
+            }
+          }
+        }
+
+        try {
+          const item = new ClipboardItem({ "image/png": blob });
+          await navigator.clipboard.write([item]);
+        } catch (clipErr) {
+          console.warn("Clipboard copy failed", clipErr);
+        }
+
+        const encodedMessage = encodeURIComponent(message);
+        window.open(`https://wa.me/?text=${encodedMessage}`, "_blank");
+
+        toast.success("התמונה הועתקה! נא לבצע 'הדבק' (Ctrl+V) בווצאפ");
+      } catch (err) {
+        console.error("WhatsApp share failed", err);
+        toast.error("שגיאה בהכנת הדוח ל-WhatsApp");
       }
     };
 
@@ -126,7 +203,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       const data = stats.map((item, index) => ({
         // Make sure we pass the ID
         id: item.status_id === null ? -1 : item.status_id, // Use -1 for "No Status" to allow clicking
-        name: item.status_name || "לא עודכן",
+        name: item.status_name || "לא דווח",
         value: item.count,
         fill: item.color || "#94a3b8",
         percentage: rounded[index],
@@ -240,7 +317,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
               >
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart
-                    margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                    margin={{ top: 30, right: 30, bottom: 30, left: 30 }}
                   >
                     <Pie
                       data={chartData}
@@ -248,21 +325,27 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                       cy="50%"
                       labelLine={false}
                       label={(props: any) => {
-                        if (props.payload.percentage < 5) return null;
+                        const isMobile =
+                          typeof window !== "undefined" &&
+                          window.innerWidth < 640;
+                        // Hide small segments labels on mobile to prevent overlapping
+                        if (props.payload.percentage < (isMobile ? 8 : 5))
+                          return null;
+
                         const RADIAN = Math.PI / 180;
-                        // Dynamic radius based on actual chart size
-                        const radius = props.outerRadius * 1.2;
+                        const radiusOffset = isMobile ? 1.2 : 1.25;
+                        const radius = props.outerRadius * radiusOffset;
+
                         const x =
                           props.cx +
                           radius * Math.cos(-props.midAngle * RADIAN);
                         const y =
                           props.cy +
                           radius * Math.sin(-props.midAngle * RADIAN);
-                        const isMobile = window.innerWidth < 640;
 
                         return (
                           <g
-                            className="cursor-pointer outline-none"
+                            className="cursor-pointer outline-none select-none transition-all duration-300"
                             onClick={() => {
                               if (onStatusClick && props.payload.id !== null) {
                                 onStatusClick(
@@ -275,54 +358,65 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                           >
                             <text
                               x={x}
-                              y={y - (isMobile ? 12 : 14)}
+                              y={y - (isMobile ? 10 : 14)}
                               fill="currentColor"
-                              className="fill-muted-foreground"
+                              className="fill-muted-foreground/60"
                               textAnchor="middle"
                               dominantBaseline="middle"
                               fontSize={isMobile ? "9" : "11"}
-                              fontWeight="700"
+                              fontWeight="800"
                             >
                               {props.payload.name}
                             </text>
                             <text
                               x={x}
-                              y={y}
+                              y={y + (isMobile ? 2 : 1)}
                               fill="currentColor"
-                              className="fill-foreground"
+                              className="fill-foreground font-black"
                               textAnchor="middle"
                               dominantBaseline="middle"
                               fontSize={isMobile ? "11" : "13"}
-                              fontWeight="800"
                             >
                               {props.payload.value}
                             </text>
                             <text
                               x={x}
-                              y={y + (isMobile ? 12 : 14)}
+                              y={y + (isMobile ? 10 : 13)}
                               fill="currentColor"
-                              className="fill-muted-foreground"
+                              className="fill-primary/50"
                               textAnchor="middle"
                               dominantBaseline="middle"
-                              fontSize={isMobile ? "8" : "10"}
-                              fontWeight="600"
+                              fontSize={isMobile ? "7" : "10"}
+                              fontWeight="700"
                             >
                               {props.payload.percentage}%
                             </text>
                           </g>
                         );
                       }}
-                      outerRadius="70%"
-                      innerRadius="45%"
+                      outerRadius={
+                        typeof window !== "undefined" && window.innerWidth < 640
+                          ? "65%"
+                          : "70%"
+                      }
+                      innerRadius={
+                        typeof window !== "undefined" && window.innerWidth < 640
+                          ? "45%"
+                          : "45%"
+                      }
                       fill="#8884d8"
+                      stroke="none"
+                      strokeWidth={0}
                       dataKey="value"
-                      paddingAngle={2}
+                      paddingAngle={4}
                     >
                       {chartData.map((item, index) => (
                         <Cell
                           key={`cell-${item.id || index}`}
                           fill={item.fill}
-                          className="outline-none hover:opacity-80 transition-opacity cursor-pointer"
+                          stroke="none"
+                          strokeWidth={0}
+                          className="outline-none hover:opacity-90 transition-all cursor-pointer"
                           onClick={() => {
                             if (
                               onStatusClick &&
@@ -340,10 +434,10 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                 </ResponsiveContainer>
                 {/* Center Display */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <div className="text-3xl font-black text-foreground">
+                  <div className="text-2xl sm:text-3xl font-black text-foreground drop-shadow-sm">
                     {total}
                   </div>
-                  <div className="text-xs font-semibold text-muted-foreground mt-1">
+                  <div className="text-[10px] font-bold text-muted-foreground/80 mt-0.5 uppercase tracking-wider">
                     סך הכל
                   </div>
                 </div>

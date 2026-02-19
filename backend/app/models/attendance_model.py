@@ -330,7 +330,7 @@ class AttendanceModel:
                 cur.execute(query, tuple(final_params))
             else:
                 # Original Snapshot logic for single day
-                status_condition = "AND (al.end_datetime IS NULL OR al.end_datetime > CURRENT_TIMESTAMP) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = CURRENT_DATE)"
+                status_condition = "AND (DATE(al.start_datetime) = CURRENT_DATE OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= CURRENT_DATE))"
                 status_params = []
                 if date:
                     try:
@@ -340,11 +340,11 @@ class AttendanceModel:
                             status_condition = "AND DATE(al.start_datetime) <= %s AND al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s"
                             status_params = [date, date]
                         else:
-                            status_condition = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
-                            status_params = [date, date, date]
+                            status_condition = "AND (DATE(al.start_datetime) = %s OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s))"
+                            status_params = [date, date]
                     except Exception:
-                        status_condition = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
-                        status_params = [date, date, date]
+                        status_condition = "AND (DATE(al.start_datetime) = %s OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s))"
+                        status_params = [date, date]
 
                 query = f"""
                     SELECT 
@@ -473,14 +473,10 @@ class AttendanceModel:
                         JOIN attendance_logs al ON al.employee_id = se.id
                         JOIN status_types st ON al.status_type_id = st.id
                         WHERE {count_condition}
-                        AND DATE(al.start_datetime) <= p.date
                         AND (
-                            CASE 
-                                WHEN p.date > CURRENT_DATE THEN al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= p.date
-                                ELSE (al.end_datetime IS NULL OR DATE(al.end_datetime) >= p.date)
-                            END
+                            DATE(al.start_datetime) = p.date 
+                            OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= p.date)
                         )
-                        AND (st.is_persistent = TRUE OR DATE(al.start_datetime) = p.date)
                     ) as present_count
                 FROM params p
                 ORDER BY p.date ASC
@@ -503,7 +499,7 @@ class AttendanceModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             params = []
-            status_condition = "AND (al.end_datetime IS NULL OR al.end_datetime > CURRENT_TIMESTAMP) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = CURRENT_DATE)"
+            status_condition = "AND (DATE(al.start_datetime) = CURRENT_DATE OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= CURRENT_DATE))"
 
             if filters and filters.get("date"):
                 try:
@@ -515,11 +511,11 @@ class AttendanceModel:
                         status_condition = "AND DATE(al.start_datetime) <= %s AND al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s"
                         params.extend([check_date_str, check_date_str])
                     else:
-                        status_condition = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
-                        params.extend([check_date_str, check_date_str, check_date_str])
+                        status_condition = "AND (DATE(al.start_datetime) = %s OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s))"
+                        params.extend([check_date_str, check_date_str])
                 except:
-                    status_condition = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
-                    params.extend([filters["date"], filters["date"], filters["date"]])
+                    status_condition = "AND (DATE(al.start_datetime) = %s OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s))"
+                    params.extend([filters["date"], filters["date"]])
 
             query = f"""
                 SELECT 

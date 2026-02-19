@@ -1,5 +1,6 @@
 from app.utils.db import get_db_connection
 from psycopg2.extras import RealDictCursor
+from datetime import date
 
 
 class NotificationModel:
@@ -188,6 +189,39 @@ class NotificationModel:
                         }
                     )
 
+            # 2.5 Check for Self Missing Report (High Priority)
+            # Check if current user has reported for today
+            if requesting_user.get("is_active", True):
+                print(
+                    f"DEBUG: Checking self report for user {requesting_user.get('id')} ({requesting_user.get('first_name')})"
+                )
+                self_missing_query = """
+                    SELECT 1 FROM attendance_logs al
+                    JOIN status_types st ON al.status_type_id = st.id
+                    WHERE al.employee_id = %s
+                    AND DATE(al.start_datetime) <= CURRENT_DATE
+                    AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= CURRENT_DATE)
+                    AND (
+                        DATE(al.start_datetime) = CURRENT_DATE
+                        OR st.is_persistent = TRUE
+                    )
+                """
+                cur.execute(self_missing_query, (requesting_user["id"],))
+                self_reported = cur.fetchone()
+                print(f"DEBUG: Self Report Found? {bool(self_reported)}")
+
+                if not self_reported:
+                    alerts.append(
+                        {
+                            "id": f"self-missing-report-{date.today().isoformat()}",
+                            "type": "danger",
+                            "title": "טרם דיווחת נוכחות להיום",
+                            "description": "לא נמצא דיווח נוכחות עבורך להיום. אנא דווח בהקדם.",
+                            "link": "/dashboard",
+                            "data": {"is_self_report": True},
+                        }
+                    )
+
             # 3. Check for Missing Morning Reports (if enabled)
             if requesting_user.get("notif_morning_report", True) and (
                 requesting_user.get("is_commander") or requesting_user.get("is_admin")
@@ -236,7 +270,7 @@ class NotificationModel:
                 if res_missing and res_missing["count"] > 0:
                     alerts.append(
                         {
-                            "id": "missing-reports",
+                            "id": f"missing-reports-{date.today().isoformat()}",
                             "type": "warning",
                             "title": "אי-דיווח בוקר ביחידה",
                             "description": f"ישנם {res_missing['count']} שוטרים ביחידתך שטרם הוזן להם סטטוס להיום",
@@ -363,7 +397,7 @@ class NotificationModel:
 
                     alerts.append(
                         {
-                            "id": "missed-birthdays",
+                            "id": f"missed-birthdays-{date.today().isoformat()}",
                             "type": "info",
                             "title": "🎁 ימי הולדת שפוספסו",
                             "description": desc,

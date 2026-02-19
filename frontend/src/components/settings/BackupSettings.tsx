@@ -74,28 +74,28 @@ export function BackupSettings({
             <div className="space-y-10">
               <div
                 className={cn(
-                  "flex items-center justify-between p-8 rounded-[2rem] border transition-all duration-500",
+                  "flex items-center justify-between p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] border transition-all duration-500",
                   backupConfig.enabled
                     ? "bg-primary/5 border-primary/20  "
                     : "bg-background border-border/50",
                 )}
               >
-                <div className="flex items-start gap-5">
+                <div className="flex items-start gap-4 sm:gap-5">
                   <div
                     className={cn(
-                      "p-4 rounded-2xl transition-all duration-500",
+                      "p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-500",
                       backupConfig.enabled
                         ? "bg-primary/10 text-primary scale-110 "
                         : "bg-muted/40 text-muted-foreground",
                     )}
                   >
-                    <Database className="w-8 h-8" />
+                    <Database className="w-6 h-6 sm:w-8 sm:h-8" />
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="text-xl font-black text-foreground tracking-tight">
+                  <div className="space-y-0.5 sm:space-y-1">
+                    <h4 className="text-lg sm:text-xl font-black text-foreground tracking-tight">
                       הפעלת מנגנון גיבוי
                     </h4>
-                    <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-sm">
+                    <p className="text-muted-foreground text-xs sm:text-sm font-medium leading-relaxed max-w-sm">
                       המערכת תבצע גיבוי אוטומטי של כל מסד הנתונים והקבצים ללא
                       צורך בהתערבות ידנית.
                     </p>
@@ -105,7 +105,7 @@ export function BackupSettings({
                 <Switch
                   checked={backupConfig.enabled}
                   onCheckedChange={(v) => updateBackupConfig("enabled", v)}
-                  className="data-[state=checked]:bg-primary"
+                  className="data-[state=checked]:bg-primary scale-90 sm:scale-100"
                 />
               </div>
 
@@ -125,7 +125,7 @@ export function BackupSettings({
                   </h4>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                   {[6, 12, 24].map((hours) => (
                     <button
                       key={hours}
@@ -133,7 +133,7 @@ export function BackupSettings({
                         updateBackupConfig("interval_hours", hours)
                       }
                       className={cn(
-                        "group relative p-8 rounded-[2rem] border-2 flex flex-col items-center gap-3 transition-all duration-500 hover:scale-[1.05] hover: hover:",
+                        "group relative p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] border-2 flex flex-col items-center gap-2 sm:gap-3 transition-all duration-500 hover:scale-[1.05]",
                         backupConfig.interval_hours === hours
                           ? "border-primary bg-primary/5   ring-4 ring-primary/5"
                           : "border-border/50 bg-background/50 hover:border-primary/20",
@@ -141,7 +141,7 @@ export function BackupSettings({
                     >
                       <span
                         className={cn(
-                          "text-5xl font-black font-mono transition-transform duration-500 group-hover:scale-110",
+                          "text-3xl sm:text-5xl font-black font-mono transition-transform duration-500 group-hover:scale-110",
                           backupConfig.interval_hours === hours
                             ? "text-primary"
                             : "text-muted-foreground/40",
@@ -149,16 +149,16 @@ export function BackupSettings({
                       >
                         {hours}
                       </span>
-                      <span className="font-black text-[10px] uppercase text-muted-foreground">
+                      <span className="font-black text-[9px] sm:text-[10px] uppercase text-muted-foreground">
                         שעות
                       </span>
 
                       {backupConfig.interval_hours === hours && (
                         <motion.div
                           layoutId="freq-check"
-                          className="absolute top-4 right-4 text-primary"
+                          className="absolute top-3 right-3 sm:top-4 sm:right-4 text-primary"
                         >
-                          <div className="w-2.5 h-2.5 rounded-full bg-primary  " />
+                          <div className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-primary  " />
                         </motion.div>
                       )}
                     </button>
@@ -183,13 +183,13 @@ export function BackupSettings({
                   onClick={handleServerBackupNow}
                   disabled={isServerBackingUp}
                   variant="outline"
-                  className="h-14 rounded-2xl border-primary/20 bg-background font-black text-primary hover:bg-primary hover:text-white transition-all duration-500 group"
+                  className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-primary/20 bg-background font-black text-primary hover:bg-primary hover:text-white transition-all duration-500 group"
                 >
                   {isServerBackingUp ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   ) : (
                     <>
-                      <RefreshCw className="w-5 h-5 ml-3 group-hover:rotate-180 transition-transform duration-700" />
+                      <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3 group-hover:rotate-180 transition-transform duration-700" />
                       ביצוע גיבוי שרת
                     </>
                   )}
@@ -198,13 +198,13 @@ export function BackupSettings({
                 <Button
                   onClick={handleBackup}
                   disabled={isBackingUp}
-                  className="h-14 rounded-2xl bg-primary text-white   font-black hover:scale-[1.02] transition-all"
+                  className="h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-primary text-white   font-black hover:scale-[1.02] transition-all"
                 >
                   {isBackingUp ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   ) : (
                     <>
-                      <Download className="w-5 h-5 ml-3" />
+                      <Download className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3" />
                       הורדת קובץ גיבוי
                     </>
                   )}
@@ -234,17 +234,19 @@ export function BackupSettings({
               <Button
                 onClick={() => document.getElementById("restore-file")?.click()}
                 disabled={isRestoring}
-                className="w-full h-16 rounded-[2rem] bg-red-500 text-white  -500/20 font-black hover:bg-red-600 transition-all flex flex-col gap-1 items-center justify-center group"
+                className="w-full h-14 sm:h-16 rounded-xl sm:rounded-[2rem] bg-red-500 text-white  -500/20 font-black hover:bg-red-600 transition-all flex flex-col gap-0.5 sm:gap-1 items-center justify-center group"
               >
                 {isRestoring ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
                 ) : (
                   <>
                     <div className="flex items-center gap-2">
-                      <Upload className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
-                      <span className="text-lg">בחר קובץ לשחזור</span>
+                      <Upload className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-y-1 transition-transform" />
+                      <span className="text-base sm:text-lg">
+                        בחר קובץ לשחזור
+                      </span>
                     </div>
-                    <span className="text-[10px] opacity-70 font-medium">
+                    <span className="text-[9px] sm:text-[10px] opacity-70 font-medium">
                       תומך בקבצי JSON בלבד
                     </span>
                   </>
@@ -272,32 +274,32 @@ function SectionCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "bg-card/50 backdrop-blur-xl rounded-[2.5rem] border   overflow-hidden",
+        "bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border overflow-hidden",
         variant === "danger" ? "border-red-500/10" : "border-primary/10",
       )}
     >
       <div
         className={cn(
-          "px-8 py-6 border-b flex items-center justify-between",
+          "px-5 py-4 sm:px-8 sm:py-6 border-b flex items-center justify-between",
           variant === "danger"
             ? "bg-red-500/5 border-red-500/10"
             : "bg-primary/5 border-primary/10",
         )}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div
             className={cn(
-              "p-2.5 rounded-2xl",
+              "p-2 sm:p-2.5 rounded-xl sm:rounded-2xl",
               variant === "danger"
                 ? "bg-red-500/10 text-red-600"
                 : "bg-primary/10 text-primary",
             )}
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <h3
             className={cn(
-              "text-xl font-black tracking-tight",
+              "text-lg sm:text-xl font-black tracking-tight",
               variant === "danger" ? "text-red-600" : "text-foreground",
             )}
           >
@@ -306,7 +308,7 @@ function SectionCard({
         </div>
         {badge}
       </div>
-      <div className="p-8">{children}</div>
+      <div className="p-5 sm:p-8">{children}</div>
     </motion.div>
   );
 }

@@ -10,6 +10,7 @@ interface PageHeaderProps {
   categoryLink: string;
   iconClassName?: string;
   badge?: React.ReactNode;
+  className?: string;
 }
 
 export function PageHeader({
@@ -19,9 +20,10 @@ export function PageHeader({
   category,
   iconClassName,
   badge,
+  className,
 }: PageHeaderProps) {
   return (
-    <div className="flex flex-col gap-2 mb-3 sm:mb-6 lg:mb-8">
+    <div className={cn("flex flex-col gap-2 mb-3 sm:mb-6 lg:mb-8", className)}>
       {/* Breadcrumb style category - Hidden on mobile */}
       <div className="hidden sm:flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase leading-none mb-1 text-right">
         <span>ניהול מערכת</span>

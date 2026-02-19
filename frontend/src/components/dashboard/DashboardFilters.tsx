@@ -6,8 +6,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Filter, X } from "lucide-react";
+import { Filter, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface Team {
   id: number;
@@ -88,22 +89,25 @@ export const DashboardFilters = ({
     <Card className="flex flex-col overflow-hidden h-full">
       {/* Header */}
       <div
-        className={`flex items-center justify-between p-4 border-b border-border/50 bg-muted/30 ${isMobile ? "px-10" : ""}`}
+        className={cn(
+          "flex items-center justify-between p-4 border-b border-border/50 bg-muted/30",
+          isMobile && "px-6 sm:px-10",
+        )}
       >
         <div className="flex items-center gap-2 text-foreground font-black text-sm">
           <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
             <Filter className="w-4 h-4" />
           </div>
-          סינון ממוקד
+          <span className="truncate">סינון ממוקד</span>
         </div>
         {hasActiveFilters && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onFilterChange("reset")}
-            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 px-2 text-xs font-bold transition-all"
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 px-2 text-xs font-bold transition-all shrink-0"
           >
-            <X className="w-3.5 h-3.5 ml-1.5" />
+            <RotateCcw className="w-3.5 h-3.5 ml-1.5" />
             איפוס
           </Button>
         )}
@@ -112,9 +116,9 @@ export const DashboardFilters = ({
       {/* Content - Vertical Stack */}
       <div className="p-4 flex flex-col gap-4 flex-1">
         {/* Organizational Filters Group */}
-        <div className="space-y-4 flex-1">
+        <div className="grid grid-cols-2 sm:flex sm:flex-col gap-3 sm:gap-4 flex-1">
           {/* Department */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 col-span-2 sm:col-span-1">
             <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               מחלקה
             </label>
@@ -147,7 +151,7 @@ export const DashboardFilters = ({
           </div>
 
           {/* Section */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 col-span-1">
             <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
               מדור
             </label>
