@@ -381,20 +381,19 @@ export default function TransfersPage() {
   const canManage = user?.is_admin || user?.is_commander;
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500" dir="rtl">
-      <div className="px-6 md:px-10 pt-6 sm:pt-10 pb-4 shrink-0 transition-all">
+    <div className="flex flex-col animate-in fade-in duration-500 px-4 lg:px-8" dir="rtl">
+      <div className="pt-2 pb-4 shrink-0 transition-all">
         <PageHeader
           icon={ArrowLeftRight}
           title="בקשות העברה ושיבוץ"
           subtitle="ניהול ניוד כוח אדם ושינויים ארגוניים במערכת"
           category="ניהול משאבי אנוש"
           categoryLink="/transfers"
-          className="mb-0"
-          iconClassName="from-primary/10 to-primary/5 border-primary/20"
+          className="mb-0 px-0 pb-2 shrink-0 transition-all"
         />
       </div>
 
-      <div className="space-y-6 pb-6 px-6 md:px-10">
+      <div className="space-y-4 sm:space-y-6 pb-6">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           <button
@@ -456,7 +455,7 @@ export default function TransfersPage() {
         </div>
 
         {/* Main Toolbar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-8 bg-card p-2 sm:pl-4 rounded-3xl sm:rounded-[16px] border border-border  overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-card/60 backdrop-blur-2xl p-2 sm:pl-4 rounded-[2rem] border border-primary/10 overflow-hidden">
           <Tabs
             value={activeTab}
             onValueChange={(val) => {
@@ -1363,8 +1362,8 @@ export default function TransfersPage() {
                         <span className="text-xs font-bold text-foreground mt-1">
                           {viewingEmployee?.enlistment_date
                             ? new Date(
-                                viewingEmployee.enlistment_date,
-                              ).toLocaleDateString("he-IL")
+                              viewingEmployee.enlistment_date,
+                            ).toLocaleDateString("he-IL")
                             : "---"}
                         </span>
                       </div>
@@ -1375,8 +1374,8 @@ export default function TransfersPage() {
                         <span className="text-xs font-bold text-primary mt-1">
                           {viewingEmployee?.assignment_date
                             ? new Date(
-                                viewingEmployee.assignment_date,
-                              ).toLocaleDateString("he-IL")
+                              viewingEmployee.assignment_date,
+                            ).toLocaleDateString("he-IL")
                             : "---"}
                         </span>
                       </div>

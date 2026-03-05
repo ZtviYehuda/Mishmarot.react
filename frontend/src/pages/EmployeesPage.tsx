@@ -22,8 +22,8 @@ export default function EmployeesPage() {
         : "יחידה";
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500">
-      <div className="px-6 md:px-10 pt-2 pb-4 shrink-0 transition-all">
+    <div className="flex flex-col animate-in fade-in duration-500 px-4 lg:px-8">
+      <div className="pt-2 pb-4 shrink-0 transition-all">
         <PageHeader
           icon={Users}
           title="ניהול מצבת כוח אדם"
@@ -35,7 +35,7 @@ export default function EmployeesPage() {
         />
       </div>
 
-      <div className="space-y-4 pb-6 px-6 md:px-10">
+      <div className="space-y-4 pb-6">
         <EmployeeTable
           employees={employees}
           loading={loading}

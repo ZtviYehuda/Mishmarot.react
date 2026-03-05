@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter, Download } from "lucide-react";
+import { Filter, Download, Activity, ShieldCheck } from "lucide-react";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -43,6 +43,8 @@ interface EmployeesChartProps {
   hideExportControls?: boolean;
   unitName?: string;
   totalInUnit?: number;
+  availableCount?: number;
+  reportedPct?: number;
   fullUnitStats?: {
     status_id: number;
     status_name: string;
@@ -65,6 +67,8 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       hideExportControls = false,
       unitName = "כלל היחידה",
       totalInUnit = 0,
+      availableCount,
+      reportedPct,
     },
     ref,
   ) => {
@@ -330,6 +334,22 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
             <CardDescription className="font-bold text-[10px] sm:text-xs text-slate-500/80 dark:text-slate-400/80 whitespace-pre-line text-right leading-relaxed tracking-tight">
               {description}
             </CardDescription>
+            {(availableCount !== undefined || reportedPct !== undefined) && (
+              <div className="flex items-center gap-3 pt-1 no-export">
+                {reportedPct !== undefined && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 rounded-lg text-[11px] font-black">
+                    <Activity className="w-3.5 h-3.5" />
+                    <span>אחוז דיווח: {reportedPct}%</span>
+                  </div>
+                )}
+                {availableCount !== undefined && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 rounded-lg text-[11px] font-black">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>זמינים במצבה: {availableCount}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col min-h-0 relative p-4 sm:p-6">
@@ -569,8 +589,8 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                           d.name === "נוכח",
                       )?.value ||
                         total -
-                          (chartData.find((d) => d.name === "לא דווח")?.value ||
-                            0)}
+                        (chartData.find((d) => d.name === "לא דווח")?.value ||
+                          0)}
                     </span>
                   </div>
                   <div className="bg-rose-50 dark:bg-rose-950/20 p-2 rounded-xl border border-rose-100 dark:border-rose-900/30 text-center">

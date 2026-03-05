@@ -6,10 +6,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { RotateCcw, Cake, Briefcase, Filter } from "lucide-react";
+import { RotateCcw, Cake, Briefcase, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMemo } from "react";
 
@@ -136,13 +142,13 @@ export const DashboardFilters = ({
     <div className="flex flex-col w-full gap-4">
       <div
         className={cn(
-          "flex items-center gap-2",
-          isMobile ? "flex-col" : "flex-row min-h-[56px]",
+          "flex items-start md:items-center gap-2",
+          isMobile ? "flex-col" : "flex-col md:flex-row min-h-[56px]",
         )}
       >
         {/* Search / Context Icon */}
         {!isMobile && (
-          <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-primary/5 text-primary ml-4 shrink-0 shadow-inner">
+          <div className="hidden md:flex items-center justify-center w-10 h-10 rounded-2xl bg-primary/5 text-primary ml-4 shrink-0 shadow-inner">
             <Filter className="w-4 h-4" />
           </div>
         )}
@@ -150,10 +156,10 @@ export const DashboardFilters = ({
         {/* Organization Selectors */}
         <div
           className={cn(
-            "flex items-center gap-1 xl:gap-2",
+            "flex items-center gap-1 xl:gap-2 flex-wrap w-full md:w-auto",
             isMobile
               ? "flex-col w-full"
-              : "flex-grow overflow-x-auto no-scrollbar",
+              : "flex-grow",
           )}
         >
           {/* Department */}
@@ -265,7 +271,7 @@ export const DashboardFilters = ({
         {/* Metadata Filters Row */}
         <div
           className={cn(
-            "flex flex-col xl:flex-row items-stretch xl:items-center gap-2 xl:gap-3",
+            "flex flex-col xl:flex-row items-stretch xl:items-center gap-2 xl:gap-3 flex-wrap w-full mt-4 md:mt-0",
             isMobile && "w-full mt-2",
           )}
         >
@@ -443,19 +449,261 @@ export const DashboardFilters = ({
     </div>
   );
 
+  const selectedTeam = teams.find((t) => t.id.toString() === selectedTeamId);
+
   return (
-    <div className="w-full">
-      <Card
-        className={cn(
-          "relative border border-border/50 transition-all duration-300 shadow-sm bg-white dark:bg-slate-900 rounded-3xl p-3 px-6",
-        )}
-      >
-        <div
-          className={cn("relative z-10", isMobile ? "p-4 bg-background" : "")}
-        >
-          {FilterContent}
+    <div className="w-full h-full">
+      {isMobile ? (
+        <Card className="relative border-none bg-background rounded-b-3xl p-4 shadow-none">
+          <div className="relative z-10">{FilterContent}</div>
+        </Card>
+      ) : (
+        <div className="flex flex-wrap items-center justify-end gap-2 w-full">
+          {/* Main Filter Action Button */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "h-9 px-3 gap-1.5 rounded-xl border transition-all font-black text-xs whitespace-nowrap",
+                  hasActiveFilters
+                    ? "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+                    : "border-input bg-card text-primary hover:bg-muted/50 shadow-sm",
+                )}
+              >
+                <Filter className="w-4 h-4" />
+                <span>סינון נתונים</span>
+                {hasActiveFilters && (
+                  <Badge
+                    variant="secondary"
+                    className="ml-1 h-5 rounded-full px-1.5 min-w-5 flex items-center justify-center font-black bg-primary/20 text-primary hover:bg-primary/30 border-none"
+                  >
+                    {
+                      [
+                        !!selectedDeptId,
+                        !!selectedSectionId,
+                        !!selectedTeamId,
+                        !!selectedStatusId,
+                        selectedServiceTypes.length > 0,
+                        !!selectedAgeRange?.min || !!selectedAgeRange?.max,
+                      ].filter(Boolean).length
+                    }
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              sideOffset={12}
+              className="w-[95vw] md:w-[700px] lg:w-[850px] p-4 md:p-6 rounded-[2rem] border-primary/10 shadow-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl z-50 flex flex-col gap-4 overflow-y-auto max-h-[85vh] left-2 right-2 md:left-auto md:right-auto"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h4 className="text-sm font-black text-foreground flex items-center gap-2">
+                  <div className="w-1.5 h-4 bg-primary rounded-full" />
+                  אפשרויות סינון
+                </h4>
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onFilterChange("reset")}
+                    className="h-8 text-[11px] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 ml-1.5" />
+                    נקה הכל
+                  </Button>
+                )}
+              </div>
+              {FilterContent}
+            </PopoverContent>
+          </Popover>
+
+          {/* Active Filter Pills (Desktop Only) */}
+          <AnimatePresence>
+            {/* Active Dept */}
+            {selectedDept && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+              >
+                <Badge
+                  variant="outline"
+                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
+                >
+                  מחלקה:{" "}
+                  <span className="font-bold text-foreground text-[11px]">
+                    {selectedDept.name}
+                  </span>
+                  {canSelectDept && (
+                    <button
+                      onClick={() => onFilterChange("department")}
+                      className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </Badge>
+              </motion.div>
+            )}
+
+            {/* Active Section */}
+            {selectedSection && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+              >
+                <Badge
+                  variant="outline"
+                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
+                >
+                  מדור:{" "}
+                  <span className="font-bold text-foreground text-[11px]">
+                    {selectedSection.name}
+                  </span>
+                  {canSelectSection && (
+                    <button
+                      onClick={() => onFilterChange("section")}
+                      className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </Badge>
+              </motion.div>
+            )}
+
+            {/* Active Team */}
+            {selectedTeam && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+              >
+                <Badge
+                  variant="outline"
+                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
+                >
+                  חולייה:{" "}
+                  <span className="font-bold text-foreground text-[11px]">
+                    {selectedTeam.name}
+                  </span>
+                  {canSelectTeam && (
+                    <button
+                      onClick={() => onFilterChange("team")}
+                      className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </Badge>
+              </motion.div>
+            )}
+
+            {/* Active Status */}
+            {selectedStatus && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+              >
+                <Badge
+                  variant="outline"
+                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
+                >
+                  סטטוס:
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{
+                        backgroundColor: selectedStatus.color || "currentColor",
+                      }}
+                    />
+                    <span className="font-bold text-foreground text-[11px]">
+                      {selectedStatus.name}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => onFilterChange("status")}
+                    className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              </motion.div>
+            )}
+
+            {/* Age Range */}
+            {(selectedAgeRange?.min || selectedAgeRange?.max) && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+              >
+                <Badge
+                  variant="outline"
+                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
+                >
+                  גיל:{" "}
+                  <span className="font-bold text-foreground text-[11px]">
+                    {currentAgeValue === "all" ? "כל הגילאים" : currentAgeValue}
+                  </span>
+                  <button
+                    onClick={() => onFilterChange("ageRange", "all")}
+                    className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              </motion.div>
+            )}
+
+            {/* Service Types */}
+            {selectedServiceTypes.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+              >
+                <Badge
+                  variant="outline"
+                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
+                >
+                  מעמד:{" "}
+                  <span className="font-bold text-foreground text-[11px]">
+                    {selectedServiceTypes.join(", ")}
+                  </span>
+                  <button
+                    onClick={() => onFilterChange("serviceType", [])}
+                    className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              </motion.div>
+            )}
+
+            {/* If has filters, a quick clear all next to pills */}
+            {hasActiveFilters && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onFilterChange("reset")}
+                  className="h-9 rounded-full px-3 text-[11px] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/10 ml-2"
+                >
+                  נקה הכל
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </Card>
+      )}
     </div>
   );
 };

@@ -411,8 +411,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500">
-      <div className="px-6 md:px-10 pt-2 pb-4 shrink-0 transition-all">
+    <div className="flex flex-col animate-in fade-in duration-500 px-4 lg:px-8">
+      <div className="pt-2 pb-4 shrink-0 transition-all">
         <PageHeader
           icon={SettingsIcon}
           title="הגדרות מערכת"
@@ -424,7 +424,7 @@ export default function SettingsPage() {
         />
       </div>
 
-      <div className="px-6 md:px-10">
+      <div className="">
         {/* Desktop Horizontal Navigation (Replaces Sidebar) */}
         <div className="hidden lg:flex items-center gap-1 border-b border-border sticky top-[-35px] bg-background/95 backdrop-blur z-50 pb-0 overflow-x-auto no-scrollbar pt-2">
           {!user?.is_temp_commander && (
@@ -505,7 +505,7 @@ export default function SettingsPage() {
                   handleResetImpersonatedPassword
                 }
                 handleConfirmCurrentPassword={handleConfirmCurrentPassword}
-                onForgotPassword={() => {}}
+                onForgotPassword={() => { }}
               />
             </>
           )}
@@ -594,9 +594,8 @@ function MobileBottomNavLink({
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-      }`}
+      className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+        }`}
     >
       <div
         className={`p-1.5 rounded-xl transition-all ${active ? "bg-primary/10" : "bg-transparent"}`}
@@ -625,10 +624,9 @@ function TabItem({
       onClick={onClick}
       className={`
         relative px-4 py-2.5 rounded-lg transition-all duration-200 font-bold text-sm whitespace-nowrap
-        ${
-          active
-            ? "text-primary bg-primary/10"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+        ${active
+          ? "text-primary bg-primary/10"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
         }
       `}
     >

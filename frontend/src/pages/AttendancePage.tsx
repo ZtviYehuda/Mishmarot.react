@@ -466,11 +466,11 @@ export default function AttendancePage() {
 
   return (
     <div
-      className="flex flex-col min-h-full selection:bg-primary/10 selection:text-primary transition-all duration-500"
+      className="flex flex-col min-h-full selection:bg-primary/10 selection:text-primary transition-all duration-500 px-4 lg:px-8"
       dir="rtl"
     >
       {/* Unified Page Header Wrapper */}
-      <div className="px-6 md:px-10 pt-2 pb-4 shrink-0 transition-all">
+      <div className="pt-2 pb-4 shrink-0 transition-all">
         <PageHeader
           icon={CalendarDays}
           title="מעקב נוכחות יומי"
@@ -487,15 +487,6 @@ export default function AttendancePage() {
                 <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 w-full lg:w-auto">
                   {!user?.is_temp_commander && (
                     <>
-                      <Button
-                        variant="outline"
-                        className="h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 gap-2 font-black px-4 w-full sm:w-auto justify-center transition-all bg-white"
-                        onClick={() => navigate("/roster")}
-                      >
-                        <CalendarRange className="w-4 h-4" />
-                        <span className="text-xs">סידור עבודה</span>
-                      </Button>
-
                       <Button
                         variant="outline"
                         className="h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 gap-2 font-black px-4 w-full sm:w-auto justify-center transition-all bg-white"
@@ -561,7 +552,7 @@ export default function AttendancePage() {
                     className={cn(
                       "h-10 rounded-xl border-input gap-2 font-black text-muted-foreground hover:bg-muted px-4 col-span-2 sm:w-auto justify-center bg-white transition-all",
                       selectedEmployeeIds.length > 0 &&
-                        "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20",
+                      "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20",
                     )}
                     onClick={() => {
                       setAlertContext(null);
@@ -683,7 +674,7 @@ export default function AttendancePage() {
                         ? "text-white scale-[1.02] z-10"
                         : "bg-muted/30 border-transparent hover:bg-muted/50 lg:bg-transparent lg:border-0",
                       s.count === 0 &&
-                        "opacity-60 grayscale cursor-default hover:bg-muted/30",
+                      "opacity-60 grayscale cursor-default hover:bg-muted/30",
                     )}
                     style={{
                       backgroundColor:
@@ -1182,7 +1173,7 @@ export default function AttendancePage() {
                         checked={
                           filteredEmployees.length > 0 &&
                           selectedEmployeeIds.length ===
-                            filteredEmployees.length
+                          filteredEmployees.length
                         }
                         onCheckedChange={(checked) =>
                           handleSelectAll(checked as boolean)
@@ -1244,9 +1235,9 @@ export default function AttendancePage() {
                             ? "bg-primary/[0.03] border-r-4 border-r-primary"
                             : "hover:bg-slate-50 dark:hover:bg-slate-900/40 border-r-4 border-r-transparent hover:border-r-primary/40",
                           user &&
-                            emp.id === user.id &&
-                            !isSelected &&
-                            "bg-emerald-500/[0.02] border-r-4 border-r-emerald-500",
+                          emp.id === user.id &&
+                          !isSelected &&
+                          "bg-emerald-500/[0.02] border-r-4 border-r-emerald-500",
                         )}
                       >
                         <TableCell className="text-center px-4 py-5 align-middle">
@@ -1323,7 +1314,7 @@ export default function AttendancePage() {
                         <TableCell className="text-right py-5">
                           <div className="flex flex-col text-right min-w-[140px]">
                             {emp.department_name &&
-                            emp.department_name !== "מטה" ? (
+                              emp.department_name !== "מטה" ? (
                               <>
                                 <span className="text-[11px] font-black text-foreground">
                                   {cleanUnitName(emp.department_name)}
@@ -1332,14 +1323,14 @@ export default function AttendancePage() {
                                   emp.section_name !== "מטה") ||
                                   (emp.team_name &&
                                     emp.team_name !== "מטה")) && (
-                                  <div className="flex items-center gap-1.5 mt-1">
-                                    <span className="text-[10px] font-black text-primary/60 truncate bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10">
-                                      {emp.team_name && emp.team_name !== "מטה"
-                                        ? cleanUnitName(emp.team_name)
-                                        : cleanUnitName(emp.section_name || "")}
-                                    </span>
-                                  </div>
-                                )}
+                                    <div className="flex items-center gap-1.5 mt-1">
+                                      <span className="text-[10px] font-black text-primary/60 truncate bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10">
+                                        {emp.team_name && emp.team_name !== "מטה"
+                                          ? cleanUnitName(emp.team_name)
+                                          : cleanUnitName(emp.section_name || "")}
+                                      </span>
+                                    </div>
+                                  )}
                               </>
                             ) : (
                               <span className="text-[10px] font-black text-muted-foreground/30">
@@ -1414,7 +1405,7 @@ export default function AttendancePage() {
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 <span className="text-xs font-bold">
                                   {selectedDate.toDateString() ===
-                                  new Date().toDateString()
+                                    new Date().toDateString()
                                     ? "היום"
                                     : format(selectedDate, "dd/MM")}
                                   ,{" "}
@@ -1424,15 +1415,15 @@ export default function AttendancePage() {
                                       new Date(
                                         e.last_status_update!,
                                       ).toDateString() !==
-                                        selectedDate.toDateString(),
+                                      selectedDate.toDateString(),
                                   )
                                     ? "08:00"
                                     : new Date(
-                                        emp.last_status_update!,
-                                      ).toLocaleTimeString("he-IL", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
+                                      emp.last_status_update!,
+                                    ).toLocaleTimeString("he-IL", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
                                 </span>
                               </div>
                             ) : (
@@ -1529,7 +1520,7 @@ export default function AttendancePage() {
                 const isUpdatedToday =
                   emp.last_status_update &&
                   new Date(emp.last_status_update).toDateString() ===
-                    selectedDate.toDateString();
+                  selectedDate.toDateString();
                 const isSelected = selectedEmployeeIds.includes(emp.id);
 
                 return (
@@ -1661,33 +1652,33 @@ export default function AttendancePage() {
                                   isUpdatedToday
                                     ? "text-emerald-700"
                                     : (() => {
-                                        const isToday =
-                                          selectedDate.toDateString() ===
-                                          new Date().toDateString();
-                                        const statusName =
-                                          emp.status_name?.trim() || "";
-                                        const isLongTermStatus = [
-                                          "חופש",
-                                          "מחלה",
-                                          "גימל",
-                                          "קורס",
-                                          "אבטחה",
-                                          "תגבור",
-                                          'חו"ל',
-                                          "סיפוח",
-                                          "הפניה",
-                                          "מיוחדת",
-                                        ].some((s) => statusName.includes(s));
+                                      const isToday =
+                                        selectedDate.toDateString() ===
+                                        new Date().toDateString();
+                                      const statusName =
+                                        emp.status_name?.trim() || "";
+                                      const isLongTermStatus = [
+                                        "חופש",
+                                        "מחלה",
+                                        "גימל",
+                                        "קורס",
+                                        "אבטחה",
+                                        "תגבור",
+                                        'חו"ל',
+                                        "סיפוח",
+                                        "הפניה",
+                                        "מיוחדת",
+                                      ].some((s) => statusName.includes(s));
 
-                                        if (
-                                          !isToday &&
-                                          !isUpdatedToday &&
-                                          !isLongTermStatus
-                                        ) {
-                                          return "text-muted-foreground";
-                                        }
-                                        return "text-foreground";
-                                      })(),
+                                      if (
+                                        !isToday &&
+                                        !isUpdatedToday &&
+                                        !isLongTermStatus
+                                      ) {
+                                        return "text-muted-foreground";
+                                      }
+                                      return "text-foreground";
+                                    })(),
                                 )}
                               >
                                 {(() => {

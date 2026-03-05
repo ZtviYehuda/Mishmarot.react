@@ -51,7 +51,7 @@ const StatusCard = ({
       "flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all text-center h-full group relative bg-background hover:bg-muted/30 border-border/40 hover:border-primary/40",
       isSub ? "opacity-90 scale-[1.0] min-h-[85px]" : "min-h-[95px]",
       large &&
-        "col-span-3 flex-row gap-6 min-h-[80px] px-8 bg-slate-100/50 dark:bg-slate-800/50 border-primary/20",
+      "col-span-3 flex-row gap-6 min-h-[80px] px-8 bg-slate-100/50 dark:bg-slate-800/50 border-primary/20",
     )}
   >
     <div
@@ -492,12 +492,12 @@ export default function RosterPage() {
 
   return (
     <div
-      className="flex flex-col h-full selection:bg-primary/10 selection:text-primary"
+      className="flex flex-col h-full selection:bg-primary/10 selection:text-primary px-4 lg:px-8"
       dir="rtl"
     >
       <div className="flex flex-col h-full">
         {/* Unified Page Header - Premium Layout Style */}
-        <div className="px-6 md:px-10 pt-2 pb-4 shrink-0 transition-all">
+        <div className="pt-2 pb-4 shrink-0 transition-all">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <PageHeader
               icon={CalendarRange}
@@ -569,7 +569,7 @@ export default function RosterPage() {
         </div>
 
         {/* New Consolidated COMMAND CENTER Bar */}
-        <div className="px-6 md:px-10 pb-4 space-y-4 shrink-0 relative z-10 w-full">
+        <div className="pb-4 space-y-4 shrink-0 relative z-10 w-full">
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-2 bg-card/60 backdrop-blur-2xl border border-primary/10 rounded-[2rem]">
             <div className="flex flex-1 flex-wrap items-center gap-2">
               {/* Global Search */}
@@ -772,7 +772,7 @@ export default function RosterPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 custom-scrollbar">
+        <div className="flex-1 overflow-auto py-3 sm:py-4 md:py-6 custom-scrollbar">
           {/* Mobile Day Selector - Only visible on small screens */}
           <div className="lg:hidden bg-background/80 backdrop-blur-xl sticky top-[-1rem] z-40 mb-6 py-4 -mx-3 border-b border-border/50 px-3">
             <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar scroll-smooth">

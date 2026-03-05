@@ -11,13 +11,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useDateContext } from "@/context/DateContext";
 import { PageHeader } from "@/components/layout/PageHeader";
-import {
-  LayoutDashboard,
-  Users,
-  ShieldCheck,
-  Activity,
-  AlertTriangle,
-} from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn, cleanUnitName } from "@/lib/utils";
@@ -641,29 +635,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleKPIClick = (
-    type: "total" | "reported" | "available" | "missing",
-  ) => {
-    switch (type) {
-      case "total":
-        setSelectedStatusData(null);
-        break;
-      case "missing":
-        handleStatusClick(-1, "לא דווח", "#f43f5e");
-        break;
-      case "available":
-        // Filter by common presence statuses - or just clear if ambiguous
-        // For now, let's reset to show all or maybe a specific "presence" set if we had one
-        setSelectedStatusData(null);
-        break;
-      case "reported": {
-        // Scroll to trend
-        const trendEl = document.getElementById("trend-section");
-        if (trendEl) trendEl.scrollIntoView({ behavior: "smooth" });
-        break;
-      }
-    }
-  };
+
 
   const canSelectDept = !!user?.is_admin;
   const canSelectSection = !!user?.is_admin || !!user?.commands_department_id;
@@ -702,7 +674,7 @@ export default function DashboardPage() {
 
   return (
     <div
-      className="w-full relative min-h-screen px-4 md:px-8 pb-10 bg-background"
+      className="w-full relative min-h-screen px-4 lg:px-8 pb-10 bg-background"
       dir="rtl"
     >
       <div className="relative z-10 space-y-4 sm:space-y-6 pt-2 transition-all">
@@ -713,13 +685,37 @@ export default function DashboardPage() {
           subtitle="נתוני נוכחות וסטטיסטיקה"
           category="מערכת משמרות"
           categoryLink="/"
-          className="hidden sm:flex mb-0 px-4 md:px-10 pb-2 shrink-0 transition-all"
+          className="hidden sm:flex mb-0 px-0 pb-2 shrink-0 transition-all"
           badge={
-            <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full sm:w-auto">
-              <DateHeader className="w-full sm:w-auto flex-1" />
+            <div className="flex flex-row items-center gap-1.5">
+              {/* Date Header - compact */}
+              <DateHeader className="h-9 text-xs" />
+
+              {/* Desktop Filters */}
+              <div className="hidden lg:flex items-stretch h-9">
+                <DashboardFilters
+                  structure={structure}
+                  statuses={allStatuses}
+                  allStatusTypes={allStatusTypes}
+                  selectedDeptId={selectedDeptId}
+                  selectedSectionId={selectedSectionId}
+                  selectedTeamId={selectedTeamId}
+                  selectedStatusId={selectedStatusData?.id?.toString()}
+                  serviceTypes={serviceTypes}
+                  selectedServiceTypes={selectedServiceTypes}
+                  selectedAgeRange={selectedAgeRange}
+                  onFilterChange={handleFilterChange}
+                  canSelectDept={canSelectDept}
+                  canSelectSection={canSelectSection}
+                  canSelectTeam={canSelectTeam}
+                  isMobile={false}
+                />
+              </div>
+
+              {/* Report Hub */}
               {!user?.is_temp_commander && (
                 <ReportHub
-                  className="w-full sm:w-auto h-auto min-h-[44px] sm:min-h-0 rounded-xl border border-primary/10 bg-white text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all flex items-center justify-center shadow-sm"
+                  className="h-9 w-auto rounded-xl border border-primary/10 bg-white text-primary hover:bg-primary/5 gap-1.5 font-black px-3 text-xs transition-all flex items-center justify-center shadow-sm whitespace-nowrap"
                   onShareBirthdays={() => birthdaysRef.current?.share()}
                   initialViewMode={viewMode}
                   initialDate={selectedDate}
@@ -772,135 +768,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Content Area */}
-        <div className="space-y-10 sm:space-y-14">
-          {/* Top Section: Filters */}
-          <div className="hidden lg:block mb-2">
-            <DashboardFilters
-              structure={structure}
-              statuses={allStatuses}
-              allStatusTypes={allStatusTypes}
-              selectedDeptId={selectedDeptId}
-              selectedSectionId={selectedSectionId}
-              selectedTeamId={selectedTeamId}
-              selectedStatusId={selectedStatusData?.id?.toString()}
-              serviceTypes={serviceTypes}
-              selectedServiceTypes={selectedServiceTypes}
-              selectedAgeRange={selectedAgeRange}
-              onFilterChange={handleFilterChange}
-              canSelectDept={canSelectDept}
-              canSelectSection={canSelectSection}
-              canSelectTeam={canSelectTeam}
-            />
-          </div>
-
-          {/* Global KPI Summary Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-2"
-          >
-            {/* Total KPI */}
-            <motion.div
-              whileHover={{ y: -5 }}
-              onClick={() => handleKPIClick("total")}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col justify-between relative overflow-visible group cursor-pointer transition-shadow hover:shadow-xl hover:shadow-primary/5 shadow-sm"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-slate-500 group-hover:scale-110 transition-transform">
-                  <Users className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">
-                  סה"כ תקן
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-3xl font-black text-foreground tracking-tight">
-                  {kpiData.total}
-                </span>
-                <span className="text-[10px] text-muted-foreground font-bold mt-1">
-                  לחץ להצגת הכל
-                </span>
-              </div>
-            </motion.div>
-
-            {/* Reported % KPI */}
-            <motion.div
-              whileHover={{ y: -5 }}
-              onClick={() => handleKPIClick("reported")}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col justify-between relative overflow-visible group cursor-pointer transition-shadow hover:shadow-xl hover:shadow-indigo-500/5 shadow-sm"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">
-                  אחוז דיווח
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-3xl font-black text-indigo-600 tracking-tight">
-                  {kpiData.reportedPct}%
-                </span>
-                <div className="w-full h-1.5 bg-indigo-50 dark:bg-indigo-950 mt-3 rounded-full overflow-visible">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${kpiData.reportedPct}%` }}
-                    transition={{ duration: 1, delay: 0.3 }}
-                    className="h-full bg-indigo-500"
-                  />
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Available KPI */}
-            <motion.div
-              whileHover={{ y: -5 }}
-              onClick={() => handleKPIClick("available")}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col justify-between relative overflow-visible group cursor-pointer transition-shadow hover:shadow-xl hover:shadow-emerald-500/5 shadow-sm"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">
-                  זמינים במצבה
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-3xl font-black text-emerald-600 tracking-tight">
-                  {kpiData.available}
-                </span>
-                <div className="w-8 h-1 bg-emerald-200 dark:bg-emerald-800 mt-2 rounded-full" />
-              </div>
-            </motion.div>
-
-            {/* Missing/Not Reported KPI */}
-            <motion.div
-              whileHover={{ y: -5 }}
-              onClick={() => handleKPIClick("missing")}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col justify-between relative overflow-visible group cursor-pointer transition-shadow hover:shadow-xl hover:shadow-amber-500/5 shadow-sm"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-amber-50 dark:bg-amber-500/10 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform">
-                  <AlertTriangle className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">
-                  עוד לא דיווחו
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-3xl font-black text-amber-600 tracking-tight">
-                  {kpiData.missing}
-                </span>
-                <span className="text-[10px] text-amber-700 font-bold mt-1">
-                  לחץ להצגת רשימה
-                </span>
-              </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Main Charts Grid */}
+        <div className="space-y-10 sm:space-y-14 transition-all mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
             {/* Main Attendance Chart */}
             <div className="flex flex-col h-full min-h-[400px]">
@@ -908,6 +776,8 @@ export default function DashboardPage() {
                 ref={snapshotRef}
                 stats={chartStats}
                 totalInUnit={totalUnitCount}
+                availableCount={kpiData.available}
+                reportedPct={kpiData.reportedPct}
                 loading={loading}
                 onOpenWhatsAppReport={
                   user?.is_temp_commander
@@ -1028,6 +898,6 @@ export default function DashboardPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+    </div >
   );
 }

@@ -11,7 +11,6 @@ import {
   LogOut,
   Menu,
   X,
-  ShieldCheck,
   Bell,
   CheckCircle2,
   AlertTriangle,
@@ -180,9 +179,9 @@ export default function MainLayout() {
     // Only show these if NOT a temp commander
     ...(!user?.is_temp_commander
       ? [
-          { name: "ניהול שוטרים", path: "/employees", icon: Users },
-          { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
-        ]
+        { name: "ניהול שוטרים", path: "/employees", icon: Users },
+        { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
+      ]
       : []),
     { name: "הגדרות", path: "/settings", icon: Settings },
   ];
@@ -205,56 +204,42 @@ export default function MainLayout() {
         {/* Sidebar Header */}
         <div
           className={cn(
-            "h-20 flex items-center border-b border-border/50 transition-all duration-300",
+            "h-16 flex-none flex items-center border-b border-border transition-none",
             isSidebarOpen ? "px-4 justify-between" : "justify-center",
           )}
         >
+          {/* Menu Toggle Button - replaces org logo */}
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className={cn(
+              "w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted rounded-xl shrink-0 transition-all",
+            )}
+            aria-label="תפריט ניווט"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
           <div
             className={cn(
-              "flex items-center gap-3 overflow-hidden transition-all duration-300",
-              isSidebarOpen ? "w-auto text-right" : "w-full justify-center",
+              "flex flex-col transition-all duration-300",
+              isSidebarOpen
+                ? "opacity-100 w-auto"
+                : "opacity-0 w-0 overflow-hidden",
             )}
-            onDoubleClick={() => setIsSidebarOpen(true)}
           >
-            <div className="w-10 h-10 flex items-center justify-center shrink-0 relative group">
-              <div className="absolute inset-0 rotate-0 transition-all duration-300 group-hover:rotate-6 group-hover:scale-110">
-                <img
-                  src="/organization-logo.jpg"
-                  alt="Organization Logo"
-                  className="w-full h-full object-contain drop- mix-blend-multiply dark:mix-blend-normal"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                    e.currentTarget.parentElement?.nextElementSibling?.classList.remove(
-                      "hidden",
-                    );
-                  }}
-                />
-              </div>
-              <div className="hidden absolute inset-0 z-10 w-9 h-9 m-auto rounded-full bg-primary flex items-center justify-center   pointer-events-none">
-                <ShieldCheck className="w-5 h-5 text-primary-foreground" />
-              </div>
-            </div>
-            <div
-              className={cn(
-                "flex flex-col transition-all duration-300",
-                isSidebarOpen
-                  ? "opacity-100 w-auto"
-                  : "opacity-0 w-0 overflow-hidden",
-              )}
-            >
-              <span className="text-[10px] font-black text-primary uppercase mt-1 whitespace-nowrap">
-                {user?.is_admin
-                  ? "פורטל ניהול"
-                  : user?.commands_team_id
-                    ? "פורטל חוליה"
-                    : user?.commands_section_id
-                      ? "פורטל מדור"
-                      : user?.commands_department_id
-                        ? "פורטל מחלקה"
-                        : "פורטל יחידה"}
-              </span>
-            </div>
+            <span className="text-[10px] font-black text-primary uppercase mt-1 whitespace-nowrap">
+              {user?.is_admin
+                ? "פורטל ניהול"
+                : user?.commands_team_id
+                  ? "פורטל חוליה"
+                  : user?.commands_section_id
+                    ? "פורטל מדור"
+                    : user?.commands_department_id
+                      ? "פורטל מחלקה"
+                      : "פורטל יחידה"}
+            </span>
           </div>
+
           {/* Close button for mobile sidebar */}
           <button
             className="lg:hidden p-1 text-muted-foreground hover:text-foreground"
@@ -396,38 +381,20 @@ export default function MainLayout() {
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col min-w-0">
         <header className="h-16 bg-card border-b border-border px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40  transition-none flex-none">
-          <div className="flex items-center gap-2 lg:gap-4 flex-1">
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className={cn(
-                "w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted rounded-lg shrink-0 relative",
-              )}
-              aria-label="תפריט ניווט"
-            >
-              <Menu className="w-5 h-5" />
-              {!isSidebarOpen && (
-                <span className="absolute -top-1 -right-1 flex h-2 w-2 lg:hidden">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+          <div className="flex items-center gap-2 md:gap-5 flex-1 min-w-0">
+            <div className="flex flex-col text-right border-r-[3px] border-primary pr-3 md:pr-5 leading-none flex-1 min-w-0 overflow-hidden">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[9px] md:text-[11px] font-black text-primary uppercase leading-none truncate">
+                  מוקד שליטה ובקרה
                 </span>
-              )}
-            </button>
-            <div className="h-5 w-px bg-border hidden sm:block" />
-            <div className="flex items-center gap-2 md:gap-5 flex-1 min-w-0">
-              <div className="flex flex-col text-right border-r-[3px] border-primary pr-3 md:pr-5 leading-none flex-1 min-w-0 overflow-hidden">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[9px] md:text-[11px] font-black text-primary uppercase leading-none truncate">
-                    מוקד שליטה ובקרה
-                  </span>
-                  <div className="flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-emerald-500  shrink-0" />
-                </div>
-                <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight py-0.5 leading-none truncate">
-                  {location.pathname === "/"
-                    ? "מערכת משמרות"
-                    : navItems.find((n) => n.path === location.pathname)
-                        ?.name || "דף מערכת"}
-                </h2>
+                <div className="flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-emerald-500  shrink-0" />
               </div>
+              <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight py-0.5 leading-none truncate">
+                {location.pathname === "/"
+                  ? "מערכת משמרות"
+                  : navItems.find((n) => n.path === location.pathname)
+                    ?.name || "דף מערכת"}
+              </h2>
             </div>
           </div>
 
@@ -618,7 +585,7 @@ export default function MainLayout() {
                               {isMorningReport &&
                                 (alert as any).data?.commander_id &&
                                 user?.id !==
-                                  (alert as any).data.commander_id && (
+                                (alert as any).data.commander_id && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -644,7 +611,7 @@ export default function MainLayout() {
                               {isMorningReport &&
                                 (alert as any).data?.commander_phone &&
                                 user?.id !==
-                                  (alert as any).data.commander_id && (
+                                (alert as any).data.commander_id && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -830,7 +797,7 @@ export default function MainLayout() {
         </header>
 
         {/* Content Page */}
-        <main className="p-2 sm:p-4 flex-grow overflow-y-auto bg-background custom-scrollbar">
+        <main className="flex-grow overflow-y-auto bg-background custom-scrollbar">
           <div className="w-full max-w-full">
             <Outlet context={{ isSidebarOpen }} />
           </div>
@@ -864,9 +831,9 @@ export default function MainLayout() {
                   style={
                     selectedAlert
                       ? {
-                          backgroundColor: getAlertConfig(selectedAlert).bg,
-                          color: getAlertConfig(selectedAlert).color,
-                        }
+                        backgroundColor: getAlertConfig(selectedAlert).bg,
+                        color: getAlertConfig(selectedAlert).color,
+                      }
                       : {}
                   }
                 >
@@ -915,7 +882,7 @@ export default function MainLayout() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
