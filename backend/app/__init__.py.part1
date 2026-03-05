@@ -1,0 +1,51 @@
+from flask import Flask
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
+from app.config import Config
+from app.utils.json_provider import CustomJSONProvider
+from app.utils.setup import setup_database
+
+
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
+
+    # Disable redirect on trailing slash for CORS preflight
+    app.url_map.strict_slashes = False
+
+    # הגדרת פורמט JSON תקין
+    app.json = CustomJSONProvider(app)
+
+    # --- תיקון CORS קריטי ---
+    # הגדרת מקורות מורשים ספציפיים במקום כוכבית כדי לאפשר Credentials
+    origins_list = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://powers-creator-broader-harper.trycloudflare.com",
+    ]
+
+    CORS(
+        app,
+        resources={
+            r"/api/*": {
+                "origins": origins_list,
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": [
+                    "Content-Type",
+                    "Authorization",
+                    "Access-Control-Allow-Private-Network",
+                ],
+                "expose_headers": ["Content-Type"],
+                "max_age": 3600,
+            }
+        },
+        supports_credentials=True,
+    )
+
+    @app.after_request
+    def add_cors_headers(response):
+        # PNA Header must be present to allow HTTPS public site to talk to HTTP localhost
+        response.headers["Access-Control-Allow-Private-Network"] = "true"
+        return response
+
+    jwt = JWTManager(app)

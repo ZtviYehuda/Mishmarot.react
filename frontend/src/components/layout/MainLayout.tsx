@@ -24,6 +24,7 @@ import {
   Thermometer,
   MessageCircle,
   Megaphone,
+  CalendarRange,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -175,6 +176,7 @@ export default function MainLayout() {
   const navItems = [
     { name: "לוח בקרה ראשי", path: "/", icon: LayoutDashboard },
     { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
+    { name: "סידור עבודה", path: "/roster", icon: CalendarRange },
     // Only show these if NOT a temp commander
     ...(!user?.is_temp_commander
       ? [
@@ -393,7 +395,7 @@ export default function MainLayout() {
 
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col min-w-0">
-        <header className="h-20 bg-card border-b border-border px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40  transition-none flex-none">
+        <header className="h-16 bg-card border-b border-border px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40  transition-none flex-none">
           <div className="flex items-center gap-2 lg:gap-4 flex-1">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -423,17 +425,8 @@ export default function MainLayout() {
                   {location.pathname === "/"
                     ? "מערכת משמרות"
                     : navItems.find((n) => n.path === location.pathname)
-                      ?.name || "דף מערכת"}
+                        ?.name || "דף מערכת"}
                 </h2>
-              </div>
-
-              <div className="group relative flex items-center justify-center w-8 h-8 md:w-12 md:h-12 shrink-0 ml-2 transition-all duration-300 hover:scale-110 cursor-pointer">
-                <img
-                  src="/unit-logo-removebg-preview.png"
-                  alt="Unit Logo"
-                  className="w-full h-full object-contain drop- z-10 relative filter hover:brightness-110"
-                  onError={(e) => (e.currentTarget.style.display = "none")}
-                />
               </div>
             </div>
           </div>
@@ -837,7 +830,7 @@ export default function MainLayout() {
         </header>
 
         {/* Content Page */}
-        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 flex-grow overflow-y-auto bg-background custom-scrollbar">
+        <main className="p-2 sm:p-4 flex-grow overflow-y-auto bg-background custom-scrollbar">
           <div className="w-full max-w-full">
             <Outlet context={{ isSidebarOpen }} />
           </div>

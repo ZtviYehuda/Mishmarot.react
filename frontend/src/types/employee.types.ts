@@ -44,10 +44,13 @@ export interface Employee {
   status_name?: string | null;
   status_color?: string | null;
   status_is_persistent?: boolean;
+  status_is_presence?: boolean;
   last_status_update?: string | null;
+  status_end_datetime?: string | null;
   start_date?: string | null;
   end_date?: string | null;
   is_active: boolean;
+  is_verified?: boolean;
 
   // Command Hierarchy
   commands_department_id?: number | null;
@@ -121,4 +124,15 @@ export interface DepartmentNode {
 export interface ServiceType {
   id: number;
   name: string;
+}
+
+// Status type definition returned by /api/attendance/status-types
+export interface StatusType {
+  id: number;
+  name: string;
+  code?: string | null;
+  color: string;
+  is_presence: boolean;
+  is_persistent: boolean;
+  parent_status_id: number | null;
 }

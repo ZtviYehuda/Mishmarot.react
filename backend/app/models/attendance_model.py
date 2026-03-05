@@ -1,6 +1,6 @@
 from app.utils.db import get_db_connection
 from psycopg2.extras import RealDictCursor
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 
 class AttendanceModel:
@@ -26,24 +26,98 @@ class AttendanceModel:
                 if start_date == now.strftime("%Y-%m-%d"):
                     start = now
 
-            # Close previous status at the new status start time
+            # Split range into daily logs, skipping non-weekend statuses on weekends
+            # 1. Fetch status info to check for weekend permission
             cur.execute(
-                """
-                UPDATE attendance_logs 
-                SET end_datetime = %s 
-                WHERE employee_id = %s AND end_datetime IS NULL
-            """,
-                (start, employee_id),
+                "SELECT name FROM status_types WHERE id = %s", (status_type_id,)
             )
+            st_res = cur.fetchone()
+            status_name = st_res[0] if st_res else ""
+            is_weekend_allowed = "תגבור" in status_name or "אחר" in status_name
 
-            # Insert new status
-            cur.execute(
-                """
-                INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """,
-                (employee_id, status_type_id, start, end_date, note, reported_by),
-            )
+            # 2. Determine date range
+            start_date_obj = None
+            if isinstance(start, str):
+                start_date_obj = datetime.strptime(start[:10], "%Y-%m-%d").date()
+            elif isinstance(start, (datetime, date)):
+                start_date_obj = start.date() if isinstance(start, datetime) else start
+
+            end_date_obj = None
+            if end_date:
+                if isinstance(end_date, str):
+                    end_date_obj = datetime.strptime(end_date[:10], "%Y-%m-%d").date()
+                elif isinstance(end_date, (datetime, date)):
+                    end_date_obj = (
+                        end_date.date() if isinstance(end_date, datetime) else end_date
+                    )
+
+            # If it's a multi-day range, split it
+            if start_date_obj and end_date_obj and start_date_obj < end_date_obj:
+                current_date = start_date_obj
+                while current_date <= end_date_obj:
+                    # Skip weekends (Friday=4, Saturday=5 in Python's weekday() if we use 0-6 index?)
+                    # Wait, datetime.weekday(): 0=Monday... 4=Friday, 5=Saturday, 6=Sunday
+                    # In Israel: 4=Friday, 5=Saturday (Wait, 0=Mon, 4=Fri, 5=Sat)
+                    wd = current_date.weekday()
+                    if (wd == 4 or wd == 5) and not is_weekend_allowed:
+                        current_date += timedelta(days=1)
+                        continue
+
+                    # Log this specific day
+                    day_start = datetime.combine(current_date, datetime.min.time())
+                    day_end = datetime.combine(current_date, datetime.max.time())
+
+                    # Close previous
+                    cur.execute(
+                        "UPDATE attendance_logs SET end_datetime = %s WHERE employee_id = %s AND end_datetime IS NULL AND start_datetime < %s",
+                        (day_start, employee_id, day_start),
+                    )
+
+                    # Insert
+                    cur.execute(
+                        """
+                        INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, is_verified)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """,
+                        (
+                            employee_id,
+                            status_type_id,
+                            day_start,
+                            day_end,
+                            note,
+                            reported_by,
+                            True,
+                        ),
+                    )
+                    current_date += timedelta(days=1)
+            else:
+                # Single day or open-ended
+                # Close previous status at the new status start time
+                cur.execute(
+                    """
+                    UPDATE attendance_logs 
+                    SET end_datetime = %s 
+                    WHERE employee_id = %s AND end_datetime IS NULL
+                """,
+                    (start, employee_id),
+                )
+
+                # Insert new status
+                cur.execute(
+                    """
+                    INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, is_verified)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                    (
+                        employee_id,
+                        status_type_id,
+                        start,
+                        end_date,
+                        note,
+                        reported_by,
+                        True,
+                    ),
+                )
 
             # --- COMMAND RETURN LOGIC ---
             # If this is a presence status, automatically return command authority by ending active delegations
@@ -96,23 +170,156 @@ class AttendanceModel:
                     if start_date == now.strftime("%Y-%m-%d"):
                         start = now
 
-                # Close previous status at the new status start time
+                # Fetch status info to check for weekend permission
                 cur.execute(
-                    """
-                    UPDATE attendance_logs 
-                    SET end_datetime = %s 
-                    WHERE employee_id = %s AND end_datetime IS NULL
-                """,
-                    (start, employee_id),
+                    "SELECT name FROM status_types WHERE id = %s", (status_type_id,)
                 )
+                st_res = cur.fetchone()
+                status_name = st_res[0] if st_res else ""
+                is_weekend_allowed = "תגבור" in status_name or "אחר" in status_name
 
-                cur.execute(
-                    """
-                    INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """,
-                    (employee_id, status_type_id, start, end_date, note, reported_by),
-                )
+                # Determine dates
+                start_date_obj = None
+                if isinstance(start, str):
+                    start_date_obj = datetime.strptime(start[:10], "%Y-%m-%d").date()
+                elif isinstance(start, (datetime, date)):
+                    start_date_obj = (
+                        start.date() if isinstance(start, datetime) else start
+                    )
+
+                end_date_obj = None
+                if end_date:
+                    if isinstance(end_date, str):
+                        end_date_obj = datetime.strptime(
+                            end_date[:10], "%Y-%m-%d"
+                        ).date()
+                    elif isinstance(end_date, (datetime, date)):
+                        end_date_obj = (
+                            end_date.date()
+                            if isinstance(end_date, datetime)
+                            else end_date
+                        )
+
+                # If multi-day range, split it
+                if start_date_obj and end_date_obj and start_date_obj < end_date_obj:
+                    current_date = start_date_obj
+                    while current_date <= end_date_obj:
+                        wd = current_date.weekday()
+                        if (wd == 4 or wd == 5) and not is_weekend_allowed:
+                            current_date += timedelta(days=1)
+                            continue
+
+                        day_start = datetime.combine(current_date, datetime.min.time())
+                        day_end = datetime.combine(current_date, datetime.max.time())
+
+                        # Surgical removal/truncation of existing logs for this day
+                        # 1. Delete logs fully contained within this day
+                        cur.execute(
+                            "DELETE FROM attendance_logs WHERE employee_id = %s AND start_datetime >= %s AND end_datetime <= %s",
+                            (employee_id, day_start, day_end),
+                        )
+
+                        # 2. Truncate logs that start before but end DURING or after the day
+                        cur.execute(
+                            "UPDATE attendance_logs SET end_datetime = %s WHERE employee_id = %s AND start_datetime < %s AND (end_datetime IS NULL OR end_datetime >= %s)",
+                            (
+                                day_start - timedelta(seconds=1),
+                                employee_id,
+                                day_start,
+                                day_start,
+                            ),
+                        )
+
+                        # 3. Truncate logs that start DURING the day but end after
+                        cur.execute(
+                            "UPDATE attendance_logs SET start_datetime = %s WHERE employee_id = %s AND start_datetime >= %s AND start_datetime <= %s AND (end_datetime IS NULL OR end_datetime > %s)",
+                            (
+                                day_end + timedelta(seconds=1),
+                                employee_id,
+                                day_start,
+                                day_end,
+                                day_end,
+                            ),
+                        )
+
+                        cur.execute(
+                            """
+                            INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, is_verified)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """,
+                            (
+                                employee_id,
+                                status_type_id,
+                                day_start,
+                                day_end,
+                                note,
+                                reported_by,
+                                True,
+                            ),
+                        )
+                        current_date += timedelta(days=1)
+                else:
+                    # Single day / open-ended
+                    # Determine day bounds if it's a full-day update
+                    if isinstance(start, (datetime, date)) or (
+                        isinstance(start, str) and len(start) == 10
+                    ):
+                        day_start = datetime.combine(
+                            start_date_obj, datetime.min.time()
+                        )
+                        day_end = datetime.combine(start_date_obj, datetime.max.time())
+
+                        # Apply same surgical logic for single day
+                        cur.execute(
+                            "DELETE FROM attendance_logs WHERE employee_id = %s AND start_datetime >= %s AND end_datetime <= %s",
+                            (employee_id, day_start, day_end),
+                        )
+                        cur.execute(
+                            "UPDATE attendance_logs SET end_datetime = %s WHERE employee_id = %s AND start_datetime < %s AND (end_datetime IS NULL OR end_datetime >= %s)",
+                            (
+                                day_start - timedelta(seconds=1),
+                                employee_id,
+                                day_start,
+                                day_start,
+                            ),
+                        )
+                        cur.execute(
+                            "UPDATE attendance_logs SET start_datetime = %s WHERE employee_id = %s AND start_datetime >= %s AND start_datetime <= %s AND (end_datetime IS NULL OR end_datetime > %s)",
+                            (
+                                day_end + timedelta(seconds=1),
+                                employee_id,
+                                day_start,
+                                day_end,
+                                day_end,
+                            ),
+                        )
+
+                        start_to_insert = day_start
+                        end_to_insert = day_end
+                    else:
+                        # If it's a specific timestamp (unlikely from Roster but good to handle)
+                        cur.execute(
+                            "UPDATE attendance_logs SET end_datetime = %s WHERE employee_id = %s AND end_datetime IS NULL AND start_datetime < %s",
+                            (start, employee_id, start),
+                        )
+                        start_to_insert = start
+                        end_to_insert = end_date
+
+                    cur.execute(
+                        """
+                        INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, is_verified)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """,
+                        (
+                            employee_id,
+                            status_type_id,
+                            start_to_insert,
+                            end_to_insert,
+                            note,
+                            reported_by,
+                            True,
+                        ),
+                    )
 
                 # --- COMMAND RETURN LOGIC (Bulk) ---
                 cur.execute(
@@ -130,15 +337,205 @@ class AttendanceModel:
                         (start, employee_id),
                     )
 
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"Error bulk logging status: {e}")
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def upsert_roster_log(employee_id, status_type_id, date_obj, reported_by=None):
+        """
+        Sets a specific daily roster entry (00:00-23:59).
+        Overwrites any existing logs for that day.
+        Sets is_verified = FALSE (unless date < today).
+        """
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+
+            # Define range for the day
+            start_dt = datetime.combine(date_obj, datetime.min.time())
+            end_dt = datetime.combine(date_obj, datetime.max.time())
+
+            # Roster entries are considered verified/final by default
+            is_verified = True
+
+            # 1. Surgical overlapping management
+            # a) Delete logs fully contained within this day
+            cur.execute(
+                "DELETE FROM attendance_logs WHERE employee_id = %s AND start_datetime >= %s AND end_datetime <= %s",
+                (employee_id, start_dt, end_dt),
+            )
+
+            # b) Truncate logs that surround this day (Start before, End after) - SPLIT them
+            cur.execute(
+                """
+                SELECT id, status_type_id, start_datetime, end_datetime, note, reported_by, is_verified
+                FROM attendance_logs
+                WHERE employee_id = %s 
+                AND start_datetime < %s 
+                AND (end_datetime IS NULL OR end_datetime > %s)
+            """,
+                (employee_id, start_dt, end_dt),
+            )
+            surrounders = cur.fetchall()
+            for s in surrounders:
+                # Insert the 'after' portion
+                cur.execute(
+                    """
+                    INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, is_verified)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                    (
+                        employee_id,
+                        s[1],
+                        end_dt + timedelta(seconds=1),
+                        s[3],
+                        s[4],
+                        s[5],
+                        s[6],
+                    ),
+                )
+                # Update the 'before' portion
+                cur.execute(
+                    "UPDATE attendance_logs SET end_datetime = %s WHERE id = %s",
+                    (start_dt - timedelta(seconds=1), s[0]),
+                )
+
+            # c) Truncate logs that start before but end DURING the day
+            cur.execute(
+                """
+                UPDATE attendance_logs 
+                SET end_datetime = %s 
+                WHERE employee_id = %s 
+                AND start_datetime < %s 
+                AND end_datetime >= %s AND end_datetime <= %s
+            """,
+                (
+                    start_dt - timedelta(seconds=1),
+                    employee_id,
+                    start_dt,
+                    start_dt,
+                    end_dt,
+                ),
+            )
+
+            # d) Truncate logs that start DURING but end after the day
+            cur.execute(
+                """
+                UPDATE attendance_logs 
+                SET start_datetime = %s 
+                WHERE employee_id = %s 
+                AND start_datetime >= %s AND start_datetime <= %s 
+                AND (end_datetime IS NULL OR end_datetime > %s)
+            """,
+                (end_dt + timedelta(seconds=1), employee_id, start_dt, end_dt, end_dt),
+            )
+
+            # 2. Insert new daily log
+            cur.execute(
+                """
+                INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, reported_by, is_verified)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+                (
+                    employee_id,
+                    status_type_id,
+                    start_dt,
+                    end_dt,
+                    reported_by,
+                    is_verified,
+                ),
+            )
+
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"Error upserting roster: {e}")
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def verify_day(date_obj, employee_ids=None):
+        """
+        Marks records for a specific day as verified.
+        If employee_ids is provided, only verifies those.
+        """
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+
+            start_dt = datetime.combine(date_obj, datetime.min.time())
+            end_dt = datetime.combine(date_obj, datetime.max.time())
+
+            query = """
+                UPDATE attendance_logs
+                SET is_verified = TRUE, verified_at = NOW()
+                WHERE start_datetime <= %s 
+                AND (end_datetime IS NULL OR end_datetime >= %s)
+                AND is_verified = FALSE
+            """
+            params = [end_dt, start_dt]
+
+            if employee_ids:
+                query += " AND employee_id = ANY(%s)"
+                params.append(list(employee_ids))
+
+            cur.execute(query, tuple(params))
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"Error verifying day: {e}")
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def auto_approve_daily_roster():
+        """
+        Automatically approves (verifies) all roster logs for TODAY that are currently unverified.
+        This runs on dashboard load to ensure the 'pull' happens automatically in the morning.
+        """
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+
+            # Update all unverified logs for today to verified
+            # Logic: IF start_date is Today (or in past) AND is_verified is False -> Set True
+            # We also ensure the log is actually active today (start <= now <= end/null)
+
+            query = """
+                UPDATE attendance_logs
+                SET is_verified = TRUE, verified_at = NOW()
+                WHERE start_datetime::date <= CURRENT_DATE 
+                AND (end_datetime IS NULL OR end_datetime >= CURRENT_TIMESTAMP)
+                AND is_verified = FALSE
+            """
+            cur.execute(query)
+            count = cur.rowcount
+            if count > 0:
                 print(
-                    f"DEBUG: Inserted log for emp {employee_id}, status {status_type_id}, start {start}"
+                    f"[AUTO-ROSTER] Automatically verified {count} records for today."
                 )
 
             conn.commit()
             return True
         except Exception as e:
             conn.rollback()
-            print(f"Error bulk logging status: {e}")
+            print(f"Error in auto_approve_daily_roster: {e}")
             return False
         finally:
             conn.close()
@@ -151,7 +548,7 @@ class AttendanceModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute(
-                "SELECT id, name, color, is_presence FROM status_types ORDER BY id"
+                "SELECT id, name, color, is_presence, is_persistent, parent_status_id FROM status_types ORDER BY COALESCE(parent_status_id, id), id"
             )
             return cur.fetchall()
         finally:
@@ -266,7 +663,10 @@ class AttendanceModel:
             # 3.5. Status Comparison Filter Logic
             count_condition = "st.is_presence = TRUE"
             if filters and filters.get("status_id"):
-                count_condition = f"st.id = {int(filters['status_id'])}"
+                status_id = int(filters["status_id"])
+                count_condition = (
+                    f"(st.id = {status_id} OR st.parent_status_id = {status_id})"
+                )
 
             # 4. Execute Query
             # If days > 1, we calculate average over requested range
@@ -286,7 +686,7 @@ class AttendanceModel:
                             COALESCE({grouping_col}, 'ללא שיוך') as unit_name,
                             e.id as emp_id,
                             (
-                                SELECT {count_condition}
+                                SELECT st.is_presence
                                 FROM attendance_logs al
                                 JOIN status_types st ON al.status_type_id = st.id
                                 WHERE al.employee_id = e.id
@@ -329,22 +729,9 @@ class AttendanceModel:
 
                 cur.execute(query, tuple(final_params))
             else:
-                # Original Snapshot logic for single day
-                status_condition = "AND (DATE(al.start_datetime) = CURRENT_DATE OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= CURRENT_DATE))"
-                status_params = []
-                if date:
-                    try:
-                        check_date_obj = datetime.strptime(date, "%Y-%m-%d").date()
-                        today = datetime.now().date()
-                        if check_date_obj > today:
-                            status_condition = "AND DATE(al.start_datetime) <= %s AND al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s"
-                            status_params = [date, date]
-                        else:
-                            status_condition = "AND (DATE(al.start_datetime) = %s OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s))"
-                            status_params = [date, date]
-                    except Exception:
-                        status_condition = "AND (DATE(al.start_datetime) = %s OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s))"
-                        status_params = [date, date]
+                # Standardized Snapshot logic for single day
+                target_date = date if date else date.today().strftime("%Y-%m-%d")
+                status_params = [target_date, target_date, target_date]
 
                 query = f"""
                     SELECT 
@@ -360,11 +747,21 @@ class AttendanceModel:
                     LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
                     LEFT JOIN service_types srv ON e.service_type_id = srv.id
                     LEFT JOIN LATERAL (
-                        SELECT al.status_type_id, al.id FROM attendance_logs al
+                        SELECT al.status_type_id, al.id,
+                               (CASE WHEN al.status_type_id IS NOT NULL
+                                          AND (
+                                            (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s)
+                                            OR
+                                            (al.end_datetime IS NULL AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s))
+                                          )
+                                     THEN TRUE
+                                     ELSE FALSE
+                               END) as is_active_for_date
+                        FROM attendance_logs al
                         JOIN status_types sti ON al.status_type_id = sti.id
-                        WHERE al.employee_id = e.id {status_condition}
+                        WHERE al.employee_id = e.id AND DATE(al.start_datetime) <= %s
                         ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
-                    ) al ON true
+                    ) al ON al.is_active_for_date = TRUE
                     LEFT JOIN status_types st ON al.status_type_id = st.id
                     WHERE e.is_active = TRUE 
                     AND e.personal_number != 'admin' 
@@ -441,7 +838,10 @@ class AttendanceModel:
             # 2.5. Status Trend Filter Logic
             count_condition = "st.is_presence = TRUE"
             if filters and filters.get("status_id"):
-                count_condition = f"st.id = {int(filters['status_id'])}"
+                status_id = int(filters["status_id"])
+                count_condition = (
+                    f"(st.id = {status_id} OR st.parent_status_id = {status_id})"
+                )
 
             date_anchor = "CURRENT_DATE"
             date_params = []
@@ -468,15 +868,19 @@ class AttendanceModel:
                     p.date,
                     (SELECT COUNT(*) FROM scoped_employees) as total_employees,
                     (
-                        SELECT COUNT(DISTINCT se.id)
+                        SELECT COUNT(*)
                         FROM scoped_employees se
-                        JOIN attendance_logs al ON al.employee_id = se.id
-                        JOIN status_types st ON al.status_type_id = st.id
+                        LEFT JOIN LATERAL (
+                            SELECT st.is_presence, st.id
+                            FROM attendance_logs al
+                            JOIN status_types st ON al.status_type_id = st.id
+                            WHERE al.employee_id = se.id
+                            AND DATE(al.start_datetime) <= p.date 
+                            AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= p.date)
+                            AND (st.is_persistent = TRUE OR DATE(al.start_datetime) = p.date)
+                            ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
+                        ) st ON true
                         WHERE {count_condition}
-                        AND (
-                            DATE(al.start_datetime) = p.date 
-                            OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= p.date)
-                        )
                     ) as present_count
                 FROM params p
                 ORDER BY p.date ASC
@@ -495,107 +899,215 @@ class AttendanceModel:
     def get_dashboard_stats(requesting_user=None, filters=None):
         conn = get_db_connection()
         if not conn:
-            return []
+            return {"stats": [], "total_employees": 0}
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            params = []
-            status_condition = "AND (DATE(al.start_datetime) = CURRENT_DATE OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= CURRENT_DATE))"
 
-            if filters and filters.get("date"):
-                try:
-                    check_date_str = filters["date"]
-                    check_date_obj = datetime.strptime(
-                        check_date_str, "%Y-%m-%d"
-                    ).date()
-                    if check_date_obj > date.today():
-                        status_condition = "AND DATE(al.start_datetime) <= %s AND al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s"
-                        params.extend([check_date_str, check_date_str])
-                    else:
-                        status_condition = "AND (DATE(al.start_datetime) = %s OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s))"
-                        params.extend([check_date_str, check_date_str])
-                except:
-                    status_condition = "AND (DATE(al.start_datetime) = %s OR (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s))"
-                    params.extend([filters["date"], filters["date"]])
+            # Smart Continuity Logic - matches the Work Roster (סידור עבודה)
+            # Find the LATEST log that started on or before target date
+            # Then check if it is still active for target date
+            # "לא דווח" = employee has NO active status entry
+            status_condition = """(
+                DATE(al.start_datetime) <= %(target_date)s
+            )"""
 
-            query = f"""
-                SELECT 
-                    st.id as status_id,
-                    st.name as status_name,
-                    COUNT(e.id) as count,
-                    st.color as color
-                FROM employees e
-                -- Direct Path Joins (for scoping)
-                LEFT JOIN teams t ON e.team_id = t.id
-                LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
-                LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
-                -- Status Joins (Smart Continuity)
-                LEFT JOIN LATERAL (
-                    SELECT al.status_type_id FROM attendance_logs al
-                    JOIN status_types sti ON al.status_type_id = sti.id
-                    WHERE al.employee_id = e.id {status_condition}
-                    ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
-                ) last_log ON true
-                LEFT JOIN status_types st ON last_log.status_type_id = st.id
-                LEFT JOIN service_types srv ON e.service_type_id = srv.id
-                WHERE e.is_active = TRUE AND e.personal_number != 'admin'
-            """
+            target_date = (filters or {}).get("date") or date.today().strftime(
+                "%Y-%m-%d"
+            )
+
+            # Build scoping conditions dynamically
+            scope_conditions = ["e.is_active = TRUE", "e.personal_number != 'admin'"]
+            scope_params = {"target_date": target_date}
 
             # 1. Base Scoping (Security)
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
-                    query += " AND d.id = %s"
-                    params.append(requesting_user["commands_department_id"])
+                    scope_conditions.append("d.id = %(cmd_dept_id)s")
+                    scope_params["cmd_dept_id"] = requesting_user[
+                        "commands_department_id"
+                    ]
                 elif requesting_user.get("commands_section_id"):
-                    query += " AND s.id = %s"
-                    params.append(requesting_user["commands_section_id"])
+                    scope_conditions.append("s.id = %(cmd_sec_id)s")
+                    scope_params["cmd_sec_id"] = requesting_user["commands_section_id"]
                 elif requesting_user.get("commands_team_id"):
-                    query += " AND t.id = %s"
-                    params.append(requesting_user["commands_team_id"])
+                    scope_conditions.append("t.id = %(cmd_team_id)s")
+                    scope_params["cmd_team_id"] = requesting_user["commands_team_id"]
                 else:
-                    # Individual Fallback
-                    query += " AND e.id = %s"
-                    params.append(requesting_user["id"])
+                    scope_conditions.append("e.id = %(cmd_user_id)s")
+                    scope_params["cmd_user_id"] = requesting_user["id"]
 
             # 2. Drill-down Filters (User Selection)
             if filters:
                 if filters.get("department_id"):
-                    query += " AND d.id = %s"
-                    params.append(filters["department_id"])
+                    scope_conditions.append("d.id = %(f_dept_id)s")
+                    scope_params["f_dept_id"] = filters["department_id"]
                 if filters.get("section_id"):
-                    query += " AND s.id = %s"
-                    params.append(filters["section_id"])
+                    scope_conditions.append("s.id = %(f_sec_id)s")
+                    scope_params["f_sec_id"] = filters["section_id"]
                 if filters.get("team_id"):
-                    query += " AND t.id = %s"
-                    params.append(filters["team_id"])
-                if filters.get("status_id"):
-                    query += " AND st.id = %s"
-                    params.append(filters["status_id"])
+                    scope_conditions.append("t.id = %(f_team_id)s")
+                    scope_params["f_team_id"] = filters["team_id"]
                 if filters.get("serviceTypes"):
                     srv_list = (
                         filters["serviceTypes"].split(",")
                         if isinstance(filters["serviceTypes"], str)
                         else filters["serviceTypes"]
                     )
-                    query += " AND srv.name = ANY(%s)"
-                    params.append(srv_list)
+                    scope_conditions.append("srv.name = ANY(%(srv_list)s)")
+                    scope_params["srv_list"] = srv_list
+                if filters.get("min_age"):
+                    scope_conditions.append(
+                        "EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) >= %(min_age)s"
+                    )
+                    scope_params["min_age"] = int(filters["min_age"])
+                if filters.get("max_age"):
+                    scope_conditions.append(
+                        "EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) <= %(max_age)s"
+                    )
+                    scope_params["max_age"] = int(filters["max_age"])
 
             # Exclude requesting user (Commander/Admin) from stats
             if requesting_user:
-                query += " AND e.id != %s"
-                params.append(requesting_user["id"])
+                scope_conditions.append("e.id != %(req_user_id)s")
+                scope_params["req_user_id"] = requesting_user["id"]
 
-            query += " GROUP BY st.id, st.name, st.color"
+            scope_where = " AND ".join(scope_conditions)
 
-            # Debug SQL
-            # print(f"Executing SQL: {query} \nParams: {params}")
+            # Full query using CTE to first scope then find status
+            # This ensures "לא דווח" employees are counted correctly
+            # Sub-statuses (e.g. מהבית, מתקן חיצוני, בשטח) are GROUPED under their parent (משרד) in chart
+            query = f"""
+                WITH scoped_employees AS (
+                    SELECT e.id
+                    FROM employees e
+                    LEFT JOIN teams t ON e.team_id = t.id
+                    LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                    LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    LEFT JOIN service_types srv ON e.service_type_id = srv.id
+                    WHERE {scope_where}
+                ),
+                employee_status AS (
+                    SELECT
+                        se.id as emp_id,
+                        (CASE 
+                            WHEN last_log.status_type_id IS NOT NULL 
+                                 AND (
+                                     (last_log.end_datetime IS NOT NULL AND DATE(last_log.end_datetime) >= %(target_date)s)
+                                     OR 
+                                     (last_log.end_datetime IS NULL AND (last_log.is_persistent = TRUE OR DATE(last_log.start_datetime) = %(target_date)s))
+                                 ) 
+                            THEN last_log.status_type_id 
+                            ELSE NULL 
+                        END) as status_type_id,
+                        last_log.is_verified
+                    FROM scoped_employees se
+                    LEFT JOIN LATERAL (
+                        SELECT al.status_type_id, al.is_verified, al.start_datetime, al.end_datetime, sti.is_persistent
+                        FROM attendance_logs al
+                        JOIN status_types sti ON al.status_type_id = sti.id
+                        WHERE al.employee_id = se.id
+                        AND DATE(al.start_datetime) <= %(target_date)s
+                        ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
+                    ) last_log ON true
+                )
+                SELECT
+                    st.id as status_id,
+                    st.name as status_name,
+                    COUNT(es.emp_id) as count,
+                    COUNT(CASE WHEN es.is_verified = FALSE THEN 1 END) as unverified_count,
+                    st.color as color
+                FROM employee_status es
+                JOIN status_types st ON es.status_type_id = st.id
+                GROUP BY st.id, st.name, st.color
+
+                UNION ALL
+
+                SELECT
+                    NULL as status_id,
+                    'לא דווח' as status_name,
+                    COUNT(es.emp_id) as count,
+                    0 as unverified_count,
+                    '#94a3b8' as color
+                FROM employee_status es
+                WHERE es.status_type_id IS NULL
+                HAVING COUNT(es.emp_id) > 0
+
+                ORDER BY count DESC
+            """
+
+            total_query = f"""
+                SELECT COUNT(e.id) as total
+                FROM employees e
+                LEFT JOIN teams t ON e.team_id = t.id
+                LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                LEFT JOIN service_types srv ON e.service_type_id = srv.id
+                WHERE {scope_where}
+            """
+
+            # 3. Age Distribution and Average Age
+            age_query = f"""
+                WITH scoped_ages AS (
+                    SELECT 
+                        EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) as age
+                    FROM employees e
+                    LEFT JOIN teams t ON e.team_id = t.id
+                    LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
+                    LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    LEFT JOIN service_types srv ON e.service_type_id = srv.id
+                    WHERE {scope_where} AND e.birth_date IS NOT NULL
+                ),
+                age_ranges AS (
+                    SELECT 
+                        CASE 
+                            WHEN age BETWEEN 18 AND 21 THEN '18-21'
+                            WHEN age BETWEEN 22 AND 25 THEN '22-25'
+                            WHEN age BETWEEN 26 AND 30 THEN '26-30'
+                            WHEN age BETWEEN 31 AND 35 THEN '31-35'
+                            WHEN age BETWEEN 36 AND 40 THEN '36-40'
+                            WHEN age BETWEEN 41 AND 50 THEN '41-50'
+                            ELSE '50+'
+                        END as range_label,
+                        age
+                    FROM scoped_ages
+                )
+                SELECT 
+                    range_label,
+                    COUNT(*) as count,
+                    (SELECT ROUND(AVG(age), 1) FROM scoped_ages) as avg_age
+                FROM age_ranges
+                GROUP BY range_label
+                ORDER BY range_label
+            """
 
             try:
-                cur.execute(query, tuple(params))
-                return cur.fetchall()
+                cur.execute(query, scope_params)
+                stats = cur.fetchall()
+                cur.execute(total_query, scope_params)
+                total_row = cur.fetchone()
+                total_employees = total_row["total"] if total_row else 0
+
+                cur.execute(age_query, scope_params)
+                age_data = cur.fetchall()
+                avg_age = age_data[0]["avg_age"] if age_data else 0
+                age_distribution = [
+                    {"range": r["range_label"], "count": r["count"]} for r in age_data
+                ]
+
+                print(
+                    f"[DEBUG] Dashboard stats: {len(stats)} status groups, {total_employees} total employees"
+                )
+                return {
+                    "stats": stats,
+                    "total_employees": total_employees,
+                    "age_distribution": age_distribution,
+                    "average_age": avg_age,
+                }
             except Exception as e:
                 print(f"SQL Error in get_dashboard_stats: {e}")
-                print(f"Query: {query}")
-                print(f"Params: {params}")
+                import traceback
+
+                traceback.print_exc()
                 raise e
         finally:
             conn.close()
@@ -681,7 +1193,7 @@ class AttendanceModel:
                 aggregated_history AS (
                     SELECT 
                         MIN(gl.id) as id,
-                        st.name as status_name,
+                        CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF((ARRAY_AGG(gl.note ORDER BY gl.start_datetime))[1], ''), st.name) ELSE st.name END as status_name,
                         st.color as status_color,
                         MIN(gl.start_datetime) as start_datetime,
                         CASE 
@@ -719,190 +1231,33 @@ class AttendanceModel:
             return []
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            # Find logs that overlap with the range [start, end]
-            # Overlap logic: LogStart <= RangeEnd AND (LogEnd IS NULL OR LogEnd >= RangeStart)
+            # Align Roster logs with Smart Continuity:
+            # Only show logs that actually manifest on those dates.
+            # 1. Started on or before the end of the range
+            # 2. Ends on or after the start of the range (or is ongoing)
+            # 3. If NOT persistent, must have started on one of the days in the range
+            # Instead of a complex multi-join for each day, we fetch logs that meet basic Smart Continuity
+            # criteria for the WHOLE range.
             query = """
                 SELECT 
+                    al.id as log_id,
                     al.employee_id,
-                    st.name as status_name,
+                    al.status_type_id,
+                    CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF(al.note, ''), st.name) ELSE st.name END as status_name,
+                    st.color as status_color,
                     al.start_datetime,
-                    al.end_datetime
+                    al.end_datetime,
+                    al.is_verified
                 FROM attendance_logs al
                 JOIN status_types st ON al.status_type_id = st.id
                 WHERE al.employee_id = ANY(%s)
                 AND DATE(al.start_datetime) <= %s 
                 AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s)
-                ORDER BY al.start_datetime ASC
-            """
-            cur.execute(query, (list(employee_ids), end_date, start_date))
-            return cur.fetchall()
-        finally:
-            conn.close()
-
-    @staticmethod
-    def get_employee_history_export(employee_id, start_date=None, end_date=None):
-        conn = get_db_connection()
-        if not conn:
-            return []
-        try:
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            query = """
-                WITH marked_changes AS (
-                    SELECT 
-                        al.id,
-                        al.status_type_id,
-                        al.start_datetime,
-                        al.end_datetime,
-                        al.note,
-                        al.reported_by,
-                        CASE 
-                            WHEN LAG(al.status_type_id) OVER (ORDER BY al.start_datetime) = al.status_type_id THEN 0 
-                            ELSE 1 
-                        END as is_new_group
-                    FROM attendance_logs al
-                    WHERE al.employee_id = %s
-                ),
-                grouped_logs AS (
-                    SELECT 
-                        *,
-                        SUM(is_new_group) OVER (ORDER BY start_datetime) as group_id
-                    FROM marked_changes
-                ),
-                aggregated_history AS (
-                    SELECT 
-                        MIN(gl.id) as id,
-                        st.name as status_name,
-                        st.color as status_color,
-                        MIN(gl.start_datetime) as start_datetime,
-                        CASE 
-                            WHEN BOOL_OR(gl.end_datetime IS NULL) THEN NULL 
-                            ELSE MAX(gl.end_datetime) 
-                        END as end_datetime,
-                        (ARRAY_AGG(gl.note ORDER BY gl.start_datetime))[1] as note,
-                        (ARRAY_AGG(gl.reported_by ORDER BY gl.start_datetime))[1] as reported_by_id
-                    FROM grouped_logs gl
-                    JOIN status_types st ON gl.status_type_id = st.id
-                    GROUP BY gl.group_id, st.id, st.name, st.color
-                )
-                SELECT 
-                    ah.id,
-                    ah.status_name,
-                    ah.start_datetime,
-                    ah.end_datetime,
-                    ah.note,
-                    r.first_name || ' ' || r.last_name as reported_by_name
-                FROM aggregated_history ah
-                LEFT JOIN employees r ON ah.reported_by_id = r.id
-                WHERE 1=1
-            """
-
-            params = [employee_id]
-
-            if start_date:
-                query += " AND DATE(ah.start_datetime) >= %s"
-                params.append(start_date)
-
-            if end_date:
-                query += " AND DATE(ah.start_datetime) <= %s"
-                params.append(end_date)
-
-            query += " ORDER BY ah.start_datetime DESC"
-
-            cur.execute(query, tuple(params))
-            return cur.fetchall()
-        finally:
-            conn.close()
-
-    @staticmethod
-    def get_employee_history(employee_id, limit=50):
-        conn = get_db_connection()
-        if not conn:
-            return []
-        try:
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            query = """
-                WITH marked_changes AS (
-                    SELECT 
-                        al.id,
-                        al.status_type_id,
-                        al.start_datetime,
-                        al.end_datetime,
-                        al.note,
-                        al.reported_by,
-                        CASE 
-                            WHEN LAG(al.status_type_id) OVER (ORDER BY al.start_datetime) = al.status_type_id THEN 0 
-                            ELSE 1 
-                        END as is_new_group
-                    FROM attendance_logs al
-                    WHERE al.employee_id = %s
-                ),
-                grouped_logs AS (
-                    SELECT 
-                        *,
-                        SUM(is_new_group) OVER (ORDER BY start_datetime) as group_id
-                    FROM marked_changes
-                ),
-                aggregated_history AS (
-                    SELECT 
-                        MIN(gl.id) as id,
-                        st.name as status_name,
-                        st.color as status_color,
-                        MIN(gl.start_datetime) as start_datetime,
-                        CASE 
-                            WHEN BOOL_OR(gl.end_datetime IS NULL) THEN NULL 
-                            ELSE MAX(gl.end_datetime) 
-                        END as end_datetime,
-                        (ARRAY_AGG(gl.note ORDER BY gl.start_datetime))[1] as note,
-                        (ARRAY_AGG(gl.reported_by ORDER BY gl.start_datetime))[1] as reported_by_id
-                    FROM grouped_logs gl
-                    JOIN status_types st ON gl.status_type_id = st.id
-                    GROUP BY gl.group_id, st.id, st.name, st.color
-                )
-                SELECT 
-                    ah.id,
-                    ah.status_name,
-                    ah.status_color,
-                    ah.start_datetime,
-                    ah.end_datetime,
-                    ah.note,
-                    r.first_name || ' ' || r.last_name as reported_by_name
-                FROM aggregated_history ah
-                LEFT JOIN employees r ON ah.reported_by_id = r.id
-                ORDER BY ah.start_datetime DESC
-                LIMIT %s
-            """
-            cur.execute(query, (employee_id, limit))
-            return cur.fetchall()
-        finally:
-            conn.close()
-
-    @staticmethod
-    def get_logs_for_employees(employee_ids, start_date, end_date):
-        conn = get_db_connection()
-        if not conn:
-            return []
-        try:
-            cur = conn.cursor(cursor_factory=RealDictCursor)
-            # Find logs that overlap with the range [start, end]
-            # Overlap logic: LogStart <= RangeEnd AND (LogEnd IS NULL OR LogEnd >= RangeStart)
-            query = """
-                SELECT 
-                    al.employee_id,
-                    st.name as status_name,
-                    al.start_datetime,
-                    al.end_datetime
-                FROM attendance_logs al
-                JOIN status_types st ON al.status_type_id = st.id
-                WHERE al.employee_id = ANY(%s)
-                AND (
-                    (st.is_persistent = TRUE AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s))
-                    OR
-                    (st.is_persistent = FALSE AND DATE(al.start_datetime) <= %s AND DATE(al.start_datetime) >= %s)
-                )
+                AND (st.is_persistent = TRUE OR (DATE(al.start_datetime) >= %s AND DATE(al.start_datetime) <= %s))
                 ORDER BY al.start_datetime ASC
             """
             cur.execute(
-                query, (list(employee_ids), end_date, start_date, end_date, start_date)
+                query, (list(employee_ids), end_date, start_date, start_date, end_date)
             )
             return cur.fetchall()
         finally:
@@ -940,7 +1295,7 @@ class AttendanceModel:
                 aggregated_history AS (
                     SELECT 
                         MIN(gl.id) as id,
-                        st.name as status_name,
+                        CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF((ARRAY_AGG(gl.note ORDER BY gl.start_datetime))[1], ''), st.name) ELSE st.name END as status_name,
                         st.color as status_color,
                         MIN(gl.start_datetime) as start_datetime,
                         CASE 
@@ -991,12 +1346,9 @@ class AttendanceModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             params = []
 
-            # Use the provided date for "snapshot"
-            # We want the status that was valid on 'date'.
-            # Similar to dashboard stats logic: start <= date AND (end >= date OR end IS NULL OR end < date + 1 day? NO.)
-            # "Status active on that date".
-            # Dashboard logic: DATE(start) <= date AND (end IS NULL OR DATE(end) >= date)
-            status_condition = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
+            # "Status active on that date"
+            # We want BOTH verified and unverified (planned) logs to show up here,
+            # so the daily attendance view reflects the Roster planning.
             params.extend([date, date, date])
 
             query = f"""
@@ -1005,7 +1357,7 @@ class AttendanceModel:
                     e.first_name,
                     e.last_name,
                     e.personal_number,
-                    st.name as status_name,
+                    CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF(last_log.note, ''), st.name) ELSE st.name END as status_name,
                     st.color as status_color,
                     last_log.start_datetime,
                     last_log.end_datetime,
@@ -1018,12 +1370,21 @@ class AttendanceModel:
                 LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
                 LEFT JOIN service_types srv ON e.service_type_id = srv.id
                 LEFT JOIN LATERAL (
-                    SELECT al.status_type_id, al.start_datetime, al.end_datetime, al.note 
+                    SELECT al.status_type_id, al.start_datetime, al.end_datetime, al.note,
+                           (CASE WHEN al.status_type_id IS NOT NULL
+                                      AND (
+                                        (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s)
+                                        OR
+                                        (al.end_datetime IS NULL AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s))
+                                      )
+                                 THEN TRUE
+                                 ELSE FALSE
+                           END) as is_active_for_date
                     FROM attendance_logs al
                     JOIN status_types sti ON al.status_type_id = sti.id
-                    WHERE al.employee_id = e.id {status_condition}
+                    WHERE al.employee_id = e.id AND DATE(al.start_datetime) <= %s
                     ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
-                ) last_log ON true
+                ) last_log ON last_log.is_active_for_date = TRUE
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
                 WHERE e.is_active = TRUE AND e.personal_number != 'admin'
             """

@@ -122,9 +122,9 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
       <>
         <Card
           id="birthdays-card"
-          className="h-full flex flex-col overflow-hidden"
+          className="bg-card/60 backdrop-blur-2xl text-card-foreground rounded-[2rem] border border-primary/10 flex flex-col overflow-hidden h-full relative"
         >
-          <CardHeader className="pb-3 sm:pb-4 border-b border-border/40 mb-2">
+          <CardHeader className="pb-3 sm:pb-4">
             <div className="flex justify-between items-start gap-2">
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-base sm:text-lg lg:text-xl font-black text-foreground mb-0.5 flex items-center gap-2">
@@ -139,7 +139,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                 <WhatsAppButton
                   onClick={handleSendWhatsApp}
                   variant="outline"
-                  className="h-8 w-8 p-0 rounded-lg border-emerald-500/30 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all "
+                  className="h-8 w-8 p-0 rounded-lg border-emerald-500/30 dark:border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all "
                   skipDirectLink={true}
                 />
               )}
@@ -152,9 +152,6 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
               onScroll={handleScroll}
               className="flex-1 overflow-y-auto relative custom-scrollbar group/scroll bg-muted/10 max-h-[400px]"
             >
-              {/* Soft fade effect at the bottom to indicate more items */}
-              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background/80 to-transparent pointer-events-none z-10 opacity-0 group-hover/scroll:opacity-100 transition-opacity" />
-
               <div className="pl-3 py-1">
                 {" "}
                 {/* Padding on the left for the scrollbar in RTL */}
@@ -230,8 +227,8 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                             className={cn(
                               "w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2",
                               isToday
-                                ? "bg-white border-primary text-primary "
-                                : "bg-muted border-border/60 text-muted-foreground",
+                                ? "bg-white dark:bg-slate-800 border-primary text-primary "
+                                : "bg-muted dark:bg-slate-800/50 border-border/60 text-muted-foreground",
                             )}
                           >
                             <User className="w-5 h-5" />

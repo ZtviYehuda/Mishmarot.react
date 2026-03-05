@@ -193,7 +193,7 @@ export const DashboardStatusTable = ({
                   {emp.phone_number && (
                     <a
                       href={`tel:${emp.phone_number}`}
-                      className="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 transition-colors shrink-0"
+                      className="w-8 h-8 rounded-full bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors shrink-0"
                     >
                       <Phone className="w-4 h-4" />
                     </a>

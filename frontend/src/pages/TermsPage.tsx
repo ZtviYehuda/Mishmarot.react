@@ -56,7 +56,7 @@ export default function TermsPage() {
       >
         <Card
           className={cn(
-            "border-none shadow-2xl rounded-[2.5rem] overflow-hidden backdrop-blur-xl",
+     "border-none rounded-[2.5rem] overflow-hidden backdrop-blur-xl",
             isDark
               ? "bg-slate-900/80 ring-1 ring-white/10"
               : "bg-white/90 ring-1 ring-black/5",

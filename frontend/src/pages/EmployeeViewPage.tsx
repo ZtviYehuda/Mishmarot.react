@@ -330,8 +330,8 @@ export default function EmployeeViewPage() {
         }
       />
 
-      {/* Header */}
-      <div className="bg-background/95 backdrop-blur-sm border-b border-border/60 py-8  sticky top-0 z-10">
+      {/* Header - Attached to layout top with negative margins and negative sticky top to cover layout padding */}
+      <div className="bg-background border-b border-border/60 pb-6 sticky top-[-0.75rem] sm:top-[-1rem] lg:top-[-1.5rem] xl:top-[-2rem] z-40 -mt-3 sm:-mt-4 lg:-mt-6 xl:-mt-8 -mx-3 sm:-mx-4 lg:-mx-6 xl:-mx-8 px-3 sm:px-4 lg:px-6 xl:px-8">
         <div className="max-w-[1600px] mx-auto px-6">
           <PageHeader
             icon={User}
@@ -339,6 +339,7 @@ export default function EmployeeViewPage() {
             subtitle={`תיק אישי: ${employee.personal_number}`}
             category="ניהול שוטרים"
             categoryLink="/employees"
+            className="pt-6 sm:pt-8"
             badge={
               !employee.is_active && (
                 <Badge variant="destructive" className="mr-4 text-sm px-3 py-1">

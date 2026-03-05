@@ -592,7 +592,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           <Button
             variant="ghost"
             onClick={handleReset}
-            className="w-full sm:w-auto px-8 rounded-2xl h-12 sm:h-14 font-black text-muted-foreground hover:text-foreground hover:bg-muted transition-all gap-2 text-sm shadow-none"
+      className="w-full sm:w-auto px-8 rounded-2xl h-12 sm:h-14 font-black text-muted-foreground hover:text-foreground hover:bg-muted transition-all gap-2 text-sm"
           >
             <RotateCcw className="w-4 h-4 opacity-70" />
             איפוס הגדרות

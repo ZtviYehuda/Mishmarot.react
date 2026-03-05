@@ -291,7 +291,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
             <WhatsAppButton
               onClick={handleWhatsAppShare}
               variant="outline"
-              className="h-8 w-8 p-0 rounded-lg text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all  border border-emerald-500/20 bg-emerald-50/50"
+              className="h-8 w-8 p-0 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20"
               skipDirectLink={true}
             />
           </div>

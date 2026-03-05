@@ -35,23 +35,33 @@ export function DateHeader({ className }: DateHeaderProps) {
   const holiday = getJewishHoliday(selectedDate);
 
   return (
-    <div className={cn("flex flex-row items-stretch gap-2 h-full", className)}>
+    <div
+      className={cn(
+   "flex flex-row items-stretch border rounded-xl lg:rounded-2xl overflow-hidden transition-all duration-300 h-full",
+        !isCurrentDay
+          ? "border-amber-400/50 bg-amber-50/80 dark:bg-amber-950/20"
+          : "border-input bg-card",
+        className,
+      )}
+    >
       <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
         <PopoverTrigger asChild>
           <Button
-            variant="outline"
+            variant="ghost"
             className={cn(
-              "w-full h-full py-1 px-2.5 lg:py-2 lg:px-4 rounded-lg lg:rounded-xl border-input bg-background hover:bg-muted/50 transition-all",
+              "flex-1 h-full py-1.5 px-3 lg:py-2 lg:px-5 rounded-none border-none hover:bg-muted/50 transition-all text-right items-end flex flex-col justify-center",
               !isCurrentDay &&
-                "border-amber-300 bg-amber-50 hover:bg-amber-100/80 text-amber-900",
+                "hover:bg-amber-100/50 dark:hover:bg-amber-900/30",
             )}
           >
-            <div className="flex flex-col items-end text-right">
+            <div className="flex flex-col items-end">
               <div className="flex items-center gap-2 lg:gap-3">
                 <span
                   className={cn(
-                    "text-[13px] lg:text-base font-bold",
-                    !isCurrentDay && "text-amber-900",
+                    "text-[12px] lg:text-[15px] font-black tracking-tight",
+                    !isCurrentDay
+                      ? "text-amber-900 dark:text-amber-100"
+                      : "text-foreground",
                   )}
                 >
                   {format(selectedDate, "d בMMMM yyyy", { locale: he })}
@@ -59,13 +69,17 @@ export function DateHeader({ className }: DateHeaderProps) {
                 <div
                   className={cn(
                     "w-px h-2.5 lg:h-3.5",
-                    isCurrentDay ? "bg-border" : "bg-amber-300",
+                    isCurrentDay
+                      ? "bg-border"
+                      : "bg-amber-400/50 dark:bg-amber-700",
                   )}
                 />
                 <span
                   className={cn(
-                    "text-[11px] lg:text-sm font-medium text-muted-foreground font-serif",
-                    !isCurrentDay && "text-amber-800/80",
+                    "text-[10px] lg:text-xs font-bold font-serif opacity-80",
+                    !isCurrentDay
+                      ? "text-amber-800 dark:text-amber-400"
+                      : "text-muted-foreground",
                   )}
                 >
                   {hebrewDateStr}
@@ -74,19 +88,22 @@ export function DateHeader({ className }: DateHeaderProps) {
 
               {/* Holiday or Status Line */}
               {holiday ? (
-                <span className="text-[10px] font-bold text-amber-600 mt-0.5">
+                <span className="text-[10px] font-black text-amber-600 mt-0.5">
                   🎉 {holiday}
                 </span>
               ) : !isCurrentDay ? (
-                <div className="flex items-center gap-1.5 mt-0.5 text-[10px] font-bold text-amber-700">
+                <div className="flex items-center gap-1.5 mt-0.5 text-[9px] font-black text-amber-700/70 dark:text-amber-400/70 uppercase tracking-widest shrink-0">
                   <CalendarClock className="w-3 h-3" />
-                  נמצא במצב היסטורי
+                  ניהול במצב היסטורי
                 </div>
               ) : null}
             </div>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
+        <PopoverContent
+     className="w-auto p-0 border-none rounded-2xl overflow-hidden"
+          align="end"
+        >
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -103,15 +120,20 @@ export function DateHeader({ className }: DateHeaderProps) {
       </Popover>
 
       {!isCurrentDay && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-9 px-3 text-xs font-bold text-amber-700 hover:text-amber-800 hover:bg-amber-100/50 rounded-xl"
-          onClick={handleBackToToday}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleBackToToday();
+          }}
+          className="bg-amber-500 hover:bg-amber-600 text-white px-3 lg:px-4 flex items-center justify-center gap-1.5 lg:gap-2 transition-all active:scale-95 group relative border-r border-amber-400/30 shrink-0"
+          title="חזור להיום"
         >
-          <CalendarClock className="w-3.5 h-3.5 ml-2" />
-          חזור להיום
-        </Button>
+          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CalendarClock className="w-4 h-4" />
+          <span className="text-[11px] lg:text-[12px] font-black whitespace-nowrap">
+            היום
+          </span>
+        </button>
       )}
     </div>
   );

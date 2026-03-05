@@ -11,7 +11,7 @@ import { useEmployees } from "@/hooks/useEmployees";
 type Theme = "dark" | "light";
 type AccentColor =
   | "blue"
-  | "indigo"
+  | "cyan"
   | "emerald"
   | "rose"
   | "amber"

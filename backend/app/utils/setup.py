@@ -219,6 +219,9 @@ def setup_database():
             cur.execute(
                 "ALTER TABLE status_types ADD COLUMN IF NOT EXISTS is_persistent BOOLEAN DEFAULT FALSE;"
             )
+            cur.execute(
+                "ALTER TABLE status_types ADD COLUMN IF NOT EXISTS parent_status_id INTEGER REFERENCES status_types(id);"
+            )
 
             # Transfer Requests Migrations
             cur.execute(
@@ -279,9 +282,49 @@ def setup_database():
                 ('מחלה', '#ef4444', FALSE, TRUE),
                 ('קורס', '#8b5cf6', TRUE, TRUE),
                 ('תגבור', '#f59e0b', TRUE, TRUE),
-                ('חו"ל', '#0ea5e9', FALSE, TRUE)
+                ('חו"ל', '#0ea5e9', FALSE, TRUE),
+                ('אחר', '#94a3b8', FALSE, TRUE)
             """
             )
+
+        # Add sub-statuses for 'משרד' if they don't exist yet
+        cur.execute(
+            "SELECT id FROM status_types WHERE name = 'משרד' AND parent_status_id IS NULL LIMIT 1"
+        )
+        mishrad_row = cur.fetchone()
+        if mishrad_row:
+            mishrad_id = (
+                mishrad_row[0]
+                if not isinstance(mishrad_row, dict)
+                else mishrad_row["id"]
+            )
+            # Insert sub-statuses only if they don't exist
+            sub_statuses = [
+                ("מהבית", "#16a34a", True, False),
+                ("מתקן חיצוני", "#15803d", True, False),
+                ("בשטח", "#166534", True, False),
+            ]
+            for name, color, is_presence, is_persistent in sub_statuses:
+                cur.execute(
+                    """
+                    INSERT INTO status_types (name, code, color, is_presence, is_persistent, parent_status_id)
+                    SELECT %s, %s, %s, %s, %s, %s
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM status_types WHERE name = %s AND parent_status_id = %s
+                    )
+                    """,
+                    (
+                        name,
+                        name,  # use name as code
+                        color,
+                        is_presence,
+                        is_persistent,
+                        mishrad_id,
+                        name,
+                        mishrad_id,
+                    ),
+                )
+            print("✅ Sub-statuses for 'משרד' added")
 
         # 3. יצירת Admin דיפולטיבי (אם לא קיים)
         # 3. יצירת/תיקון Admin דיפולטיבי

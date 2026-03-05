@@ -65,6 +65,7 @@ interface UpdateState {
   touched: boolean;
   start_date?: string | null;
   end_date?: string | null;
+  note?: string;
 }
 
 export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
@@ -93,12 +94,15 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
   // Selection State
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [batchStatusId, setBatchStatusId] = useState<string>("");
+  const [batchNote, setBatchNote] = useState<string>("");
 
   // Local state for temporary changes before submission
   const [bulkUpdates, setBulkUpdates] = useState<Record<number, UpdateState>>(
     {},
   );
   const [showWarning, setShowWarning] = useState(false);
+
+  const isWeekend = selectedDate.getDay() === 5 || selectedDate.getDay() === 6;
 
   useEffect(() => {
     if (open) {
@@ -127,6 +131,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
             ? emp.start_date.split("T")[0]
             : new Date().toISOString().split("T")[0],
           end_date: emp.end_date ? emp.end_date.split("T")[0] : null,
+          note: "",
         };
       });
       setBulkUpdates(initial);
@@ -140,12 +145,24 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
         setShowSelectedOnly(false);
       }
 
-      setFilterServiceType("all");
       setFilterSectionId("all");
       setFilterTeamId("all");
       setBatchStatusId("");
+      setBatchNote("");
+
+      // If we have missing ids from alert, pre-select them all
+      if (alertContext?.missing_ids) {
+        setSelectedIds(alertContext.missing_ids);
+      }
     }
-  }, [open, getStatusTypes, getServiceTypes, employees, initialSelectedIds]);
+  }, [
+    open,
+    getStatusTypes,
+    getServiceTypes,
+    employees,
+    initialSelectedIds,
+    alertContext,
+  ]);
 
   const uniqueSections = useMemo(() => {
     const sectionsMap = new Map();
@@ -210,6 +227,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     filterTeamId,
     showSelectedOnly,
     selectedIds,
+    alertContext,
   ]);
 
   const handleSubmit = async () => {
@@ -239,6 +257,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
           status_type_id: data.status_id,
           start_date: data.start_date,
           end_date: data.end_date,
+          note: data.note,
         });
       }
     });
@@ -289,6 +308,13 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     }));
   };
 
+  const handleNoteChange = (empId: number, note: string) => {
+    setBulkUpdates((prev) => ({
+      ...prev,
+      [empId]: { ...prev[empId], note, touched: true },
+    }));
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const visibleIds = filteredList.map((e) => e.id);
@@ -326,6 +352,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
           color: type.color,
           isChanged: type.id !== original?.status_id,
           touched: true,
+          note: type.name === "אחר" ? batchNote : next[id].note,
           start_date:
             next[id]?.start_date || new Date().toISOString().split("T")[0],
         };
@@ -353,6 +380,20 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     });
   };
 
+  const handleBatchNoteChange = (note: string) => {
+    setBatchNote(note);
+    if (!batchStatusId || selectedIds.length === 0) return;
+    setBulkUpdates((prev) => {
+      const next = { ...prev };
+      selectedIds.forEach((id) => {
+        if (next[id].status_id.toString() === batchStatusId) {
+          next[id] = { ...next[id], note, touched: true };
+        }
+      });
+      return next;
+    });
+  };
+
   const handleRevert = (empId: number) => {
     const original = employees.find((e) => e.id === empId);
     if (!original) return;
@@ -372,6 +413,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
           ? original.start_date.split("T")[0]
           : new Date().toISOString().split("T")[0],
         end_date: original.end_date ? original.end_date.split("T")[0] : null,
+        note: "",
         isChanged: false,
         touched: false,
       },
@@ -733,9 +775,9 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               <div className="flex items-center gap-3">
                                 <div
                                   className={cn(
-                                    "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-[11px] shrink-0  transition-all duration-500 group-hover:scale-105 group-hover:rotate-3 shadow-sm",
+                                    "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-[11px] shrink-0 transition-all duration-500 group-hover:scale-105 group-hover:rotate-3",
                                     current?.isChanged
-                                      ? "bg-primary text-primary-foreground scale-110 shadow-primary/30"
+                                      ? "bg-primary text-primary-foreground scale-110"
                                       : "bg-primary/5 text-primary border border-primary/10 group-hover:border-primary/40 group-hover:bg-primary/10 dark:bg-primary/10 dark:text-primary-foreground dark:border-primary/20",
                                   )}
                                 >
@@ -875,9 +917,28 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                             e.target.value,
                                           )
                                         }
-                                        className="w-full h-10 rounded-xl border border-border/60 bg-background/50 hover:bg-background hover:border-primary/40 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-[11px] font-black px-3 outline-none transition-all  placeholder:text-muted-foreground/30"
+                                        className="w-full h-10 rounded-xl border border-border/60 bg-background/50 hover:bg-background hover:border-primary/40 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-[11px] font-black px-3 outline-none transition-all "
                                       />
                                     </div>
+                                    {current.status_name === "אחר" && (
+                                      <div className="relative group/input col-span-2 mt-1">
+                                        <span className="absolute -top-2 right-3 px-1.5 text-[9px] font-black text-muted-foreground/60 bg-background z-10 scale-90 group-focus-within/input:text-primary transition-colors">
+                                          הערה
+                                        </span>
+                                        <input
+                                          type="text"
+                                          placeholder="הזן הערה (חובה)"
+                                          value={current.note || ""}
+                                          onChange={(e) =>
+                                            handleNoteChange(
+                                              emp.id,
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="w-full h-10 rounded-xl border border-border/60 bg-background/50 hover:bg-background hover:border-primary/40 focus:border-primary/50 focus:ring-4 focus:ring-primary/5 text-[11px] font-black px-3 outline-none transition-all "
+                                        />
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               ) : (
@@ -1081,21 +1142,30 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                 <SelectValue placeholder="עדכן סטטוס..." />
                               </SelectTrigger>
                               <SelectContent dir="rtl" className="rounded-2xl ">
-                                {statusTypes.map((t) => (
-                                  <SelectItem
-                                    key={t.id}
-                                    value={t.id.toString()}
-                                    className="text-xs font-bold py-3"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <div
-                                        className="w-2.5 h-2.5 rounded-full"
-                                        style={{ backgroundColor: t.color }}
-                                      />
-                                      {t.name}
-                                    </div>
-                                  </SelectItem>
-                                ))}
+                                {statusTypes
+                                  .filter((t) => {
+                                    if (isWeekend)
+                                      return (
+                                        t.name.includes("תגבור") ||
+                                        t.name.includes("אחר")
+                                      );
+                                    return true;
+                                  })
+                                  .map((t) => (
+                                    <SelectItem
+                                      key={t.id}
+                                      value={t.id.toString()}
+                                      className="text-xs font-bold py-3"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <div
+                                          className="w-2.5 h-2.5 rounded-full"
+                                          style={{ backgroundColor: t.color }}
+                                        />
+                                        {t.name}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
                               </SelectContent>
                             </Select>
                           </div>
@@ -1136,6 +1206,23 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               />
                             </div>
                           </div>
+
+                          {current.status_name === "אחר" && (
+                            <div className="space-y-1 mt-3">
+                              <label className="text-[9px] font-black text-muted-foreground/60 uppercase mr-1">
+                                הערה
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="הזן הערה (חובה)"
+                                value={current.note || ""}
+                                onChange={(e) =>
+                                  handleNoteChange(emp.id, e.target.value)
+                                }
+                                className="w-full h-10 bg-background border border-border/40 rounded-xl px-3 text-[11px] font-black outline-none focus:border-primary/50 dark:bg-white/5 dark:border-white/10 dark:text-white"
+                              />
+                            </div>
+                          )}
 
                           {current.isChanged && (
                             <button
@@ -1195,21 +1282,30 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                         dir="rtl"
                         className="max-h-[300px] rounded-2xl  border-primary/10"
                       >
-                        {statusTypes.map((t) => (
-                          <SelectItem
-                            key={t.id}
-                            value={t.id.toString()}
-                            className="text-xs font-bold py-2.5"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="w-2.5 h-2.5 rounded-full "
-                                style={{ backgroundColor: t.color }}
-                              />
-                              {t.name}
-                            </div>
-                          </SelectItem>
-                        ))}
+                        {statusTypes
+                          .filter((t) => {
+                            if (isWeekend)
+                              return (
+                                t.name.includes("תגבור") ||
+                                t.name.includes("אחר")
+                              );
+                            return true;
+                          })
+                          .map((t) => (
+                            <SelectItem
+                              key={t.id}
+                              value={t.id.toString()}
+                              className="text-xs font-bold py-2.5"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-2.5 h-2.5 rounded-full "
+                                  style={{ backgroundColor: t.color }}
+                                />
+                                {t.name}
+                              </div>
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
 
@@ -1237,6 +1333,25 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                         }
                       />
                     </div>
+
+                    {statusTypes.find((t) => t.id.toString() === batchStatusId)
+                      ?.name === "אחר" && (
+                      <div className="hidden lg:flex items-center gap-2 animate-in fade-in duration-500">
+                        <div className="w-px h-6 bg-border/60 mx-1" />
+                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                          הערה:
+                        </span>
+                        <input
+                          type="text"
+                          value={batchNote}
+                          placeholder="הזן הערה"
+                          onChange={(e) =>
+                            handleBatchNoteChange(e.target.value)
+                          }
+                          className="h-10 w-[140px] bg-background border border-border/40 rounded-xl px-3 text-xs font-black outline-none focus:border-primary/40 transition-all dark:bg-white/5 dark:border-white/10 dark:text-white"
+                        />
+                      </div>
+                    )}
 
                     <button
                       type="button"

@@ -64,7 +64,7 @@ export default function SupportPage() {
       >
         <Card
           className={cn(
-            "border-none shadow-2xl rounded-[3rem] overflow-hidden backdrop-blur-xl",
+     "border-none rounded-[3rem] overflow-hidden backdrop-blur-xl",
             isDark
               ? "bg-slate-900/80 ring-1 ring-white/10"
               : "bg-white/90 ring-1 ring-black/5",
@@ -89,7 +89,7 @@ export default function SupportPage() {
                 <div
                   key={idx}
                   className={cn(
-                    "p-6 rounded-[2rem] border transition-all hover:scale-[1.05] hover:shadow-xl cursor-pointer group",
+         "p-6 rounded-[2rem] border transition-all hover:scale-[1.05] cursor-pointer group",
                     isDark
                       ? "bg-slate-800/40 border-white/5 hover:border-white/10"
                       : "bg-slate-50 border-slate-200 hover:border-slate-300",

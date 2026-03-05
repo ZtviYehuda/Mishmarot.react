@@ -119,10 +119,10 @@ body {
 
 /* Accent Color Overrides - Highest Specificity */
 :root {
-  &.accent-indigo {
-    --primary: #6366f1;
-    --secondary: #eef2ff;
-    --accent: #eef2ff;
+  &.accent-cyan {
+    --primary: #06b6d4;
+    --secondary: #ecfeff;
+    --accent: #ecfeff;
   }
 
   &.accent-emerald {
@@ -163,10 +163,10 @@ body {
 }
 
 .dark {
-  &.accent-indigo {
-    --primary: #818cf8;
-    --secondary: #1e1b4b;
-    --accent: #1e1b4b;
+  &.accent-cyan {
+    --primary: #22d3ee;
+    --secondary: #083344;
+    --accent: #083344;
   }
 
   &.accent-emerald {

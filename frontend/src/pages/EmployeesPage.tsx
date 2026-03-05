@@ -22,21 +22,26 @@ export default function EmployeesPage() {
         : "יחידה";
 
   return (
-    <div className="space-y-6 pb-6 animate-in fade-in duration-500">
-      <PageHeader
-        icon={Users}
-        title="ניהול מצבת כוח אדם"
-        subtitle={`מערך ניהול וצפייה בנתוני השוטרים ב${unitTypeLabel}`}
-        category="ניהול שוטרים"
-        categoryLink="/employees"
-        iconClassName="from-primary/10 to-primary/5 border-primary/20"
-      />
+    <div className="flex flex-col animate-in fade-in duration-500">
+      <div className="px-6 md:px-10 pt-2 pb-4 shrink-0 transition-all">
+        <PageHeader
+          icon={Users}
+          title="ניהול מצבת כוח אדם"
+          subtitle={`מערך ניהול וצפייה בנתוני השוטרים ב${unitTypeLabel}`}
+          category="ניהול שוטרים"
+          categoryLink="/employees"
+          className="mb-0"
+          iconClassName="from-primary/10 to-primary/5 border-primary/20"
+        />
+      </div>
 
-      <EmployeeTable
-        employees={employees}
-        loading={loading}
-        fetchEmployees={fetchEmployees}
-      />
+      <div className="space-y-4 pb-6 px-6 md:px-10">
+        <EmployeeTable
+          employees={employees}
+          loading={loading}
+          fetchEmployees={fetchEmployees}
+        />
+      </div>
     </div>
   );
 }

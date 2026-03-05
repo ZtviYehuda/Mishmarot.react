@@ -2,6 +2,11 @@ import { useState, useCallback } from "react";
 import apiClient from "@/config/api.client";
 import * as endpoints from "@/config/employees.endpoints";
 import * as attEndpoints from "@/config/attendance.endpoints";
+import {
+  ATTENDANCE_ROSTER_MATRIX_ENDPOINT,
+  ATTENDANCE_ROSTER_UPDATE_ENDPOINT,
+  ATTENDANCE_ROSTER_VERIFY_ENDPOINT,
+} from "@/config/attendance.endpoints";
 import type { CreateEmployeePayload, Employee } from "@/types/employee.types";
 
 export const useEmployees = () => {
@@ -20,6 +25,9 @@ export const useEmployees = () => {
       team_id?: number,
       date?: string,
       service_types?: string[],
+      status_id_param?: number | string,
+      min_age?: number,
+      max_age?: number,
     ) => {
       setLoading(true);
       try {
@@ -27,13 +35,18 @@ export const useEmployees = () => {
         if (search) params.append("search", search);
         if (dept_id) params.append("dept_id", dept_id.toString());
         if (include_inactive) params.append("include_inactive", "true");
-        if (status_id) params.append("status_id", status_id.toString());
+        if (status_id !== undefined && status_id !== null)
+          params.append("status_id", status_id.toString());
+        if (status_id_param !== undefined && status_id_param !== null)
+          params.append("status_id", status_id_param.toString());
         if (section_id) params.append("section_id", section_id.toString());
         if (team_id) params.append("team_id", team_id.toString());
         if (date) params.append("date", date);
         if (service_types && service_types.length > 0) {
           params.append("serviceTypes", service_types.join(","));
         }
+        if (min_age) params.append("min_age", min_age.toString());
+        if (max_age) params.append("max_age", max_age.toString());
 
         const { data } = await apiClient.get<Employee[]>(
           `${endpoints.EMPLOYEES_BASE_ENDPOINT}?${params}`,
@@ -144,6 +157,8 @@ export const useEmployees = () => {
       status_id?: string;
       date?: string;
       serviceTypes?: string;
+      min_age?: number;
+      max_age?: number;
     }) => {
       try {
         const params = new URLSearchParams();
@@ -156,6 +171,10 @@ export const useEmployees = () => {
         if (filters?.date) params.append("date", filters.date);
         if (filters?.serviceTypes)
           params.append("serviceTypes", filters.serviceTypes);
+        if (filters?.min_age)
+          params.append("min_age", filters.min_age.toString());
+        if (filters?.max_age)
+          params.append("max_age", filters.max_age.toString());
 
         const { data } = await apiClient.get(
           `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}?${params}`,
@@ -291,6 +310,8 @@ export const useEmployees = () => {
           team_id?: string;
           status_id?: string;
           serviceTypes?: string;
+          min_age?: number;
+          max_age?: number;
         },
       ) => {
         try {
@@ -305,6 +326,10 @@ export const useEmployees = () => {
           if (filters?.status_id) params.append("status_id", filters.status_id);
           if (filters?.serviceTypes)
             params.append("serviceTypes", filters.serviceTypes);
+          if (filters?.min_age)
+            params.append("min_age", filters.min_age.toString());
+          if (filters?.max_age)
+            params.append("max_age", filters.max_age.toString());
 
           const { data } = await apiClient.get(
             `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/comparison?${params}`,
@@ -327,6 +352,8 @@ export const useEmployees = () => {
           team_id?: string;
           status_id?: string;
           serviceTypes?: string;
+          min_age?: number;
+          max_age?: number;
         },
       ) => {
         try {
@@ -341,6 +368,10 @@ export const useEmployees = () => {
           if (filters?.status_id) params.append("status_id", filters.status_id);
           if (filters?.serviceTypes)
             params.append("serviceTypes", filters.serviceTypes);
+          if (filters?.min_age)
+            params.append("min_age", filters.min_age.toString());
+          if (filters?.max_age)
+            params.append("max_age", filters.max_age.toString());
 
           const { data } = await apiClient.get(
             `${attEndpoints.ATTENDANCE_STATS_ENDPOINT}/trend?${params}`,
@@ -387,6 +418,72 @@ export const useEmployees = () => {
         return true;
       } catch (err: any) {
         setError(err.response?.data?.error || "Failed to cancel delegation");
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    getRosterMatrix: useCallback(
+      async (start_date: string, end_date: string, filters?: any) => {
+        try {
+          const params = new URLSearchParams();
+          params.append("start_date", start_date);
+          params.append("end_date", end_date);
+          if (filters?.department_id)
+            params.append("department_id", filters.department_id);
+          if (filters?.section_id)
+            params.append("section_id", filters.section_id);
+          if (filters?.team_id) params.append("team_id", filters.team_id);
+
+          const { data } = await apiClient.get(
+            `${ATTENDANCE_ROSTER_MATRIX_ENDPOINT}?${params}`,
+          );
+          return data;
+        } catch (err: any) {
+          console.error("Failed to fetch roster matrix", err);
+          return { employees: [], logs: [] };
+        }
+      },
+      [],
+    ),
+
+    updateRoster: async (
+      employee_id: number,
+      status_id: number,
+      start_date: string,
+      end_date?: string,
+    ) => {
+      setLoading(true);
+      try {
+        await apiClient.post(ATTENDANCE_ROSTER_UPDATE_ENDPOINT, {
+          employee_id,
+          status_id,
+          start_date,
+          end_date,
+        });
+        await fetchEmployees(); // Ensure roster updates are reflected if we view today
+        return true;
+      } catch (err: any) {
+        console.error("Failed to update roster", err);
+        setError(err.response?.data?.error || "Failed to update roster");
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+
+    verifyRoster: async (date: string, employee_ids?: number[]) => {
+      setLoading(true);
+      try {
+        await apiClient.post(ATTENDANCE_ROSTER_VERIFY_ENDPOINT, {
+          date,
+          employee_ids,
+        });
+        await fetchEmployees();
+        return true;
+      } catch (err: any) {
+        console.error("Failed to verify roster", err);
+        setError(err.response?.data?.error || "Failed to verify roster");
         return false;
       } finally {
         setLoading(false);

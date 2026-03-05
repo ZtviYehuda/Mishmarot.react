@@ -21,6 +21,7 @@ import EditEmployeePage from "@/pages/EditEmployeePage";
 import EmployeeViewPage from "@/pages/EmployeeViewPage";
 import TransfersPage from "@/pages/TransfersPage";
 import AttendancePage from "@/pages/AttendancePage";
+import RosterPage from "@/pages/RosterPage";
 import SettingsPage from "@/pages/SettingsPage";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
 import MainLayout from "@/components/layout/MainLayout";
@@ -103,6 +104,7 @@ const router = createBrowserRouter([
       { path: "/employees/edit/:id", element: <EditEmployeePage /> },
       { path: "/transfers", element: <TransfersPage /> },
       { path: "/attendance", element: <AttendancePage /> },
+      { path: "/roster", element: <RosterPage /> },
       { path: "/settings", element: <SettingsPage /> },
     ],
   },

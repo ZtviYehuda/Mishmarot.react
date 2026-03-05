@@ -62,6 +62,9 @@ def get_stats():
 
         requester = EmployeeModel.get_employee_by_id(user_id)
 
+        # TRIGGER AUTO-ROSTER APPROVAL ON DASHBOARD LOAD
+        AttendanceModel.auto_approve_daily_roster()
+
         # Parse filters for drill-down
         filters = {}
         if (
@@ -79,14 +82,31 @@ def get_stats():
             filters["date"] = request.args.get("date")
         if request.args.get("serviceTypes"):
             filters["serviceTypes"] = request.args.get("serviceTypes")
+        if request.args.get("min_age"):
+            filters["min_age"] = request.args.get("min_age")
+        if request.args.get("max_age"):
+            filters["max_age"] = request.args.get("max_age")
 
         print(f"[DEBUG] get_stats filters: {filters}")
 
-        stats = AttendanceModel.get_dashboard_stats(
+        stats_data = AttendanceModel.get_dashboard_stats(
             requesting_user=requester, filters=filters
         )
         birthdays = AttendanceModel.get_birthdays(requesting_user=requester)
-        return jsonify({"stats": stats, "birthdays": birthdays})
+        # Count unverified
+        unverified = sum(
+            int(s.get("unverified_count", 0)) for s in stats_data.get("stats", [])
+        )
+        return jsonify(
+            {
+                "stats": stats_data.get("stats", []),
+                "total_employees": stats_data.get("total_employees", 0),
+                "unverified_count": unverified,
+                "birthdays": birthdays,
+                "age_distribution": stats_data.get("age_distribution", []),
+                "average_age": stats_data.get("average_age", 0),
+            }
+        )
     except Exception as e:
         print(f"❌ Error in /stats: {e}")
         import traceback
@@ -455,4 +475,140 @@ def export_employee_history(emp_id):
         import traceback
 
         traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@att_bp.route("/roster-matrix", methods=["GET"])
+@jwt_required()
+def get_roster_matrix():
+    try:
+        identity = get_jwt_identity()
+        try:
+            if isinstance(identity, str):
+                identity = json.loads(identity)
+        except:
+            pass
+        user_id = identity.get("id") if isinstance(identity, dict) else identity
+
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+
+        if not start_date or not end_date:
+            return jsonify({"error": "Missing start_date or end_date"}), 400
+
+        from app.models.employee_model import EmployeeModel
+
+        requester = EmployeeModel.get_employee_by_id(user_id)
+
+        # 1. Fetch Employees Scope
+        filters = {}
+        if request.args.get("department_id"):
+            filters["dept_id"] = int(request.args.get("department_id"))
+        if request.args.get("section_id"):
+            filters["section_id"] = int(request.args.get("section_id"))
+        if request.args.get("team_id"):
+            filters["team_id"] = int(request.args.get("team_id"))
+
+        # Reuse get_dashboard_stats or similar scoping logic?
+        # Actually EmployeeModel might have a method.
+        # But for now let's use get_dashboard_stats style manual scoping + filters.
+        # OR: EmployeeModel.get_all_employees(filters, user_context)
+
+        # Let's inspect EmployeeModel.get_all_employees first?
+        # I don't want to make assumptions.
+        # I'll use a direct query or modify EmployeeModel.
+        # BUT, to be safe and quick, I'll fetch ALL employees and filter in python if DB method isn't ready,
+        # OR better: use `EmployeeModel.get_subordinates(user_id)` if that exists?
+
+        # Let's use `AttendanceModel.get_unit_comparison_stats` logic for scoping employees?
+        # No, that returns stats.
+
+        # Let's just fetch all employees and filter manually if needed, or rely on a simple query.
+        # Wait, I need the LIST of employees to render the grid rows.
+
+        employees = EmployeeModel.get_all_employees(
+            filters=filters, requesting_user=requester
+        )
+
+        # 2. Fetch Logs for these employees in range
+        if not employees:
+            return jsonify({"employees": [], "logs": []})
+
+        emp_ids = [e["id"] for e in employees]
+        logs = AttendanceModel.get_logs_for_employees(emp_ids, start_date, end_date)
+
+        # Convert datetimes to ISO strings for JSON serialization
+        for log in logs:
+            for key, value in log.items():
+                if hasattr(value, "isoformat"):
+                    log[key] = value.isoformat()
+
+        for emp in employees:
+            for key, value in emp.items():
+                if hasattr(value, "isoformat"):
+                    emp[key] = value.isoformat()
+
+        return jsonify({"employees": employees, "logs": logs})
+
+    except Exception as e:
+        print(f"❌ Error in /roster-matrix: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@att_bp.route("/roster-update", methods=["POST"])
+@jwt_required()
+def update_roster():
+    data = request.get_json()
+    identity = get_jwt_identity()
+    # ... identity parsing ... (standardize this?)
+    try:
+        if isinstance(identity, str):
+            identity = json.loads(identity)
+    except:
+        pass
+    user_id = identity.get("id") if isinstance(identity, dict) else identity
+
+    employee_id = data.get("employee_id")
+    status_id = data.get("status_id")
+    start_date_str = data.get("start_date")
+    end_date_str = data.get("end_date")  # Optional
+
+    if not employee_id or not status_id or not start_date_str:
+        return jsonify({"error": "Missing fields"}), 400
+
+    try:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        end_date = start_date
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+
+        curr_date = start_date
+        while curr_date <= end_date:
+            AttendanceModel.upsert_roster_log(
+                employee_id, status_id, curr_date, reported_by=user_id
+            )
+            curr_date += pd.Timedelta(days=1)  # pandas is imported as pd
+
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Error updating roster: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@att_bp.route("/roster-verify", methods=["POST"])
+@jwt_required()
+def verify_roster_day():
+    data = request.get_json()
+    date_str = data.get("date")
+    emp_ids = data.get("employee_ids")  # Optional list
+
+    if not date_str:
+        return jsonify({"error": "Missing date"}), 400
+
+    try:
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+        AttendanceModel.verify_day(date_obj, emp_ids)
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Error verifying day: {e}")
         return jsonify({"error": str(e)}), 500

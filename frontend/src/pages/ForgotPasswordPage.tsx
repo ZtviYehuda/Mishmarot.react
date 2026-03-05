@@ -163,7 +163,7 @@ export default function ForgotPasswordPage() {
       >
         <Card
           className={cn(
-            "border-none shadow-2xl overflow-hidden rounded-[2.5rem] backdrop-blur-xl transition-all duration-500",
+     "border-none overflow-hidden rounded-[2.5rem] backdrop-blur-xl transition-all duration-500",
             isDark
               ? "bg-slate-900/80 ring-1 ring-white/10"
               : "bg-white/90 ring-1 ring-black/5",

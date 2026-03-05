@@ -134,7 +134,7 @@ const UnitPicker = ({
 
         <SelectContent
           dir="rtl"
-          className="rounded-xl border-slate-100 dark:border-slate-800 shadow-none p-1 bg-white dark:bg-slate-950"
+     className="rounded-xl border-slate-100 dark:border-slate-800 p-1 bg-white dark:bg-slate-950"
         >
           {options.map((opt: any) => (
             <SelectItem
@@ -217,7 +217,7 @@ const PersonalFormTab = ({
               value={formData.first_name || ""}
               onChange={(e) => handleFieldChange("first_name", e.target.value)}
               placeholder="פרטי"
-              className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl font-bold"
+       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl font-bold"
             />
           </InputItem>
 
@@ -226,7 +226,7 @@ const PersonalFormTab = ({
               value={formData.last_name || ""}
               onChange={(e) => handleFieldChange("last_name", e.target.value)}
               placeholder="משפחה"
-              className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl font-bold"
+       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl font-bold"
             />
           </InputItem>
 
@@ -235,7 +235,7 @@ const PersonalFormTab = ({
               value={formData.national_id || ""}
               onChange={(e) => handleFieldChange("national_id", e.target.value)}
               placeholder="000000000"
-              className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl text-lg font-black tracking-widest text-center"
+       className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl text-lg font-black tracking-widest text-center"
             />
           </InputItem>
 
@@ -246,7 +246,7 @@ const PersonalFormTab = ({
                 handleFieldChange("personal_number", e.target.value)
               }
               placeholder="0000000"
-              className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl text-lg font-black tracking-widest text-center"
+       className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl text-lg font-black tracking-widest text-center"
             />
           </InputItem>
 
@@ -255,7 +255,7 @@ const PersonalFormTab = ({
               value={formData.gender || ""}
               onValueChange={(val) => handleFieldChange("gender", val)}
             >
-              <SelectTrigger className="w-full bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 text-right shadow-sm rounded-xl font-bold px-4">
+       <SelectTrigger className="w-full bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 text-right rounded-xl font-bold px-4">
                 <SelectValue placeholder="בחר מין" />
               </SelectTrigger>
               <SelectContent
@@ -279,7 +279,7 @@ const PersonalFormTab = ({
                 formData.birth_date ? formData.birth_date.split("T")[0] : ""
               }
               onChange={(e) => handleFieldChange("birth_date", e.target.value)}
-              className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 w-full shadow-sm rounded-xl font-bold"
+       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 w-full rounded-xl font-bold"
             />
           </InputItem>
 
@@ -290,7 +290,7 @@ const PersonalFormTab = ({
                 handleFieldChange("service_type_id", parseInt(val))
               }
             >
-              <SelectTrigger className="w-full bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 text-right shadow-sm rounded-xl font-bold px-4">
+       <SelectTrigger className="w-full bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 text-right rounded-xl font-bold px-4">
                 <SelectValue placeholder="בחר מעמד" />
               </SelectTrigger>
               <SelectContent
@@ -315,7 +315,7 @@ const PersonalFormTab = ({
               value={formData.city || ""}
               onChange={(e) => handleFieldChange("city", e.target.value)}
               placeholder="ירושלים, ת''א..."
-              className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 shadow-sm rounded-xl font-bold"
+       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl font-bold"
             />
           </InputItem>
         </div>
@@ -888,7 +888,7 @@ export default function CreateEmployeePage() {
       {active && (
         <motion.div
           layoutId="activeTab"
-          className="absolute inset-0 bg-white dark:bg-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-none rounded-2xl border border-slate-200/50 dark:border-slate-700/50"
+     className="absolute inset-0 bg-white dark:bg-slate-800  rounded-2xl border border-slate-200/50 dark:border-slate-700/50"
           initial={false}
           transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
         />
@@ -899,7 +899,7 @@ export default function CreateEmployeePage() {
             className={cn(
               "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-500",
               active
-                ? "bg-primary text-white scale-110 rotate-0 shadow-lg shadow-primary/20"
+        ?"bg-primary text-white scale-110 rotate-0"
                 : "bg-white/50 dark:bg-slate-800/50 text-slate-400 group-hover:scale-110 group-hover:bg-white",
             )}
           >
@@ -947,7 +947,7 @@ export default function CreateEmployeePage() {
               <div className="w-px h-6 bg-border/60 mx-1 hidden sm:block" />
 
               <Button
-                className="h-10 flex-1 sm:flex-none px-6 sm:px-8 rounded-xl font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all gap-2"
+        className="h-10 flex-1 sm:flex-none px-6 sm:px-8 rounded-xl font-black  hover:scale-[1.02] active:scale-[0.98] transition-all gap-2"
                 onClick={handleSubmit}
                 disabled={saving}
               >
@@ -966,7 +966,7 @@ export default function CreateEmployeePage() {
       </div>
 
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 mt-6 sm:mt-8">
-        <div className="bg-slate-200/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-[24px] p-2 flex gap-4 mb-8 max-w-2xl shadow-sm mx-auto">
+    <div className="bg-slate-200/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-[24px] p-2 flex gap-4 mb-8 max-w-2xl mx-auto">
           <TabButton
             active={activeTab === "personal"}
             onClick={() => setActiveTab("personal")}

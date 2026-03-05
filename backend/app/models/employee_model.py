@@ -122,7 +122,7 @@ class EmployeeModel:
                        COALESCE(s.name, s_dir.name) as section_name, 
                        t.name as team_name,
                        st.id as status_id,
-                       st.name as status_name, 
+                       CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF(al.note, ''), st.name) ELSE st.name END as status_name, 
                        st.color as status_color,
                        st.is_presence as status_is_presence,
                        al.end_datetime as status_end_datetime,
@@ -149,7 +149,7 @@ class EmployeeModel:
                 -- Active Status
                 -- Active Status (Smart Continuity: Persistent stays, Daily resets)
                 LEFT JOIN LATERAL (
-                    SELECT al.status_type_id, al.start_datetime, al.end_datetime 
+                    SELECT al.status_type_id, al.start_datetime, al.end_datetime, al.note 
                     FROM attendance_logs al
                     JOIN status_types sti ON al.status_type_id = sti.id
                     WHERE al.employee_id = e.id 
@@ -289,12 +289,13 @@ class EmployeeModel:
                        COALESCE(s.name, s_dir.name) as section_name, 
                        COALESCE(d.name, d_dir.name) as department_name,
                        st.id as status_id,
-                       st.name as status_name,
+                       CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF(last_log.note, ''), st.name) ELSE st.name END as status_name,
                        st.color as status_color,
                        st.is_presence as status_is_presence,
                        st.is_persistent as status_is_persistent,
                        last_log.end_datetime as status_end_datetime,
                        last_log.start_datetime as last_status_update,
+                       last_log.is_verified,
                        e.service_type_id,
                        srv.name as service_type_name
                 FROM employees e
@@ -310,7 +311,7 @@ class EmployeeModel:
                 -- Status Joins
                 -- Status Joins (Smart Continuity: Persistent stays, Daily resets)
                 LEFT JOIN LATERAL (
-                    SELECT al.status_type_id, al.start_datetime, al.end_datetime 
+                    SELECT al.status_type_id, al.start_datetime, al.end_datetime, al.is_verified, al.note
                     FROM attendance_logs al
                     JOIN status_types sti ON al.status_type_id = sti.id
                     WHERE al.employee_id = e.id 
@@ -322,7 +323,17 @@ class EmployeeModel:
             """
 
             # Prepare status condition
-            status_sql = "AND (al.end_datetime IS NULL OR al.end_datetime > CURRENT_TIMESTAMP) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = CURRENT_DATE)"
+            # Robust continuity: Persistent stays until changed. Daily resets unless they are part of a date range.
+            status_sql = """AND (
+                sti.is_persistent = TRUE 
+                OR (
+                    DATE(al.start_datetime) <= CURRENT_DATE 
+                    AND (
+                        (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= CURRENT_DATE)
+                        OR (al.end_datetime IS NULL AND DATE(al.start_datetime) = CURRENT_DATE)
+                    )
+                )
+            )"""
             status_params = []
 
             if filters and (filters.get("date") or filters.get("end_date")):
@@ -335,17 +346,30 @@ class EmployeeModel:
                     ).date()
                     today = date.today()
 
-                    if check_date_obj > today:
-                        # Future: Only show if explicitly scheduled
-                        status_sql = "AND DATE(al.start_datetime) <= %s AND al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s"
-                        status_params = [check_date_str, check_date_str]
-                    else:
-                        # Today/Past: Smart Continuity logic
-                        status_sql = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
-                        status_params = [check_date_str, check_date_str, check_date_str]
+                    # Unified Smart Continuity logic for any date (Past/Present/Future)
+                    status_sql = """AND (
+                        sti.is_persistent = TRUE 
+                        OR (
+                            DATE(al.start_datetime) <= %s 
+                            AND (
+                                (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s)
+                                OR (al.end_datetime IS NULL AND DATE(al.start_datetime) = %s)
+                            )
+                        )
+                    )"""
+                    status_params = [check_date_str, check_date_str, check_date_str]
                 except ValueError:
                     # Fallback
-                    status_sql = "AND DATE(al.start_datetime) <= %s AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= %s) AND (sti.is_persistent = TRUE OR DATE(al.start_datetime) = %s)"
+                    status_sql = """AND (
+                        sti.is_persistent = TRUE 
+                        OR (
+                            DATE(al.start_datetime) <= %s 
+                            AND (
+                                (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s)
+                                OR (al.end_datetime IS NULL AND DATE(al.start_datetime) = %s)
+                            )
+                        )
+                    )"""
                     status_params = [check_date_str, check_date_str, check_date_str]
 
             # Initialize query parameters list if not already present
@@ -414,8 +438,9 @@ class EmployeeModel:
                     if str(filters["status_id"]) == "missing":
                         query += " AND st.id IS NULL"
                     else:
-                        query += " AND st.id = %s"
-                        params.append(filters["status_id"])
+                        # Improved: If filtering by parent status, include all sub-statuses
+                        query += " AND (st.id = %s OR st.parent_status_id = %s)"
+                        params.extend([filters["status_id"], filters["status_id"]])
 
                 if filters.get("serviceTypes"):
                     srv_list = (
@@ -470,6 +495,17 @@ class EmployeeModel:
                     )
                     query += " AND t.name = ANY(%s)"
                     params.append(tms)
+
+                if filters.get("min_age"):
+                    query += (
+                        " AND EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) >= %s"
+                    )
+                    params.append(int(filters["min_age"]))
+                if filters.get("max_age"):
+                    query += (
+                        " AND EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) <= %s"
+                    )
+                    params.append(int(filters["max_age"]))
 
             query += " ORDER BY e.first_name ASC"
             cur.execute(query, tuple(params))

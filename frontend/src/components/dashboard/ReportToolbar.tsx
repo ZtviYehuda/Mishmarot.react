@@ -56,7 +56,7 @@ export function ReportToolbar({
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-300"
+        className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]: transition-all duration-300"
               >
                 {tab.label}
               </TabsTrigger>
@@ -71,7 +71,7 @@ export function ReportToolbar({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-10 px-3 bg-background border-border/60 hover:bg-muted/50 rounded-xl transition-all gap-2 text-xs font-bold shadow-sm"
+         className="h-10 px-3 bg-background border-border/60 hover:bg-muted/50 rounded-xl transition-all gap-2 text-xs font-bold"
                 >
                   <CalendarIcon className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span className="truncate max-w-[90px] hidden xs:inline">
@@ -91,7 +91,7 @@ export function ReportToolbar({
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-auto p-0 rounded-xl border-border/60 shadow-2xl"
+        className="w-auto p-0 rounded-xl border-border/60"
                 align="center"
               >
                 {viewMode === "monthly" ? (

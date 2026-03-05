@@ -26,7 +26,7 @@ export function AppearanceSettings({
     { id: "violet", label: "סגול", class: "bg-violet-600" },
     { id: "amber", label: "כתום", class: "bg-amber-600" },
     { id: "rose", label: "אדום", class: "bg-rose-600" },
-    { id: "indigo", label: "אינדיגו", class: "bg-indigo-600" },
+    { id: "cyan", label: "ציאן", class: "bg-cyan-500" },
   ];
 
   const fontSizes = [

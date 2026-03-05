@@ -42,6 +42,8 @@ def get_employees():
             "status_id": request.args.get("status_id"),
             "include_inactive": request.args.get("include_inactive") == "true",
             "date": request.args.get("date"),
+            "min_age": request.args.get("min_age"),
+            "max_age": request.args.get("max_age"),
         }
 
         employees = EmployeeModel.get_all_employees(filters, requesting_user=requester)

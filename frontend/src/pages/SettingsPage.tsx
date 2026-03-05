@@ -235,7 +235,6 @@ export default function SettingsPage() {
   const [showPasswords, setShowPasswords] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -412,164 +411,170 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pb-8 lg:pb-12">
-      <PageHeader
-        icon={SettingsIcon}
-        title="הגדרות מערכת"
-        subtitle="ניהול העדפות אישיות, מראה הממשק ואבטחה"
-        category="הגדרות"
-        categoryLink="/settings"
-        iconClassName="from-primary/10 to-primary/5 border-primary/20"
-        className="mb-0 sm:mb-0 lg:mb-0"
-      />
-
-      {/* Desktop Horizontal Navigation (Replaces Sidebar) */}
-      <div className="hidden lg:flex items-center gap-1 border-b border-border sticky top-14 bg-background/95 backdrop-blur z-50 pb-0 overflow-x-auto no-scrollbar pt-2">
-        {!user?.is_temp_commander && (
-          <TabItem
-            label="פרופיל אישי"
-            active={activeTab === "profile"}
-            onClick={() => setActiveTab("profile")}
-          />
-        )}
-        <TabItem
-          label="מראה ותצוגה"
-          active={activeTab === "appearance"}
-          onClick={() => setActiveTab("appearance")}
+    <div className="flex flex-col animate-in fade-in duration-500">
+      <div className="px-6 md:px-10 pt-2 pb-4 shrink-0 transition-all">
+        <PageHeader
+          icon={SettingsIcon}
+          title="הגדרות מערכת"
+          subtitle="ניהול העדפות אישיות, מראה הממשק ואבטחה"
+          category="הגדרות"
+          categoryLink="/settings"
+          iconClassName="from-primary/10 to-primary/5 border-primary/20"
+          className="mb-0"
         />
-        {!user?.is_temp_commander && (
-          <TabItem
-            label="אבטחה"
-            active={activeTab === "security"}
-            onClick={() => setActiveTab("security")}
-          />
-        )}
-        {!user?.is_temp_commander && (
-          <TabItem
-            label="התראות"
-            active={activeTab === "notifications"}
-            onClick={() => setActiveTab("notifications")}
-          />
-        )}
-        {user?.is_admin && (
-          <TabItem
-            label="גיבוי ושחזור"
-            active={activeTab === "backup"}
-            onClick={() => setActiveTab("backup")}
-          />
-        )}
       </div>
 
-      {/* Content Area */}
-      <div className="min-w-0 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">
-        {activeTab === "profile" && !user?.is_temp_commander && (
-          <ProfileSettings
-            user={user}
-            formData={formData}
-            setFormData={setFormData}
-            emergencyDetails={emergencyDetails}
-            setEmergencyDetails={setEmergencyDetails}
-            relations={relations}
-            isSaving={isSaving}
-            handleSaveProfile={handleSaveProfile}
-            handleImageUpload={handleImageUpload}
-            readOnly={!!user?.is_temp_commander}
-          />
-        )}
-
-        {activeTab === "appearance" && (
-          <AppearanceSettings
-            theme={theme}
-            setTheme={setTheme}
-            accentColor={accentColor}
-            setAccentColor={setAccentColor}
-            fontSize={fontSize}
-            setFontSize={setFontSize}
-          />
-        )}
-
-        {activeTab === "security" && !user?.is_temp_commander && (
-          <>
-            <SecuritySettings
-              user={user}
-              passwordData={passwordData}
-              setPasswordData={setPasswordData}
-              showPasswords={showPasswords}
-              setShowPasswords={setShowPasswords}
-              isChangingPassword={isChangingPassword}
-              handleChangePassword={handleChangePassword}
-              isResetting={isResetting}
-              handleResetImpersonatedPassword={handleResetImpersonatedPassword}
-              handleConfirmCurrentPassword={handleConfirmCurrentPassword}
-              onForgotPassword={() => setShowForgotPassword(true)}
+      <div className="px-6 md:px-10">
+        {/* Desktop Horizontal Navigation (Replaces Sidebar) */}
+        <div className="hidden lg:flex items-center gap-1 border-b border-border sticky top-[-35px] bg-background/95 backdrop-blur z-50 pb-0 overflow-x-auto no-scrollbar pt-2">
+          {!user?.is_temp_commander && (
+            <TabItem
+              label="פרופיל אישי"
+              active={activeTab === "profile"}
+              onClick={() => setActiveTab("profile")}
             />
-          </>
-        )}
+          )}
+          <TabItem
+            label="מראה ותצוגה"
+            active={activeTab === "appearance"}
+            onClick={() => setActiveTab("appearance")}
+          />
+          {!user?.is_temp_commander && (
+            <TabItem
+              label="אבטחה"
+              active={activeTab === "security"}
+              onClick={() => setActiveTab("security")}
+            />
+          )}
+          {!user?.is_temp_commander && (
+            <TabItem
+              label="התראות"
+              active={activeTab === "notifications"}
+              onClick={() => setActiveTab("notifications")}
+            />
+          )}
+          {user?.is_admin && (
+            <TabItem
+              label="גיבוי ושחזור"
+              active={activeTab === "backup"}
+              onClick={() => setActiveTab("backup")}
+            />
+          )}
+        </div>
 
-        {activeTab === "notifications" && !user?.is_temp_commander && (
-          <NotificationSettings
-            user={user}
-            formData={formData}
-            setFormData={setFormData}
-            systemSettings={systemSettings}
-            updateSystemSetting={updateSystemSetting}
-          />
-        )}
+        {/* Content Area */}
+        <div className="min-w-0 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-4">
+          {activeTab === "profile" && !user?.is_temp_commander && (
+            <ProfileSettings
+              user={user}
+              formData={formData}
+              setFormData={setFormData}
+              emergencyDetails={emergencyDetails}
+              setEmergencyDetails={setEmergencyDetails}
+              relations={relations}
+              isSaving={isSaving}
+              handleSaveProfile={handleSaveProfile}
+              handleImageUpload={handleImageUpload}
+              readOnly={!!user?.is_temp_commander}
+            />
+          )}
 
-        {activeTab === "backup" && user?.is_admin && (
-          <BackupSettings
-            backupConfig={backupConfig}
-            updateBackupConfig={updateBackupConfig}
-            isServerBackingUp={isServerBackingUp}
-            handleServerBackupNow={handleServerBackupNow}
-            isBackingUp={isBackingUp}
-            handleBackup={handleBackup}
-            isRestoring={isRestoring}
-            handleRestore={handleRestore}
-          />
-        )}
-      </div>
+          {activeTab === "appearance" && (
+            <AppearanceSettings
+              theme={theme}
+              setTheme={setTheme}
+              accentColor={accentColor}
+              setAccentColor={setAccentColor}
+              fontSize={fontSize}
+              setFontSize={setFontSize}
+            />
+          )}
 
-      {/* Mobile Bottom Navigation Bar - Standard Fixed */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2 safe-area-bottom">
-        {!user?.is_temp_commander && (
+          {activeTab === "security" && !user?.is_temp_commander && (
+            <>
+              <SecuritySettings
+                user={user}
+                passwordData={passwordData}
+                setPasswordData={setPasswordData}
+                showPasswords={showPasswords}
+                setShowPasswords={setShowPasswords}
+                isChangingPassword={isChangingPassword}
+                handleChangePassword={handleChangePassword}
+                isResetting={isResetting}
+                handleResetImpersonatedPassword={
+                  handleResetImpersonatedPassword
+                }
+                handleConfirmCurrentPassword={handleConfirmCurrentPassword}
+                onForgotPassword={() => {}}
+              />
+            </>
+          )}
+
+          {activeTab === "notifications" && !user?.is_temp_commander && (
+            <NotificationSettings
+              user={user}
+              formData={formData}
+              setFormData={setFormData}
+              systemSettings={systemSettings}
+              updateSystemSetting={updateSystemSetting}
+            />
+          )}
+
+          {activeTab === "backup" && user?.is_admin && (
+            <BackupSettings
+              backupConfig={backupConfig}
+              updateBackupConfig={updateBackupConfig}
+              isServerBackingUp={isServerBackingUp}
+              handleServerBackupNow={handleServerBackupNow}
+              isBackingUp={isBackingUp}
+              handleBackup={handleBackup}
+              isRestoring={isRestoring}
+              handleRestore={handleRestore}
+            />
+          )}
+        </div>
+
+        {/* Mobile Bottom Navigation Bar - Standard Fixed */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2 safe-area-bottom">
+          {!user?.is_temp_commander && (
+            <MobileBottomNavLink
+              label="פרופיל"
+              icon={User}
+              active={activeTab === "profile"}
+              onClick={() => setActiveTab("profile")}
+            />
+          )}
           <MobileBottomNavLink
-            label="פרופיל"
-            icon={User}
-            active={activeTab === "profile"}
-            onClick={() => setActiveTab("profile")}
+            label="תצוגה"
+            icon={Palette}
+            active={activeTab === "appearance"}
+            onClick={() => setActiveTab("appearance")}
           />
-        )}
-        <MobileBottomNavLink
-          label="תצוגה"
-          icon={Palette}
-          active={activeTab === "appearance"}
-          onClick={() => setActiveTab("appearance")}
-        />
-        {!user?.is_temp_commander && (
-          <MobileBottomNavLink
-            label="אבטחה"
-            icon={ShieldCheck}
-            active={activeTab === "security"}
-            onClick={() => setActiveTab("security")}
-          />
-        )}
-        {!user?.is_temp_commander && (
-          <MobileBottomNavLink
-            label="התראות"
-            icon={Bell}
-            active={activeTab === "notifications"}
-            onClick={() => setActiveTab("notifications")}
-          />
-        )}
-        {user?.is_admin && (
-          <MobileBottomNavLink
-            label="גיבוי"
-            icon={Database}
-            active={activeTab === "backup"}
-            onClick={() => setActiveTab("backup")}
-          />
-        )}
+          {!user?.is_temp_commander && (
+            <MobileBottomNavLink
+              label="אבטחה"
+              icon={ShieldCheck}
+              active={activeTab === "security"}
+              onClick={() => setActiveTab("security")}
+            />
+          )}
+          {!user?.is_temp_commander && (
+            <MobileBottomNavLink
+              label="התראות"
+              icon={Bell}
+              active={activeTab === "notifications"}
+              onClick={() => setActiveTab("notifications")}
+            />
+          )}
+          {user?.is_admin && (
+            <MobileBottomNavLink
+              label="גיבוי"
+              icon={Database}
+              active={activeTab === "backup"}
+              onClick={() => setActiveTab("backup")}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

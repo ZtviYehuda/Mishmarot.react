@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import { EmployeesChart } from "@/components/dashboard/EmployeesChart";
 import { BirthdaysCard } from "@/components/dashboard/BirthdaysCard";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
@@ -10,12 +11,21 @@ import { useAuthContext } from "@/context/AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useDateContext } from "@/context/DateContext";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { LayoutDashboard } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  ShieldCheck,
+  Activity,
+  AlertTriangle,
+} from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { cn, cleanUnitName } from "@/lib/utils";
+import { AgeDistributionChart } from "@/components/dashboard/AgeDistributionChart";
 
 import { ReportHub } from "@/components/dashboard/ReportHub";
 
+// Helper types for structure
 interface Team {
   id: number;
   name: string;
@@ -45,18 +55,19 @@ export default function DashboardPage() {
   const comparisonRef = useRef<any>(null);
   const birthdaysRef = useRef<any>(null);
   const {
-    employees, // Get employees from hook
     getStructure,
     getDashboardStats,
     getComparisonStats,
     getTrendStats,
     getServiceTypes,
-    fetchEmployees,
+    getStatusTypes,
   } = useEmployees();
 
   const [loading, setLoading] = useState(true);
-  // const [stats, setStats] = useState<any[]>([]); // Removed in favor of computedStats
+  const [stats, setStats] = useState<any[]>([]);
+  const [totalEmployees, setTotalEmployees] = useState(0);
   const [allStatuses, setAllStatuses] = useState<any[]>([]);
+  const [allStatusTypes, setAllStatusTypes] = useState<any[]>([]);
   const [birthdays, setBirthdays] = useState<any[]>([]);
   const [structure, setStructure] = useState<Department[]>([]);
 
@@ -68,6 +79,8 @@ export default function DashboardPage() {
   const [trendStats, setTrendStats] = useState<any[]>([]);
   const [loadingExtras, setLoadingExtras] = useState(true);
   const [loadingTrend, setLoadingTrend] = useState(true);
+  const [ageDistribution, setAgeDistribution] = useState<any[]>([]);
+  const [averageAge, setAverageAge] = useState(0);
 
   const [viewMode] = useState<"daily" | "weekly" | "monthly" | "yearly">(
     "weekly",
@@ -118,6 +131,10 @@ export default function DashboardPage() {
   const [selectedServiceTypes, setSelectedServiceTypes] = useState<string[]>(
     [],
   );
+  const [selectedAgeRange, setSelectedAgeRange] = useState<{
+    min?: number;
+    max?: number;
+  }>({});
 
   // Load filters from localStorage on mount
   useEffect(() => {
@@ -130,6 +147,7 @@ export default function DashboardPage() {
         if (filters.teamId) setSelectedTeamId(filters.teamId);
         if (filters.statusData) setSelectedStatusData(filters.statusData);
         if (filters.serviceTypes) setSelectedServiceTypes(filters.serviceTypes);
+        if (filters.ageRange) setSelectedAgeRange(filters.ageRange);
       } catch (e) {
         console.error("Failed to parse saved filters", e);
       }
@@ -148,6 +166,7 @@ export default function DashboardPage() {
       teamId: selectedTeamId,
       statusData: selectedStatusData,
       serviceTypes: selectedServiceTypes,
+      ageRange: selectedAgeRange,
     };
     localStorage.setItem("dashboard_filters", JSON.stringify(filters));
   }, [
@@ -157,6 +176,7 @@ export default function DashboardPage() {
     selectedTeamId,
     selectedStatusData,
     selectedServiceTypes,
+    selectedAgeRange,
     user?.is_impersonated,
   ]);
 
@@ -202,17 +222,23 @@ export default function DashboardPage() {
     }
   }, [user, isInitialized]);
 
-  // Fetch Structure and Service Types
+  // Fetch Structure  // Initial Load
   useEffect(() => {
-    const fetchSelects = async () => {
-      const structData = await getStructure();
-      if (structData) setStructure(structData);
-
-      const srvData = await getServiceTypes();
-      if (srvData) setServiceTypes(srvData);
+    const init = async () => {
+      setLoading(true);
+      const [struct, stTypes, svTypes] = await Promise.all([
+        getStructure(),
+        getStatusTypes(),
+        getServiceTypes(),
+      ]);
+      setStructure(struct);
+      setAllStatusTypes(stTypes);
+      setServiceTypes(svTypes);
+      setIsInitialized(true);
+      setLoading(false);
     };
-    fetchSelects();
-  }, [getStructure, getServiceTypes]);
+    init();
+  }, [getStructure, getStatusTypes, getServiceTypes]);
 
   // Fetch Comparison Stats
   useEffect(() => {
@@ -225,9 +251,10 @@ export default function DashboardPage() {
         {
           department_id: selectedDeptId,
           section_id: selectedSectionId,
-          team_id: selectedTeamId,
           status_id: selectedStatusData?.id?.toString(),
           serviceTypes: selectedServiceTypes.join(","),
+          min_age: selectedAgeRange.min,
+          max_age: selectedAgeRange.max,
         },
       );
       setComparisonStats(compData);
@@ -243,6 +270,7 @@ export default function DashboardPage() {
     selectedTeamId,
     selectedStatusData?.id,
     selectedServiceTypes,
+    selectedAgeRange,
   ]);
 
   // Fetch Trend Stats
@@ -253,9 +281,10 @@ export default function DashboardPage() {
       const trendData = await getTrendStats(trendRange, formattedDate, {
         department_id: selectedDeptId,
         section_id: selectedSectionId,
-        team_id: selectedTeamId,
         status_id: selectedStatusData?.id?.toString(),
         serviceTypes: selectedServiceTypes.join(","),
+        min_age: selectedAgeRange.min,
+        max_age: selectedAgeRange.max,
       });
       setTrendStats(trendData);
       setLoadingTrend(false);
@@ -270,6 +299,7 @@ export default function DashboardPage() {
     selectedTeamId,
     selectedStatusData?.id,
     selectedServiceTypes,
+    selectedAgeRange,
   ]);
 
   // Fetch active statuses
@@ -297,113 +327,27 @@ export default function DashboardPage() {
     selectedDate,
   ]);
 
-  // Sync main employees list for the unit (used by Bulk Update, etc.)
-  useEffect(() => {
-    fetchEmployees(
-      undefined,
-      selectedDeptId ? parseInt(selectedDeptId) : undefined,
-      undefined,
-      undefined,
-      selectedSectionId ? parseInt(selectedSectionId) : undefined,
-      selectedTeamId ? parseInt(selectedTeamId) : undefined,
-      format(selectedDate, "yyyy-MM-dd"),
-      selectedServiceTypes,
-    );
-  }, [
-    selectedDeptId,
-    selectedSectionId,
-    selectedTeamId,
-    selectedDate,
-    selectedServiceTypes,
-    fetchEmployees,
-  ]);
-
-  // --- STATISTICS (Unified Logic) ---
-  const isReportedOnDate = (emp: any, date: Date) => {
-    if (!emp.status_id) return false;
-    const isStartedOnDay =
-      emp.last_status_update &&
-      new Date(emp.last_status_update).toDateString() === date.toDateString();
-    if (isStartedOnDay) return true;
-    if (emp.status_end_datetime) {
-      const endDate = new Date(emp.status_end_datetime);
-      endDate.setHours(23, 59, 59, 999);
-      if (date <= endDate) return true;
-    }
-    return false;
-  };
-
-  const computedStats = useMemo(() => {
-    const statusMap = new Map<
-      string,
-      { status_id: number; status_name: string; color: string; count: number }
-    >();
-
-    let notReportedCount = 0;
-
-    employees.forEach((emp: any) => {
-      if (isReportedOnDate(emp, selectedDate)) {
-        const statusName = emp.status_name?.trim() || "ללא שם";
-        const key = statusName;
-
-        if (!statusMap.has(key)) {
-          statusMap.set(key, {
-            status_id: emp.status_id,
-            status_name: statusName,
-            color: emp.status_color || "#cbd5e1",
-            count: 0,
-          });
-        }
-
-        const entry = statusMap.get(key)!;
-        entry.count++;
-      } else {
-        notReportedCount++;
-      }
-    });
-
-    const results = Array.from(statusMap.values());
-
-    // Add "Not Reported" category if there are unreported employees or if the list is empty
-    if (
-      notReportedCount > 0 ||
-      (results.length === 0 && employees.length > 0)
-    ) {
-      results.push({
-        status_id: 0,
-        status_name: "לא דווח",
-        color: "#94a3b8", // Slate-400 equivalent for neutral gray
-        count: notReportedCount,
-      });
-    }
-
-    results.sort((a, b) => b.count - a.count);
-
-    if (selectedStatusData) {
-      return results.filter((s) => s.status_id === selectedStatusData.id);
-    }
-
-    return results;
-  }, [employees, selectedDate, selectedStatusData]);
-  // -----------------------------------------------------
-
-  // Fetch Stats (Server-side) - ONLY for Birthdays now, since we compute stats client-side
+  // Fetch birthdays and unverified count - ALWAYS get full breakdown for the selected group
   useEffect(() => {
     const fetchStatsData = async () => {
       setLoading(true);
+      // We don't pass status_id here so we always have the full context for percentages
       const data = await getDashboardStats({
         department_id: selectedDeptId,
         section_id: selectedSectionId,
         team_id: selectedTeamId,
-        status_id: selectedStatusData?.id?.toString(),
         date: format(selectedDate, "yyyy-MM-dd"),
         serviceTypes: selectedServiceTypes.join(","),
+        min_age: selectedAgeRange.min,
+        max_age: selectedAgeRange.max,
       });
 
       if (data) {
-        // We DO NOT setStats here anymore to avoid conflicting with client-side logic
-        // setStats(data.stats || []);
+        setStats(data.stats || []);
+        setTotalEmployees(data.total_employees || 0);
         setBirthdays(data.birthdays || []);
+        setAgeDistribution(data.age_distribution || []);
+        setAverageAge(data.average_age || 0);
       }
       setLoading(false);
     };
@@ -413,11 +357,76 @@ export default function DashboardPage() {
     selectedDeptId,
     selectedSectionId,
     selectedTeamId,
-    selectedStatusData?.id,
     selectedServiceTypes,
+    selectedAgeRange,
     getDashboardStats,
     selectedDate,
   ]);
+
+  // Derived stats for the chart (Client-side drilling)
+  const chartStats = useMemo(() => {
+    if (selectedStatusData) {
+      return stats.filter((s) => s.status_id === selectedStatusData.id);
+    }
+    return stats;
+  }, [stats, selectedStatusData]);
+
+  // totalUnitCount: sum of all stats (= totalEmployees from server); used as baseline for % calcs
+  const totalUnitCount = useMemo(() => {
+    // Prefer server-provided total for accuracy, fallback to summing stats
+    if (totalEmployees > 0) return totalEmployees;
+    return stats.reduce((acc, curr) => acc + curr.count, 0);
+  }, [stats, totalEmployees]);
+
+  const kpiData = useMemo(() => {
+    const total = totalUnitCount;
+    const missing = stats.find((s) => s.status_name === "לא דווח")?.count || 0;
+    const reported = total - missing;
+    const reportedPct = total > 0 ? Math.round((reported / total) * 100) : 0;
+
+    // "Available" (נוכחים/זמינים) should include anyone whose status is a child of "Present" or "Office"
+    // For simplicity, we look for names like "נוכח", "זמין", "משרד", or child names we know.
+    // Better yet, we can check if the status ID corresponds to a status whose parent is "Present" or "Office".
+    const presentStatusIds = allStatusTypes
+      .filter((s) => {
+        const name = s.name.toLowerCase();
+        // Check if it's a top-level present status or a child of Office/Present
+        if (
+          name.includes("נוכח") ||
+          name.includes("זמין") ||
+          name.includes("משרד")
+        )
+          return true;
+
+        // Find parent
+        const parent = allStatusTypes.find((p) => p.id === s.parent_status_id);
+        if (parent) {
+          const pName = parent.name.toLowerCase();
+          if (
+            pName.includes("נוכח") ||
+            pName.includes("זמין") ||
+            pName.includes("משרד")
+          )
+            return true;
+        }
+        return false;
+      })
+      .map((s) => s.id);
+
+    const available = stats
+      .filter(
+        (s) => s.status_id !== null && presentStatusIds.includes(s.status_id),
+      )
+      .reduce((acc, curr) => acc + curr.count, 0);
+
+    return {
+      total,
+      missing,
+      reported,
+      reportedPct,
+      available: available || reported,
+    };
+  }, [totalUnitCount, stats, allStatusTypes]);
 
   const handleFilterChange = (
     type:
@@ -426,6 +435,7 @@ export default function DashboardPage() {
       | "team"
       | "status"
       | "serviceType"
+      | "ageRange"
       | "reset",
     value?: any,
   ) => {
@@ -443,7 +453,33 @@ export default function DashboardPage() {
       }
       setSelectedStatusData(null);
       setSelectedServiceTypes([]);
+      setSelectedAgeRange({});
+      setFilterOpen(false);
       return;
+    }
+
+    if (type === "ageRange") {
+      if (!value || value === "all") {
+        setSelectedAgeRange({});
+      } else {
+        const [min, max] = value
+          .split("-")
+          .map((v: string) => (v === "+" ? undefined : parseInt(v)));
+        setSelectedAgeRange({
+          min,
+          max: max || (value.endsWith("+") ? undefined : min),
+        });
+        // Special case for ranges like 50+
+        if (value === "50+") {
+          setSelectedAgeRange({ min: 50 });
+        } else if (value.includes("-")) {
+          const parts = value.split("-");
+          setSelectedAgeRange({
+            min: parseInt(parts[0]),
+            max: parseInt(parts[1]),
+          });
+        }
+      }
     }
 
     if (type === "serviceType") {
@@ -458,12 +494,23 @@ export default function DashboardPage() {
     } else if (type === "team") {
       setSelectedTeamId(value || "");
     } else if (type === "status") {
-      const status = allStatuses.find((s) => s.status_id.toString() === value);
-      if (status) {
+      // Look up status in both active stats and all possible types
+      const statusType = allStatusTypes.find((s) => s.id.toString() === value);
+      const activeStatus = allStatuses.find(
+        (s) => s.status_id.toString() === value,
+      );
+
+      if (statusType) {
         setSelectedStatusData({
-          id: status.status_id,
-          name: status.status_name,
-          color: status.color,
+          id: statusType.id,
+          name: statusType.name,
+          color: statusType.color || activeStatus?.color || "#94a3b8",
+        });
+      } else if (activeStatus) {
+        setSelectedStatusData({
+          id: activeStatus.status_id,
+          name: activeStatus.status_name,
+          color: activeStatus.color,
         });
       } else {
         setSelectedStatusData(null);
@@ -533,6 +580,15 @@ export default function DashboardPage() {
       title = `${serviceTypeLabel} | ${title}`;
     }
 
+    if (selectedAgeRange.min || selectedAgeRange.max) {
+      const ageLabel = selectedAgeRange.min
+        ? selectedAgeRange.max
+          ? `גילאי ${selectedAgeRange.min}-${selectedAgeRange.max}`
+          : `גילאי ${selectedAgeRange.min}+`
+        : "";
+      if (ageLabel) title = `${ageLabel} | ${title}`;
+    }
+
     if (
       title === "כלל היחידה" ||
       title === "כלל החוליה" ||
@@ -541,24 +597,33 @@ export default function DashboardPage() {
     )
       return `נתוני ${title}`;
     return title;
-  }, [unitName, selectedStatusData, serviceTypeLabel]);
+  }, [unitName, selectedStatusData, serviceTypeLabel, selectedAgeRange]);
 
   const chartDescription = useMemo(() => {
     const filters: string[] = [];
     if (selectedStatusData) filters.push(`בסטטוס ${selectedStatusData.name}`);
     if (serviceTypeLabel) filters.push(`ב - ${serviceTypeLabel}`);
+    if (selectedAgeRange.min || selectedAgeRange.max) {
+      filters.push(
+        selectedAgeRange.max
+          ? `בגילאי ${selectedAgeRange.min}-${selectedAgeRange.max}`
+          : `בגילאי ${selectedAgeRange.min}+`,
+      );
+    }
 
     const filterText =
       filters.length > 0 ? `\nמציג שוטרים ${filters.join(" ו")}` : "";
     return `פירוט נוכחות וסטטיסטיקה עבור ${unitName}${filterText}`;
-  }, [unitName, selectedStatusData, serviceTypeLabel]);
+  }, [unitName, selectedStatusData, serviceTypeLabel, selectedAgeRange]);
 
   const hasActiveFilters =
     !!selectedDeptId ||
     !!selectedSectionId ||
     !!selectedTeamId ||
     !!selectedStatusData ||
-    selectedServiceTypes.length > 0;
+    selectedServiceTypes.length > 0 ||
+    !!selectedAgeRange.min ||
+    !!selectedAgeRange.max;
 
   const handleStatusClick = (
     statusId: number,
@@ -572,6 +637,30 @@ export default function DashboardPage() {
       const tableElement = document.getElementById("status-details-table");
       if (tableElement) {
         tableElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
+
+  const handleKPIClick = (
+    type: "total" | "reported" | "available" | "missing",
+  ) => {
+    switch (type) {
+      case "total":
+        setSelectedStatusData(null);
+        break;
+      case "missing":
+        handleStatusClick(-1, "לא דווח", "#f43f5e");
+        break;
+      case "available":
+        // Filter by common presence statuses - or just clear if ambiguous
+        // For now, let's reset to show all or maybe a specific "presence" set if we had one
+        setSelectedStatusData(null);
+        break;
+      case "reported": {
+        // Scroll to trend
+        const trendEl = document.getElementById("trend-section");
+        if (trendEl) trendEl.scrollIntoView({ behavior: "smooth" });
+        break;
       }
     }
   };
@@ -612,51 +701,91 @@ export default function DashboardPage() {
   }, [selectedTeamId, selectedSectionId, selectedDeptId, structure, user]);
 
   return (
-    <div className="w-full space-y-6" dir="rtl">
-      <PageHeader
-        icon={LayoutDashboard}
-        title="לוח בקרה ראשי"
-        subtitle="נתוני נוכחות, ימי הולדת וסטטיסטיקות כוח אדם"
-        category="מערכת משמרות"
-        categoryLink="/"
-        badge={
-          <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full sm:w-auto">
-            <DateHeader className="w-full sm:w-auto flex-1" />
-            {!user?.is_temp_commander && (
-              <ReportHub
-                className="w-full sm:w-auto h-auto min-h-[44px] sm:min-h-0 rounded-xl border border-primary/10 bg-white text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all shadow-sm flex items-center justify-center"
-                onShareBirthdays={() => birthdaysRef.current?.share()}
-                initialViewMode={viewMode}
-                initialDate={selectedDate}
-                filters={{
-                  department_id: selectedDeptId?.toString() || "",
-                  section_id: selectedSectionId?.toString() || "",
-                  team_id: selectedTeamId?.toString() || "",
-                  serviceTypes: selectedServiceTypes,
-                  unitName: currentUnitName,
-                  statusName: selectedStatusData?.name,
-                  status_id: selectedStatusData?.id?.toString(),
-                }}
-              />
-            )}
-          </div>
-        }
-      />
+    <div
+      className="w-full relative min-h-screen px-4 md:px-8 pb-10 bg-background"
+      dir="rtl"
+    >
+      <div className="relative z-10 space-y-4 sm:space-y-6 pt-2 transition-all">
+        {/* Header Section */}
+        <PageHeader
+          icon={LayoutDashboard}
+          title="לוח בקרה"
+          subtitle="נתוני נוכחות וסטטיסטיקה"
+          category="מערכת משמרות"
+          categoryLink="/"
+          className="hidden sm:flex mb-0 px-4 md:px-10 pb-2 shrink-0 transition-all"
+          badge={
+            <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full sm:w-auto">
+              <DateHeader className="w-full sm:w-auto flex-1" />
+              {!user?.is_temp_commander && (
+                <ReportHub
+                  className="w-full sm:w-auto h-auto min-h-[44px] sm:min-h-0 rounded-xl border border-primary/10 bg-white text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all flex items-center justify-center shadow-sm"
+                  onShareBirthdays={() => birthdaysRef.current?.share()}
+                  initialViewMode={viewMode}
+                  initialDate={selectedDate}
+                  filters={{
+                    department_id: selectedDeptId?.toString() || "",
+                    section_id: selectedSectionId?.toString() || "",
+                    team_id: selectedTeamId?.toString() || "",
+                    serviceTypes: selectedServiceTypes,
+                    unitName: currentUnitName,
+                    statusName: selectedStatusData?.name,
+                    status_id: selectedStatusData?.id?.toString(),
+                  }}
+                />
+              )}
+            </div>
+          }
+        />
 
-      <div className="space-y-6">
-        {/* Top Section: Filters, Main Chart & Birthdays (Desktop) */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 items-stretch">
-          {/* Filters - Always visible on desktop XL, or inside mobile dialog */}
-          <div className="hidden lg:flex flex-col xl:col-span-1">
+        {/* Mobile Simplified Header */}
+        <div className="sm:hidden flex flex-col px-6 pt-2 pb-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-black text-foreground tracking-tight">
+                לוח בקרה
+              </h1>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+                {unitName}
+              </p>
+            </div>
+            <DateHeader className="scale-90 origin-left" />
+          </div>
+
+          {!user?.is_temp_commander && (
+            <ReportHub
+              className="w-full h-12 rounded-2xl border border-primary/10 bg-white dark:bg-slate-900 text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all flex items-center justify-center shadow-lg shadow-primary/5"
+              onShareBirthdays={() => birthdaysRef.current?.share()}
+              initialViewMode={viewMode}
+              initialDate={selectedDate}
+              filters={{
+                department_id: selectedDeptId?.toString() || "",
+                section_id: selectedSectionId?.toString() || "",
+                team_id: selectedTeamId?.toString() || "",
+                serviceTypes: selectedServiceTypes,
+                unitName: currentUnitName,
+                statusName: selectedStatusData?.name,
+                status_id: selectedStatusData?.id?.toString(),
+              }}
+            />
+          )}
+        </div>
+
+        {/* Content Area */}
+        <div className="space-y-10 sm:space-y-14">
+          {/* Top Section: Filters */}
+          <div className="hidden lg:block mb-2">
             <DashboardFilters
               structure={structure}
               statuses={allStatuses}
+              allStatusTypes={allStatusTypes}
               selectedDeptId={selectedDeptId}
               selectedSectionId={selectedSectionId}
               selectedTeamId={selectedTeamId}
               selectedStatusId={selectedStatusData?.id?.toString()}
               serviceTypes={serviceTypes}
               selectedServiceTypes={selectedServiceTypes}
+              selectedAgeRange={selectedAgeRange}
               onFilterChange={handleFilterChange}
               canSelectDept={canSelectDept}
               canSelectSection={canSelectSection}
@@ -664,113 +793,241 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Main Attendance Chart */}
-          <div className="flex flex-col xl:col-span-1">
+          {/* Global KPI Summary Row */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-2"
+          >
+            {/* Total KPI */}
+            <motion.div
+              whileHover={{ y: -5 }}
+              onClick={() => handleKPIClick("total")}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col justify-between relative overflow-visible group cursor-pointer transition-shadow hover:shadow-xl hover:shadow-primary/5 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-slate-500 group-hover:scale-110 transition-transform">
+                  <Users className="w-5 h-5" />
+                </div>
+                <span className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">
+                  סה"כ תקן
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-3xl font-black text-foreground tracking-tight">
+                  {kpiData.total}
+                </span>
+                <span className="text-[10px] text-muted-foreground font-bold mt-1">
+                  לחץ להצגת הכל
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Reported % KPI */}
+            <motion.div
+              whileHover={{ y: -5 }}
+              onClick={() => handleKPIClick("reported")}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col justify-between relative overflow-visible group cursor-pointer transition-shadow hover:shadow-xl hover:shadow-indigo-500/5 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <span className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">
+                  אחוז דיווח
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-3xl font-black text-indigo-600 tracking-tight">
+                  {kpiData.reportedPct}%
+                </span>
+                <div className="w-full h-1.5 bg-indigo-50 dark:bg-indigo-950 mt-3 rounded-full overflow-visible">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${kpiData.reportedPct}%` }}
+                    transition={{ duration: 1, delay: 0.3 }}
+                    className="h-full bg-indigo-500"
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Available KPI */}
+            <motion.div
+              whileHover={{ y: -5 }}
+              onClick={() => handleKPIClick("available")}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col justify-between relative overflow-visible group cursor-pointer transition-shadow hover:shadow-xl hover:shadow-emerald-500/5 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <span className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">
+                  זמינים במצבה
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-3xl font-black text-emerald-600 tracking-tight">
+                  {kpiData.available}
+                </span>
+                <div className="w-8 h-1 bg-emerald-200 dark:bg-emerald-800 mt-2 rounded-full" />
+              </div>
+            </motion.div>
+
+            {/* Missing/Not Reported KPI */}
+            <motion.div
+              whileHover={{ y: -5 }}
+              onClick={() => handleKPIClick("missing")}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col justify-between relative overflow-visible group cursor-pointer transition-shadow hover:shadow-xl hover:shadow-amber-500/5 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-amber-50 dark:bg-amber-500/10 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <span className="text-[10px] md:text-xs font-black text-muted-foreground uppercase tracking-widest">
+                  עוד לא דיווחו
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-3xl font-black text-amber-600 tracking-tight">
+                  {kpiData.missing}
+                </span>
+                <span className="text-[10px] text-amber-700 font-bold mt-1">
+                  לחץ להצגת רשימה
+                </span>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Main Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
             {/* Main Attendance Chart */}
-            <EmployeesChart
-              ref={snapshotRef}
-              stats={computedStats} // Use computed stats
-              loading={loading}
-              onOpenWhatsAppReport={
-                user?.is_temp_commander
-                  ? undefined
-                  : () => setWhatsAppDialogOpen(true)
-              }
-              onStatusClick={handleStatusClick}
-              onFilterClick={
-                setFilterOpen ? () => setFilterOpen(true) : undefined
-              }
-              title={chartTitle}
-              description={chartDescription}
-              selectedDate={selectedDate}
-              hideExportControls={user?.is_temp_commander}
-            />
-          </div>
+            <div className="flex flex-col h-full min-h-[400px]">
+              <EmployeesChart
+                ref={snapshotRef}
+                stats={chartStats}
+                totalInUnit={totalUnitCount}
+                loading={loading}
+                onOpenWhatsAppReport={
+                  user?.is_temp_commander
+                    ? undefined
+                    : () => setWhatsAppDialogOpen(true)
+                }
+                onStatusClick={handleStatusClick}
+                onFilterClick={
+                  setFilterOpen ? () => setFilterOpen(true) : undefined
+                }
+                title={chartTitle}
+                description={chartDescription}
+                selectedDate={selectedDate}
+                hideExportControls={user?.is_temp_commander}
+                unitName={unitName}
+              />
+            </div>
 
-          {/* Birthdays (Desktop Version) */}
-          <div className="hidden xl:flex flex-col xl:col-span-1">
-            <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} />
-          </div>
-        </div>
+            {/* Right Sidebar: Birthdays & Age Distrib */}
+            <div className="flex flex-col gap-4 sm:gap-6 h-full">
+              <div className="hidden lg:flex flex-col flex-1 h-full">
+                <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} />
+              </div>
 
-        {/* Mobile/Tablet Only: Birthdays (When not in top row) */}
-        <div className="xl:hidden">
-          <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} />
-        </div>
-
-        {/* Middle Section: Status Details Table (Full Width) */}
-        <div id="status-details-table" className="w-full">
-          <DashboardStatusTable
-            statusId={selectedStatusData?.id || null}
-            statusName={selectedStatusData?.name || ""}
-            statusColor={selectedStatusData?.color || ""}
-            departmentId={selectedDeptId}
-            sectionId={selectedSectionId}
-            teamId={selectedTeamId}
-            date={format(selectedDate, "yyyy-MM-dd")}
-            serviceTypes={selectedServiceTypes}
-          />
-        </div>
-
-        {/* Bottom Section: Wider Comparison & Trend Charts - HIDDEN FOR TEMP COMMANDERS */}
-        {!user?.is_temp_commander &&
-          (showComparisonMatrix || showTrendGraph) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch">
-              {showComparisonMatrix && (
-                <StatsComparisonCard
-                  ref={comparisonRef}
-                  data={comparisonStats}
-                  loading={loadingExtras}
-                  days={comparisonRange}
-                  unitName={unitName}
-                  subtitle={chartDescription}
-                  selectedDate={selectedDate}
-                />
-              )}
-              {showTrendGraph && (
-                <AttendanceTrendCard
-                  ref={trendRef}
-                  data={trendStats}
-                  loading={loadingTrend}
-                  range={trendRange}
-                  unitName={unitName}
-                  subtitle={chartDescription}
-                  selectedDate={selectedDate}
-                  className={!showComparisonMatrix ? "md:col-span-2" : ""}
-                />
+              {ageDistribution && ageDistribution.length > 0 && (
+                <div className="w-full">
+                  <AgeDistributionChart
+                    data={ageDistribution}
+                    averageAge={averageAge}
+                  />
+                </div>
               )}
             </div>
+          </div>
+
+          {/* Bottom Section: Wider Comparison & Trend Charts - HIDDEN FOR TEMP COMMANDERS */}
+          {!user?.is_temp_commander &&
+            (showComparisonMatrix || showTrendGraph) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch">
+                {showComparisonMatrix && (
+                  <StatsComparisonCard
+                    ref={comparisonRef}
+                    data={comparisonStats}
+                    loading={loadingExtras}
+                    days={comparisonRange}
+                    unitName={unitName}
+                    subtitle={chartDescription}
+                    selectedDate={selectedDate}
+                  />
+                )}
+                {showTrendGraph && (
+                  <div id="trend-section">
+                    <AttendanceTrendCard
+                      ref={trendRef}
+                      data={trendStats}
+                      loading={loadingTrend}
+                      range={trendRange}
+                      unitName={unitName}
+                      subtitle={chartDescription}
+                      selectedDate={selectedDate}
+                      className={!showComparisonMatrix ? "md:col-span-2" : ""}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+          {/* Mobile/Tablet Only: Birthdays (Below the main charts) */}
+          <div className="lg:hidden">
+            <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} />
+          </div>
+
+          {/* Middle Section: Status Details Table (Full Width) */}
+          {!user?.is_temp_commander && (
+            <div id="status-details-table" className="w-full">
+              <DashboardStatusTable
+                statusId={selectedStatusData?.id || null}
+                statusName={selectedStatusData?.name || ""}
+                statusColor={selectedStatusData?.color || ""}
+                departmentId={selectedDeptId}
+                sectionId={selectedSectionId}
+                teamId={selectedTeamId}
+                date={format(selectedDate, "yyyy-MM-dd")}
+                serviceTypes={selectedServiceTypes}
+              />
+            </div>
           )}
+        </div>
+
+        <WhatsAppReportDialog
+          open={whatsAppDialogOpen}
+          onOpenChange={setWhatsAppDialogOpen}
+          currentStats={stats}
+          unitName={unitName}
+          isFiltered={hasActiveFilters}
+        />
+
+        {/* Mobile Filter Dialog */}
+        <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+          <DialogContent className="p-0 border-none bg-transparent max-w-[340px] w-full mx-auto">
+            <DashboardFilters
+              structure={structure}
+              statuses={allStatuses}
+              allStatusTypes={allStatusTypes}
+              selectedDeptId={selectedDeptId}
+              selectedSectionId={selectedSectionId}
+              selectedTeamId={selectedTeamId}
+              selectedStatusId={selectedStatusData?.id?.toString()}
+              serviceTypes={serviceTypes}
+              selectedServiceTypes={selectedServiceTypes}
+              selectedAgeRange={selectedAgeRange}
+              onFilterChange={handleFilterChange}
+              canSelectDept={canSelectDept}
+              canSelectSection={canSelectSection}
+              canSelectTeam={canSelectTeam}
+              isMobile={true}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
-
-      <WhatsAppReportDialog
-        open={whatsAppDialogOpen}
-        onOpenChange={setWhatsAppDialogOpen}
-        currentStats={computedStats} // Use computed stats
-        unitName={unitName}
-        isFiltered={hasActiveFilters}
-      />
-
-      {/* Mobile Filter Dialog */}
-      <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-        <DialogContent className="p-0 border-none bg-transparent  max-w-[340px] w-full mx-auto">
-          <DashboardFilters
-            structure={structure}
-            statuses={allStatuses}
-            selectedDeptId={selectedDeptId}
-            selectedSectionId={selectedSectionId}
-            selectedTeamId={selectedTeamId}
-            selectedStatusId={selectedStatusData?.id?.toString()}
-            serviceTypes={serviceTypes}
-            selectedServiceTypes={selectedServiceTypes}
-            onFilterChange={handleFilterChange}
-            canSelectDept={canSelectDept}
-            canSelectSection={canSelectSection}
-            canSelectTeam={canSelectTeam}
-            isMobile={true}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -115,13 +115,13 @@ export function ExportReportDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[650px] p-0 overflow-hidden bg-[#F8FAFC] dark:bg-slate-950 sm:rounded-[32px] border-none shadow-2xl max-h-[85vh] flex flex-col"
+    className="max-w-[650px] p-0 overflow-hidden bg-[#F8FAFC] dark:bg-slate-950 sm:rounded-[32px] border-none max-h-[85vh] flex flex-col"
         dir="rtl"
       >
         {/* Header - Premium Minimalist */}
         <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-8 py-6 shrink-0">
           <div className="flex items-center gap-5">
-            <div className="w-14 h-14 rounded-[20px] bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+      <div className="w-14 h-14 rounded-[20px] bg-primary flex items-center justify-center text-white">
               <FileSpreadsheet className="w-7 h-7" />
             </div>
             <div className="space-y-1">
@@ -150,13 +150,13 @@ export function ExportReportDialog({
                 <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 h-10 rounded-xl w-full grid grid-cols-2">
                   <TabsTrigger
                     value="daily"
-                    className="font-bold rounded-lg text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm transition-all"
+          className="font-bold rounded-lg text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]: transition-all"
                   >
                     יומי
                   </TabsTrigger>
                   <TabsTrigger
                     value="range"
-                    className="font-bold rounded-lg text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:shadow-sm transition-all"
+          className="font-bold rounded-lg text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]: transition-all"
                   >
                     טווח
                   </TabsTrigger>
@@ -169,7 +169,7 @@ export function ExportReportDialog({
                 className={cn(
                   "h-10 px-4 rounded-xl font-bold border-2 transition-all gap-2 text-xs shrink-0",
                   Object.keys(activeFilters).length > 0
-                    ? "bg-primary/5 border-primary text-primary shadow-sm"
+          ?"bg-primary/5 border-primary text-primary"
                     : "border-slate-200 dark:border-slate-800 hover:border-primary/20",
                 )}
               >
@@ -196,7 +196,7 @@ export function ExportReportDialog({
                 </span>
               )}
             </div>
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 flex justify-center w-full shadow-sm mx-auto max-w-[350px]">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 flex justify-center w-full mx-auto max-w-[350px]">
               <Calendar
                 mode={mode === "daily" ? "single" : "range"}
                 selected={(mode === "daily" ? dailyDate : dateRange) as any}
@@ -227,7 +227,7 @@ export function ExportReportDialog({
                   cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-slate-50 dark:[&:has([aria-selected])]:bg-slate-800 flex-1",
                   day: "h-9 w-full p-0 font-bold rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-xs text-slate-900 dark:text-slate-100 transition-colors",
                   day_selected:
-                    "bg-primary text-white hover:bg-primary hover:text-white shadow-md shadow-primary/20",
+         "bg-primary text-white hover:bg-primary hover:text-white",
                   day_today:
                     "bg-slate-50 dark:bg-slate-800 text-primary font-black border border-primary/20",
                   day_outside: "text-slate-300 opacity-40",
@@ -245,7 +245,7 @@ export function ExportReportDialog({
             <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={() => handleDownload(false)}
-                className="col-span-2 h-12 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90 font-black text-sm gap-2"
+        className="col-span-2 h-12 rounded-xl bg-primary text-white  hover:bg-primary/90 font-black text-sm gap-2"
               >
                 <Download className="w-4 h-4" />
                 הורדת קובץ אקסל

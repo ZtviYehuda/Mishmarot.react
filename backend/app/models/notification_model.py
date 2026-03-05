@@ -265,16 +265,24 @@ class NotificationModel:
                         ]
                     )
 
-                cur.execute(missing_query, params_missing)
-                res_missing = cur.fetchone()
-                if res_missing and res_missing["count"] > 0:
+                # Get the IDs as well for the frontend to use in filtering
+                missing_ids_query = missing_query.replace(
+                    "COUNT(e.id) as count", "e.id"
+                )
+                cur.execute(missing_ids_query, params_missing)
+                res_missing_ids = cur.fetchall()
+                missing_employee_ids = [row["id"] for row in res_missing_ids]
+                missing_count = len(missing_employee_ids)
+
+                if missing_count > 0:
                     alerts.append(
                         {
                             "id": f"missing-reports-{date.today().isoformat()}",
                             "type": "warning",
                             "title": "אי-דיווח בוקר ביחידה",
-                            "description": f"ישנם {res_missing['count']} שוטרים ביחידתך שטרם הוזן להם סטטוס להיום",
+                            "description": f"ישנם {missing_count} שוטרים ביחידתך שטרם הוזן להם סטטוס להיום",
                             "link": "/attendance",
+                            "data": {"missing_ids": missing_employee_ids},
                         }
                     )
 

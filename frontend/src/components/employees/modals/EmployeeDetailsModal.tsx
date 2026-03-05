@@ -35,30 +35,48 @@ const InfoItem = ({
   value,
   className,
   noTruncate = false,
+  type,
 }: {
   icon: any;
   label: string;
   value: React.ReactNode;
   className?: string;
   noTruncate?: boolean;
+  type?: "phone" | "email";
 }) => {
   if (!value || value === "---") return null;
+
+  const content = (
+    <span
+      className={cn(
+        "text-base font-black text-foreground tracking-tight leading-tight transition-colors",
+        !noTruncate && "truncate",
+        noTruncate && "break-all",
+        type && "text-primary hover:text-primary/80",
+      )}
+      title={typeof value === "string" ? value : undefined}
+    >
+      {value}
+    </span>
+  );
+
   return (
     <div className={cn("flex flex-col gap-2 group/info", className)}>
       <span className="text-[10px] font-black text-muted-foreground dark:text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2 group-hover/info:text-primary transition-colors">
         <Icon className="w-3.5 h-3.5" />
         {label}
       </span>
-      <span
-        className={cn(
-          "text-base font-black text-foreground tracking-tight leading-tight",
-          !noTruncate && "truncate",
-          noTruncate && "break-all",
-        )}
-        title={typeof value === "string" ? value : undefined}
-      >
-        {value}
-      </span>
+      {type === "phone" && typeof value === "string" ? (
+        <a href={`tel:${value}`} className="block">
+          {content}
+        </a>
+      ) : type === "email" && typeof value === "string" ? (
+        <a href={`mailto:${value}`} className="block">
+          {content}
+        </a>
+      ) : (
+        content
+      )}
     </div>
   );
 };
@@ -210,6 +228,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               label="טלפון"
               value={employee.phone_number}
               className="sm:col-span-1"
+              type="phone"
             />
             <InfoItem
               icon={Mail}
@@ -217,6 +236,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               value={employee.email}
               className="sm:col-span-1"
               noTruncate
+              type="email"
             />
             <div className="grid grid-cols-3 col-span-1 sm:col-span-2 gap-8">
               <InfoItem icon={MapPin} label="עיר" value={employee.city} />
@@ -272,12 +292,13 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                         <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest block">
                           טלפון
                         </span>
-                        <span
-                          className="text-base font-black text-primary truncate"
+                        <a
+                          href={`tel:${ecPhone}`}
+                          className="text-base font-black text-primary truncate hover:text-primary/80 transition-colors"
                           dir="ltr"
                         >
                           {ecPhone}
-                        </span>
+                        </a>
                       </div>
                     )}
                   </div>
