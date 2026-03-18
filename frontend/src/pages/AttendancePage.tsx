@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, startTransition } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { EmployeeLink } from "@/components/common/EmployeeLink";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAuthContext } from "@/context/AuthContext";
@@ -28,6 +29,7 @@ import {
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   CalendarDays,
+  CalendarRange,
   Search,
   Filter,
   ClipboardCheck,
@@ -35,13 +37,14 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-  User,
   X,
   CheckCheck,
-  CalendarRange,
+  History,
 } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { AttendanceCalendarView } from "@/components/attendance/AttendanceCalendarView";
+import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { cn, cleanUnitName } from "@/lib/utils";
 import {
   BulkStatusUpdateModal,
@@ -49,22 +52,19 @@ import {
   StatusHistoryModal,
   ExportReportDialog,
 } from "@/components/employees/modals";
-import { History } from "lucide-react";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { DateHeader } from "@/components/common/DateHeader";
 import type { Employee } from "@/types/employee.types";
 
 export default function AttendancePage() {
   const { user } = useAuthContext();
   const { selectedDate } = useDateContext();
+
   const location = useLocation();
-  const navigate = useNavigate();
   const {
     employees,
     loading,
     fetchEmployees,
     getStructure,
-    getDashboardStats,
     getStatusTypes,
     getServiceTypes,
     getEmployeeById,
@@ -72,31 +72,31 @@ export default function AttendancePage() {
   } = useEmployees();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [structure, setStructure] = useState<any[]>([]);
-  const [selectedDeptId, setSelectedDeptId] = useState<string>("all");
-  const [selectedSectionId, setSelectedSectionId] = useState<string>("all");
-  const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
-  const [selectedStatusId, setSelectedStatusId] = useState<string>("all");
-  const [selectedServiceTypeId, setSelectedServiceTypeId] =
-    useState<string>("all");
+  const [selectedDeptId, setSelectedDeptId] = useState("all");
+  const [selectedSectionId, setSelectedSectionId] = useState("all");
+  const [selectedTeamId, setSelectedTeamId] = useState("all");
+  const [selectedStatusId, setSelectedStatusId] = useState("all");
+  const [selectedServiceTypeId, setSelectedServiceTypeId] = useState("all");
+
   const [statusTypes, setStatusTypes] = useState<any[]>([]);
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
+  const [teams, setTeams] = useState<any[]>([]);
 
-  // Selection
-  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>([]);
-
-  // Modal states
   const [filterOpen, setFilterOpen] = useState(false);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
-
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>([]);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
-    null,
-  );
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [currentUserEmp, setCurrentUserEmp] = useState<Employee | null>(null);
-  const [alertContext, setAlertContext] = useState<any>(null);
+  const [alertContext, setAlertContext] = useState<{ missing_ids: number[] } | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  // Wrap in startTransition so the button press is instant
+  const openCalendar = () => startTransition(() => setCalendarOpen((v) => !v));
+  const closeCalendar = () => startTransition(() => setCalendarOpen(false));
 
   // Check for auto-open modal from navigation state
   useEffect(() => {
@@ -113,7 +113,6 @@ export default function AttendancePage() {
         setAlertContext(null);
       }
       setBulkModalOpen(true);
-      // Clear state to prevent reopening on refresh
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -134,7 +133,9 @@ export default function AttendancePage() {
   useEffect(() => {
     const init = async () => {
       const struct = await getStructure();
-      if (struct) setStructure(struct);
+      if (struct) {
+        setDepartments(struct);
+      }
 
       const statuses = await getStatusTypes();
       if (statuses) setStatusTypes(statuses);
@@ -144,37 +145,26 @@ export default function AttendancePage() {
 
       if (user) {
         const me = await getEmployeeById(user.id);
-        console.log("[DEBUG] getEmployeeById result:", me);
         setCurrentUserEmp(me);
       }
     };
     init();
-  }, [
-    getStructure,
-    getDashboardStats,
-    getStatusTypes,
-    getServiceTypes,
-    getEmployeeById,
-    selectedDate,
-    user,
-  ]);
+  }, [getStructure, getStatusTypes, getServiceTypes, getEmployeeById, user]);
 
-  // Set initial filters based on user permissions
-  // Removed to allow scopeEmployees to handle visibility.
-  // "All" in filters means "Entire Scope".
-  // useEffect(() => {
-  //   if (user && !user.is_admin) {
-  //     if (user.department_id) {
-  //       setSelectedDeptId(user.department_id.toString());
-  //     }
-  //     if (user.section_id) {
-  //       setSelectedSectionId(user.section_id.toString());
-  //     }
-  //     if (user.team_id) {
-  //       setSelectedTeamId(user.team_id.toString());
-  //     }
-  //   }
-  // }, [user]);
+  // Update sections and teams when department/section changes
+  useEffect(() => {
+    const currentDept = departments.find((d: any) => d.id.toString() === selectedDeptId);
+    setSections(currentDept?.sections || []);
+    setSelectedSectionId("all"); // Reset section when department changes
+    setTeams([]); // Reset teams
+    setSelectedTeamId("all"); // Reset team
+  }, [selectedDeptId, departments]);
+
+  useEffect(() => {
+    const currentSection = sections.find((s: any) => s.id.toString() === selectedSectionId);
+    setTeams(currentSection?.teams || []);
+    setSelectedTeamId("all"); // Reset team when section changes
+  }, [selectedSectionId, sections]);
 
   // Smart Continuity Logic - matches the backend get_dashboard_stats and the Work Roster
   // An employee is "active" (reported) for a date if:
@@ -247,7 +237,7 @@ export default function AttendancePage() {
       const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
       const searchMatch =
         fullName.includes(searchTerm.toLowerCase()) ||
-        emp.personal_number.includes(searchTerm);
+        false;
       if (!searchMatch) return false;
 
       // Organizational Filters (Selection)
@@ -266,7 +256,13 @@ export default function AttendancePage() {
 
       // Status Filter
       if (selectedStatusId !== "all") {
-        if (emp.status_id !== parseInt(selectedStatusId)) return false;
+        if (selectedStatusId === "GROUP_VACATION") {
+          if (!emp.status_name?.includes("חופשה")) return false;
+        } else if (selectedStatusId === "GROUP_OFFICE") {
+          if (!emp.status_name?.includes("משרד")) return false;
+        } else if (emp.status_id?.toString() !== selectedStatusId) {
+          return false;
+        }
       }
 
       // Service Type Filter
@@ -286,22 +282,7 @@ export default function AttendancePage() {
     selectedTeamId,
     selectedStatusId,
     selectedServiceTypeId,
-    selectedDate,
   ]);
-
-  const unitLabel = useMemo(() => {
-    if (user?.commands_team_id) return "חולייתי";
-    if (user?.commands_section_id) return "מדורי";
-    if (user?.commands_department_id) return "מחלקתי";
-    return "יחידתי";
-  }, [user]);
-
-  const unitTypeLabel = useMemo(() => {
-    if (user?.commands_team_id) return "חוליה";
-    if (user?.commands_section_id) return "מדור";
-    if (user?.commands_department_id) return "מחלקה";
-    return "יחידה";
-  }, [user]);
 
   const employeesForModal = useMemo(() => {
     if (alertContext && alertContext.missing_ids) {
@@ -309,21 +290,6 @@ export default function AttendancePage() {
     }
     return filteredEmployees;
   }, [employees, alertContext, filteredEmployees]);
-
-  const departments = structure;
-  const sections = useMemo(() => {
-    return (
-      departments.find((d: any) => d.id.toString() === selectedDeptId)
-        ?.sections || []
-    );
-  }, [departments, selectedDeptId]);
-
-  const teams = useMemo(() => {
-    return (
-      sections.find((s: any) => s.id.toString() === selectedSectionId)?.teams ||
-      []
-    );
-  }, [sections, selectedSectionId]);
 
   const refreshData = async () => {
     await fetchEmployees(
@@ -435,6 +401,42 @@ export default function AttendancePage() {
     });
   }, [activeEmployees, statusTypes]);
 
+  // Mobile-specific grouped stats for a cleaner gauge
+  const mobileGaugeStats = useMemo(() => {
+    const grouped = new Map<string, { status_id: string; status_name: string; color: string; count: number }>();
+    
+    computedStats.forEach(s => {
+      let groupName = s.status_name;
+      let groupId = s.status_id.toString();
+      let color = s.color;
+      
+      if (s.status_name.includes("חופשה")) {
+        groupName = "חופשה";
+        groupId = "GROUP_VACATION";
+        color = "#3b82f6"; // Primary Blue
+      } else if (s.status_name.includes("משרד")) {
+        groupName = "משרד";
+        groupId = "GROUP_OFFICE";
+        color = "#10b981"; // Emerald Green
+      }
+      
+      if (grouped.has(groupName)) {
+        grouped.get(groupName)!.count += s.count;
+      } else {
+        grouped.set(groupName, {
+          status_id: groupId,
+          status_name: groupName,
+          color: color,
+          count: s.count
+        });
+      }
+    });
+    
+    return Array.from(grouped.values())
+      .filter(s => s.count > 0)
+      .sort((a, b) => b.count - a.count);
+  }, [computedStats]);
+
   const totalCount = scopeEmployees.length;
 
   const missingEmployeeIds = useMemo(() => {
@@ -466,157 +468,286 @@ export default function AttendancePage() {
 
   return (
     <div
-      className="flex flex-col min-h-full selection:bg-primary/10 selection:text-primary transition-all duration-500 px-4 lg:px-8"
+      className="flex flex-col min-h-full selection:bg-primary/10 selection:text-primary transition-all duration-500"
       dir="rtl"
     >
-      {/* Unified Page Header Wrapper */}
-      <div className="pt-2 pb-4 shrink-0 transition-all">
+      <div className="pt-3 pb-1 shrink-0 transition-all px-4">
+        {/* Premium Page Header Section */}
         <PageHeader
           icon={CalendarDays}
-          title="מעקב נוכחות יומי"
-          subtitle={`ניהול ודיווח סטטוס נוכחות לכלל שוטרי ה${unitTypeLabel}`}
-          category="נוכחות"
-          categoryLink="/attendance"
-          iconClassName="from-primary/10 to-primary/5 border-primary/20"
-          className="mb-0"
+          title="מעקב נוכחות"
+          className="mb-2"
+          hideMobile={true}
           badge={
-            <div className="flex flex-col gap-2 w-full lg:w-auto">
-              <div className="flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto">
-                <DateHeader className="w-full justify-center sm:w-auto" />
+            <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6 w-full lg:w-auto mt-4 lg:mt-0">
+              {/* Unified Date Selector */}
+              <div className="hidden lg:flex">
+                <DateHeader className="w-auto shadow-none" compact={true} />
+              </div>
+              {/* Mobile-First Action Bar */}
+              <div className="lg:hidden">
+                {/* Mobile buttons outside PageHeader to achieve full screen width */}
+              </div>
 
-                <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 w-full lg:w-auto">
-                  {!user?.is_temp_commander && (
+              {/* Desktop Action Bar */}
+              <div className="hidden lg:flex items-center gap-2 w-full lg:w-auto">
+                {/* Calendar toggle button */}
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl gap-2 font-black px-4 justify-center transition-all shadow-none",
+                    calendarOpen
+                      ? "text-primary bg-primary/10 border-primary/30"
+                      : "text-primary hover:bg-primary/5",
+                  )}
+                  onClick={openCalendar}
+                >
+                  <CalendarRange className="w-4 h-4" />
+                  <span className="text-xs">לוח שנה</span>
+                </Button>
+
+                {!user?.is_temp_commander && (
+                  <Button
+                    variant="ghost"
+                    className="h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-4 justify-center transition-all shadow-none"
+                    onClick={() => setExportDialogOpen(true)}
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="text-xs"> ייצוא דו"חות </span>
+                  </Button>
+                )}
+
+                <Button
+                  variant={isReportedToday ? "default" : "ghost"}
+                  className={cn(
+                    "h-10 rounded-xl gap-2 font-black transition-all px-4 justify-center shadow-none backdrop-blur-xl",
+                    isReportedToday
+                      ? "bg-emerald-500/90 hover:bg-emerald-600 border-white/20 text-white"
+                      : "border border-border/40 bg-card/40 text-primary hover:bg-primary/5",
+                  )}
+                  onClick={() => {
+                    if (currentUserEmp) {
+                      setSelectedEmployee(currentUserEmp);
+                      setStatusModalOpen(true);
+                    }
+                  }}
+                >
+                  {isReportedToday ? (
                     <>
-                      <Button
-                        variant="outline"
-                        className="h-10 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 gap-2 font-black px-4 w-full sm:w-auto justify-center transition-all bg-white"
-                        onClick={() => setExportDialogOpen(true)}
-                      >
-                        <Download className="w-4 h-4" />
-                        <span className="text-xs">ייצוא</span>
-                      </Button>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span className="text-xs">דווח</span>
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardCheck className="w-4 h-4" />
+                      <span className="text-xs">דיווח עצמי</span>
                     </>
                   )}
+                </Button>
 
-                  {unverifiedEmployees.length > 0 && (
-                    <Button
-                      variant="default" // Primary style to encourage verification
-                      className="h-10 rounded-xl gap-2 font-black px-4 w-full sm:w-auto justify-center transition-all bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={async () => {
-                        const success = await verifyRoster(
-                          format(selectedDate, "yyyy-MM-dd"),
-                          unverifiedEmployees.map((e) => e.id),
-                        );
-                        if (success) {
-                          toast.success(
-                            `אושר סידור עבור ${unverifiedEmployees.length} שוטרים`,
-                            { description: "הדיווחים הפכו למאומתים (ירוק)" },
-                          );
-                          refreshData();
-                        }
-                      }}
-                    >
-                      <CheckCheck className="w-4 h-4" />
-                      <span className="text-xs">
-                        אישור סידור ({unverifiedEmployees.length})
-                      </span>
-                    </Button>
-                  )}
-
+                {unverifiedEmployees.length > 0 && (
                   <Button
-                    variant={isReportedToday ? "default" : "outline"}
-                    className={cn(
-                      "h-10 rounded-xl gap-2 font-black transition-all px-4 w-full sm:w-auto justify-center",
-                      isReportedToday
-                        ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-600 text-white"
-                        : "border-primary/20 bg-primary/5 text-primary bg-white hover:bg-primary/10",
-                    )}
-                    onClick={() => {
-                      if (currentUserEmp) {
-                        handleOpenStatusModal(currentUserEmp);
-                      } else {
-                        toast.error("לא ניתן לטעון את פרטי השוטר לדיווח");
+                    variant="default"
+                    className="h-10 rounded-xl gap-2 font-black px-4 justify-center transition-all bg-primary hover:bg-primary/90 text-white shadow-none"
+                    onClick={async () => {
+                      const success = await verifyRoster(
+                        format(selectedDate, "yyyy-MM-dd"),
+                        unverifiedEmployees.map((e) => e.id),
+                      );
+                      if (success) {
+                        toast.success(`אושר סידור עבור ${unverifiedEmployees.length} שוטרים`);
+                        refreshData();
                       }
                     }}
                   >
-                    {isReportedToday ? (
-                      <CheckCircle2 className="w-4 h-4" />
-                    ) : (
-                      <User className="w-4 h-4" />
-                    )}
-                    <span className="text-xs">דיווח עצמי</span>
+                    <CheckCheck className="w-4 h-4" />
+                    <span className="text-xs">אישור ({unverifiedEmployees.length})</span>
                   </Button>
+                )}
 
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "h-10 rounded-xl border-input gap-2 font-black text-muted-foreground hover:bg-muted px-4 col-span-2 sm:w-auto justify-center bg-white transition-all",
-                      selectedEmployeeIds.length > 0 &&
-                      "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20",
-                    )}
-                    onClick={() => {
-                      setAlertContext(null);
-                      setBulkModalOpen(true);
-                    }}
-                  >
-                    <ClipboardCheck className="w-4 h-4" />
-                    <span className="text-xs font-black">
-                      {selectedEmployeeIds.length > 0
-                        ? `עדכון לנבחרים (${selectedEmployeeIds.length})`
-                        : "עדכון נוכחות מרוכז"}
-                    </span>
-                  </Button>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-4 justify-center transition-all shadow-none",
+                    selectedEmployeeIds.length > 0 && "bg-primary/10 border-primary/20"
+                  )}
+                  onClick={() => {
+                    setAlertContext(null);
+                    setBulkModalOpen(true);
+                  }}
+                >
+                  <ClipboardCheck className="w-4 h-4" />
+                  <span className="text-xs">עדכון מרוכז</span>
+                </Button>
+              </div>
+          </div>
+        }
+      />
+
+        {/* Mobile Action Buttons - Full Screen Width */}
+        <div className="lg:hidden w-full px-4 mb-2">
+          <div className={cn(
+            "grid gap-2",
+            unverifiedEmployees.length > 0 && !user?.is_temp_commander ? "grid-cols-5" :
+            !user?.is_temp_commander ? "grid-cols-4" : "grid-cols-3"
+          )}>
+            {/* Calendar button mobile */}
+            <Button
+              variant="outline"
+              className={cn(
+                "h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1",
+                calendarOpen
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "border-border/40 bg-card/40 text-primary hover:bg-primary/5",
+              )}
+              onClick={openCalendar}
+            >
+              <CalendarRange className="w-4 h-4" />
+              <span>לוח שנה</span>
+            </Button>
+            {!user?.is_temp_commander && (
+              <Button
+                variant="outline"
+                className="h-11 rounded-xl border-border/40 bg-card/40 text-primary hover:bg-primary/5 gap-1 font-black text-[10px] flex-col py-2 px-1"
+                onClick={() => setExportDialogOpen(true)}
+              >
+                <Download className="w-4 h-4" />
+                <span>ייצוא</span>
+              </Button>
+            )}
+
+            <Button
+              variant={isReportedToday ? "default" : "outline"}
+              className={cn(
+                "h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1",
+                isReportedToday
+                  ? "bg-emerald-500 hover:bg-emerald-600 border-white/20 text-white"
+                  : "border-border/40 bg-card/40 text-primary hover:bg-primary/5",
+              )}
+              onClick={() => {
+                if (currentUserEmp) {
+                  setSelectedEmployee(currentUserEmp);
+                  setStatusModalOpen(true);
+                }
+              }}
+            >
+              {isReportedToday ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>דווח</span>
+                </>
+              ) : (
+                <>
+                  <ClipboardCheck className="w-4 h-4" />
+                  <span>דיווח עצמי</span>
+                </>
+              )}
+            </Button>
+
+            {unverifiedEmployees.length > 0 && (
+              <Button
+                variant="default"
+                className="h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1 bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={async () => {
+                  const success = await verifyRoster(
+                    format(selectedDate, "yyyy-MM-dd"),
+                    unverifiedEmployees.map((e) => e.id),
+                  );
+                  if (success) {
+                    toast.success(`אושר סידור עבור ${unverifiedEmployees.length} שוטרים`);
+                    refreshData();
+                  }
+                }}
+              >
+                <CheckCheck className="w-4 h-4" />
+                <span>אישור ({unverifiedEmployees.length})</span>
+              </Button>
+            )}
+
+            <Button
+              variant="outline"
+              className={cn(
+                "h-11 rounded-xl border-border/40 bg-card/40 text-primary hover:bg-primary/5 gap-1 font-black text-[10px] flex-col py-2 px-1",
+                selectedEmployeeIds.length > 0 && "bg-primary/10 border-primary/20"
+              )}
+              onClick={() => {
+                setAlertContext(null);
+                setBulkModalOpen(true);
+              }}
+            >
+              <ClipboardCheck className="w-4 h-4" />
+              <span>עדכון מרוכז</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile Reminder Banner */}
+        <div className="lg:hidden w-full mb-4">
+          {!isAllReported && (
+            <div
+              className="w-full bg-amber-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-3 flex items-center justify-between cursor-pointer active:scale-95 transition-all shadow-sm"
+              onClick={() => {
+                setAlertContext({ missing_ids: missingEmployeeIds });
+                setSelectedEmployeeIds(missingEmployeeIds);
+                setBulkModalOpen(true);
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 text-amber-600 rounded-lg">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-px font-black text-foreground leading-tight">נשארו דיווחים</span>
+                  <span className="text-[10px] font-bold text-muted-foreground/60">יעד יום: 09:00</span>
                 </div>
               </div>
-
-              {/* Mobile Reminder Banner - Show only on small screens when not reported */}
-              <div className="lg:hidden w-full">
-                {!isAllReported && (
-                  <div
-                    className="w-full bg-gradient-to-l from-rose-500 to-rose-600 rounded-xl p-3 flex items-center justify-between text-white cursor-pointer"
-                    onClick={() => {
-                      setAlertContext({ missing_ids: missingEmployeeIds });
-                      setSelectedEmployeeIds(missingEmployeeIds);
-                      setBulkModalOpen(true);
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-1.5 bg-white/20 rounded-lg">
-                        <Clock className="w-4 h-4" />
-                      </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-[12px] font-black leading-none">
-                          יש להשלים דיווחים
-                        </h3>
-                        <span className="text-[10px] font-bold opacity-80 mt-0.5">
-                          עד השעה 09:00
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 bg-white/20 h-7 px-3 rounded-full border border-white/10">
-                      <span className="text-[10px] font-black">
-                        נותרו: {totalCount - activeEmployees.length}
-                      </span>
-                    </div>
-                  </div>
-                )}
+              <div className="bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                <span className="text-[10px] font-black text-amber-700">נותרו: {totalCount - activeEmployees.length}</span>
               </div>
             </div>
-          }
-        />
+          )}
+        </div>
       </div>
 
-      <div className="px-6 md:px-10 pb-10 space-y-4">
+
+      {/* Main content: calendar view OR normal stats+table */}
+      <AnimatePresence>
+        {calendarOpen ? (
+          <motion.div
+            key="calendar"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 px-2 sm:px-4 pb-4"
+          >
+            <div className="bg-card border border-border/50 rounded-2xl p-3 sm:p-4 md:p-5 shadow-sm h-full">
+              <AttendanceCalendarView
+                statusTypes={statusTypes}
+                scopeEmployees={scopeEmployees}
+                onClose={closeCalendar}
+              />
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="table"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2 }}
+            className="pb-4 space-y-4"
+          >
         {/* Summary Stats & Progress */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
-          <Card className="p-6 sm:p-8 border border-border lg:col-span-3 order-2 lg:order-1 relative overflow-hidden">
+          <Card className="p-4 sm:p-8 lg:col-span-3 order-2 lg:order-1 relative overflow-hidden">
             {/* Subtle Background Pattern */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
 
             <div className="flex items-center justify-between mb-8 relative z-10">
               <div className="flex flex-col gap-1 text-right">
                 <span className="text-sm sm:text-base font-black text-foreground tracking-tight">
-                  סיכום התייצבות {unitLabel}
+                  סיכום התייצבות למשמרת
                 </span>
                 <span className="text-[11px] sm:text-sm text-muted-foreground font-bold italic">
                   מעקב דיווחים להיום,{" "}
@@ -640,86 +771,162 @@ export default function AttendancePage() {
               </div>
             </div>
 
-            <div className="w-full h-3 bg-muted rounded-full overflow-hidden mb-8 relative">
-              <div
-                className="h-full bg-gradient-to-l from-primary via-primary/80 to-primary/60 transition-all duration-1000 ease-out"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
+            {/* Mobile Gauge Area */}
+            <div className="lg:hidden flex flex-col items-center pt-6 pb-4 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-border/20 mx-3 mb-2 overflow-hidden relative z-10">
+              {/* Semi-Circle Gauge - Ultra Wide Viewport to prevent clipping */}
+              <div className="relative w-full max-w-[360px] aspect-[1.6/1] flex flex-col items-center justify-center">
+                <svg viewBox="0 0 160 100" className="w-full h-full overflow-visible">
+                  {/* Gauge Base Track - Centered at 80, 75 with R=50 */}
+                  <path
+                    d="M 30 70 A 50 50 0 0 1 130 70"
+                    fill="none"
+                    stroke="currentColor"
+                    className="text-muted/10"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+                  
+                  {/* Categorized Segments with Intelligent Labels */}
+                  {(() => {
+                    let cumulativePercentage = 0;
+                    const totalReported = mobileGaugeStats.reduce((sum, s) => sum + s.count, 0) || 1;
+                    const circumference = 157.08; // PI * R (R=50)
 
-            <div
-              className={cn(
-                "grid grid-cols-3 sm:grid-cols-4 gap-2",
-                "lg:flex lg:flex-row lg:w-full lg:gap-0 lg:border lg:border-border/60 lg:rounded-3xl lg:overflow-hidden lg:divide-x lg:divide-x-reverse lg:divide-border/40 lg:bg-muted/5",
-              )}
-            >
-              {computedStats
-                .filter((s: any) => s.status_id)
-                .map((s: any) => (
-                  <div
-                    key={s.status_id}
-                    onClick={() => {
-                      if (s.count > 0) {
-                        setSelectedStatusId((prev) =>
-                          prev === s.status_id.toString()
-                            ? "all"
-                            : s.status_id.toString(),
-                        );
-                      }
-                    }}
-                    className={cn(
-                      "relative flex flex-col items-center justify-center transition-all cursor-pointer group rounded-xl border h-20 sm:h-24",
-                      "lg:flex-1 lg:h-24 lg:p-4 lg:rounded-none",
-                      selectedStatusId === s.status_id.toString()
-                        ? "text-white scale-[1.02] z-10"
-                        : "bg-muted/30 border-transparent hover:bg-muted/50 lg:bg-transparent lg:border-0",
-                      s.count === 0 &&
-                      "opacity-60 grayscale cursor-default hover:bg-muted/30",
-                    )}
-                    style={{
-                      backgroundColor:
-                        selectedStatusId === s.status_id.toString()
-                          ? s.color
-                          : undefined,
-                      borderColor:
-                        selectedStatusId === s.status_id.toString()
-                          ? s.color
-                          : undefined,
-                    }}
-                  >
-                    <span
-                      className={cn(
-                        "text-xl sm:text-2xl lg:text-3xl font-black",
-                        selectedStatusId === s.status_id.toString()
-                          ? "text-white"
-                          : "text-foreground",
-                      )}
-                    >
-                      {s.count > 0 ? s.count : "-"}
-                    </span>
-                    <span
-                      className="text-[9px] sm:text-[10px] lg:text-xs font-black uppercase text-center leading-tight mt-1 px-1 truncate w-full"
-                      style={{
-                        color:
-                          selectedStatusId === s.status_id.toString()
-                            ? "#ffffff"
-                            : s.color || "var(--muted-foreground)",
-                      }}
-                    >
-                      {s.status_name}
-                    </span>
+                    return mobileGaugeStats.map((s) => {
+                      const share = s.count / totalReported;
+                      const size = share * 100;
+                      const dashArray = `${(share * circumference)} ${circumference * 2}`;
+                      const dashOffset = -(cumulativePercentage / 100 * circumference);
+                      
+                      const isSelected = selectedStatusId === s.status_id.toString();
+                      const isAnySelected = selectedStatusId !== "all";
+                      
+                      // Label Geometry Positioning
+                      const midShare = cumulativePercentage + (size / 2);
+                      const angle = 180 - (midShare * 1.8);
+                      const rad = (angle * Math.PI) / 180;
+                      
+                      // Intelligent radius: push further out at the edges to avoid caps
+                      const lr = (angle < 25 || angle > 155) ? 80 : 74;
+                      const lx = 80 + lr * Math.cos(rad);
+                      const ly = 70 - lr * Math.sin(rad);
 
-                    {/* Desktop Selection Bar */}
-                    {selectedStatusId === s.status_id.toString() && (
-                      <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-1 bg-white transition-all" />
-                    )}
+                      cumulativePercentage += size;
+
+                      if (s.count === 0) return null;
+
+                      return (
+                        <g 
+                          key={s.status_id} 
+                          className="cursor-pointer group"
+                          onClick={() => setSelectedStatusId(isSelected ? "all" : s.status_id.toString())}
+                        >
+                          <circle
+                            cx="80"
+                            cy="70"
+                            r="50"
+                            fill="none"
+                            stroke={s.color}
+                            strokeWidth={isSelected ? 16 : 12}
+                            strokeDasharray={dashArray}
+                            strokeDashoffset={dashOffset}
+                            strokeLinecap="butt"
+                            transform="rotate(180 80 70)"
+                            className="transition-all duration-700"
+                            style={{ 
+                              opacity: isAnySelected && !isSelected ? 0.2 : 1,
+                              filter: isSelected ? `drop-shadow(0 0 10px ${s.color}44)` : 'none'
+                            }}
+                          />
+
+                          {/* Refined Label & Count Spacing */}
+                          <motion.g
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="pointer-events-none"
+                          >
+                            <text
+                              x={lx}
+                              y={ly}
+                              textAnchor={angle > 140 ? "end" : angle < 40 ? "start" : "middle"}
+                              className={cn(
+                                "text-[4px] font-black uppercase tracking-tight transition-all duration-300",
+                                isSelected ? "fill-foreground" : "fill-muted-foreground/50"
+                              )}
+                            >
+                              {s.status_name}
+                            </text>
+                            <text
+                              x={lx}
+                              y={ly + 4.5}
+                              textAnchor={angle > 140 ? "end" : angle < 40 ? "start" : "middle"}
+                              className={cn(
+                                "text-[5px] font-black tabular-nums transition-all duration-300",
+                                isSelected ? "fill-foreground" : "fill-muted-foreground/80"
+                              )}
+                            >
+                              {s.count}
+                            </text>
+                          </motion.g>
+                        </g>
+                      );
+                    });
+                  })()}
+
+                  <circle cx="80" cy="70" r="1" className="fill-foreground/10" />
+                </svg>
+
+                {/* Central Focus Display & Progress Integrated */}
+                <div className="absolute top-[48%] flex flex-col items-center select-none" onClick={() => setSelectedStatusId("all")}>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={selectedStatusId}
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="flex flex-col items-center"
+                    >
+                      <span className="text-[34px] font-black text-foreground tracking-tighter tabular-nums leading-none">
+                        {selectedStatusId === "all" 
+                          ? activeEmployees.length 
+                          : (mobileGaugeStats.find(s => s.status_id.toString() === selectedStatusId)?.count ?? 0)}
+                      </span>
+                      <span className="text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 mt-1">
+                        {selectedStatusId === "all" ? "סה\"כ מדווחים" : "נוכחות בסטטוס"}
+                      </span>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* Compact Progress Bar - Now inside the Gauge Area */}
+                  <div className="w-32 mt-5">
+                     <div className="flex items-center justify-between text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest mb-1">
+                       <span>דיווח יחידתי</span>
+                       <span className="text-primary/60">{Math.round(progressPercent)}%</span>
+                     </div>
+                     <div className="h-1 w-full bg-muted/20 rounded-full overflow-hidden border border-border/5">
+                       <motion.div 
+                         initial={{ width: 0 }}
+                         animate={{ width: `${progressPercent}%` }}
+                         className="h-full bg-primary/80"
+                       />
+                     </div>
                   </div>
-                ))}
+                </div>
+              </div>
+
+              {/* Reset Control - Tightened spacing */}
+              {selectedStatusId !== "all" && (
+                <button 
+                  onClick={() => setSelectedStatusId("all")}
+                  className="mt-4 text-[10px] font-black text-primary/60 hover:text-primary uppercase tracking-[0.2em] transition-colors"
+                >
+                  לביטול הבחירה
+                </button>
+              )}
             </div>
           </Card>
 
           {!isAllReported ? (
-            <div className="hidden lg:flex bg-card/40 dark:bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl lg:rounded-3xl p-4 lg:p-6 flex-row lg:flex-col items-center lg:items-start justify-between gap-4 order-1 lg:order-2 hover:border-border transition-all duration-300">
+            <div className="hidden lg:flex bg-card/40 dark:bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl lg:rounded-3xl p-4 lg:p-6 flex-row lg:flex-col items-center lg:items-start justify-between gap-4 order-1 lg:order-2 hover:border-border transition-all duration-300">
               {/* Header Section */}
               <div className="flex items-start gap-3 lg:gap-4 flex-1">
                 <div className="relative">
@@ -822,7 +1029,7 @@ export default function AttendancePage() {
               <div className="relative">
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                 <Input
-                  placeholder="שם שוטר או מספר אישי..."
+                  placeholder="שם שוטר או שם משתמש..."
                   className="h-11 pr-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-sm font-bold"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -1291,7 +1498,7 @@ export default function AttendancePage() {
                                 )}
                               />
                               <span className="text-[10px] text-muted-foreground/50 font-black tracking-[0.1em]">
-                                #{emp.personal_number}
+                                #{emp.username}
                               </span>
                             </div>
                           </div>
@@ -1558,7 +1765,7 @@ export default function AttendancePage() {
                               </h3>
                               <div className="flex items-center gap-1.5">
                                 <span className="text-[10px] text-muted-foreground font-black tracking-widest">
-                                  {emp.personal_number}
+                                  {emp.username}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground/30">
                                   •
@@ -1786,7 +1993,7 @@ export default function AttendancePage() {
           alertContext={alertContext}
           onNudge={() => {
             toast.success(
-              `נשלחה תזכורת למפקד ${alertContext?.commander_name || ""}`,
+              `נשלחה תזכורת למפקד`,
             );
           }}
           selectedDate={selectedDate}
@@ -1796,7 +2003,9 @@ export default function AttendancePage() {
           open={exportDialogOpen}
           onOpenChange={setExportDialogOpen}
         />
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

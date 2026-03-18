@@ -96,25 +96,25 @@ body {
 
 .dark {
   color-scheme: dark;
-  --background: #000c14;
-  --foreground: #f8fafc;
-  --card: #04121d;
-  --card-foreground: #f8fafc;
-  --popover: #000c14;
-  --popover-foreground: #f8fafc;
-  --primary: #0074ff;
+  --background: #0b141a;
+  --foreground: #e9edef;
+  --card: #111b21;
+  --card-foreground: #e9edef;
+  --popover: #111b21;
+  --popover-foreground: #e9edef;
+  --primary: #00a884; /* Adjusted to WhatsApp-style green for better visibility in this theme */
   --primary-foreground: #ffffff;
-  --secondary: #001e30;
-  --secondary-foreground: #f8fafc;
-  --muted: #001e30;
-  --muted-foreground: #94a3b8;
-  --accent: #001e30;
+  --secondary: #202c33;
+  --secondary-foreground: #e9edef;
+  --muted: #202c33;
+  --muted-foreground: #8696a0;
+  --accent: #2a3942;
   --accent-foreground: var(--primary);
-  --destructive: #7f1d1d;
-  --border: #001e30;
-  --input: #001e30;
+  --destructive: #ef4444;
+  --border: #222d34;
+  --input: #222d34;
   --ring: var(--primary);
-  --primary-rgb: 0, 116, 255;
+  --primary-rgb: 0, 168, 132;
 }
 
 /* Accent Color Overrides - Highest Specificity */
@@ -164,45 +164,52 @@ body {
 
 .dark {
   &.accent-cyan {
-    --primary: #22d3ee;
-    --secondary: #083344;
-    --accent: #083344;
+    --primary: #47c1d3;
+    --secondary: #0b2f36;
+    --accent: #0b2f36;
+    --primary-rgb: 71, 193, 211;
   }
 
   &.accent-emerald {
-    --primary: #34d399;
-    --secondary: #064e3b;
-    --accent: #064e3b;
+    --primary: #00a884; /* WhatsApp Green */
+    --secondary: #113f34;
+    --accent: #113f34;
+    --primary-rgb: 0, 168, 132;
   }
 
   &.accent-rose {
-    --primary: #fb7185;
-    --secondary: #4c0519;
-    --accent: #4c0519;
+    --primary: #f25c78;
+    --secondary: #3f1120;
+    --accent: #3f1120;
+    --primary-rgb: 242, 92, 120;
   }
 
   &.accent-amber {
-    --primary: #fbbf24;
-    --secondary: #451a03;
-    --accent: #451a03;
+    --primary: #ffbc2d;
+    --secondary: #3f2f11;
+    --accent: #3f2f11;
+    --primary-rgb: 255, 188, 45;
   }
 
   &.accent-blue {
-    --primary: #0074ff;
-    --secondary: #001e30;
-    --accent: #001e30;
+    --primary: #3390ff;
+    --secondary: #112b3f;
+    --accent: #112b3f;
+    --primary-rgb: 51, 144, 255;
   }
 
   &.accent-zinc {
-    --primary: #94a3b8;
-    --secondary: #0f172a;
-    --accent: #0f172a;
+    --primary: #aab2c0;
+    --secondary: #1e293b;
+    --accent: #1e293b;
+    --primary-rgb: 170, 178, 192;
   }
 
   &.accent-violet {
-    --primary: #a78bfa;
-    --secondary: #2e1065;
-    --accent: #2e1065;
+    --primary: #a37dfa;
+    --secondary: #26113f;
+    --accent: #26113f;
+    --primary-rgb: 163, 125, 250;
   }
 }
 

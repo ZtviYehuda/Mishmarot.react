@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/context/AuthContext";
 import {
@@ -22,6 +22,7 @@ import {
   Plus,
   Pencil,
   LogIn,
+  Phone,
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn, cleanUnitName } from "@/lib/utils";
@@ -40,19 +41,30 @@ interface EmployeeTableProps {
     dept_id?: number,
     include_inactive?: boolean,
   ) => Promise<void>;
+  initialFilters?: EmployeeFilters;
 }
 
 export const EmployeeTable = ({
   employees,
   loading,
   fetchEmployees,
+  initialFilters,
 }: EmployeeTableProps) => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<EmployeeFilters>({});
+  const [activeFilters, setActiveFilters] = useState<EmployeeFilters>(
+    initialFilters || {},
+  );
+
+  useEffect(() => {
+    if (initialFilters) {
+      setActiveFilters(initialFilters);
+      setCurrentPage(1);
+    }
+  }, [initialFilters]);
   const itemsPerPage = 10;
 
   // Role Logic implementation base on user request
@@ -76,7 +88,7 @@ export const EmployeeTable = ({
     const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
     const searchMatch =
       fullName.includes(searchTerm.toLowerCase()) ||
-      emp.personal_number.includes(searchTerm);
+      false;
 
     if (!searchMatch) return false;
 
@@ -143,7 +155,7 @@ export const EmployeeTable = ({
       const lowerSearch = activeFilters.searchText.toLowerCase();
       const matchesSearch =
         fullName.includes(lowerSearch) ||
-        emp.personal_number.includes(lowerSearch);
+        emp.username.toLowerCase().includes(lowerSearch);
       if (!matchesSearch) return false;
     }
 
@@ -209,7 +221,7 @@ export const EmployeeTable = ({
         <div className="relative w-full">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="חיפוש לפי שם או מספר אישי..."
+            placeholder="חיפוש לפי שם או שם משתמש..."
             className="pr-10 h-10 sm:h-11 text-right border-input focus:ring-ring/20 focus:border-ring rounded-xl text-sm"
             value={searchTerm}
             onChange={(e) => {
@@ -257,12 +269,12 @@ export const EmployeeTable = ({
         <div className="overflow-x-auto">
           <Table className="min-w-full">
             <TableHeader className="bg-muted/30 backdrop-blur-sm">
-              <TableRow className="hover:bg-transparent border-b border-border/60">
+              <TableRow className="hover:bg-transparent border-b border-border/40">
                 <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-16 px-6 tracking-widest">
                   שוטר
                 </TableHead>
                 <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-16 px-6 tracking-widest">
-                  מספר אישי
+                  שם משתמש
                 </TableHead>
                 <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-16 px-6 tracking-widest">
                   טלפון
@@ -312,7 +324,7 @@ export const EmployeeTable = ({
                       !emp.is_active &&
                         "bg-destructive/[0.02] opacity-80 grayscale-[0.2] border-r-4 border-r-destructive",
                       emp.is_active &&
-                        "border-r-4 border-r-transparent hover:border-r-primary",
+                        "border-r-4 border-r-primary/30 hover:border-r-primary transition-all",
                     )}
                   >
                     <TableCell className="px-6 py-5 text-right">
@@ -330,7 +342,10 @@ export const EmployeeTable = ({
                             {emp.last_name[0]}
                           </div>
                           {emp.is_active && (
-              <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 bg-emerald-500"/>
+              <div 
+                className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900"
+                style={{ backgroundColor: emp.status_color || '#10b981' }}
+              />
                           )}
                         </div>
                         <div className="flex flex-col text-right min-w-0">
@@ -353,7 +368,7 @@ export const EmployeeTable = ({
                           ) : (
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className="text-[10px] font-black text-muted-foreground/50 tracking-[0.1em]">
-                                #{emp.personal_number}
+                                #{emp.username}
                               </span>
                             </div>
                           )}
@@ -361,7 +376,7 @@ export const EmployeeTable = ({
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4 text-right font-mono text-xs text-muted-foreground">
-                      {emp.personal_number}
+                      {emp.username}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-right font-mono text-xs text-muted-foreground">
                       {emp.phone_number || "-"}
@@ -382,13 +397,60 @@ export const EmployeeTable = ({
                     <TableCell className="px-6 py-5 text-right">
                       {emp.department_name && emp.department_name !== "מטה" ? (
                         <div className="flex flex-col text-right">
-                          <span className="text-[11px] font-black text-foreground">
+                          <span
+                            className="text-[11px] font-black text-foreground cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => {
+                              const isSelected =
+                                activeFilters.departments?.includes(
+                                  emp.department_name || "",
+                                ) && activeFilters.departments.length === 1;
+                              setActiveFilters({
+                                ...activeFilters,
+                                departments: isSelected
+                                  ? []
+                                  : [emp.department_name || ""],
+                              });
+                              setCurrentPage(1);
+                            }}
+                          >
                             {cleanUnitName(emp.department_name)}
                           </span>
                           {((emp.section_name && emp.section_name !== "מטה") ||
                             (emp.team_name && emp.team_name !== "מטה")) && (
                             <div className="flex items-center gap-1.5 mt-1">
-                              <span className="text-[10px] font-black text-primary/60 truncate bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10">
+                              <span
+                                className="text-[10px] font-black text-primary/60 truncate bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10 cursor-pointer hover:bg-primary/10 transition-all"
+                                onClick={() => {
+                                  if (
+                                    emp.team_name &&
+                                    emp.team_name !== "מטה"
+                                  ) {
+                                    const isSelected =
+                                      activeFilters.teams?.includes(
+                                        emp.team_name,
+                                      ) && activeFilters.teams.length === 1;
+                                    setActiveFilters({
+                                      ...activeFilters,
+                                      teams: isSelected ? [] : [emp.team_name],
+                                    });
+                                  } else if (
+                                    emp.section_name &&
+                                    emp.section_name !== "מטה"
+                                  ) {
+                                    const isSelected =
+                                      activeFilters.sections?.includes(
+                                        emp.section_name,
+                                      ) && activeFilters.sections.length === 1;
+                                    setActiveFilters({
+                                      ...activeFilters,
+                                      sections: isSelected
+                                        ? []
+                                        : [emp.section_name],
+                                    });
+                                  }
+                                  setCurrentPage(1);
+                                }}
+                              >
                                 {emp.team_name && emp.team_name !== "מטה"
                                   ? cleanUnitName(emp.team_name)
                                   : cleanUnitName(emp.section_name || "")}
@@ -555,21 +617,24 @@ export const EmployeeTable = ({
                     {emp.last_name[0]}
                   </div>
                   {emp.is_active && (
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
+                    <div 
+                      className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900" 
+                      style={{ backgroundColor: emp.status_color || '#10b981' }}
+                    />
                   )}
                 </div>
 
                 {/* Center: Info */}
                 <div className="flex-1 min-w-0 text-right">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <h4 className="font-black text-sm text-foreground truncate">
-                      {emp.first_name} {emp.last_name}
+                  <div className="flex flex-wrap items-center gap-x-2 mb-0.5">
+                    <h4 className="font-black text-sm text-foreground line-clamp-1 leading-snug">
+                      {emp.dominant_name ? `${emp.dominant_name} ${emp.last_name}` : (emp.first_name.split(' ').length > 2 ? `${emp.first_name.split(' ')[0]} ${emp.last_name}` : `${emp.first_name} ${emp.last_name}`)}
                     </h4>
-                    <span className="text-[10px] font-mono font-bold text-muted-foreground/60">
-                      {emp.personal_number}
+                    <span className="text-[10px] font-mono font-bold text-muted-foreground/60 shrink-0">
+                      {emp.username}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
                     <span className="text-[11px] font-bold text-muted-foreground">
                       {emp.status_name || "לא הוזן"}
@@ -579,53 +644,24 @@ export const EmployeeTable = ({
 
                 {/* Left Side: Actions */}
                 <div
-                  className="flex items-center gap-4 no-export"
+                  className="flex items-center gap-3 sm:gap-4 no-export shrink-0"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {emp.phone_number && (
                     <a
                       href={`tel:${emp.phone_number}`}
-                      className="p-2 bg-muted/50 rounded-full text-muted-foreground hover:text-primary transition-colors"
+                      className="p-1.5 bg-muted/50 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                     >
-                      <div className="relative">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 5a2 2 0 012-2h2.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                          />
-                        </svg>
-                      </div>
+                      <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
                     </a>
                   )}
-                  <button className="p-2 bg-muted/50 rounded-full text-muted-foreground hover:text-primary transition-colors">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
+                  <button 
+                    onClick={() => handleViewDetails(emp)}
+                    className="p-1.5 bg-muted/50 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                  >
+                    <User className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
-                  <div className="w-px h-6 bg-border/40 mx-1" />
+                  <div className="w-px h-5 bg-border/40 mx-0.5" />
                   <ChevronLeft className="w-4 h-4 text-muted-foreground/40" />
                 </div>
               </div>

@@ -21,50 +21,43 @@ def login():
         if not data:
             return jsonify({"error": "No data provided"}), 400
 
-        p_num = data.get("personal_number")
+        p_num = data.get("username")
         password = data.get("password")
 
-        # שלב 1: אימות פרטים בסיסי
         print(f"DEBUG LOGIN: Checking credentials for {p_num}")
         user_basic = EmployeeModel.login_check(p_num, password)
 
-        # Handle special error returns from login_check (e.g. EXPIRED_DELEGATION)
         if isinstance(user_basic, dict) and "error" in user_basic:
             error_code = user_basic["error"]
             error_msg = user_basic.get("message", "שגיאת התחברות")
-
-            # Log specific block
             AuditLogModel.log_action(
                 user_id=user_basic.get("id"),
                 action_type=f"BLOCKED_LOGIN_{error_code}",
-                description=f"Login blocked: {error_msg} for P-Num: {p_num}",
+                description=f"Login blocked: {error_msg} for username: {p_num}",
                 ip_address=request.remote_addr,
             )
-
             return jsonify({"success": False, "error": error_msg}), 403
 
         if not user_basic:
             print("DEBUG LOGIN: login_check failed")
-            # Log Failed Attempt
-            # Try to get user_id for logging if the personal_number exists
             temp_conn = get_db_connection()
             if temp_conn:
                 with temp_conn.cursor() as cur:
                     cur.execute(
-                        "SELECT id FROM employees WHERE personal_number = %s", (p_num,)
+                        "SELECT id FROM employees WHERE username = %s", (p_num,)
                     )
                     row = cur.fetchone()
                     target_uid = row[0] if row else None
                     AuditLogModel.log_action(
                         user_id=target_uid,
                         action_type="FAILED_LOGIN",
-                        description=f"Failed login attempt for P-Num: {p_num}",
+                        description=f"Failed login attempt for username: {p_num}",
                         ip_address=request.remote_addr,
                     )
                 temp_conn.close()
 
             return (
-                jsonify({"success": False, "error": "מספר אישי או סיסמה שגויים"}),
+                jsonify({"success": False, "error": "שם משתמש או סיסמא שגויים"}),
                 401,
             )
 
@@ -130,7 +123,7 @@ def login():
                     "id": user["id"],
                     "first_name": user["first_name"],
                     "last_name": user["last_name"],
-                    "personal_number": user["personal_number"],
+                    "username": user["username"],
                     "phone_number": user.get("phone_number"),
                     "email": user.get("email"),
                     "last_password_change": user.get("last_password_change"),
@@ -153,10 +146,8 @@ def login():
                     "emergency_contact": user.get("emergency_contact"),
                     "department_name": user.get("department_name"),
                     "section_name": user.get("section_name"),
-                    "section_name": user.get("section_name"),
                     "team_name": user.get("team_name"),
                     "service_type_name": user.get("service_type_name"),
-                    "national_id": user.get("national_id"),
                     "enlistment_date": user.get("enlistment_date"),
                     "discharge_date": user.get("discharge_date"),
                     "assignment_date": user.get("assignment_date"),
@@ -212,9 +203,7 @@ def get_current_user():
                 "id": user["id"],
                 "first_name": user["first_name"],
                 "last_name": user["last_name"],
-                "personal_number": user["personal_number"],
-                "phone_number": user.get("phone_number"),
-                "email": user.get("email"),
+                "username": user["username"],
                 "phone_number": user.get("phone_number"),
                 "email": user.get("email"),
                 "last_password_change": user.get("last_password_change"),
@@ -242,7 +231,6 @@ def get_current_user():
                 "section_name": user.get("section_name"),
                 "team_name": user.get("team_name"),
                 "service_type_name": user.get("service_type_name"),
-                "national_id": user.get("national_id"),
                 "enlistment_date": user.get("enlistment_date"),
                 "discharge_date": user.get("discharge_date"),
                 "assignment_date": user.get("assignment_date"),
@@ -361,7 +349,7 @@ def reset_impersonated_password():
 
     user_id = identity["id"]  # The ID of the user being impersonated
 
-    success, error = EmployeeModel.reset_password_to_national_id(user_id)
+    success, error = EmployeeModel.reset_password_to_default(user_id)
 
     if success:
         real_admin_id = identity.get("real_admin_id")
@@ -373,7 +361,7 @@ def reset_impersonated_password():
             ip_address=request.remote_addr,
         )
         return jsonify(
-            {"success": True, "message": "הסיסמה אופסה בהצלחה לתעודת הזהות של המשתמש"}
+            {"success": True, "message": "הסיסמא אופסה בהצלחה (סיסמא ברירת מחדל: 123456)"}
         )
     else:
         return (
@@ -414,7 +402,6 @@ def update_profile():
         "city",
         "birth_date",
         "emergency_contact",
-        "national_id",
         "enlistment_date",
         "discharge_date",
         "assignment_date",
@@ -458,19 +445,13 @@ def generate_code(length=6):
 @auth_bp.route("/forgot-password", methods=["POST"])
 def forgot_password():
     """
-    Step 1: Request Password Reset
-    - Receives personal_number + email
-    - Verifies they belong to the same person in the database
-    - Generates 6-digit code
-    - Saves to verification_codes
-    - Sends email
+    Step 1: Request Password Reset - Receives email only
     """
     data = request.get_json()
-    personal_number = data.get("personal_number")
     email = data.get("email")
 
-    if not personal_number or not email:
-        return jsonify({"success": False, "error": "נא להזין מספר אישי ואימייל"}), 400
+    if not email:
+        return jsonify({"success": False, "error": "נא להזין כתובת אימייל"}), 400
 
     from app.utils.db import get_db_connection
 
@@ -478,25 +459,19 @@ def forgot_password():
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        # 1. Verify User and Email match
+        # 1. Verify User has this email
         cur.execute(
-            "SELECT id, email FROM employees WHERE personal_number = %s",
-            (personal_number,),
+            "SELECT id, email FROM employees WHERE email = %s AND is_active = TRUE",
+            (email,),
         )
         user = cur.fetchone()
 
-        # Check if user exists and has this exact email (case-insensitive)
-        if (
-            not user
-            or not user.get("email")
-            or user["email"].lower().strip() != email.lower().strip()
-        ):
-            # For security, we can return a generic message, but user specifically asked to verify details
+        if not user or not user.get("email"):
             return (
                 jsonify(
                     {
                         "success": False,
-                        "error": "פרטי האימות (מספר אישי או מייל) אינם תואמים את הרשומות שלנו",
+                        "error": "כתובת האימייל לא נמצאה במערכת",
                     }
                 ),
                 400,
@@ -590,11 +565,10 @@ def reset_password_with_code():
     """
     data = request.get_json()
     email = data.get("email")
-    personal_number = data.get("personal_number")
     code = data.get("code")
     new_password = data.get("new_password")
 
-    if not email or not code or not new_password or not personal_number:
+    if not email or not code or not new_password:
         return jsonify({"success": False, "error": "חסרים נתונים לביצוע האיפוס"}), 400
 
     if len(new_password) < 6:
@@ -626,7 +600,7 @@ def reset_password_with_code():
                 400,
             )
 
-        # Update Password - Ensuring both email AND personal_number match the user
+        # Update Password - Ensuring email matches the user
         from werkzeug.security import generate_password_hash
 
         new_hash = generate_password_hash(new_password)
@@ -635,9 +609,9 @@ def reset_password_with_code():
             """
             UPDATE employees 
             SET password_hash = %s, must_change_password = FALSE, last_password_change = NOW() 
-            WHERE email = %s AND personal_number = %s
+            WHERE email = %s
             """,
-            (new_hash, email, personal_number),
+            (new_hash, email),
         )
 
         if cur.rowcount == 0:
@@ -793,7 +767,7 @@ def impersonate_user():
                     "id": target_user.get("id"),
                     "first_name": target_user.get("first_name"),
                     "last_name": target_user.get("last_name"),
-                    "personal_number": target_user.get("personal_number"),
+                    "username": target_user.get("username"),
                     "phone_number": target_user.get("phone_number"),
                     "email": target_user.get("email"),
                     "must_change_password": False,  # Admin impersonation does not require password change

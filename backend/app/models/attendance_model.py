@@ -145,6 +145,23 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
+    def _get_log_source(user_id=None, date_val=None):
+        """
+        Returns the table(s) to query for logs.
+        If a restoration grant exists, returns a UNION of active and archive.
+        Otherwise, returns just active logs.
+        """
+        from app.models.archive_model import ArchiveModel
+
+        if not user_id or not date_val:
+            return "attendance_logs"
+
+        # Check if there's an approved restore request for this user and date
+        if ArchiveModel.check_access(user_id, date_val):
+            return "(SELECT * FROM attendance_logs UNION ALL SELECT * FROM attendance_logs_archive)"
+        return "attendance_logs"
+
+    @staticmethod
     def log_bulk_status(updates, reported_by=None):
         conn = get_db_connection()
         if not conn:
@@ -555,19 +572,20 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def get_monthly_summary(year, month):
+    def get_monthly_summary(year, month, requesting_user_id=None):
         conn = get_db_connection()
         if not conn:
             return {}
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            query = """
+            table_source = AttendanceModel._get_log_source(requesting_user_id, f"{year}-{month:02d}-01")
+            query = f"""
                 SELECT 
                     DATE(al.start_datetime) as date,
                     st.name as status,
                     st.color,
                     COUNT(*) as count
-                FROM attendance_logs al
+                FROM {table_source} al
                 JOIN status_types st ON al.status_type_id = st.id
                 WHERE EXTRACT(YEAR FROM al.start_datetime) = %s 
                 AND EXTRACT(MONTH FROM al.start_datetime) = %s
@@ -687,7 +705,7 @@ class AttendanceModel:
                             e.id as emp_id,
                             (
                                 SELECT st.is_presence
-                                FROM attendance_logs al
+                                FROM (SELECT * FROM attendance_logs UNION ALL SELECT * FROM attendance_logs_archive) al
                                 JOIN status_types st ON al.status_type_id = st.id
                                 WHERE al.employee_id = e.id
                                 AND DATE(al.start_datetime) <= dr.date_val
@@ -702,14 +720,9 @@ class AttendanceModel:
                         LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
                         LEFT JOIN service_types srv ON e.service_type_id = srv.id
                         WHERE e.is_active = TRUE 
-                        AND e.personal_number != 'admin'
+                        AND e.username != 'admin'
                         {scoping_clause}
                         AND e.id != %s
-                        AND e.id NOT IN (
-                            SELECT commander_id FROM departments WHERE commander_id IS NOT NULL
-                            UNION 
-                            SELECT commander_id FROM sections WHERE commander_id IS NOT NULL
-                        )
                     )
                     SELECT 
                         unit_id,
@@ -757,14 +770,14 @@ class AttendanceModel:
                                      THEN TRUE
                                      ELSE FALSE
                                END) as is_active_for_date
-                        FROM attendance_logs al
+                        FROM (SELECT * FROM attendance_logs UNION ALL SELECT * FROM attendance_logs_archive) al
                         JOIN status_types sti ON al.status_type_id = sti.id
                         WHERE al.employee_id = e.id AND DATE(al.start_datetime) <= %s
                         ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                     ) al ON al.is_active_for_date = TRUE
                     LEFT JOIN status_types st ON al.status_type_id = st.id
                     WHERE e.is_active = TRUE 
-                    AND e.personal_number != 'admin' 
+                    AND e.username != 'admin' 
                     AND e.id != %s
                     AND e.id NOT IN (
                         SELECT commander_id FROM departments WHERE commander_id IS NOT NULL
@@ -861,7 +874,7 @@ class AttendanceModel:
                     LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                     LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
                     LEFT JOIN service_types srv ON e.service_type_id = srv.id
-                    WHERE e.is_active = TRUE AND e.personal_number != 'admin' AND e.id != %s {scoping_clause}
+                    WHERE e.is_active = TRUE AND e.username != 'admin' AND e.id != %s {scoping_clause}
                 )
                 SELECT 
                     TO_CHAR(p.date, 'DD/MM') as date_str,
@@ -872,7 +885,7 @@ class AttendanceModel:
                         FROM scoped_employees se
                         LEFT JOIN LATERAL (
                             SELECT st.is_presence, st.id
-                            FROM attendance_logs al
+                            FROM (SELECT * FROM attendance_logs UNION ALL SELECT * FROM attendance_logs_archive) al
                             JOIN status_types st ON al.status_type_id = st.id
                             WHERE al.employee_id = se.id
                             AND DATE(al.start_datetime) <= p.date 
@@ -903,29 +916,17 @@ class AttendanceModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
-            # Smart Continuity Logic - matches the Work Roster (סידור עבודה)
-            # Find the LATEST log that started on or before target date
-            # Then check if it is still active for target date
-            # "לא דווח" = employee has NO active status entry
-            status_condition = """(
-                DATE(al.start_datetime) <= %(target_date)s
-            )"""
-
-            target_date = (filters or {}).get("date") or date.today().strftime(
-                "%Y-%m-%d"
-            )
+            target_date = (filters or {}).get("date") or date.today().strftime("%Y-%m-%d")
 
             # Build scoping conditions dynamically
-            scope_conditions = ["e.is_active = TRUE", "e.personal_number != 'admin'"]
+            scope_conditions = ["e.is_active = TRUE", "e.username != 'admin'"]
             scope_params = {"target_date": target_date}
 
             # 1. Base Scoping (Security)
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
                     scope_conditions.append("d.id = %(cmd_dept_id)s")
-                    scope_params["cmd_dept_id"] = requesting_user[
-                        "commands_department_id"
-                    ]
+                    scope_params["cmd_dept_id"] = requesting_user["commands_department_id"]
                 elif requesting_user.get("commands_section_id"):
                     scope_conditions.append("s.id = %(cmd_sec_id)s")
                     scope_params["cmd_sec_id"] = requesting_user["commands_section_id"]
@@ -956,14 +957,10 @@ class AttendanceModel:
                     scope_conditions.append("srv.name = ANY(%(srv_list)s)")
                     scope_params["srv_list"] = srv_list
                 if filters.get("min_age"):
-                    scope_conditions.append(
-                        "EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) >= %(min_age)s"
-                    )
+                    scope_conditions.append("EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) >= %(min_age)s")
                     scope_params["min_age"] = int(filters["min_age"])
                 if filters.get("max_age"):
-                    scope_conditions.append(
-                        "EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) <= %(max_age)s"
-                    )
+                    scope_conditions.append("EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) <= %(max_age)s")
                     scope_params["max_age"] = int(filters["max_age"])
 
             # Exclude requesting user (Commander/Admin) from stats
@@ -973,9 +970,9 @@ class AttendanceModel:
 
             scope_where = " AND ".join(scope_conditions)
 
-            # Full query using CTE to first scope then find status
-            # This ensures "לא דווח" employees are counted correctly
-            # Sub-statuses (e.g. מהבית, מתקן חיצוני, בשטח) are GROUPED under their parent (משרד) in chart
+            requesting_user_id = requesting_user.get("id") if requesting_user else None
+            table_source = AttendanceModel._get_log_source(requesting_user_id, target_date)
+
             query = f"""
                 WITH scoped_employees AS (
                     SELECT e.id
@@ -999,11 +996,12 @@ class AttendanceModel:
                             THEN last_log.status_type_id 
                             ELSE NULL 
                         END) as status_type_id,
-                        last_log.is_verified
+                        last_log.is_verified,
+                        last_log.note
                     FROM scoped_employees se
                     LEFT JOIN LATERAL (
-                        SELECT al.status_type_id, al.is_verified, al.start_datetime, al.end_datetime, sti.is_persistent
-                        FROM attendance_logs al
+                        SELECT al.status_type_id, al.is_verified, al.start_datetime, al.end_datetime, sti.is_persistent, al.note
+                        FROM {table_source} al
                         JOIN status_types sti ON al.status_type_id = sti.id
                         WHERE al.employee_id = se.id
                         AND DATE(al.start_datetime) <= %(target_date)s
@@ -1012,16 +1010,14 @@ class AttendanceModel:
                 )
                 SELECT
                     st.id as status_id,
-                    st.name as status_name,
+                    (CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF(es.note, ''), 'אחר') ELSE st.name END) as status_name,
                     COUNT(es.emp_id) as count,
                     COUNT(CASE WHEN es.is_verified = FALSE THEN 1 END) as unverified_count,
                     st.color as color
                 FROM employee_status es
                 JOIN status_types st ON es.status_type_id = st.id
-                GROUP BY st.id, st.name, st.color
-
+                GROUP BY st.id, (CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF(es.note, ''), 'אחר') ELSE st.name END), st.color
                 UNION ALL
-
                 SELECT
                     NULL as status_id,
                     'לא דווח' as status_name,
@@ -1031,7 +1027,6 @@ class AttendanceModel:
                 FROM employee_status es
                 WHERE es.status_type_id IS NULL
                 HAVING COUNT(es.emp_id) > 0
-
                 ORDER BY count DESC
             """
 
@@ -1045,7 +1040,6 @@ class AttendanceModel:
                 WHERE {scope_where}
             """
 
-            # 3. Age Distribution and Average Age
             age_query = f"""
                 WITH scoped_ages AS (
                     SELECT 
@@ -1090,23 +1084,25 @@ class AttendanceModel:
                 cur.execute(age_query, scope_params)
                 age_data = cur.fetchall()
                 avg_age = age_data[0]["avg_age"] if age_data else 0
-                age_distribution = [
-                    {"range": r["range_label"], "count": r["count"]} for r in age_data
-                ]
+                age_distribution = [{"range": r["range_label"], "count": r["count"]} for r in age_data]
 
-                print(
-                    f"[DEBUG] Dashboard stats: {len(stats)} status groups, {total_employees} total employees"
-                )
+                # Check for archive access
+                has_archive_access = False
+                if requesting_user_id and target_date:
+                    from app.models.archive_model import ArchiveModel
+                    has_archive_access = ArchiveModel.check_access(requesting_user_id, target_date)
+
                 return {
                     "stats": stats,
                     "total_employees": total_employees,
                     "age_distribution": age_distribution,
                     "average_age": avg_age,
+                    "has_archive_access": has_archive_access,
+                    "table_source": table_source
                 }
             except Exception as e:
                 print(f"SQL Error in get_dashboard_stats: {e}")
                 import traceback
-
                 traceback.print_exc()
                 raise e
         finally:
@@ -1127,7 +1123,7 @@ class AttendanceModel:
                 LEFT JOIN teams t ON e.team_id = t.id
                 LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                 LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
-                WHERE e.is_active = TRUE AND e.birth_date IS NOT NULL AND e.personal_number != 'admin'
+                WHERE e.is_active = TRUE AND e.birth_date IS NOT NULL AND e.username != 'admin'
             """
             params = []
 
@@ -1225,7 +1221,7 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def get_logs_for_employees(employee_ids, start_date, end_date):
+    def get_logs_for_employees(employee_ids, start_date, end_date, requesting_user_id=None):
         conn = get_db_connection()
         if not conn:
             return []
@@ -1238,7 +1234,8 @@ class AttendanceModel:
             # 3. If NOT persistent, must have started on one of the days in the range
             # Instead of a complex multi-join for each day, we fetch logs that meet basic Smart Continuity
             # criteria for the WHOLE range.
-            query = """
+            table_source = AttendanceModel._get_log_source(requesting_user_id, start_date)
+            query = f"""
                 SELECT 
                     al.id as log_id,
                     al.employee_id,
@@ -1248,7 +1245,7 @@ class AttendanceModel:
                     al.start_datetime,
                     al.end_datetime,
                     al.is_verified
-                FROM attendance_logs al
+                FROM {table_source} al
                 JOIN status_types st ON al.status_type_id = st.id
                 WHERE al.employee_id = ANY(%s)
                 AND DATE(al.start_datetime) <= %s 
@@ -1356,7 +1353,7 @@ class AttendanceModel:
                     e.id,
                     e.first_name,
                     e.last_name,
-                    e.personal_number,
+                    e.username,
                     CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF(last_log.note, ''), st.name) ELSE st.name END as status_name,
                     st.color as status_color,
                     last_log.start_datetime,
@@ -1386,7 +1383,7 @@ class AttendanceModel:
                     ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                 ) last_log ON last_log.is_active_for_date = TRUE
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
-                WHERE e.is_active = TRUE AND e.personal_number != 'admin'
+                WHERE e.is_active = TRUE AND e.username != 'admin'
             """
 
             # 1. Base Scoping (Security)

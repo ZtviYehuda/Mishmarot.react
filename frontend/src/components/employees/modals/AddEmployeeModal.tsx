@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import type { CreateEmployeePayload } from "@/types/employee.types";
 import {
   Loader2,
@@ -21,6 +22,7 @@ import {
   ShieldCheck,
   Check,
   ArrowLeft,
+  KeyRound,
 } from "lucide-react";
 
 interface AddEmployeeModalProps {
@@ -35,11 +37,12 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   onAdd,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
   const [formData, setFormData] = useState<CreateEmployeePayload>({
     first_name: "",
     last_name: "",
-    personal_number: "",
-    national_id: "",
+    username: "",
+    password: "",
     phone_number: "",
     email: "",
     city: "",
@@ -55,15 +58,19 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const success = await onAdd(formData);
+    const payload = hasAccess
+      ? formData
+      : { ...formData, username: "", password: "" };
+    const success = await onAdd(payload);
     setLoading(false);
     if (success) {
       onOpenChange(false);
+      setHasAccess(false);
       setFormData({
         first_name: "",
         last_name: "",
-        personal_number: "",
-        national_id: "",
+        username: "",
+        password: "",
         phone_number: "",
         email: "",
         city: "",
@@ -156,32 +163,61 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                     className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
                   />
                 </InputGroup>
-                <InputGroup label="מספר אישי *" icon={ShieldCheck}>
-                  <Input
-                    value={formData.personal_number}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        personal_number: e.target.value,
-                      })
-                    }
-                    required
-                    placeholder="מ״א"
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono tracking-widest transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
-                  />
-                </InputGroup>
-                <InputGroup label="תעודת זהות *" icon={ShieldCheck}>
-                  <Input
-                    value={formData.national_id}
-                    onChange={(e) =>
-                      setFormData({ ...formData, national_id: e.target.value })
-                    }
-                    required
-                    placeholder="ת״ז"
-                    className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono tracking-widest transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
-                  />
-                </InputGroup>
               </div>
+
+              {/* System Access Toggle */}
+              <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                hasAccess
+                  ? "bg-primary/5 border-primary/20"
+                  : "bg-muted/20 border-border/50"
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                    hasAccess ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                  }`}>
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-foreground leading-none">גישה למערכת</p>
+                    <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
+                      רק מפקדים ומשתמשים מורשים זקוקים לגישה
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={hasAccess}
+                  onCheckedChange={setHasAccess}
+                />
+              </div>
+
+              {/* Username & Password – only when access is granted */}
+              {hasAccess && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <InputGroup label="שם משתמש *" icon={ShieldCheck}>
+                    <Input
+                      value={formData.username}
+                      onChange={(e) =>
+                        setFormData({ ...formData, username: e.target.value })
+                      }
+                      required={hasAccess}
+                      placeholder="username"
+                      className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono tracking-widest transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
+                    />
+                  </InputGroup>
+                  <InputGroup label="סיסמה ראשונית *" icon={ShieldCheck}>
+                    <Input
+                      type="password"
+                      value={formData.password || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      required={hasAccess}
+                      placeholder="לפחות 6 תווים"
+                      className="h-11 bg-muted/30 border-border/50 focus:ring-4 focus:ring-primary/10 rounded-2xl text-right font-black text-sm font-mono tracking-widest transition-all dark:bg-slate-900/50 dark:text-white dark:border-white/10 dark:placeholder:text-muted-foreground/50"
+                    />
+                  </InputGroup>
+                </div>
+              )}
             </div>
 
             <div className="h-px bg-border/40 w-full" />

@@ -6,7 +6,6 @@ export interface TransferRequest {
   id: number;
   employee_id: number;
   employee_name: string;
-  personal_number: string;
   source_type: string;
   source_id: number;
   source_name: string;

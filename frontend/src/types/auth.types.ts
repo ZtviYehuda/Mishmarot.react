@@ -2,7 +2,7 @@ export interface AuthUser {
   id: number;
   first_name: string;
   last_name: string;
-  personal_number: string;
+  username: string;
   phone_number: string | null;
   email?: string | null;
   must_change_password: boolean;
@@ -28,7 +28,6 @@ export interface AuthUser {
   role_name?: string | null;
   service_type_name?: string | null;
   is_impersonated?: boolean;
-  national_id?: string | null;
   enlistment_date?: string | null;
   discharge_date?: string | null;
   assignment_date?: string | null;

@@ -6,7 +6,7 @@ interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   error: string | null;
-  login: (personal_number: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: (hard?: boolean) => void;
   changePassword: (newPassword: string) => Promise<boolean>;
   refreshUser: () => Promise<void>;

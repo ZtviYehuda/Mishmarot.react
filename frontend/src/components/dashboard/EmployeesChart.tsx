@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Filter, Download, Activity, ShieldCheck } from "lucide-react";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
-import { Badge } from "@/components/ui/badge";
 import {
   BarChart,
   Bar,
@@ -24,7 +23,7 @@ import {
 } from "recharts";
 import { toPng, toBlob } from "html-to-image";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, subDays, isBefore } from "date-fns";
 
 interface EmployeesChartProps {
   stats: {
@@ -51,6 +50,8 @@ interface EmployeesChartProps {
     count: number;
     color: string;
   }[];
+  hasArchiveAccess?: boolean;
+  onRequestRestore?: () => void;
 }
 
 export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
@@ -69,6 +70,8 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       totalInUnit = 0,
       availableCount,
       reportedPct,
+      hasArchiveAccess = false,
+      onRequestRestore,
     },
     ref,
   ) => {
@@ -195,9 +198,9 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
     };
 
     // Process stats into chart data
-    const { chartData, total, reportedCount } = useMemo(() => {
+    const { chartData, total, computedAvailableCount, computedUnavailableCount } = useMemo(() => {
       if (!stats || stats.length === 0)
-        return { chartData: [], total: 0, reportedCount: 0 };
+        return { chartData: [], total: 0, computedAvailableCount: 0, computedUnavailableCount: 0 };
 
       // Logical/Operational priority ordering
       const priorityMap: Record<string, number> = {
@@ -240,11 +243,22 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
           viewTotal > 0 ? Math.round((item.count / viewTotal) * 100) : 0,
       }));
 
-      const notReportedCount =
-        stats.find((s) => s.status_name === "לא דווח")?.count || 0;
-      const reportedCount = baseTotal - notReportedCount;
+      const availableKeywords = ["משרד", "תגבור", "קורס"];
+      let computedAvailableCount = 0;
+      let computedUnavailableCount = 0;
+      
+      data.forEach(item => {
+        if (item.name !== "לא דווח") {
+          // available exactly if it contains one of the keywords
+          if (availableKeywords.some(kw => item.name.includes(kw))) {
+            computedAvailableCount += item.value;
+          } else {
+            computedUnavailableCount += item.value;
+          }
+        }
+      });
 
-      return { chartData: data, total: baseTotal, reportedCount }; // total here is what we show in the center
+      return { chartData: data, total: baseTotal, computedAvailableCount, computedUnavailableCount }; // total here is what we show in the center
     }, [stats, totalInUnit]);
 
     const CustomTooltip = ({ active, payload }: any) => {
@@ -262,6 +276,9 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       }
       return null;
     };
+
+    const archiveThreshold = useMemo(() => subDays(new Date(), 30), []);
+    const isOldData = useMemo(() => isBefore(selectedDate, archiveThreshold), [selectedDate, archiveThreshold]);
 
     if (loading) {
       return (
@@ -300,7 +317,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                     variant="ghost"
                     size="icon"
                     onClick={onFilterClick}
-                    className="lg:hidden h-9 w-9 p-0 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-500 hover:text-primary transition-colors border border-slate-200/50 dark:border-slate-700/50"
+                    className="lg:hidden h-9 w-9 p-0 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-500 hover:text-primary transition-colors border border-border/40"
                     title="סינון נתונים"
                   >
                     <Filter className="w-4 h-4" />
@@ -312,7 +329,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 text-slate-500 hover:text-primary rounded-xl transition-all bg-slate-50 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50"
+                    className="h-9 w-9 text-slate-500 hover:text-primary rounded-xl transition-all bg-slate-50 dark:bg-slate-800 border border-border/40"
                     onClick={handleDownload}
                     title="הורדה כתמונה"
                   >
@@ -353,7 +370,23 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
           </div>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col min-h-0 relative p-4 sm:p-6">
-          {total === 0 ? (
+          {isOldData && !hasArchiveAccess ? (
+            <div className="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-4">
+              <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 rounded-full flex items-center justify-center">
+                <ShieldCheck className="w-8 h-8 text-amber-600" />
+              </div>
+              <div className="space-y-2 max-w-xs">
+                <p className="font-black text-slate-800 dark:text-slate-100 uppercase tracking-wide">הנתונים בארכיון</p>
+                <p className="text-xs font-bold text-slate-500 leading-relaxed">הנתונים לתאריך זה הועברו לארכיון מטעמי אבטחה. ניתן להגיש בקשת שחזור לצפייה בנתונים.</p>
+              </div>
+              <Button 
+                onClick={onRequestRestore}
+                className="font-black rounded-xl bg-primary hover:bg-primary/90 text-white px-8"
+              >
+                בקשת שחזור נתונים
+              </Button>
+            </div>
+          ) : total === 0 ? (
             <div className="flex-1 flex items-center justify-center py-12 text-center">
               <p className="text-sm text-muted-foreground font-bold">
                 אין נתונים להצגה
@@ -369,7 +402,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart
-                      margin={{ top: 10, right: 30, bottom: 10, left: 30 }}
+                      margin={{ top: 50, right: 50, bottom: 50, left: 50 }}
                     >
                       <Pie
                         data={chartData}
@@ -390,35 +423,36 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                             <g className="cursor-pointer select-none">
                               <text
                                 x={x}
-                                y={y - 14}
+                                y={y - 16}
                                 fill="currentColor"
                                 className="fill-muted-foreground/60"
                                 textAnchor="middle"
                                 dominantBaseline="middle"
-                                fontSize="11"
+                                fontSize="13"
                                 fontWeight="800"
                               >
                                 {props.payload.name}
                               </text>
                               <text
                                 x={x}
-                                y={y + 1}
+                                y={y + 2}
                                 fill="currentColor"
                                 className="fill-foreground font-black"
                                 textAnchor="middle"
                                 dominantBaseline="middle"
-                                fontSize="13"
+                                fontSize="15"
+                                fontWeight="900"
                               >
                                 {props.payload.value}
                               </text>
                               <text
                                 x={x}
-                                y={y + 13}
+                                y={y + 17}
                                 fill="currentColor"
                                 className="fill-primary/50"
                                 textAnchor="middle"
                                 dominantBaseline="middle"
-                                fontSize="10"
+                                fontSize="12"
                                 fontWeight="700"
                               >
                                 {props.payload.percentage}%
@@ -459,62 +493,14 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
 
               {/* Mobile View: Bar Rows & Progress Bar */}
               <div className="sm:hidden space-y-6">
-                {/* Manpower Summary Row (Kodkod style) */}
-                <div className="bg-muted/30 dark:bg-slate-900/40 rounded-[2rem] p-5 border border-border/10">
-                  <div className="flex flex-col gap-4 mb-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                        <div className="w-1.5 h-6 bg-primary rounded-full" />
-                        כוח אדם
-                      </h3>
-                      <Badge
-                        variant="secondary"
-                        className="h-7 px-3 bg-indigo-500 text-white font-black text-[11px] rounded-full  border-none"
-                      >
-                        {Math.round((reportedCount / (total || 1)) * 100)}%
-                        דווחו
-                      </Badge>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] font-black tracking-tight">
-                      <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 px-2 py-1 rounded-lg">
-                        <span>{reportedCount}</span>
-                        <span className="opacity-70">מעודכנים</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-lg">
-                        <span>{total}</span>
-                        <span className="opacity-70">סה"כ תקן</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Availability Bar */}
-                  <div className="relative h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex flex-row-reverse">
-                    {chartData.map((item) => (
-                      <div
-                        key={item.id}
-                        className="h-full transition-all duration-500"
-                        style={{
-                          width: `${item.percentage}%`,
-                          backgroundColor: item.fill,
-                          opacity: item.name === "לא דווח" ? 0.3 : 1,
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between mt-3 px-1 text-[10px] font-black text-muted-foreground uppercase tracking-tighter">
-                    <span>לא זמינים</span>
-                    <span>זמינים</span>
-                  </div>
-                </div>
+                {/* Manpower Summary Row has been removed based on user request */}
 
                 {/* Status Bar Chart (Mobile) */}
-                <div className="h-[250px] w-full mt-2">
+                <div className="h-[250px] w-full mt-2 pt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={chartData}
-                      margin={{ top: 20, right: 0, left: 0, bottom: 0 }}
+                      margin={{ top: 25, right: 0, left: 0, bottom: 0 }}
                       onClick={(data: any) => {
                         if (
                           data &&
@@ -537,7 +523,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                         }}
                         interval={0}
                       />
-                      <YAxis hide />
+                      <YAxis hide domain={[0, 'dataMax + 10']} />
                       <Tooltip
                         cursor={{ fill: "transparent" }}
                         content={({ active, payload }) => {
@@ -582,23 +568,15 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                       זמינים
                     </span>
                     <span className="text-sm font-black text-emerald-600">
-                      {chartData.find(
-                        (d) =>
-                          d.name === "נוכחים" ||
-                          d.name === "זמין" ||
-                          d.name === "נוכח",
-                      )?.value ||
-                        total -
-                        (chartData.find((d) => d.name === "לא דווח")?.value ||
-                          0)}
+                      {computedAvailableCount}
                     </span>
                   </div>
                   <div className="bg-rose-50 dark:bg-rose-950/20 p-2 rounded-xl border border-rose-100 dark:border-rose-900/30 text-center">
                     <span className="block text-[8px] font-black text-rose-600/70 uppercase mb-0.5">
-                      חוסרים
+                      לא זמינים
                     </span>
                     <span className="text-sm font-black text-rose-600">
-                      {chartData.find((d) => d.name === "לא דווח")?.value || 0}
+                      {computedUnavailableCount}
                     </span>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800 text-center">

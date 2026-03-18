@@ -1,53 +1,53 @@
 import axios from "axios";
-const getBaseUrl = () => {
-  // Use relative path to leverage Vite's proxy.
-  // This solves Mixed Content (HTTPS tunnel -> HTTP localhost)
-  // and CORS/PNA issues by making the request Same-Origin.
-  return "/api";
-};
 
-export const API_URL = getBaseUrl();
+export const API_URL = "/api";
 
+// ── Simple in-memory cache for GET requests ───────────────────────────────────
+// Avoids refetching reference data (statusTypes, structure, etc.)
+// within a short window. TTL = 30 seconds.
+const _cache = new Map<string, { data: any; ts: number }>();
+const CACHE_TTL = 30_000; // ms
+
+export function getCached<T>(key: string): T | null {
+  const entry = _cache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > CACHE_TTL) { _cache.delete(key); return null; }
+  return entry.data as T;
+}
+
+export function setCache(key: string, data: any) {
+  _cache.set(key, { data, ts: Date.now() });
+}
+
+export function invalidateCache(pattern?: string) {
+  if (!pattern) { _cache.clear(); return; }
+  for (const key of Array.from(_cache.keys())) {
+    if (key.includes(pattern)) _cache.delete(key);
+  }
+}
+
+// ── Axios instance ────────────────────────────────────────────────────────────
 const apiClient = axios.create({
   baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
+  // Reasonable timeout so hung requests don't block the UI
+  timeout: 15_000,
 });
 
-// 1. Request Interceptor: Automatically add the Token
+// Request interceptor — attach token (no console.log in production)
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log(
-        `[API] ${config.method?.toUpperCase()} ${config.url} - Token attached`,
-      );
-    } else {
-      console.log(
-        `[API] ${config.method?.toUpperCase()} ${config.url} - No token`,
-      );
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => {
-    console.error("[API] Request error:", error);
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
-// 2. Response Interceptor: Handle 401 (Logout if token expires)
+// Response interceptor — handle 401, no console.log spam
 apiClient.interceptors.response.use(
-  (response) => {
-    console.log(`[API] ${response.status} ${response.config.url}`);
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    console.error(
-      `[API] Error: ${error.response?.status} ${error.config?.url}`,
-      error.response?.data,
-    );
     if (
       error.response?.status === 401 &&
       !error.config?.url?.includes("/auth/login")

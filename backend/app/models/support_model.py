@@ -11,15 +11,14 @@ class SupportModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
-                INSERT INTO support_tickets (full_name, personal_number, subject, message)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO support_tickets (full_name, subject, message)
+                VALUES (%s, %s, %s)
                 RETURNING id
             """
             cur.execute(
                 query,
                 (
                     data.get("full_name"),
-                    data.get("personal_number"),
                     data.get("subject"),
                     data.get("message"),
                 ),

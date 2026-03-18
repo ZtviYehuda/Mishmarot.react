@@ -204,7 +204,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
         `${emp.first_name} ${emp.last_name}`
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        String(emp.personal_number).includes(searchTerm);
+        String(emp.username).includes(searchTerm);
 
       const matchesService =
         filterServiceType === "all" ||
@@ -271,7 +271,14 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     const success = await logBulkStatus(updates);
 
     if (success) {
-      toast.success("כלל הסטטוסים עודכנו בהצלחה");
+      const updatedCount = updates.length;
+      if (updatedCount === 1) {
+        toast.success("הסטטוס עודכן בהצלחה");
+      } else if (updatedCount === employees.length) {
+        toast.success(`כלל הסטטוסים עודכנו בהצלחה (${updatedCount} שוטרים)`);
+      } else {
+        toast.success(`${updatedCount} סטטוסים עודכנו בהצלחה`);
+      }
       if (onSuccess) onSuccess();
       onOpenChange(false);
     }
@@ -797,7 +804,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                   </span>
                                   <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
                                     <span className="bg-muted/50 px-1.5 py-0.5 rounded-md tracking-wider font-mono">
-                                      {emp.personal_number}
+                                      {emp.username}
                                     </span>
                                     {emp.service_type_name && (
                                       <>
@@ -1091,7 +1098,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               </h4>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-[10px] font-bold text-muted-foreground/60 tracking-tighter">
-                                  {emp.personal_number}
+                                  {emp.username}
                                 </span>
                                 {hasStatus && (
                                   <div

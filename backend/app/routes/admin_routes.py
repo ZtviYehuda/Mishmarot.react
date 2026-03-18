@@ -39,7 +39,7 @@ def update_backup_config():
     data = request.get_json()
     new_config = {
         "enabled": data.get("enabled"),
-        "interval_hours": data.get("interval_hours"),
+        "interval_days": data.get("interval_days"),
     }
     backup_service.save_config(new_config)
     return jsonify({"success": True, "config": backup_service.get_config()})
@@ -248,7 +248,7 @@ def backup_database():
         mem_file.seek(0)
 
         filename = (
-            f"mishmarot_backup_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            f"shiftguard_backup_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         )
 
         # Log Backup
@@ -415,5 +415,23 @@ def trigger_morning_reminders():
                 "message": "Morning reminders triggered. Check server logs/simulation.",
             }
         )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@admin_bp.route("/archive/trigger", methods=["POST"])
+@jwt_required()
+def trigger_archive_cycle():
+    """Manually trigger the data retention archive cycle"""
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        from app.utils.archive_service import run_archive_cycle
+        result = run_archive_cycle()
+        return jsonify({
+            "success": True, 
+            "message": "Archive cycle completed",
+            "details": result
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

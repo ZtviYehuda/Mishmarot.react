@@ -2,10 +2,10 @@ export interface Employee {
   id: number;
   first_name: string;
   last_name: string;
-  personal_number: string;
+  dominant_name?: string | null;
+  username: string;
   phone_number: string | null;
   email: string | null;
-  national_id?: string; // Often protected/not returned in lists
 
   // Dates (ISO Strings from backend)
   birth_date: string | null;
@@ -69,8 +69,9 @@ export interface Employee {
 export interface CreateEmployeePayload {
   first_name: string;
   last_name: string;
-  personal_number: string;
-  national_id: string;
+  dominant_name?: string | null;
+  username: string;
+  password?: string;
   gender?: "male" | "female";
   phone_number?: string;
   email?: string;

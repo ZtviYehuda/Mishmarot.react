@@ -61,6 +61,7 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
 
         now = datetime.now()
         is_sunday = now.weekday() == 6  # 6 is Sunday in Python
+        is_thursday = now.weekday() == 3 # 3 is Thursday
 
         # --- PREVENTION OF MULTIPLE RUNS PER DAY ---
         today_str = now.strftime("%Y-%m-%d")
@@ -253,8 +254,19 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
                         bday_rows += f"""<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 12px 0; text-align: right; color: #334155; font-size: 14px;">{rb['first_name']} {rb['last_name']}</td><td style="padding: 12px 0; text-align: left; color: #64748b; font-size: 13px;">יום {days_map[d.weekday()]} ({d.strftime('%d/%m')})</td></tr>"""
                     bday_html = f"""<div style="margin-top: 32px; border-top: 2px solid #f1f5f9; padding-top: 24px;"><h3 style="color: #1e293b; margin: 0 0 16px 0; font-size: 16px; font-weight: 800;">🎂 ימי הולדת השבוע ביחידה</h3><table style="width: 100%; border-collapse: collapse;">{bday_rows}</table></div>"""
 
+            # 5. Thursday Roster Reminder
+            roster_reminder_html = ""
+            if is_thursday or force_now:
+                roster_reminder_html = f"""
+                <div style="margin-bottom: 24px; padding: 16px; border-right: 4px solid #3b82f6; background-color: #f0f9ff;">
+                    <h4 style="margin: 0 0 4px 0; color: #1e40af; font-size: 15px; font-weight: 700;">📅 תזכורת סידור עבודה שבועי</h4>
+                    <p style="margin: 0; color: #1e3a8a; font-size: 13px;">
+                        יום חמישי היום! זה הזמן לוודא שכל דיווחי השבוע הושלמו ולהכין <strong>סידור עבודה לשבוע הבא</strong> במערכת.
+                    </p>
+                </div>"""
+
             # Combine Status Sections
-            status_summary_html = ""
+            status_summary_html = roster_reminder_html
             if not self_reported:
                 status_summary_html += f"""<div style="margin-bottom: 16px; padding: 16px; border-right: 4px solid #ef4444; background-color: #fafafa;"><h4 style="margin: 0 0 4px 0; color: #b91c1c; font-size: 15px; font-weight: 700;">⚠️ טרם דיווחת היום</h4><p style="margin: 0; color: #7f1d1d; font-size: 13px;">נא לעדכן את הסטטוס האישי שלך במערכת.</p></div>"""
             else:
@@ -270,8 +282,8 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
                     </p>
                 </div>"""
 
-            if not self_reported or sub_reports_found or bday_html:
-                subject = "תזכורת בוקר - מערכת משמרות"
+            if not self_reported or sub_reports_found or bday_html or is_thursday:
+                subject = "תזכורת בוקר - ShiftGuard"
                 body = f"""
                 <div dir="rtl" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 40px auto; background-color: #ffffff; color: #334155;">
                     <div style="padding: 0 20px;">
@@ -294,7 +306,7 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
                 from app.utils.email_service import send_email
 
                 if send_email(email, subject, body):
-                    reminders_sent += 1
+                    reminders_sent = reminders_sent + 1
                     sent_emails_set.add(email)
 
         # Update last run date in settings

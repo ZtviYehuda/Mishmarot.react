@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -7,46 +7,49 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useAuthContext } from "@/context/AuthContext";
-
-// Placeholder pages (build these next; use ShadCN components)
-import LoginPage from "@/pages/LoginPage";
-import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
-import SupportPage from "@/pages/SupportPage";
-import TermsPage from "@/pages/TermsPage";
-import PrivacyPage from "@/pages/PrivacyPage";
-import DashboardPage from "@/pages/DashboardPage";
-import EmployeesPage from "@/pages/EmployeesPage";
-import CreateEmployeePage from "@/pages/CreateEmployeePage";
-import EditEmployeePage from "@/pages/EditEmployeePage";
-import EmployeeViewPage from "@/pages/EmployeeViewPage";
-import TransfersPage from "@/pages/TransfersPage";
-import AttendancePage from "@/pages/AttendancePage";
-import RosterPage from "@/pages/RosterPage";
-import SettingsPage from "@/pages/SettingsPage";
-import ChangePasswordPage from "@/pages/ChangePasswordPage";
+import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import MainLayout from "@/components/layout/MainLayout";
 import { EmployeeProvider } from "@/context/EmployeeContext";
-import { LoadingScreen } from "@/components/layout/LoadingScreen";
 
+// ── Lazy-load every page so each is its own JS chunk ──────────────────────────
+// Pages load only when first navigated to → smaller initial bundle
+const LoginPage          = lazy(() => import("@/pages/LoginPage"));
+const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
+const SupportPage        = lazy(() => import("@/pages/SupportPage"));
+const TermsPage          = lazy(() => import("@/pages/TermsPage"));
+const PrivacyPage        = lazy(() => import("@/pages/PrivacyPage"));
+const DashboardPage      = lazy(() => import("@/pages/DashboardPage"));
+const EmployeesPage      = lazy(() => import("@/pages/EmployeesPage"));
+const CreateEmployeePage = lazy(() => import("@/pages/CreateEmployeePage"));
+const EditEmployeePage   = lazy(() => import("@/pages/EditEmployeePage"));
+const EmployeeViewPage   = lazy(() => import("@/pages/EmployeeViewPage"));
+const TransfersPage      = lazy(() => import("@/pages/TransfersPage"));
+const AttendancePage     = lazy(() => import("@/pages/AttendancePage"));
+const RosterPage         = lazy(() => import("@/pages/RosterPage"));
+const SettingsPage       = lazy(() => import("@/pages/SettingsPage"));
+const ChangePasswordPage = lazy(() => import("@/pages/ChangePasswordPage"));
+
+// ── Page-level suspense wrapper ───────────────────────────────────────────────
+// Keeps UX smooth: shows LoadingScreen while the chunk downloads
+function PageSuspense({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<LoadingScreen />}>{children}</Suspense>;
+}
+
+// ── Protected route ───────────────────────────────────────────────────────────
 const ProtectedRoute = () => {
   const { user, loading } = useAuthContext();
   const location = useLocation();
 
   if (loading) return <LoadingScreen />;
-
   if (!user) return <Navigate to="/login" replace />;
 
-  // Redirect to change-password if required
   if (user.must_change_password && location.pathname !== "/change-password") {
     return <Navigate to="/change-password" replace />;
   }
-
-  // Prevent going to change-password if not required
   if (!user.must_change_password && location.pathname === "/change-password") {
     return <Navigate to="/" replace />;
   }
 
-  // If on change-password, don't show the sidebar/layout
   if (location.pathname === "/change-password") {
     return (
       <EmployeeProvider>
@@ -55,13 +58,8 @@ const ProtectedRoute = () => {
     );
   }
 
-  // Redirect temp commanders away from management pages
   const managementRoutes = ["/employees", "/transfers"];
-  const isManagementRoute = managementRoutes.some((route) =>
-    location.pathname.startsWith(route),
-  );
-
-  if (user.is_temp_commander && isManagementRoute) {
+  if (user.is_temp_commander && managementRoutes.some((r) => location.pathname.startsWith(r))) {
     return <Navigate to="/" replace />;
   }
 
@@ -72,52 +70,33 @@ const ProtectedRoute = () => {
   );
 };
 
+// ── Router ────────────────────────────────────────────────────────────────────
 const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/forgot-password",
-    element: <ForgotPasswordPage />,
-  },
-  {
-    path: "/support",
-    element: <SupportPage />,
-  },
-  {
-    path: "/terms",
-    element: <TermsPage />,
-  },
-  {
-    path: "/privacy",
-    element: <PrivacyPage />,
-  },
+  { path: "/login",            element: <PageSuspense><LoginPage /></PageSuspense> },
+  { path: "/forgot-password",  element: <PageSuspense><ForgotPasswordPage /></PageSuspense> },
+  { path: "/support",          element: <PageSuspense><SupportPage /></PageSuspense> },
+  { path: "/terms",            element: <PageSuspense><TermsPage /></PageSuspense> },
+  { path: "/privacy",          element: <PageSuspense><PrivacyPage /></PageSuspense> },
   {
     element: <ProtectedRoute />,
     children: [
-      { path: "/", element: <DashboardPage /> },
-      { path: "/change-password", element: <ChangePasswordPage /> },
-      { path: "/employees", element: <EmployeesPage /> },
-      { path: "/employees/new", element: <CreateEmployeePage /> },
-      { path: "/employees/:id", element: <EmployeeViewPage /> },
-      { path: "/employees/edit/:id", element: <EditEmployeePage /> },
-      { path: "/transfers", element: <TransfersPage /> },
-      { path: "/attendance", element: <AttendancePage /> },
-      { path: "/roster", element: <RosterPage /> },
-      { path: "/settings", element: <SettingsPage /> },
+      { path: "/",                    element: <PageSuspense><DashboardPage /></PageSuspense> },
+      { path: "/change-password",     element: <PageSuspense><ChangePasswordPage /></PageSuspense> },
+      { path: "/employees",           element: <PageSuspense><EmployeesPage /></PageSuspense> },
+      { path: "/employees/new",       element: <PageSuspense><CreateEmployeePage /></PageSuspense> },
+      { path: "/employees/:id",       element: <PageSuspense><EmployeeViewPage /></PageSuspense> },
+      { path: "/employees/edit/:id",  element: <PageSuspense><EditEmployeePage /></PageSuspense> },
+      { path: "/transfers",           element: <PageSuspense><TransfersPage /></PageSuspense> },
+      { path: "/attendance",          element: <PageSuspense><AttendancePage /></PageSuspense> },
+      { path: "/roster",              element: <PageSuspense><RosterPage /></PageSuspense> },
+      { path: "/settings",            element: <PageSuspense><SettingsPage /></PageSuspense> },
     ],
   },
 ]);
 
 export function AppRouter() {
-  // Clean up old localStorage notification reads (migration)
   useEffect(() => {
-    try {
-      localStorage.removeItem("read_notifications");
-    } catch (e) {
-      console.error("Failed to cleanup notification storage:", e);
-    }
+    try { localStorage.removeItem("read_notifications"); } catch {}
   }, []);
 
   return <RouterProvider router={router} />;

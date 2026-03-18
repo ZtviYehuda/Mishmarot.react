@@ -20,8 +20,9 @@ import {
   Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
+import { useAuthContext } from "@/context/AuthContext";
 
 interface EmployeeDetailsModalProps {
   open: boolean;
@@ -87,6 +88,8 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   employee,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+  const [searchParams] = useSearchParams();
 
   if (!employee) return null;
 
@@ -98,7 +101,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       if (emp.commands_department_id || emp.department_name) return "ראש מחלקה";
       return "מפקד יחידה";
     }
-    return "שוטר";
+    return null;
   };
 
   const calculateAge = (birthDate: string) => {
@@ -145,84 +148,74 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 overflow-hidden border border-border bg-card  rounded-[2.5rem]"
+        className="w-[92vw] max-w-md p-0 overflow-hidden border border-border bg-card rounded-3xl"
         dir="rtl"
       >
-        <DialogHeader className="p-8 pb-6 border-b border-border/40 bg-gradient-to-br from-background via-background to-primary/5 text-right relative overflow-hidden">
+        <DialogHeader className="px-6 pt-8 pb-5 border-b border-border/40 bg-gradient-to-br from-background via-background to-primary/5 text-center relative overflow-hidden">
           {/* Decorative Background Elements */}
           <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -ml-16 -mt-16" />
           <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -mr-12 -mb-12" />
 
-          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-right relative z-10">
-            {/* Avatar with Integrated Status */}
+          <div className="flex flex-col items-center gap-3 relative z-10">
+            {/* Avatar */}
             <div className="relative shrink-0">
               <div
-                className="relative w-24 h-24 rounded-[2rem] bg-muted flex items-center justify-center text-4xl font-black  border-2 border-background ring-1 ring-border"
+                className="relative w-20 h-20 rounded-2xl bg-muted flex items-center justify-center text-3xl font-black border-2 border-background ring-1 ring-border"
                 style={{ color: employee.status_color || "inherit" }}
               >
                 {employee.first_name[0]}
                 {employee.last_name[0]}
-
                 {/* Status Dot */}
                 <div
-                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-4 border-background  flex items-center justify-center ring-1 ring-border"
-                  style={{
-                    backgroundColor: employee.status_color || "var(--primary)",
-                  }}
+                  className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-[3px] border-background ring-1 ring-border"
+                  style={{ backgroundColor: employee.status_color || "var(--primary)" }}
                   title={employee.status_name || "סטטוס שוטר"}
                 />
               </div>
             </div>
 
-            {/* Name & Quick Info */}
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 justify-center sm:justify-start">
-                <DialogTitle className="text-3xl sm:text-4xl font-black text-foreground tracking-tight flex items-center gap-2">
-                  {employee.first_name} {employee.last_name}
-                  {isBirthday && (
-                    <Gift className="w-6 h-6 text-pink-500 drop- animate-bounce" />
-                  )}
-                </DialogTitle>
+            {/* Name & badges */}
+            <div className="flex flex-col items-center gap-1.5">
+              <DialogTitle className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
+                {employee.first_name} {employee.last_name}
+                {isBirthday && <Gift className="w-5 h-5 text-pink-500 animate-bounce" />}
+              </DialogTitle>
 
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className="bg-primary/10 text-primary border-primary/20 font-black text-[10px] h-6 rounded-full px-3 uppercase tracking-wider"
-                  >
+              {/* Badges row */}
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                {getProfessionalTitle(employee) && (
+                  <Badge variant="secondary"
+                    className="bg-primary/10 text-primary border-primary/20 font-black text-[10px] h-5 rounded-full px-2.5 uppercase tracking-wider">
                     {getProfessionalTitle(employee)}
                   </Badge>
-                  {employee.is_commander && (
-                    <div className="p-1 px-2 bg-blue-500/10 text-blue-600 rounded-full border border-blue-500/20">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                    </div>
-                  )}
-                </div>
+                )}
+                {employee.service_type_name && (
+                  <Badge variant="outline"
+                    className="bg-blue-50 text-blue-600 border-blue-100 font-black text-[10px] h-5 rounded-full px-2.5 uppercase tracking-wider">
+                    {employee.service_type_name}
+                  </Badge>
+                )}
+                {employee.is_commander && (
+                  <div className="flex items-center gap-1 p-1 px-2 bg-blue-500/10 text-blue-600 rounded-full border border-blue-500/20">
+                    <ShieldCheck className="w-3 h-3" />
+                  </div>
+                )}
               </div>
 
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-muted-foreground/80">
-                <div className="flex items-center gap-2 text-sm font-black bg-muted/40 px-3 py-1 rounded-lg border border-border/30">
-                  <span className="text-[10px] opacity-50 font-bold uppercase tracking-widest pl-1 border-l border-border/50 ml-1">
-                    מ"א
-                  </span>
-                  <span className="tracking-widest font-mono">
-                    {employee.personal_number}
-                  </span>
+              {/* Status pill */}
+              {employee.status_name && (
+                <div className="flex items-center gap-1.5 text-xs font-bold bg-muted/50 px-3 py-1 rounded-full border border-border/40">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: employee.status_color || "var(--primary)" }} />
+                  <span className="text-muted-foreground">{employee.status_name}</span>
                 </div>
-
-                <div className="flex items-center gap-2 text-sm font-black bg-muted/40 px-3 py-1 rounded-lg border border-border/30">
-                  <span className="text-[10px] opacity-50 font-bold uppercase tracking-widest pl-1 border-l border-border/50 ml-1">
-                    סטטוס
-                  </span>
-                  <span>{employee.status_name}</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </DialogHeader>
 
-        <div className="p-8 pt-6 space-y-8 flex-1 overflow-hidden">
+        <div className="px-5 py-4 sm:p-8 sm:pt-6 space-y-5 sm:space-y-8 flex-1 overflow-hidden">
           {/* Main Info Columns */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 sm:gap-y-8 gap-x-8 sm:gap-x-12">
             <InfoItem
               icon={Phone}
               label="טלפון"
@@ -314,11 +307,31 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             <div className="space-y-5">
               <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center justify-center sm:justify-start gap-2 opacity-70">
                 <Building2 className="w-4 h-4 text-primary" />
-                ניהול ומבנה ארגוני
+                מבנה ארגוני
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {employee.department_name && (
-                  <div className="bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5  hover:border-primary/20 transition-colors group">
+                  <div
+                    onClick={() => {
+                      if (!user?.is_commander && !user?.is_admin) return;
+                      const currentDept = searchParams.get("dept");
+                      const isSelected =
+                        currentDept === employee.department_name;
+                      navigate(
+                        isSelected
+                          ? "/employees"
+                          : `/employees?dept=${encodeURIComponent(employee.department_name || "")}`,
+                      );
+                      onOpenChange(false);
+                    }}
+                    className={cn(
+                      "bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5 transition-all group",
+                      (user?.is_commander || user?.is_admin) &&
+                        "cursor-pointer hover:border-primary/40 hover:bg-primary/5 active:scale-95",
+                      searchParams.get("dept") === employee.department_name &&
+                        "border-primary bg-primary/5 ring-2 ring-primary/10",
+                    )}
+                  >
                     <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">
                       מחלקה
                     </p>
@@ -328,7 +341,27 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                   </div>
                 )}
                 {employee.section_name && (
-                  <div className="bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5  hover:border-primary/20 transition-colors group">
+                  <div
+                    onClick={() => {
+                      if (!user?.is_commander && !user?.is_admin) return;
+                      const currentSection = searchParams.get("section");
+                      const isSelected =
+                        currentSection === employee.section_name;
+                      navigate(
+                        isSelected
+                          ? "/employees"
+                          : `/employees?section=${encodeURIComponent(employee.section_name || "")}`,
+                      );
+                      onOpenChange(false);
+                    }}
+                    className={cn(
+                      "bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5 transition-all group",
+                      (user?.is_commander || user?.is_admin) &&
+                        "cursor-pointer hover:border-primary/40 hover:bg-primary/5 active:scale-95",
+                      searchParams.get("section") === employee.section_name &&
+                        "border-primary bg-primary/5 ring-2 ring-primary/10",
+                    )}
+                  >
                     <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">
                       מדור
                     </p>
@@ -338,7 +371,26 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                   </div>
                 )}
                 {employee.team_name && (
-                  <div className="bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5  hover:border-primary/20 transition-colors group">
+                  <div
+                    onClick={() => {
+                      if (!user?.is_commander && !user?.is_admin) return;
+                      const currentTeam = searchParams.get("team");
+                      const isSelected = currentTeam === employee.team_name;
+                      navigate(
+                        isSelected
+                          ? "/employees"
+                          : `/employees?team=${encodeURIComponent(employee.team_name || "")}`,
+                      );
+                      onOpenChange(false);
+                    }}
+                    className={cn(
+                      "bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5 transition-all group",
+                      (user?.is_commander || user?.is_admin) &&
+                        "cursor-pointer hover:border-primary/40 hover:bg-primary/5 active:scale-95",
+                      searchParams.get("team") === employee.team_name &&
+                        "border-primary bg-primary/5 ring-2 ring-primary/10",
+                    )}
+                  >
                     <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">
                       צוות / חוליה
                     </p>
@@ -353,7 +405,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         </div>
 
         {/* Action Footer */}
-        <div className="p-5 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row gap-3">
+        <div className="px-4 py-3 sm:p-5 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             variant="default"
             className="flex-1 gap-2 font-black   bg-primary hover:bg-primary/90 text-primary-foreground h-11 rounded-xl transition-transform active:scale-95 text-sm order-2 sm:order-1"

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import apiClient from "@/config/api.client";
+import apiClient, { getCached, setCache } from "@/config/api.client";
 import * as endpoints from "@/config/employees.endpoints";
 import * as attEndpoints from "@/config/attendance.endpoints";
 import {
@@ -28,6 +28,7 @@ export const useEmployees = () => {
       status_id_param?: number | string,
       min_age?: number,
       max_age?: number,
+      status_name?: string,
     ) => {
       setLoading(true);
       try {
@@ -39,6 +40,7 @@ export const useEmployees = () => {
           params.append("status_id", status_id.toString());
         if (status_id_param !== undefined && status_id_param !== null)
           params.append("status_id", status_id_param.toString());
+        if (status_name) params.append("status_name", status_name);
         if (section_id) params.append("section_id", section_id.toString());
         if (team_id) params.append("team_id", team_id.toString());
         if (date) params.append("date", date);
@@ -109,12 +111,13 @@ export const useEmployees = () => {
     }
   };
 
-  // Get Organization Structure
+  // Get Organization Structure (cached 30s)
   const getStructure = useCallback(async () => {
+    const cached = getCached("structure");
+    if (cached) return cached;
     try {
-      const { data } = await apiClient.get(
-        endpoints.EMPLOYEES_STRUCTURE_ENDPOINT,
-      );
+      const { data } = await apiClient.get(endpoints.EMPLOYEES_STRUCTURE_ENDPOINT);
+      setCache("structure", data);
       return data;
     } catch (err: any) {
       console.error("Failed to fetch structure", err);
@@ -122,12 +125,13 @@ export const useEmployees = () => {
     }
   }, []);
 
-  // Get Service Types
+  // Get Service Types (cached 30s)
   const getServiceTypes = useCallback(async () => {
+    const cached = getCached("serviceTypes");
+    if (cached) return cached;
     try {
-      const { data } = await apiClient.get(
-        endpoints.EMPLOYEES_SERVICE_TYPES_ENDPOINT,
-      );
+      const { data } = await apiClient.get(endpoints.EMPLOYEES_SERVICE_TYPES_ENDPOINT);
+      setCache("serviceTypes", data);
       return data;
     } catch (err: any) {
       console.error("Failed to fetch service types", err);
@@ -135,12 +139,13 @@ export const useEmployees = () => {
     }
   }, []);
 
-  // Get Status Types (Attendance)
+  // Get Status Types (Attendance) — cached 30s
   const getStatusTypes = useCallback(async () => {
+    const cached = getCached("statusTypes");
+    if (cached) return cached;
     try {
-      const { data } = await apiClient.get(
-        attEndpoints.ATTENDANCE_STATUS_TYPES_ENDPOINT,
-      );
+      const { data } = await apiClient.get(attEndpoints.ATTENDANCE_STATUS_TYPES_ENDPOINT);
+      setCache("statusTypes", data);
       return data;
     } catch (err: any) {
       console.error("Failed to fetch status types", err);
@@ -487,6 +492,20 @@ export const useEmployees = () => {
         return false;
       } finally {
         setLoading(false);
+      }
+    },
+
+    createRestoreRequest: async (date: string, reason: string) => {
+      try {
+        await apiClient.post("/api/archive/restore-request", {
+          start_date: date,
+          end_date: date,
+          reason,
+        });
+        return true;
+      } catch (err: any) {
+        console.error("Failed to create restore request", err);
+        throw err;
       }
     },
   };

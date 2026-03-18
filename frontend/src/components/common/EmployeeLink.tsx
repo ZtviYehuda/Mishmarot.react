@@ -25,7 +25,7 @@ export const EmployeeLink: React.FC<EmployeeLinkProps> = ({
   const displayName =
     name ||
     (typeof employee === "object"
-      ? `${employee.first_name} ${employee.last_name}`
+      ? (employee.dominant_name ? `${employee.dominant_name} ${employee.last_name}` : `${employee.first_name} ${employee.last_name}`)
       : `שוטר #${employee}`);
 
   return (

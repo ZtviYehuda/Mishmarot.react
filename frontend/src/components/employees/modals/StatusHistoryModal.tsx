@@ -43,7 +43,7 @@ export default function StatusHistoryModal({
                 </span>
                 <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                 <span className="text-[10px] font-bold text-muted-foreground font-mono tracking-widest">
-                  {employee.personal_number}
+                  {employee.username}
                 </span>
               </div>
             </div>

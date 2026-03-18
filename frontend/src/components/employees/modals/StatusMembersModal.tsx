@@ -99,7 +99,7 @@ export const StatusMembersModal: React.FC<StatusMembersModalProps> = ({
                 <thead>
                   <tr className="bg-muted/30 border-b border-border/50">
                     <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">
-                      שוטר / מ"א
+                      שוטר / שם משתמש
                     </th>
                     <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">
                       שיוך ארגוני
@@ -128,7 +128,7 @@ export const StatusMembersModal: React.FC<StatusMembersModalProps> = ({
                             />
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-bold text-muted-foreground/60 font-mono tracking-widest">
-                                {emp.personal_number}
+                                {emp.username}
                               </span>
                               {emp.is_commander && (
                                 <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black px-1.5 h-4 hover:bg-primary/20">

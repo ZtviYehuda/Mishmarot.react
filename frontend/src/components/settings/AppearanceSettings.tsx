@@ -36,7 +36,7 @@ export function AppearanceSettings({
   ];
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1600px] mx-auto pb-24 lg:pb-0">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full pb-24 lg:pb-0">
       <div className="grid grid-cols-12 gap-4 sm:gap-8">
         {/* Main Settings Area */}
         <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-8">
@@ -50,7 +50,7 @@ export function AppearanceSettings({
                     "group relative h-32 sm:h-48 rounded-[1.5rem] sm:rounded-[2rem] border-2 transition-all duration-500 overflow-hidden",
                     theme === t
                       ? "border-primary bg-primary/5 ring-4 ring-primary/5"
-                      : "border-border/50 bg-background/50 hover:border-primary/20",
+                      : "border-border/40 bg-background/50 hover:border-border/40",
                   )}
                 >
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8">
@@ -95,7 +95,7 @@ export function AppearanceSettings({
                   className={cn(
                     "flex flex-col items-center gap-2 p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all",
                     accentColor === color.id
-                      ? "bg-primary/10 border border-primary/20"
+                      ? "bg-primary/10 border border-border/40"
                       : "hover:bg-muted/50 border border-transparent",
                   )}
                 >
@@ -126,7 +126,7 @@ export function AppearanceSettings({
                     "group relative p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] border-2 flex flex-col items-center gap-2 sm:gap-3 transition-all duration-500",
                     fontSize === size.id
                       ? "border-primary bg-primary/5 ring-4 ring-primary/5"
-                      : "border-border/50 bg-background/50 hover:border-primary/20",
+                      : "border-border/40 bg-background/50 hover:border-border/40",
                   )}
                 >
                   <span
@@ -163,7 +163,7 @@ export function AppearanceSettings({
         {/* Info Area */}
         <div className="col-span-12 lg:col-span-4 space-y-4 sm:space-y-8">
           <SectionCard icon={Monitor} title="תצוגה מקדימה">
-            <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10 relative overflow-hidden group">
+            <div className="p-6 rounded-3xl bg-primary/5 border border-border/40 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-primary/20" />
               <p className="text-sm font-black text-primary leading-relaxed relative z-10 transition-colors group-hover:text-primary/100">
                 שינויי העיצוב משפיעים על כל דפי המערכת באופן מיידי ומסונכרנים עם
@@ -184,9 +184,9 @@ function SectionCard({ icon: Icon, title, children }: any) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border border-primary/10 overflow-hidden"
+      className="bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border border-border/40 overflow-hidden"
     >
-      <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-primary/10 bg-primary/5 flex items-center gap-2 sm:gap-3">
+      <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-border/40 bg-primary/5 flex items-center gap-2 sm:gap-3">
         <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-primary/10 text-primary">
           <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>

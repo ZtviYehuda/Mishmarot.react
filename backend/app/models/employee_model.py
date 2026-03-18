@@ -6,7 +6,7 @@ from psycopg2.extras import RealDictCursor
 
 class EmployeeModel:
     @staticmethod
-    def login_check(personal_number, password_input):
+    def login_check(username, password_input):
         conn = get_db_connection()
         if not conn:
             return None
@@ -14,52 +14,53 @@ class EmployeeModel:
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
             # --- 1. Check for active or expired delegations (Replacement Commander) ---
-            # We check for the latest delegation for this person (by PN)
             cur.execute(
                 """
                 SELECT d.id, d.temp_password_hash, d.start_date, d.end_date, d.is_active,
-                       e.id as emp_id, e.first_name, e.last_name, e.personal_number,
+                       e.id as emp_id, e.first_name, e.last_name, e.dominant_name, e.username,
                        e.theme, e.accent_color, e.font_size
                 FROM delegations d
                 JOIN employees e ON d.delegate_id = e.id
-                WHERE e.personal_number = %s AND e.is_active = TRUE
+                WHERE e.username = %s AND e.is_active = TRUE
                 ORDER BY d.created_at DESC LIMIT 1
             """,
-                (personal_number,),
+                (username,),
             )
             delegation = cur.fetchone()
 
             if delegation and delegation["temp_password_hash"]:
-                # Check if password matches temp hash
                 if check_password_hash(
                     delegation["temp_password_hash"], password_input
                 ):
-                    # Password matches! Now check if it's expired
                     now_date = datetime.now().date()
-
                     is_expired = False
                     if not delegation["is_active"]:
                         is_expired = True
-                    if delegation["start_date"] > now_date:
-                        is_expired = True  # Not started yet
-                    if delegation["end_date"] and delegation["end_date"] < now_date:
-                        is_expired = True  # Already finished
+                    start_val = delegation["start_date"]
+                    start_d = start_val.date() if hasattr(start_val, "date") else start_val
+                    if start_d > now_date:
+                        is_expired = True
+                        
+                    if delegation["end_date"]:
+                        end_val = delegation["end_date"]
+                        end_d = end_val.date() if hasattr(end_val, "date") else end_val
+                        if end_d < now_date:
+                            is_expired = True
 
                     if is_expired:
-                        # User matched the temp password but it's expired
                         return {
                             "error": "EXPIRED_DELEGATION",
                             "message": "אינך יכול להיכנס למערכת - תוקף המינוי הזמני פג",
                         }
 
-                    # Valid temp login!
                     user = {
                         "id": delegation["emp_id"],
                         "first_name": delegation["first_name"],
                         "last_name": delegation["last_name"],
-                        "personal_number": delegation["personal_number"],
-                        "is_admin": False,  # Temp commanders aren't admins
-                        "is_commander": True,  # They act as commander
+                        "dominant_name": delegation["dominant_name"],
+                        "username": delegation["username"],
+                        "is_admin": False,
+                        "is_commander": True,
                         "is_temp_commander": True,
                         "theme": delegation["theme"],
                         "accent_color": delegation["accent_color"],
@@ -70,13 +71,13 @@ class EmployeeModel:
 
             # --- 2. Standard Login ---
             query = """
-                SELECT id, first_name, last_name, personal_number, 
+                SELECT id, first_name, last_name, dominant_name, username,
                        password_hash, must_change_password, is_admin, is_commander,
                        theme, accent_color, font_size
                 FROM employees 
-                WHERE personal_number = %s AND is_active = TRUE
+                WHERE username = %s AND is_active = TRUE
             """
-            cur.execute(query, (personal_number,))
+            cur.execute(query, (username,))
             user = cur.fetchone()
 
             if user:
@@ -85,15 +86,6 @@ class EmployeeModel:
                     user["password_hash"], password_input
                 ):
                     is_valid = True
-
-                # First-time login check (National ID)
-                if not is_valid and user.get("must_change_password"):
-                    cur.execute(
-                        "SELECT national_id FROM employees WHERE id = %s", (user["id"],)
-                    )
-                    nid_row = cur.fetchone()
-                    if nid_row and nid_row["national_id"] == password_input:
-                        is_valid = True
 
                 if is_valid:
                     del user["password_hash"]
@@ -110,8 +102,8 @@ class EmployeeModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
-                SELECT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number,
-                       e.national_id, e.email, e.birth_date, e.city, e.emergency_contact,
+                SELECT e.id, e.first_name, e.last_name, e.dominant_name, e.username, e.phone_number,
+                       e.email, e.birth_date, e.city, e.emergency_contact,
                        e.enlistment_date, e.discharge_date, e.assignment_date,
                        e.security_clearance, e.police_license, e.is_active,
                        e.must_change_password, e.is_admin, e.is_commander,
@@ -282,7 +274,7 @@ class EmployeeModel:
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             query = """
-                SELECT DISTINCT e.id, e.first_name, e.last_name, e.personal_number, e.phone_number, e.email,
+                SELECT DISTINCT e.id, e.first_name, e.last_name, e.dominant_name, e.username, e.phone_number, e.email,
                        e.birth_date, e.is_commander, e.security_clearance, e.police_license, e.gender,
                        e.is_active, e.department_id, e.section_id, e.team_id,
                        t.name as team_name, 
@@ -319,7 +311,7 @@ class EmployeeModel:
                     ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                 ) last_log ON true
                 LEFT JOIN status_types st ON last_log.status_type_id = st.id
-                WHERE e.personal_number != 'admin'
+                WHERE e.username != 'admin'
             """
 
             # Prepare status condition
@@ -417,8 +409,8 @@ class EmployeeModel:
             if filters:
                 if filters.get("search"):
                     term = f"%{filters['search']}%"
-                    query += " AND (e.first_name ILIKE %s OR e.last_name ILIKE %s OR e.personal_number ILIKE %s)"
-                    params.extend([term, term, term])
+                    query += " AND (e.first_name ILIKE %s OR e.last_name ILIKE %s)"
+                    params.extend([term, term])
                 if filters.get("dept_id") and str(filters.get("dept_id")).isdigit():
                     d_id = int(filters["dept_id"])
                     query += " AND (d.id = %s OR d_dir.id = %s)"
@@ -441,6 +433,15 @@ class EmployeeModel:
                         # Improved: If filtering by parent status, include all sub-statuses
                         query += " AND (st.id = %s OR st.parent_status_id = %s)"
                         params.extend([filters["status_id"], filters["status_id"]])
+                
+                if filters.get("status_name"):
+                    query += """ AND (
+                        CASE 
+                            WHEN st.name = 'אחר' THEN COALESCE(NULLIF(last_log.note, ''), st.name) 
+                            ELSE st.name 
+                        END
+                    ) = %s"""
+                    params.append(filters["status_name"])
 
                 if filters.get("serviceTypes"):
                     srv_list = (
@@ -525,20 +526,25 @@ class EmployeeModel:
             raise Exception("Database connection failed")
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            pw_hash = None
-            must_change = False
-            if data.get("is_commander") or data.get("is_admin"):
-                pw_hash = generate_password_hash(str(data["national_id"]))
+            # Password: use provided password or set must_change_password
+            raw_password = data.get("password") or data.get("initial_password")
+            must_change = data.get("must_change_password", False)
+            if raw_password:
+                pw_hash = generate_password_hash(str(raw_password))
+            else:
+                # No password set - force change on first login
+                import secrets
+                pw_hash = generate_password_hash(secrets.token_hex(16))
                 must_change = True
 
             query = """
                 INSERT INTO employees (
-                    first_name, last_name, personal_number, national_id, phone_number, email,
+                    first_name, last_name, username, phone_number, email,
                     city, birth_date, enlistment_date, discharge_date, assignment_date,
                     team_id, section_id, department_id, service_type_id, 
                     is_commander, is_admin, 
                     password_hash, must_change_password, security_clearance, police_license, gender,
-                    notif_sick_leave, notif_transfers, notif_morning_report
+                    notif_sick_leave, notif_transfers, notif_morning_report, dominant_name
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """
@@ -559,8 +565,7 @@ class EmployeeModel:
                 (
                     data["first_name"],
                     data["last_name"],
-                    data["personal_number"],
-                    data["national_id"],
+                    data["username"],
                     data.get("phone_number") or None,
                     data.get("email") or None,
                     data.get("city") or None,
@@ -582,6 +587,7 @@ class EmployeeModel:
                     data.get("notif_sick_leave", True),
                     data.get("notif_transfers", True),
                     data.get("notif_morning_report", True),
+                    data.get("dominant_name") or None,
                 ),
             )
             new_id = cur.fetchone()["id"]
@@ -684,8 +690,8 @@ class EmployeeModel:
             allowed_fields = {
                 "first_name": "first_name",
                 "last_name": "last_name",
-                "personal_number": "personal_number",
-                "national_id": "national_id",
+                "dominant_name": "dominant_name",
+                "username": "username",
                 "phone_number": "phone_number",
                 "email": "email",
                 "city": "city",
@@ -916,24 +922,14 @@ class EmployeeModel:
             conn.close()
 
     @staticmethod
-    def reset_password_to_national_id(user_id):
+    def reset_password_to_default(user_id, new_password="123456"):
+        """Reset a user's password to a default value (admin action)"""
         conn = get_db_connection()
         if not conn:
             return False, "Database connection failed"
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-
-            # Fetch National ID
-            cur.execute("SELECT national_id FROM employees WHERE id = %s", (user_id,))
-            user = cur.fetchone()
-
-            if not user or not user["national_id"]:
-                return False, "User not found or missing National ID"
-
-            national_id = user["national_id"]
-
-            # Update Password
-            new_hash = generate_password_hash(national_id)
+            new_hash = generate_password_hash(new_password)
             cur.execute(
                 "UPDATE employees SET password_hash = %s, must_change_password = TRUE WHERE id = %s",
                 (new_hash, user_id),
@@ -1086,7 +1082,7 @@ class EmployeeModel:
             # Fetch candidates (active, not the commander themselves)
             cur.execute(
                 """
-                SELECT id, first_name, last_name, personal_number, phone_number
+                SELECT id, first_name, last_name, username, phone_number
                 FROM employees 
                 WHERE team_id = %s AND is_active = TRUE AND id != %s
                 ORDER BY first_name ASC

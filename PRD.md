@@ -67,7 +67,7 @@ Currently, the system operates as a server-side rendered monolithic Flask applic
 
 | ID          | Requirement           | Description                                                                        | API Endpoint (Draft)             |
 | :---------- | :-------------------- | :--------------------------------------------------------------------------------- | :------------------------------- |
-| **AUTH-01** | Login                 | User logs in with Personal Number & Password. Returns JWT.                         | `POST /api/auth/login`           |
+| **AUTH-01** | Login                 | User logs in with Username & Password. Returns JWT.                         | `POST /api/auth/login`           |
 | **AUTH-02** | Force Password Change | If `must_change_password` is true, force update before allowing other actions.     | `POST /api/auth/change-password` |
 | **AUTH-03** | Token Refresh         | Mechanism to refresh access tokens silently.                                       | `POST /api/auth/refresh`         |
 | **AUTH-04** | Role Based Access     | Backend must validate permissions (Scope: Admin/Dept/Sect/Team) for every request. | Middleware                       |
@@ -86,9 +86,9 @@ Currently, the system operates as a server-side rendered monolithic Flask applic
 
 | ID         | Requirement        | Description                                                                   | API Endpoint (Draft)            |
 | :--------- | :----------------- | :---------------------------------------------------------------------------- | :------------------------------ |
-| **EMP-01** | Employee List      | Paginated/Filtered list of employees. Search by name/personal number.         | `GET /api/employees`            |
+| **EMP-01** | Employee List      | Paginated/Filtered list of employees. Search by name/username.                | `GET /api/employees`            |
 | **EMP-02** | Employee Profile   | Detailed view: Personal info, Current Hierarchy, Status History.              | `GET /api/employees/{id}`       |
-| **EMP-03** | Create Employee    | Form to add new personnel. Validation for Personal ID/National ID uniqueness. | `POST /api/employees`           |
+| **EMP-03** | Create Employee    | Form to add new personnel. Validation for Username uniqueness.                | `POST /api/employees`           |
 | **EMP-04** | Edit Employee      | Update details (Phone, City, Role, Security Clearance).                       | `PUT /api/employees/{id}`       |
 | **EMP-05** | Soft Delete        | Mark employee as inactive (archive) and clear current status.                 | `DELETE /api/employees/{id}`    |
 | **EMP-06** | Command Assignment | Assign a user as commander of Dept/Section/Team.                              | `PUT /api/org/assign-commander` |
@@ -116,7 +116,7 @@ Currently, the system operates as a server-side rendered monolithic Flask applic
 
 _Reflects existing schema, no major changes required._
 
-- **Employees:** `id, personal_number, national_id, first_name, last_name, team_id, role_id, is_commander, is_admin, password_hash...`
+- **Employees:** `id, username, first_name, last_name, team_id, role_id, is_commander, is_admin, password_hash...`
 - **Attendance_Logs:** `id, employee_id, status_type_id, start_datetime, end_datetime, note...`
 - **Transfer_Requests:** `id, employee_id, target_type, target_id, status, current_commander_id, new_commander_id...`
 - **Hierarchy:** `Departments`, `Sections`, `Teams` (All linked via Foreign Keys).

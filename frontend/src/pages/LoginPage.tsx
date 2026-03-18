@@ -11,6 +11,7 @@ import {
   Eye,
   EyeOff,
   Crosshair,
+  Fingerprint,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -19,7 +20,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface LockedUser {
-  personal_number: string;
+  username: string;
   first_name: string;
   last_name: string;
 }
@@ -205,7 +206,7 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
 };
 
 export default function LoginPage() {
-  const [personalNumber, setPersonalNumber] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -214,6 +215,31 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuthContext();
   const { theme } = useTheme();
+  const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
+
+  useEffect(() => {
+    // We set it to true so it always appears for UX testing,
+    // even if accessed locally over HTTP (where WebAuthn is usually blocked).
+    // The actual system check will happen when clicked.
+    setIsBiometricAvailable(true);
+  }, []);
+
+  const handleBiometricLogin = async () => {
+    try {
+      if (!window.PublicKeyCredential) {
+        setError("זיהוי ביומטרי דורש חיבור מאובטח (HTTPS) או מכשיר תומך.");
+        return;
+      }
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (!available) {
+        setError("לא נמצא חיישן ביומטרי מוגדר במכשיר (כגון טביעת אצבע או זיהוי פנים).");
+        return;
+      }
+      setError("יש להגדיר כניסה ביומטרית בהגדרות המשתמש תחילה (טרם הופעל).");
+    } catch (e) {
+      setError("שגיאת גישה לאמצעי זיהוי ביומטרי.");
+    }
+  };
 
   useEffect(() => {
     const savedLockedUser = localStorage.getItem("locked_user");
@@ -221,7 +247,7 @@ export default function LoginPage() {
       try {
         const user = JSON.parse(savedLockedUser);
         setLockedUser(user);
-        setPersonalNumber(user.personal_number);
+        setUsername(user.username || "");
       } catch (e) {
         console.error("Failed to parse locked user", e);
         localStorage.removeItem("locked_user");
@@ -233,19 +259,19 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    if (!personalNumber.trim() || !password.trim()) {
-      setError("יש למלא מספר אישי וסיסמה");
+    if (!username.trim() || !password.trim()) {
+      setError("יש למלא שם משתמש וסיסמה");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const success = await login(personalNumber.trim(), password.trim());
+      const success = await login(username.trim(), password.trim());
       if (success) {
         navigate("/", { replace: true });
       } else {
-        setError("הסיסמה שגויה. אנא נסה שוב.");
+        setError("שם משתמש או סיסמה שגויים.");
       }
     } catch (err) {
       setError("שגיאת מערכת. אנא נסה שוב מאוחר יותר.");
@@ -257,7 +283,7 @@ export default function LoginPage() {
   const handleSwitchUser = () => {
     localStorage.removeItem("locked_user");
     setLockedUser(null);
-    setPersonalNumber("");
+    setUsername("");
     setPassword("");
     setError("");
   };
@@ -310,7 +336,7 @@ export default function LoginPage() {
                   : "bg-gradient-to-br from-slate-950 via-slate-800 to-slate-600",
               )}
             >
-              MISHMAROT
+              ShiftGuard
             </h1>
             <div className="flex items-center justify-center gap-2 mb-1">
               <div className="h-px w-6 md:w-8 bg-blue-500/50" />
@@ -371,7 +397,7 @@ export default function LoginPage() {
                         />
                         <Input
                           id="password"
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           autoComplete="current-password"
                           autoFocus
                           value={password}
@@ -380,7 +406,7 @@ export default function LoginPage() {
                             setError("");
                           }}
                           className={cn(
-                            "h-12 border rounded-xl pr-12 transition-all text-lg tracking-widest font-mono",
+                            "h-12 border rounded-xl pr-12 pl-12 transition-all text-lg tracking-widest font-mono",
                             isDark
                               ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
                               : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
@@ -388,6 +414,22 @@ export default function LoginPage() {
                           placeholder="••••••••"
                           disabled={isLoading}
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className={cn(
+                            "absolute left-3 top-3.5 transition-colors z-10",
+                            isDark
+                              ? "text-slate-500 hover:text-slate-300"
+                              : "text-slate-400 hover:text-slate-600",
+                          )}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
                       </div>
                     </div>
 
@@ -398,18 +440,31 @@ export default function LoginPage() {
                       </div>
                     )}
 
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all  active:scale-[0.98] relative overflow-hidden group"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                      {isLoading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        "אימות וכניסה"
+                    <div className="flex gap-2">
+                      {isBiometricAvailable && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleBiometricLogin}
+                          className="h-12 w-14 min-w-[56px] rounded-xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
+                          title="כניסה ביומטרית"
+                        >
+                          <Fingerprint className="w-6 h-6 text-blue-500" />
+                        </Button>
                       )}
-                    </Button>
+                      <Button
+                        type="submit"
+                        disabled={isLoading}
+                        className="flex-1 h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all  active:scale-[0.98] relative overflow-hidden group"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                        {isLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                        ) : (
+                          "אימות וכניסה"
+                        )}
+                      </Button>
+                    </div>
                   </form>
 
                   <button
@@ -435,7 +490,7 @@ export default function LoginPage() {
                       <div className="space-y-1.5">
                         <div className="relative group">
                           <Label
-                            htmlFor="personal_number"
+                            htmlFor="username"
                             className={cn(
                               "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border ",
                               isDark
@@ -443,7 +498,7 @@ export default function LoginPage() {
                                 : "bg-white text-blue-600 border-slate-200",
                             )}
                           >
-                            מספר אישי
+                            שם משתמש
                           </Label>
                           <ScanEye
                             className={cn(
@@ -454,13 +509,13 @@ export default function LoginPage() {
                             )}
                           />
                           <Input
-                            id="personal_number"
+                            id="username"
                             type="text"
                             autoComplete="username"
                             autoFocus
-                            value={personalNumber}
+                            value={username}
                             onChange={(e) => {
-                              setPersonalNumber(e.target.value.trim());
+                              setUsername(e.target.value.trim());
                               setError("");
                             }}
                             className={cn(
@@ -469,7 +524,7 @@ export default function LoginPage() {
                                 ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
                                 : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
                             )}
-                            placeholder="הזן מספר משתמש"
+                            placeholder="הזן שם משתמש"
                             disabled={isLoading}
                           />
                         </div>
@@ -555,15 +610,26 @@ export default function LoginPage() {
                       </div>
                     )}
 
-                    {/* Submit Button */}
-                    <div className="pt-2">
+                    {/* Submit Button & Biometric */}
+                    <div className="pt-2 flex gap-3">
+                      {isBiometricAvailable && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleBiometricLogin}
+                          className="h-14 w-16 min-w-[64px] rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
+                          title="כניסה ביומטרית"
+                        >
+                          <Fingerprint className="w-7 h-7 text-blue-500" />
+                        </Button>
+                      )}
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-14 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-black text-lg rounded-2xl transition-all  active:scale-[0.98] border border-white/10 relative overflow-hidden group"
+                        className="flex-1 h-14 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-black text-lg rounded-2xl transition-all  active:scale-[0.98] border border-white/10 relative overflow-hidden group"
                       >
                         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
-                        <div className="relative flex items-center gap-2">
+                        <div className="relative flex items-center justify-center gap-2">
                           {isLoading ? (
                             <>
                               <Loader2 className="h-5 w-5 animate-spin" />

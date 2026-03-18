@@ -30,20 +30,25 @@ export const DashboardStatusTable = ({
   useEffect(() => {
     if (statusId !== null && statusId !== undefined) {
       fetchEmployees(
-        undefined,
+        undefined, // search
         departmentId && departmentId !== ""
           ? parseInt(departmentId)
-          : undefined,
-        undefined,
-        statusId === -1 ? "missing" : statusId, // Pass "missing" string if -1, assuming hook/backend handles it or I'll fix hook next
-        sectionId && sectionId !== "" ? parseInt(sectionId) : undefined,
-        teamId && teamId !== "" ? parseInt(teamId) : undefined,
-        date,
-        serviceTypes,
+          : undefined, // deptId
+        undefined, // include_inactive
+        statusId === -1 ? "missing" : statusId, // statusId
+        sectionId && sectionId !== "" ? parseInt(sectionId) : undefined, // sectionId
+        teamId && teamId !== "" ? parseInt(teamId) : undefined, // teamId
+        date, // date
+        serviceTypes, // service_types
+        undefined, // status_id_param
+        undefined, // min_age
+        undefined, // max_age
+        statusName, // status_name
       );
     }
   }, [
     statusId,
+    statusName,
     departmentId,
     sectionId,
     teamId,
@@ -56,7 +61,7 @@ export const DashboardStatusTable = ({
 
   return (
     <Card className="mt-6 overflow-hidden min-h-[300px]">
-      <CardHeader className="pb-4 border-b border-border/50">
+      <CardHeader className="pb-4 border-b border-border/40">
         <div className="flex items-center gap-3">
           <div
             className="w-3 h-3 rounded-full  "
@@ -89,12 +94,12 @@ export const DashboardStatusTable = ({
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-right border-collapse min-w-[700px]">
                 <thead>
-                  <tr className="bg-muted/50 border-b border-border">
+                  <tr className="bg-muted/50 border-b border-border/40">
                     <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
                       שם מלא (פרטי ומשפחה)
                     </th>
                     <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
-                      מ.א
+                      שם משתמש
                     </th>
                     <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
                       מחלקה
@@ -126,7 +131,7 @@ export const DashboardStatusTable = ({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-muted-foreground">
-                        {emp.personal_number}
+                        {emp.username}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-xs font-bold text-muted-foreground">
@@ -180,7 +185,7 @@ export const DashboardStatusTable = ({
                         {emp.first_name} {emp.last_name}
                       </h4>
                       <span className="text-[10px] font-mono bg-muted px-1.5 rounded text-muted-foreground">
-                        {emp.personal_number}
+                        {emp.username}
                       </span>
                     </div>
                     <div className="flex flex-col text-xs text-muted-foreground mt-0.5">

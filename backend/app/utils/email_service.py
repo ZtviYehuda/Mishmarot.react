@@ -47,7 +47,7 @@ def send_verification_email(to_email, code):
     """
     Sends a verification code email using the generic sender.
     """
-    subject = "Mishmarot - קוד לאיפוס סיסמה"
+    subject = "ShiftGuard - קוד לאיפוס סיסמה"
     body = f"""
     <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; text-align: center; background-color: #f8fafc;">
         <div style="background-color: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">

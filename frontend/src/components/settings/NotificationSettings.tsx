@@ -51,7 +51,7 @@ export function NotificationSettings({
   ].filter(Boolean).length;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1600px] mx-auto pb-24 lg:pb-0">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full pb-24 lg:pb-0">
       <div className="grid grid-cols-12 gap-8">
         {/* RIGHT SIDE - Main Notifications */}
         <div className="col-span-12 lg:col-span-8 space-y-8">
@@ -59,7 +59,7 @@ export function NotificationSettings({
             icon={Bell}
             title="התראות אישיות"
             badge={
-              <div className="flex items-center gap-3 bg-primary/5 border border-primary/10 px-4 py-1.5 rounded-full  text-[10px] font-black uppercase">
+              <div className="flex items-center gap-3 bg-primary/5 border border-border/40 px-4 py-1.5 rounded-full  text-[10px] font-black uppercase">
                 <div className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -181,7 +181,7 @@ export function NotificationSettings({
               />
 
               <div className="pt-8 border-t border-primary/5 text-center px-4">
-                <div className="inline-flex p-4 bg-primary/5 rounded-3xl border border-primary/10 mb-4">
+                <div className="inline-flex p-4 bg-primary/5 rounded-3xl border border-border/40 mb-4">
                   <Sparkles className="w-6 h-6 text-primary" />
                 </div>
                 <p className="text-xs font-bold text-muted-foreground leading-relaxed">
@@ -212,7 +212,7 @@ function SectionCard({
       animate={{ opacity: 1, y: 0 }}
       className={cn(
         "bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border overflow-hidden",
-        variant === "danger" ? "border-red-500/10" : "border-primary/10",
+        variant === "danger" ? "border-red-500/10" : "border-border/40",
       )}
     >
       <div
@@ -220,7 +220,7 @@ function SectionCard({
           "px-5 py-4 sm:px-8 sm:py-6 border-b flex items-center justify-between",
           variant === "danger"
             ? "bg-red-500/5 border-red-500/10"
-            : "bg-primary/5 border-primary/10",
+            : "bg-primary/5 border-border/40",
         )}
       >
         <div className="flex items-center gap-2 sm:gap-3">
@@ -256,8 +256,8 @@ function SwitchItem({ label, desc, checked, onChange, icon: Icon }: any) {
       className={cn(
         "flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border transition-all duration-300 group",
         checked
-          ? "bg-primary/5 border-primary/20  "
-          : "bg-background border-border/50 hover:border-primary/20",
+          ? "bg-primary/5 border-border/40  "
+          : "bg-background border-border/40 hover:border-border/40",
       )}
     >
       <div className="flex items-start gap-3 sm:gap-4">

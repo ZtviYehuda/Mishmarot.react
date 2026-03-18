@@ -233,7 +233,7 @@ class NotificationModel:
                     LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
                     LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
                     WHERE e.is_active = TRUE 
-                      AND e.personal_number != 'admin'
+                      AND e.username != 'admin'
                       AND e.id != %s
                       AND NOT EXISTS (
                           SELECT 1 FROM attendance_logs al
@@ -477,6 +477,20 @@ class NotificationModel:
                         "description": f"האצלת את סמכויות הדיווח שלך ל{delegate_name}. ניתן לבטל זאת בכל עת.",
                         "link": "/",
                         "data": {"is_delegation": True, "delegate_name": delegate_name},
+                    }
+                )
+
+            # 8. Thursday Roster Reminder (Admins & Commanders)
+            if (
+                requesting_user.get("is_commander") or requesting_user.get("is_admin")
+            ) and date.today().weekday() == 3:
+                alerts.append(
+                    {
+                        "id": f"thursday-roster-reminder-{date.today().isoformat()}",
+                        "type": "warning",
+                        "title": "📅 תזכורת: סידור עבודה שבועי",
+                        "description": "יום חמישי היום! נא לוודא שכל דיווחי השבוע הושלמו ולהכין סידור עבודה לשבוע הבא.",
+                        "link": "/roster",
                     }
                 )
 

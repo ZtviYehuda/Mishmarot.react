@@ -33,7 +33,7 @@ export function BackupSettings({
   handleRestore,
 }: BackupSettingsProps) {
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1600px] mx-auto pb-24 lg:pb-0">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full pb-24 lg:pb-0">
       <div className="grid grid-cols-12 gap-8">
         {/* Main Settings Area */}
         <div className="col-span-12 lg:col-span-8 space-y-8">
@@ -76,8 +76,8 @@ export function BackupSettings({
                 className={cn(
                   "flex items-center justify-between p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] border transition-all duration-500",
                   backupConfig.enabled
-                    ? "bg-primary/5 border-primary/20  "
-                    : "bg-background border-border/50",
+                    ? "bg-primary/5 border-border/40  "
+                    : "bg-background border-border/40",
                 )}
               >
                 <div className="flex items-start gap-4 sm:gap-5">
@@ -125,40 +125,44 @@ export function BackupSettings({
                   </h4>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                  {[6, 12, 24].map((hours) => (
+                <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                  {[
+                    { days: 1, label: "יומי", sub: "גיבוי אוטומטי", icon: "📅" },
+                    { days: 7, label: "שבועי", sub: "גיבוי מרווח", icon: "🗓️" },
+                  ].map(({ days, label, sub, icon }) => (
                     <button
-                      key={hours}
+                      key={days}
                       onClick={() =>
-                        updateBackupConfig("interval_hours", hours)
+                        updateBackupConfig("interval_days", days)
                       }
                       className={cn(
-                        "group relative p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] border-2 flex flex-col items-center gap-2 sm:gap-3 transition-all duration-500 hover:scale-[1.05]",
-                        backupConfig.interval_hours === hours
-                          ? "border-primary bg-primary/5   ring-4 ring-primary/5"
-                          : "border-border/50 bg-background/50 hover:border-primary/20",
+                        "group relative p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] border-2 flex flex-col items-center gap-2 sm:gap-3 transition-all duration-500 hover:scale-[1.03]",
+                        backupConfig.interval_days === days
+                          ? "border-primary bg-primary/5 ring-4 ring-primary/5"
+                          : "border-border/40 bg-background/50 hover:border-border/40",
                       )}
                     >
+                      <span className="text-3xl sm:text-4xl">{icon}</span>
                       <span
                         className={cn(
-                          "text-3xl sm:text-5xl font-black font-mono transition-transform duration-500 group-hover:scale-110",
-                          backupConfig.interval_hours === hours
+                          "text-xl sm:text-3xl font-black font-mono transition-transform duration-500 group-hover:scale-110",
+                          backupConfig.interval_days === days
                             ? "text-primary"
                             : "text-muted-foreground/40",
                         )}
                       >
-                        {hours}
+                        {label}
                       </span>
-                      <span className="font-black text-[9px] sm:text-[10px] uppercase text-muted-foreground">
-                        שעות
+                      <span className="font-black text-[9px] sm:text-[10px] uppercase text-muted-foreground text-center">
+                        {sub}
                       </span>
 
-                      {backupConfig.interval_hours === hours && (
+                      {backupConfig.interval_days === days && (
                         <motion.div
                           layoutId="freq-check"
                           className="absolute top-3 right-3 sm:top-4 sm:right-4 text-primary"
                         >
-                          <div className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-primary  " />
+                          <div className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-primary" />
                         </motion.div>
                       )}
                     </button>
@@ -183,7 +187,7 @@ export function BackupSettings({
                   onClick={handleServerBackupNow}
                   disabled={isServerBackingUp}
                   variant="outline"
-                  className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-primary/20 bg-background font-black text-primary hover:bg-primary hover:text-white transition-all duration-500 group"
+                  className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-border/40 bg-background font-black text-primary hover:bg-primary hover:text-white transition-all duration-500 group"
                 >
                   {isServerBackingUp ? (
                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
@@ -275,7 +279,7 @@ function SectionCard({
       animate={{ opacity: 1, y: 0 }}
       className={cn(
         "bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border overflow-hidden",
-        variant === "danger" ? "border-red-500/10" : "border-primary/10",
+        variant === "danger" ? "border-red-500/10" : "border-border/40",
       )}
     >
       <div
@@ -283,7 +287,7 @@ function SectionCard({
           "px-5 py-4 sm:px-8 sm:py-6 border-b flex items-center justify-between",
           variant === "danger"
             ? "bg-red-500/5 border-red-500/10"
-            : "bg-primary/5 border-primary/10",
+            : "bg-primary/5 border-border/40",
         )}
       >
         <div className="flex items-center gap-2 sm:gap-3">

@@ -9,7 +9,7 @@ def create_ticket():
     data = request.get_json()
 
     # Basic validation
-    required = ["full_name", "personal_number", "subject", "message"]
+    required = ["full_name", "subject", "message"]
     if not all(k in data for k in required):
         return jsonify({"error": "Missing required fields"}), 400
 

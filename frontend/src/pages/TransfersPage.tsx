@@ -38,7 +38,7 @@ import {
   ShieldCheck,
   User,
   Phone,
-  IdCard,
+
   XCircle,
   CheckCircle,
   Calendar,
@@ -217,7 +217,7 @@ export default function TransfersPage() {
       .filter(
         (emp) =>
           `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(lower) ||
-          emp.personal_number.includes(searchTerm),
+          false,
       )
       .slice(0, 5);
   }, [employees, searchTerm]);
@@ -240,7 +240,7 @@ export default function TransfersPage() {
       result = result.filter(
         (h) =>
           h.employee_name?.toLowerCase().includes(lowerSearch) ||
-          h.personal_number?.includes(searchTerm),
+          false,
       );
     }
     return result;
@@ -381,15 +381,13 @@ export default function TransfersPage() {
   const canManage = user?.is_admin || user?.is_commander;
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 px-4 lg:px-8" dir="rtl">
-      <div className="pt-2 pb-4 shrink-0 transition-all">
+    <div className="flex flex-col animate-in fade-in duration-500" dir="rtl">
+      <div className="pt-6 pb-4 shrink-0 transition-all">
         <PageHeader
           icon={ArrowLeftRight}
           title="בקשות העברה ושיבוץ"
-          subtitle="ניהול ניוד כוח אדם ושינויים ארגוניים במערכת"
-          category="ניהול משאבי אנוש"
-          categoryLink="/transfers"
-          className="mb-0 px-0 pb-2 shrink-0 transition-all"
+          className="mb-0 px-4 pb-2 shrink-0 transition-all"
+          hideMobile={true}
         />
       </div>
 
@@ -535,7 +533,7 @@ export default function TransfersPage() {
                             {req.employee_name}
                           </span>
                           <span className="text-[10px] text-muted-foreground font-mono">
-                            {req.personal_number}
+                            
                           </span>
                         </div>
                       </div>
@@ -670,7 +668,7 @@ export default function TransfersPage() {
                                   {req.employee_name}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground font-mono truncate">
-                                  {req.personal_number}
+                                  
                                 </span>
                               </div>
                             </button>
@@ -803,7 +801,7 @@ export default function TransfersPage() {
                             {req.employee_name}
                           </span>
                           <span className="text-[10px] text-muted-foreground font-mono">
-                            {req.personal_number}
+                            
                           </span>
                         </div>
                       </div>
@@ -916,7 +914,7 @@ export default function TransfersPage() {
                                   {req.employee_name}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground font-mono truncate">
-                                  {req.personal_number}
+                                  
                                 </span>
                               </div>
                             </button>
@@ -1003,7 +1001,7 @@ export default function TransfersPage() {
                       <div className="relative">
                         <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                         <Input
-                          placeholder="חפש לפי שם או מ''א..."
+                          placeholder="חפש לפי שם או שם משתמש..."
                           className="pr-10 sm:pr-12 h-12 sm:h-14 text-right rounded-xl sm:rounded-2xl bg-muted/30 border-input focus:bg-background focus:ring-4 focus:ring-primary/20 transition-all text-sm sm:text-base"
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
@@ -1028,7 +1026,7 @@ export default function TransfersPage() {
                                     {emp.first_name} {emp.last_name}
                                   </span>
                                   <span className="text-[10px] sm:text-xs text-muted-foreground">
-                                    מ"א: {emp.personal_number} •{" "}
+                                    שם משתמש: {emp.username} •{" "}
                                     {emp.department_name}
                                   </span>
                                 </div>
@@ -1050,7 +1048,7 @@ export default function TransfersPage() {
                               {selectedEmployee.last_name}
                             </span>
                             <span className="text-[10px] sm:text-xs text-muted-foreground">
-                              מ"א: {selectedEmployee.personal_number} •{" "}
+                              
                               {selectedEmployee.department_name}
                             </span>
                           </div>
@@ -1287,7 +1285,7 @@ export default function TransfersPage() {
                           {viewingEmployee?.last_name}
                         </h2>
                         <span className="text-[11px] font-bold text-muted-foreground mt-1">
-                          מספר אישי: {viewingEmployee?.personal_number}
+                          שם משתמש: {viewingEmployee?.username}
                         </span>
                       </div>
                     </div>
@@ -1307,19 +1305,7 @@ export default function TransfersPage() {
                 {/* Content */}
                 <div className="p-6 space-y-3">
                   {/* Personal Info Card */}
-                  <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 transition-all hover:border-border">
-                    <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center border border-border/50 shrink-0">
-                      <IdCard className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-foreground truncate">
-                        {viewingEmployee?.national_id || "---"}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground font-medium truncate">
-                        תעודת זהות
-                      </p>
-                    </div>
-                  </div>
+
 
                   <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 transition-all hover:border-border">
                     <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center border border-border/50 shrink-0">

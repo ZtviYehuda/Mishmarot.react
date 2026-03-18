@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAuthContext } from "@/context/AuthContext";
 import { EmployeeTable } from "@/components/employees/EmployeeTable";
@@ -8,10 +9,24 @@ import { PageHeader } from "@/components/layout/PageHeader";
 export default function EmployeesPage() {
   const { user } = useAuthContext();
   const { employees, loading, fetchEmployees } = useEmployees();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
+
+  const initialFilters = useMemo(() => {
+    const filters: any = {};
+    const dept = searchParams.get("dept");
+    const section = searchParams.get("section");
+    const team = searchParams.get("team");
+
+    if (dept) filters.departments = [dept];
+    if (section) filters.sections = [section];
+    if (team) filters.teams = [team];
+
+    return Object.keys(filters).length > 0 ? filters : undefined;
+  }, [searchParams]);
 
   const unitTypeLabel = user?.commands_team_id
     ? "חוליה"
@@ -22,17 +37,14 @@ export default function EmployeesPage() {
         : "יחידה";
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 px-4 lg:px-8">
-      <div className="pt-2 pb-4 shrink-0 transition-all">
+    <div className="flex flex-col animate-in fade-in duration-500">
+      <div className="pt-6 pb-4 shrink-0 transition-all">
         <PageHeader
           icon={Users}
           title="ניהול מצבת כוח אדם"
-          subtitle={`מערך ניהול וצפייה בנתוני השוטרים ב${unitTypeLabel}`}
-          category="ניהול שוטרים"
-          categoryLink="/employees"
           className="mb-0"
-          iconClassName="from-primary/10 to-primary/5 border-primary/20"
-        />
+          hideMobile={true}
+          iconClassName="from-primary/10 to-primary/5 border-primary/20"/>
       </div>
 
       <div className="space-y-4 pb-6">
@@ -40,6 +52,7 @@ export default function EmployeesPage() {
           employees={employees}
           loading={loading}
           fetchEmployees={fetchEmployees}
+          initialFilters={initialFilters}
         />
       </div>
     </div>

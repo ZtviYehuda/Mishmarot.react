@@ -152,9 +152,8 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
               onScroll={handleScroll}
               className="flex-1 overflow-y-auto relative custom-scrollbar group/scroll bg-muted/10 max-h-[400px]"
             >
-              <div className="pl-3 py-1">
-                {" "}
-                {/* Padding on the left for the scrollbar in RTL */}
+              <div className="px-5 py-5 min-h-full">
+                {/* Padding on the sides and top/bottom to prevent border clipping */}
                 {/* Quick Action for Today's Birthdays */}
                 {/* Quick Action for Greetings */}
                 {birthdays.length > 0 && (
@@ -184,7 +183,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                     </Button>
                   </div>
                 )}
-                <div className="space-y-2 pb-2">
+                <div className="space-y-3 pb-4">
                   {birthdays.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10 opacity-40">
                       <Calendar className="w-8 h-8 mb-2" />
@@ -217,10 +216,10 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                         <div
                           key={employee.id}
                           className={cn(
-                            "flex items-center gap-3 p-3 rounded-2xl border transition-all hover:",
+                            "flex items-center gap-4 p-4 rounded-[1.25rem] border transition-all hover:-translate-y-0.5 hover:shadow-sm",
                             isToday
-                              ? "bg-primary/5 border-primary/20 "
-                              : "bg-muted/30 border-border/40 hover:bg-muted/50",
+                              ? "bg-primary/5 border-primary/30 "
+                              : "bg-background border-border/60 hover:border-primary/20 hover:bg-muted/30",
                           )}
                         >
                           <div
@@ -263,7 +262,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
             {showScrollHint && (
               <button
                 onClick={scrollToBottom}
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 animate-bounce bg-primary text-primary-foreground p-1.5 rounded-full  border border-primary-foreground/20 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 animate-bounce bg-primary text-primary-foreground p-2 rounded-full shadow-lg border border-primary-foreground/20 hover:scale-110 active:scale-95 transition-all cursor-pointer"
                 title="גלול לסוף הרשימה"
               >
                 <ChevronDown className="w-4 h-4" />

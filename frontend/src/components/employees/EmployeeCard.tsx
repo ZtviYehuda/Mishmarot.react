@@ -39,7 +39,7 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
                 {employee.first_name} {employee.last_name}
               </h3>
               <p className="text-xs text-slate-400 font-mono mt-0.5">
-                {employee.personal_number}
+                {employee.username}
               </p>
             </div>
           </div>

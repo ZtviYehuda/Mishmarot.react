@@ -7,7 +7,6 @@ import * as endpoints from "@/config/employees.endpoints";
 import { Button } from "@/components/ui/button";
 import {
   Loader2,
-  Settings2,
   Save,
   X,
   User,
@@ -27,7 +26,6 @@ import {
 } from "lucide-react";
 import { useMemo } from "react";
 import { TransferRequestModal } from "@/components/employees/modals/TransferRequestModal";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { toast } from "sonner";
 import { useAuthContext } from "@/context/AuthContext";
 import type {
@@ -297,25 +295,74 @@ const PersonalEditTab = ({
             />
           </InputItem>
 
-          <InputItem label="תעודת זהות" icon={BadgeCheck}>
-            <Input
-              value={formData.national_id || ""}
-              onChange={(e) => handleFieldChange("national_id", e.target.value)}
-              placeholder="000000000"
-       className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl text-lg font-black tracking-widest text-center"
-            />
-          </InputItem>
+          {(() => {
+            const first = (formData.first_name || "").trim();
+            const last = (formData.last_name || "").trim();
+            const fullName = `${first} ${last}`.trim();
+            const words = fullName.split(/\s+/).filter(Boolean);
+            const isNameLong = fullName.length > 18 || words.length > 2;
 
-          <InputItem label="מספר אישי" icon={BadgeCheck}>
-            <Input
-              value={formData.personal_number || ""}
-              onChange={(e) =>
-                handleFieldChange("personal_number", e.target.value)
-              }
-              placeholder="0000000"
+            return (
+              <AnimatePresence>
+                {(isNameLong || formData.dominant_name) && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, y: 10 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: 10 }}
+                    className="col-span-1 md:col-span-2 lg:col-span-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-primary/20 p-4 sm:p-5 mt-2 overflow-hidden flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6"
+                  >
+                    <div className="flex items-center gap-3 text-primary">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black">זיהינו שם ארוך מהרגיל</span>
+                        <span className="text-xs font-bold opacity-80 mt-0.5">בחר את השם שיוצג ביומיום או הקלד בעצמך:</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-2 flex-1 w-full sm:w-auto">
+                      {words.map((word, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleFieldChange("dominant_name", formData.dominant_name === word ? "" : word)}
+                          className={cn(
+                            "px-4 py-2 rounded-xl text-sm font-black transition-all border",
+                            formData.dominant_name === word
+                              ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-[1.02]"
+                              : "bg-white dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:text-primary"
+                          )}
+                        >
+                          {word}
+                        </button>
+                      ))}
+                      
+                      <Input
+                        value={formData.dominant_name || ""}
+                        onChange={(e) => handleFieldChange("dominant_name", e.target.value)}
+                        placeholder="הקלד שם אחר..."
+                        className="bg-white/50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-10 w-[140px] rounded-xl font-bold text-sm"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            );
+          })()}
+
+          {(formData.is_commander || formData.is_admin) && (
+            <InputItem label="שם משתמש" icon={BadgeCheck}>
+              <Input
+                value={formData.username || ""}
+                onChange={(e) =>
+                  handleFieldChange("username", e.target.value)
+                }
+                placeholder="username"
        className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl text-lg font-black tracking-widest text-center"
-            />
-          </InputItem>
+              />
+            </InputItem>
+          )}
 
           <InputItem label="מין" required icon={User}>
             <Select
@@ -859,10 +906,10 @@ export default function EditEmployeePage() {
     setSaving(true);
 
     if (
-      (!formData.national_id && !formData.personal_number) ||
+      (!formData.username) ||
       !formData.birth_date
     ) {
-      toast.error("יש להזין מספר אישי או ת.ז, ותאריך לידה");
+      toast.error("יש להזין שם משתמש ותאריך לידה");
       setSaving(false);
       return;
     }
@@ -1015,65 +1062,54 @@ export default function EditEmployeePage() {
         }
       />
 
-      {/* Header */}
-      <div className="bg-background/95 backdrop-blur-sm border-b border-border/60 py-8 sticky top-0 z-30">
-        <div className="max-w-[1600px] mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <PageHeader
-              icon={Settings2}
-              title={`עריכת שוטר: ${formData.first_name || ""} ${formData.last_name || ""}`}
-              subtitle={`תיק אישי: ${formData.personal_number || employee.personal_number}`}
-              category="ניהול שוטרים"
-              categoryLink="/employees"
-              className="mb-3 sm:mb-6 lg:mb-8"
-            />
+      {/* ── HERO SECTION ── */}
+      <div className="relative bg-gradient-to-br from-primary/10 via-card to-card/80 border-b border-border/40 overflow-hidden">
+        {/* Back */}
+        <button
+          onClick={() => navigate(`/employees/${id}`)}
+          className="absolute top-4 right-4 flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-primary transition-colors"
+        >
+          <X className="w-3.5 h-3.5" />&nbsp;ביטול
+        </button>
 
-            <div className="flex items-center gap-3 self-end md:self-auto">
-              <Button
-                variant="ghost"
-                onClick={() => navigate(`/employees/${id}`)}
-                className="h-11 px-5 rounded-xl font-bold text-muted-foreground hover:bg-muted"
-              >
-                <X className="w-4 h-4 ml-2" />
-                ביטול
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={handleToggleActiveStatus}
-                disabled={actionLoading}
-                className={cn(
-                  "h-11 px-5 rounded-xl font-bold transition-all",
-                  employee.is_active
-                    ? "text-destructive border-destructive/20 hover:bg-destructive hover:text-white"
-                    : "text-emerald-600 border-emerald-500/20 hover:bg-emerald-600 hover:text-white",
-                )}
-              >
-                {employee.is_active ? "הפוך ללא פעיל" : "החזר לפעילות"}
-              </Button>
-
-              <Button
-        className="h-11 px-8 rounded-xl font-black  hover:scale-[1.02] active:scale-[0.98] transition-all gap-2"
-                onClick={handleSubmit}
-                disabled={saving}
-              >
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                <span>שמור שינויים</span>
-              </Button>
-            </div>
+        <div className="flex flex-col items-center text-center pt-12 pb-5 px-4 gap-2">
+          {/* Avatar */}
+          <div className={cn(
+            "w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black border-4 border-card ring-1 ring-border",
+            employee.is_active ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground" : "bg-muted text-muted-foreground grayscale opacity-60",
+          )}>
+            {formData.first_name?.[0]}{formData.last_name?.[0]}
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-foreground">{formData.first_name} {formData.last_name}</h1>
+            <p className="text-xs text-muted-foreground font-bold">עריכת כרטיס שוטר</p>
+          </div>
+          {/* Org chips */}
+          <div className="flex flex-wrap justify-center gap-1 mt-0.5">
+            {cleanUnitName(structure.find((d) => d.id.toString() === selectedDeptId)?.name) && (
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-primary/70">
+                {cleanUnitName(structure.find((d) => d.id.toString() === selectedDeptId)?.name)}
+              </span>
+            )}
+            {cleanUnitName(sections.find((s) => s.id.toString() === selectedSectionId)?.name) && (
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-primary/70">
+                {cleanUnitName(sections.find((s) => s.id.toString() === selectedSectionId)?.name)}
+              </span>
+            )}
+            {cleanUnitName(teams.find((t: any) => t.id === formData.team_id)?.name) && (
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-primary/70">
+                {cleanUnitName(teams.find((t: any) => t.id === formData.team_id)?.name)}
+              </span>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-6 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* SIDEBAR (Match Profile Page) */}
-          <div className="lg:col-span-3 lg:sticky lg:top-[120px] space-y-6 order-2">
-      <div className="bg-card rounded-3xl border border-primary/10 overflow-hidden">
+      <div className="max-w-3xl lg:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 mt-4 pb-28">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-start">
+          {/* SIDEBAR — shows FIRST on mobile, sticky on desktop */}
+          <div className="lg:col-span-3 lg:sticky lg:top-8 space-y-4 order-1 lg:order-2">
+            <div className="bg-card rounded-2xl border border-border/40 overflow-hidden">
               <div className="h-24 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent relative">
                 <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
 
@@ -1117,7 +1153,7 @@ export default function EditEmployeePage() {
 
                 <div className="flex items-center justify-center gap-2 mb-6">
                   <Badge variant="outline" className="font-mono bg-muted/50">
-                    {formData.personal_number}
+                    {formData.username}
                   </Badge>
                   <Badge
                     variant="secondary"
@@ -1207,9 +1243,9 @@ export default function EditEmployeePage() {
           </div>
 
           {/* MAIN CONTENT Area */}
-          <div className="lg:col-span-9 space-y-8 order-1 min-h-[600px]">
+          <div className="lg:col-span-9 space-y-4 order-2 lg:order-1 min-h-[600px]">
             {/* Tabs Selector */}
-      <div className="bg-slate-200/40 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-1.5 flex gap-1.5 max-w-md">
+            <div className="bg-muted/40 dark:bg-slate-900/40 border border-border/40 rounded-2xl p-1 flex gap-1">
               <TabButton
                 active={activeTab === "personal"}
                 onClick={() => setActiveTab("personal")}
@@ -1265,6 +1301,31 @@ export default function EditEmployeePage() {
             </AnimatePresence>
           </div>
         </div>
+      </div>
+
+      {/* ── STICKY BOTTOM ACTION BAR (mobile only) ── */}
+      <div className="fixed bottom-0 right-0 left-0 z-50 bg-card/95 backdrop-blur-md border-t border-border/50 px-4 py-3 flex gap-2 lg:hidden safe-area-inset-bottom">
+        <Button
+          variant="outline"
+          onClick={handleToggleActiveStatus}
+          disabled={actionLoading}
+          className={cn(
+            "flex-none h-10 px-3 rounded-xl font-bold text-xs transition-all",
+            employee.is_active
+              ? "text-destructive border-destructive/20 hover:bg-destructive hover:text-white"
+              : "text-emerald-600 border-emerald-500/20 hover:bg-emerald-600 hover:text-white",
+          )}
+        >
+          {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (employee.is_active ? "הפוך ללא פעיל" : "החזר לפעילות")}
+        </Button>
+        <Button
+          className="flex-1 h-10 rounded-xl font-black gap-1.5 text-sm"
+          onClick={handleSubmit}
+          disabled={saving}
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          שמור שינויים
+        </Button>
       </div>
     </div>
   );

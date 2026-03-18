@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useTransition } from "react";
 import { useEmployees } from "@/hooks/useEmployees";
+import { useAuthContext } from "@/context/AuthContext";
 import { EmployeeLink } from "@/components/common/EmployeeLink";
 import { PageHeader } from "@/components/layout/PageHeader";
 import {
@@ -21,18 +22,19 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
+
   CalendarRange,
   BadgeInfo,
   Undo2,
   Save,
   Loader2,
-  MousePointer2,
   AlertCircle,
   Filter,
   Info,
-  Flame,
   TrendingUp,
 } from "lucide-react";
+
+import { ShabbatIcon } from "@/components/common/ShabbatIcon";
 
 const StatusCard = ({
   type,
@@ -51,7 +53,7 @@ const StatusCard = ({
       "flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all text-center h-full group relative bg-background hover:bg-muted/30 border-border/40 hover:border-primary/40",
       isSub ? "opacity-90 scale-[1.0] min-h-[85px]" : "min-h-[95px]",
       large &&
-      "col-span-3 flex-row gap-6 min-h-[80px] px-8 bg-slate-100/50 dark:bg-slate-800/50 border-primary/20",
+        "col-span-3 flex-row gap-6 min-h-[80px] px-8 bg-slate-100/50 dark:bg-slate-800/50 border-primary/20",
     )}
   >
     <div
@@ -114,14 +116,19 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function RosterPage() {
   const { getRosterMatrix, getStatusTypes, getStructure, logBulkStatus } =
     useEmployees();
+  const { user } = useAuthContext();
+  // const navigate = useNavigate();
 
   // State
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isPendingDate, startTransition] = useTransition();
+
   const [employees, setEmployees] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [statusTypes, setStatusTypes] = useState<any[]>([]);
@@ -197,7 +204,23 @@ export default function RosterPage() {
       setDepartments(struct || []);
     };
     init();
-  }, [getStatusTypes, getStructure]);
+  }, [getStatusTypes, getStructure, user]); // Added user dependency
+
+  // Default org filters based on permissions
+  useEffect(() => {
+    if (!user || user.is_admin) return;
+    
+    if (user.commands_department_id) {
+      setSelectedDept(user.commands_department_id.toString());
+    } else if (user.commands_section_id) {
+      if (user.assigned_department_id) setSelectedDept(user.assigned_department_id.toString());
+      setSelectedSection(user.commands_section_id.toString());
+    } else if (user.commands_team_id) {
+      if (user.assigned_department_id) setSelectedDept(user.assigned_department_id.toString());
+      if (user.assigned_section_id) setSelectedSection(user.assigned_section_id.toString());
+      setSelectedTeam(user.commands_team_id.toString());
+    }
+  }, [user]);
 
   // Fetch Matrix
   const fetchMatrix = async () => {
@@ -391,7 +414,7 @@ export default function RosterPage() {
       const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
       const matchesSearch =
         fullName.includes(searchTerm.toLowerCase()) ||
-        emp.personal_number.includes(searchTerm);
+        false;
 
       if (!matchesSearch) return false;
       if (statusFilter === "all") return true;
@@ -488,89 +511,138 @@ export default function RosterPage() {
     activeDepartment,
   ]);
 
-  const projectTitle = "מערכת ניהול מצבה יחידתית";
+
 
   return (
     <div
-      className="flex flex-col h-full selection:bg-primary/10 selection:text-primary px-4 lg:px-8"
+      className="flex flex-col h-full selection:bg-primary/10 selection:text-primary"
       dir="rtl"
     >
       <div className="flex flex-col h-full">
         {/* Unified Page Header - Premium Layout Style */}
-        <div className="pt-2 pb-4 shrink-0 transition-all">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-            <PageHeader
-              icon={CalendarRange}
-              title={
-                window.innerWidth < 1024
-                  ? "מעקב נוכחות יומי"
-                  : "סידור עבודה שבועי"
-              }
-              subtitle={
-                window.innerWidth < 1024
-                  ? `${unitName}`
-                  : `ניהול סטטוסים ומעקב נוכחות עבור ${unitName}`
-              }
-              category="נוכחות"
-              categoryLink="/roster"
-              className="mb-0"
-            />
-            {/* Contextual Action Area & Stats */}
-            <div className="flex items-center justify-end gap-3 flex-wrap">
-              {/* Minimal Stats Card */}
-              <div className="hidden md:flex items-center bg-card/60 backdrop-blur-xl border border-primary/10 rounded-2xl h-10 px-4 gap-4 text-xs font-black">
-                <div className="flex items-center gap-2 text-muted-foreground border-l border-primary/10 pl-4">
-                  <span className="text-foreground">
-                    {filteredEmployees.length} שוטרים
-                  </span>
-                  <Users className="w-4 h-4 text-primary/70" />
+        <div className="pt-6 pb-2 shrink-0 transition-all px-4">
+          <PageHeader
+            icon={CalendarRange}
+            title={
+              window.innerWidth < 1024
+                ? "מעקב נוכחות יומי"
+                : "סידור עבודה שבועי"
+            }
+            className="mb-0"
+            hideMobile={true}
+            badge={
+              <div className="flex flex-col lg:flex-row lg:items-center justify-end gap-3 flex-wrap mt-4 lg:mt-0">
+                {/* Minimal Stats Card */}
+                <div className="hidden md:flex items-center bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl h-10 px-4 gap-4 text-xs font-black">
+                  <div className="flex items-center gap-2 text-muted-foreground border-l border-border/40 pl-4">
+                    <span className="text-foreground">
+                      {filteredEmployees.length} שוטרים
+                    </span>
+                    <Users className="w-4 h-4 text-primary/70" />
+                  </div>
+                  <div className="flex items-center gap-2 text-emerald-600">
+                    <span>{weekdayAverageAttendance}% ממוצע שבועי</span>
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-emerald-600">
-                  <span>{weekdayAverageAttendance}% ממוצע שבועי</span>
-                  <TrendingUp className="w-4 h-4" />
-                </div>
-              </div>
 
-              <AnimatePresence>
-                {pendingUpdates.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-1.5"
+                {/* {!user?.is_temp_commander && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="h-10 rounded-xl border-border/40 bg-card/80 text-foreground hover:bg-primary/5 hover:text-primary gap-2 font-black transition-all shadow-sm"
                   >
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleUndoAll}
-                      className="h-10 w-10 p-0 rounded-xl text-amber-600 hover:text-amber-700 hover:bg-amber-500/20 transition-all"
-                      title="בטל הכל"
+                    <Plus className="w-4 h-4" />
+                    <span className="text-xs">איש צוות</span>
+                  </Button>
+                )} */}
+
+                <AnimatePresence>
+                  {pendingUpdates.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                      className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-1.5"
                     >
-                      <Undo2 className="w-5 h-5" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={handleSaveAll}
-                      disabled={saving}
-                      className="h-10 rounded-xl px-5 text-sm font-black bg-amber-500 hover:bg-amber-600 text-white gap-2 transition-all"
-                    >
-                      {saving ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Save className="w-4 h-4" />
-                      )}
-                      שמור חלון ({pendingUpdates.length})
-                    </Button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleUndoAll}
+                        className="h-10 w-10 p-0 rounded-xl text-amber-600 hover:text-amber-700 hover:bg-amber-500/20 transition-all"
+                        title="בטל הכל"
+                      >
+                        <Undo2 className="w-5 h-5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveAll}
+                        disabled={saving}
+                        className="h-10 rounded-xl px-5 text-sm font-black bg-amber-500 hover:bg-amber-600 text-white gap-2 transition-all"
+                      >
+                        {saving ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        שמור חלון ({pendingUpdates.length})
+                      </Button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            }
+          />
         </div>
 
         {/* New Consolidated COMMAND CENTER Bar */}
-        <div className="pb-4 space-y-4 shrink-0 relative z-10 w-full">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-2 bg-card/60 backdrop-blur-2xl border border-primary/10 rounded-[2rem]">
+        <div className="pb-4 space-y-2 shrink-0 relative z-10 w-full">
+          {/* Mobile: compact row with search + week nav */}
+          <div className="flex lg:hidden items-center gap-2">
+            {/* Search */}
+            <div className="relative group/search flex-1">
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within/search:text-primary transition-all z-10" />
+              <Input
+                placeholder="חיפוש שם..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-10 pr-10 pl-3 bg-muted/30 border-transparent rounded-2xl font-bold text-sm placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-primary/10 transition-all"
+              />
+            </div>
+            {/* Mobile Week Nav */}
+            <div className="flex items-center gap-1 shrink-0 bg-muted/30 rounded-2xl p-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-xl"
+                onClick={() => startTransition(() => setCurrentDate(subWeeks(currentDate, 1)))}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <button
+                onClick={() => startTransition(() => setCurrentDate(new Date()))}
+                className="px-2 flex flex-col items-center"
+              >
+                <span className="text-[9px] font-black text-primary uppercase tracking-widest">
+                  {format(weekStart, "MMM", { locale: he })}
+                </span>
+                <span className="text-xs font-black text-foreground tabular-nums">
+                  {format(weekStart, "dd")}-{format(weekEnd, "dd")}
+                </span>
+              </button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-xl"
+                onClick={() => startTransition(() => setCurrentDate(addWeeks(currentDate, 1)))}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Desktop full command bar */}
+          <div className="hidden lg:flex items-center justify-between gap-4 p-2 bg-card/60 backdrop-blur-2xl border border-border/40 rounded-[2rem]">
             <div className="flex flex-1 flex-wrap items-center gap-2">
               {/* Global Search */}
               <div className="relative group/search flex-1 max-w-[220px]">
@@ -579,11 +651,11 @@ export default function RosterPage() {
                   placeholder="חיפוש..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-11 pr-11 pl-4 bg-muted/30 hover:bg-muted/50 border-transparent hover:border-border/50 rounded-2xl font-bold text-xs placeholder:text-muted-foreground/50 focus:ring-4 focus:ring-primary/10 transition-all"
+                  className="h-11 pr-11 pl-4 bg-muted/30 hover:bg-muted/50 border-transparent hover:border-border/40 rounded-2xl font-bold text-xs placeholder:text-muted-foreground/50 focus:ring-4 focus:ring-primary/10 transition-all"
                 />
               </div>
 
-              <div className="w-px h-6 bg-border/50 mx-1 hidden lg:block" />
+              <div className="w-px h-6 bg-border/40 mx-1 hidden lg:block" />
 
               {/* All Filters Groups */}
               <div className="flex items-center gap-2">
@@ -603,7 +675,7 @@ export default function RosterPage() {
                     </SelectTrigger>
                     <SelectContent
                       dir="rtl"
-                      className="rounded-2xl font-bold border-border/50"
+                      className="rounded-2xl font-bold border-border/40"
                     >
                       <SelectItem value="all">כל היחידה</SelectItem>
                       {departments.map((d: any) => (
@@ -638,7 +710,7 @@ export default function RosterPage() {
                           </SelectTrigger>
                           <SelectContent
                             dir="rtl"
-                            className="rounded-2xl font-bold border-border/50"
+                            className="rounded-2xl font-bold border-border/40"
                           >
                             <SelectItem value="all">כל המדורים</SelectItem>
                             {sections.map((s: any) => (
@@ -673,7 +745,7 @@ export default function RosterPage() {
                           </SelectTrigger>
                           <SelectContent
                             dir="rtl"
-                            className="rounded-2xl font-bold border-border/50"
+                            className="rounded-2xl font-bold border-border/40"
                           >
                             <SelectItem value="all">כל החוליות</SelectItem>
                             {teams.map((t: any) => (
@@ -689,7 +761,7 @@ export default function RosterPage() {
                 </AnimatePresence>
               </div>
 
-              <div className="w-px h-6 bg-border/50 mx-1 hidden lg:block" />
+              <div className="w-px h-6 bg-border/40 mx-1 hidden lg:block" />
 
               {/* Status Filter */}
               <div className="relative group/select">
@@ -702,7 +774,7 @@ export default function RosterPage() {
                     dir="rtl"
                     className="rounded-2xl font-bold border-primary/20"
                   >
-                    <SelectItem value="all">כל המצבים</SelectItem>
+                    <SelectItem value="all">כל הסטטוסים</SelectItem>
                     <SelectItem value="none" className="text-rose-500">
                       לא דווח
                     </SelectItem>
@@ -723,46 +795,42 @@ export default function RosterPage() {
             </div>
 
             {/* Date Navigation Block */}
-            <div className="flex items-center gap-1.5 p-1 bg-muted/30 rounded-2xl border border-transparent">
+            <div className={cn("flex items-center gap-1.5 p-1 bg-muted/30 rounded-2xl border border-transparent transition-opacity", isPendingDate && "opacity-50")}>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary transition-all"
-                onClick={() => setCurrentDate(subWeeks(currentDate, 1))}
+                onClick={() => startTransition(() => setCurrentDate(subWeeks(currentDate, 1)))}
               >
                 <ChevronRight className="w-5 h-5" />
               </Button>
-
               <div className="px-4 flex flex-col items-center justify-center min-w-[130px]">
                 <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] leading-none mb-1">
                   {format(weekStart, "MMMM yyyy", { locale: he })}
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] font-black text-foreground tracking-tighter tabular-nums">
-                    {format(weekStart, "dd", { locale: he })}
+                    {format(weekStart, "dd")}
                   </span>
                   <div className="w-3 h-px bg-border/80" />
                   <span className="text-[13px] font-black text-foreground tracking-tighter tabular-nums">
-                    {format(weekEnd, "dd", { locale: he })}
+                    {format(weekEnd, "dd")}
                   </span>
                 </div>
               </div>
-
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary transition-all"
-                onClick={() => setCurrentDate(addWeeks(currentDate, 1))}
+                onClick={() => startTransition(() => setCurrentDate(addWeeks(currentDate, 1)))}
               >
                 <ChevronLeft className="w-5 h-5" />
               </Button>
-
               <div className="w-px h-5 bg-border/80 mx-1" />
-
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setCurrentDate(new Date())}
+                onClick={() => startTransition(() => setCurrentDate(new Date()))}
                 className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary transition-all group/today"
                 title="חזור להיום"
               >
@@ -774,8 +842,9 @@ export default function RosterPage() {
 
         <div className="flex-1 overflow-auto py-3 sm:py-4 md:py-6 custom-scrollbar">
           {/* Mobile Day Selector - Only visible on small screens */}
-          <div className="lg:hidden bg-background/80 backdrop-blur-xl sticky top-[-1rem] z-40 mb-6 py-4 -mx-3 border-b border-border/50 px-3">
-            <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
+          <div className="lg:hidden bg-background/95 backdrop-blur-xl sticky top-0 z-40 mb-4 -mx-4 border-b border-border/40 px-4 pt-2 pb-3">
+            {/* Day pills row */}
+            <div className="flex items-center gap-1.5">
               {weekDays.map((day, i) => {
                 const isSelected = isSameDay(day, selectedDayMobile);
                 const isToday = isSameDay(day, today);
@@ -785,66 +854,77 @@ export default function RosterPage() {
                     key={i}
                     onClick={() => {
                       setSelectedDayMobile(day);
-                      // Vibration feedback if available
                       if (window.navigator.vibrate)
                         window.navigator.vibrate(10);
                     }}
                     className={cn(
-                      "flex flex-col items-center justify-center min-w-[65px] h-[85px] p-2 rounded-2xl transition-all border-2 relative shrink-0",
-                      "active:scale-90 touch-none", // Tap effect
+                      "flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all relative",
+                      "active:scale-95",
                       isSelected
-                        ? "bg-primary text-primary-foreground border-primary  scale-[1.05] z-10"
-                        : "bg-background border-border/40 hover:border-primary/20 text-muted-foreground",
-                      weekend && !isSelected && "bg-muted/30 border-dashed",
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : weekend
+                          ? "bg-amber-500/5 border border-amber-500/20"
+                          : "bg-transparent hover:bg-muted/50",
                     )}
                   >
+                    {/* Day letter */}
                     <span
                       className={cn(
-                        "text-[10px] font-black uppercase tracking-tighter mb-1",
+                        "text-[10px] font-black mb-0.5",
                         isSelected
-                          ? "text-primary-foreground/70"
+                          ? "text-primary-foreground/80"
                           : "text-muted-foreground/60",
                       )}
                     >
-                      {format(day, "EEEE", { locale: he })}
+                      {format(day, "EEEEE", { locale: he })}
                     </span>
-                    <span className="text-lg font-black tracking-tight tabular-nums leading-none">
+                    {/* Day number */}
+                    <span
+                      className={cn(
+                        "text-sm font-black tabular-nums leading-none",
+                        isSelected
+                          ? "text-primary-foreground"
+                          : isToday
+                            ? "text-primary"
+                            : "text-foreground",
+                      )}
+                    >
                       {format(day, "dd")}
                     </span>
-                    {isToday && !isSelected && (
-                      <div className="absolute top-2 left-2 w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    )}
-
-                    {/* Mini indicator for weekend fire icon */}
+                    {/* Shabbat icon for weekend days */}
                     {weekend && (
-                      <Flame
+                      <ShabbatIcon
                         className={cn(
-                          "w-3 h-3 mt-1",
+                          "w-3 h-3 mt-0.5",
                           isSelected
-                            ? "text-primary-foreground/50"
-                            : "text-amber-500/50",
+                            ? "text-primary-foreground/80"
+                            : "text-amber-500",
                         )}
                       />
+                    )}
+                    {/* Today dot */}
+                    {isToday && !isSelected && (
+                      <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary" />
                     )}
                   </button>
                 );
               })}
             </div>
 
-            {/* Mobile Stats Summary */}
-            <div className="flex items-center justify-between mt-4 px-1">
+            {/* Stats + date summary row */}
+            <div className="flex items-center justify-between mt-2">
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/[0.08] text-emerald-600 rounded-xl border border-emerald-500/20">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 text-emerald-600 rounded-lg">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span className="text-[11px] font-black uppercase tracking-tight">
+                  <span className="text-[11px] font-black">
                     נוכחים:{" "}
                     {dailyTotals[format(selectedDayMobile, "yyyy-MM-dd")]
                       ?.present || 0}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-500/[0.08] text-rose-600 rounded-xl border border-rose-500/20">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-rose-500/10 text-rose-600 rounded-lg">
                   <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                  <span className="text-[11px] font-black uppercase tracking-tight">
+                  <span className="text-[11px] font-black">
                     נעדרים:{" "}
                     {dailyTotals[format(selectedDayMobile, "yyyy-MM-dd")]
                       ?.absent || 0}
@@ -866,11 +946,11 @@ export default function RosterPage() {
           {/* Layout Wrapper */}
           <div className="relative group">
             {/* Desktop Roster Grid (hidden on mobile) */}
-            <div className="hidden lg:block bg-background border border-border rounded-2xl min-w-max lg:min-w-full overflow-hidden relative">
+            <div className="hidden lg:block bg-background border border-border/40 rounded-2xl min-w-max lg:min-w-full overflow-hidden relative">
               {/* Table Header */}
               <div className="min-w-[1200px]">
-                <div className="grid grid-cols-[minmax(240px,1.5fr)_repeat(7,minmax(110px,1fr))] bg-muted/10 border-b border-border/30 sticky top-0 z-30 backdrop-blur-2xl">
-                  <div className="p-4 flex items-center justify-between border-l border-border/30 sticky right-0 z-40 bg-muted/10 backdrop-blur-2xl">
+                <div className="grid grid-cols-[minmax(240px,1.5fr)_repeat(7,minmax(110px,1fr))] border-b border-border/30 sticky top-0 z-30 backdrop-blur-2xl bg-background/95">
+                  <div className="p-4 flex items-center justify-between border-l border-border/30 sticky right-0 z-40 bg-background/95 backdrop-blur-2xl">
                     <div className="flex flex-col">
                       <span className="text-xs font-black text-foreground uppercase tracking-widest">
                         שם השוטר
@@ -896,27 +976,31 @@ export default function RosterPage() {
                       <div
                         key={i}
                         className={cn(
-                          "p-4 flex flex-col items-center justify-center border-l border-border/30 transition-colors",
-                          weekend && "bg-muted/10",
-                          isToday && "bg-primary/[0.02]",
+                          "p-4 flex flex-col items-center justify-center border-l border-border/30 transition-colors relative",
+                          isToday && "bg-primary/[0.04]",
                         )}
                       >
+                        {/* Today indicator line on top */}
+                        {isToday && (
+                          <div className="absolute top-0 left-4 right-4 h-0.5 rounded-full bg-primary" />
+                        )}
+
                         <span
                           className={cn(
                             "text-[10px] font-black uppercase tracking-widest mb-1.5",
                             isToday
                               ? "text-primary"
-                              : "text-muted-foreground/60",
+                              : "text-muted-foreground/50",
                           )}
                         >
                           {format(day, "EEEE", { locale: he })}
                         </span>
 
-                        <div className="flex items-center gap-1.5 mb-2">
+                        <div className="flex items-center gap-1.5 mb-1">
                           <span
                             className={cn(
                               "text-xl font-black tabular-nums leading-none",
-                              isToday ? "text-primary" : "text-foreground",
+                              isToday ? "text-primary" : "text-foreground/80",
                             )}
                           >
                             {format(day, "dd")}
@@ -924,25 +1008,13 @@ export default function RosterPage() {
                         </div>
 
                         {weekend && (
-                          <div className="flex items-center gap-1.5 mt-1 -mb-1 opacity-50">
-                            <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
-                          </div>
+                          <ShabbatIcon className="w-5 h-5 text-amber-500 mt-0.5" />
                         )}
                         {!weekend && dailyTotal.total > 0 && (
-                          <div className="flex items-center gap-2 px-2 py-0.5 rounded-lg bg-background border border-border/50 mt-1">
-                            <div className="flex items-center gap-1">
-                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              <span className="text-[9px] font-black text-emerald-600 tabular-nums">
-                                {dailyTotal.present}
-                              </span>
-                            </div>
-                            <div className="w-px h-2.5 bg-border/50" />
-                            <div className="flex items-center gap-1">
-                              <span className="text-[9px] font-black text-rose-600 tabular-nums">
-                                {dailyTotal.absent}
-                              </span>
-                              <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                            </div>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-[9px] font-black text-emerald-600 tabular-nums">{dailyTotal.present}</span>
+                            <span className="text-[9px] text-muted-foreground/40">/</span>
+                            <span className="text-[9px] font-black text-rose-600 tabular-nums">{dailyTotal.absent}</span>
                           </div>
                         )}
                       </div>
@@ -962,7 +1034,7 @@ export default function RosterPage() {
                             repeat: Infinity,
                             ease: "linear",
                           }}
-                          className="w-16 h-16 rounded-full border-4 border-primary/10 border-t-primary"
+                          className="w-16 h-16 rounded-full border-4 border-border/40 border-t-primary"
                         />
                       </div>
                       <span className="text-sm font-black text-muted-foreground animate-pulse tracking-widest uppercase">
@@ -992,7 +1064,7 @@ export default function RosterPage() {
                       >
                         <div className="p-4 border-l border-border/30 sticky right-0 z-20 bg-background/90 backdrop-blur-xl transition-all border-r-2 border-r-transparent group-hover/row:border-r-primary">
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-border/50 flex items-center justify-center text-slate-500 font-black text-xs group-hover/row:scale-105 transition-all">
+                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-border/40 flex items-center justify-center text-slate-500 font-black text-xs group-hover/row:scale-105 transition-all">
                               {emp.first_name[0]}
                               {emp.last_name[0]}
                             </div>
@@ -1003,7 +1075,7 @@ export default function RosterPage() {
                               />
                               <div className="flex items-center gap-1.5 mt-1">
                                 <span className="text-[9px] font-black text-muted-foreground/60 tracking-widest">
-                                  {emp.personal_number}
+                                  {emp.username}
                                 </span>
                                 <span className="w-1 h-1 rounded-full bg-border/60" />
                                 <span className="text-[9px] font-black text-primary/70 truncate bg-primary/5 px-1.5 py-0.5 rounded-md">
@@ -1108,17 +1180,17 @@ export default function RosterPage() {
                   return (
                     <motion.div
                       key={emp.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.03 }}
                       onClick={() => handleCellClick(emp.id, selectedDayMobile)}
-                      className="bg-card border border-border/50 rounded-3xl p-4 flex items-center justify-between gap-4 active:scale-[0.97] transition-all  border-r-4"
+                      className="flex items-center justify-between gap-4 py-3 border-b border-border/20 active:bg-muted/30 transition-all"
                       style={{
                         borderRightColor: log?.status_color || "transparent",
                       }}
                     >
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center font-black text-[11px] shrink-0 border border-border/40 text-muted-foreground uppercase">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center font-black text-[11px] shrink-0 text-muted-foreground uppercase">
                           {emp.first_name[0]}
                           {emp.last_name[0]}
                         </div>
@@ -1129,7 +1201,7 @@ export default function RosterPage() {
                           />
                           <div className="flex items-center gap-1.5 opacity-60">
                             <span className="text-[10px] font-black">
-                              #{emp.personal_number}
+                              #{emp.username}
                             </span>
                             <div className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                             <span className="text-[11px] font-bold truncate max-w-[100px] text-primary">
@@ -1151,13 +1223,14 @@ export default function RosterPage() {
                           >
                             {log.status_name}
                           </div>
+                        ) : isWeekend ? (
+                          <div className="px-3 py-2 rounded-xl text-[11px] font-black text-amber-500/60 flex items-center gap-1.5 bg-amber-500/5 border border-amber-500/10">
+                            <ShabbatIcon className="w-4 h-4" />
+                            <span>שבת</span>
+                          </div>
                         ) : (
                           <div className="w-10 h-10 rounded-2xl bg-primary/5 border border-primary/20 flex items-center justify-center text-primary group-active:scale-110 transition-transform">
-                            {isWeekend ? (
-                              <Flame className="w-5 h-5 opacity-40" />
-                            ) : (
-                              <Plus className="w-5 h-5" />
-                            )}
+                            <Plus className="w-5 h-5" />
                           </div>
                         )}
                       </div>
@@ -1166,42 +1239,6 @@ export default function RosterPage() {
                 })
               )}
             </div>
-          </div>
-        </div>
-
-        {/* Legend & Footer */}
-        <div className="bg-white/80 dark:bg-slate-950/80 border-t border-border/50 px-4 sm:px-8 py-4 sm:py-6 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 shrink-0 z-40 backdrop-blur-3xl">
-          <div className="flex flex-wrap items-center justify-center gap-x-6 sm:gap-x-12 gap-y-3 sm:gap-y-4">
-            {rosterParentStatuses.slice(0, 8).map((st: any) => (
-              <div
-                key={st.id}
-                className="flex items-center gap-2 sm:gap-3 group/legend cursor-help"
-              >
-                <div
-                  className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full transition-transform group-hover/legend:scale-125"
-                  style={{
-                    backgroundColor: st.color,
-                    boxShadow: `0 4px 12px ${st.color}40`,
-                  }}
-                />
-                <span className="text-[10px] sm:text-[11px] font-black text-muted-foreground uppercase tracking-wider sm:tracking-widest group-hover/legend:text-foreground transition-colors">
-                  {st.name}
-                </span>
-              </div>
-            ))}
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-px h-5 sm:h-6 bg-border mx-1 sm:mx-2" />
-              <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
-                שישי-שבת
-              </span>
-            </div>
-          </div>
-
-          <div className="hidden sm:flex text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.4em] items-center gap-3 group">
-            <MousePointer2 className="w-4 h-4 group-hover:text-primary transition-colors" />
-            <span className="group-hover:text-foreground transition-colors">
-              {projectTitle}
-            </span>
           </div>
         </div>
 
@@ -1231,7 +1268,7 @@ export default function RosterPage() {
             </DialogHeader>
 
             <div className="px-6 py-4 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-              <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-white/5 rounded-2xl border border-primary/10 dark:border-white/10 shadow-sm transition-all hover:bg-primary/10 dark:hover:bg-white/10">
+              <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-white/5 rounded-2xl border border-border/40 dark:border-white/10 shadow-sm transition-all hover:bg-primary/10 dark:hover:bg-white/10">
                 <div className="flex items-center gap-3">
                   <CalendarRange className="w-5 h-5 text-primary/70" />
                   <span className="text-sm font-bold text-foreground">
@@ -1252,7 +1289,7 @@ export default function RosterPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-primary/[0.02] border border-primary/10 rounded-xl space-y-4"
+                  className="p-4 bg-primary/[0.02] border border-border/40 rounded-xl space-y-4"
                 >
                   <div className="flex items-center gap-2 text-primary">
                     <AlertCircle className="w-4 h-4" />

@@ -242,7 +242,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-full sm:max-w-2xl h-[92vh] sm:h-auto sm:max-h-[85vh] p-0 border-none bg-card flex flex-col rounded-t-[32px] sm:rounded-3xl overflow-hidden !gap-0"
+        className="w-full sm:max-w-2xl h-[92vh] sm:h-auto sm:max-h-[85vh] p-0 border-none bg-card flex flex-col rounded-t-[32px] sm:rounded-3xl overflow-hidden !gap-0 pointer-events-auto"
         dir="rtl"
       >
         <DialogHeader className="p-5 sm:p-8 pb-4 border-b border-border/50 bg-muted/20 text-right shrink-0 space-y-0">
@@ -254,9 +254,6 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               <DialogDescription className="text-[11px] sm:text-sm font-bold text-muted-foreground italic tracking-tight leading-relaxed">
                 התאם את התצוגה המבוקשת לפי מדרג ארגוני, מעמד או מאפיינים אישיים
               </DialogDescription>
-            </div>
-            <div className="w-16 h-16 rounded-[24px] bg-primary/10 flex items-center justify-center text-primary border border-primary/20  shrink-0 scale-110 sm:scale-100">
-              <Filter className="w-8 h-8" />
             </div>
           </div>
 
@@ -315,59 +312,58 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             {expandedSection === "org" && (
               <div className="space-y-6 pr-2 sm:pr-14 animate-in fade-in slide-in-from-top-4 duration-500 pb-4">
                 {/* Departments */}
-                {(user?.is_admin || availableDepts.length > 1) && (
-                  <div className="space-y-3">
-                    <Label className="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
-                      מחלקות
-                      <div className="h-px bg-indigo-100 flex-1 opacity-70" />
-                    </Label>
-                    <div className="flex flex-wrap gap-2.5">
-                      {availableDepts.map((dept) => (
-                        <Button
-                          key={dept}
-                          variant="ghost"
-                          onClick={() => toggleFilter("departments", dept)}
-                          className={cn(
-                            "h-9 px-4 rounded-xl text-xs font-black transition-all border",
-                            filters.departments?.includes(dept)
-                              ? "bg-indigo-600 text-white border-indigo-600  -600/20 hover:bg-indigo-700 hover:text-white"
-                              : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-indigo-300 hover:text-indigo-600",
-                          )}
-                        >
-                          {dept}
-                        </Button>
-                      ))}
-                    </div>
+                <div className="space-y-3">
+                  <Label className="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+                    מחלקות
+                    <div className="h-px bg-indigo-100 flex-1 opacity-70" />
+                  </Label>
+                  <div className="flex flex-wrap gap-2.5">
+                    {availableDepts.length > 0 ? availableDepts.map((dept) => (
+                      <Button
+                        key={dept}
+                        variant="ghost"
+                        onClick={() => toggleFilter("departments", dept)}
+                        className={cn(
+                          "h-9 px-4 rounded-xl text-xs font-black transition-all border",
+                          filters.departments?.includes(dept)
+                            ? "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700 hover:text-white"
+                            : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-indigo-300 hover:text-indigo-600",
+                        )}
+                      >
+                        {dept}
+                      </Button>
+                    )) : (
+                      <span className="text-xs text-muted-foreground/50">אין נתונים</span>
+                    )}
                   </div>
-                )}
+                </div>
 
                 {/* Sections */}
-                {availableSections.length > 0 &&
-                  (availableSections.length > 1 || user?.is_admin) && (
-                    <div className="space-y-3">
-                      <Label className="text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
-                        מדורים
-                        <div className="h-px bg-blue-100 flex-1 opacity-70" />
-                      </Label>
-                      <div className="flex flex-wrap gap-2.5">
-                        {availableSections.map((sect) => (
-                          <Button
-                            key={sect}
-                            variant="ghost"
-                            onClick={() => toggleFilter("sections", sect)}
-                            className={cn(
-                              "h-9 px-4 rounded-xl text-xs font-black transition-all border",
-                              filters.sections?.includes(sect)
-                                ? "bg-blue-600 text-white border-blue-600  -600/20 hover:bg-blue-700 hover:text-white"
-                                : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-blue-300 hover:text-blue-600",
-                            )}
-                          >
-                            {sect}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <div className="space-y-3">
+                  <Label className="text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                    מדורים
+                    <div className="h-px bg-blue-100 flex-1 opacity-70" />
+                  </Label>
+                  <div className="flex flex-wrap gap-2.5">
+                    {availableSections.length > 0 ? availableSections.map((sect) => (
+                      <Button
+                        key={sect}
+                        variant="ghost"
+                        onClick={() => toggleFilter("sections", sect)}
+                        className={cn(
+                          "h-9 px-4 rounded-xl text-xs font-black transition-all border",
+                          filters.sections?.includes(sect)
+                            ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:text-white"
+                            : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-blue-300 hover:text-blue-600",
+                        )}
+                      >
+                        {sect}
+                      </Button>
+                    )) : (
+                      <span className="text-xs text-muted-foreground/50">בחר מחלקה תחילה</span>
+                    )}
+                  </div>
+                </div>
 
                 {/* Teams */}
                 {availableTeams.length > 0 && (
@@ -385,7 +381,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                           className={cn(
                             "h-9 px-4 rounded-xl text-xs font-black transition-all border",
                             filters.teams?.includes(team)
-                              ? "bg-emerald-600 text-white border-emerald-600  -600/20 hover:bg-emerald-700 hover:text-white"
+                              ? "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:text-white"
                               : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-emerald-300 hover:text-emerald-600",
                           )}
                         >
@@ -396,29 +392,30 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
-                  {/* Service Types */}
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
-                      מעמד / מעמד
-                    </Label>
-                    <div className="flex flex-wrap gap-2">
-                      {hierarchyData.serviceTypes.map((type) => (
-                        <Button
-                          key={type}
-                          variant="outline"
-                          onClick={() => toggleFilter("serviceTypes", type)}
-                          className={cn(
-                            "h-8 px-3 rounded-lg text-[11px] font-black transition-all",
-                            filters.serviceTypes?.includes(type)
-                              ? "bg-primary text-primary-foreground border-primary  "
-                              : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/30",
-                          )}
-                        >
-                          {type}
-                        </Button>
-                      ))}
-                    </div>
+                {/* Service Types */}
+                <div className="space-y-3">
+                  <Label className="text-[11px] font-black text-violet-600 uppercase tracking-widest flex items-center gap-2">
+                    מעמד
+                    <div className="h-px bg-violet-100 flex-1 opacity-70" />
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {hierarchyData.serviceTypes.length > 0 ? hierarchyData.serviceTypes.map((type) => (
+                      <Button
+                        key={type}
+                        variant="ghost"
+                        onClick={() => toggleFilter("serviceTypes", type)}
+                        className={cn(
+                          "h-9 px-4 rounded-xl text-xs font-black transition-all border",
+                          filters.serviceTypes?.includes(type)
+                            ? "bg-violet-600 text-white border-violet-600 hover:bg-violet-700 hover:text-white"
+                            : "bg-background text-muted-foreground border-border/50 hover:bg-muted hover:border-violet-300 hover:text-violet-600",
+                        )}
+                      >
+                        {type}
+                      </Button>
+                    )) : (
+                      <span className="text-xs text-muted-foreground/50">אין נתונים</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -445,9 +442,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   <span className="text-base font-black text-foreground leading-none">
                     הרשאות ומאפיינים
                   </span>
-                  <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1">
-                    דיווח, פיקוד וניהול
-                  </span>
+                  
                 </div>
               </div>
               <div
@@ -475,7 +470,6 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                     label: "מפקדים בלבד",
                     icon: ShieldCheck,
                   },
-                  { id: "isAdmin", label: "מנהלי מערכת", icon: CheckCircle2 },
                   {
                     id: "hasSecurityClearance",
                     label: "בעלי סיווג ביטחוני",
@@ -531,16 +525,16 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 toggleFilter("showInactive", !filters.showInactive)
               }
               className={cn(
-                "w-full flex items-center justify-between p-5 rounded-3xl border-2 transition-all group",
+                "w-full flex items-center justify-between p-4 sm:p-5 rounded-3xl border-2 transition-all group overflow-hidden gap-3",
                 filters.showInactive
                   ? "bg-red-500/5 border-red-500/20 text-red-600  -500/5"
                   : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted/50 hover:border-border/30",
               )}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 <div
                   className={cn(
-                    "w-10 h-10 rounded-2xl flex items-center justify-center transition-all",
+                    "w-10 h-10 shrink-0 rounded-2xl flex items-center justify-center transition-all",
                     filters.showInactive
                       ? "bg-red-600 text-white  -600/20"
                       : "bg-background text-muted-foreground group-hover:text-foreground ",
@@ -548,18 +542,18 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 >
                   <UserMinus className="w-5 h-5" />
                 </div>
-                <div className="flex flex-col text-right">
-                  <span className="text-sm font-black tracking-tight">
+                <div className="flex flex-col text-right flex-1 min-w-0">
+                  <span className="text-sm font-black tracking-tight truncate">
                     הצגת שוטרים שאינם פעילים
                   </span>
-                  <span className="text-[10px] font-black opacity-60 uppercase tracking-widest mt-0.5">
-                    כולל שוטרים בתהליך שחרור או מושבתים באופן זמני
+                  <span className="text-[9px] sm:text-[10px] font-black opacity-60 uppercase tracking-widest mt-0.5 truncate sm:whitespace-normal sm:line-clamp-2">
+                    כולל שוטרים בתהליך שחרור או מושבתים
                   </span>
                 </div>
               </div>
               <div
                 className={cn(
-                  "w-10 h-5 rounded-full relative transition-colors p-1",
+                  "w-10 h-5 shrink-0 rounded-full relative transition-colors p-1",
                   filters.showInactive
                     ? "bg-red-600"
                     : "bg-muted-foreground/30",

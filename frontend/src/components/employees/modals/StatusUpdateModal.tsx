@@ -238,7 +238,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
         const delegate = candidates.find((c) => c.id.toString() === delegateId);
         setDelegationResult({
           delegateName: `${delegate?.first_name} ${delegate?.last_name}`,
-          personalNumber: delegate?.personal_number || "",
+          personalNumber: delegate?.username || "",
           tempPassword: result.delegation.temp_password,
           phoneNumber: delegate?.phone_number,
         });
@@ -303,7 +303,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
-                      מספר אישי
+                      שם משתמש
                     </span>
                     <span className="text-xl font-mono font-black text-primary">
                       {delegationResult.personalNumber}
@@ -334,7 +334,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button
                 onClick={() => {
-                  const text = `שלום ${delegationResult.delegateName}, מונית כממלא מקום מפקד החוליה.\n\nפרטי התחברות למערכת:\nמספר אישי: ${delegationResult.personalNumber}\nסיסמה זמנית: ${delegationResult.tempPassword}\n\nבהצלחה!`;
+                  const text = `שלום ${delegationResult.delegateName}, מונית כממלא מקום מפקד החוליה.\n\nפרטי התחברות למערכת:\nשם משתמש: ${delegationResult.personalNumber}\nסיסמה זמנית: ${delegationResult.tempPassword}\n\nבהצלחה!`;
                   if (delegationResult.phoneNumber) {
                     const cleanPhone = delegationResult.phoneNumber.replace(
                       /\D/g,
@@ -364,7 +364,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
               <Button
                 variant="outline"
                 onClick={() => {
-                  const text = `שלום ${delegationResult.delegateName}, מונית כממלא מקום מפקד החוליה.\n\nפרטי התחברות למערכת:\nמספר אישי: ${delegationResult.personalNumber}\nסיסמה זמנית: ${delegationResult.tempPassword}\n\nבהצלחה!`;
+                  const text = `שלום ${delegationResult.delegateName}, מונית כממלא מקום מפקד החוליה.\n\nפרטי התחברות למערכת:\nשם משתמש: ${delegationResult.personalNumber}\nסיסמה זמנית: ${delegationResult.tempPassword}\n\nבהצלחה!`;
                   navigator.clipboard.writeText(text);
                   toast.success("הפרטים הועתקו ללוח");
                   onOpenChange(false);
@@ -397,7 +397,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                   </DialogTitle>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[10px] font-mono text-muted-foreground">
-                      {employee.personal_number}
+                      {employee.username}
                     </span>
                     {employee.status_name && (
                       <>
@@ -758,7 +758,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                                 {c.first_name} {c.last_name}
                                               </span>
                                               <span className="text-xs text-muted-foreground font-mono">
-                                                ({c.personal_number})
+                                                ({c.username})
                                               </span>
                                             </div>
                                           </SelectItem>

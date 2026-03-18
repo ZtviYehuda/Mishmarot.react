@@ -7,7 +7,6 @@ import {
   ShieldCheck,
   ArrowRight,
   Mail,
-  KeyRound,
   Fingerprint,
   Loader2,
   AlertCircle,
@@ -34,7 +33,6 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState("");
 
   // Form Data
-  const [personalNumber, setPersonalNumber] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -42,7 +40,7 @@ export default function ForgotPasswordPage() {
 
   const handleRequestCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!personalNumber || !email) return;
+    if (!email) return;
 
     setIsLoading(true);
     setError("");
@@ -50,8 +48,7 @@ export default function ForgotPasswordPage() {
       const { data } = await apiClient.post(
         endpoints.AUTH_FORGOT_PASSWORD_ENDPOINT,
         {
-          personal_number: personalNumber,
-          email: email,
+                    email: email,
         },
       );
 
@@ -113,8 +110,7 @@ export default function ForgotPasswordPage() {
         endpoints.AUTH_RESET_PASSWORD_WITH_CODE_ENDPOINT,
         {
           email,
-          personal_number: personalNumber,
-          code,
+                    code,
           new_password: newPassword,
         },
       );
@@ -191,21 +187,6 @@ export default function ForgotPasswordPage() {
                   </div>
 
                   <form onSubmit={handleRequestCode} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground mr-1">
-                        מספר אישי
-                      </Label>
-                      <div className="relative group">
-                        <KeyRound className="absolute right-3 top-3 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-                        <Input
-                          required
-                          value={personalNumber}
-                          onChange={(e) => setPersonalNumber(e.target.value)}
-                          className="h-12 pr-10 rounded-xl bg-background/50 focus:bg-background transition-all"
-                          placeholder="מספר אישי"
-                        />
-                      </div>
-                    </div>
 
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground mr-1">

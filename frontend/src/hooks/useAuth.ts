@@ -39,13 +39,13 @@ export const useAuth = () => {
   }, []);
 
   // Login Function
-  const login = async (personal_number: string, password: string) => {
+  const login = async (username: string, password: string) => {
     setLoading(true);
     try {
       const { data } = await apiClient.post<LoginResponse>(
         endpoints.AUTH_LOGIN_ENDPOINT,
         {
-          personal_number,
+          username,
           password,
         },
       );
@@ -72,7 +72,7 @@ export const useAuth = () => {
       localStorage.setItem(
         "locked_user",
         JSON.stringify({
-          personal_number: user.personal_number,
+          username: user.username,
           first_name: user.first_name,
           last_name: user.last_name,
           id: user.id,

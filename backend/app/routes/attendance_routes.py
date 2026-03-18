@@ -389,7 +389,15 @@ def get_calendar_stats():
     try:
         year = int(request.args.get("year"))
         month = int(request.args.get("month"))
-        summary = AttendanceModel.get_monthly_summary(year, month)
+        identity = get_jwt_identity()
+        try:
+            if isinstance(identity, str):
+                identity = json.loads(identity)
+        except:
+            pass
+        user_id = identity.get("id") if isinstance(identity, dict) else identity
+
+        summary = AttendanceModel.get_monthly_summary(year, month, user_id)
         return jsonify(summary)
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid year/month parameters"}), 400
@@ -535,7 +543,7 @@ def get_roster_matrix():
             return jsonify({"employees": [], "logs": []})
 
         emp_ids = [e["id"] for e in employees]
-        logs = AttendanceModel.get_logs_for_employees(emp_ids, start_date, end_date)
+        logs = AttendanceModel.get_logs_for_employees(emp_ids, start_date, end_date, user_id)
 
         # Convert datetimes to ISO strings for JSON serialization
         for log in logs:

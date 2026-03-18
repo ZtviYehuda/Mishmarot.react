@@ -112,7 +112,7 @@ def create_employee():
         AuditLogModel.log_action(
             user_id=user_id,
             action_type="EMPLOYEE_CREATE",
-            description=f"Created new employee: {data.get('first_name')} {data.get('last_name')} (P-Num: {data.get('personal_number')})",
+            description=f"Created new employee: {data.get('first_name')} {data.get('last_name')} (Username: {data.get('username')})",
             target_id=new_id,
             ip_address=request.remote_addr,
             metadata=data,
@@ -301,7 +301,7 @@ def export_excel():
             return jsonify({"error": "No employees found"}), 404
 
         emp_map = {
-            e["id"]: f"{e['first_name']} {e['last_name']} ({e['personal_number']})"
+            e["id"]: f"{e['first_name']} {e['last_name']} ({e['username']})"
             for e in employees
         }
         emp_ids = list(emp_map.keys())
@@ -358,7 +358,7 @@ def export_excel():
             eid = emp["id"]
             row = {
                 "שם מלא (פרטי ומשפחה)": f"{emp['first_name']} {emp['last_name']}",
-                "מספר אישי": emp["personal_number"],
+                "שם משתמש": emp["username"],
                 "מחלקה": emp["department_name"] or "-",
                 "מדור": emp["section_name"] or "-",
                 "חולייה": emp["team_name"] or "-",
@@ -381,7 +381,7 @@ def export_excel():
         columns = {
             "first_name": "שם פרטי",
             "last_name": "שם משפחה",
-            "personal_number": "מספר אישי",
+            "username": "שם משתמש",
             "status_name": "סטטוס",
             "team_name": "חוליה",
             "section_name": "מדור",

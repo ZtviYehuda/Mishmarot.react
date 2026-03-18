@@ -6,10 +6,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { RotateCcw, Cake, Briefcase, Filter, X } from "lucide-react";
+import { RotateCcw, Cake, Briefcase, Filter, X, Users, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
   Popover,
@@ -61,7 +60,12 @@ interface DashboardFiltersProps {
   canSelectDept: boolean;
   canSelectSection: boolean;
   canSelectTeam: boolean;
+  hasActiveFiltersExternal?: boolean;
+  activeFilterCountExternal?: number;
+  user?: any;
   isMobile?: boolean;
+  pillsOnly?: boolean;
+  className?: string;
 }
 
 export const DashboardFilters = ({
@@ -79,27 +83,35 @@ export const DashboardFilters = ({
   canSelectDept,
   canSelectSection,
   canSelectTeam,
+  hasActiveFiltersExternal,
+  activeFilterCountExternal,
+  user,
   isMobile = false,
+  pillsOnly = false,
+  className,
 }: DashboardFiltersProps) => {
-  // Prepare options based on selections
-  const selectedDept = structure.find(
-    (d) => d.id.toString() === selectedDeptId,
-  );
-  const sections = selectedDept ? selectedDept.sections : [];
+  const sections = useMemo(() => {
+    if (!selectedDeptId) return [];
+    const dept = structure.find((d) => d.id.toString() === selectedDeptId);
+    return dept ? dept.sections : [];
+  }, [selectedDeptId, structure]);
 
-  const selectedSection = sections.find(
-    (s) => s.id.toString() === selectedSectionId,
-  );
-  const teams = selectedSection ? selectedSection.teams : [];
+  const teams = useMemo(() => {
+    if (!selectedSectionId) return [];
+    const sec = sections.find((s) => s.id.toString() === selectedSectionId);
+    return sec ? sec.teams : [];
+  }, [selectedSectionId, sections]);
 
-  const hasActiveFilters =
-    !!selectedDeptId ||
-    !!selectedSectionId ||
-    !!selectedTeamId ||
-    !!selectedStatusId ||
-    selectedServiceTypes.length > 0 ||
-    !!selectedAgeRange?.min ||
-    !!selectedAgeRange?.max;
+  const hasActiveFilters = 
+    hasActiveFiltersExternal !== undefined 
+      ? hasActiveFiltersExternal 
+      : (!!selectedDeptId ||
+         !!selectedSectionId ||
+         !!selectedTeamId ||
+         !!selectedStatusId ||
+         selectedServiceTypes.length > 0 ||
+         !!selectedAgeRange?.min ||
+         !!selectedAgeRange?.max);
 
   const ageRanges = [
     { label: "כל הגילאים", value: "all" },
@@ -121,587 +133,368 @@ export const DashboardFilters = ({
   // Sub-status logic
   const selectedStatus = useMemo(() => {
     if (!selectedStatusId) return null;
-    return allStatusTypes.find((s) => s.id.toString() === selectedStatusId);
-  }, [allStatusTypes, selectedStatusId]);
+    const s = statuses.find((st) => st.status_id.toString() === selectedStatusId);
+    if (s) return { id: s.status_id, name: s.status_name, color: s.color };
+    return null;
+  }, [selectedStatusId, statuses]);
 
-  const activeParentId = useMemo(() => {
-    if (!selectedStatus) return null;
-    return selectedStatus.parent_status_id
-      ? selectedStatus.parent_status_id.toString()
-      : selectedStatus.id.toString();
-  }, [selectedStatus]);
+  const selectedDept = structure.find((d) => d.id.toString() === selectedDeptId);
+  const selectedSection = sections.find((s) => s.id.toString() === selectedSectionId);
+  const selectedTeam = teams.find((t) => t.id.toString() === selectedTeamId);
 
-  const subStatuses = useMemo(() => {
-    if (!activeParentId) return [];
-    return allStatusTypes.filter(
-      (s) => s.parent_status_id?.toString() === activeParentId,
-    );
-  }, [allStatusTypes, activeParentId]);
+  // Determine if organizational filters are "active" based on user's command level
+  const isDeptActive = useMemo(() => {
+    if (!selectedDeptId || selectedDeptId === "all") return false;
+    if (user?.is_admin) return true;
+    // For commanders, if it matches their assigned/commanded unit, it's not an "active" filter (it's their default constraint)
+    if (user?.commands_department_id?.toString() === selectedDeptId) return false;
+    if (user?.assigned_department_id?.toString() === selectedDeptId) return false;
+    return true; 
+  }, [selectedDeptId, user]);
+
+  const isSectionActive = useMemo(() => {
+    if (!selectedSectionId || selectedSectionId === "all") return false;
+    if (user?.is_admin) return true;
+    if (user?.commands_section_id?.toString() === selectedSectionId) return false;
+    if (user?.assigned_section_id?.toString() === selectedSectionId) return false;
+    // If it's a dept commander and they haven't selected a section, it's not active.
+    // But here we check equality.
+    return true;
+  }, [selectedSectionId, user]);
+
+  const isTeamActive = useMemo(() => {
+    if (!selectedTeamId || selectedTeamId === "all") return false;
+    if (user?.is_admin) return true;
+    if (user?.commands_team_id?.toString() === selectedTeamId) return false;
+    if (user?.assigned_team_id?.toString() === selectedTeamId) return false;
+    return true;
+  }, [selectedTeamId, user]);
 
   const FilterContent = (
-    <div className="flex flex-col w-full gap-4">
-      <div
-        className={cn(
-          "flex items-start md:items-center gap-2",
-          isMobile ? "flex-col" : "flex-col md:flex-row min-h-[56px]",
-        )}
-      >
-        {/* Search / Context Icon */}
-        {!isMobile && (
-          <div className="hidden md:flex items-center justify-center w-10 h-10 rounded-2xl bg-primary/5 text-primary ml-4 shrink-0 shadow-inner">
-            <Filter className="w-4 h-4" />
+    <div className="space-y-6">
+      {(canSelectDept || canSelectSection || canSelectTeam) && (
+        <div className="space-y-3">
+          <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <Briefcase className="w-3 h-3" />
+            יחידות ארגוניות
+          </h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="w-full">
+                <Select
+                  value={selectedDeptId || "all"}
+                  onValueChange={(val) => onFilterChange("department", val === "all" ? undefined : val)}
+                  disabled={!canSelectDept && !!selectedDeptId}
+                >
+                  <SelectTrigger className="h-10 px-3 text-[13px] font-bold rounded-xl border border-primary/10 hover:bg-primary/5 transition-colors focus:ring-0 text-right">
+                    <SelectValue placeholder="מחלקה" />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl" className="rounded-xl border-border/40 backdrop-blur-xl">
+                    <SelectItem value="all" className="font-bold">כל המחלקות</SelectItem>
+                    {structure.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-full">
+                <Select
+                  value={selectedSectionId || "all"}
+                  onValueChange={(val) => onFilterChange("section", val === "all" ? undefined : val)}
+                  disabled={(!selectedDeptId && !canSelectDept) || (!canSelectSection && !!selectedSectionId) || (canSelectDept && !selectedDeptId)}
+                >
+                  <SelectTrigger className="h-10 px-3 text-[13px] font-bold rounded-xl border border-primary/10 hover:bg-primary/5 transition-colors focus:ring-0 text-right">
+                    <SelectValue placeholder="מדור" />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl" className="rounded-xl border-border/40 backdrop-blur-xl">
+                    <SelectItem value="all" className="font-bold">כל המדורים</SelectItem>
+                    {sections.map((sec) => (
+                      <SelectItem key={sec.id} value={sec.id.toString()}>{sec.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-full">
+                <Select
+                  value={selectedTeamId || "all"}
+                  onValueChange={(val) => onFilterChange("team", val === "all" ? undefined : val)}
+                  disabled={(!selectedSectionId && !canSelectSection) || (!canSelectTeam && !!selectedTeamId) || (canSelectSection && !selectedSectionId)}
+                >
+                  <SelectTrigger className="h-10 px-3 text-[13px] font-bold rounded-xl border border-primary/10 hover:bg-primary/5 transition-colors focus:ring-0 text-right">
+                    <SelectValue placeholder="חוליה" />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl" className="rounded-xl border-border/40 backdrop-blur-xl">
+                    <SelectItem value="all" className="font-bold">כל החוליות</SelectItem>
+                    {teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id.toString()}>{team.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Organization Selectors */}
-        <div
-          className={cn(
-            "flex items-center gap-1 xl:gap-2 flex-wrap w-full md:w-auto",
-            isMobile
-              ? "flex-col w-full"
-              : "flex-grow",
-          )}
-        >
-          {/* Department */}
-          <div className={cn("min-w-[130px]", isMobile && "w-full")}>
-            <Select
-              value={selectedDeptId || "all"}
-              onValueChange={(val) =>
-                onFilterChange("department", val === "all" ? undefined : val)
-              }
-              disabled={!canSelectDept && !!selectedDeptId}
-            >
-              <SelectTrigger className="border-none bg-transparent hover:bg-black/5 dark:hover:bg-white/5 h-10 px-3 text-[13px] font-black focus:ring-0 focus:ring-offset-0 transition-all rounded-xl">
-                <div className="flex items-center gap-2 truncate">
-                  <Briefcase className="w-3.5 h-3.5 opacity-40 shrink-0" />
-                  <SelectValue placeholder="מחלקה" />
-                </div>
-              </SelectTrigger>
-              <SelectContent
-                dir="rtl"
-                className="rounded-2xl border-primary/10 shadow-2xl backdrop-blur-xl"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Statuses Group */}
+        <div className="space-y-3">
+          <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <Activity className="w-3 h-3" />
+            סטטוסים
+          </h5>
+          <div className="flex flex-wrap gap-2">
+            {allStatusTypes.map((type) => (
+              <Button
+                key={type.id}
+                variant="outline"
+                size="sm"
+                onClick={() => onFilterChange("status", type.id)}
+                className={cn(
+                  "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all",
+                  selectedStatusId === type.id.toString()
+                    ? "bg-primary text-white border-primary shadow-md"
+                    : "hover:bg-primary/5 hover:border-primary/30"
+                )}
               >
-                <SelectItem value="all" className="font-bold">
-                  כל המחלקות
-                </SelectItem>
-                {structure.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id.toString()}>
-                    {dept.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {!isMobile && (
-            <Separator orientation="vertical" className="h-4 bg-primary/10" />
-          )}
-
-          {/* Section */}
-          <div className={cn("min-w-[130px]", isMobile && "w-full")}>
-            <Select
-              value={selectedSectionId || "all"}
-              onValueChange={(val) =>
-                onFilterChange("section", val === "all" ? undefined : val)
-              }
-              disabled={
-                (!selectedDeptId && !canSelectDept) ||
-                (!canSelectSection && !!selectedSectionId) ||
-                (canSelectDept && !selectedDeptId)
-              }
-            >
-              <SelectTrigger className="border-none bg-transparent hover:bg-black/5 dark:hover:bg-white/5 h-10 px-3 text-[13px] font-black focus:ring-0 focus:ring-offset-0 transition-all rounded-xl text-right">
-                <SelectValue placeholder="מדור" />
-              </SelectTrigger>
-              <SelectContent
-                dir="rtl"
-                className="rounded-2xl border-primary/10 shadow-2xl backdrop-blur-xl"
-              >
-                <SelectItem value="all" className="font-bold">
-                  כל המדורים
-                </SelectItem>
-                {sections.map((sec) => (
-                  <SelectItem key={sec.id} value={sec.id.toString()}>
-                    {sec.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {!isMobile && (
-            <Separator orientation="vertical" className="h-4 bg-primary/10" />
-          )}
-
-          {/* Team */}
-          <div className={cn("min-w-[130px]", isMobile && "w-full")}>
-            <Select
-              value={selectedTeamId || "all"}
-              onValueChange={(val) =>
-                onFilterChange("team", val === "all" ? undefined : val)
-              }
-              disabled={
-                (!selectedSectionId && !canSelectSection) ||
-                (!canSelectTeam && !!selectedTeamId) ||
-                (canSelectSection && !selectedSectionId)
-              }
-            >
-              <SelectTrigger className="border-none bg-transparent hover:bg-black/5 dark:hover:bg-white/5 h-10 px-3 text-[13px] font-black focus:ring-0 focus:ring-offset-0 transition-all rounded-xl text-right">
-                <SelectValue placeholder="חולייה" />
-              </SelectTrigger>
-              <SelectContent
-                dir="rtl"
-                className="rounded-2xl border-primary/10 shadow-2xl backdrop-blur-xl"
-              >
-                <SelectItem value="all" className="font-bold">
-                  כל החוליות
-                </SelectItem>
-                {teams.map((team) => (
-                  <SelectItem key={team.id} value={team.id.toString()}>
-                    {team.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                <div 
+                  className="w-2 h-2 rounded-full ml-1.5" 
+                  style={{ backgroundColor: type.color || "currentColor" }} 
+                />
+                {type.name}
+              </Button>
+            ))}
           </div>
         </div>
 
-        {!isMobile && <div className="flex-grow min-w-[20px]" />}
-
-        {/* Metadata Filters Row */}
-        <div
-          className={cn(
-            "flex flex-col xl:flex-row items-stretch xl:items-center gap-2 xl:gap-3 flex-wrap w-full mt-4 md:mt-0",
-            isMobile && "w-full mt-2",
-          )}
-        >
-          {/* Service Type Buttons */}
-          <div
-            className={cn(
-              "flex items-center gap-1 p-1 bg-black/5 dark:bg-white/5 rounded-2xl",
-              isMobile && "w-full justify-center flex-wrap",
-            )}
-          >
-            {serviceTypes.map((st) => {
-              const isSelected = selectedServiceTypes.includes(st.name);
+        {/* Service Types */}
+        <div className="space-y-3">
+          <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <Users className="w-3 h-3" />
+            מעמד
+          </h5>
+          <div className="flex flex-wrap gap-2">
+            {serviceTypes.map((type) => {
+              const isActive = selectedServiceTypes.includes(type.name);
               return (
-                <button
-                  key={st.id}
+                <Button
+                  key={type.id}
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
-                    const newValue = isSelected
-                      ? selectedServiceTypes.filter((name) => name !== st.name)
-                      : [...selectedServiceTypes, st.name];
-                    onFilterChange("serviceType", newValue);
+                    const newTypes = isActive
+                      ? selectedServiceTypes.filter((t) => t !== type.name)
+                      : [...selectedServiceTypes, type.name];
+                    onFilterChange("serviceType", newTypes);
                   }}
                   className={cn(
-                    "px-3 py-1.5 rounded-[14px] text-[11px] font-black transition-all",
-                    isSelected
-                      ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-primary/5"
-                      : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5",
+                    "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all",
+                    isActive
+                      ? "bg-primary text-white border-primary shadow-md"
+                      : "hover:bg-primary/5 hover:border-primary/30"
                   )}
                 >
-                  {st.name}
-                </button>
+                  {type.name}
+                </Button>
               );
             })}
           </div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            {/* Status Select */}
-            <Select
-              value={activeParentId || "all"}
-              onValueChange={(val) =>
-                onFilterChange("status", val === "all" ? undefined : val)
-              }
-            >
-              <SelectTrigger className="h-10 min-w-[140px] border-primary/10 bg-white/50 dark:bg-slate-900 rounded-2xl text-[12px] font-black shadow-sm focus:ring-primary/20">
-                <SelectValue placeholder="סטטוס" />
-              </SelectTrigger>
-              <SelectContent
-                dir="rtl"
-                className="rounded-2xl border-primary/10 shadow-2xl"
-              >
-                <SelectItem
-                  value="all"
-                  className="font-bold text-muted-foreground"
-                >
-                  כל הסטטוסים
-                </SelectItem>
-                {statuses.map((st) => (
-                  <SelectItem
-                    key={st.status_id}
-                    value={st.status_id.toString()}
-                    className="font-bold"
-                  >
-                    <div className="flex items-center gap-2 text-right">
-                      <div
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: st.color }}
-                      />
-                      {st.status_name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Age Select */}
-            <Select
-              value={currentAgeValue}
-              onValueChange={(val) => onFilterChange("ageRange", val)}
-            >
-              <SelectTrigger className="h-10 min-w-[110px] border-primary/10 bg-primary/5 text-primary rounded-2xl text-[12px] font-black shadow-none">
-                <div className="flex items-center gap-2">
-                  <Cake className="w-4 h-4 opacity-50" />
-                  <SelectValue placeholder="גיל" />
-                </div>
-              </SelectTrigger>
-              <SelectContent
-                dir="rtl"
-                className="rounded-2xl border-primary/10 shadow-2xl"
-              >
-                {ageRanges.map((range) => (
-                  <SelectItem
-                    key={range.value}
-                    value={range.value}
-                    className="font-bold"
-                  >
-                    {range.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Reset Button */}
-            {hasActiveFilters && (
+        {/* Age Range */}
+        <div className="space-y-3">
+          <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <Cake className="w-3 h-3" />
+            גילאים
+          </h5>
+          <div className="flex flex-wrap gap-2">
+            {ageRanges.map((range) => (
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onFilterChange("reset")}
-                className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-2xl transition-all shrink-0"
-                title="איפוס"
+                key={range.value}
+                variant="outline"
+                size="sm"
+                onClick={() => onFilterChange("ageRange", range.value)}
+                className={cn(
+                  "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all",
+                  currentAgeValue === range.value
+                    ? "bg-primary text-white border-primary shadow-md"
+                    : "hover:bg-primary/5 hover:border-primary/30"
+                )}
               >
-                <RotateCcw className="w-4 h-4" />
+                {range.label}
               </Button>
-            )}
+            ))}
           </div>
         </div>
       </div>
-
-      {/* Cool Sub-status Row (3 Squares popping up) */}
-      <AnimatePresence>
-        {subStatuses.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, height: "auto", y: 0, scale: 1 }}
-            exit={{ opacity: 0, height: 0, y: -20, scale: 0.95 }}
-            transition={{ type: "spring", damping: 20, stiffness: 200 }}
-            className="overflow-visible"
-          >
-            <div className="flex flex-wrap items-center gap-2 border-t border-primary/5 pt-3 pb-1">
-              <div className="flex items-center gap-1.5 ml-4">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
-                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                  תתי קטגוריה:
-                </span>
-              </div>
-              <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-3 pt-2 px-1">
-                {subStatuses.map((sub, idx) => {
-                  const isSubSel = selectedStatusId === sub.id.toString();
-                  return (
-                    <motion.button
-                      key={sub.id}
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{
-                        delay: idx * 0.05,
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 15,
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() =>
-                        onFilterChange("status", sub.id.toString())
-                      }
-                      className={cn(
-                        "px-4 py-4 rounded-2xl text-[11px] font-black transition-all flex flex-col items-center justify-center gap-2 border-2 whitespace-nowrap min-w-[110px] h-[80px]",
-                        isSubSel
-                          ? "bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105"
-                          : "bg-white/50 dark:bg-slate-800/50 border-border/40 text-muted-foreground hover:border-primary/40 hover:bg-white dark:hover:bg-slate-800",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "w-2.5 h-2.5 rounded-full",
-                          isSubSel ? "bg-white" : "bg-primary/40",
-                        )}
-                      />
-                      <span className="text-center">{sub.name}</span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 
-  const selectedTeam = teams.find((t) => t.id.toString() === selectedTeamId);
-
   return (
-    <div className="w-full h-full">
+    <div className="w-full">
       {isMobile ? (
         <Card className="relative border-none bg-background rounded-b-3xl p-4 shadow-none">
           <div className="relative z-10">{FilterContent}</div>
         </Card>
-      ) : (
-        <div className="flex flex-wrap items-center justify-end gap-2 w-full">
-          {/* Main Filter Action Button */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "h-9 px-3 gap-1.5 rounded-xl border transition-all font-black text-xs whitespace-nowrap",
-                  hasActiveFilters
-                    ? "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
-                    : "border-input bg-card text-primary hover:bg-muted/50 shadow-sm",
-                )}
-              >
-                <Filter className="w-4 h-4" />
-                <span>סינון נתונים</span>
-                {hasActiveFilters && (
-                  <Badge
-                    variant="secondary"
-                    className="ml-1 h-5 rounded-full px-1.5 min-w-5 flex items-center justify-center font-black bg-primary/20 text-primary hover:bg-primary/30 border-none"
-                  >
-                    {
-                      [
-                        !!selectedDeptId,
-                        !!selectedSectionId,
-                        !!selectedTeamId,
-                        !!selectedStatusId,
-                        selectedServiceTypes.length > 0,
-                        !!selectedAgeRange?.min || !!selectedAgeRange?.max,
-                      ].filter(Boolean).length
-                    }
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              align="end"
-              sideOffset={12}
-              className="w-[95vw] md:w-[700px] lg:w-[850px] p-4 md:p-6 rounded-[2rem] border-primary/10 shadow-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl z-50 flex flex-col gap-4 overflow-y-auto max-h-[85vh] left-2 right-2 md:left-auto md:right-auto"
+      ) : pillsOnly ? (
+        <AnimatePresence>
+          {hasActiveFilters && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              className="flex flex-wrap items-center gap-2 py-1"
             >
-              <div className="mb-4 flex items-center justify-between">
-                <h4 className="text-sm font-black text-foreground flex items-center gap-2">
-                  <div className="w-1.5 h-4 bg-primary rounded-full" />
-                  אפשרויות סינון
-                </h4>
-                {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onFilterChange("reset")}
-                    className="h-8 text-[11px] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 ml-1.5" />
-                    נקה הכל
-                  </Button>
-                )}
-              </div>
-              {FilterContent}
-            </PopoverContent>
-          </Popover>
-
-          {/* Active Filter Pills (Desktop Only) */}
-          <AnimatePresence>
-            {/* Active Dept */}
-            {selectedDept && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-              >
-                <Badge
-                  variant="outline"
-                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
-                >
-                  מחלקה:{" "}
-                  <span className="font-bold text-foreground text-[11px]">
-                    {selectedDept.name}
-                  </span>
-                  {canSelectDept && (
-                    <button
-                      onClick={() => onFilterChange("department")}
-                      className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
+              {selectedDept && isDeptActive && (
+                <Badge variant="outline" className="h-7 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-primary/10 font-medium text-[11px] text-muted-foreground">
+                  מחלקה:{" "}<span className="font-bold text-foreground">{selectedDept.name}</span>
+                  {canSelectDept && <button onClick={() => onFilterChange("department")} className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"><X className="w-3 h-3" /></button>}
                 </Badge>
-              </motion.div>
-            )}
-
-            {/* Active Section */}
-            {selectedSection && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-              >
-                <Badge
-                  variant="outline"
-                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
-                >
-                  מדור:{" "}
-                  <span className="font-bold text-foreground text-[11px]">
-                    {selectedSection.name}
-                  </span>
-                  {canSelectSection && (
-                    <button
-                      onClick={() => onFilterChange("section")}
-                      className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
+              )}
+              {selectedSection && isSectionActive && (
+                <Badge variant="outline" className="h-7 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-primary/10 font-medium text-[11px] text-muted-foreground">
+                  מדור:{" "}<span className="font-bold text-foreground">{selectedSection.name}</span>
+                  {canSelectSection && <button onClick={() => onFilterChange("section")} className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"><X className="w-3 h-3" /></button>}
                 </Badge>
-              </motion.div>
-            )}
-
-            {/* Active Team */}
-            {selectedTeam && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-              >
-                <Badge
-                  variant="outline"
-                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
-                >
-                  חולייה:{" "}
-                  <span className="font-bold text-foreground text-[11px]">
-                    {selectedTeam.name}
-                  </span>
-                  {canSelectTeam && (
-                    <button
-                      onClick={() => onFilterChange("team")}
-                      className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
+              )}
+              {selectedTeam && isTeamActive && (
+                <Badge variant="outline" className="h-7 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-primary/10 font-medium text-[11px] text-muted-foreground">
+                  חולייה:{" "}<span className="font-bold text-foreground">{selectedTeam.name}</span>
+                  {canSelectTeam && <button onClick={() => onFilterChange("team")} className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"><X className="w-3 h-3" /></button>}
                 </Badge>
-              </motion.div>
-            )}
-
-            {/* Active Status */}
-            {selectedStatus && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-              >
-                <Badge
-                  variant="outline"
-                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
-                >
+              )}
+              {selectedStatus && (
+                <Badge variant="outline" className="h-7 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-primary/10 font-medium text-[11px] text-muted-foreground">
                   סטטוס:
                   <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{
-                        backgroundColor: selectedStatus.color || "currentColor",
-                      }}
-                    />
-                    <span className="font-bold text-foreground text-[11px]">
-                      {selectedStatus.name}
-                    </span>
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedStatus.color || "currentColor" }} />
+                    <span className="font-bold text-foreground">{selectedStatus.name}</span>
                   </div>
-                  <button
-                    onClick={() => onFilterChange("status")}
-                    className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+                  <button onClick={() => onFilterChange("status")} className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"><X className="w-3 h-3" /></button>
                 </Badge>
-              </motion.div>
-            )}
-
-            {/* Age Range */}
-            {(selectedAgeRange?.min || selectedAgeRange?.max) && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-              >
-                <Badge
-                  variant="outline"
-                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
-                >
-                  גיל:{" "}
-                  <span className="font-bold text-foreground text-[11px]">
-                    {currentAgeValue === "all" ? "כל הגילאים" : currentAgeValue}
-                  </span>
-                  <button
-                    onClick={() => onFilterChange("ageRange", "all")}
-                    className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+              )}
+              {(selectedAgeRange?.min || selectedAgeRange?.max) && (
+                <Badge variant="outline" className="h-7 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-primary/10 font-medium text-[11px] text-muted-foreground">
+                  גיל:{" "}<span className="font-bold text-foreground">{currentAgeValue === "all" ? "כל הגילאים" : currentAgeValue}</span>
+                  <button onClick={() => onFilterChange("ageRange", "all")} className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"><X className="w-3 h-3" /></button>
                 </Badge>
-              </motion.div>
-            )}
-
-            {/* Service Types */}
-            {selectedServiceTypes.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-              >
-                <Badge
-                  variant="outline"
-                  className="h-9 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 hover:border-primary/30 transition-all font-medium text-[11px] text-muted-foreground"
-                >
-                  מעמד:{" "}
-                  <span className="font-bold text-foreground text-[11px]">
-                    {selectedServiceTypes.join(", ")}
-                  </span>
-                  <button
-                    onClick={() => onFilterChange("serviceType", [])}
-                    className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+              )}
+              {selectedServiceTypes.length > 0 && (
+                <Badge variant="outline" className="h-7 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 font-medium text-[11px] text-muted-foreground">
+                  מעמד:{" "}<span className="font-bold text-foreground">{selectedServiceTypes.join(", ")}</span>
+                  <button onClick={() => onFilterChange("serviceType", [])} className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"><X className="w-3 h-3" /></button>
                 </Badge>
-              </motion.div>
-            )}
-
-            {/* If has filters, a quick clear all next to pills */}
-            {hasActiveFilters && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
+              )}
+              <Button variant="ghost" size="sm" onClick={() => onFilterChange("reset")} className="h-7 rounded-full px-3 text-[11px] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                נקה הכל
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      ) : (
+        <div className={cn("flex flex-wrap items-center justify-end gap-2 w-full", className)}>
+            <Popover>
+              <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={() => onFilterChange("reset")}
-                  className="h-9 rounded-full px-3 text-[11px] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/10 ml-2"
+                  className={cn(
+                    "h-10 px-4 gap-2 rounded-xl border border-border/40 transition-all font-black text-xs whitespace-nowrap backdrop-blur-xl shadow-none",
+                    hasActiveFilters
+                      ? "bg-primary/5 text-primary hover:bg-primary/10 border-primary/20"
+                      : "bg-card/40 text-primary hover:bg-primary/5",
+                  )}
                 >
-                  נקה הכל
+                  <Filter className="w-4 h-4" />
+                  <span>סינון נתונים</span>
+                  {hasActiveFilters && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-1 h-5 rounded-full px-1.5 min-w-5 flex items-center justify-center font-black bg-primary/20 text-primary hover:bg-primary/30 border-none"
+                    >
+                      {activeFilterCountExternal !== undefined 
+                        ? activeFilterCountExternal 
+                        : [
+                          isDeptActive,
+                          isSectionActive,
+                          isTeamActive,
+                          !!selectedStatusId,
+                          selectedServiceTypes.length > 0,
+                          !!selectedAgeRange?.min || !!selectedAgeRange?.max,
+                        ].filter(Boolean).length
+                      }
+                    </Badge>
+                  )}
                 </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                sideOffset={12}
+                className="w-[95vw] md:w-[700px] lg:w-[850px] p-4 md:p-6 rounded-[2rem] border-primary/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl z-50 flex flex-col gap-4 overflow-y-auto max-h-[85vh]"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-black text-foreground flex items-center gap-2">
+                    <div className="w-1.5 h-4 bg-primary rounded-full" />
+                    אפשרויות סינון
+                  </h4>
+                  {hasActiveFilters && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onFilterChange("reset")}
+                      className="h-8 text-[11px] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 ml-1.5" />
+                      נקה הכל
+                    </Button>
+                  )}
+                </div>
+
+                {hasActiveFilters && (
+                  <div className="flex flex-wrap items-center gap-1.5 p-3 bg-primary/5 rounded-2xl border border-primary/10">
+                    <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest ml-1">פעיל:</span>
+                    {selectedDept && isDeptActive && (
+                      <Badge variant="outline" className="h-6 gap-1 rounded-full pl-2 pr-1.5 bg-white dark:bg-slate-900 border-primary/20 font-medium text-[10px] text-foreground">
+                        {selectedDept.name}
+                        {canSelectDept && <button onClick={() => onFilterChange("department")} className="hover:text-destructive transition-colors"><X className="w-2.5 h-2.5" /></button>}
+                      </Badge>
+                    )}
+                    {selectedSection && isSectionActive && (
+                      <Badge variant="outline" className="h-6 gap-1 rounded-full pl-2 pr-1.5 bg-white dark:bg-slate-900 border-primary/20 font-medium text-[10px] text-foreground">
+                        {selectedSection.name}
+                        {canSelectSection && <button onClick={() => onFilterChange("section")} className="hover:text-destructive transition-colors"><X className="w-2.5 h-2.5" /></button>}
+                      </Badge>
+                    )}
+                    {selectedTeam && isTeamActive && (
+                      <Badge variant="outline" className="h-6 gap-1 rounded-full pl-2 pr-1.5 bg-white dark:bg-slate-900 border-primary/20 font-medium text-[10px] text-foreground">
+                        {selectedTeam.name}
+                        {canSelectTeam && <button onClick={() => onFilterChange("team")} className="hover:text-destructive transition-colors"><X className="w-2.5 h-2.5" /></button>}
+                      </Badge>
+                    )}
+                    {selectedStatus && (
+                      <Badge variant="outline" className="h-6 gap-1 rounded-full pl-2 pr-1.5 bg-white dark:bg-slate-900 border-primary/20 font-medium text-[10px] text-foreground">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: selectedStatus.color || "currentColor" }} />
+                        {selectedStatus.name}
+                        <button onClick={() => onFilterChange("status")} className="hover:text-destructive transition-colors"><X className="w-2.5 h-2.5" /></button>
+                      </Badge>
+                    )}
+                    {(selectedAgeRange?.min || selectedAgeRange?.max) && (
+                      <Badge variant="outline" className="h-6 gap-1 rounded-full pl-2 pr-1.5 bg-white dark:bg-slate-900 border-primary/20 font-medium text-[10px] text-foreground">
+                        גיל: {currentAgeValue}
+                        <button onClick={() => onFilterChange("ageRange", "all")} className="hover:text-destructive transition-colors"><X className="w-2.5 h-2.5" /></button>
+                      </Badge>
+                    )}
+                    {selectedServiceTypes.length > 0 && (
+                      <Badge variant="outline" className="h-6 gap-1 rounded-full pl-2 pr-1.5 bg-white dark:bg-slate-900 border-primary/20 font-medium text-[10px] text-foreground">
+                        {selectedServiceTypes.join(", ")}
+                        <button onClick={() => onFilterChange("serviceType", [])} className="hover:text-destructive transition-colors"><X className="w-2.5 h-2.5" /></button>
+                      </Badge>
+                    )}
+                  </div>
+                )}
+
+                {FilterContent}
+              </PopoverContent>
+            </Popover>
         </div>
       )}
     </div>

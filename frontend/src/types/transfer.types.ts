@@ -24,7 +24,6 @@ export interface TransferRequest {
   employee_name?: string; // first_name + last_name
   first_name: string;
   last_name: string;
-  personal_number: string;
   requester_first: string;
   requester_last: string;
   resolver_first?: string;

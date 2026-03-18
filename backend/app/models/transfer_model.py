@@ -191,7 +191,7 @@ class TransferModel:
             query = """
                 SELECT tr.*, 
                        (e.first_name || ' ' || e.last_name) as employee_name,
-                       e.personal_number,
+                       e.username,
                        (req.first_name || ' ' || req.last_name) as requester_name,
                        CASE 
                            WHEN req.team_id IS NOT NULL THEN 'מפקד חוליית ' || req_t.name
@@ -565,7 +565,7 @@ class TransferModel:
             query = """
                 SELECT tr.*, 
                        (e.first_name || ' ' || e.last_name) as employee_name,
-                       e.personal_number,
+                       e.username,
                        (res_by.first_name || ' ' || res_by.last_name) as resolver_name,
                        CASE 
                            WHEN res_by.team_id IS NOT NULL THEN 'מפקד חוליית ' || res_t.name

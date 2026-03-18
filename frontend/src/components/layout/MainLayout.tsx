@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/popover";
 import { ImpersonationBanner } from "./ImpersonationBanner";
 import { ThemeToggle } from "./ThemeToggle";
+import { DateHeader } from "@/components/common/DateHeader";
 import { InternalMessageDialog } from "@/components/dashboard/InternalMessageDialog";
 import { SickLeaveDetailsDialog } from "@/components/dashboard/SickLeaveDetailsDialog";
 import { toast } from "sonner";
@@ -195,50 +196,39 @@ export default function MainLayout() {
       <aside
         onDoubleClick={() => setIsSidebarOpen((prev) => !prev)}
         className={cn(
-          "bg-card/80 backdrop-blur-xl border-l border-primary/5 flex flex-col z-[100] fixed lg:sticky top-0 h-[100dvh] overflow-hidden flex-shrink-0 transition-all duration-500 ease-in-out",
+          // Base: fixed to RIGHT edge (RTL), full height
+          "bg-card/80 backdrop-blur-xl border-l border-border/40 flex flex-col z-[100] fixed right-0 lg:sticky lg:right-auto top-0 h-[100dvh] overflow-hidden flex-shrink-0",
+          // Mobile: keep w-72 always, only slide translateX (RIGHT = off-screen in RTL)
+          // Desktop: width animates between w-24 ↔ w-72
+          "w-72 transition-transform lg:transition-all duration-150 ease-out",
           isSidebarOpen
-            ? "w-72 translate-x-0"
-            : "w-0 lg:w-24 -translate-x-full lg:translate-x-0",
+            ? "translate-x-0 lg:w-72"
+            : "translate-x-full lg:translate-x-0 lg:w-24",
         )}
       >
         {/* Sidebar Header */}
         <div
           className={cn(
-            "h-16 flex-none flex items-center border-b border-border transition-none",
+            "h-16 flex-none flex items-center border-b border-border/40 transition-none",
             isSidebarOpen ? "px-4 justify-between" : "justify-center",
           )}
         >
-          {/* Menu Toggle Button - replaces org logo */}
+          {/* Menu Toggle Button — logo floats freely, no box */}
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={cn(
-              "w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted rounded-xl shrink-0 transition-all",
-            )}
+            className="flex items-center justify-center shrink-0 transition-all active:scale-90"
             aria-label="תפריט ניווט"
           >
-            <Menu className="w-5 h-5" />
+            <img
+              src="/logo_unit.png"
+              alt="לוגו"
+              className={cn(
+                "object-contain transition-all duration-100",
+                // Collapsed sidebar: larger floating logo; open: slightly smaller
+                isSidebarOpen ? "w-12 h-12" : "w-14 h-14",
+              )}
+            />
           </button>
-
-          <div
-            className={cn(
-              "flex flex-col transition-all duration-300",
-              isSidebarOpen
-                ? "opacity-100 w-auto"
-                : "opacity-0 w-0 overflow-hidden",
-            )}
-          >
-            <span className="text-[10px] font-black text-primary uppercase mt-1 whitespace-nowrap">
-              {user?.is_admin
-                ? "פורטל ניהול"
-                : user?.commands_team_id
-                  ? "פורטל חוליה"
-                  : user?.commands_section_id
-                    ? "פורטל מדור"
-                    : user?.commands_department_id
-                      ? "פורטל מחלקה"
-                      : "פורטל יחידה"}
-            </span>
-          </div>
 
           {/* Close button for mobile sidebar */}
           <button
@@ -277,7 +267,7 @@ export default function MainLayout() {
               >
                 <Icon
                   className={cn(
-                    "w-6 h-6 shrink-0 transition-transform duration-500 group-hover:scale-110",
+                    "w-6 h-6 shrink-0 transition-transform duration-150 group-hover:scale-110",
                     isActive
                       ? "text-primary"
                       : "text-muted-foreground group-hover:text-primary",
@@ -286,7 +276,7 @@ export default function MainLayout() {
                 />
                 <span
                   className={cn(
-                    "text-sm font-black tracking-tight truncate flex-1 text-right transition-all duration-500",
+                    "text-sm font-black tracking-tight truncate flex-1 text-right transition-all duration-150",
                     isSidebarOpen
                       ? "opacity-100 translate-x-0"
                       : "opacity-0 translate-x-10 absolute right-12 w-0",
@@ -295,7 +285,7 @@ export default function MainLayout() {
                   {item.name}
                 </span>
                 {isActive && (
-                  <div className="absolute left-1 w-1 h-5 bg-primary rounded-full transition-opacity duration-300" />
+                  <div className="absolute left-1 w-1 h-5 bg-primary rounded-full transition-opacity duration-100" />
                 )}
               </Link>
             );
@@ -303,7 +293,7 @@ export default function MainLayout() {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-3 border-t border-border/50 space-y-3">
+        <div className="p-3 border-t border-border/40 space-y-3">
           {/* User Profile Area */}
           <Link
             to={`/settings`}
@@ -380,25 +370,39 @@ export default function MainLayout() {
 
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col min-w-0">
-        <header className="h-16 bg-card border-b border-border px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40  transition-none flex-none">
-          <div className="flex items-center gap-2 md:gap-5 flex-1 min-w-0">
-            <div className="flex flex-col text-right border-r-[3px] border-primary pr-3 md:pr-5 leading-none flex-1 min-w-0 overflow-hidden">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-[9px] md:text-[11px] font-black text-primary uppercase leading-none truncate">
+        <header className="h-16 bg-card border-b border-border/40 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40 transition-none flex-none">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+            {/* Mobile Menu Toggle — floating logo, no box */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden flex items-center justify-center shrink-0 active:scale-90 transition-all"
+              aria-label="Open menu"
+            >
+              <img src="/logo_unit.png" alt="לוגו" className="w-12 h-12 object-contain" />
+            </button>
+
+            <div className="flex flex-col text-right leading-none flex-1 min-w-0 overflow-hidden">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] md:text-[11px] font-black text-primary uppercase leading-none truncate opacity-80">
                   מוקד שליטה ובקרה
                 </span>
-                <div className="flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-emerald-500  shrink-0" />
+                <div className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
               </div>
-              <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tight py-0.5 leading-none truncate">
+              <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tight leading-none truncate">
                 {location.pathname === "/"
-                  ? "מערכת משמרות"
-                  : navItems.find((n) => n.path === location.pathname)
-                    ?.name || "דף מערכת"}
-              </h2>
+                  ? "לוח בקרה"
+                  : navItems.find((n) => location.pathname.startsWith(n.path) && n.path !== "/")
+                    ?.name || "ShiftGuard"}
+              </h1>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            {/* DateHeader for Mobile */}
+            <div className="lg:hidden shrink-0 mt-0.5">
+              <DateHeader compact />
+            </div>
+
             {/* Notifications Bell */}
             <Popover>
               <PopoverTrigger asChild>
@@ -449,7 +453,7 @@ export default function MainLayout() {
                       </button>
                     </div>
                   </div>
-                  <div className="flex gap-2 border-b border-border -mb-px">
+                  <div className="flex gap-2 border-b border-border/40 -mb-px">
                     <button
                       onClick={() => setNotificationTab("active")}
                       className={cn(
@@ -797,8 +801,8 @@ export default function MainLayout() {
         </header>
 
         {/* Content Page */}
-        <main className="flex-grow overflow-y-auto bg-background custom-scrollbar">
-          <div className="w-full max-w-full">
+        <main className="flex-grow overflow-y-auto bg-background custom-scrollbar px-4 lg:px-8">
+          <div className="w-full max-w-full mx-auto">
             <Outlet context={{ isSidebarOpen }} />
           </div>
         </main>

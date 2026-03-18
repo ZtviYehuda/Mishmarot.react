@@ -50,8 +50,7 @@ def setup_database():
             );""",
             """CREATE TABLE IF NOT EXISTS employees (
                 id SERIAL PRIMARY KEY,
-                personal_number VARCHAR(20) UNIQUE NOT NULL,
-                national_id VARCHAR(9) UNIQUE,
+                username VARCHAR(50) UNIQUE NOT NULL,
                 first_name VARCHAR(50) NOT NULL,
                 last_name VARCHAR(50) NOT NULL,
                 phone_number VARCHAR(20),
@@ -130,7 +129,6 @@ def setup_database():
             """CREATE TABLE IF NOT EXISTS support_tickets (
                 id SERIAL PRIMARY KEY,
                 full_name VARCHAR(100) NOT NULL,
-                personal_number VARCHAR(20) NOT NULL,
                 subject VARCHAR(200) NOT NULL,
                 message TEXT NOT NULL,
                 status VARCHAR(20) DEFAULT 'open',
@@ -156,6 +154,30 @@ def setup_database():
                 is_active BOOLEAN DEFAULT TRUE,
                 CONSTRAINT unique_active_delegation UNIQUE (commander_id, delegate_id, start_date)
             );""",
+            """CREATE TABLE IF NOT EXISTS attendance_logs_archive (
+                id BIGINT PRIMARY KEY,
+                employee_id INTEGER REFERENCES employees(id),
+                status_type_id INTEGER REFERENCES status_types(id),
+                start_datetime TIMESTAMP NOT NULL,
+                end_datetime TIMESTAMP,
+                note TEXT,
+                reported_by INTEGER REFERENCES employees(id),
+                is_verified BOOLEAN DEFAULT FALSE,
+                verified_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );""",
+            """CREATE TABLE IF NOT EXISTS data_restore_requests (
+                id SERIAL PRIMARY KEY,
+                requester_id INTEGER REFERENCES employees(id),
+                approver_id INTEGER REFERENCES employees(id),
+                start_date DATE NOT NULL,
+                end_date DATE NOT NULL,
+                reason TEXT,
+                status VARCHAR(20) DEFAULT 'pending', -- pending, approved, rejected, restored, expired
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                resolved_at TIMESTAMP,
+                expires_at TIMESTAMP
+            );""",
         ]
 
         for table in tables:
@@ -174,6 +196,12 @@ def setup_database():
         cur.execute(
             "CREATE INDEX IF NOT EXISTS idx_delegations_delegate_id ON delegations(delegate_id);"
         )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_attendance_logs_archive_start ON attendance_logs_archive(start_datetime);"
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_restore_requests_requester ON data_restore_requests(requester_id);"
+        )
 
         # Insert default system settings
         cur.execute(
@@ -186,14 +214,9 @@ def setup_database():
 
         # --- Migration: Add missing columns if table already existed ---
         try:
+            # Migration to ensure username exists
             cur.execute(
-                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS section_id INTEGER;"
-            )
-            cur.execute(
-                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS department_id INTEGER;"
-            )
-            cur.execute(
-                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS national_id VARCHAR(9) UNIQUE;"
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS username VARCHAR(50);"
             )
             cur.execute(
                 "ALTER TABLE employees ADD COLUMN IF NOT EXISTS notif_sick_leave BOOLEAN DEFAULT TRUE;"
@@ -329,7 +352,7 @@ def setup_database():
         # 3. יצירת Admin דיפולטיבי (אם לא קיים)
         # 3. יצירת/תיקון Admin דיפולטיבי
         cur.execute(
-            "SELECT id, password_hash FROM employees WHERE personal_number = 'admin'"
+            "SELECT id, password_hash FROM employees WHERE username = 'admin'"
         )
         admin_row = cur.fetchone()
 
@@ -339,14 +362,13 @@ def setup_database():
             cur.execute(
                 """
                 INSERT INTO employees 
-                (first_name, last_name, personal_number, national_id, password_hash, is_admin, is_commander, must_change_password)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                (first_name, last_name, username, password_hash, is_admin, is_commander, must_change_password)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
                 (
                     "Admin",
                     "System",
                     "admin",
-                    "000000000",
                     admin_pw_hash,
                     True,
                     True,
@@ -355,7 +377,6 @@ def setup_database():
             )
             print("✅ Default Admin created: User: admin, Pass: 123456")
         else:
-            # בדיקה האם המשתמש קיים אך עם נתונים שגויים (למשל hash לא תקין)
             current_hash = admin_row[1]
             if not current_hash or not str(current_hash).startswith("scrypt"):
                 print("⚠️  Admin user found with invalid data. Resetting admin...")
@@ -365,12 +386,11 @@ def setup_database():
                     SET password_hash = %s,
                         first_name = 'Admin',
                         last_name = 'System',
-                        national_id = '000000000',
                         is_admin = TRUE,
                         is_commander = TRUE,
                         must_change_password = FALSE,
-                        phone_number = NULL, -- Reset potentially corrupt fields
-                        role_id = NULL -- Ensure no random role
+                        phone_number = NULL,
+                        role_id = NULL
                     WHERE id = %s
                     """,
                     (admin_pw_hash, admin_row[0]),

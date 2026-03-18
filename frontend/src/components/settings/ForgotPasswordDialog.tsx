@@ -49,8 +49,7 @@ export function ForgotPasswordDialog({
     setIsLoading(true);
     try {
       await apiClient.post("/auth/forgot-password", {
-        personal_number: user.personal_number,
-        email: user.email,
+                email: user.email,
       });
       setStage("CODE");
       toast.success("קוד אימות נשלח למייל");

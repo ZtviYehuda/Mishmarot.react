@@ -17,12 +17,14 @@ import {
   HeartPulse,
   Calendar,
   MapPin,
-  BadgeCheck,
   Mail,
   Briefcase,
   FileCheck,
   ArrowLeft,
   AlertTriangle,
+  Copy,
+  Check,
+  MessageCircle,
 } from "lucide-react";
 import { useMemo } from "react";
 import { toast } from "sonner";
@@ -40,11 +42,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { differenceInYears } from "date-fns";
 import { cn, cleanUnitName } from "@/lib/utils";
+import { PageHeader } from "@/components/layout/PageHeader";
 const InputItem = ({
   label,
   icon: Icon,
@@ -70,14 +80,8 @@ const UnitPicker = ({
   onChange,
   placeholder,
   disabled,
-  icon: Icon,
   onClear,
 }: any) => {
-  const selectedOption = options.find((o: any) => o.id.toString() === value);
-  const displayValue = selectedOption
-    ? cleanUnitName(selectedOption.name)
-    : placeholder;
-
   return (
     <div className="flex-1 min-w-[200px] space-y-1.5">
       <div className="flex items-center justify-between px-1">
@@ -97,44 +101,20 @@ const UnitPicker = ({
         )}
       </div>
 
-      <Select value={value} onValueChange={onChange} disabled={disabled}>
+      <Select value={value || ""} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger
           className={cn(
-            "h-16 w-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl transition-all duration-200 px-4 hover:border-primary/30 focus:ring-0",
+            "h-16 w-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl transition-all duration-200 px-4 hover:border-primary/30 focus:ring-0 text-right font-bold",
             !value && "bg-slate-50/30 border-dashed",
             disabled && "opacity-30 grayscale pointer-events-none",
           )}
         >
-          <div className="flex items-center gap-4 w-full text-right overflow-hidden">
-            {Icon && (
-              <Icon
-                className={cn(
-                  "w-5 h-5 shrink-0",
-                  value ? "text-primary" : "text-slate-300",
-                )}
-              />
-            )}
-
-            <div className="flex-1 overflow-hidden">
-              <p
-                className={cn(
-                  "text-[15px] font-bold tracking-tight",
-                  value ? "text-slate-900 dark:text-white" : "text-slate-400",
-                )}
-              >
-                {displayValue}
-              </p>
-            </div>
-          </div>
-
-          <style>{`
-            [data-slot="select-trigger"] svg:last-child { display: none !important; }
-          `}</style>
+          <SelectValue placeholder={placeholder} />
         </SelectTrigger>
 
         <SelectContent
           dir="rtl"
-     className="rounded-xl border-slate-100 dark:border-slate-800 p-1 bg-white dark:bg-slate-950"
+          className="rounded-xl border-slate-100 dark:border-slate-800 p-1 bg-white dark:bg-slate-950"
         >
           {options.map((opt: any) => (
             <SelectItem
@@ -230,25 +210,61 @@ const PersonalFormTab = ({
             />
           </InputItem>
 
-          <InputItem label="תעודת זהות" icon={BadgeCheck}>
-            <Input
-              value={formData.national_id || ""}
-              onChange={(e) => handleFieldChange("national_id", e.target.value)}
-              placeholder="000000000"
-       className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl text-lg font-black tracking-widest text-center"
-            />
-          </InputItem>
+          {(() => {
+            const first = (formData.first_name || "").trim();
+            const last = (formData.last_name || "").trim();
+            const fullName = `${first} ${last}`.trim();
+            const words = fullName.split(/\s+/).filter(Boolean);
+            const isNameLong = fullName.length > 18 || words.length > 2;
 
-          <InputItem label="מספר אישי" icon={BadgeCheck}>
-            <Input
-              value={formData.personal_number || ""}
-              onChange={(e) =>
-                handleFieldChange("personal_number", e.target.value)
-              }
-              placeholder="0000000"
-       className="font-mono bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl text-lg font-black tracking-widest text-center"
-            />
-          </InputItem>
+            return (
+              <AnimatePresence>
+                {(isNameLong || formData.dominant_name) && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, y: 10 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: 10 }}
+                    className="col-span-1 md:col-span-2 lg:col-span-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-primary/20 p-4 sm:p-5 mt-2 overflow-hidden flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6"
+                  >
+                    <div className="flex items-center gap-3 text-primary">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black">זיהינו שם ארוך מהרגיל</span>
+                        <span className="text-xs font-bold opacity-80 mt-0.5">בחר את השם שיוצג ביומיום או הקלד בעצמך:</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-2 flex-1 w-full sm:w-auto">
+                      {words.map((word, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleFieldChange("dominant_name", formData.dominant_name === word ? "" : word)}
+                          className={cn(
+                            "px-4 py-2 rounded-xl text-sm font-black transition-all border",
+                            formData.dominant_name === word
+                              ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-[1.02]"
+                              : "bg-white dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:text-primary"
+                          )}
+                        >
+                          {word}
+                        </button>
+                      ))}
+                      
+                      <Input
+                        value={formData.dominant_name || ""}
+                        onChange={(e) => handleFieldChange("dominant_name", e.target.value)}
+                        placeholder="הקלד שם אחר..."
+                        className="bg-white/50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-10 w-[140px] rounded-xl font-bold text-sm"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            );
+          })()}
 
           <InputItem label="מין" required icon={User}>
             <Select
@@ -443,10 +459,18 @@ const ProfessionalFormTab = ({
   saving,
   setFormData,
 }: any) => {
-  const isDeptDisabled = !user.is_admin;
-  const isSectionDisabled = !user.is_admin && !user.commands_department_id;
+  // Admin → full freedom
+  // Dept commander → dept is locked (pre-filled), section/team free
+  // Section commander → dept+section locked, team free
+  // Team commander → all pre-filled and locked
+  const isDeptDisabled =
+    !user.is_admin &&
+    !!(user.commands_department_id || user.commands_section_id || user.commands_team_id);
+  const isSectionDisabled =
+    !user.is_admin &&
+    !!(user.commands_section_id || user.commands_team_id);
   const isTeamDisabled =
-    !user.is_admin && !user.commands_department_id && !user.commands_section_id;
+    !user.is_admin && !!user.commands_team_id;
 
   const currentCommander = useMemo(() => {
     if (!formData.is_commander) return null;
@@ -720,6 +744,8 @@ export default function CreateEmployeePage() {
   });
 
   const [activeTab, setActiveTab] = useState("personal");
+  const [createdCredentials, setCreatedCredentials] = useState<{name: string, user: string, pass: string} | null>(null);
+  const [copiedField, setCopiedField] = useState("");
 
   const relations = [
     "בן / בת זוג",
@@ -809,11 +835,8 @@ export default function CreateEmployeePage() {
 
   const handleSubmit = async () => {
     setSaving(true);
-    if (
-      (!formData.national_id && !formData.personal_number) ||
-      !formData.birth_date
-    ) {
-      toast.error("יש להזין מספר אישי או ת.ז, ותאריך לידה");
+    if (!formData.birth_date) {
+      toast.error("יש להזין תאריך לידה");
       setSaving(false);
       return;
     }
@@ -849,12 +872,36 @@ export default function CreateEmployeePage() {
     }
 
     const payload = { ...formData } as CreateEmployeePayload;
+    
+    let generatedCreds = null;
+    const isCmd = payload.is_commander || payload.is_admin;
+    
+    if (isCmd && !payload.username) {
+      generatedCreds = {
+        user: Math.floor(100000 + Math.random() * 900000).toString(),
+        pass: Math.floor(100000 + Math.random() * 900000).toString()
+      };
+      payload.username = generatedCreds.user;
+      payload.password = generatedCreds.pass;
+      (payload as any).must_change_password = true;
+    } else if (!payload.username) {
+      payload.username = 'emp_' + Date.now().toString().slice(-6) + Math.floor(100 + Math.random() * 900).toString();
+    }
+
     const success = await createEmployee(payload);
     setSaving(false);
 
     if (success) {
-      toast.success("השוטר נוצר בהצלחה");
-      navigate("/employees");
+      if (generatedCreds) {
+        setCreatedCredentials({
+          name: formData.dominant_name || `${formData.first_name || ''} ${formData.last_name || ''}`,
+          user: generatedCreds.user,
+          pass: generatedCreds.pass
+        });
+      } else {
+        toast.success("השוטר נוצר בהצלחה");
+        navigate("/employees");
+      }
     }
   };
 
@@ -879,94 +926,66 @@ export default function CreateEmployeePage() {
       type="button"
       onClick={onClick}
       className={cn(
-        "flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-sm font-black transition-all duration-500 relative group overflow-hidden",
+        "flex items-center gap-2 py-2 px-4 rounded-xl text-sm font-black transition-all duration-300 relative",
         active
-          ? "text-primary"
+          ? "bg-white dark:bg-slate-800 text-primary shadow-sm border border-border/50"
           : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200",
       )}
     >
-      {active && (
-        <motion.div
-          layoutId="activeTab"
-     className="absolute inset-0 bg-white dark:bg-slate-800  rounded-2xl border border-slate-200/50 dark:border-slate-700/50"
-          initial={false}
-          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-        />
+      {Icon && (
+        <div
+          className={cn(
+            "w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-300",
+            active
+              ? "bg-primary/10 text-primary"
+              : "text-slate-400",
+          )}
+        >
+          <Icon className="w-3.5 h-3.5" />
+        </div>
       )}
-      <div className="relative z-10 flex items-center gap-3">
-        {Icon && (
-          <div
-            className={cn(
-              "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-500",
-              active
-        ?"bg-primary text-white scale-110 rotate-0"
-                : "bg-white/50 dark:bg-slate-800/50 text-slate-400 group-hover:scale-110 group-hover:bg-white",
-            )}
-          >
-            <Icon className="w-4 h-4" />
-          </div>
-        )}
-        <span className="tracking-tight">{label}</span>
-      </div>
+      <span>{label}</span>
     </button>
   );
 
   return (
-    <div
-      id="create-page-root"
-      className="bg-[#f8fafc] dark:bg-[#020617] min-h-screen"
-    >
-      <div className="bg-background dark:bg-slate-950 border-b border-border/60 py-4 sm:py-6 sticky top-0 z-30 backdrop-blur-md bg-background/95">
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="flex w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 items-center justify-center text-primary border border-primary/20 shrink-0">
-                <UserPlus className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <div className="space-y-0.5">
-                <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tight leading-tight">
-                  הוספת שוטר{" "}
-                  <span className="text-primary whitespace-nowrap">חדש</span>
-                </h1>
-                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground hidden sm:block">
-                  הזנת פרטים אישיים, שיוך ארגוני והגדרת הרשאות
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/employees")}
-                className="h-10 flex-1 sm:flex-none px-4 rounded-xl font-bold text-muted-foreground hover:text-foreground hover:bg-muted"
-              >
-                <X className="w-4 h-4 ml-1.5" />
-                <span className="text-xs sm:text-sm">ביטול</span>
-              </Button>
-
-              <div className="w-px h-6 bg-border/60 mx-1 hidden sm:block" />
-
-              <Button
-        className="h-10 flex-1 sm:flex-none px-6 sm:px-8 rounded-xl font-black  hover:scale-[1.02] active:scale-[0.98] transition-all gap-2"
-                onClick={handleSubmit}
-                disabled={saving}
-              >
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                <span className="text-xs sm:text-sm whitespace-nowrap">
-                  שמור שוטר
-                </span>
-              </Button>
-            </div>
-          </div>
+    <div id="create-page-root" className="flex flex-col animate-in fade-in duration-500 pb-10">
+      {/* Page Header - matches system layout */}
+      <div className="pt-6 pb-4 shrink-0 flex items-center justify-between gap-4">
+        <PageHeader
+          icon={UserPlus}
+          title="הוספת שוטר חדש"
+          subtitle="הזנת פרטים אישיים, שיוך ארגוני והגדרת הרשאות"
+          className="mb-0"
+          hideMobile={true}
+        />
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/employees")}
+            className="h-9 px-3 sm:px-4 rounded-xl font-bold text-muted-foreground hover:text-foreground hover:bg-muted"
+          >
+            <X className="w-4 h-4 ml-1" />
+            <span className="text-xs sm:text-sm">ביטול</span>
+          </Button>
+          <Button
+            className="h-9 px-4 sm:px-6 rounded-xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all gap-2"
+            onClick={handleSubmit}
+            disabled={saving}
+          >
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span className="text-xs sm:text-sm whitespace-nowrap">שמור שוטר</span>
+          </Button>
         </div>
       </div>
 
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6 mt-6 sm:mt-8">
-    <div className="bg-slate-200/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-[24px] p-2 flex gap-4 mb-8 max-w-2xl mx-auto">
+      {/* Tabs */}
+      <div className="flex">
+        <div className="bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1.5 flex gap-2 mb-6 self-start">
           <TabButton
             active={activeTab === "personal"}
             onClick={() => setActiveTab("personal")}
@@ -974,31 +993,24 @@ export default function CreateEmployeePage() {
             label="פרטים אישיים"
           />
           <TabButton
-            active={activeTab === "pro"}
-            onClick={() => setActiveTab("pro")}
+            active={activeTab === "professional"}
+            onClick={() => setActiveTab("professional")}
             icon={Shield}
             label="מקצועי והרשאות"
           />
         </div>
+      </div>
 
+        <div className="space-y-4">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{
-              opacity: 0,
-              x: activeTab === "personal" ? 20 : -20,
-              filter: "blur(10px)",
-            }}
-            animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-            exit={{
-              opacity: 0,
-              x: activeTab === "personal" ? -20 : 20,
-              filter: "blur(10px)",
-            }}
-            transition={{ type: "spring", duration: 0.5, bounce: 0 }}
-            className="space-y-6 pb-24 sm:pb-0"
-          >
-            {activeTab === "personal" && (
+          {activeTab === "personal" && (
+            <motion.div
+              key="personal"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
               <PersonalFormTab
                 formData={formData}
                 handleFieldChange={handleFieldChange}
@@ -1006,39 +1018,120 @@ export default function CreateEmployeePage() {
                 setEmergencyDetails={setEmergencyDetails}
                 relations={relations}
                 serviceTypes={serviceTypes}
-                onNext={() => {
-                  setActiveTab("pro");
-                  setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                    document
-                      .getElementById("create-page-root")
-                      ?.scrollIntoView({ behavior: "smooth" });
-                  }, 100);
-                }}
+                onNext={() => setActiveTab("professional")}
               />
-            )}
-
-            {activeTab === "pro" && (
+            </motion.div>
+          )}
+          {activeTab === "professional" && (
+            <motion.div
+              key="professional"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
               <ProfessionalFormTab
                 formData={formData}
                 handleFieldChange={handleFieldChange}
                 structure={structure}
+                selectedDeptId={selectedDeptId}
                 setSelectedDeptId={setSelectedDeptId}
+                selectedSectionId={selectedSectionId}
                 setSelectedSectionId={setSelectedSectionId}
                 sections={sections}
                 teams={teams}
-                serviceTypes={serviceTypes}
                 user={user}
-                selectedDeptId={selectedDeptId}
-                selectedSectionId={selectedSectionId}
                 onSave={handleSubmit}
                 saving={saving}
                 setFormData={setFormData}
               />
-            )}
-          </motion.div>
+            </motion.div>
+          )}
         </AnimatePresence>
-      </div>
+        </div>
+
+      <Dialog open={!!createdCredentials} onOpenChange={() => { navigate("/employees"); }}>
+        <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-xl border-border/50 text-right p-0 overflow-hidden" dir="rtl">
+          <DialogHeader className="p-6 bg-primary/5 pb-4 border-b border-primary/10">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+              <Check className="w-6 h-6" />
+            </div>
+            <DialogTitle className="text-2xl font-black text-center text-primary mb-1">
+              בניית כרטיס הושלמה!
+            </DialogTitle>
+            <DialogDescription className="text-center font-bold text-muted-foreground">
+              פרטי הגישה נוצרו בהצלחה
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-6 space-y-6">
+            <div className="bg-muted/50 rounded-2xl p-5 border border-border/50 space-y-4">
+              <div>
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">שם משתמש</Label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-background border border-border/50 rounded-xl px-4 py-2.5 font-mono text-center font-black text-lg text-foreground tracking-widest select-all">
+                    {createdCredentials?.user}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-[46px] w-[46px] rounded-xl border-border/50 shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdCredentials?.user || "");
+                      setCopiedField("user");
+                      setTimeout(() => setCopiedField(""), 2000);
+                    }}
+                  >
+                    {copiedField === "user" ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">סיסמה ראשונית</Label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-background border border-border/50 rounded-xl px-4 py-2.5 font-mono text-center font-black text-lg text-foreground tracking-widest select-all">
+                    {createdCredentials?.pass}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-[46px] w-[46px] rounded-xl border-border/50 shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdCredentials?.pass || "");
+                      setCopiedField("pass");
+                      setTimeout(() => setCopiedField(""), 2000);
+                    }}
+                  >
+                    {copiedField === "pass" ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 pt-2">
+              <Button 
+                onClick={() => {
+                  const text = encodeURIComponent(`אהלן ${createdCredentials?.name},\nנוצר לך חשבון חדש למערכת כוח האדם.\n\nשם משתמש: ${createdCredentials?.user}\nסיסמה: ${createdCredentials?.pass}\n\n* בחיבור הראשון המערכת תדרוש ממך להחליף סיסמה.`);
+                  window.open(`https://wa.me/?text=${text}`, '_blank');
+                  navigate("/employees");
+                }}
+                className="w-full h-12 rounded-xl text-base font-black bg-[#25D366] hover:bg-[#128C7E] text-white  transition-all gap-2"
+              >
+                <MessageCircle className="w-5 h-5" />
+                שתף פרטים בוואטסאפ
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate("/employees")}
+                className="w-full h-12 rounded-xl font-bold text-muted-foreground hover:bg-muted"
+              >
+                סגור וחזור לרשימה
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

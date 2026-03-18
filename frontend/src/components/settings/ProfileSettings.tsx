@@ -40,7 +40,7 @@ export function ProfileSettings({
   readOnly = false,
 }: ProfileSettingsProps) {
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1600px] mx-auto pb-24 lg:pb-0">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full pb-24 lg:pb-0">
       <div className="grid grid-cols-12 gap-4 sm:gap-8">
         {/* Main Settings Area */}
         <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-8 order-2 lg:order-1">
@@ -53,7 +53,7 @@ export function ProfileSettings({
                   onChange={(e) =>
                     setFormData({ ...formData, first_name: e.target.value })
                   }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-4 font-bold text-base sm:text-lg focus:bg-background transition-all"
+                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
                   placeholder="ישראל"
                 />
               </InputItem>
@@ -65,7 +65,7 @@ export function ProfileSettings({
                   onChange={(e) =>
                     setFormData({ ...formData, last_name: e.target.value })
                   }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-4 font-bold text-base sm:text-lg"
+                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
                   placeholder="ישראלי"
                 />
               </InputItem>
@@ -77,7 +77,7 @@ export function ProfileSettings({
                   onChange={(e) =>
                     setFormData({ ...formData, phone_number: e.target.value })
                   }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-4 font-bold text-base sm:text-lg"
+                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
                   placeholder="050-0000000"
                 />
               </InputItem>
@@ -89,7 +89,7 @@ export function ProfileSettings({
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-4 font-bold text-base sm:text-lg"
+                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
                   placeholder="israel@example.com"
                 />
               </InputItem>
@@ -101,7 +101,7 @@ export function ProfileSettings({
                   onChange={(e) =>
                     setFormData({ ...formData, city: e.target.value })
                   }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-4 font-bold text-base sm:text-lg"
+                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
                   placeholder="תל אביב"
                 />
               </InputItem>
@@ -114,7 +114,7 @@ export function ProfileSettings({
                   onChange={(e) =>
                     setFormData({ ...formData, birth_date: e.target.value })
                   }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-4 font-bold text-base sm:text-lg text-right"
+                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg text-right"
                 />
               </InputItem>
             </div>
@@ -122,16 +122,13 @@ export function ProfileSettings({
 
           <SectionCard icon={Settings2} title="פרטי שירות ומזהים">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <InputItem label="מספר אישי / ת.ז" required>
+              <InputItem label="שם משתמש" required>
                 <div className="relative group">
                   <Input
-                    disabled={readOnly}
-                    value={formData.national_id}
-                    onChange={(e) =>
-                      setFormData({ ...formData, national_id: e.target.value })
-                    }
-                    className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-4 pr-12 font-bold text-base sm:text-lg"
-                    placeholder="1234567"
+                    disabled={true}
+                    value={formData.username || user?.username || ""}
+                    className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 pr-12 font-bold text-base sm:text-lg opacity-70"
+                    placeholder="username"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-primary/10 text-primary">
                     <ShieldCheck className="w-4 h-4" />
@@ -294,8 +291,8 @@ export function ProfileSettings({
                   {user?.first_name} {user?.last_name}
                 </h2>
                 <div className="flex items-center justify-center gap-2">
-                  <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] sm:text-xs font-black rounded-full border border-primary/10">
-                    {user?.national_id}
+                  <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] sm:text-xs font-black rounded-full border border-border/40">
+                    {user?.username}
                   </span>
                 </div>
               </div>
@@ -316,9 +313,9 @@ function SectionCard({ icon: Icon, title, children, badge }: any) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border border-primary/10 overflow-hidden"
+      className="bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border border-border/40 overflow-hidden"
     >
-      <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-primary/10 bg-primary/5 flex items-center justify-between">
+      <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-border/40 bg-primary/5 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-primary/10 text-primary">
             <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -336,7 +333,7 @@ function SectionCard({ icon: Icon, title, children, badge }: any) {
 
 function InputItem({ label, required, children }: any) {
   return (
-    <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[3rem] bg-background/30 border border-primary/5 space-y-2 sm:space-y-3">
+    <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[3rem] bg-background/30 border border-border/40 space-y-2 sm:space-y-3">
       <Label className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground font-black uppercase tracking-widest pl-2">
         {label}
         {required && <span className="text-red-500/80 mr-0.5">*</span>}
@@ -348,7 +345,7 @@ function InputItem({ label, required, children }: any) {
 
 function UnitBadge({ label, value }: any) {
   return (
-    <div className="p-4 rounded-2xl bg-primary/[0.03] border border-primary/10">
+    <div className="p-4 rounded-2xl bg-primary/[0.03] border border-border/40">
       <span className="text-[10px] font-black text-primary/40 block mb-1 uppercase tracking-widest leading-none">
         {label}
       </span>

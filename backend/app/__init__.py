@@ -88,6 +88,7 @@ def create_app():
     from app.routes.admin_routes import admin_bp
     from app.routes.support_routes import support_bp
     from app.routes.audit_routes import audit_bp
+    from app.routes.archive_routes import archive_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(emp_bp, url_prefix="/api/employees", strict_slashes=False)
@@ -101,5 +102,6 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix="/api/admin", strict_slashes=False)
     app.register_blueprint(support_bp, url_prefix="/api/support", strict_slashes=False)
     app.register_blueprint(audit_bp, url_prefix="/api/audit", strict_slashes=False)
+    app.register_blueprint(archive_bp, url_prefix="/api/archive", strict_slashes=False)
 
     return app

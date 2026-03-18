@@ -245,12 +245,10 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                     <p className="font-bold mb-1">כיצד מחושב?</p>
                     <ul className="text-xs space-y-1 list-disc list-inside">
                       <li>
-                        <span className="font-semibold">נוכחים:</span> משרד,
-                        קורס, תגבור
+                        <span className="font-semibold">נוכחים:</span> משרד, תגבור, קורס
                       </li>
                       <li>
-                        <span className="font-semibold">לא נוכחים:</span> חופשה,
-                        מחלה, חו"ל
+                        <span className="font-semibold">לא נוכחים:</span> חופשה, מחלה, חו"ל
                       </li>
                       <li>
                         <span className="font-semibold">תקן:</span> ממוצע שוטרים

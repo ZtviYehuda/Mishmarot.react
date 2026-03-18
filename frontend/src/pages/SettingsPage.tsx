@@ -112,7 +112,7 @@ export default function SettingsPage() {
       const link = document.createElement("a");
       link.href = url;
       const date = new Date().toISOString().split("T")[0];
-      link.setAttribute("download", `mishmarot_backup_${date}.json`);
+      link.setAttribute("download", `shiftguard_backup_${date}.json`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -195,8 +195,6 @@ export default function SettingsPage() {
     notif_sick_leave: true,
     notif_transfers: true,
     notif_morning_report: true,
-    // New fields
-    national_id: "",
     enlistment_date: "",
     discharge_date: "",
     assignment_date: "",
@@ -249,7 +247,6 @@ export default function SettingsPage() {
         notif_sick_leave: user.notif_sick_leave !== false,
         notif_transfers: user.notif_transfers !== false,
         notif_morning_report: user.notif_morning_report !== false,
-        national_id: user.national_id || "",
         enlistment_date: user.enlistment_date || "",
         discharge_date: user.discharge_date || "",
         assignment_date: user.assignment_date || "",
@@ -309,7 +306,6 @@ export default function SettingsPage() {
       const payload = {
         ...formData,
         security_clearance: formData.security_clearance,
-        national_id: formData.national_id || null,
         birth_date: formData.birth_date || null,
         enlistment_date: formData.enlistment_date || null,
         discharge_date: formData.discharge_date || null,
@@ -367,11 +363,9 @@ export default function SettingsPage() {
   };
 
   const handleResetImpersonatedPassword = async () => {
-    if (
       !confirm(
-        "האם אתה בטוח שברצונך לאפס את הסיסמה של המשתמש לתעודת הזהות שלו?",
+        "האם אתה בטוח שברצונך לאפס את הסיסמה של המשתמש לשם המשתמש שלו?",
       )
-    )
       return;
 
     try {
@@ -380,7 +374,7 @@ export default function SettingsPage() {
         "/auth/reset-impersonated-password",
       );
       if (response.status === 200) {
-        toast.success("הסיסמה אופסה בהצלחה לתעודת הזהות של המשתמש");
+        toast.success("הסיסמא אופסה בהצלחה (123456)");
       }
     } catch (error) {
       console.error(error);
@@ -411,22 +405,19 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 px-4 lg:px-8">
-      <div className="pt-2 pb-4 shrink-0 transition-all">
+    <div className="flex flex-col min-h-full animate-in fade-in duration-500 pb-20">
+      <div className="pt-6 pb-2 shrink-0 transition-all px-4">
         <PageHeader
           icon={SettingsIcon}
           title="הגדרות מערכת"
-          subtitle="ניהול העדפות אישיות, מראה הממשק ואבטחה"
-          category="הגדרות"
-          categoryLink="/settings"
-          iconClassName="from-primary/10 to-primary/5 border-primary/20"
           className="mb-0"
+          hideMobile={true}
         />
       </div>
 
-      <div className="">
+      <div className="flex-1 min-h-0 flex flex-col">
         {/* Desktop Horizontal Navigation (Replaces Sidebar) */}
-        <div className="hidden lg:flex items-center gap-1 border-b border-border sticky top-[-35px] bg-background/95 backdrop-blur z-50 pb-0 overflow-x-auto no-scrollbar pt-2">
+        <div className="hidden lg:flex items-center gap-1 border-b border-border sticky top-[-35px] bg-background/95 backdrop-blur z-50 pb-0 overflow-x-auto no-scrollbar pt-2 px-4">
           {!user?.is_temp_commander && (
             <TabItem
               label="פרופיל אישי"
@@ -463,7 +454,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Content Area */}
-        <div className="min-w-0 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-4">
+        <div className="min-w-0 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-4 pb-24 lg:pb-8">
           {activeTab === "profile" && !user?.is_temp_commander && (
             <ProfileSettings
               user={user}

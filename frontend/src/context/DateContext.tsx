@@ -5,6 +5,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { isSameDay } from "date-fns";
 
 interface DateContextType {
   selectedDate: Date;
@@ -19,7 +20,8 @@ export function DateProvider({ children }: { children: ReactNode }) {
       const savedDate = localStorage.getItem("app_selected_date");
       if (savedDate) {
         const parsed = new Date(savedDate);
-        if (!isNaN(parsed.getTime())) {
+        // Only load saved date if it's the exact same day as today
+        if (!isNaN(parsed.getTime()) && isSameDay(parsed, new Date())) {
           return parsed;
         }
       }

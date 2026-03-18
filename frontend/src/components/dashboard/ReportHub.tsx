@@ -301,9 +301,9 @@ export const ReportHub: React.FC<ReportHubProps> = ({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button
-            variant="outline"
+            variant="ghost"
             className={cn(
-              "h-10 rounded-xl gap-2 font-black transition-all px-4 shrink-0  border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 active:scale-95",
+              "h-10 rounded-xl gap-2 font-black transition-all px-4 shrink-0 border border-border/40 bg-card/40 text-primary hover:bg-primary/5 active:scale-95 shadow-none backdrop-blur-xl",
               className,
             )}
           >

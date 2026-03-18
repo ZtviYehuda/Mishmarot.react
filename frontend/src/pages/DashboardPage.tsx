@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { EmployeesChart } from "@/components/dashboard/EmployeesChart";
 import { BirthdaysCard } from "@/components/dashboard/BirthdaysCard";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
@@ -12,12 +12,13 @@ import { useEmployees } from "@/hooks/useEmployees";
 import { useDateContext } from "@/context/DateContext";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LayoutDashboard } from "lucide-react";
-import { format } from "date-fns";
+import { format, subDays, isBefore } from "date-fns";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { cn, cleanUnitName } from "@/lib/utils";
 import { AgeDistributionChart } from "@/components/dashboard/AgeDistributionChart";
-
+import { Badge } from "@/components/ui/badge";
 import { ReportHub } from "@/components/dashboard/ReportHub";
+import { DateHeader } from "@/components/common/DateHeader";
+import { RestorationRequestDialog } from "@/components/dashboard/RestorationRequestDialog";
 
 // Helper types for structure
 interface Team {
@@ -36,8 +37,6 @@ interface Department {
   name: string;
   sections: Section[];
 }
-
-import { DateHeader } from "@/components/common/DateHeader";
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
@@ -111,6 +110,12 @@ export default function DashboardPage() {
   }, [viewMode]);
   const [whatsAppDialogOpen, setWhatsAppDialogOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasArchiveAccess, setHasArchiveAccess] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+
+  const isOldDate = useMemo(() => {
+    return isBefore(selectedDate, subDays(new Date(), 30));
+  }, [selectedDate]);
 
   // Filters
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
@@ -342,6 +347,7 @@ export default function DashboardPage() {
         setBirthdays(data.birthdays || []);
         setAgeDistribution(data.age_distribution || []);
         setAverageAge(data.average_age || 0);
+        setHasArchiveAccess(data.has_archive_access || false);
       }
       setLoading(false);
     };
@@ -378,33 +384,9 @@ export default function DashboardPage() {
     const reported = total - missing;
     const reportedPct = total > 0 ? Math.round((reported / total) * 100) : 0;
 
-    // "Available" (נוכחים/זמינים) should include anyone whose status is a child of "Present" or "Office"
-    // For simplicity, we look for names like "נוכח", "זמין", "משרד", or child names we know.
-    // Better yet, we can check if the status ID corresponds to a status whose parent is "Present" or "Office".
+    // "Available" (נוכחים/זמינים) dynamically pulls from the is_presence flag of the status
     const presentStatusIds = allStatusTypes
-      .filter((s) => {
-        const name = s.name.toLowerCase();
-        // Check if it's a top-level present status or a child of Office/Present
-        if (
-          name.includes("נוכח") ||
-          name.includes("זמין") ||
-          name.includes("משרד")
-        )
-          return true;
-
-        // Find parent
-        const parent = allStatusTypes.find((p) => p.id === s.parent_status_id);
-        if (parent) {
-          const pName = parent.name.toLowerCase();
-          if (
-            pName.includes("נוכח") ||
-            pName.includes("זמין") ||
-            pName.includes("משרד")
-          )
-            return true;
-        }
-        return false;
-      })
+      .filter((s) => s.is_presence)   // <- now uses the DB flag we corrected
       .map((s) => s.id);
 
     const available = stats
@@ -610,14 +592,43 @@ export default function DashboardPage() {
     return `פירוט נוכחות וסטטיסטיקה עבור ${unitName}${filterText}`;
   }, [unitName, selectedStatusData, serviceTypeLabel, selectedAgeRange]);
 
-  const hasActiveFilters =
-    !!selectedDeptId ||
-    !!selectedSectionId ||
-    !!selectedTeamId ||
-    !!selectedStatusData ||
-    selectedServiceTypes.length > 0 ||
-    !!selectedAgeRange.min ||
-    !!selectedAgeRange.max;
+  const activeFilterInfo = useMemo(() => {
+    const filters = [
+      !!selectedStatusData,
+      selectedServiceTypes.length > 0,
+      !!selectedAgeRange.min || !!selectedAgeRange.max,
+    ];
+
+    // For admins, any org filter is "active"
+    if (user?.is_admin) {
+      filters.push(!!selectedDeptId, !!selectedSectionId, !!selectedTeamId);
+    } else {
+      // For commanders, only count org filters if they go BEYOND their default view
+      if (user?.commands_department_id) {
+        filters.push(!!selectedSectionId, !!selectedTeamId);
+      } else if (user?.commands_section_id) {
+        filters.push(!!selectedTeamId);
+      } else if (user?.commands_team_id) {
+        // Team commanders are already at the lowest level
+      } else {
+        // Regular users/others
+        filters.push(!!selectedDeptId, !!selectedSectionId, !!selectedTeamId);
+      }
+    }
+
+    return {
+      hasActive: filters.some(Boolean),
+      count: filters.filter(Boolean).length
+    };
+  }, [
+    selectedDeptId,
+    selectedSectionId,
+    selectedTeamId,
+    selectedStatusData,
+    selectedServiceTypes,
+    selectedAgeRange,
+    user
+  ]);
 
   const handleStatusClick = (
     statusId: number,
@@ -644,128 +655,81 @@ export default function DashboardPage() {
     !!user?.commands_department_id ||
     !!user?.commands_section_id;
 
-  const currentUnitName = useMemo(() => {
-    if (selectedTeamId) {
-      for (const dept of structure) {
-        for (const sec of dept.sections) {
-          const team = sec.teams.find((t) => t.id === Number(selectedTeamId));
-          if (team) return team.name;
-        }
-      }
-    }
-    if (selectedSectionId) {
-      for (const dept of structure) {
-        const sec = dept.sections.find(
-          (s) => s.id === Number(selectedSectionId),
-        );
-        if (sec) return sec.name;
-      }
-    }
-    if (selectedDeptId) {
-      const dept = structure.find((d) => d.id === Number(selectedDeptId));
-      if (dept) return dept.name;
-    }
-
-    if (user?.commands_team_id) return "כלל החוליה";
-    if (user?.commands_section_id) return "כלל המדור";
-    if (user?.commands_department_id) return "כלל המחלקה";
-    return "כלל היחידה";
-  }, [selectedTeamId, selectedSectionId, selectedDeptId, structure, user]);
 
   return (
     <div
-      className="w-full relative min-h-screen px-4 lg:px-8 pb-10 bg-background"
+      className="w-full relative min-h-screen pb-10 bg-background"
       dir="rtl"
     >
-      <div className="relative z-10 space-y-4 sm:space-y-6 pt-2 transition-all">
+      <div className="relative z-10 space-y-4 sm:space-y-6 pt-6 transition-all">
         {/* Header Section */}
         <PageHeader
           icon={LayoutDashboard}
           title="לוח בקרה"
-          subtitle="נתוני נוכחות וסטטיסטיקה"
-          category="מערכת משמרות"
-          categoryLink="/"
-          className="hidden sm:flex mb-0 px-0 pb-2 shrink-0 transition-all"
+          hideMobile={true}
+          className="flex mb-0 px-0 pb-2 shrink-0 transition-all border-none"
           badge={
-            <div className="flex flex-row items-center gap-1.5">
-              {/* Date Header - compact */}
-              <DateHeader className="h-9 text-xs" />
-
-              {/* Desktop Filters */}
-              <div className="hidden lg:flex items-stretch h-9">
-                <DashboardFilters
-                  structure={structure}
-                  statuses={allStatuses}
-                  allStatusTypes={allStatusTypes}
-                  selectedDeptId={selectedDeptId}
-                  selectedSectionId={selectedSectionId}
-                  selectedTeamId={selectedTeamId}
-                  selectedStatusId={selectedStatusData?.id?.toString()}
-                  serviceTypes={serviceTypes}
-                  selectedServiceTypes={selectedServiceTypes}
-                  selectedAgeRange={selectedAgeRange}
-                  onFilterChange={handleFilterChange}
-                  canSelectDept={canSelectDept}
-                  canSelectSection={canSelectSection}
-                  canSelectTeam={canSelectTeam}
-                  isMobile={false}
-                />
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-6 w-full lg:w-auto mt-2 lg:mt-0">
+              {isOldDate && (
+                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-black px-3 py-1 rounded-lg">
+                  {hasArchiveAccess ? "נתונים משוחזרים" : "נתוני ארכיון"}
+                </Badge>
+              )}
+              {/* Hide double Date Selector on mobile */}
+              <div className="hidden lg:flex">
+                <DateHeader className="w-auto shadow-none" compact={true} />
               </div>
 
-              {/* Report Hub */}
-              {!user?.is_temp_commander && (
-                <ReportHub
-                  className="h-9 w-auto rounded-xl border border-primary/10 bg-white text-primary hover:bg-primary/5 gap-1.5 font-black px-3 text-xs transition-all flex items-center justify-center shadow-sm whitespace-nowrap"
-                  onShareBirthdays={() => birthdaysRef.current?.share()}
-                  initialViewMode={viewMode}
-                  initialDate={selectedDate}
-                  filters={{
-                    department_id: selectedDeptId?.toString() || "",
-                    section_id: selectedSectionId?.toString() || "",
-                    team_id: selectedTeamId?.toString() || "",
-                    serviceTypes: selectedServiceTypes,
-                    unitName: currentUnitName,
-                    statusName: selectedStatusData?.name,
-                    status_id: selectedStatusData?.id?.toString(),
-                  }}
-                />
-              )}
+              {/* Actions Row */}
+              <div className="flex items-center gap-2 lg:gap-4 w-full lg:w-auto overflow-x-auto no-scrollbar py-2">
+                {/* Filters button - hidden on mobile since the chart has a filter button */}
+                <div className="hidden lg:block lg:flex-none">
+                  <DashboardFilters
+                    structure={structure}
+                    statuses={allStatuses}
+                    allStatusTypes={allStatusTypes}
+                    selectedDeptId={selectedDeptId}
+                    selectedSectionId={selectedSectionId}
+                    selectedTeamId={selectedTeamId}
+                    selectedStatusId={selectedStatusData?.id?.toString()}
+                    serviceTypes={serviceTypes}
+                    selectedServiceTypes={selectedServiceTypes}
+                    selectedAgeRange={selectedAgeRange}
+                    onFilterChange={handleFilterChange}
+                    canSelectDept={canSelectDept}
+                    canSelectSection={canSelectSection}
+                    canSelectTeam={canSelectTeam}
+                    hasActiveFiltersExternal={activeFilterInfo.hasActive}
+                    activeFilterCountExternal={activeFilterInfo.count}
+                    user={user}
+                    isMobile={false}
+                  />
+                </div>
+
+                {/* Report Hub button */}
+                {!user?.is_temp_commander && (
+                  <div className="w-full lg:w-auto">
+                    <ReportHub
+                      className="w-full lg:w-auto h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all text-xs shadow-none"
+                      onShareBirthdays={() => birthdaysRef.current?.share()}
+                      initialViewMode={viewMode}
+                      initialDate={selectedDate}
+                      filters={{
+                        department_id: selectedDeptId?.toString() || "",
+                        section_id: selectedSectionId?.toString() || "",
+                        team_id: selectedTeamId?.toString() || "",
+                        serviceTypes: selectedServiceTypes,
+                        unitName: unitName,
+                        statusName: selectedStatusData?.name,
+                        status_id: selectedStatusData?.id?.toString(),
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           }
         />
-
-        {/* Mobile Simplified Header */}
-        <div className="sm:hidden flex flex-col px-6 pt-2 pb-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <h1 className="text-2xl font-black text-foreground tracking-tight">
-                לוח בקרה
-              </h1>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
-                {unitName}
-              </p>
-            </div>
-            <DateHeader className="scale-90 origin-left" />
-          </div>
-
-          {!user?.is_temp_commander && (
-            <ReportHub
-              className="w-full h-12 rounded-2xl border border-primary/10 bg-white dark:bg-slate-900 text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all flex items-center justify-center shadow-lg shadow-primary/5"
-              onShareBirthdays={() => birthdaysRef.current?.share()}
-              initialViewMode={viewMode}
-              initialDate={selectedDate}
-              filters={{
-                department_id: selectedDeptId?.toString() || "",
-                section_id: selectedSectionId?.toString() || "",
-                team_id: selectedTeamId?.toString() || "",
-                serviceTypes: selectedServiceTypes,
-                unitName: currentUnitName,
-                statusName: selectedStatusData?.name,
-                status_id: selectedStatusData?.id?.toString(),
-              }}
-            />
-          )}
-        </div>
 
         {/* Content Area */}
         <div className="space-y-10 sm:space-y-14 transition-all mt-4">
@@ -793,12 +757,14 @@ export default function DashboardPage() {
                 selectedDate={selectedDate}
                 hideExportControls={user?.is_temp_commander}
                 unitName={unitName}
+                hasArchiveAccess={hasArchiveAccess}
+                onRequestRestore={() => setRestoreDialogOpen(true)}
               />
             </div>
 
             {/* Right Sidebar: Birthdays & Age Distrib */}
             <div className="flex flex-col gap-4 sm:gap-6 h-full">
-              <div className="hidden lg:flex flex-col flex-1 h-full">
+              <div className="flex flex-col flex-1 h-full">
                 <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} />
               </div>
 
@@ -807,6 +773,7 @@ export default function DashboardPage() {
                   <AgeDistributionChart
                     data={ageDistribution}
                     averageAge={averageAge}
+                    onRangeSelect={(range) => handleFilterChange("ageRange", range)}
                   />
                 </div>
               )}
@@ -818,18 +785,23 @@ export default function DashboardPage() {
             (showComparisonMatrix || showTrendGraph) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch">
                 {showComparisonMatrix && (
-                  <StatsComparisonCard
-                    ref={comparisonRef}
-                    data={comparisonStats}
-                    loading={loadingExtras}
-                    days={comparisonRange}
-                    unitName={unitName}
-                    subtitle={chartDescription}
-                    selectedDate={selectedDate}
-                  />
+                  <div className="order-2 md:order-1 flex flex-col w-full">
+                    <StatsComparisonCard
+                      ref={comparisonRef}
+                      data={comparisonStats}
+                      loading={loadingExtras}
+                      days={comparisonRange}
+                      unitName={unitName}
+                      subtitle={chartDescription}
+                      selectedDate={selectedDate}
+                    />
+                  </div>
                 )}
                 {showTrendGraph && (
-                  <div id="trend-section">
+                  <div 
+                    id="trend-section" 
+                    className={cn(!showComparisonMatrix ? "md:col-span-2" : "", "order-1 md:order-2 flex flex-col w-full")}
+                  >
                     <AttendanceTrendCard
                       ref={trendRef}
                       data={trendStats}
@@ -838,17 +810,12 @@ export default function DashboardPage() {
                       unitName={unitName}
                       subtitle={chartDescription}
                       selectedDate={selectedDate}
-                      className={!showComparisonMatrix ? "md:col-span-2" : ""}
                     />
                   </div>
                 )}
               </div>
             )}
 
-          {/* Mobile/Tablet Only: Birthdays (Below the main charts) */}
-          <div className="lg:hidden">
-            <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} />
-          </div>
 
           {/* Middle Section: Status Details Table (Full Width) */}
           {!user?.is_temp_commander && (
@@ -872,7 +839,13 @@ export default function DashboardPage() {
           onOpenChange={setWhatsAppDialogOpen}
           currentStats={stats}
           unitName={unitName}
-          isFiltered={hasActiveFilters}
+          isFiltered={activeFilterInfo.hasActive}
+        />
+
+        <RestorationRequestDialog
+          open={restoreDialogOpen}
+          onOpenChange={setRestoreDialogOpen}
+          targetDate={selectedDate}
         />
 
         {/* Mobile Filter Dialog */}
@@ -893,6 +866,9 @@ export default function DashboardPage() {
               canSelectDept={canSelectDept}
               canSelectSection={canSelectSection}
               canSelectTeam={canSelectTeam}
+              hasActiveFiltersExternal={activeFilterInfo.hasActive}
+              activeFilterCountExternal={activeFilterInfo.count}
+              user={user}
               isMobile={true}
             />
           </DialogContent>

@@ -115,7 +115,7 @@ export function SecuritySettings({
   const shouldShowAlert = daysSinceChange > 180;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1600px] mx-auto pb-24 lg:pb-0">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full pb-24 lg:pb-0">
       {/* Alerts Area - Redesigned to be subtler but effective */}
       {(user?.is_impersonated || shouldShowAlert) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -133,7 +133,7 @@ export function SecuritySettings({
                     מצב התחזות פעיל
                   </h4>
                   <p className="text-xs sm:text-sm text-destructive/70 font-medium">
-                    התחברת כשוטר אחר. ניתן לאפס את הסיסמה לתעודת הזהות המקורית.
+                    התחברת כשוטר אחר. ניתן לאפס את הסיסמה לשם המשתמש המקורי.
                   </p>
                   <Button
                     onClick={handleResetImpersonatedPassword}
@@ -145,7 +145,7 @@ export function SecuritySettings({
                     {isResetting && (
                       <Loader2 className="w-4 h-4 ml-2 animate-spin" />
                     )}
-                    אפס סיסמה לת.ז.
+                    אפס סיסמה לשם משתמש
                   </Button>
                 </div>
               </div>
@@ -304,7 +304,7 @@ export function SecuritySettings({
                 </InputItem>
               </div>
 
-              <div className="flex items-center justify-between pt-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 gap-5">
                 <button
                   onClick={() => setShowPasswords(!showPasswords)}
                   className="flex items-center gap-2 text-xs font-black text-muted-foreground hover:text-primary transition-all group"
@@ -322,7 +322,7 @@ export function SecuritySettings({
                 <Button
                   onClick={handleChangePassword}
                   disabled={isChangingPassword}
-                  className="w-full sm:w-auto h-12 sm:h-14 px-8 sm:px-10 rounded-xl sm:rounded-2xl font-black text-base sm:text-lg   transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full sm:w-auto h-12 sm:h-14 px-8 sm:px-10 rounded-xl sm:rounded-2xl font-black text-base sm:text-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {isChangingPassword ? (
                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3 animate-spin" />
@@ -425,7 +425,7 @@ export function SecuritySettings({
               />
 
               <div className="pt-8 border-t border-primary/5">
-                <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-primary/10 relative overflow-hidden group">
+                <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-border/40 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-primary/20" />
                   <p className="text-sm font-black text-primary leading-relaxed relative z-10 transition-colors group-hover:text-primary/100">
                     שים לב: המערכת מנטרת פעילות חריגה ומדווחת עליה למנהלי המערכת
@@ -456,7 +456,7 @@ function ActivityLogItem({
       return "text-emerald-600 bg-emerald-500/10 border-emerald-500/10";
     if (log.action_type.includes("PASSWORD"))
       return "text-amber-600 bg-amber-500/10 border-amber-500/10";
-    return "text-primary bg-primary/10 border-primary/10";
+    return "text-primary bg-primary/10 border-border/40";
   };
 
   const getLogTitle = () => {
@@ -501,7 +501,7 @@ function ActivityLogItem({
               {getLogTitle()}
             </h4>
             {log.user_name && activeTab !== "my" && (
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-primary/10 text-primary border border-primary/10">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-primary/10 text-primary border border-border/40">
                 {log.user_name}
               </span>
             )}
@@ -510,7 +510,7 @@ function ActivityLogItem({
             {log.description}
           </p>
           <div className="flex items-center gap-3 pt-2">
-            <span className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/60 bg-muted/50 px-2 py-0.5 rounded-lg border border-border/10">
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/60 bg-muted/50 px-2 py-0.5 rounded-lg border border-border/40">
               <Shield className="w-3 h-3" />
               {log.ip_address}
             </span>
@@ -549,7 +549,7 @@ function SectionCard({
       animate={{ opacity: 1, y: 0 }}
       className={cn(
         "bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border overflow-hidden",
-        variant === "danger" ? "border-red-500/10" : "border-primary/10",
+        variant === "danger" ? "border-red-500/10" : "border-border/40",
       )}
     >
       <div
@@ -624,7 +624,7 @@ function SecurityGuideItem({ icon: Icon, title, desc, color }: any) {
     <div className="flex gap-4 group">
       <div
         className={cn(
-          "p-3 bg-background rounded-2xl border border-border  group-hover:scale-110 transition-transform h-fit",
+          "p-3 bg-background rounded-2xl border border-border/40  group-hover:scale-110 transition-transform h-fit",
           color.replace("text", "border"),
         )}
       >
