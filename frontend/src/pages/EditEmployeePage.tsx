@@ -1102,6 +1102,24 @@ export default function EditEmployeePage() {
               </span>
             )}
           </div>
+
+          {/* Tabs Selector at the bottom of Hero */}
+          <div className="flex justify-center w-full mt-6 -mb-5 relative z-20">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1.5 flex gap-2 shadow-xl shadow-primary/5 min-w-[320px] sm:min-w-[400px]">
+              <TabButton
+                active={activeTab === "personal"}
+                onClick={() => setActiveTab("personal")}
+                icon={User}
+                label="פרטים אישיים"
+              />
+              <TabButton
+                active={activeTab === "pro"}
+                onClick={() => setActiveTab("pro")}
+                icon={Shield}
+                label="מקצועי והרשאות"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1242,23 +1260,7 @@ export default function EditEmployeePage() {
             </div>
           </div>
 
-          {/* MAIN CONTENT Area */}
-          <div className="lg:col-span-9 space-y-4 order-2 lg:order-1 min-h-[600px]">
-            {/* Tabs Selector */}
-            <div className="bg-muted/40 dark:bg-slate-900/40 border border-border/40 rounded-2xl p-1 flex gap-1">
-              <TabButton
-                active={activeTab === "personal"}
-                onClick={() => setActiveTab("personal")}
-                icon={User}
-                label="פרטים אישיים"
-              />
-              <TabButton
-                active={activeTab === "pro"}
-                onClick={() => setActiveTab("pro")}
-                icon={Shield}
-                label="מקצועי והרשאות"
-              />
-            </div>
+          <div className="lg:col-span-9 space-y-4 order-2 lg:order-1 min-h-[600px] mt-4 sm:mt-6">
 
             <AnimatePresence mode="wait">
               <motion.div

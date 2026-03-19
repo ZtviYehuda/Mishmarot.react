@@ -158,7 +158,8 @@ class AttendanceModel:
 
         # Check if there's an approved restore request for this user and date
         if ArchiveModel.check_access(user_id, date_val):
-            return "(SELECT * FROM attendance_logs UNION ALL SELECT * FROM attendance_logs_archive)"
+            cols = "id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at"
+            return f"(SELECT {cols} FROM attendance_logs UNION ALL SELECT {cols} FROM attendance_logs_archive)"
         return "attendance_logs"
 
     @staticmethod
@@ -362,6 +363,82 @@ class AttendanceModel:
             return False
         finally:
             conn.close()
+
+    @staticmethod
+    def log_scope_status(
+        scope_type, scope_id, status_type_id, start_date, end_date, note=None, reported_by=None
+    ):
+        """
+        Logs a status for ALL employees in a given scope.
+        scope_type: 'team', 'section', 'department'
+        """
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # 1. Find all active employees in scope
+            query = "SELECT id FROM employees WHERE is_active = TRUE AND username != 'admin'"
+            if scope_type == "team":
+                query += " AND team_id = %s"
+            elif scope_type == "section":
+                query += " AND (section_id = %s OR team_id IN (SELECT id FROM teams WHERE section_id = %s))"
+            elif scope_type == "department":
+                query += " AND (department_id = %s OR section_id IN (SELECT id FROM sections WHERE department_id = %s) OR team_id IN (SELECT t.id FROM teams t JOIN sections s ON t.section_id = s.id WHERE s.department_id = %s))"
+            
+            if scope_type == "team":
+                cur.execute(query, (scope_id,))
+            elif scope_type == "section":
+                cur.execute(query, (scope_id, scope_id))
+            elif scope_type == "department":
+                cur.execute(query, (scope_id, scope_id, scope_id))
+            else:
+                return False # Invalid scope
+
+            employees = cur.fetchall()
+            if not employees:
+                return True # No one to update
+            
+            updates = []
+            for emp in employees:
+                updates.append({
+                    "employee_id": emp["id"],
+                    "status_type_id": status_type_id,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "note": note
+                })
+            
+            # Reuse bulk logic
+            success = AttendanceModel.log_bulk_status(updates, reported_by=reported_by)
+            
+            if success:
+                # Send notifications to all affected employees
+                from app.models.notification_model import NotificationModel
+                
+                # Get status name
+                cur.execute("SELECT name FROM status_types WHERE id = %s", (status_type_id,))
+                st_res = cur.fetchone()
+                status_name = st_res[0] if st_res else "אירוע יחידה"
+                
+                msg_title = f"נקבע {status_name}"
+                msg_desc = f"עבור התאריכים {start_date} עד {end_date or start_date}"
+                if note:
+                    msg_desc += f". הערה: {note}"
+                
+                for emp in employees:
+                    if emp["id"] != reported_by:
+                        NotificationModel.send_message(reported_by, emp["id"], msg_title, msg_desc)
+            
+            return success
+        except Exception as e:
+            print(f"Error logging scope status: {e}")
+            return False
+        finally:
+            conn.close()
+
+
 
     @staticmethod
     def upsert_roster_log(employee_id, status_type_id, date_obj, reported_by=None):
@@ -705,7 +782,11 @@ class AttendanceModel:
                             e.id as emp_id,
                             (
                                 SELECT st.is_presence
-                                FROM (SELECT * FROM attendance_logs UNION ALL SELECT * FROM attendance_logs_archive) al
+                                FROM (
+                                    SELECT id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at FROM attendance_logs
+                                    UNION ALL
+                                    SELECT id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at FROM attendance_logs_archive
+                                ) al
                                 JOIN status_types st ON al.status_type_id = st.id
                                 WHERE al.employee_id = e.id
                                 AND DATE(al.start_datetime) <= dr.date_val
@@ -770,7 +851,11 @@ class AttendanceModel:
                                      THEN TRUE
                                      ELSE FALSE
                                END) as is_active_for_date
-                        FROM (SELECT * FROM attendance_logs UNION ALL SELECT * FROM attendance_logs_archive) al
+                        FROM (
+                            SELECT id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at FROM attendance_logs
+                            UNION ALL
+                            SELECT id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at FROM attendance_logs_archive
+                        ) al
                         JOIN status_types sti ON al.status_type_id = sti.id
                         WHERE al.employee_id = e.id AND DATE(al.start_datetime) <= %s
                         ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
@@ -885,13 +970,17 @@ class AttendanceModel:
                         FROM scoped_employees se
                         LEFT JOIN LATERAL (
                             SELECT st.is_presence, st.id
-                            FROM (SELECT * FROM attendance_logs UNION ALL SELECT * FROM attendance_logs_archive) al
+                            FROM (
+                                SELECT id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at FROM attendance_logs
+                                UNION ALL
+                                SELECT id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at FROM attendance_logs_archive
+                            ) al
                             JOIN status_types st ON al.status_type_id = st.id
                             WHERE al.employee_id = se.id
-                            AND DATE(al.start_datetime) <= p.date 
-                            AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= p.date)
-                            AND (st.is_persistent = TRUE OR DATE(al.start_datetime) = p.date)
-                            ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
+                                AND DATE(al.start_datetime) <= p.date 
+                                AND (al.end_datetime IS NULL OR DATE(al.end_datetime) >= p.date)
+                                AND (st.is_persistent = TRUE OR DATE(al.start_datetime) = p.date)
+                                ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                         ) st ON true
                         WHERE {count_condition}
                     ) as present_count

@@ -152,20 +152,16 @@ export const StatusMembersModal: React.FC<StatusMembersModalProps> = ({
                       </td>
                       <td className="px-6 py-5 whitespace-nowrap text-right">
                         {emp.phone_number ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            asChild
-                            className="h-8 rounded-lg hover:bg-primary hover:text-white transition-all gap-2 text-xs font-black px-3"
+                          <a
+                            href={`tel:${emp.phone_number}`}
+                            className="text-xs font-bold text-primary hover:brightness-75 transition-all flex items-center justify-end gap-2"
                           >
-                            <a href={`tel:${emp.phone_number}`}>
-                              <Phone className="w-3.5 h-3.5" />
-                              {emp.phone_number}
-                            </a>
-                          </Button>
+                            <Phone className="w-3.5 h-3.5" />
+                            {emp.phone_number}
+                          </a>
                         ) : (
-                          <span className="text-[10px] text-muted-foreground/30 font-black italic uppercase tracking-widest pl-4">
-                            אין טלפון
+                          <span className="text-xs text-muted-foreground/30 font-mono">
+                            -
                           </span>
                         )}
                       </td>

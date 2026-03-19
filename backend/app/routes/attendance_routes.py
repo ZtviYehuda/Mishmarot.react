@@ -383,6 +383,56 @@ def bulk_log_status():
     return jsonify({"success": False, "error": "Failed to bulk log status"}), 500
 
 
+@att_bp.route("/bulk-scope", methods=["POST"])
+@jwt_required()
+def bulk_scope_status():
+    data = request.get_json()
+    scope_type = data.get("scope_type")
+    scope_id = data.get("scope_id")
+    status_id = data.get("status_type_id")
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+    note = data.get("note")
+
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    current_user_id = identity["id"] if isinstance(identity, dict) else identity
+
+    if not all([scope_type, scope_id, status_id, start_date]):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    success = AttendanceModel.log_scope_status(
+        scope_type=scope_type,
+        scope_id=scope_id,
+        status_type_id=status_id,
+        start_date=start_date,
+        end_date=end_date,
+        note=note,
+        reported_by=current_user_id,
+    )
+
+    if success:
+        AuditLogModel.log_action(
+            user_id=current_user_id,
+            action_type="SCOPE_STATUS_UPDATE",
+            description=f"Updated status for scope {scope_type}:{scope_id}",
+            ip_address=request.remote_addr,
+            metadata={
+                "scope_type": scope_type,
+                "scope_id": scope_id,
+                "status_id": status_id,
+            },
+        )
+        return jsonify({"success": True, "message": "אירוע היחידה עודכן בהצלחה לכלל השוטרים"})
+    return jsonify({"success": False, "error": "Failed to log scope status"}), 500
+
+
 @att_bp.route("/calendar", methods=["GET"])
 @jwt_required()
 def get_calendar_stats():

@@ -16,9 +16,13 @@ import { format, subDays, isBefore } from "date-fns";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AgeDistributionChart } from "@/components/dashboard/AgeDistributionChart";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ReportHub } from "@/components/dashboard/ReportHub";
 import { DateHeader } from "@/components/common/DateHeader";
 import { RestorationRequestDialog } from "@/components/dashboard/RestorationRequestDialog";
+import { WhatsAppBroadcastModal } from "@/components/employees/modals/WhatsAppBroadcastModal";
+import { MessageSquare, Calendar as CalendarIcon } from "lucide-react";
+import { GlobalEventModal } from "@/components/employees/modals/GlobalEventModal";
 
 // Helper types for structure
 interface Team {
@@ -109,6 +113,8 @@ export default function DashboardPage() {
     }
   }, [viewMode]);
   const [whatsAppDialogOpen, setWhatsAppDialogOpen] = useState(false);
+  const [whatsappBroadcastOpen, setWhatsappBroadcastOpen] = useState(false);
+  const [globalEventOpen, setGlobalEventOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasArchiveAccess, setHasArchiveAccess] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
@@ -708,7 +714,7 @@ export default function DashboardPage() {
 
                 {/* Report Hub button */}
                 {!user?.is_temp_commander && (
-                  <div className="w-full lg:w-auto">
+                  <div className="w-full lg:w-auto flex items-center gap-2">
                     <ReportHub
                       className="w-full lg:w-auto h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all text-xs shadow-none"
                       onShareBirthdays={() => birthdaysRef.current?.share()}
@@ -724,6 +730,26 @@ export default function DashboardPage() {
                         status_id: selectedStatusData?.id?.toString(),
                       }}
                     />
+                    
+                    {(user?.is_commander || user?.is_admin) && (
+                      <Button
+                        onClick={() => setWhatsappBroadcastOpen(true)}
+                        className="h-10 rounded-xl border border-border/40 bg-green-500/10 text-green-600 hover:bg-green-500/20 gap-2 font-black px-4 transition-all text-xs"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        רשימת תפוצה
+                      </Button>
+                    )}
+
+                    {(user?.is_commander || user?.is_admin) && !user?.is_temp_commander && (
+                      <Button
+                        onClick={() => setGlobalEventOpen(true)}
+                        className="h-10 rounded-xl border border-border/40 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 gap-2 font-black px-4 transition-all text-xs"
+                      >
+                        <CalendarIcon className="w-4 h-4" />
+                        אירוע
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -848,6 +874,11 @@ export default function DashboardPage() {
           targetDate={selectedDate}
         />
 
+        <WhatsAppBroadcastModal
+          open={whatsappBroadcastOpen}
+          onOpenChange={setWhatsappBroadcastOpen}
+        />
+
         {/* Mobile Filter Dialog */}
         <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
           <DialogContent className="p-0 border-none bg-transparent max-w-[340px] w-full mx-auto">
@@ -873,7 +904,13 @@ export default function DashboardPage() {
             />
           </DialogContent>
         </Dialog>
+        <GlobalEventModal
+          isOpen={globalEventOpen}
+          onClose={() => setGlobalEventOpen(false)}
+          statusTypes={allStatusTypes}
+          structure={structure}
+        />
       </div>
-    </div >
+    </div>
   );
 }

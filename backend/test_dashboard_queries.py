@@ -4,7 +4,7 @@ import psycopg2.extras
 from dotenv import load_dotenv
 from datetime import date, datetime, timedelta
 
-def test_comparison_after_fix():
+def test_query():
     load_dotenv()
     try:
         conn = psycopg2.connect(
@@ -16,10 +16,10 @@ def test_comparison_after_fix():
         )
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
-        target_date = date.today().strftime("%Y-%m-%d")
-        cols = "id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at"
+        base_date = date.today().strftime("%Y-%m-%d")
         
-        # Test Comparison Snapshot (days=1)
+        # Test Single Day Comparison Query (Admin level)
+        target_date = base_date
         query = f"""
             SELECT 
                 d.id as unit_id,
@@ -44,11 +44,7 @@ def test_comparison_after_fix():
                              THEN TRUE
                              ELSE FALSE
                        END) as is_active_for_date
-                FROM (
-                    SELECT {cols} FROM attendance_logs 
-                    UNION ALL 
-                    SELECT {cols} FROM attendance_logs_archive
-                ) al
+                FROM (SELECT * FROM attendance_logs UNION ALL SELECT * FROM attendance_logs_archive) al
                 JOIN status_types sti ON al.status_type_id = sti.id
                 WHERE al.employee_id = e.id AND DATE(al.start_datetime) <= %s
                 ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
@@ -80,4 +76,4 @@ def test_comparison_after_fix():
         traceback.print_exc()
 
 if __name__ == "__main__":
-    test_comparison_after_fix()
+    test_query()

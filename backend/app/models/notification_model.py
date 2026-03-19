@@ -72,7 +72,7 @@ class NotificationModel:
                         FROM employees e
                         JOIN attendance_logs al ON e.id = al.employee_id
                         JOIN status_types st ON al.status_type_id = st.id
-                        WHERE st.name = 'מחלה' 
+                        WHERE st.name = 'חולה' 
                           AND al.end_datetime IS NULL 
                           AND e.is_active = TRUE
                     )
@@ -496,6 +496,7 @@ class NotificationModel:
 
         finally:
             conn.close()
+        return alerts
 
     @staticmethod
     def mark_as_read(

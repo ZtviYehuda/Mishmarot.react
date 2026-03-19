@@ -57,6 +57,15 @@ function getAlertConfig(alert: {
   const isTransfer = alert.id.includes("transfer") || text.includes("העברה");
   const isSick = alert.id.includes("sick") || text.includes("מחלה");
   const isMessage = alert.id.startsWith("msg-");
+  const isMorningReport = alert.id.includes("missing-reports") || text.includes("דיווח בוקר");
+
+  if (isMorningReport) {
+    return {
+      icon: CalendarRange,
+      bg: "rgba(245, 158, 11, 0.1)",
+      color: "rgb(245, 158, 11)",
+    };
+  }
 
   if (isTransfer) {
     return {

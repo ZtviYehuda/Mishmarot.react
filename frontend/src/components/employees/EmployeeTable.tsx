@@ -378,8 +378,18 @@ export const EmployeeTable = ({
                     <TableCell className="px-6 py-4 text-right font-mono text-xs text-muted-foreground">
                       {emp.username}
                     </TableCell>
-                    <TableCell className="px-6 py-4 text-right font-mono text-xs text-muted-foreground">
-                      {emp.phone_number || "-"}
+                    <TableCell className="px-6 py-4 text-right">
+                      {emp.phone_number ? (
+                        <a
+                          href={`tel:${emp.phone_number}`}
+                          className="font-mono text-xs text-primary hover:text-primary transition-colors hover:brightness-75 flex items-center justify-center gap-2 w-fit mr-auto"
+                        >
+                          <Phone className="w-3 h-3" />
+                          {emp.phone_number}
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/30 font-mono">-</span>
+                      )}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-right text-xs text-muted-foreground">
                       {emp.birth_date
@@ -458,6 +468,7 @@ export const EmployeeTable = ({
                             </div>
                           )}
                         </div>
+
                       ) : (
                         <span className="text-[10px] font-black text-muted-foreground/30">
                           מטה / ללא שיוך

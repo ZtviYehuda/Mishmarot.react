@@ -47,37 +47,62 @@ const InfoItem = ({
 }) => {
   if (!value || value === "---") return null;
 
+  const cleanValue = typeof value === "string" ? value.trim() : value;
+
   const content = (
     <span
       className={cn(
         "text-base font-black text-foreground tracking-tight leading-tight transition-colors",
         !noTruncate && "truncate",
         noTruncate && "break-all",
-        type && "text-primary hover:text-primary/80",
+        type && "text-primary group-hover:text-primary/80"
       )}
-      title={typeof value === "string" ? value : undefined}
+      title={typeof cleanValue === "string" ? cleanValue : undefined}
     >
-      {value}
+      {cleanValue}
     </span>
   );
 
+  const wrapperClass = cn("flex flex-col gap-2 group/info cursor-pointer relative z-10", className);
+
+  if (type === "phone" && typeof cleanValue === "string") {
+    return (
+      <a href={`tel:${cleanValue.replace(/\s/g, '')}`} className={wrapperClass}>
+        <span className="text-[10px] font-black text-muted-foreground dark:text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2 group-hover/info:text-primary transition-colors">
+          <Icon className="w-3.5 h-3.5" />
+          {label}
+        </span>
+        {content}
+      </a>
+    );
+  }
+
+  if (type === "email" && typeof cleanValue === "string") {
+    return (
+      <a 
+        href={`mailto:${cleanValue}`} 
+        className={cn(wrapperClass, "hover:bg-primary/5 rounded-xl transition-colors p-1 -m-1")}
+        onClick={(e) => {
+          // Manual trigger as fallback if href fails
+          window.location.href = `mailto:${cleanValue}`;
+        }}
+      >
+        <span className="text-[10px] font-black text-muted-foreground dark:text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2 group-hover/info:text-primary transition-colors">
+          <Icon className="w-3.5 h-3.5" />
+          {label}
+        </span>
+        {content}
+      </a>
+    );
+  }
+
   return (
-    <div className={cn("flex flex-col gap-2 group/info", className)}>
+    <div className={wrapperClass}>
       <span className="text-[10px] font-black text-muted-foreground dark:text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2 group-hover/info:text-primary transition-colors">
         <Icon className="w-3.5 h-3.5" />
         {label}
       </span>
-      {type === "phone" && typeof value === "string" ? (
-        <a href={`tel:${value}`} className="block">
-          {content}
-        </a>
-      ) : type === "email" && typeof value === "string" ? (
-        <a href={`mailto:${value}`} className="block">
-          {content}
-        </a>
-      ) : (
-        content
-      )}
+      {content}
     </div>
   );
 };

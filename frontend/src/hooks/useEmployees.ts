@@ -13,6 +13,35 @@ export const useEmployees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdatingScope, setIsUpdatingScope] = useState<boolean>(false);
+
+  // Log status for a scope (Team/Section/Department)
+  const logScopeStatus = async (
+    scope_type: "team" | "section" | "department",
+    scope_id: number,
+    status_type_id: number,
+    start_date: string,
+    end_date: string,
+    note?: string,
+  ) => {
+    setIsUpdatingScope(true);
+    try {
+      await apiClient.post(attEndpoints.ATTENDANCE_BULK_SCOPE_ENDPOINT, {
+        scope_type,
+        scope_id,
+        status_type_id,
+        start_date,
+        end_date,
+        note,
+      });
+      return true;
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to log scope status");
+      return false;
+    } finally {
+      setIsUpdatingScope(false);
+    }
+  };
 
   // Fetch all employees
   const fetchEmployees = useCallback(
@@ -508,5 +537,7 @@ export const useEmployees = () => {
         throw err;
       }
     },
+    logScopeStatus,
+    isUpdatingScope,
   };
 };

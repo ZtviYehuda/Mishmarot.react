@@ -1307,22 +1307,25 @@ export default function TransfersPage() {
                   {/* Personal Info Card */}
 
 
-                  <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 transition-all hover:border-border">
-                    <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center border border-border/50 shrink-0">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-xs font-bold text-foreground truncate"
-                        dir="ltr"
-                      >
-                        {viewingEmployee?.phone_number || "---"}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground font-medium truncate">
-                        טלפון נייד
-                      </p>
-                    </div>
-                  </div>
+                    <a
+                      href={`tel:${viewingEmployee?.phone_number}`}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 transition-all hover:border-primary/50 hover:bg-primary/5 group/phone"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center border border-border/50 shrink-0 group-hover/phone:border-primary/30 transition-colors">
+                        <Phone className="w-4 h-4 text-muted-foreground group-hover/phone:text-primary transition-colors" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-xs font-bold text-foreground truncate group-hover/phone:text-primary transition-colors"
+                          dir="ltr"
+                        >
+                          {viewingEmployee?.phone_number || "---"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground font-medium truncate">
+                          טלפון נייד
+                        </p>
+                      </div>
+                    </a>
 
                   <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 transition-all hover:border-border">
                     <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center border border-border/50 shrink-0">

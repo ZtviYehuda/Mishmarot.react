@@ -124,8 +124,8 @@ class EmployeeModel:
                        d.id as assigned_department_id,
                        s.id as assigned_section_id,
                        e.team_id, e.section_id, e.department_id,
-                       (SELECT id FROM departments WHERE commander_id = e.id LIMIT 1) as commands_department_id_direct,
-                       (SELECT id FROM sections WHERE commander_id = e.id LIMIT 1) as commands_section_id_direct,
+                       (SELECT id FROM departments WHERE commander_id = e.id LIMIT 1) as commands_department_id,
+                       (SELECT id FROM sections WHERE commander_id = e.id LIMIT 1) as commands_section_id,
                        (SELECT id FROM teams WHERE commander_id = e.id LIMIT 1) as commands_team_id,
                        e.notif_sick_leave, e.notif_transfers, e.notif_morning_report
                 FROM employees e

@@ -921,44 +921,79 @@ export default function CreateEmployeePage() {
       </div>
     );
 
-  const TabButton = ({ active, onClick, icon: Icon, label }: any) => (
+  const TabButton = ({ active, onClick, icon: Icon, label, small }: any) => (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 py-2 px-4 rounded-xl text-sm font-black transition-all duration-300 relative",
+        "flex-1 flex items-center justify-center transition-all duration-500 relative group overflow-hidden",
+        small ? "gap-2 py-1.5 px-3 rounded-xl text-[11px]" : "gap-3 py-3 px-6 rounded-2xl text-sm",
         active
-          ? "bg-white dark:bg-slate-800 text-primary shadow-sm border border-border/50"
+          ? "text-primary"
           : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200",
       )}
     >
-      {Icon && (
-        <div
+      {active && (
+        <motion.div
+          layoutId="activeTab"
           className={cn(
-            "w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-300",
-            active
-              ? "bg-primary/10 text-primary"
-              : "text-slate-400",
+            "absolute inset-0 bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50",
+            small ? "rounded-xl" : "rounded-2xl"
           )}
-        >
-          <Icon className="w-3.5 h-3.5" />
-        </div>
+          initial={false}
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
       )}
-      <span>{label}</span>
+      <div className="relative z-10 flex items-center gap-2">
+        {Icon && (
+          <div
+            className={cn(
+              "rounded-lg flex items-center justify-center transition-all duration-500",
+              small ? "w-5 h-5" : "w-8 h-8",
+              active
+                ? "bg-primary text-white scale-110 rotate-0"
+                : "bg-white/50 dark:bg-slate-800/50 text-slate-400 group-hover:scale-110 group-hover:bg-white",
+            )}
+          >
+            <Icon className={small ? "w-2.5 h-2.5" : "w-4 h-4"} />
+          </div>
+        )}
+        <span className="tracking-tight leading-none whitespace-nowrap">{label}</span>
+      </div>
     </button>
   );
+
+
 
   return (
     <div id="create-page-root" className="flex flex-col animate-in fade-in duration-500 pb-10">
       {/* Page Header - matches system layout */}
-      <div className="pt-6 pb-4 shrink-0 flex items-center justify-between gap-4">
+      <div className="pt-6 pb-4 shrink-0 flex items-center justify-between gap-4 border-b border-border/40 mb-6">
         <PageHeader
           icon={UserPlus}
           title="הוספת שוטר חדש"
-          subtitle="הזנת פרטים אישיים, שיוך ארגוני והגדרת הרשאות"
           className="mb-0"
           hideMobile={true}
         />
+
+        {/* Inline Header Tabs */}
+        <div className="hidden sm:flex bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1 flex gap-1 min-w-[280px]">
+          <TabButton
+            active={activeTab === "personal"}
+            onClick={() => setActiveTab("personal")}
+            icon={User}
+            label="פרטים אישיים"
+            small
+          />
+          <TabButton
+            active={activeTab === "professional"}
+            onClick={() => setActiveTab("professional")}
+            icon={Shield}
+            label="מקצועי והרשאות"
+            small
+          />
+        </div>
+
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Button
             variant="ghost"
@@ -983,9 +1018,9 @@ export default function CreateEmployeePage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex">
-        <div className="bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1.5 flex gap-2 mb-6 self-start">
+      {/* Mobile-only tabs (original style) */}
+      <div className="flex sm:hidden justify-center w-full mb-6 px-4">
+        <div className="bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1 flex gap-1 w-full">
           <TabButton
             active={activeTab === "personal"}
             onClick={() => setActiveTab("personal")}

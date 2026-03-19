@@ -336,12 +336,13 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                             </span>
                           )}
                         </div>
-                        <span
-                          className="text-[10px] font-bold text-muted-foreground/60"
+                        <a
+                          href={`tel:${emp.phone_number}`}
+                          className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors hover:underline"
                           dir="ltr"
                         >
                           {emp.phone_number || "---"}
-                        </span>
+                        </a>
                       </div>
 
                       <Button

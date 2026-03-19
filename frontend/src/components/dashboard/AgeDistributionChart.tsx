@@ -10,7 +10,7 @@ import {
   Cell,
 } from "recharts";
 import { Card } from "@/components/ui/card";
-import { Timer, Users, TrendingUp } from "lucide-react";
+import { Timer } from "lucide-react";
 
 interface AgeDistributionChartProps {
   data: { range: string; count: number }[];
@@ -39,9 +39,7 @@ export const AgeDistributionChart = ({
   }, [chartData]);
 
   return (
-    <Card className="rounded-[2rem] border border-border/40 bg-card/60 backdrop-blur-2xl shadow-sm overflow-hidden p-6 sm:p-8 h-full flex flex-col transition-all hover:bg-card/80 group/card relative">
-      {/* Subtle background glow - very faint */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none group-hover/card:bg-primary/10 transition-colors" />
+    <Card className="rounded-[2rem] border border-primary/10 bg-card/60 backdrop-blur-2xl overflow-hidden p-6 sm:p-8 h-full flex flex-col relative">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 relative z-10">
@@ -139,33 +137,6 @@ export const AgeDistributionChart = ({
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-      </div>
-
-      {/* Modern Stats Cards */}
-      <div className="grid grid-cols-2 gap-4 mt-8 relative z-10">
-        <div className="p-5 rounded-[1.75rem] bg-muted/20 border border-border/40 transition-all hover:bg-muted/30">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-xl bg-card border border-border/40 flex items-center justify-center shadow-sm">
-              <TrendingUp className="w-4 h-4 text-primary" />
-            </div>
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">הדומיננטי</span>
-          </div>
-          <p className="text-2xl font-black text-foreground tracking-tighter">
-            {dominantRange}
-          </p>
-        </div>
-        
-        <div className="p-5 rounded-[1.75rem] bg-muted/20 border border-border/40 transition-all hover:bg-muted/30">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-xl bg-card border border-border/40 flex items-center justify-center shadow-sm">
-              <Users className="w-4 h-4 text-primary" />
-            </div>
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">סה"כ כוח אדם</span>
-          </div>
-          <p className="text-2xl font-black text-foreground tracking-tighter tabular-nums">
-            {totalCount}
-          </p>
-        </div>
       </div>
     </Card>
   );

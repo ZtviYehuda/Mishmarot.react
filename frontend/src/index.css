@@ -217,6 +217,20 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+  
+  button, 
+  [role="button"],
+  a,
+  select,
+  input[type="checkbox"],
+  input[type="radio"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
 
 /* Responsive utilities */

@@ -23,16 +23,24 @@ const Field = ({ label, value, mono = false, href }: {
   label: string; value?: string | null; mono?: boolean; href?: string;
 }) => {
   if (!value) return null;
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{label}</span>
-      {href ? (
-        <a href={href} className={cn("font-bold text-primary text-sm", mono && "font-mono")}>{value}</a>
-      ) : (
-        <span className={cn("font-bold text-foreground text-sm", mono && "font-mono")}>{value}</span>
-      )}
+  const content = (
+    <div className="flex flex-col gap-0.5 group/field">
+      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest group-hover/field:text-primary transition-colors">{label}</span>
+      <span className={cn("font-bold text-foreground text-sm transition-colors", href && "text-primary group-hover:text-primary/80", mono && "font-mono")}>
+        {value}
+      </span>
     </div>
   );
+
+  if (href) {
+    return (
+      <a href={href} className="block">
+        {content}
+      </a>
+    );
+  }
+
+  return content;
 };
 
 // ── Section card ──────────────────────────────────────────────────────────────
