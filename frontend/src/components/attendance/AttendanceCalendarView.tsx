@@ -2,8 +2,9 @@ import { useState, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronRight, ChevronLeft, CalendarDays, CalendarRange,
-  Download, X, Users, CheckCircle2, AlertCircle, ArrowRight, ChevronDown,
+  Download, X, CheckCircle2, AlertCircle, ArrowRight, ChevronDown,
 } from "lucide-react";
+import { ShabbatIcon } from "@/components/common/ShabbatIcon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEmployeeContext } from "@/context/EmployeeContext";
@@ -21,6 +22,7 @@ interface DayStats {
   date: Date;
   reported: number;
   total: number;
+  present: number;
   statuses: { name: string; color: string; count: number }[];
   missing: { id: number; name: string }[];
 }
@@ -89,6 +91,7 @@ function computeDayStats(
   const dayEndTs = dayMidnightTs + 86399999;
   const total = parsedEmps.length;
   let reported = 0;
+  let present = 0;
   const statusMap = new Map<string, { name: string; color: string; count: number; emps: { id: number; name: string }[] }>();
   const missing: { id: number; name: string }[] = [];
 
@@ -102,57 +105,21 @@ function computeDayStats(
     const parent = emp.statusId !== null ? subToParent.get(emp.statusId) : undefined;
     const key = parent ? parent.name : emp.statusName;
     const color = parent ? parent.color : emp.statusColor;
+    
+    const isPresent = key.includes("משרד") || key.includes("קורס") || key.includes("תגבור") || key.includes("שטח") || key.includes("משמרת");
+    if (isPresent) {
+      present++;
+    }
+
     const existing = statusMap.get(key);
     if (existing) { existing.count++; existing.emps.push({ id: emp.id, name: emp.fullName }); }
     else statusMap.set(key, { name: key, color, count: 1, emps: [{ id: emp.id, name: emp.fullName }] });
   }
 
   const statuses = Array.from(statusMap.values()).sort((a, b) => b.count - a.count);
-  return { date, reported, total, statuses, missing };
+  return { date, reported, total, present, statuses, missing };
 }
 
-// ── Large Donut ───────────────────────────────────────────────────────────────
-function LargeDonut({ stats, size = 140 }: { stats: DayStats; size?: number }) {
-  const { reported, total, statuses } = stats;
-  if (total === 0) return null;
-  const radius = size / 2 - 10;
-  const circumference = 2 * Math.PI * radius;
-  const reportedPct = reported / total;
-  let accum = 0;
-  const segments = statuses.map((s) => {
-    const pct = s.count / total;
-    const offset = circumference * (1 - accum);
-    const dash = circumference * pct;
-    accum += pct;
-    return { ...s, offset, dash };
-  });
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-      <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="currentColor" strokeOpacity={0.07} strokeWidth={12} />
-      {segments.map((seg, i) => (
-        <circle key={i} cx={size/2} cy={size/2} r={radius} fill="none"
-          stroke={seg.color} strokeWidth={12}
-          strokeDasharray={`${seg.dash} ${circumference - seg.dash}`}
-          strokeDashoffset={seg.offset} strokeLinecap="butt"
-          transform={`rotate(-90 ${size/2} ${size/2})`} />
-      ))}
-      {reported < total && (
-        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#ef444425" strokeWidth={12}
-          strokeDasharray={`${circumference * (1 - reportedPct)} ${circumference * reportedPct}`}
-          strokeDashoffset={circumference * (accum === 0 ? 1 : 1 - accum) - circumference}
-          transform={`rotate(-90 ${size/2} ${size/2})`} />
-      )}
-      <text x="50%" y="45%" textAnchor="middle" dominantBaseline="central"
-        fontSize="22" fontWeight="900" fill="currentColor" fontFamily="sans-serif">
-        {Math.round(reportedPct * 100)}%
-      </text>
-      <text x="50%" y="62%" textAnchor="middle" dominantBaseline="central"
-        fontSize="10" fontWeight="600" fill="currentColor" fontFamily="sans-serif" opacity={0.5}>
-        {reported}/{total}
-      </text>
-    </svg>
-  );
-}
 
 // ── Mini Donut ────────────────────────────────────────────────────────────────
 function MiniDonut({ stats, size = 40 }: { stats: DayStats; size?: number }) {
@@ -199,44 +166,95 @@ function MonthDayCell({ stats, isCurrentMonth, selectedDate, onClick }: {
 }) {
   const isSelected = selectedDate && isSameDay(stats.date, selectedDate);
   const today = isToday(stats.date);
-  const pct = stats.total > 0 ? stats.reported / stats.total : 0;
+  const total = stats.total;
+  const reported = stats.reported;
+  const present = stats.present;
+  
+  const reportPct = total > 0 ? reported / total : 0;
+  const presentPct = total > 0 ? present / total : 0;
+  
   const isWeekend = getDay(stats.date) === 5 || getDay(stats.date) === 6;
 
+  // 🌿 Heatmap logic for subtle background tints
+  const getHeatmapClass = () => {
+    if (!isCurrentMonth || isWeekend || total === 0) return "";
+    if (reportPct < 0.5) return "bg-rose-500/[0.03]"; // Very low reporting
+    if (presentPct >= 0.9) return "bg-emerald-500/[0.04]"; // High presence
+    if (presentPct >= 0.75) return "bg-amber-500/[0.03]"; // Good presence
+    if (presentPct < 0.5) return "bg-rose-500/[0.05]"; // Low presence
+    return "";
+  };
+
   return (
-    <motion.div whileTap={{ scale: 0.95 }} onClick={onClick}
+    <motion.div whileTap={{ scale: 0.97 }} onClick={onClick}
       className={cn(
-        "relative flex flex-col items-center justify-between p-1 rounded-lg cursor-pointer border transition-all duration-150 overflow-hidden select-none h-16 md:h-[90px]",
-        !isCurrentMonth && "opacity-25 pointer-events-none",
-        isWeekend && isCurrentMonth && "opacity-40",
-        isSelected ? "border-primary bg-primary/10 ring-1 ring-primary/30"
-          : today ? "border-primary/50 bg-primary/5"
-          : "border-border/30 bg-card/40 hover:border-primary/20 hover:bg-card",
+        "relative flex flex-col items-center p-1.5 rounded-xl cursor-pointer border transition-all duration-300 overflow-hidden select-none h-[76px] md:h-[105px] group",
+        !isCurrentMonth && "opacity-20 pointer-events-none",
+        isWeekend && isCurrentMonth && "bg-muted/10 opacity-40",
+        getHeatmapClass(),
+        isSelected ? "border-primary bg-primary/10 ring-2 ring-primary/20 z-10 shadow-lg shadow-primary/10"
+          : today ? "border-primary/60 bg-primary/5"
+          : "border-border/30 bg-card/60 hover:border-primary/30 hover:bg-card hover:shadow-md hover:shadow-primary/5",
       )}>
-      <span className={cn("text-[11px] font-black leading-none self-start",
-        today ? "text-primary" : isCurrentMonth ? "text-foreground" : "text-muted-foreground")}>
-        {format(stats.date, "d")}
-      </span>
-      {stats.total > 0 && !isWeekend && (
-        <>
-          <span className="md:hidden text-[10px] font-black"
-            style={{ color: pct === 1 ? "#10b981" : pct > 0.7 ? "#f59e0b" : "#ef4444" }}>
-            {Math.round(pct * 100)}%
+      
+      {/* 📅 Date & Report Summary */}
+      <div className="flex justify-between items-start w-full px-0.5">
+        <span className={cn("text-[11px] md:text-sm font-black leading-none transition-colors",
+          today ? "text-primary" : isCurrentMonth ? "text-foreground" : "text-muted-foreground")}>
+          {format(stats.date, "d")}
+        </span>
+        {isCurrentMonth && !isWeekend && total > 0 && (
+          <span className="hidden md:inline text-[10px] font-black text-muted-foreground/60 transition-opacity opacity-70 group-hover:opacity-100">
+            {reported}/{total}
           </span>
-          <div className="hidden md:flex"><MiniDonut stats={stats} size={30} /></div>
-          <div className="hidden md:flex flex-col gap-0.5 w-full">
-            {stats.statuses.slice(0, 2).map((s, i) => (
-              <div key={i} className="flex items-center gap-0.5">
-                <div className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-                <span className="text-[7px] font-bold text-muted-foreground truncate">{s.name} {s.count}</span>
-              </div>
-            ))}
+        )}
+      </div>
+
+      {/* 📊 Presence Metric (The "Hero" of the cell) */}
+      {total > 0 && !isWeekend && (
+        <div className="flex flex-col items-center justify-center flex-1 w-full -mt-1">
+          <div className="relative">
+            <span className={cn(
+              "text-sm md:text-2xl font-black tabular-nums transition-all tracking-tight",
+              presentPct >= 0.9 ? "text-emerald-500" : presentPct >= 0.75 ? "text-amber-500" : "text-rose-500"
+            )}>
+              {Math.round(presentPct * 100)}%
+            </span>
           </div>
-        </>
+          <span className="hidden md:block text-[9px] font-black text-muted-foreground/40 uppercase tracking-tighter leading-none">
+            נוכחות
+          </span>
+        </div>
       )}
-      {stats.total > 0 && !isWeekend && (
-        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-border/20">
-          <div className="h-full transition-all duration-700"
-            style={{ width: `${pct * 100}%`, backgroundColor: pct === 1 ? "#10b981" : pct > 0.7 ? "#f59e0b" : "#ef4444" }} />
+
+      {/* 🟢 Status Indicators (Bottom dots) — Desktop only */}
+      {total > 0 && !isWeekend && (
+        <div className="hidden md:flex gap-1.5 md:gap-2 items-center justify-center w-full pb-1 md:pb-2">
+          {stats.statuses.slice(0, 3).map((s, i) => (
+            <div key={i} className="flex items-center gap-0.5" title={s.name}>
+               <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full shadow-sm" style={{ backgroundColor: s.color }} />
+               <span className="text-[9px] md:text-[11px] font-black text-foreground/70">{s.count}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Status Continuity Bar (Bottom edge) */}
+      {total > 0 && !isWeekend && (
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] md:h-[1.5px] bg-border/20 flex w-full">
+          <div className="h-full transition-all duration-1000 ease-in-out bg-emerald-500"
+            style={{ width: `${presentPct * 100}%` }} />
+          <div className="h-full transition-all duration-1000 ease-in-out bg-amber-400"
+            style={{ width: `${((reported - present) / total) * 100}%` }} />
+          <div className="h-full transition-all duration-1000 ease-in-out bg-rose-500/30"
+            style={{ width: `${((total - reported) / total) * 100}%` }} />
+        </div>
+      )}
+
+      {/* 🕍 Weekend Icon */}
+      {isWeekend && isCurrentMonth && (
+        <div className="absolute bottom-1 left-1.5 opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity">
+          <ShabbatIcon width={16} height={16} />
         </div>
       )}
     </motion.div>
@@ -249,7 +267,6 @@ function WeekDayRow({ stats, selectedDate, onClick }: {
 }) {
   const isSelected = selectedDate && isSameDay(stats.date, selectedDate);
   const today = isToday(stats.date);
-  const pct = stats.total > 0 ? stats.reported / stats.total : 0;
   const isFriday = getDay(stats.date) === 5;
   const isSaturday = getDay(stats.date) === 6;
   const isWeekend = isFriday || isSaturday;
@@ -292,9 +309,11 @@ function WeekDayRow({ stats, selectedDate, onClick }: {
               </div>
             ))}
           </div>
-          <div className="h-1 bg-border/30 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${pct * 100}%`, backgroundColor: pct === 1 ? "#10b981" : pct > 0.7 ? "#f59e0b" : "#ef4444" }} />
+          <div className="h-1 bg-border/30 rounded-full overflow-hidden flex w-full">
+            <div className="h-full transition-all duration-700 bg-[#10b981]"
+              style={{ width: `${(stats.present / stats.total) * 100}%` }} />
+            <div className="h-full transition-all duration-700 bg-amber-500/80"
+              style={{ width: `${((stats.reported - stats.present) / stats.total) * 100}%` }} />
           </div>
         </div>
       ) : (
@@ -378,6 +397,7 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
   };
 
   const pct = stats.total > 0 ? stats.reported / stats.total : 0;
+  const presentPct = stats.total > 0 ? stats.present / stats.total : 0;
   const today = isToday(stats.date);
 
   return (
@@ -413,53 +433,69 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
       {/* ── Export target ── */}
       <div ref={detailRef} className="flex flex-col gap-4 bg-card/60 rounded-2xl p-4 border border-border/40">
 
-        {/* Day title */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+        {/* Statistics Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 py-2">
+          {/* Day & Date Title */}
+          <div className="flex flex-col gap-1">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">
               {format(stats.date, "EEEE", { locale: he })}
             </p>
-            <h2 className={cn("text-2xl font-black leading-none", today ? "text-primary" : "text-foreground")}>
+            <h2 className={cn("text-3xl font-black leading-tight tracking-tight", today ? "text-primary transition-colors" : "text-foreground")}>
               {format(stats.date, "d MMMM yyyy", { locale: he })}
             </h2>
           </div>
-          <LargeDonut stats={stats} size={120} />
+
+          {/* Compact Integrated Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
+            {/* Reporting Badge */}
+            <div className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/20 rounded-2xl px-4 py-2.5 transition-all hover:bg-primary/[0.08] hover:shadow-sm">
+              <div className="flex flex-col items-center flex-1">
+                <span className={cn("text-2xl font-black leading-none tracking-tighter", pct < 0.7 ? "text-rose-500" : "text-primary")}>
+                  {Math.round(pct * 100)}%
+                </span>
+                <span className="text-[8px] font-black text-primary/50 uppercase tracking-widest mt-1">אחוז דיווח</span>
+              </div>
+              <div className="w-px h-8 bg-primary/20 self-center shrink-0" />
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-xs font-black text-foreground leading-none">{stats.reported}/{stats.total}</span>
+                <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1 text-center">חברי סגל</span>
+              </div>
+            </div>
+
+            {/* Presence Badge */}
+            <div className="flex items-center justify-between gap-3 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl px-4 py-2.5 transition-all hover:bg-emerald-500/[0.08] hover:shadow-sm">
+              <div className="flex flex-col items-center flex-1">
+                <span className={cn("text-2xl font-black leading-none tracking-tighter", presentPct < 0.5 ? "text-rose-500" : "text-emerald-600")}>
+                  {Math.round(presentPct * 100)}%
+                </span>
+                <span className="text-[8px] font-black text-emerald-600/50 uppercase tracking-widest mt-1">אחוז נוכחות</span>
+              </div>
+              <div className="w-px h-8 bg-emerald-500/20 self-center shrink-0" />
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-xs font-black text-foreground leading-none">{stats.present}/{stats.total}</span>
+                <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1 text-center">נוכחות בפועל</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Summary bar */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5 bg-muted/40 rounded-xl px-3 py-1.5">
-            <Users className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-sm font-black">{stats.reported}/{stats.total}</span>
-            <span className="text-xs text-muted-foreground font-bold">דיווחו</span>
-          </div>
+        {/* Action / Alert Context line */}
+        <div className="flex items-center gap-2 justify-center -mt-2">
           {stats.reported === stats.total && stats.total > 0 && (
-            <div className="flex items-center gap-1 bg-emerald-500/10 rounded-xl px-3 py-1.5 text-emerald-600 text-xs font-black">
-              <CheckCircle2 className="w-3.5 h-3.5" />כולם דיווחו!
+            <div className="flex items-center gap-1.5 bg-emerald-500/10 rounded-full px-4 py-1.5 text-emerald-600 text-[10px] font-black border border-emerald-500/20 shadow-sm">
+              <CheckCircle2 className="w-3 h-3" />כל הסגל דיווח במלואו!
             </div>
           )}
           {stats.reported < stats.total && stats.total > 0 && (
-            <div className="flex items-center gap-1 bg-rose-500/10 rounded-xl px-3 py-1.5 text-rose-500 text-xs font-black">
-              <AlertCircle className="w-3.5 h-3.5" />{stats.total - stats.reported} לא דיווחו
-            </div>
+            <button
+              onClick={() => setMissingExpanded((prev) => !prev)}
+              className="flex items-center gap-1.5 bg-rose-500/10 rounded-full px-4 py-1.5 text-rose-500 text-[10px] font-black border border-rose-500/20 shadow-sm transition-all hover:scale-105 hover:bg-rose-500/20 active:scale-95 cursor-pointer group"
+            >
+              <AlertCircle className={cn("w-3 h-3 transition-transform duration-300", missingExpanded && "rotate-12")} />
+              <span>{stats.total - stats.reported} חברי סגל טרם השלימו דיווח</span>
+              <ChevronDown className={cn("w-3 h-3 transition-transform", missingExpanded && "rotate-180")} />
+            </button>
           )}
-        </div>
-
-        {/* Progress bar */}
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-black text-muted-foreground">אחוז דיווח</span>
-            <span className="text-[10px] font-black" style={{ color: pct === 1 ? "#10b981" : pct > 0.7 ? "#f59e0b" : "#ef4444" }}>
-              {Math.round(pct * 100)}%
-            </span>
-          </div>
-          <div className="h-2.5 bg-border/30 rounded-full overflow-hidden">
-            <motion.div className="h-full rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${pct * 100}%` }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              style={{ backgroundColor: pct === 1 ? "#10b981" : pct > 0.7 ? "#f59e0b" : "#ef4444" }} />
-          </div>
         </div>
 
         {/* Status breakdown */}
@@ -522,11 +558,11 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
                               <button
                                 key={emp.id}
                                 onClick={() => openProfile(emp.id)}
-                                className="text-[9px] font-bold px-1.5 py-0.5 rounded-md border transition-all hover:scale-105 active:scale-95"
+                                className="text-[11px] font-black px-2.5 py-1 rounded-xl border transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm"
                                 style={{
-                                  borderColor: `${group.color}40`,
-                                  color: group.color,
-                                  backgroundColor: `${group.color}12`,
+                                  borderColor: group.color,
+                                  color: "var(--foreground)",
+                                  backgroundColor: `${group.color}08`,
                                 }}
                               >
                                 {emp.name}
@@ -575,7 +611,7 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
                         <button
                           key={emp.id}
                           onClick={() => openProfile(emp.id)}
-                          className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 border border-rose-500/20 transition-all hover:scale-105 active:scale-95"
+                          className="text-[11px] font-black px-2.5 py-1 rounded-xl border border-rose-500 bg-rose-500/5 text-foreground shadow-sm transition-all duration-200 hover:scale-105 active:scale-95"
                         >
                           {emp.name}
                         </button>
@@ -768,13 +804,13 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose }:
       {/* ══ Calendar grid (export target) ══ */}
       <div ref={exportRef} className="flex flex-col gap-3">
         {viewMode === "month" && (
-          <div>
-            <div className="grid grid-cols-7 gap-[2px] mb-[2px]">
+          <div className="overflow-x-hidden">
+            <div className="grid-calendar-view gap-[1px] md:gap-[2px] mb-[2px]">
               {HEB_DAYS.map((day) => (
                 <div key={day} className="text-center text-[9px] font-black text-muted-foreground uppercase tracking-widest py-1">{day}</div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-[2px] md:gap-1">
+            <div className="grid-calendar-view gap-[1px] md:gap-2">
               {dayStats.map((ds) => (
                 <MonthDayCell key={ds.date.toISOString()} stats={ds}
                   isCurrentMonth={isSameMonth(ds.date, currentDate)}

@@ -22,7 +22,6 @@ import {
   ArrowLeft,
   Filter,
   Check,
-  Clock,
   CheckCircle2,
 } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
@@ -52,7 +51,6 @@ interface BulkStatusUpdateModalProps {
   onSuccess?: () => void;
   initialSelectedIds?: number[];
   alertContext?: any;
-  onNudge?: (commanderId: number) => void;
   selectedDate?: Date;
   isReportedCheck?: (emp: Employee, date: Date) => boolean;
 }
@@ -75,7 +73,6 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
   onSuccess,
   initialSelectedIds = [],
   alertContext,
-  onNudge,
   selectedDate = new Date(),
   isReportedCheck,
 }) => {
@@ -470,26 +467,8 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                {alertContext?.commander_id && onNudge && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onNudge(alertContext.commander_id)}
-                    className="hidden sm:flex h-9 rounded-xl border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 gap-2 font-black transition-all"
-                  >
-                    <Clock className="w-4 h-4" />
-                    תזכורת למפקד
-                  </Button>
-                )}
-                <button
-                  onClick={handleCloseAttempt}
-                  className="sm:hidden p-2 rounded-xl hover:bg-muted active:bg-muted/80 transition-colors"
-                >
-                  <ArrowLeft className="w-5 h-5 text-foreground" />
-                </button>
-              </div>
             </div>
+
 
             {/* Search & Filters */}
             <div className="flex flex-col gap-3">

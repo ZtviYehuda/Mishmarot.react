@@ -5,10 +5,12 @@ cur = conn.cursor()
 
 cur.execute("SELECT id FROM status_types WHERE code = 'UNIT_DAY'")
 if not cur.fetchone():
-    cur.execute("""
+    cur.execute(
+        """
         INSERT INTO status_types (code, name, color, is_presence, is_persistent)
-        VALUES ('UNIT_DAY', 'יום יחידה/הווי', '#A855F7', FALSE, FALSE)
-    """)
+        VALUES ('UNIT_DAY', 'יום יחידה', '#A855F7', FALSE, FALSE)
+    """
+    )
     print("✅ Status type 'UNIT_DAY' added")
 else:
     print("ℹ️ Status type 'UNIT_DAY' already exists")

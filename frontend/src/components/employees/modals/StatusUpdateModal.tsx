@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
   Loader2,
-  ClipboardList,
   CheckCircle2,
   Clock,
   Sun,
@@ -269,7 +268,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
           delegationResult ? "sm:max-w-md" : "sm:max-w-md",
         )}
         dir="rtl"
-        showCloseButton={!delegationResult}
+        showCloseButton={true}
       >
         {delegationResult ? (
           // View 2: Delegation Result
@@ -415,9 +414,6 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                       </>
                     )}
                   </div>
-                </div>
-                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <ClipboardList className="w-4 h-4 text-primary" />
                 </div>
               </div>
             </DialogHeader>

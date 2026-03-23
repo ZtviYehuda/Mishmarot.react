@@ -797,8 +797,10 @@ class AttendanceModel:
                         FROM date_range dr
                         CROSS JOIN employees e
                         LEFT JOIN teams t ON e.team_id = t.id
-                        LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
-                        LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                        LEFT JOIN sections s ON t.section_id = s.id
+                        LEFT JOIN departments d ON s.department_id = d.id
+                        LEFT JOIN sections s_dir ON e.section_id = s_dir.id
+                        LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                         LEFT JOIN service_types srv ON e.service_type_id = srv.id
                         WHERE e.is_active = TRUE 
                         AND e.username != 'admin'
@@ -837,8 +839,10 @@ class AttendanceModel:
                         COUNT(CASE WHEN al.id IS NULL THEN 1 END) as unknown_count
                     FROM employees e
                     LEFT JOIN teams t ON e.team_id = t.id
-                    LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
-                    LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    LEFT JOIN sections s ON t.section_id = s.id
+                    LEFT JOIN departments d ON s.department_id = d.id
+                    LEFT JOIN sections s_dir ON e.section_id = s_dir.id
+                    LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                     LEFT JOIN service_types srv ON e.service_type_id = srv.id
                     LEFT JOIN LATERAL (
                         SELECT al.status_type_id, al.id,
@@ -1014,10 +1018,10 @@ class AttendanceModel:
             # 1. Base Scoping (Security)
             if requesting_user and not requesting_user.get("is_admin"):
                 if requesting_user.get("commands_department_id"):
-                    scope_conditions.append("d.id = %(cmd_dept_id)s")
+                    scope_conditions.append("(d.id = %(cmd_dept_id)s OR d_dir.id = %(cmd_dept_id)s)")
                     scope_params["cmd_dept_id"] = requesting_user["commands_department_id"]
                 elif requesting_user.get("commands_section_id"):
-                    scope_conditions.append("s.id = %(cmd_sec_id)s")
+                    scope_conditions.append("(s.id = %(cmd_sec_id)s OR s_dir.id = %(cmd_sec_id)s)")
                     scope_params["cmd_sec_id"] = requesting_user["commands_section_id"]
                 elif requesting_user.get("commands_team_id"):
                     scope_conditions.append("t.id = %(cmd_team_id)s")
@@ -1029,10 +1033,10 @@ class AttendanceModel:
             # 2. Drill-down Filters (User Selection)
             if filters:
                 if filters.get("department_id"):
-                    scope_conditions.append("d.id = %(f_dept_id)s")
+                    scope_conditions.append("(d.id = %(f_dept_id)s OR d_dir.id = %(f_dept_id)s)")
                     scope_params["f_dept_id"] = filters["department_id"]
                 if filters.get("section_id"):
-                    scope_conditions.append("s.id = %(f_sec_id)s")
+                    scope_conditions.append("(s.id = %(f_sec_id)s OR s_dir.id = %(f_sec_id)s)")
                     scope_params["f_sec_id"] = filters["section_id"]
                 if filters.get("team_id"):
                     scope_conditions.append("t.id = %(f_team_id)s")
@@ -1067,8 +1071,10 @@ class AttendanceModel:
                     SELECT e.id
                     FROM employees e
                     LEFT JOIN teams t ON e.team_id = t.id
-                    LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
-                    LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    LEFT JOIN sections s ON t.section_id = s.id
+                    LEFT JOIN departments d ON s.department_id = d.id
+                    LEFT JOIN sections s_dir ON e.section_id = s_dir.id
+                    LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                     LEFT JOIN service_types srv ON e.service_type_id = srv.id
                     WHERE {scope_where}
                 ),
@@ -1123,8 +1129,10 @@ class AttendanceModel:
                 SELECT COUNT(e.id) as total
                 FROM employees e
                 LEFT JOIN teams t ON e.team_id = t.id
-                LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
-                LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                LEFT JOIN sections s ON t.section_id = s.id
+                LEFT JOIN departments d ON s.department_id = d.id
+                LEFT JOIN sections s_dir ON e.section_id = s_dir.id
+                LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                 LEFT JOIN service_types srv ON e.service_type_id = srv.id
                 WHERE {scope_where}
             """
@@ -1135,8 +1143,10 @@ class AttendanceModel:
                         EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) as age
                     FROM employees e
                     LEFT JOIN teams t ON e.team_id = t.id
-                    LEFT JOIN sections s ON (t.section_id = s.id OR e.section_id = s.id)
-                    LEFT JOIN departments d ON (s.department_id = d.id OR e.department_id = d.id)
+                    LEFT JOIN sections s ON t.section_id = s.id
+                    LEFT JOIN departments d ON s.department_id = d.id
+                    LEFT JOIN sections s_dir ON e.section_id = s_dir.id
+                    LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                     LEFT JOIN service_types srv ON e.service_type_id = srv.id
                     WHERE {scope_where} AND e.birth_date IS NOT NULL
                 ),

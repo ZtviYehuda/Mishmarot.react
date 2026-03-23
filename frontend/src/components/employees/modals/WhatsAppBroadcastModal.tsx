@@ -13,7 +13,8 @@ import {
   Filter, 
   Send, 
   Copy, 
-  Info 
+  Info,
+  CheckCircle2
 } from "lucide-react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAuthContext } from "@/context/AuthContext";
@@ -36,10 +37,15 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
   const [message, setMessage] = useState("");
   const [scope, setScope] = useState<"team" | "section" | "department">("team");
 
+  const [broadcastMode, setBroadcastMode] = useState(false);
+  const [currentSendIndex, setCurrentSendIndex] = useState(0);
+
   // Fetch subordinates when modal opens
   useEffect(() => {
     if (open) {
       fetchEmployees();
+      setBroadcastMode(false);
+      setCurrentSendIndex(0);
     }
   }, [open, fetchEmployees]);
 
@@ -64,6 +70,10 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
     });
   }, [employees, search]);
 
+  const selectedEmployeesList = useMemo(() => {
+    return employees.filter(e => selectedIds.has(e.id) && !!e.phone_number);
+  }, [employees, selectedIds]);
+
   const toggleSelect = (id: number) => {
     const next = new Set(selectedIds);
     if (next.has(id)) next.delete(id);
@@ -86,8 +96,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
   };
 
   const handleCopyNumbers = () => {
-    const selectedEmployees = employees.filter(e => selectedIds.has(e.id) && e.phone_number);
-    const numbers = selectedEmployees.map(e => e.phone_number).join(",");
+    const numbers = selectedEmployeesList.map(e => e.phone_number).join(",");
     
     if (!numbers) {
       toast.error("לא נבחרו נמענים עם מספר טלפון");
@@ -95,36 +104,62 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
     }
 
     navigator.clipboard.writeText(numbers);
-    toast.success(`${selectedEmployees.length} מספרים הועתקו ללוח`);
+    toast.success(`${selectedEmployeesList.length} מספרים הועתקו ללוח`);
   };
 
-  const handleOpenWhatsAppSelector = () => {
-    const selectedEmployees = employees.filter(e => selectedIds.has(e.id) && e.phone_number);
-    if (selectedEmployees.length === 0) {
+  const handleStartBroadcast = () => {
+    if (selectedEmployeesList.length === 0) {
       toast.error("יש לבחור לפחות נמען אחד");
       return;
     }
 
-    if (!message) {
+    if (!message.trim()) {
       toast.error("יש להקליד תוכן להודעה");
       return;
     }
 
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(waUrl, "_blank");
-    toast.info("הודעה הועתקה. בחרו נמענים בוואטסאפ והדביקו את ההודעה.");
+    if (selectedEmployeesList.length === 1) {
+      const emp = selectedEmployeesList[0];
+      const waUrl = `https://api.whatsapp.com/send?phone=${emp.phone_number!.replace(/\D/g, '')}&text=${encodeURIComponent(message)}`;
+      window.open(waUrl, "_blank");
+      toast.success("טוען צ'אט לוואטסאפ...");
+      return;
+    }
+
+    setBroadcastMode(true);
+    setCurrentSendIndex(0);
+  };
+
+  const handleSendNext = () => {
+    if (currentSendIndex >= selectedEmployeesList.length) return;
+    
+    const emp = selectedEmployeesList[currentSendIndex];
+    if (emp && emp.phone_number) {
+      const waUrl = `https://api.whatsapp.com/send?phone=${emp.phone_number.replace(/\D/g, '')}&text=${encodeURIComponent(message)}`;
+      window.open(waUrl, "_blank");
+    }
+    
+    if (currentSendIndex < selectedEmployeesList.length - 1) {
+      setCurrentSendIndex(prev => prev + 1);
+    } else {
+      toast.success("כל ההודעות בסבב נשלחו בהצלחה!");
+      setBroadcastMode(false);
+    }
   };
 
   const handleIndividualSend = (emp: any) => {
     if (!emp.phone_number) return;
-    const waUrl = `https://wa.me/${emp.phone_number.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    const waUrl = `https://api.whatsapp.com/send?phone=${emp.phone_number.replace(/\D/g, '')}&text=${encodeURIComponent(message)}`;
     window.open(waUrl, "_blank");
   };
 
   if (!user) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(val) => {
+      if (!val) setBroadcastMode(false);
+      onOpenChange(val);
+    }}>
       <DialogContent className="w-[95vw] max-w-xl h-[85vh] p-0 overflow-hidden bg-background border-border/40 shadow-2xl rounded-[2rem] flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-border/40 bg-muted/20 relative shrink-0">
@@ -141,50 +176,52 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
 
         {/* Main Content Area - NO GLOBAL SCROLL */}
         <div className="flex-1 flex flex-col p-6 pt-1 space-y-4 overflow-hidden">
-          {/* 1. Scope Selection */}
-          <div className="space-y-1 shrink-0">
-            <div className="flex flex-wrap gap-2">
-              {user.commands_team_id && (
-                <Button 
-                  variant={scope === "team" ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={() => setScope("team")}
-                  className={cn(
-                    "rounded-xl h-9 font-black text-xs px-4 transition-all",
-                    scope === "team" ? "shadow-md shadow-primary/20" : "bg-card border-border/60 font-bold"
-                  )}
-                >
-                  חוליה ({user.team_name})
-                </Button>
-              )}
-              {user.commands_section_id && (
-                <Button 
-                  variant={scope === "section" ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={() => setScope("section")}
-                  className={cn(
-                    "rounded-xl h-9 font-black text-xs px-4 transition-all",
-                    scope === "section" ? "shadow-md shadow-primary/20" : "bg-card border-border/60 font-bold"
-                  )}
-                >
-                  מדור ({user.section_name})
-                </Button>
-              )}
-              {user.commands_department_id && (
-                <Button 
-                  variant={scope === "department" ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={() => setScope("department")}
-                  className={cn(
-                    "rounded-xl h-9 font-black text-xs px-4 transition-all",
-                    scope === "department" ? "shadow-md shadow-primary/20" : "bg-card border-border/60 font-bold"
-                  )}
-                >
-                  מחלקה ({user.department_name})
-                </Button>
-              )}
+          {/* 1. Scope Selection - Only show if commander has multiple scopes */}
+          {(user.commands_team_id ? 1 : 0) + (user.commands_section_id ? 1 : 0) + (user.commands_department_id ? 1 : 0) > 1 && (
+            <div className="space-y-1 shrink-0">
+              <div className="flex flex-wrap gap-2">
+                {user.commands_team_id && (
+                  <Button 
+                    variant={scope === "team" ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => setScope("team")}
+                    className={cn(
+                      "rounded-xl h-9 font-black text-xs px-4 transition-all",
+                      scope === "team" ? "shadow-md shadow-primary/20" : "bg-card border-border/60 font-bold"
+                    )}
+                  >
+                    חוליה ({user.team_name})
+                  </Button>
+                )}
+                {user.commands_section_id && (
+                  <Button 
+                    variant={scope === "section" ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => setScope("section")}
+                    className={cn(
+                      "rounded-xl h-9 font-black text-xs px-4 transition-all",
+                      scope === "section" ? "shadow-md shadow-primary/20" : "bg-card border-border/60 font-bold"
+                    )}
+                  >
+                    מדור ({user.section_name})
+                  </Button>
+                )}
+                {user.commands_department_id && (
+                  <Button 
+                    variant={scope === "department" ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => setScope("department")}
+                    className={cn(
+                      "rounded-xl h-9 font-black text-xs px-4 transition-all",
+                      scope === "department" ? "shadow-md shadow-primary/20" : "bg-card border-border/60 font-bold"
+                    )}
+                  >
+                    מחלקה ({user.department_name})
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 2. Recipients Selection - This part scrolls */}
           <div className="flex-1 flex flex-col min-h-0 space-y-3">
@@ -212,7 +249,16 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               />
             </div>
 
-            <div className="flex-1 border border-border/40 rounded-2xl bg-muted/10 overflow-y-auto custom-scrollbar p-2 min-h-0">
+            <div className="flex-1 border border-border/40 rounded-2xl bg-muted/10 overflow-y-auto custom-scrollbar p-2 min-h-0 relative">
+              {broadcastMode && (
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                  <div className="bg-background border border-border/50 shadow-xl rounded-2xl p-6 text-center space-y-2 max-w-[80%]">
+                    <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto animate-bounce" />
+                    <p className="font-black text-sm">מצב שליחה רציפה פעיל</p>
+                    <p className="text-xs text-muted-foreground font-medium">השתמשו בכפתור למטה כדי לשלוח לנמענים אחד אחרי השני.</p>
+                  </div>
+                </div>
+              )}
               <div className="space-y-1.5">
                 {loading ? (
                   <div className="p-10 text-center"><span className="text-xs font-bold animate-pulse">טוען...</span></div>
@@ -222,20 +268,20 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                   filteredEmployees.map((emp) => (
                     <div 
                       key={emp.id}
-                      onClick={() => emp.phone_number && toggleSelect(emp.id)}
+                      onClick={() => !broadcastMode && emp.phone_number && toggleSelect(emp.id)}
                       className={cn(
                         "p-2.5 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer",
                         selectedIds.has(emp.id) 
                           ? "bg-primary/5 border-primary/20" 
                           : "border-transparent hover:bg-background",
-                        !emp.phone_number && "opacity-40 grayscale-[0.5] cursor-not-allowed"
+                        (!emp.phone_number || broadcastMode) && "opacity-40 grayscale-[0.5] cursor-not-allowed"
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <Checkbox 
                           checked={selectedIds.has(emp.id)} 
-                          onCheckedChange={() => emp.phone_number && toggleSelect(emp.id)}
-                          disabled={!emp.phone_number}
+                          onCheckedChange={() => !broadcastMode && emp.phone_number && toggleSelect(emp.id)}
+                          disabled={!emp.phone_number || broadcastMode}
                           className="w-4.5 h-4.5 rounded-md"
                         />
                         <div className="min-w-0">
@@ -243,7 +289,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                           <p className="text-[10px] font-bold text-muted-foreground/60 tabular-nums">{emp.phone_number || "ללא מספר"}</p>
                         </div>
                       </div>
-                      {emp.phone_number && (
+                      {emp.phone_number && !broadcastMode && (
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -272,7 +318,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                 
                 {/* Information Tooltip on Hover */}
                 <div className="absolute bottom-full right-0 mb-3 w-72 p-4 bg-blue-600 text-white text-[11px] font-bold rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none leading-relaxed border border-white/20">
-                  שימו לב: וואטסאפ אינו מאפשר שליחה אוטומטית המונית. לאחר הקלקה תפתח האפליקציה ותתבקשו לבחור נמענים ידנית (ההודעה תודבק אוטומטית).
+                  {broadcastMode ? "במצב זה תוכלו לשלוח הודעות אחת אחרי השנייה ברצף על ידי לחיצה על כפתור 'שלח להבא'." : "בחרו נמענים, הקלידו את תוכן ההודעה, ולחצו על התחלת שליחה כדי לשלוח הודעות אישיות אחת אחרי השנייה."}
                   <div className="absolute top-full right-4 w-3 h-3 bg-blue-600 rotate-45 -mt-1.5" />
                 </div>
               </div>
@@ -282,28 +328,66 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               className="min-h-[140px] resize-none bg-background shadow-inner border-border/40 focus:border-green-500/50 rounded-2xl p-4 font-bold text-base leading-relaxed"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              disabled={broadcastMode}
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-border/40 bg-muted/10 grid grid-cols-2 gap-3 shrink-0">
-          <Button 
-            onClick={handleOpenWhatsAppSelector}
-            className="bg-green-600 hover:bg-green-700 text-white font-black h-12 rounded-xl gap-2 shadow-lg shadow-green-500/20 text-sm"
-          >
-            <Send className="w-4 h-4" />
-            שליחה בוואטסאפ
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleCopyNumbers}
-            disabled={selectedIds.size === 0}
-            className="font-black h-12 rounded-xl gap-2 border-border/60 hover:bg-background text-sm"
-          >
-            <Copy className="w-4 h-4" />
-            העתקת {selectedIds.size} מספרים
-          </Button>
+        <div className="p-5 border-t border-border/40 bg-muted/10 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] relative z-20">
+          {!broadcastMode ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                onClick={handleStartBroadcast}
+                disabled={selectedIds.size === 0}
+                className="bg-green-600 hover:bg-green-700 text-white font-black h-12 rounded-xl gap-2 shadow-lg shadow-green-500/20 text-sm transition-all"
+              >
+                <Send className="w-4 h-4" />
+                {selectedEmployeesList.length === 1 
+                  ? "שליחה בוואטסאפ אישי" 
+                  : selectedEmployeesList.length > 1 
+                    ? `התחל שליחה ברצף ל-${selectedEmployeesList.length}` 
+                    : "שליחה בוואטסאפ"}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleCopyNumbers}
+                disabled={selectedIds.size === 0}
+                className="font-black h-12 rounded-xl gap-2 border-border/60 hover:bg-background text-sm transition-all"
+              >
+                <Copy className="w-4 h-4" />
+                העתקת {selectedEmployeesList.length} מספרים
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex justify-between items-center px-1">
+                <span className="text-xs font-black text-muted-foreground/80 flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  מצב שליחה רציפה
+                </span>
+                <span className="text-sm font-black bg-primary/10 text-primary px-3 py-1.5 rounded-lg tabular-nums">
+                  {currentSendIndex + 1} / {selectedEmployeesList.length}
+                </span>
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  onClick={() => setBroadcastMode(false)}
+                  variant="outline"
+                  className="h-14 rounded-xl font-bold flex-[1] border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
+                >
+                  סיום ועצירה
+                </Button>
+                <Button 
+                  onClick={handleSendNext}
+                  className="bg-green-600 hover:bg-green-700 text-white font-black h-14 rounded-xl flex-[2] gap-2 shadow-lg shadow-green-500/30 text-base transition-all scale-100 hover:scale-[1.02]"
+                >
+                  <Send className="w-5 h-5 fill-white" />
+                  לשלוח ל: <span className="underline decoration-2 underline-offset-4">{selectedEmployeesList[currentSendIndex]?.first_name}</span>
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

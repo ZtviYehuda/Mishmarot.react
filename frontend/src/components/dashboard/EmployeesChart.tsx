@@ -68,8 +68,8 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       hideExportControls = false,
       unitName = "כלל היחידה",
       totalInUnit = 0,
-      availableCount,
-      reportedPct,
+      availableCount = 0,
+      reportedPct = 0,
       hasArchiveAccess = false,
       onRequestRestore,
     },
@@ -397,12 +397,12 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
               {/* Desktop View: Pie Chart */}
               <div className="hidden sm:flex flex-1 w-full flex-col min-h-0">
                 <div
-                  className="relative w-full flex-1 min-h-[300px]"
+                  className="relative w-full flex-1 min-h-[350px] lg:min-h-[400px]"
                   style={{ direction: "ltr" }}
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart
-                      margin={{ top: 50, right: 50, bottom: 50, left: 50 }}
+                      margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
                     >
                       <Pie
                         data={chartData}
@@ -410,9 +410,9 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                         cy="50%"
                         labelLine={false}
                         label={(props: any) => {
-                          if (props.payload.percentage < 5) return null;
+                          if (props.payload.percentage < 3) return null;
                           const RADIAN = Math.PI / 180;
-                          const radius = props.outerRadius * 1.25;
+                          const radius = props.outerRadius * 1.35; // push labels outward slightly more
                           const x =
                             props.cx +
                             radius * Math.cos(-props.midAngle * RADIAN);
@@ -460,11 +460,11 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                             </g>
                           );
                         }}
-                        outerRadius="80%"
-                        innerRadius="50%"
+                        outerRadius="60%"
+                        innerRadius="35%"
                         stroke="none"
                         dataKey="value"
-                        paddingAngle={4}
+                        paddingAngle={3}
                       >
                         {chartData.map((item, index) => (
                           <Cell
@@ -480,13 +480,26 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                       <Tooltip content={<CustomTooltip />} />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-[40px]">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     <div className="text-4xl font-black text-foreground">
                       {total}
                     </div>
                     <div className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-widest mt-1">
-                      סה"כ יחידה
+                      {unitName}
                     </div>
+                    {totalInUnit > 0 && (
+                      <div className="mt-1 flex flex-col items-center gap-0.5">
+                        <div className="w-14 h-0.5 bg-muted/40 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary/40" 
+                            style={{ width: `${Math.round((availableCount / totalInUnit) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-[9px] font-black text-muted-foreground/60 transition-all">
+                          {Math.round((availableCount / totalInUnit) * 100)}% נוכחות
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

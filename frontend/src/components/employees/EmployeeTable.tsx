@@ -382,13 +382,13 @@ export const EmployeeTable = ({
                       {emp.phone_number ? (
                         <a
                           href={`tel:${emp.phone_number}`}
-                          className="font-mono text-xs text-primary hover:text-primary transition-colors hover:brightness-75 flex items-center justify-center gap-2 w-fit mr-auto"
+                          className="font-mono text-xs text-primary hover:text-primary transition-colors hover:brightness-75 inline-flex items-center gap-2"
                         >
                           <Phone className="w-3 h-3" />
                           {emp.phone_number}
                         </a>
                       ) : (
-                        <span className="text-xs text-muted-foreground/30 font-mono">-</span>
+                        <span className="text-xs text-muted-foreground/30 font-mono inline-flex">-</span>
                       )}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-right text-xs text-muted-foreground">

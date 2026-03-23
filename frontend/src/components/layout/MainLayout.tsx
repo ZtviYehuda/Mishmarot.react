@@ -9,7 +9,6 @@ import {
   CalendarDays,
   Settings,
   LogOut,
-  Menu,
   X,
   Bell,
   CheckCircle2,
@@ -198,7 +197,7 @@ export default function MainLayout() {
 
   return (
     <div
-      className="h-screen bg-background flex font-sans text-foreground overflow-hidden"
+      className="h-dvh bg-background flex font-sans text-foreground overflow-hidden"
       dir="rtl"
     >
       {/* Sidebar - Official White Style */}
@@ -397,7 +396,7 @@ export default function MainLayout() {
                 </span>
                 <div className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
               </div>
-              <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tight leading-none truncate">
+              <h1 className="lg:hidden text-xl md:text-2xl font-black text-foreground tracking-tight leading-none truncate">
                 {location.pathname === "/"
                   ? "לוח בקרה"
                   : navItems.find((n) => location.pathname.startsWith(n.path) && n.path !== "/")

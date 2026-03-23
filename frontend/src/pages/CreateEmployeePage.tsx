@@ -62,12 +62,12 @@ const InputItem = ({
   required,
   className,
 }: any) => (
-  <div className={cn("space-y-1.5 h-full flex flex-col", className)}>
+  <div className={cn("space-y-1.5 flex flex-col", className)}>
     <Label className="text-[12px] font-bold text-slate-400 pr-1 flex items-center gap-2">
       {Icon && <Icon className="w-3.5 h-3.5 opacity-60" />}
       {label} {required && <span className="text-destructive">*</span>}
     </Label>
-    <div className="relative flex-1 flex flex-col justify-center">
+    <div className="relative w-full flex flex-col justify-center">
       {children}
     </div>
   </div>
@@ -344,85 +344,69 @@ const PersonalFormTab = ({
           </span>
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <h4 className="text-sm font-bold text-muted-foreground flex items-center gap-2 pb-2 border-b">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
+          {/* Contact Details Block */}
+          <div className="space-y-5">
+            <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2 pb-2 border-b border-border/40">
               פרטי התקשרות
             </h4>
-            <InputItem label="טלפון נייד" icon={Phone}>
-              <Input
-                value={formData.phone_number || ""}
-                onChange={(e) =>
-                  handleFieldChange("phone_number", e.target.value)
-                }
-              />
-            </InputItem>
-            <InputItem label="דואר אלקטרוני" icon={Mail}>
-              <Input
-                value={formData.email || ""}
-                onChange={(e) => handleFieldChange("email", e.target.value)}
-              />
-            </InputItem>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <InputItem label="טלפון נייד" icon={Phone} className="sm:col-span-2">
+                <Input
+                  value={formData.phone_number || ""}
+                  onChange={(e) => handleFieldChange("phone_number", e.target.value)}
+                  placeholder="05X-XXXXXXX"
+                  className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 transition-all h-12 rounded-xl font-bold"
+                />
+              </InputItem>
+              <InputItem label="דואר אלקטרוני" icon={Mail} className="sm:col-span-2">
+                <Input
+                  value={formData.email || ""}
+                  onChange={(e) => handleFieldChange("email", e.target.value)}
+                  placeholder="example@mail.com"
+                  className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 transition-all h-12 rounded-xl font-bold"
+                />
+              </InputItem>
+            </div>
           </div>
 
-          <div className="bg-red-50/60 rounded-2xl p-5 border border-red-100 dark:bg-red-950/10 dark:border-red-900/20">
-            <h4 className="text-sm font-black text-red-600 flex items-center gap-2 pb-2 mb-4 border-b border-red-200/50">
-              <HeartPulse className="w-4 h-4" /> איש קשר לחירום
+          {/* Emergency Contact Block (Destructive/Red Theme) */}
+          <div className="bg-rose-500/[0.03] rounded-3xl p-5 sm:p-6 border border-rose-500/10 dark:bg-rose-500/[0.02] dark:border-rose-500/10">
+            <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2 pb-2 mb-5 border-b border-rose-500/10">
+              <HeartPulse className="w-3.5 h-3.5" /> איש קשר לחירום
             </h4>
-            <div className="space-y-4">
-              <div className="grid grid-cols-5 gap-4 w-full items-end">
-                <InputItem
-                  label="שם מלא (פרטי ומשפחה)"
-                  className="bg-transparent col-span-3"
-                >
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full">
+                <InputItem label="שם מלא (פרטי ומשפחה)" className="sm:col-span-3">
                   <Input
                     value={emergencyDetails.name}
-                    onChange={(e) =>
-                      setEmergencyDetails({
-                        ...emergencyDetails,
-                        name: e.target.value,
-                      })
-                    }
-                    className="w-full h-11 bg-transparent border-red-200/50 focus-visible:ring-red-500/30 flex"
+                    onChange={(e) => setEmergencyDetails({ ...emergencyDetails, name: e.target.value })}
+                    placeholder="שם איש הקשר"
+                    className="w-full h-12 bg-white dark:bg-slate-900/50 border-rose-500/10 focus-visible:ring-rose-500/20 rounded-xl font-bold"
                   />
                 </InputItem>
-                <InputItem label="קרבה" className="bg-transparent col-span-2">
+                <InputItem label="קרבה" className="sm:col-span-2">
                   <Select
                     value={emergencyDetails.relation}
-                    onValueChange={(val) =>
-                      setEmergencyDetails({
-                        ...emergencyDetails,
-                        relation: val,
-                      })
-                    }
+                    onValueChange={(val) => setEmergencyDetails({ ...emergencyDetails, relation: val })}
                   >
-                    <SelectTrigger className="w-full h-11 bg-transparent border-red-200/50 text-right flex">
+                    <SelectTrigger className="w-full h-12 bg-white dark:bg-slate-900/50 border-rose-500/10 text-right font-bold rounded-xl focus:ring-rose-500/20">
                       <SelectValue placeholder="בחר" />
                     </SelectTrigger>
-                    <SelectContent dir="rtl">
+                    <SelectContent dir="rtl" className="rounded-xl border-rose-500/10">
                       {relations.map((r: string) => (
-                        <SelectItem key={r} value={r}>
-                          {r}
-                        </SelectItem>
+                        <SelectItem key={r} value={r} className="font-bold py-2.5">{r}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </InputItem>
               </div>
-              <InputItem
-                label="טלפון חירום"
-                icon={Phone}
-                className="bg-transparent"
-              >
+              <InputItem label="טלפון חירום" icon={Phone}>
                 <Input
                   value={emergencyDetails.phone}
-                  onChange={(e) =>
-                    setEmergencyDetails({
-                      ...emergencyDetails,
-                      phone: e.target.value,
-                    })
-                  }
-                  className="bg-transparent border-red-200/50 focus-visible:ring-red-500/30 font-mono"
+                  onChange={(e) => setEmergencyDetails({ ...emergencyDetails, phone: e.target.value })}
+                  placeholder="מספר טלפון לחירום"
+                  className="h-12 bg-white dark:bg-slate-900/50 border-rose-500/10 focus-visible:ring-rose-500/20 font-bold rounded-xl"
                   dir="ltr"
                 />
               </InputItem>

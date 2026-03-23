@@ -1037,89 +1037,98 @@ export default function AttendancePage() {
               </div>
             </div>
 
-            <div className="w-36 lg:w-48 space-y-2 text-right">
-              <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
-                מחלקה
-              </label>
-              <Select
-                value={selectedDeptId}
-                onValueChange={(val) => {
-                  setSelectedDeptId(val);
-                  setSelectedSectionId("all");
-                  setSelectedTeamId("all");
-                }}
-                disabled={!!(user && !user.is_admin && user.department_id)}
-              >
-                <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
-                  <SelectValue placeholder="כל המחלקות" />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  <SelectItem value="all">כל המחלקות</SelectItem>
-                  {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id.toString()}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Department Filter - Only for Admins or those without a fixed Dept */}
+            {(user?.is_admin || !user?.department_id) && (
+              <div className="w-36 lg:w-48 space-y-2 text-right">
+                <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
+                  מחלקה
+                </label>
+                <Select
+                  value={selectedDeptId}
+                  onValueChange={(val) => {
+                    setSelectedDeptId(val);
+                    setSelectedSectionId("all");
+                    setSelectedTeamId("all");
+                  }}
+                  disabled={!!(user && !user.is_admin && user.department_id)}
+                >
+                  <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
+                    <SelectValue placeholder="כל המחלקות" />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="all">כל המחלקות</SelectItem>
+                    {departments.map((d) => (
+                      <SelectItem key={d.id} value={d.id.toString()}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-            <div className="w-36 lg:w-48 space-y-2 text-right">
-              <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
-                מדור
-              </label>
-              <Select
-                value={selectedSectionId}
-                onValueChange={(val) => {
-                  setSelectedSectionId(val);
-                  setSelectedTeamId("all");
-                }}
-                disabled={
-                  !selectedDeptId ||
-                  selectedDeptId === "all" ||
-                  !!(user && !user.is_admin && user.section_id)
-                }
-              >
-                <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
-                  <SelectValue placeholder="כל המדורים" />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  <SelectItem value="all">כל המדורים</SelectItem>
-                  {sections.map((s: any) => (
-                    <SelectItem key={s.id} value={s.id.toString()}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Section Filter - Only for Admins or those without a fixed Section */}
+            {(user?.is_admin || !user?.section_id) && (
+              <div className="w-36 lg:w-48 space-y-2 text-right">
+                <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
+                  מדור
+                </label>
+                <Select
+                  value={selectedSectionId}
+                  onValueChange={(val) => {
+                    setSelectedSectionId(val);
+                    setSelectedTeamId("all");
+                  }}
+                  disabled={
+                    !selectedDeptId ||
+                    selectedDeptId === "all" ||
+                    !!(user && !user.is_admin && user.section_id)
+                  }
+                >
+                  <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
+                    <SelectValue placeholder="כל המדורים" />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="all">כל המדורים</SelectItem>
+                    {sections.map((s: any) => (
+                      <SelectItem key={s.id} value={s.id.toString()}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-            <div className="w-36 lg:w-48 space-y-2 text-right">
-              <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
-                חוליה
-              </label>
-              <Select
-                value={selectedTeamId}
-                onValueChange={(val) => setSelectedTeamId(val)}
-                disabled={
-                  !selectedSectionId ||
-                  selectedSectionId === "all" ||
-                  !!(user && !user.is_admin && user.team_id)
-                }
-              >
-                <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
-                  <SelectValue placeholder="כל החוליות" />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  <SelectItem value="all">כל החוליות</SelectItem>
-                  {teams.map((t: any) => (
-                    <SelectItem key={t.id} value={t.id.toString()}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Team Filter - Only for Admins or those without a fixed Team */}
+            {(user?.is_admin || !user?.team_id) && (
+              <div className="w-36 lg:w-48 space-y-2 text-right">
+                <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
+                  חוליה
+                </label>
+                <Select
+                  value={selectedTeamId}
+                  onValueChange={(val) => setSelectedTeamId(val)}
+                  disabled={
+                    !selectedSectionId ||
+                    selectedSectionId === "all" ||
+                    !!(user && !user.is_admin && user.team_id)
+                  }
+                >
+                  <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
+                    <SelectValue placeholder="כל החוליות" />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="all">כל החוליות</SelectItem>
+                    {teams.map((t: any) => (
+                      <SelectItem key={t.id} value={t.id.toString()}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="w-36 lg:w-48 space-y-2 text-right">
               <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
@@ -1222,81 +1231,91 @@ export default function AttendancePage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground">
-                    מחלקה
-                  </label>
-                  <Select
-                    value={selectedDeptId}
-                    onValueChange={(val) => {
-                      setSelectedDeptId(val);
-                      setSelectedSectionId("all");
-                      setSelectedTeamId("all");
-                    }}
-                    disabled={!!(user && !user.is_admin && user.department_id)}
-                  >
-                    <SelectTrigger className="w-full text-right">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent dir="rtl">
-                      <SelectItem value="all">כל המחלקות</SelectItem>
-                      {departments.map((d) => (
-                        <SelectItem key={d.id} value={d.id.toString()}>
-                          {d.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {(user?.is_admin || !user?.department_id) && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground">
+                      מחלקה
+                    </label>
+                    <Select
+                      value={selectedDeptId}
+                      onValueChange={(val) => {
+                        setSelectedDeptId(val);
+                        setSelectedSectionId("all");
+                        setSelectedTeamId("all");
+                      }}
+                      disabled={
+                        !!(user && !user.is_admin && user.department_id)
+                      }
+                    >
+                      <SelectTrigger className="w-full text-right">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent dir="rtl">
+                        <SelectItem value="all">כל המחלקות</SelectItem>
+                        {departments.map((d) => (
+                          <SelectItem key={d.id} value={d.id.toString()}>
+                            {d.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground">
-                    מדור
-                  </label>
-                  <Select
-                    value={selectedSectionId}
-                    onValueChange={(val) => {
-                      setSelectedSectionId(val);
-                      setSelectedTeamId("all");
-                    }}
-                    disabled={!selectedDeptId || selectedDeptId === "all"}
-                  >
-                    <SelectTrigger className="w-full text-right">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent dir="rtl">
-                      <SelectItem value="all">כל המדורים</SelectItem>
-                      {sections.map((s: any) => (
-                        <SelectItem key={s.id} value={s.id.toString()}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {(user?.is_admin || !user?.section_id) && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground">
+                      מדור
+                    </label>
+                    <Select
+                      value={selectedSectionId}
+                      onValueChange={(val) => {
+                        setSelectedSectionId(val);
+                        setSelectedTeamId("all");
+                      }}
+                      disabled={!selectedDeptId || selectedDeptId === "all" || !!(user && !user.is_admin && user.section_id)}
+                    >
+                      <SelectTrigger className="w-full text-right">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent dir="rtl">
+                        <SelectItem value="all">כל המדורים</SelectItem>
+                        {sections.map((s: any) => (
+                          <SelectItem key={s.id} value={s.id.toString()}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground">
-                    חוליה
-                  </label>
-                  <Select
-                    value={selectedTeamId}
-                    onValueChange={(val) => setSelectedTeamId(val)}
-                    disabled={!selectedSectionId || selectedSectionId === "all"}
-                  >
-                    <SelectTrigger className="w-full text-right">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent dir="rtl">
-                      <SelectItem value="all">כל החוליות</SelectItem>
-                      {teams.map((t: any) => (
-                        <SelectItem key={t.id} value={t.id.toString()}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {(user?.is_admin || !user?.team_id) && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground">
+                      חוליה
+                    </label>
+                    <Select
+                      value={selectedTeamId}
+                      onValueChange={(val) => setSelectedTeamId(val)}
+                      disabled={
+                        !selectedSectionId || selectedSectionId === "all" || !!(user && !user.is_admin && user.team_id)
+                      }
+                    >
+                      <SelectTrigger className="w-full text-right">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent dir="rtl">
+                        <SelectItem value="all">כל החוליות</SelectItem>
+                        {teams.map((t: any) => (
+                          <SelectItem key={t.id} value={t.id.toString()}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-muted-foreground">
@@ -1356,9 +1375,9 @@ export default function AttendancePage() {
                   onClick={() => {
                     setSelectedStatusId("all");
                     setSelectedServiceTypeId("all");
-                    setSelectedDeptId("all");
-                    setSelectedSectionId("all");
-                    setSelectedTeamId("all");
+                    if (!user || user.is_admin || !user.department_id) setSelectedDeptId("all");
+                    if (!user || user.is_admin || !user.section_id) setSelectedSectionId("all");
+                    if (!user || user.is_admin || !user.team_id) setSelectedTeamId("all");
                   }}
                 >
                   נקה
@@ -1367,6 +1386,7 @@ export default function AttendancePage() {
             </div>
           </DialogContent>
         </Dialog>
+
         {/* Attendance Table - Desktop Only */}
         <div className="hidden lg:block bg-card rounded-2xl border border-border  overflow-hidden">
           <div className="overflow-x-auto">
@@ -1991,11 +2011,6 @@ export default function AttendancePage() {
           initialSelectedIds={selectedEmployeeIds}
           onSuccess={refreshData}
           alertContext={alertContext}
-          onNudge={() => {
-            toast.success(
-              `נשלחה תזכורת למפקד`,
-            );
-          }}
           selectedDate={selectedDate}
           isReportedCheck={isReportedOnDate}
         />

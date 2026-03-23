@@ -671,7 +671,7 @@ export default function DashboardPage() {
         {/* Header Section */}
         <PageHeader
           icon={LayoutDashboard}
-          title="לוח בקרה"
+          title={selectedDeptId || selectedSectionId || selectedTeamId ? `לוח בקרה - ${unitName}` : "לוח בקרה"}
           hideMobile={true}
           className="flex mb-0 px-0 pb-2 shrink-0 transition-all border-none"
           badge={
@@ -714,9 +714,9 @@ export default function DashboardPage() {
 
                 {/* Report Hub button */}
                 {!user?.is_temp_commander && (
-                  <div className="w-full lg:w-auto flex items-center gap-2">
+                  <div className="w-full lg:w-auto flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
                     <ReportHub
-                      className="w-full lg:w-auto h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all text-xs shadow-none"
+                      className="w-full lg:w-auto h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all text-sm lg:text-xs shadow-none"
                       onShareBirthdays={() => birthdaysRef.current?.share()}
                       initialViewMode={viewMode}
                       initialDate={selectedDate}
@@ -732,23 +732,25 @@ export default function DashboardPage() {
                     />
                     
                     {(user?.is_commander || user?.is_admin) && (
-                      <Button
-                        onClick={() => setWhatsappBroadcastOpen(true)}
-                        className="h-10 rounded-xl border border-border/40 bg-green-500/10 text-green-600 hover:bg-green-500/20 gap-2 font-black px-4 transition-all text-xs"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                        רשימת תפוצה
-                      </Button>
-                    )}
+                      <div className="flex items-center gap-2 w-full lg:w-auto lg:shrink-0">
+                        <Button
+                          onClick={() => setWhatsappBroadcastOpen(true)}
+                          className="flex-1 lg:flex-none h-10 rounded-xl border border-border/40 bg-green-500/10 text-green-600 hover:bg-green-500/20 gap-1.5 font-black px-3 sm:px-4 transition-all text-[11px] sm:text-xs"
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                          רשימת תפוצה
+                        </Button>
 
-                    {(user?.is_commander || user?.is_admin) && !user?.is_temp_commander && (
-                      <Button
-                        onClick={() => setGlobalEventOpen(true)}
-                        className="h-10 rounded-xl border border-border/40 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 gap-2 font-black px-4 transition-all text-xs"
-                      >
-                        <CalendarIcon className="w-4 h-4" />
-                        אירוע
-                      </Button>
+                        {!user?.is_temp_commander && (
+                          <Button
+                            onClick={() => setGlobalEventOpen(true)}
+                            className="flex-1 lg:flex-none h-10 rounded-xl border border-border/40 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 gap-1.5 font-black px-3 sm:px-4 transition-all text-[11px] sm:text-xs"
+                          >
+                            <CalendarIcon className="w-4 h-4" />
+                            אירוע
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

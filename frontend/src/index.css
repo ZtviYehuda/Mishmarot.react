@@ -4,6 +4,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Custom Calendar Grid - Responsive Optimization */
+.grid-calendar-view {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+@media (min-width: 768px) {
+  .grid-calendar-view {
+    grid-template-columns: repeat(5, 1fr) 0.7fr 0.7fr;
+  }
+}
+
 * {
   font-family: "Noto Sans Hebrew", sans-serif;
 }
@@ -11,10 +23,11 @@
 html,
 body {
   direction: rtl;
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background-color: var(--background);
+  color: var(--foreground);
   overflow: hidden;
-  height: 100vh;
+  /* Use dynamic viewport height so mobile browser UI (address bar) doesn't clip content */
+  height: 100dvh;
   margin: 0;
   padding: 0;
 }
@@ -46,6 +59,7 @@ body {
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
   --radius-4xl: calc(var(--radius) + 16px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -279,4 +293,16 @@ body {
 
 .animate-shimmer {
   animation: shimmer 3s ease-in-out infinite;
+}
+
+/* 🔄 Global Close Button Rotation Animation 
+   Whenever an 'X' or 'XIcon' from Lucide is inside a button, rotate it on hover. */
+button:hover svg.lucide-x,
+button:hover svg.lucide-x-icon {
+  transform: rotate(90deg);
+}
+
+svg.lucide-x,
+svg.lucide-x-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
