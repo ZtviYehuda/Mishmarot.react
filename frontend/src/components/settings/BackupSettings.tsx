@@ -33,7 +33,7 @@ export function BackupSettings({
   handleRestore,
 }: BackupSettingsProps) {
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full pb-24 lg:pb-0">
+    <div className=" w-full pb-24 lg:pb-0">
       <div className="grid grid-cols-12 gap-8">
         {/* Main Settings Area */}
         <div className="col-span-12 lg:col-span-8 space-y-8">
@@ -43,7 +43,7 @@ export function BackupSettings({
             badge={
               <div
                 className={cn(
-                  "flex items-center gap-2.5 px-4 py-1.5 rounded-full border  text-[10px] font-black uppercase transition-all duration-500",
+                  "flex items-center gap-2.5 px-4 py-1.5 rounded-full border  text-[10px] font-black uppercase transition-all",
                   backupConfig.enabled
                     ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                     : "bg-muted/50 text-muted-foreground border-border",
@@ -74,7 +74,7 @@ export function BackupSettings({
             <div className="space-y-10">
               <div
                 className={cn(
-                  "flex items-center justify-between p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] border transition-all duration-500",
+                  "flex items-center justify-between p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] border transition-all",
                   backupConfig.enabled
                     ? "bg-primary/5 border-border/40  "
                     : "bg-background border-border/40",
@@ -83,7 +83,7 @@ export function BackupSettings({
                 <div className="flex items-start gap-4 sm:gap-5">
                   <div
                     className={cn(
-                      "p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-500",
+                      "p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all",
                       backupConfig.enabled
                         ? "bg-primary/10 text-primary scale-110 "
                         : "bg-muted/40 text-muted-foreground",
@@ -111,7 +111,7 @@ export function BackupSettings({
 
               <div
                 className={cn(
-                  "space-y-6 transition-all duration-700",
+                  "space-y-6 transition-all",
                   !backupConfig.enabled &&
                     "opacity-40 grayscale pointer-events-none scale-[0.98]",
                 )}
@@ -136,7 +136,7 @@ export function BackupSettings({
                         updateBackupConfig("interval_days", days)
                       }
                       className={cn(
-                        "group relative p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] border-2 flex flex-col items-center gap-2 sm:gap-3 transition-all duration-500 hover:scale-[1.03]",
+                        "group relative p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] border-2 flex flex-col items-center gap-2 sm:gap-3 transition-all hover:scale-[1.03]",
                         backupConfig.interval_days === days
                           ? "border-primary bg-primary/5 ring-4 ring-primary/5"
                           : "border-border/40 bg-background/50 hover:border-border/40",
@@ -145,7 +145,7 @@ export function BackupSettings({
                       <span className="text-3xl sm:text-4xl">{icon}</span>
                       <span
                         className={cn(
-                          "text-xl sm:text-3xl font-black font-mono transition-transform duration-500 group-hover:scale-110",
+                          "text-xl sm:text-3xl font-black font-mono transition-transform group-hover:scale-110",
                           backupConfig.interval_days === days
                             ? "text-primary"
                             : "text-muted-foreground/40",
@@ -187,13 +187,13 @@ export function BackupSettings({
                   onClick={handleServerBackupNow}
                   disabled={isServerBackingUp}
                   variant="outline"
-                  className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-border/40 bg-background font-black text-primary hover:bg-primary hover:text-white transition-all duration-500 group"
+                  className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-border/40 bg-background font-black text-primary hover:bg-primary hover:text-white transition-all group"
                 >
                   {isServerBackingUp ? (
                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   ) : (
                     <>
-                      <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3 group-hover:rotate-180 transition-transform duration-700" />
+                      <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3 group-hover:rotate-180 transition-transform" />
                       ביצוע גיבוי שרת
                     </>
                   )}
@@ -316,3 +316,4 @@ function SectionCard({
     </motion.div>
   );
 }
+

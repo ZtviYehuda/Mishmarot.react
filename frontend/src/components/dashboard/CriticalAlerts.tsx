@@ -51,7 +51,7 @@ export const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
           <div
             key={alert.id}
             className={cn(
-              "relative overflow-hidden group rounded-[1.5rem] border backdrop-blur-md p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 transition-all duration-500  ",
+              "relative overflow-hidden group rounded-[1.5rem] border backdrop-blur-md p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 transition-all  ",
               alert.type === "danger"
                 ? "border-red-500/20 bg-red-500/5 hover:bg-red-500/10"
                 : alert.type === "warning" || alert.id === "command-delegated"
@@ -63,7 +63,7 @@ export const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
             {/* Decorative background element */}
             <div
               className={cn(
-                "absolute -right-4 -top-4 w-24 h-24 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700",
+                "absolute -right-4 -top-4 w-24 h-24 rounded-full blur-2xl group-hover:scale-150 transition-transform",
                 alert.type === "danger"
                   ? "bg-red-500/10"
                   : alert.type === "warning" || alert.id === "command-delegated"
@@ -194,3 +194,4 @@ export const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
     </>
   );
 };
+

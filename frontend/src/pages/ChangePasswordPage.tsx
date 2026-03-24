@@ -80,7 +80,7 @@ export default function ChangePasswordPage() {
 
       {/* Main Content Area */}
       <main className="flex-grow flex flex-col items-center justify-start py-6 px-4 md:px-8">
-        <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="w-full max-w-[440px]">
           {/* Change Password Banner */}
           <div className="bg-amber-500/10 border-r-4 border-amber-500 p-3 mb-4 flex items-start gap-3">
             <KeyRound className="w-5 h-5 text-amber-600 mt-0.5" />
@@ -178,7 +178,7 @@ export default function ChangePasswordPage() {
 
                 {/* Error Message */}
                 {error && (
-                  <div className="flex items-center gap-2 bg-destructive/10 border-r-2 border-destructive p-2.5 text-xs text-destructive animate-in fade-in zoom-in-95 duration-200">
+                  <div className="flex items-center gap-2 bg-destructive/10 border-r-2 border-destructive p-2.5 text-xs text-destructive">
                     <AlertCircle className="h-4 w-4 flex-shrink-0" />
                     <span className="font-medium text-right">{error}</span>
                   </div>
@@ -235,3 +235,4 @@ export default function ChangePasswordPage() {
     </div>
   );
 }
+

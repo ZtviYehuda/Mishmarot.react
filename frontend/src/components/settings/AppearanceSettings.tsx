@@ -36,7 +36,7 @@ export function AppearanceSettings({
   ];
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full pb-24 lg:pb-0">
+    <div className=" w-full pb-24 lg:pb-0">
       <div className="grid grid-cols-12 gap-4 sm:gap-8">
         {/* Main Settings Area */}
         <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-8">
@@ -47,7 +47,7 @@ export function AppearanceSettings({
                   key={t}
                   onClick={() => setTheme(t as any)}
                   className={cn(
-                    "group relative h-32 sm:h-48 rounded-[1.5rem] sm:rounded-[2rem] border-2 transition-all duration-500 overflow-hidden",
+                    "group relative h-32 sm:h-48 rounded-[1.5rem] sm:rounded-[2rem] border-2 transition-all overflow-hidden",
                     theme === t
                       ? "border-primary bg-primary/5 ring-4 ring-primary/5"
                       : "border-border/40 bg-background/50 hover:border-border/40",
@@ -56,7 +56,7 @@ export function AppearanceSettings({
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8">
                     <div
                       className={cn(
-                        "p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-500",
+                        "p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all",
                         theme === t
                           ? "bg-primary text-white scale-110"
                           : "bg-muted text-muted-foreground group-hover:bg-muted/80",
@@ -123,7 +123,7 @@ export function AppearanceSettings({
                   key={size.id}
                   onClick={() => setFontSize(size.id as any)}
                   className={cn(
-                    "group relative p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] border-2 flex flex-col items-center gap-2 sm:gap-3 transition-all duration-500",
+                    "group relative p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] border-2 flex flex-col items-center gap-2 sm:gap-3 transition-all",
                     fontSize === size.id
                       ? "border-primary bg-primary/5 ring-4 ring-primary/5"
                       : "border-border/40 bg-background/50 hover:border-border/40",
@@ -131,7 +131,7 @@ export function AppearanceSettings({
                 >
                   <span
                     className={cn(
-                      "font-black transition-all duration-500",
+                      "font-black transition-all",
                       size.id === "small" && "text-sm",
                       size.id === "normal" && "text-base",
                       size.id === "large" && "text-lg",
@@ -198,3 +198,4 @@ function SectionCard({ icon: Icon, title, children }: any) {
     </motion.div>
   );
 }
+

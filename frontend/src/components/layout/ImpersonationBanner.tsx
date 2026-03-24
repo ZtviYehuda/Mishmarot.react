@@ -35,7 +35,7 @@ export const ImpersonationBanner = () => {
     >
       <div
         className={cn(
-          "flex items-center gap-1 p-1.5 pl-1 pr-1.5 rounded-full border-2  backdrop-blur-xl select-none transition-all duration-300",
+          "flex items-center gap-1 p-1.5 pl-1 pr-1.5 rounded-full border-2  backdrop-blur-xl select-none transition-all",
           // Dynamic Theme Colors - Extra Pop
           "bg-background/80 border-primary/50 text-foreground",
           " dark:",
@@ -82,3 +82,4 @@ export const ImpersonationBanner = () => {
     </motion.div>
   );
 };
+

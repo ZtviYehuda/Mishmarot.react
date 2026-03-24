@@ -98,7 +98,7 @@ export const AgeDistributionChart = ({
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="bg-popover text-popover-foreground border border-border p-3 rounded-2xl shadow-xl animate-in fade-in zoom-in duration-200">
+                    <div className="bg-popover text-popover-foreground border border-border p-3 rounded-2xl shadow-xl">
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
                         טווח גילאים: {payload[0].payload.range}
                       </p>
@@ -123,7 +123,7 @@ export const AgeDistributionChart = ({
               {chartData.map((_, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  className="transition-all duration-300"
+                  className="transition-all"
                 />
               ))}
               <LabelList
@@ -141,3 +141,4 @@ export const AgeDistributionChart = ({
     </Card>
   );
 };
+

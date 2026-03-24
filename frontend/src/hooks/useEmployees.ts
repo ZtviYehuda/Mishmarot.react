@@ -526,7 +526,7 @@ export const useEmployees = () => {
 
     createRestoreRequest: async (date: string, reason: string) => {
       try {
-        await apiClient.post("/api/archive/restore-request", {
+        await apiClient.post("/archive/restore-request", {
           start_date: date,
           end_date: date,
           reason,

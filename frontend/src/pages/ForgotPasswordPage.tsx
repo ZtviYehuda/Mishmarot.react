@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
   return (
     <div
       className={cn(
-        "min-h-screen flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden transition-colors duration-500",
+        "min-h-screen flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden transition-colors",
         isDark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900",
       )}
       dir="rtl"
@@ -140,13 +140,13 @@ export default function ForgotPasswordPage() {
       <div className="absolute inset-0 z-0">
         <div
           className={cn(
-            "absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-20 transition-colors duration-500",
+            "absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-20 transition-colors",
             isDark ? "bg-blue-600/30" : "bg-blue-400/20",
           )}
         />
         <div
           className={cn(
-            "absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-20 transition-colors duration-500",
+            "absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-20 transition-colors",
             isDark ? "bg-indigo-600/30" : "bg-indigo-400/20",
           )}
         />
@@ -159,7 +159,7 @@ export default function ForgotPasswordPage() {
       >
         <Card
           className={cn(
-     "border-none overflow-hidden rounded-[2.5rem] backdrop-blur-xl transition-all duration-500",
+     "border-none overflow-hidden rounded-[2.5rem] backdrop-blur-xl transition-all",
             isDark
               ? "bg-slate-900/80 ring-1 ring-white/10"
               : "bg-white/90 ring-1 ring-black/5",
@@ -408,3 +408,4 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
+

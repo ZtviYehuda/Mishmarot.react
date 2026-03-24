@@ -21,7 +21,6 @@ const PrivacyPage        = lazy(() => import("@/pages/PrivacyPage"));
 const DashboardPage      = lazy(() => import("@/pages/DashboardPage"));
 const EmployeesPage      = lazy(() => import("@/pages/EmployeesPage"));
 const CreateEmployeePage = lazy(() => import("@/pages/CreateEmployeePage"));
-const EditEmployeePage   = lazy(() => import("@/pages/EditEmployeePage"));
 const EmployeeViewPage   = lazy(() => import("@/pages/EmployeeViewPage"));
 const TransfersPage      = lazy(() => import("@/pages/TransfersPage"));
 const AttendancePage     = lazy(() => import("@/pages/AttendancePage"));
@@ -85,7 +84,7 @@ const router = createBrowserRouter([
       { path: "/employees",           element: <PageSuspense><EmployeesPage /></PageSuspense> },
       { path: "/employees/new",       element: <PageSuspense><CreateEmployeePage /></PageSuspense> },
       { path: "/employees/:id",       element: <PageSuspense><EmployeeViewPage /></PageSuspense> },
-      { path: "/employees/edit/:id",  element: <PageSuspense><EditEmployeePage /></PageSuspense> },
+      { path: "/employees/edit/:id",  element: <PageSuspense><EmployeeViewPage /></PageSuspense> },
       { path: "/transfers",           element: <PageSuspense><TransfersPage /></PageSuspense> },
       { path: "/attendance",          element: <PageSuspense><AttendancePage /></PageSuspense> },
       { path: "/roster",              element: <PageSuspense><RosterPage /></PageSuspense> },

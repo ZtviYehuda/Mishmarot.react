@@ -320,7 +320,7 @@ export const EmployeeTable = ({
                   <TableRow
                     key={emp.id}
                     className={cn(
-                      "group/row transition-all duration-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 border-b border-border/40",
+                      "group/row transition-all hover:bg-slate-50 dark:hover:bg-slate-900/40 border-b border-border/40",
                       !emp.is_active &&
                         "bg-destructive/[0.02] opacity-80 grayscale-[0.2] border-r-4 border-r-destructive",
                       emp.is_active &&
@@ -332,7 +332,7 @@ export const EmployeeTable = ({
                         <div className="relative">
                           <div
                             className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm group-hover/row:scale-110 transition-all duration-500",
+              "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm group-hover/row:scale-110 transition-all",
                               emp.is_active
                                 ? "bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 text-slate-600 dark:text-slate-400 border border-border/50"
                                 : "bg-muted text-muted-foreground ",
@@ -740,3 +740,4 @@ export const EmployeeTable = ({
     </div>
   );
 };
+

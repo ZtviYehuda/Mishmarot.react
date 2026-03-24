@@ -234,11 +234,11 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     onWhatsApp: () => void;
     hasDownload?: boolean;
   }) => (
-    <div className="group relative bg-card/50 hover:bg-card border border-border/50 hover:border-primary/20 rounded-2xl p-4 sm:p-5 transition-all duration-300 hover: active:scale-[0.99] overflow-hidden flex flex-col h-full">
+    <div className="group relative bg-card/50 hover:bg-card border border-border/50 hover:border-primary/20 rounded-2xl p-4 sm:p-5 transition-all hover: active:scale-[0.99] overflow-hidden flex flex-col h-full">
       {/* Background Glow */}
       <div
         className={cn(
-          "absolute -top-12 -right-12 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-full pointer-events-none",
+          "absolute -top-12 -right-12 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity rounded-full pointer-events-none",
           colorClass,
         )}
       />
@@ -246,7 +246,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
       <div className="flex items-start gap-3 sm:gap-4 flex-1">
         <div
           className={cn(
-            "p-2.5 sm:p-3 rounded-xl sm:rounded-2xl shrink-0  transition-transform group-hover:scale-110 duration-300",
+            "p-2.5 sm:p-3 rounded-xl sm:rounded-2xl shrink-0  transition-transform group-hover:scale-110",
             colorClass.replace("bg-", "bg-").replace("text-", "text-"),
           )}
         >
@@ -314,7 +314,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
         </DialogTrigger>
 
         <DialogContent
-          className="w-[95vw] max-w-[95vw] sm:max-w-3xl p-0 overflow-hidden border-none bg-background rounded-2xl sm:rounded-3xl  animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]"
+          className="w-[95vw] max-w-[95vw] sm:max-w-3xl p-0 overflow-hidden border-none bg-background rounded-2xl sm:rounded-3xl  flex flex-col max-h-[90vh]"
           showCloseButton={true}
         >
           {/* Header Section with Gradient */}
@@ -437,3 +437,4 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     </>
   );
 };
+

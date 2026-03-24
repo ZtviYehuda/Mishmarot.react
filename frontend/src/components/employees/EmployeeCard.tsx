@@ -26,7 +26,7 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
   };
 
   return (
-    <Card className="group hover: transition-all duration-200 border-slate-200 dark:border-slate-700 hover:border-[#0074ff]/30 dark:hover:border-[#0074ff]/50 bg-white dark:bg-slate-800/50">
+    <Card className="group hover: transition-all border-slate-200 dark:border-slate-700 hover:border-[#0074ff]/30 dark:hover:border-[#0074ff]/50 bg-white dark:bg-slate-800/50">
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -135,3 +135,4 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
     </Card>
   );
 };
+

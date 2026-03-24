@@ -21,7 +21,7 @@ import { ReportHub } from "@/components/dashboard/ReportHub";
 import { DateHeader } from "@/components/common/DateHeader";
 import { RestorationRequestDialog } from "@/components/dashboard/RestorationRequestDialog";
 import { WhatsAppBroadcastModal } from "@/components/employees/modals/WhatsAppBroadcastModal";
-import { MessageSquare, Calendar as CalendarIcon } from "lucide-react";
+import { MessageSquare, Calendar as CalendarIcon, RotateCcw } from "lucide-react";
 import { GlobalEventModal } from "@/components/employees/modals/GlobalEventModal";
 
 // Helper types for structure
@@ -687,29 +687,41 @@ export default function DashboardPage() {
               </div>
 
               {/* Actions Row */}
-              <div className="flex items-center gap-2 lg:gap-4 w-full lg:w-auto overflow-x-auto no-scrollbar py-2">
+              <div className="flex items-center gap-2 lg:gap-4 w-full lg:w-auto overflow-x-auto lg:overflow-visible no-scrollbar py-2 pt-3 lg:pt-3">
                 {/* Filters button - hidden on mobile since the chart has a filter button */}
-                <div className="hidden lg:block lg:flex-none">
-                  <DashboardFilters
-                    structure={structure}
-                    statuses={allStatuses}
-                    allStatusTypes={allStatusTypes}
-                    selectedDeptId={selectedDeptId}
-                    selectedSectionId={selectedSectionId}
-                    selectedTeamId={selectedTeamId}
-                    selectedStatusId={selectedStatusData?.id?.toString()}
-                    serviceTypes={serviceTypes}
-                    selectedServiceTypes={selectedServiceTypes}
-                    selectedAgeRange={selectedAgeRange}
-                    onFilterChange={handleFilterChange}
-                    canSelectDept={canSelectDept}
-                    canSelectSection={canSelectSection}
-                    canSelectTeam={canSelectTeam}
-                    hasActiveFiltersExternal={activeFilterInfo.hasActive}
-                    activeFilterCountExternal={activeFilterInfo.count}
-                    user={user}
-                    isMobile={false}
-                  />
+                <div className="hidden lg:flex items-center overflow-visible">
+                  <div className="relative group">
+                    <DashboardFilters
+                      structure={structure}
+                      statuses={allStatuses}
+                      allStatusTypes={allStatusTypes}
+                      selectedDeptId={selectedDeptId}
+                      selectedSectionId={selectedSectionId}
+                      selectedTeamId={selectedTeamId}
+                      selectedStatusId={selectedStatusData?.id?.toString()}
+                      serviceTypes={serviceTypes}
+                      selectedServiceTypes={selectedServiceTypes}
+                      selectedAgeRange={selectedAgeRange}
+                      onFilterChange={handleFilterChange}
+                      canSelectDept={canSelectDept}
+                      canSelectSection={canSelectSection}
+                      canSelectTeam={canSelectTeam}
+                      hasActiveFiltersExternal={activeFilterInfo.hasActive}
+                      activeFilterCountExternal={activeFilterInfo.count}
+                      user={user}
+                      isMobile={false}
+                    />
+
+                    {activeFilterInfo.hasActive && (
+                      <button
+                        onClick={() => handleFilterChange("reset")}
+                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
+                        title="נקה סינון"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Report Hub button */}

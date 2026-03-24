@@ -58,7 +58,7 @@ const StatusCard = ({
   >
     <div
       className={cn(
-        "rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110",
+        "rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-110",
         large
           ? "w-12 h-12 bg-primary/10"
           : "w-10 h-10 bg-muted/70 group-hover:bg-primary/5",
@@ -1060,7 +1060,7 @@ export default function RosterPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(empIdx * 0.05, 0.5) }}
-                        className="grid grid-cols-[minmax(240px,1.5fr)_repeat(7,minmax(110px,1fr))] group/row hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-all duration-300"
+                        className="grid grid-cols-[minmax(240px,1.5fr)_repeat(7,minmax(110px,1fr))] group/row hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-all"
                       >
                         <div className="p-4 border-l border-border/30 sticky right-0 z-20 bg-background/90 backdrop-blur-xl transition-all border-r-2 border-r-transparent group-hover/row:border-r-primary">
                           <div className="flex items-center gap-4">
@@ -1505,3 +1505,4 @@ export default function RosterPage() {
     </div>
   );
 }
+

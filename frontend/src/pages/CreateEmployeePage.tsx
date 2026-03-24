@@ -104,7 +104,7 @@ const UnitPicker = ({
       <Select value={value || ""} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger
           className={cn(
-            "h-16 w-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl transition-all duration-200 px-4 hover:border-primary/30 focus:ring-0 text-right font-bold",
+            "h-16 w-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl transition-all px-4 hover:border-primary/30 focus:ring-0 text-right font-bold",
             !value && "bg-slate-50/30 border-dashed",
             disabled && "opacity-30 grayscale pointer-events-none",
           )}
@@ -183,7 +183,7 @@ const PersonalFormTab = ({
   onNext,
 }: any) => {
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 sm:pb-0">
+    <div className="space-y-6 pb-24 sm:pb-0">
       <CompactCard
         title={
           <span className="flex items-center gap-2 text-primary font-black text-lg">
@@ -494,7 +494,7 @@ const ProfessionalFormTab = ({
   ]);
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 sm:pb-0">
+    <div className="space-y-6 pb-24 sm:pb-0">
       {/* 1. Organizational Affiliation - Compact & Professional */}
       {/* 1. Organizational Affiliation - Compact & Professional */}
       <CompactCard
@@ -584,7 +584,7 @@ const ProfessionalFormTab = ({
             />
 
             {currentCommander && (
-              <div className="flex items-start gap-4 p-5 rounded-[24px] bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/20 animate-in slide-in-from-top-2 duration-500">
+              <div className="flex items-start gap-4 p-5 rounded-[24px] bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/20">
                 <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 shrink-0">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
@@ -910,39 +910,44 @@ export default function CreateEmployeePage() {
       type="button"
       onClick={onClick}
       className={cn(
-        "flex-1 flex items-center justify-center transition-all duration-500 relative group overflow-hidden",
-        small ? "gap-2 py-1.5 px-3 rounded-xl text-[11px]" : "gap-3 py-3 px-6 rounded-2xl text-sm",
+        "flex-1 flex items-center justify-center transition-all relative group h-full",
+        small ? "px-2" : "px-4",
         active
           ? "text-primary"
-          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200",
+          : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
       )}
     >
       {active && (
         <motion.div
           layoutId="activeTab"
           className={cn(
-            "absolute inset-0 bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50",
-            small ? "rounded-xl" : "rounded-2xl"
+            "absolute inset-1 bg-white dark:bg-slate-800 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] border border-slate-200/50 dark:border-slate-700/50",
           )}
           initial={false}
-          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+          transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
         />
       )}
-      <div className="relative z-10 flex items-center gap-2">
+      <div className="relative z-10 flex items-center gap-2 sm:gap-3">
         {Icon && (
           <div
             className={cn(
-              "rounded-lg flex items-center justify-center transition-all duration-500",
-              small ? "w-5 h-5" : "w-8 h-8",
+              "rounded-lg flex items-center justify-center transition-all shrink-0",
+              small ? "w-6 h-6" : "w-8 h-8",
               active
-                ? "bg-primary text-white scale-110 rotate-0"
-                : "bg-white/50 dark:bg-slate-800/50 text-slate-400 group-hover:scale-110 group-hover:bg-white",
+                ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105"
+                : "bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 group-hover:scale-110 group-hover:bg-slate-200 dark:group-hover:bg-slate-700",
             )}
           >
-            <Icon className={small ? "w-2.5 h-2.5" : "w-4 h-4"} />
+            <Icon className={small ? "w-3 h-3" : "w-4 h-4"} />
           </div>
         )}
-        <span className="tracking-tight leading-none whitespace-nowrap">{label}</span>
+        <span className={cn(
+          "font-black tracking-tight leading-none whitespace-nowrap transition-all",
+          small ? "text-[10px] sm:text-[11px]" : "text-sm",
+          active ? "opacity-100" : "opacity-70 group-hover:opacity-100"
+        )}>
+          {label}
+        </span>
       </div>
     </button>
   );
@@ -950,7 +955,7 @@ export default function CreateEmployeePage() {
 
 
   return (
-    <div id="create-page-root" className="flex flex-col animate-in fade-in duration-500 pb-10">
+    <div id="create-page-root" className="flex flex-col pb-10">
       {/* Page Header - matches system layout */}
       <div className="pt-6 pb-4 shrink-0 flex items-center justify-between gap-4 border-b border-border/40 mb-6">
         <PageHeader
@@ -961,7 +966,7 @@ export default function CreateEmployeePage() {
         />
 
         {/* Inline Header Tabs */}
-        <div className="hidden sm:flex bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1 flex gap-1 min-w-[280px]">
+        <div className="hidden sm:flex items-stretch bg-slate-200/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-[1.25rem] p-0.5 min-w-[300px] h-11 relative shadow-inner">
           <TabButton
             active={activeTab === "personal"}
             onClick={() => setActiveTab("personal")}
@@ -1003,8 +1008,8 @@ export default function CreateEmployeePage() {
       </div>
 
       {/* Mobile-only tabs (original style) */}
-      <div className="flex sm:hidden justify-center w-full mb-6 px-4">
-        <div className="bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1 flex gap-1 w-full">
+      <div className="flex sm:hidden justify-center w-full mb-6 px-4 pt-2">
+        <div className="bg-slate-200/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-1 flex w-full h-14 shadow-inner">
           <TabButton
             active={activeTab === "personal"}
             onClick={() => setActiveTab("personal")}
@@ -1154,3 +1159,4 @@ export default function CreateEmployeePage() {
     </div>
   );
 }
+

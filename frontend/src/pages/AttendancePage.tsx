@@ -468,7 +468,7 @@ export default function AttendancePage() {
 
   return (
     <div
-      className="flex flex-col min-h-full selection:bg-primary/10 selection:text-primary transition-all duration-500"
+      className="flex flex-col min-h-full selection:bg-primary/10 selection:text-primary transition-all"
       dir="rtl"
     >
       <div className="pt-3 pb-1 shrink-0 transition-all px-4">
@@ -758,7 +758,7 @@ export default function AttendancePage() {
               </div>
               <div className="text-right flex flex-col items-end">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl sm:text-4xl font-black text-primary animate-in zoom-in duration-500">
+                  <span className="text-3xl sm:text-4xl font-black text-primary">
                     {updatedTodayCount}
                   </span>
                   <span className="text-base sm:text-xl font-bold text-muted-foreground/40">
@@ -832,7 +832,7 @@ export default function AttendancePage() {
                             strokeDashoffset={dashOffset}
                             strokeLinecap="butt"
                             transform="rotate(180 80 70)"
-                            className="transition-all duration-700"
+                            className="transition-all"
                             style={{ 
                               opacity: isAnySelected && !isSelected ? 0.2 : 1,
                               filter: isSelected ? `drop-shadow(0 0 10px ${s.color}44)` : 'none'
@@ -850,7 +850,7 @@ export default function AttendancePage() {
                               y={ly}
                               textAnchor={angle > 140 ? "end" : angle < 40 ? "start" : "middle"}
                               className={cn(
-                                "text-[4px] font-black uppercase tracking-tight transition-all duration-300",
+                                "text-[4px] font-black uppercase tracking-tight transition-all",
                                 isSelected ? "fill-foreground" : "fill-muted-foreground/50"
                               )}
                             >
@@ -861,7 +861,7 @@ export default function AttendancePage() {
                               y={ly + 4.5}
                               textAnchor={angle > 140 ? "end" : angle < 40 ? "start" : "middle"}
                               className={cn(
-                                "text-[5px] font-black tabular-nums transition-all duration-300",
+                                "text-[5px] font-black tabular-nums transition-all",
                                 isSelected ? "fill-foreground" : "fill-muted-foreground/80"
                               )}
                             >
@@ -926,7 +926,7 @@ export default function AttendancePage() {
           </Card>
 
           {!isAllReported ? (
-            <div className="hidden lg:flex bg-card/40 dark:bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl lg:rounded-3xl p-4 lg:p-6 flex-row lg:flex-col items-center lg:items-start justify-between gap-4 order-1 lg:order-2 hover:border-border transition-all duration-300">
+            <div className="hidden lg:flex bg-card/40 dark:bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl lg:rounded-3xl p-4 lg:p-6 flex-row lg:flex-col items-center lg:items-start justify-between gap-4 order-1 lg:order-2 hover:border-border transition-all">
               {/* Header Section */}
               <div className="flex items-start gap-3 lg:gap-4 flex-1">
                 <div className="relative">
@@ -1457,7 +1457,7 @@ export default function AttendancePage() {
                         key={emp.id}
                         data-state={isSelected ? "selected" : "unchecked"}
                         className={cn(
-                          "group/row transition-all duration-300 border-b border-border/40",
+                          "group/row transition-all border-b border-border/40",
                           isSelected
                             ? "bg-primary/[0.03] border-r-4 border-r-primary"
                             : "hover:bg-slate-50 dark:hover:bg-slate-900/40 border-r-4 border-r-transparent hover:border-r-primary/40",
@@ -1488,7 +1488,7 @@ export default function AttendancePage() {
                             <div className="relative">
                               <div
                                 className={cn(
-                                  "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm group-hover/row:scale-110 transition-all duration-500 shrink-0",
+                                  "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm group-hover/row:scale-110 transition-all shrink-0",
                                   isSelected
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 text-slate-600 dark:text-slate-400 border border-border/50",
@@ -2024,3 +2024,4 @@ export default function AttendancePage() {
     </div>
   );
 }
+

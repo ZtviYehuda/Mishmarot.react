@@ -405,7 +405,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full animate-in fade-in duration-500 pb-20">
+    <div className="flex flex-col min-h-full pb-20">
       <div className="pt-6 pb-2 shrink-0 transition-all px-4">
         <PageHeader
           icon={SettingsIcon}
@@ -454,7 +454,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Content Area */}
-        <div className="min-w-0 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-4 pb-24 lg:pb-8">
+        <div className="min-w-0 mt-4 pb-24 lg:pb-8">
           {activeTab === "profile" && !user?.is_temp_commander && (
             <ProfileSettings
               user={user}
@@ -614,7 +614,7 @@ function TabItem({
     <button
       onClick={onClick}
       className={`
-        relative px-4 py-2.5 rounded-lg transition-all duration-200 font-bold text-sm whitespace-nowrap
+        relative px-4 py-2.5 rounded-lg transition-all font-bold text-sm whitespace-nowrap
         ${active
           ? "text-primary bg-primary/10"
           : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
@@ -628,3 +628,4 @@ function TabItem({
     </button>
   );
 }
+

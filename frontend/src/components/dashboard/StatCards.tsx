@@ -45,7 +45,7 @@ export const StatCards = ({ stats }: StatCardsProps) => {
             <div className="mt-6 flex items-center gap-2">
               <div className="flex-grow h-1.5 bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full transition-all duration-1000 "
+                  className="h-full transition-all "
                   style={{
                     backgroundColor: stat.color || "#0074ff",
                     width: `${Math.min(100, (stat.count / 40) * 100)}%`,
@@ -62,3 +62,4 @@ export const StatCards = ({ stats }: StatCardsProps) => {
     </div>
   );
 };
+

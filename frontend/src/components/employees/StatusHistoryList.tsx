@@ -13,6 +13,7 @@ import { he } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import type { DayButtonProps } from "react-day-picker";
+import { ChevronDown } from "lucide-react";
 
 interface StatusLog {
   id: number;
@@ -70,13 +71,10 @@ export default function StatusHistoryList({
     return format(new Date(dateStr), "dd/MM/yy HH:mm", { locale: he });
   };
 
-  const [showAll, setShowAll] = useState(false);
+  const [displayCount, setDisplayCount] = useState(limit || 3);
 
   // List View Logic
-  const displayLimit = showAll ? undefined : limit;
-  const displayHistory = displayLimit
-    ? history.slice(0, displayLimit)
-    : history;
+  const displayHistory = history.slice(0, displayCount);
 
   // Calendar View Logic
   const selectedDayLogs = useMemo(() => {
@@ -175,7 +173,7 @@ export default function StatusHistoryList({
       )}
 
       {viewMode === "list" ? (
-        <div className="relative space-y-4 animate-in fade-in duration-300">
+        <div className="relative space-y-4">
           {/* Timeline Connector */}
           <div className="absolute top-0 bottom-0 right-[21px] w-0.5 bg-border/50" />
 
@@ -235,7 +233,7 @@ export default function StatusHistoryList({
           ))}
         </div>
       ) : (
-        <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+        <div className="flex flex-col gap-6">
           <div className="flex justify-center bg-card rounded-2xl border border-border/50 p-4 ">
             <Calendar
               mode="single"
@@ -307,20 +305,16 @@ export default function StatusHistoryList({
 
       {/* Footer Actions (Only show in List mode or if forced?) -> Let's show in both but contextually */}
       {viewMode === "list" && (
-        <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-border/50">
-          {/* Show All Toggle */}
-          {limit && history.length > limit && (
+        <div className="flex flex-col items-center justify-center gap-4 pt-4 border-t border-border/50">
+          {/* Show More Button */}
+          {history.length > displayCount && (
             <button
-              onClick={() => setShowAll(!showAll)}
-              className="text-xs font-bold text-primary hover:underline transition-all"
+              onClick={() => setDisplayCount((prev) => prev + 10)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 transition-all group"
             >
-              {showAll ? "הצג פחות" : `הצג את כל ה-${history.length} דיווחים`}
+              הצג 10 דיווחים נוספים
+              <ChevronDown className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
             </button>
-          )}
-
-          {/* Separator if needed */}
-          {limit && history.length > limit && (
-            <div className="h-4 w-px bg-border" />
           )}
 
           {/* Export Button */}
@@ -336,3 +330,4 @@ export default function StatusHistoryList({
     </div>
   );
 }
+

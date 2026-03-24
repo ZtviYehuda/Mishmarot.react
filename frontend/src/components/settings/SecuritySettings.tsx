@@ -115,7 +115,7 @@ export function SecuritySettings({
   const shouldShowAlert = daysSinceChange > 180;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full pb-24 lg:pb-0">
+    <div className=" w-full pb-24 lg:pb-0">
       {/* Alerts Area - Redesigned to be subtler but effective */}
       {(user?.is_impersonated || shouldShowAlert) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -245,7 +245,7 @@ export function SecuritySettings({
                   <div className="flex gap-1 h-1.5 px-1 mt-3">
                     <div
                       className={cn(
-                        "flex-1 rounded-full transition-all duration-500",
+                        "flex-1 rounded-full transition-all",
                         passwordData.new_password.length > 0
                           ? passwordData.new_password.length < 6
                             ? "bg-red-500/60"
@@ -255,7 +255,7 @@ export function SecuritySettings({
                     />
                     <div
                       className={cn(
-                        "flex-1 rounded-full transition-all duration-500",
+                        "flex-1 rounded-full transition-all",
                         passwordData.new_password.length >= 6
                           ? "bg-emerald-500/60"
                           : "bg-muted",
@@ -263,7 +263,7 @@ export function SecuritySettings({
                     />
                     <div
                       className={cn(
-                        "flex-1 rounded-full transition-all duration-500",
+                        "flex-1 rounded-full transition-all",
                         passwordData.new_password.length >= 10
                           ? "bg-emerald-500/60"
                           : "bg-muted",
@@ -606,7 +606,7 @@ function TabButton({ active, label, onClick, isSuspicious }: any) {
     <button
       onClick={onClick}
       className={cn(
-        "px-5 py-2 rounded-xl text-xs font-black transition-all duration-300",
+        "px-5 py-2 rounded-xl text-xs font-black transition-all",
         active
           ? isSuspicious
             ? "bg-destructive text-white  "
@@ -639,3 +639,4 @@ function SecurityGuideItem({ icon: Icon, title, desc, color }: any) {
     </div>
   );
 }
+

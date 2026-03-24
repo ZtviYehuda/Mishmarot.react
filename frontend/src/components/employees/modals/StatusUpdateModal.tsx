@@ -39,7 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface StatusUpdateModalProps {
   open: boolean;
@@ -272,7 +271,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
       >
         {delegationResult ? (
           // View 2: Delegation Result
-          <div className="p-8 space-y-8 animate-in fade-in zoom-in-95 duration-500 text-center relative">
+          <div className="p-8 space-y-8 text-center relative">
             <div className="flex flex-col items-center gap-4">
               <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-500/10 flex items-center justify-center text-emerald-600 border-2 border-emerald-500/20">
                 <Shield className="w-10 h-10" />
@@ -473,7 +472,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                           >
                             <div
                               className={cn(
-                                "w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
+                                "w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all",
                                 sel
                                   ? "bg-white/20 rotate-12"
                                   : "bg-muted/70 group-hover:bg-primary/10 group-hover:scale-110",
@@ -511,20 +510,11 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                     </div>
 
                     {/* Sub Statuses Grid - Cool Popping Submenu */}
-                    <AnimatePresence mode="wait">
-                      {activeParentId &&
+                    {activeParentId &&
                         subStatusMap[activeParentId] &&
                         subStatusMap[activeParentId].length > 0 && (
-                          <motion.div
+                          <div
                             key={`sub-${activeParentId}`}
-                            initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                            transition={{
-                              type: "spring",
-                              damping: 20,
-                              stiffness: 300,
-                            }}
                             className="mt-6 p-4 bg-primary/[0.03] dark:bg-primary/[0.02] border border-primary/20 rounded-[2rem] shadow-xl shadow-primary/5 backdrop-blur-md relative overflow-visible"
                           >
                             <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.05] to-transparent pointer-events-none" />
@@ -533,18 +523,14 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             </p>
                             <div className="grid grid-cols-3 gap-3 relative z-10">
                               {subStatusMap[activeParentId].map(
-                                (sub: any, idx: number) => {
+                                (sub: any) => {
                                   const SubIcon = getStatusIcon(sub.name);
                                   const isSubSel =
                                     formData.status_type_id ===
                                     sub.id.toString();
                                   return (
-                                    <motion.button
+                                    <button
                                       key={sub.id}
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ delay: idx * 0.05 }}
-                                      whileTap={{ scale: 0.95 }}
                                       type="button"
                                       onClick={() =>
                                         setFormData((p) => ({
@@ -561,7 +547,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                     >
                                       <div
                                         className={cn(
-                                          "p-2 rounded-xl transition-all duration-300",
+                                          "p-2 rounded-xl transition-all",
                                           isSubSel
                                             ? "bg-primary/10 text-primary rotate-6"
                                             : "bg-muted/50 text-muted-foreground/60 group-hover:bg-primary/5 group-hover:text-primary group-hover:-rotate-6",
@@ -580,23 +566,19 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                         {sub.name}
                                       </span>
                                       {isSubSel && (
-                                        <motion.div
-                                          layoutId="sub-sel-check"
-                                          initial={{ scale: 0 }}
-                                          animate={{ scale: 1 }}
+                                        <div
                                           className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-800"
                                         >
                                           <CheckCircle2 className="w-2.5 h-2.5 text-white" />
-                                        </motion.div>
+                                        </div>
                                       )}
-                                    </motion.button>
+                                    </button>
                                   );
                                 },
                               )}
                             </div>
-                          </motion.div>
+                          </div>
                         )}
-                    </AnimatePresence>
                   </div>
                 )}
 
@@ -731,7 +713,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                   />
                                 </div>
                                 {isDelegating && candidates.length > 0 && (
-                                  <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                                  <div className="space-y-1.5">
                                     <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                                       בחר מחליף
                                     </Label>

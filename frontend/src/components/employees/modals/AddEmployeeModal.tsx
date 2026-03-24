@@ -192,7 +192,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
               {/* Username & Password – only when access is granted */}
               {hasAccess && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
                   <InputGroup label="שם משתמש *" icon={ShieldCheck}>
                     <Input
                       value={formData.username}
@@ -342,3 +342,4 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     </Dialog>
   );
 };
+

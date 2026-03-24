@@ -208,7 +208,7 @@ export default function MainLayout() {
           "bg-card/80 backdrop-blur-xl border-l border-border/40 flex flex-col z-[100] fixed right-0 lg:sticky lg:right-auto top-0 h-[100dvh] overflow-hidden flex-shrink-0",
           // Mobile: keep w-72 always, only slide translateX (RIGHT = off-screen in RTL)
           // Desktop: width animates between w-24 ↔ w-72
-          "w-72 transition-transform lg:transition-all duration-150 ease-out",
+          "w-72 transition-transform lg:transition-all ease-out",
           isSidebarOpen
             ? "translate-x-0 lg:w-72"
             : "translate-x-full lg:translate-x-0 lg:w-24",
@@ -231,7 +231,7 @@ export default function MainLayout() {
               src="/logo_unit.png"
               alt="לוגו"
               className={cn(
-                "object-contain transition-all duration-100",
+                "object-contain transition-all",
                 // Collapsed sidebar: larger floating logo; open: slightly smaller
                 isSidebarOpen ? "w-12 h-12" : "w-14 h-14",
               )}
@@ -275,7 +275,7 @@ export default function MainLayout() {
               >
                 <Icon
                   className={cn(
-                    "w-6 h-6 shrink-0 transition-transform duration-150 group-hover:scale-110",
+                    "w-6 h-6 shrink-0 transition-transform group-hover:scale-110",
                     isActive
                       ? "text-primary"
                       : "text-muted-foreground group-hover:text-primary",
@@ -284,7 +284,7 @@ export default function MainLayout() {
                 />
                 <span
                   className={cn(
-                    "text-sm font-black tracking-tight truncate flex-1 text-right transition-all duration-150",
+                    "text-sm font-black tracking-tight truncate flex-1 text-right transition-all",
                     isSidebarOpen
                       ? "opacity-100 translate-x-0"
                       : "opacity-0 translate-x-10 absolute right-12 w-0",
@@ -293,7 +293,7 @@ export default function MainLayout() {
                   {item.name}
                 </span>
                 {isActive && (
-                  <div className="absolute left-1 w-1 h-5 bg-primary rounded-full transition-opacity duration-100" />
+                  <div className="absolute left-1 w-1 h-5 bg-primary rounded-full transition-opacity" />
                 )}
               </Link>
             );
@@ -326,7 +326,7 @@ export default function MainLayout() {
             </div>
             <div
               className={cn(
-                "flex flex-col min-w-0 text-right transition-all duration-300",
+                "flex flex-col min-w-0 text-right transition-all",
                 isSidebarOpen
                   ? "opacity-100 w-auto"
                   : "opacity-0 w-0 overflow-hidden",
@@ -417,7 +417,7 @@ export default function MainLayout() {
                 <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all">
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-primary text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card   animate-in zoom-in duration-300">
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-primary text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card  ">
                       {unreadCount}
                     </span>
                   )}
@@ -898,3 +898,4 @@ export default function MainLayout() {
     </div >
   );
 }
+

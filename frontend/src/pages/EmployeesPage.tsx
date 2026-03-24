@@ -37,7 +37,7 @@ export default function EmployeesPage() {
         : "יחידה";
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500">
+    <div className="flex flex-col">
       <div className="pt-6 pb-4 shrink-0 transition-all">
         <PageHeader
           icon={Users}
@@ -58,3 +58,4 @@ export default function EmployeesPage() {
     </div>
   );
 }
+

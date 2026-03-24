@@ -178,7 +178,7 @@ export function ForgotPasswordDialog({
                 className="space-y-6"
               >
                 <div className="p-5 rounded-2xl bg-muted/40 border border-border/50 flex items-center gap-4 relative overflow-hidden group hover:bg-muted/60 transition-colors">
-                  <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="bg-background p-3 rounded-xl border  relative z-10 text-primary">
                     <Mail className="w-5 h-5" />
                   </div>
@@ -321,3 +321,4 @@ export function ForgotPasswordDialog({
     </Dialog>
   );
 }
+

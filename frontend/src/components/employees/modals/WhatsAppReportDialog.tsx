@@ -243,7 +243,7 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
           </div>
 
           {sendOption === "custom" && (
-            <div className="space-y-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="space-y-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50">
               {Object.entries(uniqueValues).map(
                 ([key, values]) =>
                   values.length > 0 && (
@@ -351,3 +351,4 @@ export const WhatsAppReportDialog: React.FC<WhatsAppReportDialogProps> = ({
     </Dialog>
   );
 };
+

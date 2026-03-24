@@ -188,7 +188,7 @@ function MonthDayCell({ stats, isCurrentMonth, selectedDate, onClick }: {
   return (
     <motion.div whileTap={{ scale: 0.97 }} onClick={onClick}
       className={cn(
-        "relative flex flex-col items-center p-1.5 rounded-xl cursor-pointer border transition-all duration-300 overflow-hidden select-none h-[76px] md:h-[105px] group",
+        "relative flex flex-col items-center p-1.5 rounded-xl cursor-pointer border transition-all overflow-hidden select-none h-[76px] md:h-[105px] group",
         !isCurrentMonth && "opacity-20 pointer-events-none",
         isWeekend && isCurrentMonth && "bg-muted/10 opacity-40",
         getHeatmapClass(),
@@ -242,11 +242,11 @@ function MonthDayCell({ stats, isCurrentMonth, selectedDate, onClick }: {
       {/* Status Continuity Bar (Bottom edge) */}
       {total > 0 && !isWeekend && (
         <div className="absolute bottom-0 left-0 right-0 h-[3px] md:h-[1.5px] bg-border/20 flex w-full">
-          <div className="h-full transition-all duration-1000 ease-in-out bg-emerald-500"
+          <div className="h-full transition-all ease-in-out bg-emerald-500"
             style={{ width: `${presentPct * 100}%` }} />
-          <div className="h-full transition-all duration-1000 ease-in-out bg-amber-400"
+          <div className="h-full transition-all ease-in-out bg-amber-400"
             style={{ width: `${((reported - present) / total) * 100}%` }} />
-          <div className="h-full transition-all duration-1000 ease-in-out bg-rose-500/30"
+          <div className="h-full transition-all ease-in-out bg-rose-500/30"
             style={{ width: `${((total - reported) / total) * 100}%` }} />
         </div>
       )}
@@ -310,9 +310,9 @@ function WeekDayRow({ stats, selectedDate, onClick }: {
             ))}
           </div>
           <div className="h-1 bg-border/30 rounded-full overflow-hidden flex w-full">
-            <div className="h-full transition-all duration-700 bg-[#10b981]"
+            <div className="h-full transition-all bg-[#10b981]"
               style={{ width: `${(stats.present / stats.total) * 100}%` }} />
-            <div className="h-full transition-all duration-700 bg-amber-500/80"
+            <div className="h-full transition-all bg-amber-500/80"
               style={{ width: `${((stats.reported - stats.present) / stats.total) * 100}%` }} />
           </div>
         </div>
@@ -433,68 +433,85 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
       {/* ── Export target ── */}
       <div ref={detailRef} className="flex flex-col gap-4 bg-card/60 rounded-2xl p-4 border border-border/40">
 
-        {/* Statistics Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 py-2">
-          {/* Day & Date Title */}
-          <div className="flex flex-col gap-1">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">
-              {format(stats.date, "EEEE", { locale: he })}
-            </p>
-            <h2 className={cn("text-3xl font-black leading-tight tracking-tight", today ? "text-primary transition-colors" : "text-foreground")}>
-              {format(stats.date, "d MMMM yyyy", { locale: he })}
-            </h2>
-          </div>
+        {/* Statistics Header Section — Responsive Layout */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 py-2">
+          {/* Date */}
+          <p className={cn("text-xl font-black leading-none tracking-tight", today ? "text-primary" : "text-foreground")}>
+            {format(stats.date, "EEEE, d MMMM yyyy", { locale: he })}
+          </p>
 
-          {/* Compact Integrated Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
-            {/* Reporting Badge */}
-            <div className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/20 rounded-2xl px-4 py-2.5 transition-all hover:bg-primary/[0.08] hover:shadow-sm">
-              <div className="flex flex-col items-center flex-1">
-                <span className={cn("text-2xl font-black leading-none tracking-tighter", pct < 0.7 ? "text-rose-500" : "text-primary")}>
-                  {Math.round(pct * 100)}%
-                </span>
-                <span className="text-[8px] font-black text-primary/50 uppercase tracking-widest mt-1">אחוז דיווח</span>
-              </div>
-              <div className="w-px h-8 bg-primary/20 self-center shrink-0" />
-              <div className="flex flex-col items-center flex-1">
-                <span className="text-xs font-black text-foreground leading-none">{stats.reported}/{stats.total}</span>
-                <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1 text-center">חברי סגל</span>
+          {/* Compact pill badges — Responsive Grouping */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Reporting pill */}
+            <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-xl px-3 sm:px-4 py-2 shrink-0">
+              <span className={cn("text-lg font-black leading-none", pct < 0.7 ? "text-rose-500" : "text-primary")}>
+                {Math.round(pct * 100)}%
+              </span>
+              <div className="w-px h-5 bg-primary/20 mx-1" />
+              <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5">
+                <span className="text-sm font-bold text-primary/50 leading-none">{stats.reported}/{stats.total}</span>
+                <span className="text-[10px] sm:text-sm font-black text-primary/40 leading-none">דיווח</span>
               </div>
             </div>
 
-            {/* Presence Badge */}
-            <div className="flex items-center justify-between gap-3 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl px-4 py-2.5 transition-all hover:bg-emerald-500/[0.08] hover:shadow-sm">
-              <div className="flex flex-col items-center flex-1">
-                <span className={cn("text-2xl font-black leading-none tracking-tighter", presentPct < 0.5 ? "text-rose-500" : "text-emerald-600")}>
-                  {Math.round(presentPct * 100)}%
-                </span>
-                <span className="text-[8px] font-black text-emerald-600/50 uppercase tracking-widest mt-1">אחוז נוכחות</span>
-              </div>
-              <div className="w-px h-8 bg-emerald-500/20 self-center shrink-0" />
-              <div className="flex flex-col items-center flex-1">
-                <span className="text-xs font-black text-foreground leading-none">{stats.present}/{stats.total}</span>
-                <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1 text-center">נוכחות בפועל</span>
+            {/* Presence pill */}
+            <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-3 sm:px-4 py-2 shrink-0">
+              <span className={cn("text-lg font-black leading-none", presentPct < 0.5 ? "text-rose-500" : "text-emerald-600")}>
+                {Math.round(presentPct * 100)}%
+              </span>
+              <div className="w-px h-5 bg-emerald-500/20 mx-1" />
+              <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5">
+                <span className="text-sm font-bold text-emerald-600/40 leading-none">{stats.present}/{stats.total}</span>
+                <span className="text-[10px] sm:text-sm font-black text-emerald-600/50 leading-none">נוכחות</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Action / Alert Context line */}
-        <div className="flex items-center gap-2 justify-center -mt-2">
+        {/* Action / Alert Context line + inline missing list */}
+        <div className="flex flex-col items-start gap-1">
           {stats.reported === stats.total && stats.total > 0 && (
             <div className="flex items-center gap-1.5 bg-emerald-500/10 rounded-full px-4 py-1.5 text-emerald-600 text-[10px] font-black border border-emerald-500/20 shadow-sm">
               <CheckCircle2 className="w-3 h-3" />כל הסגל דיווח במלואו!
             </div>
           )}
           {stats.reported < stats.total && stats.total > 0 && (
-            <button
-              onClick={() => setMissingExpanded((prev) => !prev)}
-              className="flex items-center gap-1.5 bg-rose-500/10 rounded-full px-4 py-1.5 text-rose-500 text-[10px] font-black border border-rose-500/20 shadow-sm transition-all hover:scale-105 hover:bg-rose-500/20 active:scale-95 cursor-pointer group"
-            >
-              <AlertCircle className={cn("w-3 h-3 transition-transform duration-300", missingExpanded && "rotate-12")} />
-              <span>{stats.total - stats.reported} חברי סגל טרם השלימו דיווח</span>
-              <ChevronDown className={cn("w-3 h-3 transition-transform", missingExpanded && "rotate-180")} />
-            </button>
+            <div className="w-full">
+              <button
+                onClick={() => setMissingExpanded((prev) => !prev)}
+                className="flex items-center gap-1.5 bg-rose-500/10 rounded-full px-4 py-1.5 text-rose-500 text-[10px] font-black border border-rose-500/20 shadow-sm transition-all hover:bg-rose-500/20 active:scale-95 cursor-pointer"
+              >
+                <AlertCircle className={cn("w-3 h-3 transition-transform", missingExpanded && "rotate-12")} />
+                <span>{stats.total - stats.reported} חברי סגל טרם השלימו דיווח</span>
+                <ChevronDown className={cn("w-3 h-3 transition-transform", missingExpanded && "rotate-180")} />
+              </button>
+              {/* Missing list — opens directly below the button */}
+              <AnimatePresence>
+                {missingExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="overflow-hidden mt-1.5"
+                  >
+                    <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-2.5">
+                      <div className="flex flex-wrap gap-1">
+                        {stats.missing.map((emp) => (
+                          <button
+                            key={emp.id}
+                            onClick={() => openProfile(emp.id)}
+                            className="text-[11px] font-black px-2.5 py-1 rounded-xl border border-rose-500 bg-rose-500/5 text-foreground shadow-sm transition-all hover:scale-105 active:scale-95"
+                          >
+                            {emp.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           )}
         </div>
 
@@ -539,7 +556,7 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
                       style={{ color: group.color }}
                     >
                       <span>לרשימה המלאה ({group.emps.length})</span>
-                      <ChevronDown className={cn("w-3 h-3 transition-transform duration-150",
+                      <ChevronDown className={cn("w-3 h-3 transition-transform",
                         expandedGroups.has(group.name) && "rotate-180")} />
                     </button>
 
@@ -558,7 +575,7 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
                               <button
                                 key={emp.id}
                                 onClick={() => openProfile(emp.id)}
-                                className="text-[11px] font-black px-2.5 py-1 rounded-xl border transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm"
+                                className="text-[11px] font-black px-2.5 py-1 rounded-xl border transition-all hover:scale-105 active:scale-95 shadow-sm"
                                 style={{
                                   borderColor: group.color,
                                   color: "var(--foreground)",
@@ -579,48 +596,13 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
           </div>
         )}
 
-        {/* Missing employees */}
+        {/* Missing count label (no duplicate list — list is shown inline above) */}
         {stats.missing.length > 0 && (
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                לא דיווחו ({stats.missing.length})
-              </p>
-              <button
-                onClick={() => setMissingExpanded((v) => !v)}
-                className="flex items-center gap-1 text-[10px] font-black text-rose-500 hover:underline"
-              >
-                <span>לרשימה</span>
-                <ChevronDown className={cn("w-3 h-3 transition-transform duration-150",
-                  missingExpanded && "rotate-180")} />
-              </button>
-            </div>
-            <AnimatePresence>
-              {missingExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="overflow-hidden"
-                >
-                  <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-2.5">
-                    <div className="flex flex-wrap gap-1">
-                      {stats.missing.map((emp) => (
-                        <button
-                          key={emp.id}
-                          onClick={() => openProfile(emp.id)}
-                          className="text-[11px] font-black px-2.5 py-1 rounded-xl border border-rose-500 bg-rose-500/5 text-foreground shadow-sm transition-all duration-200 hover:scale-105 active:scale-95"
-                        >
-                          {emp.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              לא דיווחו ({stats.missing.length})
+            </p>
           </div>
         )}
 
@@ -831,3 +813,4 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose }:
     </motion.div>
   );
 }
+

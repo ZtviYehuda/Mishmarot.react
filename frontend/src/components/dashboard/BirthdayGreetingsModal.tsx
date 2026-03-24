@@ -316,7 +316,7 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
                     <div
                       key={emp.id}
                       className={cn(
-                        "flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300",
+                        "flex items-center justify-between p-3.5 rounded-2xl border transition-all",
                         isSent
                           ? "bg-muted/10 border-border/10 opacity-60"
                           : "bg-card border-border  hover:border-primary/30 hover:",
@@ -380,3 +380,4 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
     </Dialog>
   );
 };
+

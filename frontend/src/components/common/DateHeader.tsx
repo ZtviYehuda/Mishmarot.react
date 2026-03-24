@@ -1,9 +1,8 @@
 import React, { useMemo, useTransition } from "react";
-import { format, subDays, addDays, isSameDay } from "date-fns";
+import { format, subDays, addDays, isSameDay, differenceInCalendarDays } from "date-fns";
 import { he } from "date-fns/locale";
 import { ChevronRight, ChevronLeft, RefreshCw, Calendar as CalendarIcon } from "lucide-react";
 import { useDateContext } from "@/context/DateContext";
-import { motion, AnimatePresence } from "framer-motion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
@@ -18,9 +17,17 @@ export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = (
 
   const isToday = useMemo(() => isSameDay(selectedDate, new Date()), [selectedDate]);
 
+  const relativeDayInfo = useMemo(() => {
+    if (isToday) return null;
+    const diff = differenceInCalendarDays(selectedDate, new Date());
+    return diff < 0
+      ? { label: "עבר", isPast: true }
+      : { label: "עתיד", isPast: false };
+  }, [selectedDate, isToday]);
+
   return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <div className={cn("flex-1 flex items-center justify-between bg-card/40 backdrop-blur-xl border border-border/40 rounded-xl overflow-hidden h-10 shadow-none", compact ? "px-0" : "px-1")}>
+    <div className={cn("relative group flex items-center shrink-0", className)}>
+      <div className={cn("flex-1 flex items-center justify-between bg-card/40 backdrop-blur-xl border border-border/40 rounded-xl overflow-hidden h-10 shadow-none relative", compact ? "px-0" : "px-1")}>
         {/* Next Day (Right Arrow in RTL) */}
         {!compact && (
           <button
@@ -34,7 +41,7 @@ export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = (
         {/* Date Display with Calendar Picker */}
         <Popover>
           <PopoverTrigger asChild>
-            <div 
+            <div
               className={cn(
                 "flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all flex-1 min-w-0 px-3 sm:px-4 h-full",
                 isPending && "opacity-50 grayscale-[0.5] scale-95"
@@ -48,10 +55,40 @@ export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = (
                 <span className="text-xs sm:text-sm font-black text-primary tabular-nums leading-none whitespace-nowrap tracking-tight sm:tracking-normal">
                   {format(selectedDate, "d/M/yy")}
                 </span>
+
+                {/* היום */}
                 {isToday && (
                   <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20" title="היום">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                     <span className="hidden sm:block text-[8px] font-black text-emerald-600 uppercase">היום</span>
+                  </div>
+                )}
+
+                {/* עבר / עתיד */}
+                {relativeDayInfo && (
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 px-1.5 py-0.5 rounded-full border",
+                      relativeDayInfo.isPast
+                        ? "bg-amber-500/10 border-amber-500/20"
+                        : "bg-violet-500/10 border-violet-500/20"
+                    )}
+                    title={relativeDayInfo.label}
+                  >
+                    <div
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full shrink-0",
+                        relativeDayInfo.isPast ? "bg-amber-500" : "bg-violet-500"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "hidden sm:block text-[8px] font-black uppercase",
+                        relativeDayInfo.isPast ? "text-amber-600" : "text-violet-600"
+                      )}
+                    >
+                      {relativeDayInfo.label}
+                    </span>
                   </div>
                 )}
               </div>
@@ -80,20 +117,16 @@ export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = (
         )}
       </div>
 
-      {/* Quick Today Toggle */}
-      <AnimatePresence>
-        {!isToday && (
-          <motion.button
-            initial={{ opacity: 0, width: 0, x: 20 }}
-            animate={{ opacity: 1, width: 36, x: 0 }}
-            exit={{ opacity: 0, width: 0, x: 20 }}
-            onClick={handleToday}
-            className="h-9 w-9 flex items-center justify-center bg-primary text-primary-foreground rounded-xl transition-all active:scale-95 shrink-0"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Quick Today Toggle - FLOATING STYLE */}
+      {!isToday && (
+        <button
+          onClick={handleToday}
+          className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
+          title="חזרה להיום"
+        >
+          <RefreshCw className="w-3 h-3" />
+        </button>
+      )}
     </div>
   );
 };

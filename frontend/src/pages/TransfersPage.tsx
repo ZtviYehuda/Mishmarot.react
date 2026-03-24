@@ -381,7 +381,7 @@ export default function TransfersPage() {
   const canManage = user?.is_admin || user?.is_commander;
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500" dir="rtl">
+    <div className="flex flex-col" dir="rtl">
       <div className="pt-6 pb-4 shrink-0 transition-all">
         <PageHeader
           icon={ArrowLeftRight}
@@ -502,7 +502,7 @@ export default function TransfersPage() {
         {activeTab === "pending" && (
           <>
             {/* Mobile View - Pending Cards */}
-            <div className="md:hidden space-y-3 animate-in fade-in slide-in-from-bottom-3 duration-500">
+            <div className="md:hidden space-y-3">
               {loading ? (
                 <div className="bg-card rounded-2xl p-8 text-center text-muted-foreground animate-pulse border border-border">
                   טוען נתונים...
@@ -592,7 +592,7 @@ export default function TransfersPage() {
             </div>
 
             {/* Desktop View - Pending Table */}
-            <div className="hidden md:block bg-card rounded-2xl border border-border  overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="hidden md:block bg-card rounded-2xl border border-border  overflow-hidden">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader className="bg-muted/50 border-b border-border sticky top-0 z-10 backdrop-blur-sm">
@@ -713,7 +713,7 @@ export default function TransfersPage() {
                           </TableCell>
                           <TableCell className="px-6 py-4">
                             {req.reason ? (
-                              <div className="flex flex-col items-start gap-1 transition-all duration-300">
+                              <div className="flex flex-col items-start gap-1 transition-all">
                                 <span
                                   className={cn(
                                     "text-xs text-muted-foreground block max-w-[200px] break-words whitespace-pre-wrap transition-all",
@@ -776,7 +776,7 @@ export default function TransfersPage() {
         {activeTab === "history" && (
           <>
             {/* Mobile View - History Cards */}
-            <div className="md:hidden space-y-3 animate-in fade-in duration-500">
+            <div className="md:hidden space-y-3">
               {filteredHistory.length === 0 ? (
                 <div className="bg-card rounded-2xl p-12 text-center border border-dashed border-border">
                   <p className="text-sm font-bold text-muted-foreground italic">
@@ -850,7 +850,7 @@ export default function TransfersPage() {
             </div>
 
             {/* Desktop View - History Table */}
-            <div className="hidden md:block bg-card rounded-2xl border border-border  overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="hidden md:block bg-card rounded-2xl border border-border  overflow-hidden">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader className="bg-muted/30">
@@ -973,7 +973,7 @@ export default function TransfersPage() {
 
         {/* New Request Form */}
         {activeTab === "new" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-card rounded-[20px] border border-border  overflow-hidden">
                 <div className="px-4 sm:px-8 py-5 sm:py-6 border-b border-border/50">
@@ -1007,7 +1007,7 @@ export default function TransfersPage() {
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
                         {filteredEmployeesList.length > 0 && searchTerm && (
-                          <div className="absolute top-full mt-2 w-full z-50 bg-popover border border-border rounded-xl sm:rounded-2xl  overflow-hidden ring-4 ring-muted/10 animate-in fade-in zoom-in-95 duration-200">
+                          <div className="absolute top-full mt-2 w-full z-50 bg-popover border border-border rounded-xl sm:rounded-2xl  overflow-hidden ring-4 ring-muted/10">
                             {filteredEmployeesList.map((emp) => (
                               <button
                                 key={emp.id}
@@ -1575,7 +1575,7 @@ export default function TransfersPage() {
                             {/* Arrow Indicator */}
                             <div className="flex flex-col items-center justify-center shrink-0 z-10 -my-2 sm:my-0">
                               <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
-                                <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-90 sm:rotate-0 transition-transform duration-300" />
+                                <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-90 sm:rotate-0 transition-transform" />
                               </div>
                             </div>
 
@@ -1651,7 +1651,7 @@ export default function TransfersPage() {
                 <div className="p-4 sm:p-6 bg-muted/10 border-t border-border/50">
                   {/* Rejection / Snooze / Approve Logic */}
                   {isRejecting ? (
-                    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="space-y-3">
                       <Textarea
                         placeholder="נא לפרט את סיבת הדחייה..."
                         className="bg-background min-h-[100px] rounded-xl sm:rounded-2xl"
@@ -1676,7 +1676,7 @@ export default function TransfersPage() {
                       </div>
                     </div>
                   ) : isSnoozing ? (
-                    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2 mb-2">
                         <Calendar className="w-4 h-4 text-primary" />
                         <span className="text-sm font-bold">
@@ -1779,3 +1779,4 @@ export default function TransfersPage() {
     </div>
   );
 }
+

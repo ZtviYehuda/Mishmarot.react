@@ -277,6 +277,29 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       return null;
     };
 
+    const CustomXAxisTick = ({ x, y, payload }: any) => {
+      const words = payload.value.split(" ");
+      return (
+        <g transform={`translate(${x},${y})`}>
+          <text
+            x={0}
+            y={0}
+            dy={12}
+            textAnchor="middle"
+            fill="#64748b"
+            fontSize={10}
+            fontWeight={900}
+          >
+            {words.map((word: string, index: number) => (
+              <tspan x="0" dy={index === 0 ? 0 : 12} key={index}>
+                {word}
+              </tspan>
+            ))}
+          </text>
+        </g>
+      );
+    };
+
     const archiveThreshold = useMemo(() => subDays(new Date(), 30), []);
     const isOldData = useMemo(() => isBefore(selectedDate, archiveThreshold), [selectedDate, archiveThreshold]);
 
@@ -529,12 +552,9 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{
-                          fontSize: 10,
-                          fontWeight: 900,
-                          fill: "#64748b",
-                        }}
+                        tick={<CustomXAxisTick />}
                         interval={0}
+                        height={40}
                       />
                       <YAxis hide domain={[0, 'dataMax + 10']} />
                       <Tooltip

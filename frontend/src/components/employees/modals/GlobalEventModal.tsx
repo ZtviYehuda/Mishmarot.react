@@ -67,12 +67,6 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
   const [targetId, setTargetId] = useState<string>("");
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
   const [selectedSectionId, setSelectedSectionId] = useState<string>("");
-  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
-
-  // Reset targetId when scope changes
-  useEffect(() => {
-    setTargetId("");
-  }, [scope]);
 
   // --- Accessible lists per scope (flat, no cascading UI needed) ---
   const departments = useMemo(() => {
@@ -126,28 +120,42 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
     return result;
   }, [structure, isAdmin, user]);
 
+
+
+  // Smart filtering for cascading behavior
   const availableSections = useMemo(() => {
-    if (!selectedDeptId) return [];
-    return allSections.filter((s) => s.dept_id === parseInt(selectedDeptId));
+    if (selectedDeptId) {
+      return allSections.filter((s: any) => s.dept_id.toString() === selectedDeptId);
+    }
+    return allSections;
   }, [allSections, selectedDeptId]);
 
   const availableTeams = useMemo(() => {
-    if (!selectedSectionId) return [];
-    return allTeams.filter((t) => t.section_id === parseInt(selectedSectionId));
-  }, [allTeams, selectedSectionId]);
+    if (selectedSectionId) {
+      return allTeams.filter((t: any) => t.section_id.toString() === selectedSectionId);
+    }
+    if (selectedDeptId) {
+      const validSections = allSections
+        .filter((s: any) => s.dept_id.toString() === selectedDeptId)
+        .map((s: any) => s.id);
+      return allTeams.filter((t: any) => validSections.includes(t.section_id));
+    }
+    return allTeams;
+  }, [allTeams, selectedSectionId, selectedDeptId, allSections]);
 
-  // Auto-select when only one option
+  // Auto-select when only one option in active filtered list
   useEffect(() => {
     if (scope === "department" && departments.length === 1) {
       setTargetId(departments[0].id.toString());
-    } else if (scope === "section" && allSections.length === 1) {
-      setTargetId(allSections[0].id.toString());
-    } else if (scope === "team" && allTeams.length === 1) {
-      setTargetId(allTeams[0].id.toString());
-    } else {
-      setTargetId("");
+      setSelectedDeptId(departments[0].id.toString());
+    } else if (scope === "section" && availableSections.length === 1) {
+      setTargetId(availableSections[0].id.toString());
+      setSelectedSectionId(availableSections[0].id.toString());
+      if (!selectedDeptId) setSelectedDeptId(availableSections[0].dept_id.toString());
+    } else if (scope === "team" && availableTeams.length === 1) {
+      setTargetId(availableTeams[0].id.toString());
     }
-  }, [scope, departments, allSections, allTeams]);
+  }, [scope, departments, availableSections, availableTeams]);
 
   const isScopeDisabled = (scopeType: "team" | "section" | "department") => {
     if (isAdmin) return false;
@@ -195,7 +203,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
 
   // Shared card base styles
   const cardBase =
-    "flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border-2 transition-all duration-200 w-full text-right";
+    "flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border-2 transition-all w-full text-right";
   const cardActive =
     "border-primary bg-primary/10 text-primary shadow-sm scale-[1.02]";
   const cardInactive =
@@ -228,192 +236,155 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
             <>
               {/* Scope + Unit Selection — combined into 3 cards */}
               {/* Scope Selection (Toggle Cards) */}
-              {/* Level Selection Cards */}
+              {/* Level Selection Cards / Dropdowns */}
               {(isAdmin ||
                 user?.commands_department_id ||
                 user?.commands_section_id) && (
                 <div className="space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 pr-1">
                       <Users className="w-4 h-4 text-primary" />
-                      1. בחר רמה פיקודית לעדכון
+                      1. בחר רמה פיקודית ויחידה
                     </Label>
 
                     <div className="grid grid-cols-3 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setScope("department")}
-                        disabled={isScopeDisabled("department")}
-                        className={cn(
-                          cardBase,
-                          scope === "department" ? cardActive : cardInactive,
-                          isScopeDisabled("department") && cardDisabled,
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "p-1.5 rounded-lg",
-                            scope === "department"
-                              ? "bg-primary/20"
-                              : "bg-muted",
-                          )}
-                        >
-                          <Building2 className="w-5 h-5" />
-                        </div>
-                        <span className="text-sm font-black">מחלקה</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setScope("section")}
-                        disabled={isScopeDisabled("section")}
-                        className={cn(
-                          cardBase,
-                          scope === "section" ? cardActive : cardInactive,
-                          isScopeDisabled("section") && cardDisabled,
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "p-1.5 rounded-lg",
-                            scope === "section" ? "bg-primary/20" : "bg-muted",
-                          )}
-                        >
-                          <LayoutPanelLeft className="w-5 h-5" />
-                        </div>
-                        <span className="text-sm font-black">מדור</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setScope("team")}
-                        disabled={isScopeDisabled("team")}
-                        className={cn(
-                          cardBase,
-                          scope === "team" ? cardActive : cardInactive,
-                          isScopeDisabled("team") && cardDisabled,
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "p-1.5 rounded-lg",
-                            scope === "team" ? "bg-primary/20" : "bg-muted",
-                          )}
-                        >
-                          <Users className="w-5 h-5" />
-                        </div>
-                        <span className="text-sm font-black">חוליה</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Cascading Dropdowns */}
-                  <div className="space-y-3 bg-muted/20 p-4 rounded-2xl border border-border/40 animate-in fade-in zoom-in duration-300">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-4">
-                      2. הגדרת היחידה הנבחרת
-                    </Label>
-
-                    <div className="space-y-4">
-                      {/* Department Select (Always shown for filtering) */}
-                      <div className="space-y-1.5 text-right">
-                        <Label className="text-[11px] font-bold text-muted-foreground/80 pr-1">
-                          מחלקה
-                        </Label>
+                      {/* Department Select */}
                         <Select
-                          value={selectedDeptId}
+                          value={scope === "department" && targetId ? targetId : undefined}
                           onValueChange={(val) => {
+                            setScope("department");
+                            setTargetId(val);
                             setSelectedDeptId(val);
                             setSelectedSectionId("");
-                            setSelectedTeamId("");
-                            if (scope === "department") setTargetId(val);
                           }}
+                          disabled={isScopeDisabled("department") || departments.length === 0}
                         >
-                          <SelectTrigger className="h-11 bg-background border-border/40 rounded-xl font-bold text-sm">
-                            <SelectValue placeholder="בחירת מחלקה..." />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-border/40 shadow-xl scrollbar-none">
-                            {departments.map((d: any) => (
-                              <SelectItem key={d.id} value={d.id.toString()}>
-                                {d.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Section Select - Shown if scope is section or team */}
-                      {(scope === "section" || scope === "team") && (
-                        <div className="space-y-1.5 text-right animate-in slide-in-from-top-2 duration-200">
-                          <Label className="text-[11px] font-bold text-muted-foreground/80 pr-1">
-                            מדור
-                          </Label>
-                          <Select
-                            value={selectedSectionId}
-                            onValueChange={(val) => {
-                              setSelectedSectionId(val);
-                              setSelectedTeamId("");
-                              if (scope === "section") setTargetId(val);
-                            }}
-                            disabled={!selectedDeptId}
-                          >
-                            <SelectTrigger className="h-11 bg-background border-border/40 rounded-xl font-bold text-sm">
-                              <SelectValue placeholder="בחירת מדור..." />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl border-border/40 shadow-xl scrollbar-none">
-                              {availableSections.map((s: any) => (
-                                <SelectItem key={s.id} value={s.id.toString()}>
-                                  {s.name}
-                                </SelectItem>
-                              ))}
-                              {availableSections.length === 0 && (
-                                <SelectItem value="_" disabled>
-                                  אין מדורים זמינים
-                                </SelectItem>
+                        <SelectTrigger
+                          className={cn(
+                            cardBase,
+                            "h-full justify-start py-4 focus:ring-0 outline-none [&>svg]:hidden whitespace-normal text-center [&_[data-slot=select-value]]:line-clamp-3 [&_[data-slot=select-value]]:whitespace-normal [&_[data-slot=select-value]]:text-center",
+                            scope === "department" && targetId ? cardActive : cardInactive,
+                            (isScopeDisabled("department") || departments.length === 0) && cardDisabled,
+                          )}
+                        >
+                            <div
+                              className={cn(
+                                "p-2 rounded-xl mb-1 transition-colors shrink-0",
+                                scope === "department" && targetId
+                                  ? "bg-primary/20"
+                                  : "bg-muted",
                               )}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
+                            >
+                              <Building2 className="w-5 h-5" />
+                            </div>
+                            <span className="text-xs sm:text-[13px] font-black w-full text-center px-0.5 break-words leading-tight">
+                              <SelectValue placeholder="מחלקה" />
+                            </span>
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-border/40 shadow-xl max-h-48 custom-scrollbar relative z-[100]">
+                          {departments.map((d: any) => (
+                            <SelectItem key={d.id} value={d.id.toString()} className="font-bold cursor-pointer">
+                              {d.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
-                      {/* Team Select - Shown if scope is team */}
-                      {scope === "team" && (
-                        <div className="space-y-1.5 text-right animate-in slide-in-from-top-2 duration-200">
-                          <Label className="text-[11px] font-bold text-muted-foreground/80 pr-1">
-                            חוליה
-                          </Label>
-                          <Select
-                            value={selectedTeamId}
-                            onValueChange={(val) => {
-                              setSelectedTeamId(val);
-                              setTargetId(val);
-                            }}
-                            disabled={!selectedSectionId}
-                          >
-                            <SelectTrigger className="h-11 bg-background border-border/40 rounded-xl font-bold text-sm">
-                              <SelectValue placeholder="בחירת חוליה..." />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl border-border/40 shadow-xl scrollbar-none">
-                              {availableTeams.map((t: any) => (
-                                <SelectItem key={t.id} value={t.id.toString()}>
-                                  {t.name}
-                                </SelectItem>
-                              ))}
-                              {availableTeams.length === 0 && (
-                                <SelectItem value="_" disabled>
-                                  אין חוליות זמינות
-                                </SelectItem>
+                      {/* Section Select */}
+                      <Select
+                        value={scope === "section" && targetId ? targetId : undefined}
+                        onValueChange={(val) => {
+                          setScope("section");
+                          setTargetId(val);
+                          setSelectedSectionId(val);
+                          const s = allSections.find((x: any) => x.id.toString() === val);
+                          if (s) setSelectedDeptId(s.dept_id.toString());
+                        }}
+                        disabled={isScopeDisabled("section") || availableSections.length === 0}
+                      >
+                        <SelectTrigger
+                          className={cn(
+                            cardBase,
+                            "h-full justify-start py-4 focus:ring-0 outline-none [&>svg]:hidden whitespace-normal text-center [&_[data-slot=select-value]]:line-clamp-3 [&_[data-slot=select-value]]:whitespace-normal [&_[data-slot=select-value]]:text-center",
+                            scope === "section" && targetId ? cardActive : cardInactive,
+                            (isScopeDisabled("section") || availableSections.length === 0) && cardDisabled,
+                          )}
+                        >
+                            <div
+                              className={cn(
+                                "p-2 rounded-xl mb-1 transition-colors shrink-0",
+                                scope === "section" && targetId
+                                  ? "bg-primary/20"
+                                  : "bg-muted",
                               )}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
+                            >
+                              <LayoutPanelLeft className="w-5 h-5" />
+                            </div>
+                            <span className="text-xs sm:text-[13px] font-black w-full text-center px-0.5 break-words leading-tight">
+                              <SelectValue placeholder="מדור" />
+                            </span>
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-border/40 shadow-xl max-h-48 custom-scrollbar relative z-[100]">
+                          {availableSections.map((s: any) => (
+                            <SelectItem key={s.id} value={s.id.toString()} className="font-bold cursor-pointer">
+                              {s.name} <span className="text-[9px] text-muted-foreground mr-1">({s.dept_name})</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      {/* Team Select */}
+                      <Select
+                        value={scope === "team" && targetId ? targetId : undefined}
+                        onValueChange={(val) => {
+                          setScope("team");
+                          setTargetId(val);
+                          const t = allTeams.find((x: any) => x.id.toString() === val);
+                          if (t) {
+                            setSelectedSectionId(t.section_id.toString());
+                            const s = allSections.find((x: any) => x.id === t.section_id);
+                            if (s) setSelectedDeptId(s.dept_id.toString());
+                          }
+                        }}
+                        disabled={isScopeDisabled("team") || availableTeams.length === 0}
+                      >
+                        <SelectTrigger
+                          className={cn(
+                            cardBase,
+                            "h-full justify-start py-4 focus:ring-0 outline-none [&>svg]:hidden whitespace-normal text-center [&_[data-slot=select-value]]:line-clamp-3 [&_[data-slot=select-value]]:whitespace-normal [&_[data-slot=select-value]]:text-center",
+                            scope === "team" && targetId ? cardActive : cardInactive,
+                            (isScopeDisabled("team") || availableTeams.length === 0) && cardDisabled,
+                          )}
+                        >
+                            <div
+                              className={cn(
+                                "p-2 rounded-xl mb-1 transition-colors shrink-0",
+                                scope === "team" && targetId
+                                  ? "bg-primary/20"
+                                  : "bg-muted",
+                              )}
+                            >
+                              <Users className="w-5 h-5" />
+                            </div>
+                            <span className="text-xs sm:text-[13px] font-black w-full text-center px-0.5 break-words leading-tight">
+                              <SelectValue placeholder="חוליה" />
+                            </span>
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-border/40 shadow-xl max-h-48 custom-scrollbar relative z-[100]">
+                          {availableTeams.map((t: any) => (
+                            <SelectItem key={t.id} value={t.id.toString()} className="font-bold cursor-pointer">
+                              {t.name} <span className="text-[9px] text-muted-foreground mr-1">({t.section_name})</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
               )}
             </>
           ) : (
-            <div className="flex items-center justify-center gap-2 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center justify-center gap-2 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive">
               <AlertCircle className="w-5 h-5" />
               <p className="text-sm font-bold">
                 אין לך הרשאות פיקודיות לביצוע פעולה זו
@@ -422,30 +393,24 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
           )}
 
           {/* Date Selection */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6">
             <div className="space-y-2.5">
-              <Label className="text-sm font-bold pr-1">תאריך התחלה</Label>
-              <div className="relative">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-muted/30 border-border/50 h-12 rounded-xl focus:ring-primary/20 font-medium pl-10"
-                />
-                <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              </div>
+              <Label className="text-xs sm:text-sm font-bold pr-1">תאריך התחלה</Label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="bg-muted/30 border-border/50 h-12 rounded-xl focus:ring-primary/20 font-medium px-2 sm:px-4 text-xs sm:text-base w-full block text-center"
+              />
             </div>
             <div className="space-y-2.5">
-              <Label className="text-sm font-bold pr-1">תאריך סיום</Label>
-              <div className="relative">
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-muted/30 border-border/50 h-12 rounded-xl focus:ring-primary/20 font-medium pl-10"
-                />
-                <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              </div>
+              <Label className="text-xs sm:text-sm font-bold pr-1">תאריך סיום</Label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="bg-muted/30 border-border/50 h-12 rounded-xl focus:ring-primary/20 font-medium px-2 sm:px-4 text-xs sm:text-base w-full block text-center"
+              />
             </div>
           </div>
 
@@ -475,7 +440,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
             ביטול
           </Button>
           <Button
-            className="flex-[2] rounded-xl h-12 font-black text-base shadow-[0_10px_20px_rgba(var(--primary-rgb),0.2)] hover:shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] hover:-translate-y-0.5 transition-all duration-300"
+            className="flex-[2] rounded-xl h-12 font-black text-base shadow-[0_10px_20px_rgba(var(--primary-rgb),0.2)] hover:shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] hover:-translate-y-0.5 transition-all"
             onClick={handleSubmit}
             disabled={isUpdatingScope || !hasCommandPower || !targetId}
           >
@@ -493,3 +458,4 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
     </Dialog>
   );
 };
+

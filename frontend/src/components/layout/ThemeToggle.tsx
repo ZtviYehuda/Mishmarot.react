@@ -60,7 +60,7 @@ export function ThemeToggle({
       {/* Sliding Background Indicator */}
       <div
         className={cn(
-          "absolute inset-y-1 w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-spring",
+          "absolute inset-y-1 w-[calc(50%-4px)] rounded-full transition-all ease-spring",
           theme === "dark"
             ? "translate-x-[calc(100%+4px)] bg-primary/20 border border-primary/30"
             : "translate-x-0 ml-1 bg-white shadow-sm",
@@ -70,7 +70,7 @@ export function ThemeToggle({
       {/* Light Option */}
       <div
         className={cn(
-          "flex-1 flex items-center justify-center gap-2 z-10 transition-colors duration-300",
+          "flex-1 flex items-center justify-center gap-2 z-10 transition-colors",
           theme === "light"
             ? "text-slate-800"
             : "text-slate-400 dark:text-slate-500",
@@ -83,7 +83,7 @@ export function ThemeToggle({
       >
         <Sun
           className={cn(
-            "w-5 h-5 transition-all duration-300",
+            "w-5 h-5 transition-all",
             theme === "light" && "fill-amber-500 text-amber-500 scale-110",
           )}
         />
@@ -95,7 +95,7 @@ export function ThemeToggle({
       {/* Dark Option */}
       <div
         className={cn(
-          "flex-1 flex items-center justify-center gap-2 z-10 transition-colors duration-300",
+          "flex-1 flex items-center justify-center gap-2 z-10 transition-colors",
           theme === "dark"
             ? "text-slate-100"
             : "text-slate-400 dark:text-slate-500",
@@ -108,7 +108,7 @@ export function ThemeToggle({
       >
         <Moon
           className={cn(
-            "w-5 h-5 transition-all duration-300",
+            "w-5 h-5 transition-all",
             theme === "dark" && "fill-blue-400 text-blue-400 scale-110",
           )}
         />
@@ -119,3 +119,4 @@ export function ThemeToggle({
     </div>
   );
 }
+

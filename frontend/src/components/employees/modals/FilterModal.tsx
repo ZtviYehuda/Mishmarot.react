@@ -302,7 +302,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               >
                 <ChevronDown
                   className={cn(
-                    "w-4 h-4 transition-transform duration-300",
+                    "w-4 h-4 transition-transform",
                     expandedSection === "org" && "rotate-180",
                   )}
                 />
@@ -310,7 +310,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             </button>
 
             {expandedSection === "org" && (
-              <div className="space-y-6 pr-2 sm:pr-14 animate-in fade-in slide-in-from-top-4 duration-500 pb-4">
+              <div className="space-y-6 pr-2 sm:pr-14 pb-4">
                 {/* Departments */}
                 <div className="space-y-3">
                   <Label className="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
@@ -455,7 +455,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               >
                 <ChevronDown
                   className={cn(
-                    "w-4 h-4 transition-transform duration-300",
+                    "w-4 h-4 transition-transform",
                     expandedSection === "security" && "rotate-180",
                   )}
                 />
@@ -463,7 +463,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             </button>
 
             {expandedSection === "security" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-2 sm:pr-14 animate-in fade-in slide-in-from-top-4 duration-500 pb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-2 sm:pr-14 pb-4">
                 {[
                   {
                     id: "isCommander",
@@ -561,7 +561,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               >
                 <div
                   className={cn(
-                    "w-3 h-3 bg-white rounded-full transition-all duration-300 ",
+                    "w-3 h-3 bg-white rounded-full transition-all",
                     filters.showInactive ? "translate-x-0" : "-translate-x-5",
                   )}
                 />

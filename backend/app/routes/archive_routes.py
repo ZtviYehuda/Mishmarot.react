@@ -3,12 +3,22 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.archive_model import ArchiveModel
 from app.models.employee_model import EmployeeModel
 
+import json
+
 archive_bp = Blueprint('archive', __name__)
 
 @archive_bp.route('/restore-request', methods=['POST'])
 @jwt_required()
 def create_restore_request():
-    user_id = get_jwt_identity()
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
     data = request.get_json()
     
     start_date = data.get('start_date')
@@ -26,7 +36,15 @@ def create_restore_request():
 @archive_bp.route('/requests/pending', methods=['GET'])
 @jwt_required()
 def get_pending_requests():
-    user_id = get_jwt_identity()
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
     user = EmployeeModel.get_by_id(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
@@ -37,7 +55,15 @@ def get_pending_requests():
 @archive_bp.route('/requests/resolve/<int:request_id>', methods=['POST'])
 @jwt_required()
 def resolve_request(request_id):
-    user_id = get_jwt_identity()
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
     data = request.get_json()
     
     status = data.get('status') # approved, rejected
@@ -54,14 +80,30 @@ def resolve_request(request_id):
 @archive_bp.route('/my-requests', methods=['GET'])
 @jwt_required()
 def get_my_requests():
-    user_id = get_jwt_identity()
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
     requests = ArchiveModel.get_requests_history(user_id)
     return jsonify(requests), 200
 
 @archive_bp.route('/all-requests', methods=['GET'])
 @jwt_required()
 def get_all_requests():
-    user_id = get_jwt_identity()
+    identity_raw = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
     user = EmployeeModel.get_by_id(user_id)
     if not user or not user.get('is_admin'):
         return jsonify({"error": "Unauthorized"}), 403

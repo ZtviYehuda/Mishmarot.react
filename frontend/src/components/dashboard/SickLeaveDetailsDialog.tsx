@@ -80,7 +80,7 @@ export const SickLeaveDetailsDialog: React.FC<SickLeaveDetailsDialogProps> = ({
             employees.map((emp) => (
               <div
                 key={emp.id}
-                className="group relative overflow-hidden bg-card border border-border/50 hover:border-red-500/30 hover: hover:-500/5 transition-all duration-300 rounded-[28px] p-5 flex items-center justify-between gap-4"
+                className="group relative overflow-hidden bg-card border border-border/50 hover:border-red-500/30 hover: hover:-500/5 transition-all rounded-[28px] p-5 flex items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-5 min-w-0">
                   <div className="h-14 w-14 shrink-0 rounded-2xl border border-border/50 flex items-center justify-center bg-muted/30 text-red-700 font-black text-xs group-hover:scale-110 transition-transform ">
@@ -156,3 +156,4 @@ export const SickLeaveDetailsDialog: React.FC<SickLeaveDetailsDialogProps> = ({
     </Dialog>
   );
 };
+

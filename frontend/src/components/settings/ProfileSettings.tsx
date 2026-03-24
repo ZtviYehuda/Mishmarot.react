@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Save,
@@ -8,11 +9,18 @@ import {
   Camera,
   Settings2,
   ShieldCheck,
+  Fingerprint,
+  CheckCircle2,
+  ShieldOff,
+  AlertCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cleanUnitName } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 interface ProfileSettingsProps {
   user: any;
@@ -39,8 +47,88 @@ export function ProfileSettings({
   handleImageUpload,
   readOnly = false,
 }: ProfileSettingsProps) {
+  const [biometricRegistered, setBiometricRegistered] = useState(false);
+  const [biometricPassword, setBiometricPassword] = useState("");
+  const [showBioPassword, setShowBioPassword] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
+  const [biometricError, setBiometricError] = useState("");
+
+  useEffect(() => {
+    const stored = localStorage.getItem(`biometric_registered_${user?.username}`);
+    setBiometricRegistered(!!stored);
+  }, [user?.username]);
+
+  const handleRegisterBiometric = async () => {
+    setBiometricError("");
+    if (!biometricPassword.trim()) {
+      setBiometricError("יש להזין את הסיסמה כדי לאמת את זהותך");
+      return;
+    }
+    if (!window.PublicKeyCredential) {
+      setBiometricError("הדפדפן אינו תומך בזיהוי ביומטרי — יש להשתמש ב-HTTPS");
+      return;
+    }
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (!available) {
+      setBiometricError("לא נמצא חיישן ביומטרי במכשיר זה");
+      return;
+    }
+    setBiometricLoading(true);
+    try {
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { name: "ShiftGuard", id: window.location.hostname },
+          user: {
+            id: new TextEncoder().encode(user.username),
+            name: user.username,
+            displayName: `${user.first_name} ${user.last_name}`,
+          },
+          pubKeyCredParams: [
+            { type: "public-key", alg: -7 },
+            { type: "public-key", alg: -257 },
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            userVerification: "required",
+          },
+          timeout: 60000,
+        },
+      }) as PublicKeyCredential;
+
+      if (!credential) throw new Error("ביטול על ידי המשתמש");
+
+      const credId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+      localStorage.setItem(`biometric_cred_${user.username}`, credId);
+      localStorage.setItem(`biometric_token_${user.username}`, btoa(`${user.username}:${biometricPassword}`));
+      localStorage.setItem(`biometric_registered_${user.username}`, "1");
+      setBiometricRegistered(true);
+      setBiometricPassword("");
+      toast.success("כניסה ביומטרית הופעלה בהצלחה!");
+    } catch (err: any) {
+      if (err.name === "NotAllowedError") {
+        setBiometricError("הגישה לזיהוי ביומטרי נדחתה — אנא נסה שנית");
+      } else {
+        setBiometricError(err.message || "שגיאה בהרשמה הביומטרית");
+      }
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
+
+  const handleRemoveBiometric = () => {
+    localStorage.removeItem(`biometric_cred_${user?.username}`);
+    localStorage.removeItem(`biometric_token_${user?.username}`);
+    localStorage.removeItem(`biometric_registered_${user?.username}`);
+    setBiometricRegistered(false);
+    setBiometricPassword("");
+    setBiometricError("");
+    toast.success("כניסה ביומטרית בוטלה");
+  };
+
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full pb-24 lg:pb-0">
+    <div className=" w-full pb-24 lg:pb-0">
       <div className="grid grid-cols-12 gap-4 sm:gap-8">
         {/* Main Settings Area */}
         <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-8 order-2 lg:order-1">
@@ -234,6 +322,91 @@ export function ProfileSettings({
             </div>
           </SectionCard>
 
+          {/* Biometric section */}
+          {!readOnly && (
+            <SectionCard
+              icon={Fingerprint}
+              title="כניסה ביומטרית"
+              badge={
+                biometricRegistered ? (
+                  <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-1">
+                    <CheckCircle2 className="w-3 h-3" /> מופעל
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[10px] font-black text-muted-foreground bg-muted/40 border border-border/40 rounded-full px-2.5 py-1">
+                    <ShieldOff className="w-3 h-3" /> לא מופעל
+                  </span>
+                )
+              }
+            >
+              {biometricRegistered ? (
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                      <Fingerprint className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-foreground">כניסה ביומטרית פעילה</p>
+                      <p className="text-[11px] font-bold text-muted-foreground">ניתן להתחבר עם טביעת אצבע / זיהוי פנים</p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleRemoveBiometric}
+                    className="h-11 rounded-xl border-red-500/20 bg-red-500/5 text-red-600 hover:bg-red-500/10 font-black text-sm gap-2"
+                  >
+                    <ShieldOff className="w-4 h-4" />
+                    בטל כניסה ביומטרית
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                    הפעל כניסה מהירה בטביעת אצבע או זיהוי פנים. הזן את הסיסמה שלך כדי לאשר את ההגדרה.
+                  </p>
+                  <div className="relative">
+                    <Input
+                      type={showBioPassword ? "text" : "password"}
+                      placeholder="הזן סיסמה נוכחית"
+                      value={biometricPassword}
+                      onChange={(e) => { setBiometricPassword(e.target.value); setBiometricError(""); }}
+                      className="h-12 rounded-xl border-border/40 bg-background/40 font-mono tracking-widest pr-4 pl-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowBioPassword(v => !v)}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showBioPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+
+                  {biometricError && (
+                    <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-xs font-bold">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {biometricError}
+                    </div>
+                  )}
+
+                  <Button
+                    type="button"
+                    onClick={handleRegisterBiometric}
+                    disabled={biometricLoading}
+                    className="h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm gap-2"
+                  >
+                    {biometricLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                    ) : (
+                      <Fingerprint className="w-4 h-4" />
+                    )}
+                    הפעל כניסה ביומטרית
+                  </Button>
+                </div>
+              )}
+            </SectionCard>
+          )}
+
           {!readOnly && (
             <div className="flex justify-end pt-4 sm:pt-8">
               <Button
@@ -267,7 +440,7 @@ export function ProfileSettings({
 
               <div className="relative">
                 <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 sm:border-8 border-background bg-card flex items-center justify-center text-primary text-3xl sm:text-5xl font-black   z-10 relative group overflow-hidden">
-                  <span className="group-hover:scale-110 transition-transform duration-500">
+                  <span className="group-hover:scale-110 transition-transform">
                     {user?.first_name?.[0]}
                     {user?.last_name?.[0]}
                   </span>
@@ -355,3 +528,4 @@ function UnitBadge({ label, value }: any) {
     </div>
   );
 }
+

@@ -198,7 +198,7 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
     <canvas
       ref={canvasRef}
       className={cn(
-        "fixed inset-0 pointer-events-none z-0 transition-colors duration-500",
+        "fixed inset-0 pointer-events-none z-0 transition-colors",
         theme === "dark" ? "bg-slate-950" : "bg-slate-50/80",
       )}
     />
@@ -230,14 +230,64 @@ export default function LoginPage() {
         setError("זיהוי ביומטרי דורש חיבור מאובטח (HTTPS) או מכשיר תומך.");
         return;
       }
-      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      if (!available) {
-        setError("לא נמצא חיישן ביומטרי מוגדר במכשיר (כגון טביעת אצבע או זיהוי פנים).");
+
+      // Determine which user to authenticate
+      const targetUsername = lockedUser?.username
+        || (username.trim() || null)
+        || localStorage.getItem("biometric_last_user");
+
+      if (!targetUsername) {
+        setError("הזן שם משתמש כדי להשתמש בכניסה ביומטרית.");
         return;
       }
-      setError("יש להגדיר כניסה ביומטרית בהגדרות המשתמש תחילה (טרם הופעל).");
-    } catch (e) {
-      setError("שגיאת גישה לאמצעי זיהוי ביומטרי.");
+
+      const credIdStr = localStorage.getItem(`biometric_cred_${targetUsername}`);
+      const token = localStorage.getItem(`biometric_token_${targetUsername}`);
+
+      if (!credIdStr || !token) {
+        setError("יש להפעיל כניסה ביומטרית בהגדרות המשתמש תחילה.");
+        return;
+      }
+
+      const credIdBytes = Uint8Array.from(atob(credIdStr), (c) => c.charCodeAt(0));
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          allowCredentials: [{ id: credIdBytes, type: "public-key" }],
+          userVerification: "required",
+          timeout: 60000,
+        },
+      });
+
+      if (!assertion) {
+        setError("זיהוי ביומטרי נכשל.");
+        return;
+      }
+
+      // Decode stored credentials and auto-login
+      const decoded = atob(token);
+      const colonIdx = decoded.indexOf(":");
+      const storedUsername = decoded.substring(0, colonIdx);
+      const storedPassword = decoded.substring(colonIdx + 1);
+
+      setIsLoading(true);
+      const success = await login(storedUsername, storedPassword);
+      if (success) {
+        localStorage.setItem("biometric_last_user", storedUsername);
+        navigate("/", { replace: true });
+      } else {
+        setError("שגיאת אימות — ייתכן שהסיסמה שונתה. עדכן את הגדרות הכניסה הביומטרית.");
+      }
+    } catch (err: any) {
+      if (err.name === "NotAllowedError") {
+        setError("הזיהוי הביומטרי בוטל.");
+      } else {
+        setError("שגיאת זיהוי ביומטרי: " + (err.message || "נסה שנית"));
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -272,9 +322,11 @@ export default function LoginPage() {
         navigate("/", { replace: true });
       } else {
         setError("שם משתמש או סיסמה שגויים.");
+        setPassword("");
       }
     } catch (err) {
       setError("שגיאת מערכת. אנא נסה שוב מאוחר יותר.");
+      setPassword("");
     } finally {
       setIsLoading(false);
     }
@@ -294,7 +346,7 @@ export default function LoginPage() {
   return (
     <div
       className={cn(
-        "h-screen overflow-y-auto bg-background flex flex-col font-sans relative transition-colors duration-500 custom-scrollbar",
+        "h-screen overflow-y-auto bg-background flex flex-col font-sans relative transition-colors custom-scrollbar",
         isDark ? "text-slate-100" : "text-slate-800",
       )}
       dir="rtl"
@@ -304,7 +356,7 @@ export default function LoginPage() {
       {/* Decorative Overlays - Theme Adaptive */}
       <div
         className={cn(
-          "fixed inset-0 pointer-events-none z-0 transition-colors duration-500",
+          "fixed inset-0 pointer-events-none z-0 transition-colors",
           isDark
             ? "bg-gradient-to-b from-transparent via-slate-950/50 to-slate-950"
             : "bg-gradient-to-b from-transparent via-slate-50/50 to-slate-100",
@@ -329,7 +381,7 @@ export default function LoginPage() {
           <div className="text-center mb-10 md:mb-14 relative">
             <h1
               className={cn(
-                "text-4xl md:text-6xl font-black bg-clip-text text-transparent tracking-tight mb-2 md:mb-3 uppercase transition-all duration-700",
+                "text-4xl md:text-6xl font-black bg-clip-text text-transparent tracking-tight mb-2 md:mb-3 uppercase transition-all",
                 "",
                 isDark
                   ? "bg-gradient-to-br from-white via-white to-slate-500"
@@ -350,7 +402,7 @@ export default function LoginPage() {
           {/* Login Card */}
           <div
             className={cn(
-              "backdrop-blur-xl border rounded-[2rem] md:rounded-[2.5rem] overflow-hidden ring-1 transition-all duration-300",
+              "backdrop-blur-xl border rounded-[2rem] md:rounded-[2.5rem] overflow-hidden ring-1 transition-all",
               isDark
                 ? "bg-slate-900/60 border-white/10  ring-white/5"
                 : "bg-white/70 border-white/50  ring-black/5",
@@ -359,7 +411,7 @@ export default function LoginPage() {
             <div className="p-6 md:p-10">
               {lockedUser ? (
                 /* LOCKED USER VIEW */
-                <div className="text-center animate-in fade-in zoom-in-95 duration-300">
+                <div className="text-center">
                   <div
                     className={cn(
                       "w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center border-2  font-black text-2xl relative group",
@@ -457,7 +509,7 @@ export default function LoginPage() {
                         disabled={isLoading}
                         className="flex-1 h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all  active:scale-[0.98] relative overflow-hidden group"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform" />
                         {isLoading ? (
                           <Loader2 className="w-5 h-5 animate-spin mx-auto" />
                         ) : (
@@ -602,7 +654,7 @@ export default function LoginPage() {
 
                     {/* Error Message */}
                     {error && (
-                      <div className="flex items-center gap-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl text-sm text-rose-500 font-medium animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex items-center gap-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl text-sm text-rose-500 font-medium">
                         <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
                           <AlertCircle className="h-5 w-5 text-rose-500" />
                         </div>
@@ -639,7 +691,7 @@ export default function LoginPage() {
                             </>
                           ) : (
                             <>
-                              <Crosshair className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+                              <Crosshair className="w-5 h-5 group-hover:rotate-90 transition-transform" />
                               כניסה למערכת
                             </>
                           )}
@@ -664,3 +716,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

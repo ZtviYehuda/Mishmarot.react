@@ -420,7 +420,7 @@ class AttendanceModel:
                 # Get status name
                 cur.execute("SELECT name FROM status_types WHERE id = %s", (status_type_id,))
                 st_res = cur.fetchone()
-                status_name = st_res[0] if st_res else "אירוע יחידה"
+                status_name = st_res['name'] if st_res else "אירוע יחידה"
                 
                 msg_title = f"נקבע {status_name}"
                 msg_desc = f"עבור התאריכים {start_date} עד {end_date or start_date}"

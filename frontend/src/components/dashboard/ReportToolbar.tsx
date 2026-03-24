@@ -56,7 +56,7 @@ export function ReportToolbar({
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-        className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]: transition-all duration-300"
+        className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]: transition-all"
               >
                 {tab.label}
               </TabsTrigger>
@@ -132,3 +132,4 @@ export function ReportToolbar({
     </div>
   );
 }
+

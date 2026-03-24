@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
             />
           </div>
 
-          <div className="relative z-10 flex flex-col items-center max-w-md w-full text-center animate-in fade-in zoom-in duration-500">
+          <div className="relative z-10 flex flex-col items-center max-w-md w-full text-center">
             {/* Animated Icon Container */}
             <div className="mb-8 relative">
               <div className="absolute inset-0 bg-red-500 blur-3xl opacity-20 animate-pulse rounded-full" />
@@ -106,3 +106,4 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+

@@ -79,12 +79,14 @@ const InfoItem = ({
 
   if (type === "email" && typeof cleanValue === "string") {
     return (
-      <a 
-        href={`mailto:${cleanValue}`} 
-        className={cn(wrapperClass, "hover:bg-primary/5 rounded-xl transition-colors p-1 -m-1")}
+      <button
+        type="button"
+        className={cn(wrapperClass, "hover:bg-primary/5 rounded-xl transition-colors p-1 -m-1 text-right")}
         onClick={(e) => {
-          // Manual trigger as fallback if href fails
-          window.location.href = `mailto:${cleanValue}`;
+          e.stopPropagation();
+          const a = document.createElement("a");
+          a.href = `mailto:${cleanValue}`;
+          a.click();
         }}
       >
         <span className="text-[10px] font-black text-muted-foreground dark:text-primary/60 uppercase tracking-[0.2em] flex items-center gap-2 group-hover/info:text-primary transition-colors">
@@ -92,7 +94,7 @@ const InfoItem = ({
           {label}
         </span>
         {content}
-      </a>
+      </button>
     );
   }
 

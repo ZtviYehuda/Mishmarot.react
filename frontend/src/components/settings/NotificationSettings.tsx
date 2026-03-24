@@ -51,7 +51,7 @@ export function NotificationSettings({
   ].filter(Boolean).length;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full pb-24 lg:pb-0">
+    <div className=" w-full pb-24 lg:pb-0">
       <div className="grid grid-cols-12 gap-8">
         {/* RIGHT SIDE - Main Notifications */}
         <div className="col-span-12 lg:col-span-8 space-y-8">
@@ -254,7 +254,7 @@ function SwitchItem({ label, desc, checked, onChange, icon: Icon }: any) {
   return (
     <div
       className={cn(
-        "flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border transition-all duration-300 group",
+        "flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border transition-all group",
         checked
           ? "bg-primary/5 border-border/40  "
           : "bg-background border-border/40 hover:border-border/40",
@@ -263,7 +263,7 @@ function SwitchItem({ label, desc, checked, onChange, icon: Icon }: any) {
       <div className="flex items-start gap-3 sm:gap-4">
         <div
           className={cn(
-            "p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-500",
+            "p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all",
             checked
               ? "bg-primary/10 text-primary scale-110"
               : "bg-muted/40 text-muted-foreground group-hover:bg-muted",
@@ -302,3 +302,4 @@ function InfoItemSimple({ title, desc }: any) {
     </div>
   );
 }
+

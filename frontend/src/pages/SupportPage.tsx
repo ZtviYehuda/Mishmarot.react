@@ -153,10 +153,11 @@ export default function SupportPage() {
           </div>
         </Card>
 
-        <div className="mt-8 flex items-center justify-center gap-4 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
+        <div className="mt-8 flex items-center justify-center gap-4 opacity-50 grayscale hover:grayscale-0 transition-all">
           {/* Placeholder for logos if needed */}
         </div>
       </motion.div>
     </div>
   );
 }
+
