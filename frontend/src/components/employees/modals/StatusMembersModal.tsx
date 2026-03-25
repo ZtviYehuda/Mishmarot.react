@@ -53,7 +53,7 @@ export const StatusMembersModal: React.FC<StatusMembersModalProps> = ({
         className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col p-0 border-none bg-card  rounded-3xl"
         dir="rtl"
       >
-        <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
+        <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-transparent text-right shrink-0">
           <div className="flex items-center gap-5">
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center text-white  rotate-3 shrink-0"
@@ -97,7 +97,7 @@ export const StatusMembersModal: React.FC<StatusMembersModalProps> = ({
             <div className="overflow-x-auto rounded-2xl border border-border/50">
               <table className="w-full text-right border-collapse min-w-[700px]">
                 <thead>
-                  <tr className="bg-muted/30 border-b border-border/50">
+                  <tr className="bg-transparent border-b border-border/50">
                     <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">
                       שוטר / שם משתמש
                     </th>
@@ -173,7 +173,7 @@ export const StatusMembersModal: React.FC<StatusMembersModalProps> = ({
           )}
         </div>
 
-        <div className="p-6 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
+        <div className="p-6 bg-transparent border-t border-border/50 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
               סה"כ רשומות מוצגות:

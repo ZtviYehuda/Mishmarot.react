@@ -2,11 +2,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Save,
-  User,
+  User as UserIcon,
   Phone,
   Heart,
   Building2,
-  Camera,
   Settings2,
   ShieldCheck,
   Fingerprint,
@@ -31,7 +30,6 @@ interface ProfileSettingsProps {
   relations: string[];
   isSaving: boolean;
   handleSaveProfile: () => void;
-  handleImageUpload: () => void;
   readOnly?: boolean;
 }
 
@@ -44,7 +42,6 @@ export function ProfileSettings({
   relations,
   isSaving,
   handleSaveProfile,
-  handleImageUpload,
   readOnly = false,
 }: ProfileSettingsProps) {
   const [biometricRegistered, setBiometricRegistered] = useState(false);
@@ -133,78 +130,84 @@ export function ProfileSettings({
         {/* Main Settings Area */}
         <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-8 order-2 lg:order-1">
           <SectionCard icon={User} title="פרטים אישיים">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <InputItem label="שם פרטי" required>
-                <Input
-                  disabled={readOnly}
-                  value={formData.first_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, first_name: e.target.value })
-                  }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
-                  placeholder="ישראל"
-                />
-              </InputItem>
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                <InputItem label="שם פרטי" required>
+                  <Input
+                    disabled={readOnly}
+                    value={formData.first_name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, first_name: e.target.value })
+                    }
+                    className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
+                    placeholder="ישראל"
+                  />
+                </InputItem>
 
-              <InputItem label="שם משפחה" required>
-                <Input
-                  disabled={readOnly}
-                  value={formData.last_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, last_name: e.target.value })
-                  }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
-                  placeholder="ישראלי"
-                />
-              </InputItem>
+                <InputItem label="שם משפחה" required>
+                  <Input
+                    disabled={readOnly}
+                    value={formData.last_name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, last_name: e.target.value })
+                    }
+                    className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
+                    placeholder="ישראלי"
+                  />
+                </InputItem>
 
-              <InputItem label="מספר טלפון">
-                <Input
-                  disabled={readOnly}
-                  value={formData.phone_number}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone_number: e.target.value })
-                  }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
-                  placeholder="050-0000000"
-                />
-              </InputItem>
+                <InputItem label="עיר מגורים">
+                  <Input
+                    disabled={readOnly}
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
+                    className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
+                    placeholder="תל אביב"
+                  />
+                </InputItem>
+              </div>
 
-              <InputItem label="כתובת אימייל">
-                <Input
-                  disabled={readOnly}
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
-                  placeholder="israel@example.com"
-                />
-              </InputItem>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <InputItem label="מספר טלפון">
+                  <Input
+                    disabled={readOnly}
+                    value={formData.phone_number}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone_number: e.target.value })
+                    }
+                    className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
+                    placeholder="050-0000000"
+                  />
+                </InputItem>
 
-              <InputItem label="עיר מגורים">
-                <Input
-                  disabled={readOnly}
-                  value={formData.city}
-                  onChange={(e) =>
-                    setFormData({ ...formData, city: e.target.value })
-                  }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
-                  placeholder="תל אביב"
-                />
-              </InputItem>
+                <InputItem label="כתובת אימייל">
+                  <Input
+                    disabled={readOnly}
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg"
+                    placeholder="israel@example.com"
+                  />
+                </InputItem>
+              </div>
 
-              <InputItem label="תאריך לידה">
-                <Input
-                  disabled={readOnly}
-                  type="date"
-                  value={formData.birth_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, birth_date: e.target.value })
-                  }
-                  className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg text-right"
-                />
-              </InputItem>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <InputItem label="תאריך לידה">
+                  <Input
+                    disabled={readOnly}
+                    type="date"
+                    value={formData.birth_date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, birth_date: e.target.value })
+                    }
+                    className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-border/40 pl-4 font-bold text-base sm:text-lg text-right"
+                  />
+                </InputItem>
+              </div>
             </div>
           </SectionCard>
 
@@ -427,34 +430,14 @@ export function ProfileSettings({
 
         {/* Sidebar Summary */}
         <div className="col-span-12 lg:col-span-4 space-y-4 sm:space-y-8 order-1 lg:order-2">
-          <SectionCard icon={Camera} title="תמונת פרופיל">
+          <SectionCard icon={UserIcon} title="פרופיל">
             <div className="flex flex-col items-center">
-              <div
-                className="w-full h-32 sm:h-40 rounded-[2rem] bg-gradient-to-br from-primary/20 to-primary/5 relative overflow-hidden group mb-[-4rem] sm:mb-[-5rem]"
-                onDoubleClick={handleImageUpload}
-              >
-                <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                  <Camera className="w-8 h-8 text-primary animate-pulse" />
-                </div>
-              </div>
-
-              <div className="relative">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 sm:border-8 border-background bg-card flex items-center justify-center text-primary text-3xl sm:text-5xl font-black   z-10 relative group overflow-hidden">
-                  <span className="group-hover:scale-110 transition-transform">
+              <div className="relative mt-4">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 sm:border-8 border-background bg-card flex items-center justify-center text-primary text-3xl sm:text-5xl font-black z-10 relative overflow-hidden">
+                  <span>
                     {user?.first_name?.[0]}
                     {user?.last_name?.[0]}
                   </span>
-                  {!readOnly && (
-                    <div
-                      onClick={handleImageUpload}
-                      className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer gap-1"
-                    >
-                      <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
-                      <span className="text-[8px] sm:text-[10px] font-black uppercase">
-                        החלף
-                      </span>
-                    </div>
-                  )}
                 </div>
                 <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-emerald-500 border-2 sm:border-4 border-background rounded-full z-20" />
               </div>

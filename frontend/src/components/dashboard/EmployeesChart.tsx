@@ -451,6 +451,8 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                                 className="fill-muted-foreground/60"
                                 textAnchor="middle"
                                 dominantBaseline="middle"
+                                direction="rtl"
+                                unicodeBidi="isolate"
                                 fontSize="13"
                                 fontWeight="800"
                               >
@@ -463,6 +465,8 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                                 className="fill-foreground font-black"
                                 textAnchor="middle"
                                 dominantBaseline="middle"
+                                direction="rtl"
+                                unicodeBidi="isolate"
                                 fontSize="15"
                                 fontWeight="900"
                               >
@@ -475,6 +479,8 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                                 className="fill-primary/50"
                                 textAnchor="middle"
                                 dominantBaseline="middle"
+                                direction="rtl"
+                                unicodeBidi="isolate"
                                 fontSize="12"
                                 fontWeight="700"
                               >
@@ -537,16 +543,6 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                     <BarChart
                       data={chartData}
                       margin={{ top: 25, right: 0, left: 0, bottom: 0 }}
-                      onClick={(data: any) => {
-                        if (
-                          data &&
-                          data.activePayload &&
-                          data.activePayload[0]
-                        ) {
-                          const item = data.activePayload[0].payload;
-                          onStatusClick?.(item.id, item.name, item.fill);
-                        }
-                      }}
                     >
                       <XAxis
                         dataKey="name"
@@ -578,6 +574,8 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                             style={{
                               filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
                             }}
+                            className="cursor-pointer"
+                            onClick={() => onStatusClick?.(entry.id, entry.name, entry.fill)}
                           />
                         ))}
                         <LabelList

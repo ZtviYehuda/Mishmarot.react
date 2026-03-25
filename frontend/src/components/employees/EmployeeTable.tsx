@@ -86,9 +86,7 @@ export const EmployeeTable = ({
 
     // Search filter
     const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
-    const searchMatch =
-      fullName.includes(searchTerm.toLowerCase()) ||
-      false;
+    const searchMatch = fullName.includes(searchTerm.toLowerCase()) || false;
 
     if (!searchMatch) return false;
 
@@ -221,7 +219,7 @@ export const EmployeeTable = ({
         <div className="relative w-full">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="חיפוש לפי שם או שם משתמש..."
+            placeholder="חיפוש שם או שם משתמש..."
             className="pr-10 h-10 sm:h-11 text-right border-input focus:ring-ring/20 focus:border-ring rounded-xl text-sm"
             value={searchTerm}
             onChange={(e) => {
@@ -332,7 +330,7 @@ export const EmployeeTable = ({
                         <div className="relative">
                           <div
                             className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm group-hover/row:scale-110 transition-all",
+                              "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm group-hover/row:scale-110 transition-all",
                               emp.is_active
                                 ? "bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 text-slate-600 dark:text-slate-400 border border-border/50"
                                 : "bg-muted text-muted-foreground ",
@@ -342,10 +340,12 @@ export const EmployeeTable = ({
                             {emp.last_name[0]}
                           </div>
                           {emp.is_active && (
-              <div 
-                className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900"
-                style={{ backgroundColor: emp.status_color || '#10b981' }}
-              />
+                            <div
+                              className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900"
+                              style={{
+                                backgroundColor: emp.status_color || "#10b981",
+                              }}
+                            />
                           )}
                         </div>
                         <div className="flex flex-col text-right min-w-0">
@@ -388,7 +388,9 @@ export const EmployeeTable = ({
                           {emp.phone_number}
                         </a>
                       ) : (
-                        <span className="text-xs text-muted-foreground/30 font-mono inline-flex">-</span>
+                        <span className="text-xs text-muted-foreground/30 font-mono inline-flex">
+                          -
+                        </span>
                       )}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-right text-xs text-muted-foreground">
@@ -468,7 +470,6 @@ export const EmployeeTable = ({
                             </div>
                           )}
                         </div>
-
                       ) : (
                         <span className="text-[10px] font-black text-muted-foreground/30">
                           מטה / ללא שיוך
@@ -608,7 +609,7 @@ export const EmployeeTable = ({
             <div
               key={emp.id}
               className={cn(
-       "bg-white dark:bg-slate-900 rounded-2xl border border-border/60 active:scale-[0.98] transition-all overflow-hidden",
+                "bg-white dark:bg-slate-900 rounded-2xl border border-border/60 active:scale-[0.98] transition-all overflow-hidden",
                 !emp.is_active && "bg-destructive/[0.02] grayscale-[0.3]",
               )}
               onClick={() => handleViewDetails(emp)}
@@ -628,9 +629,9 @@ export const EmployeeTable = ({
                     {emp.last_name[0]}
                   </div>
                   {emp.is_active && (
-                    <div 
-                      className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900" 
-                      style={{ backgroundColor: emp.status_color || '#10b981' }}
+                    <div
+                      className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900"
+                      style={{ backgroundColor: emp.status_color || "#10b981" }}
                     />
                   )}
                 </div>
@@ -639,7 +640,11 @@ export const EmployeeTable = ({
                 <div className="flex-1 min-w-0 text-right">
                   <div className="flex flex-wrap items-center gap-x-2 mb-0.5">
                     <h4 className="font-black text-sm text-foreground line-clamp-1 leading-snug">
-                      {emp.dominant_name ? `${emp.dominant_name} ${emp.last_name}` : (emp.first_name.split(' ').length > 2 ? `${emp.first_name.split(' ')[0]} ${emp.last_name}` : `${emp.first_name} ${emp.last_name}`)}
+                      {emp.dominant_name
+                        ? `${emp.dominant_name} ${emp.last_name}`
+                        : emp.first_name.split(" ").length > 2
+                          ? `${emp.first_name.split(" ")[0]} ${emp.last_name}`
+                          : `${emp.first_name} ${emp.last_name}`}
                     </h4>
                     <span className="text-[10px] font-mono font-bold text-muted-foreground/60 shrink-0">
                       {emp.username}
@@ -666,7 +671,7 @@ export const EmployeeTable = ({
                       <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
                     </a>
                   )}
-                  <button 
+                  <button
                     onClick={() => handleViewDetails(emp)}
                     className="p-1.5 bg-muted/50 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                   >
@@ -740,4 +745,3 @@ export const EmployeeTable = ({
     </div>
   );
 };
-

@@ -94,7 +94,7 @@ export const DashboardStatusTable = ({
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-right border-collapse min-w-[700px]">
                 <thead>
-                  <tr className="bg-muted/50 border-b border-border/40">
+                  <tr className="bg-transparent border-b border-border/40">
                     <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
                       שם מלא (פרטי ומשפחה)
                     </th>
@@ -181,9 +181,10 @@ export const DashboardStatusTable = ({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-sm text-foreground truncate">
-                        {emp.first_name} {emp.last_name}
-                      </h4>
+                      <EmployeeLink
+                        employee={emp}
+                        className="font-bold text-sm text-foreground truncate h-auto p-0 hover:no-underline"
+                      />
                       <span className="text-[10px] font-mono bg-muted px-1.5 rounded text-muted-foreground">
                         {emp.username}
                       </span>

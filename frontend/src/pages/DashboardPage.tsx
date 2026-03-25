@@ -147,12 +147,12 @@ export default function DashboardPage() {
     if (savedFilters) {
       try {
         const filters = JSON.parse(savedFilters);
-        if (filters.deptId) setSelectedDeptId(filters.deptId);
-        if (filters.sectionId) setSelectedSectionId(filters.sectionId);
-        if (filters.teamId) setSelectedTeamId(filters.teamId);
-        if (filters.statusData) setSelectedStatusData(filters.statusData);
-        if (filters.serviceTypes) setSelectedServiceTypes(filters.serviceTypes);
-        if (filters.ageRange) setSelectedAgeRange(filters.ageRange);
+        if (filters.deptId !== undefined) setSelectedDeptId(filters.deptId);
+        if (filters.sectionId !== undefined) setSelectedSectionId(filters.sectionId);
+        if (filters.teamId !== undefined) setSelectedTeamId(filters.teamId);
+        if (filters.statusData !== undefined) setSelectedStatusData(filters.statusData);
+        if (filters.serviceTypes !== undefined) setSelectedServiceTypes(filters.serviceTypes);
+        if (filters.ageRange !== undefined) setSelectedAgeRange(filters.ageRange);
       } catch (e) {
         console.error("Failed to parse saved filters", e);
       }
@@ -476,10 +476,16 @@ export default function DashboardPage() {
     } else if (type === "team") {
       setSelectedTeamId(value || "");
     } else if (type === "status") {
+      // If clicking the same status, deselect it
+      if (selectedStatusData?.id?.toString() === value?.toString()) {
+        setSelectedStatusData(null);
+        return;
+      }
+
       // Look up status in both active stats and all possible types
-      const statusType = allStatusTypes.find((s) => s.id.toString() === value);
+      const statusType = allStatusTypes.find((s) => s.id.toString() === value?.toString());
       const activeStatus = allStatuses.find(
-        (s) => s.status_id.toString() === value,
+        (s) => s.status_id.toString() === value?.toString(),
       );
 
       if (statusType) {

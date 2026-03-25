@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/card";
 import { Cake, Calendar, ChevronLeft } from "lucide-react";
 import type { BirthdayInfo } from "@/types/attendance.types";
+import { EmployeeLink } from "@/components/common/EmployeeLink";
+import type { Employee } from "@/types/employee.types";
 
 interface BirthdayModuleProps {
   birthdays: BirthdayInfo[];
@@ -43,9 +45,10 @@ export const BirthdayModule = ({ birthdays }: BirthdayModuleProps) => {
                   {b.last_name[0]}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-slate-800 dark:text-white leading-none mb-1">
-                    {b.first_name} {b.last_name}
-                  </span>
+                  <EmployeeLink
+                    employee={b as any as Employee}
+                    className="text-sm font-bold text-slate-800 dark:text-white leading-none mb-1 h-auto p-0 hover:no-underline"
+                  />
                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
                     <Calendar className="w-3 h-3" />
                     <span>

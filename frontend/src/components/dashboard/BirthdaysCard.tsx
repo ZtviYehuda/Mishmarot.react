@@ -150,7 +150,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex-1 overflow-y-auto relative custom-scrollbar group/scroll bg-muted/10 max-h-[400px]"
+              className="flex-1 overflow-y-auto relative custom-scrollbar group/scroll bg-transparent max-h-[400px]"
             >
               <div className="px-5 py-5 min-h-full">
                 {/* Padding on the sides and top/bottom to prevent border clipping */}
@@ -219,7 +219,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                             "flex items-center gap-4 p-4 rounded-[1.25rem] border transition-all hover:-translate-y-0.5 hover:shadow-sm",
                             isToday
                               ? "bg-primary/5 border-primary/30 "
-                              : "bg-background border-border/60 hover:border-primary/20 hover:bg-muted/30",
+                              : "bg-background border-border/60 hover:border-primary/20",
                           )}
                         >
                           <div

@@ -398,12 +398,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleImageUpload = () => {
-    toast.info("העלאת תמונה", {
-      description: "פיצ'ר זה יהיה זמין בגרסה הבאה של המערכת",
-    });
-  };
-
   return (
     <div className="flex flex-col min-h-full pb-20">
       <div className="pt-6 pb-2 shrink-0 transition-all px-4">
@@ -465,7 +459,6 @@ export default function SettingsPage() {
               relations={relations}
               isSaving={isSaving}
               handleSaveProfile={handleSaveProfile}
-              handleImageUpload={handleImageUpload}
               readOnly={!!user?.is_temp_commander}
             />
           )}

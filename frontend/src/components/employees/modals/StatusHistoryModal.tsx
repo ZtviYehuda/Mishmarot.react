@@ -8,6 +8,7 @@ import type { Employee } from "@/types/employee.types";
 import { History, ArrowLeft } from "lucide-react";
 import StatusHistoryList from "../StatusHistoryList";
 import { Button } from "@/components/ui/button";
+import { EmployeeLink } from "@/components/common/EmployeeLink";
 
 interface StatusHistoryModalProps {
   open: boolean;
@@ -28,7 +29,7 @@ export default function StatusHistoryModal({
         className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 border-none bg-card  rounded-3xl"
         dir="rtl"
       >
-        <DialogHeader className="p-6 sm:p-8 border-b border-border/50 bg-muted/20 text-right shrink-0">
+        <DialogHeader className="p-6 sm:p-8 border-b border-border/50 bg-transparent text-right shrink-0">
           <div className="flex items-center gap-5">
             <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center  shrink-0 rotate-3">
               <History className="w-7 h-7" />
@@ -38,9 +39,10 @@ export default function StatusHistoryModal({
                 היסטוריית סטטוסים
               </DialogTitle>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm font-black text-muted-foreground italic">
-                  {employee.first_name} {employee.last_name}
-                </span>
+                <EmployeeLink
+                  employee={employee}
+                  className="text-sm font-black text-muted-foreground italic h-auto p-0 hover:no-underline"
+                />
                 <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                 <span className="text-[10px] font-bold text-muted-foreground font-mono tracking-widest">
                   {employee.username}
@@ -50,11 +52,11 @@ export default function StatusHistoryModal({
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar bg-background/50">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
           <StatusHistoryList employeeId={employee.id} />
         </div>
 
-        <div className="p-6 bg-muted/20 border-t border-border/50 flex justify-end shrink-0">
+        <div className="p-6 bg-transparent border-t border-border/50 flex justify-end shrink-0">
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}

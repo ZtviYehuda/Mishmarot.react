@@ -249,7 +249,7 @@ export const DashboardFilters = ({
                 key={type.id}
                 variant="outline"
                 size="sm"
-                onClick={() => onFilterChange("status", type.id)}
+                onClick={() => onFilterChange("status", type.id.toString())}
                 className={cn(
                   "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all",
                   selectedStatusId === type.id.toString()

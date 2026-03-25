@@ -466,9 +466,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                   </DialogDescription>
                 </div>
               </div>
-
             </div>
-
 
             {/* Search & Filters */}
             <div className="flex flex-col gap-3">
@@ -477,7 +475,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 dark:text-white/50 group-focus-within:text-primary dark:group-focus-within:text-white transition-colors" />
                   <input
                     type="text"
-                    placeholder="חיפוש לפי שם או מ''א..."
+                    placeholder="חיפוש שם או מ''א..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full h-10 bg-muted/20 border border-border/40 rounded-xl pr-10 pl-4 text-sm font-bold focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/40 outline-none transition-all dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/40 dark:focus:bg-white/10 dark:focus:border-white/20"
@@ -1460,4 +1458,3 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
     </>
   );
 };
-

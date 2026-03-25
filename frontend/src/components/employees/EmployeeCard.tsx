@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { Employee } from "@/types/employee.types";
 import { cn, cleanUnitName } from "@/lib/utils";
 import { User, MoreVertical } from "lucide-react";
+import { EmployeeLink } from "@/components/common/EmployeeLink";
 
 interface EmployeeCardProps {
   employee: Employee;
@@ -35,9 +36,10 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
               {employee.last_name[0]}
             </div>
             <div>
-              <h3 className="font-black text-slate-800 dark:text-white text-base leading-tight">
-                {employee.first_name} {employee.last_name}
-              </h3>
+              <EmployeeLink
+                employee={employee}
+                className="font-black text-slate-800 dark:text-white text-base leading-tight h-auto p-0 hover:no-underline"
+              />
               <p className="text-xs text-slate-400 font-mono mt-0.5">
                 {employee.username}
               </p>

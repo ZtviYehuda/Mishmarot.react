@@ -16,8 +16,8 @@ import {
   User,
   Mail,
   ExternalLink,
-  ShieldCheck,
   Gift,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -192,12 +192,6 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               >
                 {employee.first_name[0]}
                 {employee.last_name[0]}
-                {/* Status Dot */}
-                <div
-                  className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-[3px] border-background ring-1 ring-border"
-                  style={{ backgroundColor: employee.status_color || "var(--primary)" }}
-                  title={employee.status_name || "סטטוס שוטר"}
-                />
               </div>
             </div>
 
@@ -208,33 +202,13 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                 {isBirthday && <Gift className="w-5 h-5 text-pink-500 animate-bounce" />}
               </DialogTitle>
 
-              {/* Badges row */}
-              <div className="flex flex-wrap items-center justify-center gap-1.5">
-                {getProfessionalTitle(employee) && (
-                  <Badge variant="secondary"
-                    className="bg-primary/10 text-primary border-primary/20 font-black text-[10px] h-5 rounded-full px-2.5 uppercase tracking-wider">
-                    {getProfessionalTitle(employee)}
-                  </Badge>
-                )}
-                {employee.service_type_name && (
-                  <Badge variant="outline"
-                    className="bg-blue-50 text-blue-600 border-blue-100 font-black text-[10px] h-5 rounded-full px-2.5 uppercase tracking-wider">
-                    {employee.service_type_name}
-                  </Badge>
-                )}
-                {employee.is_commander && (
-                  <div className="flex items-center gap-1 p-1 px-2 bg-blue-500/10 text-blue-600 rounded-full border border-blue-500/20">
-                    <ShieldCheck className="w-3 h-3" />
-                  </div>
-                )}
-              </div>
-
-              {/* Status pill */}
-              {employee.status_name && (
-                <div className="flex items-center gap-1.5 text-xs font-bold bg-muted/50 px-3 py-1 rounded-full border border-border/40">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: employee.status_color || "var(--primary)" }} />
-                  <span className="text-muted-foreground">{employee.status_name}</span>
-                </div>
+              {/* Professional title badge */}
+              {getProfessionalTitle(employee) && (
+                <Badge variant="secondary"
+                  className="bg-primary/10 text-primary border-primary/20 font-black text-[10px] h-5 rounded-full px-2.5 uppercase tracking-wider flex items-center gap-1.5">
+                  <Star className="w-3 h-3" />
+                  {getProfessionalTitle(employee)}
+                </Badge>
               )}
             </div>
           </div>
@@ -282,7 +256,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             {/* Emergency Contact */}
             {employee.emergency_contact && (
               <div className="col-span-1 sm:col-span-2">
-                <div className="bg-muted/30 p-5 rounded-3xl border border-border/50 flex flex-col sm:flex-row gap-5 items-start sm:items-center overflow-hidden relative group">
+                <div className="bg-transparent p-5 rounded-3xl border border-border/40 flex flex-col sm:flex-row gap-5 items-start sm:items-center overflow-hidden relative group">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-12 -mt-12 transition-all group-hover:bg-primary/10" />
 
                   <div className="bg-muted text-muted-foreground p-3 rounded-2xl shrink-0 mx-auto sm:mx-0 relative z-10 ">
@@ -336,7 +310,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                 <Building2 className="w-4 h-4 text-primary" />
                 מבנה ארגוני
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mt-6">
                 {employee.department_name && (
                   <div
                     onClick={() => {
@@ -352,7 +326,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                       onOpenChange(false);
                     }}
                     className={cn(
-                      "bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5 transition-all group",
+                      "bg-transparent p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5 transition-all group",
                       (user?.is_commander || user?.is_admin) &&
                         "cursor-pointer hover:border-primary/40 hover:bg-primary/5 active:scale-95",
                       searchParams.get("dept") === employee.department_name &&
@@ -382,7 +356,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                       onOpenChange(false);
                     }}
                     className={cn(
-                      "bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5 transition-all group",
+                      "bg-transparent p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5 transition-all group",
                       (user?.is_commander || user?.is_admin) &&
                         "cursor-pointer hover:border-primary/40 hover:bg-primary/5 active:scale-95",
                       searchParams.get("section") === employee.section_name &&
@@ -411,7 +385,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                       onOpenChange(false);
                     }}
                     className={cn(
-                      "bg-muted/20 p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5 transition-all group",
+                      "bg-transparent p-4 rounded-3xl border border-border/40 flex flex-col items-center justify-center gap-1.5 transition-all group",
                       (user?.is_commander || user?.is_admin) &&
                         "cursor-pointer hover:border-primary/40 hover:bg-primary/5 active:scale-95",
                       searchParams.get("team") === employee.team_name &&

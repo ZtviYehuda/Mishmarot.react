@@ -27,17 +27,6 @@ export const AgeDistributionChart = ({
     return data;
   }, [data]);
 
-  const totalCount = useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.count, 0);
-  }, [chartData]);
-
-  const dominantRange = useMemo(() => {
-    if (chartData.length === 0) return "—";
-    return chartData.reduce((prev, current) =>
-      prev.count > current.count ? prev : current,
-    ).range;
-  }, [chartData]);
-
   return (
     <Card className="rounded-[2rem] border border-primary/10 bg-card/60 backdrop-blur-2xl overflow-hidden p-6 sm:p-8 h-full flex flex-col relative">
       
@@ -78,17 +67,12 @@ export const AgeDistributionChart = ({
             data={chartData}
             margin={{ top: 30, right: 10, left: 10, bottom: 25 }}
             barCategoryGap="25%"
-            onClick={(state) => {
-              if (state && state.activeLabel && onRangeSelect) {
-                onRangeSelect(state.activeLabel.toString());
-              }
-            }}
           >
             <XAxis
               dataKey="range"
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fontWeight: 800, fill: "#94a3b8" }}
+              tick={{ fontSize: 13, fontWeight: 900, fill: "#94a3b8" }}
               dy={10}
               interval={0}
             />
@@ -118,12 +102,13 @@ export const AgeDistributionChart = ({
               dataKey="count"
               radius={[8, 8, 4, 4]}
               fill="currentColor"
-              className="text-primary/70 hover:text-primary transition-colors cursor-pointer"
+              className="text-primary/70 hover:text-primary transition-colors"
             >
-              {chartData.map((_, index) => (
+              {chartData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  className="transition-all"
+                  className="transition-all cursor-pointer"
+                  onClick={() => onRangeSelect?.(entry.range)}
                 />
               ))}
               <LabelList
@@ -131,7 +116,7 @@ export const AgeDistributionChart = ({
                 position="top"
                 offset={12}
                 fill="currentColor"
-                fontSize={12}
+                fontSize={16}
                 fontWeight={900}
               />
             </Bar>
