@@ -891,33 +891,6 @@ export default function EmployeeViewPage() {
                               valueClassName={employee.is_commander ? "text-emerald-600" : "text-slate-500"}
                             />
                           </div>
-
-                          <div className="grid grid-cols-1 gap-4">
-                            <Field
-                              label="תאריך גיוס"
-                              value={
-                                employee.enlistment_date
-                                  ? format(
-                                      new Date(employee.enlistment_date),
-                                      "dd/MM/yyyy",
-                                    )
-                                  : null
-                              }
-                              icon={Calendar}
-                            />
-                            <Field
-                              label="שחרור צפוי"
-                              value={
-                                employee.discharge_date
-                                  ? format(
-                                      new Date(employee.discharge_date),
-                                      "dd/MM/yyyy",
-                                    )
-                                  : null
-                              }
-                              icon={Calendar}
-                            />
-                          </div>
                         </div>
                       </Section>
 
@@ -942,6 +915,30 @@ export default function EmployeeViewPage() {
                             label="מעמד אירגוני"
                             value={employee.service_type_name}
                             icon={Briefcase}
+                          />
+                          <Field
+                            label="תאריך גיוס"
+                            value={
+                              employee.enlistment_date
+                                ? format(
+                                    new Date(employee.enlistment_date),
+                                    "dd/MM/yyyy",
+                                  )
+                                : null
+                            }
+                            icon={Calendar}
+                          />
+                          <Field
+                            label="שחרור צפוי"
+                            value={
+                              employee.discharge_date
+                                ? format(
+                                    new Date(employee.discharge_date),
+                                    "dd/MM/yyyy",
+                                  )
+                                : null
+                            }
+                            icon={Calendar}
                           />
                         </div>
                       </Section>
@@ -1204,49 +1201,6 @@ export default function EmployeeViewPage() {
                               />
                             </div>
                           </div>
-
-                          <div className="grid grid-cols-1 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                            <div className="space-y-1.5">
-                              <Label className="text-sm font-black text-slate-700 dark:text-slate-300 pr-1">
-                                תאריך גיוס
-                              </Label>
-                              <Input
-                                type="date"
-                                value={
-                                  formData.enlistment_date
-                                    ? formData.enlistment_date.split("T")[0]
-                                    : ""
-                                }
-                                onChange={(e) =>
-                                  handleFieldChange(
-                                    "enlistment_date",
-                                    e.target.value,
-                                  )
-                                }
-                                className="h-12 rounded-xl font-bold bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
-                              />
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-sm font-black text-slate-700 dark:text-slate-300 pr-1">
-                                שחרור צפוי
-                              </Label>
-                              <Input
-                                type="date"
-                                value={
-                                  formData.discharge_date
-                                    ? formData.discharge_date.split("T")[0]
-                                    : ""
-                                }
-                                onChange={(e) =>
-                                  handleFieldChange(
-                                    "discharge_date",
-                                    e.target.value,
-                                  )
-                                }
-                                className="h-12 rounded-xl font-bold bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
-                              />
-                            </div>
-                          </div>
                         </div>
                       </Section>
 
@@ -1301,6 +1255,49 @@ export default function EmployeeViewPage() {
                               />
                             </>
                           )}
+                          
+                          <div className="grid grid-cols-1 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <div className="space-y-1.5">
+                              <Label className="text-sm font-black text-slate-700 dark:text-slate-300 pr-1">
+                                תאריך גיוס
+                              </Label>
+                              <Input
+                                type="date"
+                                value={
+                                  formData.enlistment_date
+                                    ? formData.enlistment_date.split("T")[0]
+                                    : ""
+                                }
+                                onChange={(e) =>
+                                  handleFieldChange(
+                                    "enlistment_date",
+                                    e.target.value,
+                                  )
+                                }
+                                className="h-12 rounded-xl font-bold bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-sm font-black text-slate-700 dark:text-slate-300 pr-1">
+                                שחרור צפוי
+                              </Label>
+                              <Input
+                                type="date"
+                                value={
+                                  formData.discharge_date
+                                    ? formData.discharge_date.split("T")[0]
+                                    : ""
+                                }
+                                onChange={(e) =>
+                                  handleFieldChange(
+                                    "discharge_date",
+                                    e.target.value,
+                                  )
+                                }
+                                className="h-12 rounded-xl font-bold bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </Section>
                     </div>
