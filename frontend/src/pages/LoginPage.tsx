@@ -218,16 +218,36 @@ export default function LoginPage() {
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
 
   useEffect(() => {
-    // We set it to true so it always appears for UX testing,
-    // even if accessed locally over HTTP (where WebAuthn is usually blocked).
-    // The actual system check will happen when clicked.
-    setIsBiometricAvailable(true);
+    // Check if biometric is available and if there's a registered user
+    const checkBiometric = async () => {
+      if (!window.PublicKeyCredential) {
+        setIsBiometricAvailable(false);
+        return;
+      }
+      
+      try {
+        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        // Check if there's at least one registered user
+        const lastUser = localStorage.getItem("biometric_last_user");
+        const hasRegistration = lastUser && localStorage.getItem(`biometric_registered_${lastUser}`);
+        
+        setIsBiometricAvailable(available && !!hasRegistration);
+      } catch {
+        setIsBiometricAvailable(false);
+      }
+    };
+    
+    checkBiometric();
   }, []);
 
   const handleBiometricLogin = async () => {
+    setError("");
+    setIsLoading(true);
+    
     try {
       if (!window.PublicKeyCredential) {
         setError("זיהוי ביומטרי דורש חיבור מאובטח (HTTPS) או מכשיר תומך.");
+        setIsLoading(false);
         return;
       }
 
@@ -238,6 +258,7 @@ export default function LoginPage() {
 
       if (!targetUsername) {
         setError("הזן שם משתמש כדי להשתמש בכניסה ביומטרית.");
+        setIsLoading(false);
         return;
       }
 
@@ -246,15 +267,21 @@ export default function LoginPage() {
 
       if (!credIdStr || !token) {
         setError("יש להפעיל כניסה ביומטרית בהגדרות המשתמש תחילה.");
+        setIsLoading(false);
         return;
       }
 
       const credIdBytes = Uint8Array.from(atob(credIdStr), (c) => c.charCodeAt(0));
       const challenge = crypto.getRandomValues(new Uint8Array(32));
+      
+      // Get the correct RP ID - use the hostname without port
+      const hostname = window.location.hostname;
+      const rpId = hostname === 'localhost' ? 'localhost' : hostname;
 
       const assertion = await navigator.credentials.get({
         publicKey: {
           challenge,
+          rpId: rpId,
           allowCredentials: [{ id: credIdBytes, type: "public-key" }],
           userVerification: "required",
           timeout: 60000,
@@ -263,6 +290,7 @@ export default function LoginPage() {
 
       if (!assertion) {
         setError("זיהוי ביומטרי נכשל.");
+        setIsLoading(false);
         return;
       }
 
@@ -272,7 +300,6 @@ export default function LoginPage() {
       const storedUsername = decoded.substring(0, colonIdx);
       const storedPassword = decoded.substring(colonIdx + 1);
 
-      setIsLoading(true);
       const success = await login(storedUsername, storedPassword);
       if (success) {
         localStorage.setItem("biometric_last_user", storedUsername);
@@ -281,8 +308,11 @@ export default function LoginPage() {
         setError("שגיאת אימות — ייתכן שהסיסמה שונתה. עדכן את הגדרות הכניסה הביומטרית.");
       }
     } catch (err: any) {
+      console.error("Biometric login error:", err);
       if (err.name === "NotAllowedError") {
-        setError("הזיהוי הביומטרי בוטל.");
+        setError("הזיהוי הביומטרי בוטל או נדחה");
+      } else if (err.name === "SecurityError") {
+        setError("שגיאת אבטחה - ודא שהאתר רץ על HTTPS");
       } else {
         setError("שגיאת זיהוי ביומטרי: " + (err.message || "נסה שנית"));
       }

@@ -1256,7 +1256,7 @@ export default function EmployeeViewPage() {
                             </>
                           )}
                           
-                          <div className="grid grid-cols-1 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                             <div className="space-y-1.5">
                               <Label className="text-sm font-black text-slate-700 dark:text-slate-300 pr-1">
                                 תאריך גיוס

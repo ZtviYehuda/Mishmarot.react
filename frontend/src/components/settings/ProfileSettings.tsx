@@ -61,36 +61,81 @@ export function ProfileSettings({
       setBiometricError("יש להזין את הסיסמה כדי לאמת את זהותך");
       return;
     }
+    
+    // Check if running on secure context (HTTPS or localhost)
+    if (!window.isSecureContext) {
+      setBiometricError("כניסה ביומטרית דורשת חיבור מאובטח (HTTPS)");
+      return;
+    }
+    
     if (!window.PublicKeyCredential) {
-      setBiometricError("הדפדפן אינו תומך בזיהוי ביומטרי — יש להשתמש ב-HTTPS");
+      setBiometricError("הדפדפן אינו תומך בזיהוי ביומטרי");
       return;
     }
-    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-    if (!available) {
-      setBiometricError("לא נמצא חיישן ביומטרי במכשיר זה");
-      return;
-    }
+    
     setBiometricLoading(true);
     try {
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (!available) {
+        setBiometricError("לא נמצא חיישן ביומטרי במכשיר זה");
+        setBiometricLoading(false);
+        return;
+      }
+    } catch (err: any) {
+      console.error("Biometric availability check error:", err);
+      setBiometricError("שגיאה בבדיקת תמיכה ביומטרית: " + (err.message || ""));
+      setBiometricLoading(false);
+      return;
+    }
+    
+    // Verify password with server before storing
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: user.username,
+          password: biometricPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        setBiometricError("הסיסמה שהוזנה שגויה");
+        setBiometricLoading(false);
+        return;
+      }
+
       const challenge = crypto.getRandomValues(new Uint8Array(32));
+      
+      // Get the correct RP ID - use the hostname without port
+      const hostname = window.location.hostname;
+      const rpId = hostname === 'localhost' ? 'localhost' : hostname;
+      
+      console.log("Creating credential with rpId:", rpId);
+      
       const credential = await navigator.credentials.create({
         publicKey: {
           challenge,
-          rp: { name: "ShiftGuard", id: window.location.hostname },
+          rp: { 
+            name: "ShiftGuard",
+            id: rpId
+          },
           user: {
             id: new TextEncoder().encode(user.username),
             name: user.username,
             displayName: `${user.first_name} ${user.last_name}`,
           },
           pubKeyCredParams: [
-            { type: "public-key", alg: -7 },
-            { type: "public-key", alg: -257 },
+            { type: "public-key", alg: -7 },  // ES256
+            { type: "public-key", alg: -257 }, // RS256
           ],
           authenticatorSelection: {
             authenticatorAttachment: "platform",
             userVerification: "required",
+            requireResidentKey: false,
           },
           timeout: 60000,
+          attestation: "none",
         },
       }) as PublicKeyCredential;
 
@@ -100,12 +145,18 @@ export function ProfileSettings({
       localStorage.setItem(`biometric_cred_${user.username}`, credId);
       localStorage.setItem(`biometric_token_${user.username}`, btoa(`${user.username}:${biometricPassword}`));
       localStorage.setItem(`biometric_registered_${user.username}`, "1");
+      localStorage.setItem("biometric_last_user", user.username);
       setBiometricRegistered(true);
       setBiometricPassword("");
       toast.success("כניסה ביומטרית הופעלה בהצלחה!");
     } catch (err: any) {
+      console.error("Biometric registration error:", err);
       if (err.name === "NotAllowedError") {
-        setBiometricError("הגישה לזיהוי ביומטרי נדחתה — אנא נסה שנית");
+        setBiometricError("הגישה לזיהוי ביומטרי נדחתה. ודא שהאתר רץ על HTTPS ושיש לך הרשאות מתאימות");
+      } else if (err.name === "SecurityError") {
+        setBiometricError("שגיאת אבטחה - ודא שהאתר רץ על HTTPS");
+      } else if (err.name === "NotSupportedError") {
+        setBiometricError("המכשיר או הדפדפן אינם תומכים בזיהוי ביומטרי");
       } else {
         setBiometricError(err.message || "שגיאה בהרשמה הביומטרית");
       }
@@ -129,7 +180,7 @@ export function ProfileSettings({
       <div className="grid grid-cols-12 gap-4 sm:gap-8">
         {/* Main Settings Area */}
         <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-8 order-2 lg:order-1">
-          <SectionCard icon={User} title="פרטים אישיים">
+          <SectionCard icon={UserIcon} title="פרטים אישיים">
             <div className="grid grid-cols-1 gap-4 sm:gap-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                 <InputItem label="שם פרטי" required>
