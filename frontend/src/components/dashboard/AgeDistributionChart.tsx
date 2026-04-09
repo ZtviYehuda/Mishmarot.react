@@ -11,17 +11,20 @@ import {
 } from "recharts";
 import { Card } from "@/components/ui/card";
 import { Timer } from "lucide-react";
+import { format } from "date-fns";
 
 interface AgeDistributionChartProps {
   data: { range: string; count: number }[];
   averageAge: number;
   onRangeSelect?: (range: string) => void;
+  selectedDate?: Date;
 }
 
 export const AgeDistributionChart = ({
   data,
   averageAge,
   onRangeSelect,
+  selectedDate = new Date(),
 }: AgeDistributionChartProps) => {
   const chartData = useMemo(() => {
     return data;
@@ -41,7 +44,7 @@ export const AgeDistributionChart = ({
               חתך גילאים
             </h3>
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">
-              התפלגות גילאית של כוח האדם
+              התפלגות גילאית של כוח האדם • {format(selectedDate, "dd/MM/yyyy")}
             </p>
           </div>
         </div>

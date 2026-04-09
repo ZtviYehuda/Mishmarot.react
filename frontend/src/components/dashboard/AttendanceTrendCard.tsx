@@ -309,7 +309,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   ? "7 ימים אחרונים"
                   : range === 30
                     ? "30 ימים אחרונים"
-                    : "מגמה שנתית"}
+                    : "מגמה שנתית"} • {format(selectedDate, "dd/MM/yyyy")}
               </div>
             </CardDescription>
           </div>

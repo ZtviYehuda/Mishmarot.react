@@ -32,6 +32,7 @@ export function DateProvider({ children }: { children: ReactNode }) {
       } else {
         // First time ever - set last login date
         localStorage.setItem("app_last_login_date", today.toISOString());
+        return today;
       }
       
       // Same day - load saved date if exists

@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from "react";
 import {
   useParams,
   useNavigate,
-  useSearchParams,
   useLocation,
 } from "react-router-dom";
 import apiClient from "@/config/api.client";
@@ -14,18 +13,14 @@ import {
   Calendar,
   BadgeCheck,
   MapPin,
-  History as HistoryIcon,
   Mail,
   Cake,
   ArrowRight,
   Save,
-  X,
   Shield,
   Settings,
-  Info,
   Briefcase,
   Star,
-  AlertCircle,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -43,7 +38,6 @@ import {
 import { toast } from "sonner";
 import { cn, cleanUnitName } from "@/lib/utils";
 import * as endpoints from "@/config/employees.endpoints";
-import StatusHistoryList from "@/components/employees/StatusHistoryList";
 import { format } from "date-fns";
 import { BirthdayGreetingsModal } from "@/components/dashboard/BirthdayGreetingsModal";
 import {
@@ -99,13 +93,27 @@ const Field = ({
   valueClassName,
 }: {
   label: string;
-  value?: string | null;
+  value?: string | null | React.ReactNode;
   mono?: boolean;
   href?: string;
   icon?: any;
   valueClassName?: string;
 }) => {
-  if (!value) return null;
+  const hasValue = value !== undefined && value !== null && value !== "";
+  if (!hasValue) return null;
+
+  const normalizedHref = href?.trim();
+  const safeHref = normalizedHref
+    ? normalizedHref.startsWith("mailto:")
+      ? `mailto:${normalizedHref.slice(7).trim()}`
+      : normalizedHref.startsWith("tel:")
+      ? `tel:${normalizedHref.slice(4).trim().replace(/\s+/g, "")}`
+      : normalizedHref
+    : undefined;
+
+  const isExternalLink =
+    safeHref?.startsWith("mailto:") || safeHref?.startsWith("tel:");
+
   const content = (
     <div className="flex items-start gap-4 p-4 rounded-2xl bg-transparent border border-transparent transition-colors hover:border-primary/10">
       {Icon && (
@@ -120,7 +128,7 @@ const Field = ({
         <span
           className={cn(
             "font-bold text-[15px] mt-0.5",
-            href && "text-primary hover:underline",
+            safeHref && "text-primary hover:underline",
             mono && "font-mono",
             valueClassName || "text-foreground",
           )}
@@ -131,12 +139,19 @@ const Field = ({
     </div>
   );
 
-  if (href)
+  if (safeHref)
     return (
-      <a href={href} className="block group">
+      <a
+        href={safeHref}
+        className="block group"
+        onClick={(e) => e.stopPropagation()}
+        target={isExternalLink ? "_blank" : undefined}
+        rel={isExternalLink ? "noopener noreferrer" : undefined}
+      >
         {content}
       </a>
     );
+
   return content;
 };
 
@@ -387,20 +402,7 @@ const ActionFooter = ({ editMode, onEdit, onSave, onCancel, saving }: any) => (
 export default function EmployeeViewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { pathname } = useLocation();
-  const dateParam = searchParams.get("date");
-  const initialDate = useMemo(() => {
-    if (!dateParam) return undefined;
-    const parts = dateParam.split("-");
-    if (parts.length === 3)
-      return new Date(
-        parseInt(parts[0]),
-        parseInt(parts[1]) - 1,
-        parseInt(parts[2]),
-      );
-    return undefined;
-  }, [dateParam]);
 
   const { user } = useAuthContext();
   const [employee, setEmployee] = useState<Employee | null>(null);

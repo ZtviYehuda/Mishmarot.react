@@ -104,7 +104,7 @@ const UnitPicker = ({
       <Select value={value || ""} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger
           className={cn(
-            "h-16 w-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl transition-all px-4 hover:border-primary/30 focus:ring-0 text-right font-bold",
+            "h-10 w-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl transition-all px-4 hover:border-primary/30 focus:ring-0 text-right font-bold",
             !value && "bg-slate-50/30 border-dashed",
             disabled && "opacity-30 grayscale pointer-events-none",
           )}
@@ -197,7 +197,7 @@ const PersonalFormTab = ({
               value={formData.first_name || ""}
               onChange={(e) => handleFieldChange("first_name", e.target.value)}
               placeholder="פרטי"
-       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl font-bold"
+       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-10 rounded-xl font-bold"
             />
           </InputItem>
 
@@ -206,7 +206,7 @@ const PersonalFormTab = ({
               value={formData.last_name || ""}
               onChange={(e) => handleFieldChange("last_name", e.target.value)}
               placeholder="משפחה"
-       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl font-bold"
+       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-10 rounded-xl font-bold"
             />
           </InputItem>
 
@@ -271,7 +271,7 @@ const PersonalFormTab = ({
               value={formData.gender || ""}
               onValueChange={(val) => handleFieldChange("gender", val)}
             >
-       <SelectTrigger className="w-full bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 text-right rounded-xl font-bold px-4">
+       <SelectTrigger className="w-full bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-10 text-right rounded-xl font-bold px-4">
                 <SelectValue placeholder="בחר מין" />
               </SelectTrigger>
               <SelectContent
@@ -295,7 +295,7 @@ const PersonalFormTab = ({
                 formData.birth_date ? formData.birth_date.split("T")[0] : ""
               }
               onChange={(e) => handleFieldChange("birth_date", e.target.value)}
-       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 w-full rounded-xl font-bold"
+       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-10 w-full rounded-xl font-bold"
             />
           </InputItem>
 
@@ -306,7 +306,7 @@ const PersonalFormTab = ({
                 handleFieldChange("service_type_id", parseInt(val))
               }
             >
-       <SelectTrigger className="w-full bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 text-right rounded-xl font-bold px-4">
+       <SelectTrigger className="w-full bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-10 text-right rounded-xl font-bold px-4">
                 <SelectValue placeholder="בחר מעמד" />
               </SelectTrigger>
               <SelectContent
@@ -331,7 +331,7 @@ const PersonalFormTab = ({
               value={formData.city || ""}
               onChange={(e) => handleFieldChange("city", e.target.value)}
               placeholder="ירושלים, ת''א..."
-       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-12 rounded-xl font-bold"
+       className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 transition-all h-10 rounded-xl font-bold"
             />
           </InputItem>
         </div>
@@ -356,7 +356,7 @@ const PersonalFormTab = ({
                   value={formData.phone_number || ""}
                   onChange={(e) => handleFieldChange("phone_number", e.target.value)}
                   placeholder="05X-XXXXXXX"
-                  className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 transition-all h-12 rounded-xl font-bold"
+                  className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 transition-all h-10 rounded-xl font-bold"
                 />
               </InputItem>
               <InputItem label="דואר אלקטרוני" icon={Mail} className="sm:col-span-2">
@@ -364,7 +364,7 @@ const PersonalFormTab = ({
                   value={formData.email || ""}
                   onChange={(e) => handleFieldChange("email", e.target.value)}
                   placeholder="example@mail.com"
-                  className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 transition-all h-12 rounded-xl font-bold"
+                  className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 transition-all h-10 rounded-xl font-bold"
                 />
               </InputItem>
             </div>
@@ -382,7 +382,7 @@ const PersonalFormTab = ({
                     value={emergencyDetails.name}
                     onChange={(e) => setEmergencyDetails({ ...emergencyDetails, name: e.target.value })}
                     placeholder="שם איש הקשר"
-                    className="w-full h-12 bg-white dark:bg-slate-900/50 border-rose-500/10 focus-visible:ring-rose-500/20 rounded-xl font-bold"
+                    className="w-full h-10 bg-white dark:bg-slate-900/50 border-rose-500/10 focus-visible:ring-rose-500/20 rounded-xl font-bold"
                   />
                 </InputItem>
                 <InputItem label="קרבה" className="sm:col-span-2">
@@ -390,7 +390,7 @@ const PersonalFormTab = ({
                     value={emergencyDetails.relation}
                     onValueChange={(val) => setEmergencyDetails({ ...emergencyDetails, relation: val })}
                   >
-                    <SelectTrigger className="w-full h-12 bg-white dark:bg-slate-900/50 border-rose-500/10 text-right font-bold rounded-xl focus:ring-rose-500/20">
+                    <SelectTrigger className="w-full h-10 bg-white dark:bg-slate-900/50 border-rose-500/10 text-right font-bold rounded-xl focus:ring-rose-500/20">
                       <SelectValue placeholder="בחר" />
                     </SelectTrigger>
                     <SelectContent dir="rtl" className="rounded-xl border-rose-500/10">
@@ -406,7 +406,7 @@ const PersonalFormTab = ({
                   value={emergencyDetails.phone}
                   onChange={(e) => setEmergencyDetails({ ...emergencyDetails, phone: e.target.value })}
                   placeholder="מספר טלפון לחירום"
-                  className="h-12 bg-white dark:bg-slate-900/50 border-rose-500/10 focus-visible:ring-rose-500/20 font-bold rounded-xl"
+                  className="h-10 bg-white dark:bg-slate-900/50 border-rose-500/10 focus-visible:ring-rose-500/20 font-bold rounded-xl"
                   dir="ltr"
                 />
               </InputItem>
@@ -418,7 +418,7 @@ const PersonalFormTab = ({
       {/* Mobile Navigation Button */}
       <div className="sm:hidden mt-8">
         <Button
-          className="w-full h-14 text-lg font-bold  bg-primary text-primary-foreground rounded-2xl"
+          className="w-full h-10 text-lg font-bold  bg-primary text-primary-foreground rounded-2xl"
           onClick={onNext}
         >
           המשך לשלב הבא
@@ -686,7 +686,7 @@ const ProfessionalFormTab = ({
       {/* Mobile Save Button */}
       <div className="sm:hidden mt-8">
         <Button
-          className="w-full h-14 text-xl font-black  bg-primary text-primary-foreground"
+          className="w-full h-10 text-xl font-black  bg-primary text-primary-foreground"
           onClick={onSave}
           disabled={saving}
         >
@@ -1009,7 +1009,7 @@ export default function CreateEmployeePage() {
 
       {/* Mobile-only tabs (original style) */}
       <div className="flex sm:hidden justify-center w-full mb-6 px-4 pt-2">
-        <div className="bg-slate-200/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-1 flex w-full h-14 shadow-inner">
+        <div className="bg-slate-200/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-1 flex w-full h-10 shadow-inner">
           <TabButton
             active={activeTab === "personal"}
             onClick={() => setActiveTab("personal")}
@@ -1077,7 +1077,7 @@ export default function CreateEmployeePage() {
       <Dialog open={!!createdCredentials} onOpenChange={() => { navigate("/employees"); }}>
         <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-xl border-border/50 text-right p-0 overflow-hidden" dir="rtl">
           <DialogHeader className="p-6 bg-primary/5 pb-4 border-b border-primary/10">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-4">
               <Check className="w-6 h-6" />
             </div>
             <DialogTitle className="text-2xl font-black text-center text-primary mb-1">
@@ -1140,7 +1140,7 @@ export default function CreateEmployeePage() {
                   window.open(`https://wa.me/?text=${text}`, '_blank');
                   navigate("/employees");
                 }}
-                className="w-full h-12 rounded-xl text-base font-black bg-[#25D366] hover:bg-[#128C7E] text-white  transition-all gap-2"
+                className="w-full h-10 rounded-xl text-base font-black bg-[#25D366] hover:bg-[#128C7E] text-white  transition-all gap-2"
               >
                 <MessageCircle className="w-5 h-5" />
                 שתף פרטים בוואטסאפ
@@ -1148,7 +1148,7 @@ export default function CreateEmployeePage() {
               <Button 
                 variant="ghost" 
                 onClick={() => navigate("/employees")}
-                className="w-full h-12 rounded-xl font-bold text-muted-foreground hover:bg-muted"
+                className="w-full h-10 rounded-xl font-bold text-muted-foreground hover:bg-muted"
               >
                 סגור וחזור לרשימה
               </Button>

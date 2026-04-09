@@ -1,4 +1,4 @@
-import { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
+import { useRef, useMemo, forwardRef, useImperativeHandle, useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter, Download, Activity, ShieldCheck } from "lucide-react";
+import { Filter, Download, Activity, ShieldCheck, BarChart2, PieChart as PieChartIcon } from "lucide-react";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 import {
   BarChart,
@@ -32,6 +32,7 @@ interface EmployeesChartProps {
     count: number;
     color: string;
   }[];
+  total: number;
   loading?: boolean;
   onOpenWhatsAppReport?: () => void;
   onStatusClick?: (statusId: number, statusName: string, color: string) => void;
@@ -52,12 +53,14 @@ interface EmployeesChartProps {
   }[];
   hasArchiveAccess?: boolean;
   onRequestRestore?: () => void;
+  selectedStatusId?: number | null;
 }
 
 export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
   (
     {
       stats,
+      total,
       loading = false,
       onOpenWhatsAppReport,
       onStatusClick,
@@ -72,10 +75,20 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       reportedPct = 0,
       hasArchiveAccess = false,
       onRequestRestore,
+      selectedStatusId = null,
     },
     ref,
   ) => {
     const cardRef = useRef<HTMLDivElement>(null);
+    const [chartType, setChartType] = useState<"pie" | "bar">("pie");
+
+    // On mobile, the user might prefer bar or pie, but we'll default to pie as requested
+    useEffect(() => {
+      const isMobile = window.innerWidth < 640;
+      if (isMobile) {
+        setChartType("pie");
+      }
+    }, []);
 
     useImperativeHandle(ref, () => ({
       download: handleDownload,
@@ -198,9 +211,9 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
     };
 
     // Process stats into chart data
-    const { chartData, total, computedAvailableCount, computedUnavailableCount } = useMemo(() => {
+    const { chartData, computedAvailableCount, computedUnavailableCount } = useMemo(() => {
       if (!stats || stats.length === 0)
-        return { chartData: [], total: 0, computedAvailableCount: 0, computedUnavailableCount: 0 };
+        return { chartData: [], computedAvailableCount: 0, computedUnavailableCount: 0 };
 
       // Logical/Operational priority ordering
       const priorityMap: Record<string, number> = {
@@ -322,9 +335,9 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
       <Card
         ref={cardRef}
         id="attendance-snapshot-card"
-        className="bg-card/60 backdrop-blur-2xl text-card-foreground gap-6 rounded-[2rem] border border-primary/10 py-6 flex flex-col overflow-hidden h-full relative"
+        className="bg-card/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-primary/10 py-3 flex flex-col overflow-hidden h-full relative"
       >
-        <CardHeader className="px-5 sm:px-6 py-5">
+        <CardHeader className="px-5 sm:px-6 py-3">
           <div className="space-y-3">
             <div className="flex flex-row items-center justify-between gap-3">
               <div className="flex-1 min-w-0 text-right">
@@ -360,6 +373,17 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                   </Button>
                 )}
 
+                {/* Chart Type Toggle */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-slate-500 hover:text-primary rounded-xl transition-all bg-slate-50 dark:bg-slate-800 border border-border/40"
+                  onClick={() => setChartType(prev => prev === "pie" ? "bar" : "pie")}
+                  title={chartType === "pie" ? "עבור לתצוגת עמודות" : "עבור לתצוגת עוגה"}
+                >
+                  {chartType === "pie" ? <BarChart2 className="h-4 w-4" /> : <PieChartIcon className="h-4 w-4" />}
+                </Button>
+
                 {/* WhatsApp Button - HIDDEN for Temp Commanders */}
                 {!hideExportControls && onOpenWhatsAppReport && (
                   <WhatsAppButton
@@ -372,7 +396,7 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
               </div>
             </div>
             <CardDescription className="font-bold text-[10px] sm:text-xs text-slate-500/80 dark:text-slate-400/80 whitespace-pre-line text-right leading-relaxed tracking-tight">
-              {description}
+              {description} • {format(selectedDate, "dd/MM/yyyy")}
             </CardDescription>
             {(availableCount !== undefined || reportedPct !== undefined) && (
               <div className="flex items-center gap-3 pt-1 no-export">
@@ -417,145 +441,125 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
             </div>
           ) : (
             <>
-              {/* Desktop View: Pie Chart */}
+              {/* Desktop View: Pie Chart / Bar Chart */}
               <div className="hidden sm:flex flex-1 w-full flex-col min-h-0">
                 <div
-                  className="relative w-full flex-1 min-h-[350px] lg:min-h-[400px]"
+                  className="relative w-full flex-1 min-h-[300px] lg:min-h-[350px]"
                   style={{ direction: "ltr" }}
                 >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart
-                      margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
-                    >
-                      <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={(props: any) => {
-                          if (props.payload.percentage < 3) return null;
-                          const RADIAN = Math.PI / 180;
-                          const radius = props.outerRadius * 1.35; // push labels outward slightly more
-                          const x =
-                            props.cx +
-                            radius * Math.cos(-props.midAngle * RADIAN);
-                          const y =
-                            props.cy +
-                            radius * Math.sin(-props.midAngle * RADIAN);
-                          return (
-                            <g className="cursor-pointer select-none">
-                              <text
-                                x={x}
-                                y={y - 16}
-                                fill="currentColor"
-                                className="fill-muted-foreground/60"
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                                direction="rtl"
-                                unicodeBidi="isolate"
-                                fontSize="13"
-                                fontWeight="800"
-                              >
-                                {props.payload.name}
-                              </text>
-                              <text
-                                x={x}
-                                y={y + 2}
-                                fill="currentColor"
-                                className="fill-foreground font-black"
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                                direction="rtl"
-                                unicodeBidi="isolate"
-                                fontSize="15"
-                                fontWeight="900"
-                              >
-                                {props.payload.value}
-                              </text>
-                              <text
-                                x={x}
-                                y={y + 17}
-                                fill="currentColor"
-                                className="fill-primary/50"
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                                direction="rtl"
-                                unicodeBidi="isolate"
-                                fontSize="12"
-                                fontWeight="700"
-                              >
-                                {props.payload.percentage}%
-                              </text>
-                            </g>
-                          );
-                        }}
-                        outerRadius="60%"
-                        innerRadius="35%"
-                        stroke="none"
-                        dataKey="value"
-                        paddingAngle={3}
-                      >
-                        {chartData.map((item, index) => (
-                          <Cell
-                            key={`cell-${item.id || index}`}
-                            fill={item.fill}
-                            className="outline-none hover:opacity-90 cursor-pointer"
-                            onClick={() =>
-                              onStatusClick?.(item.id, item.name, item.fill)
+                  {chartType === "pie" ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={(props: any) => {
+                            if (props.payload.percentage < 3) return null;
+                            const RADIAN = Math.PI / 180;
+                            const radius = props.outerRadius * 1.35;
+                            const x = props.cx + radius * Math.cos(-props.midAngle * RADIAN);
+                            const y = props.cy + radius * Math.sin(-props.midAngle * RADIAN);
+                            return (
+                              <g className="cursor-pointer select-none">
+                                <text x={x} y={y - 16} fill="currentColor" className="fill-muted-foreground/60" textAnchor="middle" dominantBaseline="middle" direction="rtl" unicodeBidi="isolate" fontSize="13" fontWeight="800">{props.payload.name}</text>
+                                <text x={x} y={y + 2} fill="currentColor" className="fill-foreground font-black" textAnchor="middle" dominantBaseline="middle" direction="rtl" unicodeBidi="isolate" fontSize="15" fontWeight="900">{props.payload.value}</text>
+                                <text x={x} y={y + 17} fill="currentColor" className="fill-primary/50" textAnchor="middle" dominantBaseline="middle" direction="rtl" unicodeBidi="isolate" fontSize="12" fontWeight="700">{props.payload.percentage}%</text>
+                              </g>
+                            );
+                          }}
+                          outerRadius="60%"
+                          innerRadius="35%"
+                          stroke="none"
+                          dataKey="value"
+                          paddingAngle={3}
+                        >
+                          {chartData.map((item, index) => (
+                            <Cell
+                              key={`cell-${item.id || index}`}
+                              fill={item.fill}
+                              onClick={() => onStatusClick?.(item.id, item.name, item.fill)}
+                              className="cursor-pointer transition-opacity"
+                              fillOpacity={selectedStatusId === null || selectedStatusId === item.id ? 1 : 0.2}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 30, right: 30, left: 20, bottom: 40 }}>
+                        <XAxis
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={<CustomXAxisTick />}
+                          interval={0}
+                        />
+                        <YAxis hide domain={[0, 'dataMax + 10']} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
+                        <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                          {chartData.map((item, index) => (
+                            <Cell
+                              key={`cell-${item.id || index}`}
+                              fill={item.fill}
+                              onClick={() => onStatusClick?.(item.id, item.name, item.fill)}
+                              className="cursor-pointer transition-opacity"
+                              fillOpacity={selectedStatusId === null || selectedStatusId === item.id ? 1 : 0.2}
+                            />
+                          ))}
+                          <LabelList
+                            dataKey="value"
+                            position="top"
+                            offset={10}
+                            style={{
+                              fill: "currentColor",
+                              fontSize: 14,
+                              fontWeight: 900
+                            }}
+                          />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                  {chartType === "pie" && (
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                      <p className="text-5xl font-black text-slate-800 dark:text-slate-100 pointer-events-none">
+                        {total}
+                      </p>
+                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1 pointer-events-none">
+                        נוכחות בסטטוס
+                      </p>
+                      {selectedStatusId !== null && (
+                        <Button
+                          variant="link"
+                          className="text-xs font-bold h-auto p-0 mt-2"
+                          onClick={() => {
+                            const selected = chartData.find((d) => d.id === selectedStatusId);
+                            if (selected) {
+                              onStatusClick?.(selected.id, selected.name, selected.fill);
                             }
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <div className="text-4xl font-black text-foreground">
-                      {total}
+                          }}
+                        >
+                          ביטול הבחירה
+                        </Button>
+                      )}
                     </div>
-                    <div className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-widest mt-1">
-                      {unitName}
-                    </div>
-                    {totalInUnit > 0 && (
-                      <div className="mt-1 flex flex-col items-center gap-0.5">
-                        <div className="w-14 h-0.5 bg-muted/40 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-primary/40" 
-                            style={{ width: `${Math.round((availableCount / totalInUnit) * 100)}%` }}
-                          />
-                        </div>
-                        <span className="text-[9px] font-black text-muted-foreground/60 transition-all">
-                          {Math.round((availableCount / totalInUnit) * 100)}% נוכחות
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
 
-              {/* Mobile View: Bar Rows & Progress Bar */}
+              {/* Mobile View: Bar Chart / Pie Chart Toggle */}
               <div className="sm:hidden space-y-6">
-                {/* Manpower Summary Row has been removed based on user request */}
-
-                {/* Status Bar Chart (Mobile) */}
-                <div className="h-[250px] w-full mt-2 pt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={chartData}
-                      margin={{ top: 25, right: 0, left: 0, bottom: 0 }}
-                    >
-                      <XAxis
-                        dataKey="name"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={<CustomXAxisTick />}
-                        interval={0}
-                        height={40}
-                      />
-                      <YAxis hide domain={[0, 'dataMax + 10']} />
-                      <Tooltip
-                        cursor={{ fill: "transparent" }}
-                        content={({ active, payload }) => {
+                <div className="h-[300px] w-full mt-2 pt-4 relative" style={{ direction: "ltr" }}>
+                  {chartType === "bar" ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 25, right: 0, left: 0, bottom: 0 }}>
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={<CustomXAxisTick />} interval={0} height={40}/>
+                        <YAxis hide domain={[0, 'dataMax + 10']} />
+                        <Tooltip cursor={{ fill: "transparent" }} content={({ active, payload }) => {
                           if (active && payload && payload.length) {
                             return (
                               <div className="bg-slate-900 text-white p-2 rounded-xl text-[10px] font-black">
@@ -564,32 +568,53 @@ export const EmployeesChart = forwardRef<any, EmployeesChartProps>(
                             );
                           }
                           return null;
-                        }}
-                      />
-                      <Bar dataKey="value" radius={[8, 8, 8, 8]} barSize={30}>
-                        {chartData.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={entry.fill}
-                            style={{
-                              filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
-                            }}
-                            className="cursor-pointer"
-                            onClick={() => onStatusClick?.(entry.id, entry.name, entry.fill)}
-                          />
-                        ))}
-                        <LabelList
-                          dataKey="value"
-                          position="top"
-                          style={{
-                            fill: "#64748b",
-                            fontSize: 10,
-                            fontWeight: 900,
-                          }}
-                        />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                        }}/>
+                        <Bar dataKey="value" className="cursor-pointer">
+                          {chartData.map((item, index) => (
+                            <Cell
+                              key={`cell-${item.id || index}`}
+                              fill={item.fill}
+                              onClick={() => onStatusClick?.(item.id, item.name, item.fill)}
+                              className="transition-opacity"
+                              opacity={selectedStatusId === null || selectedStatusId === item.id ? 1 : 0.3}
+                            />
+                          ))}
+                          <LabelList dataKey="value" position="top" style={{ fill: "#64748b", fontSize: 10, fontWeight: 900 }} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                          <Pie
+                            data={chartData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius="35%"
+                            outerRadius="60%"
+                            stroke="none"
+                            dataKey="value"
+                            paddingAngle={3}
+                          >
+                            {chartData.map((item, index) => (
+                              <Cell
+                                key={`cell-${item.id || index}`}
+                                fill={item.fill}
+                                onClick={() => onStatusClick?.(item.id, item.name, item.fill)}
+                                fillOpacity={selectedStatusId === null || selectedStatusId === item.id ? 1 : 0.2}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                        <p className="text-3xl font-black text-slate-800 dark:text-slate-100">{total}</p>
+                        <p className="text-[8px] font-bold text-slate-500 uppercase">סה"כ</p>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Units/Totals (Small cards) */}

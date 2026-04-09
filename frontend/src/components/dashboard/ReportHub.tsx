@@ -79,6 +79,10 @@ export const ReportHub: React.FC<ReportHubProps> = ({
   const { getTrendStats, getComparisonStats, getDashboardStats } =
     useEmployees();
 
+  const snapshotTotal = useMemo(() => {
+    return snapshotStats.reduce((acc, curr) => acc + curr.count, 0);
+  }, [snapshotStats]);
+
   const activeDaysRange = useMemo(() => {
     if (localViewMode === "custom") {
       if (dateRange?.from && dateRange?.to) {
@@ -404,6 +408,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
           <EmployeesChart
             ref={snapshotRef}
             stats={snapshotStats}
+            total={snapshotTotal}
             loading={loading}
             title={`מצבת כוח אדם`}
             unitName={filters.unitName}

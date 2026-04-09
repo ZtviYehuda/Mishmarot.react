@@ -489,30 +489,6 @@ export default function RosterPage() {
     return map;
   }, [statusTypes]);
 
-  const unitName = useMemo(() => {
-    if (selectedTeam !== "all") {
-      const t = teams.find((t: any) => t.id.toString() === selectedTeam);
-      return t?.name || "חוליה";
-    }
-    if (selectedSection !== "all") {
-      const s = sections.find((s: any) => s.id.toString() === selectedSection);
-      return s?.name || "מדור";
-    }
-    if (selectedDept !== "all") {
-      return activeDepartment?.name || "מחלקה";
-    }
-    return "כלל היחידה";
-  }, [
-    selectedTeam,
-    selectedSection,
-    selectedDept,
-    teams,
-    sections,
-    activeDepartment,
-  ]);
-
-
-
   return (
     <div
       className="flex flex-col h-full selection:bg-primary/10 selection:text-primary"
@@ -641,150 +617,124 @@ export default function RosterPage() {
             </div>
           </div>
 
-          {/* Desktop full command bar */}
-          <div className="hidden lg:flex items-center justify-between gap-4 p-2 bg-card/60 backdrop-blur-2xl border border-border/40 rounded-[2rem]">
-            <div className="flex flex-1 flex-wrap items-center gap-2">
-              {/* Global Search */}
-              <div className="relative group/search flex-1 max-w-[220px]">
-                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within/search:text-primary transition-all z-10" />
+          {/* Desktop Toolbar - MINIMALIST & CLEAN */}
+          <div className="hidden lg:flex items-center justify-between gap-4 py-6 px-1">
+            {/* Left side: Navigation */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center bg-muted/30 p-1 rounded-2xl border border-border/40">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-xl hover:bg-background hover:shadow-sm transition-all"
+                  onClick={() => startTransition(() => setCurrentDate(subWeeks(currentDate, 1)))}
+                  disabled={isPendingDate}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                
+                <div className="px-6 flex flex-col items-center">
+                   <div className="flex items-center gap-2">
+                    <span className="text-sm font-black text-foreground tabular-nums tracking-tight">
+                      {format(weekStart, "dd")}
+                    </span>
+                    <span className="text-muted-foreground/30 font-light">-</span>
+                    <span className="text-sm font-black text-foreground tabular-nums tracking-tight">
+                      {format(weekEnd, "dd")}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none mt-0.5">
+                    {format(weekStart, "MMMM yyyy", { locale: he })}
+                  </span>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-xl hover:bg-background hover:shadow-sm transition-all"
+                  onClick={() => startTransition(() => setCurrentDate(addWeeks(currentDate, 1)))}
+                  disabled={isPendingDate}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => startTransition(() => setCurrentDate(new Date()))}
+                className="h-9 rounded-2xl px-4 hover:bg-primary/5 text-primary text-[11px] font-black transition-all"
+              >
+                חזור להיום
+              </Button>
+            </div>
+
+            {/* Right side: Filters & Search */}
+            <div className="flex items-center gap-3">
+              {/* Search Pill */}
+              <div className="relative group/search">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 group-focus-within/search:text-primary transition-all z-10" />
                 <Input
-                  placeholder="חיפוש..."
+                  placeholder="חיפוש מהיר..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-11 pr-11 pl-4 bg-muted/30 hover:bg-muted/50 border-transparent hover:border-border/40 rounded-2xl font-bold text-xs placeholder:text-muted-foreground/50 focus:ring-4 focus:ring-primary/10 transition-all"
+                  className="h-9 w-48 pr-9 pl-4 bg-muted/20 border-transparent hover:bg-muted/40 focus:bg-background focus:border-border/40 focus:w-64 rounded-2xl font-bold text-[11px] transition-all"
                 />
               </div>
 
-              <div className="w-px h-6 bg-border/40 mx-1 hidden lg:block" />
-
-              {/* All Filters Groups */}
-              <div className="flex items-center gap-2">
-                {/* Department */}
-                <div className="relative group/select">
-                  <Users className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within/select:text-primary transition-colors pointer-events-none z-10" />
-                  <Select
-                    value={selectedDept}
-                    onValueChange={(val) => {
-                      setSelectedDept(val);
-                      setSelectedSection("all");
-                      setSelectedTeam("all");
-                    }}
-                  >
-                    <SelectTrigger className="h-11 min-w-[140px] pr-10 pl-4 bg-muted/20 hover:bg-muted/50 border-transparent rounded-2xl font-bold text-xs transition-all focus:ring-4 focus:ring-primary/10">
-                      <SelectValue placeholder="מחלקה" />
-                    </SelectTrigger>
-                    <SelectContent
-                      dir="rtl"
-                      className="rounded-2xl font-bold border-border/40"
-                    >
-                      <SelectItem value="all">כל היחידה</SelectItem>
-                      {departments.map((d: any) => (
-                        <SelectItem key={d.id} value={d.id.toString()}>
-                          {d.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Section (Auto-showing) */}
-                <AnimatePresence>
-                  {selectedDept !== "all" && sections.length > 0 && (
-                    <motion.div
-                      initial={{ width: 0, opacity: 0 }}
-                      animate={{ width: "auto", opacity: 1 }}
-                      exit={{ width: 0, opacity: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="relative group/select">
-                        <BadgeInfo className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 transition-colors pointer-events-none z-10" />
-                        <Select
-                          value={selectedSection}
-                          onValueChange={(val) => {
-                            setSelectedSection(val);
-                            setSelectedTeam("all");
-                          }}
-                        >
-                          <SelectTrigger className="h-11 min-w-[140px] pr-10 pl-4 bg-muted/20 hover:bg-muted/50 border-transparent rounded-2xl font-bold text-xs transition-all focus:ring-4 focus:ring-primary/10">
-                            <SelectValue placeholder="מדור" />
-                          </SelectTrigger>
-                          <SelectContent
-                            dir="rtl"
-                            className="rounded-2xl font-bold border-border/40"
-                          >
-                            <SelectItem value="all">כל המדורים</SelectItem>
-                            {sections.map((s: any) => (
-                              <SelectItem key={s.id} value={s.id.toString()}>
-                                {s.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Team (Auto-showing) */}
-                <AnimatePresence>
-                  {selectedSection !== "all" && teams.length > 0 && (
-                    <motion.div
-                      initial={{ width: 0, opacity: 0 }}
-                      animate={{ width: "auto", opacity: 1 }}
-                      exit={{ width: 0, opacity: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="relative group/select">
-                        <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 transition-colors pointer-events-none z-10" />
-                        <Select
-                          value={selectedTeam}
-                          onValueChange={setSelectedTeam}
-                        >
-                          <SelectTrigger className="h-11 min-w-[140px] pr-10 pl-4 bg-muted/20 hover:bg-muted/50 border-transparent rounded-2xl font-bold text-xs transition-all focus:ring-4 focus:ring-primary/10">
-                            <SelectValue placeholder="חוליה" />
-                          </SelectTrigger>
-                          <SelectContent
-                            dir="rtl"
-                            className="rounded-2xl font-bold border-border/40"
-                          >
-                            <SelectItem value="all">כל החוליות</SelectItem>
-                            {teams.map((t: any) => (
-                              <SelectItem key={t.id} value={t.id.toString()}>
-                                {t.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <div className="w-px h-6 bg-border/40 mx-1 hidden lg:block" />
-
-              {/* Status Filter */}
-              <div className="relative group/select">
-                <Info className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/60 transition-colors pointer-events-none z-10 group-focus-within/select:text-primary" />
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-11 min-w-[160px] pr-10 pl-4 bg-primary/5 hover:bg-primary/10 text-primary border-transparent rounded-2xl font-bold text-xs transition-all focus:ring-4 focus:ring-primary/10">
-                    <SelectValue placeholder="סינון סטטוס" />
+              <div className="flex items-center gap-2 bg-muted/20 p-1 rounded-2xl border border-transparent hover:border-border/40 transition-all">
+                {/* Dept Select */}
+                <Select value={selectedDept} onValueChange={(val) => { setSelectedDept(val); setSelectedSection("all"); setSelectedTeam("all"); }}>
+                  <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover:shadow-sm rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
+                    <SelectValue placeholder="מחלקה" />
                   </SelectTrigger>
-                  <SelectContent
-                    dir="rtl"
-                    className="rounded-2xl font-bold border-primary/20"
-                  >
-                    <SelectItem value="all">כל הסטטוסים</SelectItem>
-                    <SelectItem value="none" className="text-rose-500">
-                      לא דווח
-                    </SelectItem>
+                  <SelectContent dir="rtl" className="rounded-2xl font-bold">
+                    <SelectItem value="all">כל היחידה</SelectItem>
+                    {departments.map((d: any) => (<SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+
+                {/* Section Select - Sequential */}
+                {selectedDept !== "all" && sections.length > 0 && (
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                    <Select value={selectedSection} onValueChange={(val) => { setSelectedSection(val); setSelectedTeam("all"); }}>
+                      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover:shadow-sm rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
+                        <SelectValue placeholder="מדור" />
+                      </SelectTrigger>
+                      <SelectContent dir="rtl" className="rounded-2xl font-bold">
+                        <SelectItem value="all">כל המדורים</SelectItem>
+                        {sections.map((s: any) => (<SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </motion.div>
+                )}
+
+                {/* Team Select - Sequential */}
+                {selectedSection !== "all" && teams.length > 0 && (
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                    <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover:shadow-sm rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
+                        <SelectValue placeholder="חוליה" />
+                      </SelectTrigger>
+                      <SelectContent dir="rtl" className="rounded-2xl font-bold">
+                        <SelectItem value="all">כל החוליות</SelectItem>
+                        {teams.map((t: any) => (<SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </motion.div>
+                )}
+
+                {/* Status Select */}
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover:shadow-sm rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px] text-primary">
+                    <SelectValue placeholder="סטטוס" />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl" className="rounded-2xl font-bold border-primary/20">
+                    <SelectItem value="all">סטטוס: הכל</SelectItem>
+                    <SelectItem value="none" className="text-rose-500">לא דווח</SelectItem>
                     {rosterParentStatuses.map((st: any) => (
                       <SelectItem key={st.id} value={st.id.toString()}>
                         <div className="flex items-center gap-2">
-                          <div
-                            className="w-2.5 h-2.5 rounded-full"
-                            style={{ backgroundColor: st.color }}
-                          />
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: st.color }} />
                           {st.name}
                         </div>
                       </SelectItem>
@@ -792,50 +742,6 @@ export default function RosterPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {/* Date Navigation Block */}
-            <div className={cn("flex items-center gap-1.5 p-1 bg-muted/30 rounded-2xl border border-transparent transition-opacity", isPendingDate && "opacity-50")}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary transition-all"
-                onClick={() => startTransition(() => setCurrentDate(subWeeks(currentDate, 1)))}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-              <div className="px-4 flex flex-col items-center justify-center min-w-[130px]">
-                <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] leading-none mb-1">
-                  {format(weekStart, "MMMM yyyy", { locale: he })}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-black text-foreground tracking-tighter tabular-nums">
-                    {format(weekStart, "dd")}
-                  </span>
-                  <div className="w-3 h-px bg-border/80" />
-                  <span className="text-[13px] font-black text-foreground tracking-tighter tabular-nums">
-                    {format(weekEnd, "dd")}
-                  </span>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary transition-all"
-                onClick={() => startTransition(() => setCurrentDate(addWeeks(currentDate, 1)))}
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-              <div className="w-px h-5 bg-border/80 mx-1" />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => startTransition(() => setCurrentDate(new Date()))}
-                className="h-9 w-9 rounded-xl hover:bg-background hover:text-primary transition-all group/today"
-                title="חזור להיום"
-              >
-                <CalendarIcon className="w-4.5 h-4.5 group-hover/today:scale-110 transition-transform" />
-              </Button>
             </div>
           </div>
         </div>

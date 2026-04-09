@@ -5,10 +5,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
-    react({
-      // Babel fast-refresh — keeps dev HMR snappy
-      fastRefresh: true,
-    }),
+    react(),
     tailwindcss(),
   ],
 
@@ -60,6 +57,13 @@ export default defineConfig({
     ],
     // Force re-bundle on dep changes
     force: false,
+  },
+
+  // @ts-ignore: Vitest test config recognized at runtime
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./src/test/setup.ts"],
   },
 
   server: {

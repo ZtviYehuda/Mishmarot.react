@@ -270,7 +270,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               <div className="text-[10px] text-muted-foreground mt-0.5">
                 {days === 1
                   ? `תמונת מצב יומית להיום`
-                  : `ממוצע נוכחים - ${days === 7 ? "שבועית" : days === 30 ? "חודשית" : "שנתית"}`}
+                  : `ממוצע נוכחים - ${days === 7 ? "שבועית" : days === 30 ? "חודשית" : "שנתית"}`} • {format(selectedDate, "dd/MM/yyyy")}
               </div>
             </CardDescription>
           </div>

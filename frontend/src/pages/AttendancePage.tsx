@@ -549,7 +549,7 @@ export default function AttendancePage() {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl gap-2 font-black px-4 justify-center transition-all shadow-none",
+                    "h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl gap-2 font-bold px-4 justify-center transition-all shadow-none",
                     calendarOpen
                       ? "text-primary bg-primary/10 border-primary/30"
                       : "text-primary hover:bg-primary/5",
@@ -563,7 +563,7 @@ export default function AttendancePage() {
                 {!user?.is_temp_commander && (
                   <Button
                     variant="ghost"
-                    className="h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-4 justify-center transition-all shadow-none"
+                    className="h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-bold px-4 justify-center transition-all shadow-none"
                     onClick={() => setExportDialogOpen(true)}
                   >
                     <Download className="w-4 h-4" />
@@ -574,7 +574,7 @@ export default function AttendancePage() {
                 <Button
                   variant={isReportedToday ? "default" : "ghost"}
                   className={cn(
-                    "h-10 rounded-xl gap-2 font-black transition-all px-4 justify-center shadow-none backdrop-blur-xl",
+                    "h-10 rounded-xl gap-2 font-bold transition-all px-4 justify-center shadow-none backdrop-blur-xl",
                     isReportedToday
                       ? "bg-emerald-500/90 hover:bg-emerald-600 border-white/20 text-white"
                       : "border border-border/40 bg-card/40 text-primary hover:bg-primary/5",
@@ -602,7 +602,7 @@ export default function AttendancePage() {
                 {unverifiedEmployees.length > 0 && (
                   <Button
                     variant="default"
-                    className="h-10 rounded-xl gap-2 font-black px-4 justify-center transition-all bg-primary hover:bg-primary/90 text-white shadow-none"
+                    className="h-10 rounded-xl gap-2 font-bold px-4 justify-center transition-all bg-primary hover:bg-primary/90 text-white shadow-none"
                     onClick={async () => {
                       const success = await verifyRoster(
                         format(selectedDate, "yyyy-MM-dd"),
@@ -626,7 +626,7 @@ export default function AttendancePage() {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-4 justify-center transition-all shadow-none",
+                    "h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-bold px-4 justify-center transition-all shadow-none",
                     selectedEmployeeIds.length > 0 &&
                       "bg-primary/10 border-primary/20",
                   )}
@@ -659,7 +659,7 @@ export default function AttendancePage() {
             <Button
               variant="outline"
               className={cn(
-                "h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1",
+                "h-11 rounded-xl gap-1 font-bold text-[10px] flex-col py-2 px-1",
                 calendarOpen
                   ? "bg-primary/10 border-primary/30 text-primary"
                   : "border-border/40 bg-card/40 text-primary hover:bg-primary/5",
@@ -672,7 +672,7 @@ export default function AttendancePage() {
             {!user?.is_temp_commander && (
               <Button
                 variant="outline"
-                className="h-11 rounded-xl border-border/40 bg-card/40 text-primary hover:bg-primary/5 gap-1 font-black text-[10px] flex-col py-2 px-1"
+                className="h-11 rounded-xl border-border/40 bg-card/40 text-primary hover:bg-primary/5 gap-1 font-bold text-[10px] flex-col py-2 px-1"
                 onClick={() => setExportDialogOpen(true)}
               >
                 <Download className="w-4 h-4" />
@@ -683,7 +683,7 @@ export default function AttendancePage() {
             <Button
               variant={isReportedToday ? "default" : "outline"}
               className={cn(
-                "h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1",
+                "h-11 rounded-xl gap-1 font-bold text-[10px] flex-col py-2 px-1",
                 isReportedToday
                   ? "bg-emerald-500 hover:bg-emerald-600 border-white/20 text-white"
                   : "border-border/40 bg-card/40 text-primary hover:bg-primary/5",
@@ -711,7 +711,7 @@ export default function AttendancePage() {
             {unverifiedEmployees.length > 0 && (
               <Button
                 variant="default"
-                className="h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1 bg-blue-600 hover:bg-blue-700 text-white"
+                className="h-11 rounded-xl gap-1 font-bold text-[10px] flex-col py-2 px-1 bg-blue-600 hover:bg-blue-700 text-white"
                 onClick={async () => {
                   const success = await verifyRoster(
                     format(selectedDate, "yyyy-MM-dd"),
@@ -733,7 +733,7 @@ export default function AttendancePage() {
             <Button
               variant="outline"
               className={cn(
-                "h-11 rounded-xl border-border/40 bg-card/40 text-primary hover:bg-primary/5 gap-1 font-black text-[10px] flex-col py-2 px-1",
+                "h-11 rounded-xl border-border/40 bg-card/40 text-primary hover:bg-primary/5 gap-1 font-bold text-[10px] flex-col py-2 px-1",
                 selectedEmployeeIds.length > 0 &&
                   "bg-primary/10 border-primary/20",
               )}
@@ -764,7 +764,7 @@ export default function AttendancePage() {
                   <Clock className="w-4 h-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-px font-black text-foreground leading-tight">
+                  <span className="text-px font-bold text-foreground leading-tight">
                     נשארו דיווחים
                   </span>
                   <span className="text-[10px] font-bold text-muted-foreground/60">
@@ -773,7 +773,7 @@ export default function AttendancePage() {
                 </div>
               </div>
               <div className="bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-                <span className="text-[10px] font-black text-amber-700">
+                <span className="text-[10px] font-bold text-amber-700">
                   נותרו: {totalCount - activeEmployees.length}
                 </span>
               </div>
@@ -816,30 +816,60 @@ export default function AttendancePage() {
                 {/* Subtle Background Pattern */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
 
-                <div className="flex items-center justify-between mb-8 relative z-10">
-                  <div className="flex flex-col gap-1 text-right">
-                    <span className="text-sm sm:text-base font-black text-foreground tracking-tight">
-                      סיכום התייצבות למשמרת
-                    </span>
-                    <span className="text-[11px] sm:text-sm text-muted-foreground font-bold italic">
-                      מעקב דיווחים להיום,{" "}
-                      {format(selectedDate, "EEEE, d MMM", {
-                        locale: he,
-                      })}
-                    </span>
-                  </div>
-                  <div className="text-right flex flex-col items-end">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl sm:text-4xl font-black text-primary">
-                        {updatedTodayCount}
+                <div className="space-y-6 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-1 text-right">
+                      <span className="text-sm sm:text-lg font-black text-foreground tracking-tight">
+                        סיכום התייצבות למשמרת
                       </span>
-                      <span className="text-base sm:text-xl font-bold text-muted-foreground/40">
-                        / {totalCount}
+                      <span className="text-[11px] sm:text-sm text-muted-foreground font-bold italic">
+                        מעקב דיווחים להיום,{" "}
+                        {format(selectedDate, "EEEE, d MMM", {
+                          locale: he,
+                        })}
                       </span>
                     </div>
-                    <span className="text-[10px] sm:text-[11px] font-black text-muted-foreground uppercase mt-1">
-                      שוטרים מדווחים
-                    </span>
+
+                    <div className="text-right flex flex-col items-end">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl sm:text-4xl font-black text-primary">
+                          {updatedTodayCount}
+                        </span>
+                        <span className="text-base sm:text-xl font-bold text-muted-foreground/30">
+                          / {totalCount}
+                        </span>
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-black text-muted-foreground uppercase opacity-60">
+                        שוטרים מדווחים
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Full-width Progress Display */}
+                  <div className="w-full space-y-3">
+                    <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider">
+                      <div className="flex items-center gap-2 text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>זמינים: {updatedTodayCount}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-primary/60 bg-primary/5 px-3 py-1 rounded-lg border border-primary/10">
+                        <span>{Math.round(progressPercent)}% הושלם</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 px-3 py-1 rounded-lg border border-rose-500/20">
+                        <span>{totalCount - updatedTodayCount} חסרים</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                      </div>
+                    </div>
+                    
+                    <div className="h-3 w-full bg-slate-100 dark:bg-slate-800/40 rounded-full overflow-hidden border border-border/10 relative shadow-inner">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPercent}%` }}
+                        transition={{ duration: 1.2, ease: "circOut" }}
+                        className="absolute inset-y-0 right-0 bg-gradient-to-l from-emerald-500 via-emerald-400 to-emerald-300 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.4)] z-10"
+                      />
+                      <div className="absolute inset-0 bg-rose-500/10" />
+                    </div>
                   </div>
                 </div>
 
@@ -948,7 +978,7 @@ export default function AttendancePage() {
                                   direction="rtl"
                                   unicodeBidi="isolate"
                                   className={cn(
-                                    "text-[4px] font-black tracking-tight transition-all",
+                                    "text-[4px] font-bold tracking-tight transition-all",
                                     isSelected
                                       ? "fill-foreground"
                                       : "fill-muted-foreground/50",
@@ -969,7 +999,7 @@ export default function AttendancePage() {
                                   direction="rtl"
                                   unicodeBidi="isolate"
                                   className={cn(
-                                    "text-[5px] font-black tabular-nums transition-all",
+                                    "text-[5px] font-bold tabular-nums transition-all",
                                     isSelected
                                       ? "fill-foreground"
                                       : "fill-muted-foreground/80",
@@ -1003,7 +1033,7 @@ export default function AttendancePage() {
                           animate={{ scale: 1, opacity: 1 }}
                           className="flex flex-col items-center"
                         >
-                          <span className="text-[34px] font-black text-foreground tracking-tighter tabular-nums leading-none">
+                          <span className="text-[34px] font-bold text-foreground tracking-tighter tabular-nums leading-none">
                             {selectedStatusId === "all"
                               ? activeEmployees.length
                               : (mobileGaugeStats.find(
@@ -1011,7 +1041,7 @@ export default function AttendancePage() {
                                     s.status_id.toString() === selectedStatusId,
                                 )?.count ?? 0)}
                           </span>
-                          <span className="text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 mt-1">
+                          <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30 mt-1">
                             {selectedStatusId === "all"
                               ? 'סה"כ מדווחים'
                               : "נוכחות בסטטוס"}
@@ -1021,7 +1051,7 @@ export default function AttendancePage() {
 
                       {/* Compact Progress Bar - Now inside the Gauge Area */}
                       <div className="w-32 mt-5">
-                        <div className="flex items-center justify-between text-[7px] font-black text-muted-foreground/40 uppercase tracking-widest mb-1">
+                        <div className="flex items-center justify-between text-[7px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-1">
                           <span>דיווח יחידתי</span>
                           <span className="text-primary/60">
                             {Math.round(progressPercent)}%
@@ -1042,7 +1072,7 @@ export default function AttendancePage() {
                   {selectedStatusId !== "all" && (
                     <button
                       onClick={() => setSelectedStatusId("all")}
-                      className="mt-4 text-[10px] font-black text-primary/60 hover:text-primary uppercase tracking-[0.2em] transition-colors"
+                      className="mt-4 text-[10px] font-bold text-primary/60 hover:text-primary uppercase tracking-[0.2em] transition-colors"
                     >
                       לביטול הבחירה
                     </button>
@@ -1067,7 +1097,7 @@ export default function AttendancePage() {
 
                     <div className="flex-1 space-y-1 lg:space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm lg:text-lg font-black text-foreground">
+                        <h3 className="text-sm lg:text-lg font-bold text-foreground">
                           תזכורת דיווח
                         </h3>
                         <div className="hidden lg:block px-2 py-0.5 bg-primary/10 dark:bg-primary/20 rounded-full">
@@ -1079,13 +1109,13 @@ export default function AttendancePage() {
                       <p className="hidden lg:block text-xs lg:text-sm text-muted-foreground font-medium leading-relaxed">
                         יש להשלים את דיווחי הנוכחות של כלל השוטרים במחלקה עד
                         השעה{" "}
-                        <span className="font-black text-foreground">
+                        <span className="font-bold text-foreground">
                           09:00
                         </span>
                       </p>
                       <p className="lg:hidden text-[10px] text-muted-foreground font-medium">
                         השלמה עד{" "}
-                        <span className="font-black text-foreground">
+                        <span className="font-bold text-foreground">
                           09:00
                         </span>
                       </p>
@@ -1103,7 +1133,7 @@ export default function AttendancePage() {
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
                       <AlertCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-foreground relative z-10" />
-                      <span className="text-xs lg:text-sm font-black text-primary-foreground whitespace-nowrap relative z-10">
+                      <span className="text-xs lg:text-sm font-bold text-primary-foreground whitespace-nowrap relative z-10">
                         נותרו: {totalCount - updatedTodayCount}
                       </span>
                     </button>
@@ -1116,7 +1146,7 @@ export default function AttendancePage() {
                       <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div className="space-y-0.5 lg:space-y-1">
-                      <h3 className="text-xs lg:text-lg font-black text-emerald-800 leading-none">
+                      <h3 className="text-xs lg:text-lg font-bold text-emerald-800 leading-none">
                         הושלם הדיווח!
                       </h3>
                       <p className="text-[9px] lg:text-xs text-emerald-700/80 font-bold leading-none">
@@ -1153,7 +1183,7 @@ export default function AttendancePage() {
               {/* Desktop View: Full Filters */}
               <div className="hidden md:flex flex-row gap-4 items-end">
                 <div className="flex-1 space-y-2 text-right">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
                     חיפוש מהיר
                   </label>
                   <div className="relative">
@@ -1170,7 +1200,7 @@ export default function AttendancePage() {
                 {/* Department Filter - Only for Admins or those without a fixed Dept */}
                 {(user?.is_admin || !user?.department_id) && (
                   <div className="w-36 lg:w-48 space-y-2 text-right">
-                    <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
                       מחלקה
                     </label>
                     <Select
@@ -1202,7 +1232,7 @@ export default function AttendancePage() {
                 {/* Section Filter - Only for Admins or those without a fixed Section */}
                 {(user?.is_admin || !user?.section_id) && (
                   <div className="w-36 lg:w-48 space-y-2 text-right">
-                    <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
                       מדור
                     </label>
                     <Select
@@ -1235,7 +1265,7 @@ export default function AttendancePage() {
                 {/* Team Filter - Only for Admins or those without a fixed Team */}
                 {(user?.is_admin || !user?.team_id) && (
                   <div className="w-36 lg:w-48 space-y-2 text-right">
-                    <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
                       חוליה
                     </label>
                     <Select
@@ -1263,7 +1293,7 @@ export default function AttendancePage() {
                 )}
 
                 <div className="w-36 lg:w-48 space-y-2 text-right">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
                     סטטוס
                   </label>
                   <Select
@@ -1285,7 +1315,7 @@ export default function AttendancePage() {
                 </div>
 
                 <div className="w-32 lg:w-36 space-y-2 text-right">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase mr-1">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
                     מעמד
                   </label>
                   <Select
@@ -1349,7 +1379,7 @@ export default function AttendancePage() {
               <DialogContent className="w-[90vw] max-w-[340px] p-0 border-none bg-transparent">
                 <div className="bg-card border border-border flex flex-col rounded-2xl  overflow-hidden max-h-[85vh]">
                   <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
-                    <div className="flex items-center gap-2 font-black text-sm text-foreground">
+                    <div className="flex items-center gap-2 font-bold text-sm text-foreground">
                       <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
                         <Filter className="w-4 h-4" />
                       </div>
@@ -1553,22 +1583,22 @@ export default function AttendancePage() {
                           />
                         </div>
                       </TableHead>
-                      <TableHead className="text-right px-6 font-black text-muted-foreground uppercase text-[10px] tracking-widest h-16">
+                      <TableHead className="text-right px-6 font-bold text-muted-foreground uppercase text-[10px] tracking-widest h-16">
                         שוטר
                       </TableHead>
-                      <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] tracking-widest h-16">
+                      <TableHead className="text-right font-bold text-muted-foreground uppercase text-[10px] tracking-widest h-16">
                         תפקיד/סמכות
                       </TableHead>
-                      <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] tracking-widest h-16">
+                      <TableHead className="text-right font-bold text-muted-foreground uppercase text-[10px] tracking-widest h-16">
                         שיוך ארגוני
                       </TableHead>
-                      <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] tracking-widest h-16">
+                      <TableHead className="text-right font-bold text-muted-foreground uppercase text-[10px] tracking-widest h-16">
                         סטטוס נוכחות
                       </TableHead>
-                      <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] tracking-widest h-16">
+                      <TableHead className="text-right font-bold text-muted-foreground uppercase text-[10px] tracking-widest h-16">
                         עדכון אחרון
                       </TableHead>
-                      <TableHead className="text-center font-black text-muted-foreground uppercase text-[10px] tracking-widest h-16">
+                      <TableHead className="text-center font-bold text-muted-foreground uppercase text-[10px] tracking-widest h-16">
                         פעולות
                       </TableHead>
                     </TableRow>
@@ -1636,7 +1666,7 @@ export default function AttendancePage() {
                                 <div className="relative">
                                   <div
                                     className={cn(
-                                      "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm group-hover/row:scale-110 transition-all shrink-0",
+                                      "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm group-hover/row:scale-110 transition-all shrink-0",
                                       isSelected
                                         ? "bg-primary text-primary-foreground"
                                         : "bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 text-slate-600 dark:text-slate-400 border border-border/50",
@@ -1659,13 +1689,13 @@ export default function AttendancePage() {
                                   <EmployeeLink
                                     employee={emp}
                                     className={cn(
-                                      "text-base font-black truncate tracking-tight transition-colors",
+                                      "text-base font-bold truncate tracking-tight transition-colors",
                                       isSelected
                                         ? "text-primary"
                                         : "text-foreground group-hover/row:text-primary",
                                     )}
                                   />
-                                  <span className="text-[10px] text-muted-foreground/50 font-black tracking-[0.1em]">
+                                  <span className="text-[10px] text-muted-foreground/50 font-bold tracking-[0.1em]">
                                     #{emp.username}
                                   </span>
                                 </div>
@@ -1691,7 +1721,7 @@ export default function AttendancePage() {
                                 {emp.department_name &&
                                 emp.department_name !== "מטה" ? (
                                   <>
-                                    <span className="text-[11px] font-black text-foreground">
+                                    <span className="text-[11px] font-bold text-foreground">
                                       {cleanUnitName(emp.department_name)}
                                     </span>
                                     {((emp.section_name &&
@@ -1699,7 +1729,7 @@ export default function AttendancePage() {
                                       (emp.team_name &&
                                         emp.team_name !== "מטה")) && (
                                       <div className="flex items-center gap-1.5 mt-1">
-                                        <span className="text-[10px] font-black text-primary/60 truncate bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10">
+                                        <span className="text-[10px] font-bold text-primary/60 truncate bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10">
                                           {emp.team_name &&
                                           emp.team_name !== "מטה"
                                             ? cleanUnitName(emp.team_name)
@@ -1711,7 +1741,7 @@ export default function AttendancePage() {
                                     )}
                                   </>
                                 ) : (
-                                  <span className="text-[10px] font-black text-muted-foreground/30">
+                                  <span className="text-[10px] font-bold text-muted-foreground/30">
                                     מטה / ללא שיוך
                                   </span>
                                 )}
@@ -1807,7 +1837,7 @@ export default function AttendancePage() {
                                 ) : (
                                   <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">
                                     <Clock className="w-3.5 h-3.5" />
-                                    <span className="text-[10px] font-black">
+                                    <span className="text-[10px] font-bold">
                                       מתוכנן
                                     </span>
                                   </div>
@@ -1920,7 +1950,7 @@ export default function AttendancePage() {
                             {/* Avatar/Initials */}
                             <div
                               className={cn(
-                                "w-12 h-12 rounded-[18px] flex items-center justify-center font-black text-xs shrink-0 transition-transform",
+                                "w-12 h-12 rounded-[18px] flex items-center justify-center font-bold text-xs shrink-0 transition-transform",
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
                                   : "bg-muted text-muted-foreground border border-border/50",
@@ -1935,10 +1965,10 @@ export default function AttendancePage() {
                                 <div className="flex flex-col">
                                   <EmployeeLink
                                     employee={emp}
-                                    className="text-[15px] font-black text-foreground truncate text-right justify-start p-0 h-auto hover:no-underline"
+                                    className="text-[15px] font-bold text-foreground truncate text-right justify-start p-0 h-auto hover:no-underline"
                                   />
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] text-muted-foreground font-black tracking-widest">
+                                    <span className="text-[10px] text-muted-foreground font-bold tracking-widest">
                                       {emp.username}
                                     </span>
                                     <span className="text-[10px] text-muted-foreground/30">
@@ -2029,7 +2059,7 @@ export default function AttendancePage() {
                                 <div className="flex items-center gap-2">
                                   <span
                                     className={cn(
-                                      "text-xs font-black",
+                                      "text-xs font-bold",
                                       isUpdatedToday
                                         ? "text-emerald-700"
                                         : (() => {
@@ -2095,7 +2125,7 @@ export default function AttendancePage() {
                                   </span>
                                 </div>
                                 {isUpdatedToday && (
-                                  <div className="flex items-center gap-1 text-[9px] font-black text-emerald-600/70 bg-emerald-500/5 px-2 py-0.5 rounded-full">
+                                  <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-600/70 bg-emerald-500/5 px-2 py-0.5 rounded-full">
                                     <Clock className="w-3 h-3" />
                                     {format(
                                       new Date(emp.last_status_update!),
@@ -2111,7 +2141,7 @@ export default function AttendancePage() {
                         {/* Actions Bar */}
                         <div className="flex border-t border-border/50 bg-muted/20">
                           <button
-                            className="flex-1 py-3 text-[11px] font-black text-primary hover:bg-primary/5 active:bg-primary/10 transition-colors flex items-center justify-center gap-2 border-l border-border/50"
+                            className="flex-1 py-3 text-[11px] font-bold text-primary hover:bg-primary/5 active:bg-primary/10 transition-colors flex items-center justify-center gap-2 border-l border-border/50"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenStatusModal(emp);
@@ -2122,7 +2152,7 @@ export default function AttendancePage() {
                           </button>
                           {!user?.is_temp_commander && (
                             <button
-                              className="flex-1 py-3 text-[11px] font-black text-muted-foreground hover:bg-muted/50 active:bg-muted transition-colors flex items-center justify-center gap-2"
+                              className="flex-1 py-3 text-[11px] font-bold text-muted-foreground hover:bg-muted/50 active:bg-muted transition-colors flex items-center justify-center gap-2"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleOpenHistoryModal(emp);

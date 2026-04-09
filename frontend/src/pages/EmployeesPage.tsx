@@ -1,13 +1,11 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useEmployees } from "@/hooks/useEmployees";
-import { useAuthContext } from "@/context/AuthContext";
 import { EmployeeTable } from "@/components/employees/EmployeeTable";
 import { Users } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function EmployeesPage() {
-  const { user } = useAuthContext();
   const { employees, loading, fetchEmployees } = useEmployees();
   const [searchParams] = useSearchParams();
 
@@ -28,13 +26,6 @@ export default function EmployeesPage() {
     return Object.keys(filters).length > 0 ? filters : undefined;
   }, [searchParams]);
 
-  const unitTypeLabel = user?.commands_team_id
-    ? "חוליה"
-    : user?.commands_section_id
-      ? "מדור"
-      : user?.commands_department_id
-        ? "מחלקה"
-        : "יחידה";
 
   return (
     <div className="flex flex-col">

@@ -1208,13 +1208,19 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def get_birthdays(requesting_user=None):
+    def get_birthdays(requesting_user=None, selected_date=None):
         conn = get_db_connection()
         if not conn:
             return []
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            query = """
+            
+            # Use selected_date if provided, otherwise use current date
+            date_condition = "CURRENT_DATE"
+            if selected_date:
+                date_condition = f"'{selected_date}'::DATE"
+            
+            query = f"""
                 SELECT e.id, e.first_name, e.last_name, e.birth_date, e.phone_number,
                     DATE_PART('day', e.birth_date) as day,
                     DATE_PART('month', e.birth_date) as month
@@ -1245,9 +1251,9 @@ class AttendanceModel:
                 query += " AND e.id != %s"
                 params.append(requesting_user["id"])
 
-            query += """
+            query += f"""
                 AND (
-                    (EXTRACT(DOY FROM e.birth_date) - EXTRACT(DOY FROM CURRENT_DATE) + 365) %% 365 < 7
+                    (EXTRACT(DOY FROM e.birth_date) - EXTRACT(DOY FROM {date_condition}) + 365) %% 365 < 7
                 )
                 ORDER BY month, day
             """

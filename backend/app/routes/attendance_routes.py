@@ -92,7 +92,9 @@ def get_stats():
         stats_data = AttendanceModel.get_dashboard_stats(
             requesting_user=requester, filters=filters
         )
-        birthdays = AttendanceModel.get_birthdays(requesting_user=requester)
+        # Pass the selected date to get_birthdays
+        selected_date = filters.get('date') if filters else None
+        birthdays = AttendanceModel.get_birthdays(requesting_user=requester, selected_date=selected_date)
         # Count unverified
         unverified = sum(
             int(s.get("unverified_count", 0)) for s in stats_data.get("stats", [])

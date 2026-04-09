@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import apiClient from "@/config/api.client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { PinVerificationModal } from "@/components/auth/PinVerificationModal";
 
 interface LockedUser {
   username: string;
@@ -213,111 +215,101 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [lockedUser, setLockedUser] = useState<LockedUser | null>(null);
   const navigate = useNavigate();
-  const { login } = useAuthContext();
   const { theme } = useTheme();
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinUsername, setPinUsername] = useState("");
+  const { login, refreshUser } = useAuthContext();
 
   useEffect(() => {
-    // Check if biometric is available and if there's a registered user
-    const checkBiometric = async () => {
-      if (!window.PublicKeyCredential) {
-        setIsBiometricAvailable(false);
-        return;
-      }
-      
-      try {
-        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-        // Check if there's at least one registered user
-        const lastUser = localStorage.getItem("biometric_last_user");
-        const hasRegistration = lastUser && localStorage.getItem(`biometric_registered_${lastUser}`);
-        
-        setIsBiometricAvailable(available && !!hasRegistration);
-      } catch {
-        setIsBiometricAvailable(false);
-      }
-    };
-    
-    checkBiometric();
+    // Check if quick login is available
+    const lastUser = localStorage.getItem("biometric_last_user");
+    const hasRegistration = lastUser && localStorage.getItem(`biometric_registered_${lastUser}`);
+    setIsBiometricAvailable(!!hasRegistration);
   }, []);
+
+  // Hash function matching ProfileSettings
+  const hashPin = async (pin: string, username: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin + username);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
 
   const handleBiometricLogin = async () => {
     setError("");
-    setIsLoading(true);
     
+    // Determine which user to authenticate
+    const targetUsername = lockedUser?.username
+      || (username.trim() || null)
+      || localStorage.getItem("biometric_last_user");
+
+    if (!targetUsername) {
+      setError("הזן שם משתמש כדי להשתמש בכניסה מהירה");
+      return;
+    }
+
+    const hasRegistration = localStorage.getItem(`biometric_registered_${targetUsername}`);
+    if (!hasRegistration) {
+      setError("יש להפעיל כניסה מהירה בהגדרות המשתמש תחילה");
+      return;
+    }
+
+    // Open PIN verification modal
+    setPinUsername(targetUsername);
+    setShowPinModal(true);
+  };
+
+  const handleVerifyPin = async (enteredPin: string): Promise<boolean> => {
     try {
-      if (!window.PublicKeyCredential) {
-        setError("זיהוי ביומטרי דורש חיבור מאובטח (HTTPS) או מכשיר תומך.");
-        setIsLoading(false);
-        return;
+      // Hash the entered PIN
+      const enteredPinHash = await hashPin(enteredPin, pinUsername);
+
+      // Get stored PIN hash
+      const storedPinHash = localStorage.getItem(`biometric_pin_${pinUsername}`);
+
+      if (!storedPinHash || enteredPinHash !== storedPinHash) {
+        return false;
       }
 
-      // Determine which user to authenticate
-      const targetUsername = lockedUser?.username
-        || (username.trim() || null)
-        || localStorage.getItem("biometric_last_user");
-
-      if (!targetUsername) {
-        setError("הזן שם משתמש כדי להשתמש בכניסה ביומטרית.");
-        setIsLoading(false);
-        return;
+      const refreshToken = localStorage.getItem(`biometric_refresh_${pinUsername}`);
+      if (!refreshToken) {
+        throw new Error("לכדי כניסה מהירה יש להגדיר PIN מחדש בהגדרות הפרופיל");
       }
 
-      const credIdStr = localStorage.getItem(`biometric_cred_${targetUsername}`);
-      const token = localStorage.getItem(`biometric_token_${targetUsername}`);
+      setIsLoading(true);
 
-      if (!credIdStr || !token) {
-        setError("יש להפעיל כניסה ביומטרית בהגדרות המשתמש תחילה.");
-        setIsLoading(false);
-        return;
-      }
-
-      const credIdBytes = Uint8Array.from(atob(credIdStr), (c) => c.charCodeAt(0));
-      const challenge = crypto.getRandomValues(new Uint8Array(32));
-      
-      // Get the correct RP ID - use the hostname without port
-      const hostname = window.location.hostname;
-      const rpId = hostname === 'localhost' ? 'localhost' : hostname;
-
-      const assertion = await navigator.credentials.get({
-        publicKey: {
-          challenge,
-          rpId: rpId,
-          allowCredentials: [{ id: credIdBytes, type: "public-key" }],
-          userVerification: "required",
-          timeout: 60000,
-        },
+      // Attempt refresh-token login
+      const { data } = await apiClient.post("/auth/refresh-token", {
+        refresh_token: refreshToken,
       });
 
-      if (!assertion) {
-        setError("זיהוי ביומטרי נכשל.");
-        setIsLoading(false);
-        return;
+      if (!data?.success || !data?.accessToken) {
+        throw new Error("כשל ניסיון רענון אימות. אנא התחבר באמצעות שם משתמש וסיסמה.");
       }
 
-      // Decode stored credentials and auto-login
-      const decoded = atob(token);
-      const colonIdx = decoded.indexOf(":");
-      const storedUsername = decoded.substring(0, colonIdx);
-      const storedPassword = decoded.substring(colonIdx + 1);
-
-      const success = await login(storedUsername, storedPassword);
-      if (success) {
-        localStorage.setItem("biometric_last_user", storedUsername);
-        navigate("/", { replace: true });
-      } else {
-        setError("שגיאת אימות — ייתכן שהסיסמה שונתה. עדכן את הגדרות הכניסה הביומטרית.");
+      localStorage.setItem("token", data.accessToken);
+      if (data.refreshToken) {
+        localStorage.setItem(`biometric_refresh_${pinUsername}`, data.refreshToken);
       }
+      localStorage.setItem("biometric_last_user", pinUsername);
+
+      await refreshUser();
+      setShowPinModal(false);
+      navigate("/", { replace: true });
+      return true;
     } catch (err: any) {
-      console.error("Biometric login error:", err);
-      if (err.name === "NotAllowedError") {
-        setError("הזיהוי הביומטרי בוטל או נדחה");
-      } else if (err.name === "SecurityError") {
-        setError("שגיאת אבטחה - ודא שהאתר רץ על HTTPS");
-      } else {
-        setError("שגיאת זיהוי ביומטרי: " + (err.message || "נסה שנית"));
+      console.error("PIN verification error:", err);
+      setShowPinModal(false);
+      if (err.response?.status === 401 || err.message?.includes("כשל")) {
+        localStorage.removeItem(`biometric_refresh_${pinUsername}`);
+        localStorage.removeItem(`biometric_pin_${pinUsername}`);
+        localStorage.removeItem(`biometric_registered_${pinUsername}`);
       }
-    } finally {
+      setError(err.response?.data?.error || err.message || "שגיאה באימות");
       setIsLoading(false);
+      return false;
     }
   };
 
@@ -529,7 +521,7 @@ export default function LoginPage() {
                           variant="outline"
                           onClick={handleBiometricLogin}
                           className="h-12 w-14 min-w-[56px] rounded-xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
-                          title="כניסה ביומטרית"
+                          title="כניסה מהירה עם PIN"
                         >
                           <Fingerprint className="w-6 h-6 text-blue-500" />
                         </Button>
@@ -700,7 +692,7 @@ export default function LoginPage() {
                           variant="outline"
                           onClick={handleBiometricLogin}
                           className="h-14 w-16 min-w-[64px] rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
-                          title="כניסה ביומטרית"
+                          title="כניסה מהירה עם PIN"
                         >
                           <Fingerprint className="w-7 h-7 text-blue-500" />
                         </Button>
@@ -743,6 +735,15 @@ export default function LoginPage() {
           </div>
         </motion.div>
       </main>
+
+      {/* PIN Verification Modal */}
+      <PinVerificationModal
+        isOpen={showPinModal}
+        onClose={() => setShowPinModal(false)}
+        onVerify={handleVerifyPin}
+        username={pinUsername}
+        theme={theme}
+      />
     </div>
   );
 }

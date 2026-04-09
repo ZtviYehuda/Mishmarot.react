@@ -60,7 +60,6 @@ export default function DashboardPage() {
     getStatusTypes,
   } = useEmployees();
 
-  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any[]>([]);
   const [totalEmployees, setTotalEmployees] = useState(0);
   const [allStatuses, setAllStatuses] = useState<any[]>([]);
@@ -82,6 +81,7 @@ export default function DashboardPage() {
   const [viewMode] = useState<"daily" | "weekly" | "monthly" | "yearly">(
     "weekly",
   );
+  const [fetchError, setFetchError] = useState<string>("");
 
   const trendRange = useMemo(() => {
     switch (viewMode) {
@@ -132,6 +132,7 @@ export default function DashboardPage() {
     name: string;
     color: string;
   } | null>(null);
+  const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
   const [selectedServiceTypes, setSelectedServiceTypes] = useState<string[]>(
     [],
@@ -230,17 +231,22 @@ export default function DashboardPage() {
   // Fetch Structure  // Initial Load
   useEffect(() => {
     const init = async () => {
-      setLoading(true);
-      const [struct, stTypes, svTypes] = await Promise.all([
-        getStructure(),
-        getStatusTypes(),
-        getServiceTypes(),
-      ]);
-      setStructure(struct);
-      setAllStatusTypes(stTypes);
-      setServiceTypes(svTypes);
-      setIsInitialized(true);
-      setLoading(false);
+      try {
+        const [struct, stTypes, svTypes] = await Promise.all([
+          getStructure(),
+          getStatusTypes(),
+          getServiceTypes(),
+        ]);
+        setStructure(struct);
+        setAllStatusTypes(stTypes);
+        setServiceTypes(svTypes);
+        setFetchError("");
+      } catch (error) {
+        console.error("DashboardPage init error", error);
+        setFetchError("שגיאה בטעינת נתוני לוח הבקרה. בדוק את חיבור השרת או ההרשאות.");
+      } finally {
+        setIsInitialized(true);
+      }
     };
     init();
   }, [getStructure, getStatusTypes, getServiceTypes]);
@@ -335,27 +341,31 @@ export default function DashboardPage() {
   // Fetch birthdays and unverified count - ALWAYS get full breakdown for the selected group
   useEffect(() => {
     const fetchStatsData = async () => {
-      setLoading(true);
-      // We don't pass status_id here so we always have the full context for percentages
-      const data = await getDashboardStats({
-        department_id: selectedDeptId,
-        section_id: selectedSectionId,
-        team_id: selectedTeamId,
-        date: format(selectedDate, "yyyy-MM-dd"),
-        serviceTypes: selectedServiceTypes.join(","),
-        min_age: selectedAgeRange.min,
-        max_age: selectedAgeRange.max,
-      });
+      try {
+        // We don't pass status_id here so we always have the full context for percentages
+        const data = await getDashboardStats({
+          department_id: selectedDeptId,
+          section_id: selectedSectionId,
+          team_id: selectedTeamId,
+          date: format(selectedDate, "yyyy-MM-dd"),
+          serviceTypes: selectedServiceTypes.join(","),
+          min_age: selectedAgeRange.min,
+          max_age: selectedAgeRange.max,
+        });
 
-      if (data) {
-        setStats(data.stats || []);
-        setTotalEmployees(data.total_employees || 0);
-        setBirthdays(data.birthdays || []);
-        setAgeDistribution(data.age_distribution || []);
-        setAverageAge(data.average_age || 0);
-        setHasArchiveAccess(data.has_archive_access || false);
+        if (data) {
+          setStats(data.stats || []);
+          setTotalEmployees(data.total_employees || 0);
+          setBirthdays(data.birthdays || []);
+          setAgeDistribution(data.age_distribution || []);
+          setAverageAge(data.average_age || 0);
+          setHasArchiveAccess(data.has_archive_access || false);
+        }
+        setFetchError("");
+      } catch (error) {
+        console.error("DashboardPage fetchStatsData error", error);
+        setFetchError("שגיאה בטעינת נתוני הסטטוס. נסה לרענן את הדף.");
       }
-      setLoading(false);
     };
 
     fetchStatsData();
@@ -376,39 +386,6 @@ export default function DashboardPage() {
     }
     return stats;
   }, [stats, selectedStatusData]);
-
-  // totalUnitCount: sum of all stats (= totalEmployees from server); used as baseline for % calcs
-  const totalUnitCount = useMemo(() => {
-    // Prefer server-provided total for accuracy, fallback to summing stats
-    if (totalEmployees > 0) return totalEmployees;
-    return stats.reduce((acc, curr) => acc + curr.count, 0);
-  }, [stats, totalEmployees]);
-
-  const kpiData = useMemo(() => {
-    const total = totalUnitCount;
-    const missing = stats.find((s) => s.status_name === "לא דווח")?.count || 0;
-    const reported = total - missing;
-    const reportedPct = total > 0 ? Math.round((reported / total) * 100) : 0;
-
-    // "Available" (נוכחים/זמינים) dynamically pulls from the is_presence flag of the status
-    const presentStatusIds = allStatusTypes
-      .filter((s) => s.is_presence)   // <- now uses the DB flag we corrected
-      .map((s) => s.id);
-
-    const available = stats
-      .filter(
-        (s) => s.status_id !== null && presentStatusIds.includes(s.status_id),
-      )
-      .reduce((acc, curr) => acc + curr.count, 0);
-
-    return {
-      total,
-      missing,
-      reported,
-      reportedPct,
-      available: available || reported,
-    };
-  }, [totalUnitCount, stats, allStatusTypes]);
 
   const handleFilterChange = (
     type:
@@ -434,6 +411,7 @@ export default function DashboardPage() {
         setSelectedTeamId("");
       }
       setSelectedStatusData(null);
+      setSelectedStatusId(null);
       setSelectedServiceTypes([]);
       setSelectedAgeRange({});
       setFilterOpen(false);
@@ -477,7 +455,8 @@ export default function DashboardPage() {
       setSelectedTeamId(value || "");
     } else if (type === "status") {
       // If clicking the same status, deselect it
-      if (selectedStatusData?.id?.toString() === value?.toString()) {
+      if (selectedStatusId === value?.toString()) {
+        setSelectedStatusId(null);
         setSelectedStatusData(null);
         return;
       }
@@ -494,14 +473,17 @@ export default function DashboardPage() {
           name: statusType.name,
           color: statusType.color || activeStatus?.color || "#94a3b8",
         });
+        setSelectedStatusId(statusType.id);
       } else if (activeStatus) {
         setSelectedStatusData({
           id: activeStatus.status_id,
           name: activeStatus.status_name,
           color: activeStatus.color,
         });
+        setSelectedStatusId(activeStatus.status_id);
       } else {
         setSelectedStatusData(null);
+        setSelectedStatusId(null);
       }
     }
   };
@@ -557,47 +539,19 @@ export default function DashboardPage() {
         : `${selectedServiceTypes.length} מעמדות`
       : "";
 
-  const chartTitle = useMemo(() => {
-    let title = unitName;
-
-    if (selectedStatusData) {
-      title = `${selectedStatusData.name} | ${title}`;
-    }
-
-    if (serviceTypeLabel) {
-      title = `${serviceTypeLabel} | ${title}`;
-    }
-
-    if (selectedAgeRange.min || selectedAgeRange.max) {
-      const ageLabel = selectedAgeRange.min
-        ? selectedAgeRange.max
-          ? `גילאי ${selectedAgeRange.min}-${selectedAgeRange.max}`
-          : `גילאי ${selectedAgeRange.min}+`
-        : "";
-      if (ageLabel) title = `${ageLabel} | ${title}`;
-    }
-
-    if (
-      title === "כלל היחידה" ||
-      title === "כלל החוליה" ||
-      title === "כלל המדור" ||
-      title === "כלל המחלקה"
-    )
-      return `נתוני ${title}`;
-    return title;
-  }, [unitName, selectedStatusData, serviceTypeLabel, selectedAgeRange]);
-
   const chartDescription = useMemo(() => {
-    const filters: string[] = [];
-    if (selectedStatusData) filters.push(`בסטטוס ${selectedStatusData.name}`);
-    if (serviceTypeLabel) filters.push(`ב - ${serviceTypeLabel}`);
-    if (selectedAgeRange.min || selectedAgeRange.max) {
-      filters.push(
-        selectedAgeRange.max
-          ? `בגילאי ${selectedAgeRange.min}-${selectedAgeRange.max}`
-          : `בגילאי ${selectedAgeRange.min}+`,
-      );
+    if (selectedStatusData) {
+      return `פירוט נוכחות עבור ${selectedStatusData.name}`;
     }
+    if (selectedAgeRange.min || selectedAgeRange.max) {
+      const ageText = selectedAgeRange.max
+        ? `בגילאי ${selectedAgeRange.min}-${selectedAgeRange.max}`
+        : `בגילאי ${selectedAgeRange.min}+`;
+      return `פירוט נוכחות עבור ${ageText}`;
+    }
+
+    const filters: string[] = [];
+    if (serviceTypeLabel) filters.push(`ב - ${serviceTypeLabel}`);
 
     const filterText =
       filters.length > 0 ? `\nמציג שוטרים ${filters.join(" ו")}` : "";
@@ -645,20 +599,21 @@ export default function DashboardPage() {
   const handleStatusClick = (
     statusId: number,
     statusName: string,
-    color: string,
+    statusColor: string,
   ) => {
-    if (selectedStatusData?.id === statusId) {
+    // Toggle behavior: if clicking the same status, deselect it.
+    if (selectedStatusId === statusId) {
+      setSelectedStatusId(null);
       setSelectedStatusData(null);
     } else {
-      setSelectedStatusData({ id: statusId, name: statusName, color });
-      const tableElement = document.getElementById("status-details-table");
-      if (tableElement) {
-        tableElement.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      setSelectedStatusId(statusId);
+      setSelectedStatusData({
+        id: statusId,
+        name: statusName,
+        color: statusColor,
+      });
     }
   };
-
-
 
   const canSelectDept = !!user?.is_admin;
   const canSelectSection = !!user?.is_admin || !!user?.commands_department_id;
@@ -673,7 +628,7 @@ export default function DashboardPage() {
       className="w-full relative min-h-screen pb-10 bg-background"
       dir="rtl"
     >
-      <div className="relative z-10 space-y-4 sm:space-y-6 pt-6 transition-all">
+      <div className="relative z-10 space-y-3 sm:space-y-4 pt-4 transition-all">
         {/* Header Section */}
         <PageHeader
           icon={LayoutDashboard}
@@ -681,19 +636,18 @@ export default function DashboardPage() {
           hideMobile={true}
           className="flex mb-0 px-0 pb-2 shrink-0 transition-all border-none"
           badge={
-            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-6 w-full lg:w-auto mt-2 lg:mt-0">
+            <div className="flex flex-row items-center justify-start lg:justify-end gap-2 lg:gap-3 w-full lg:w-auto overflow-x-auto no-scrollbar">
               {isOldDate && (
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-black px-3 py-1 rounded-lg">
-                  {hasArchiveAccess ? "נתונים משוחזרים" : "נתוני ארכיון"}
+                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-black px-2 py-0.5 rounded-lg shrink-0 text-[10px] sm:text-xs">
+                  {hasArchiveAccess ? "משוחזר" : "ארכיון"}
                 </Badge>
               )}
-              {/* Hide double Date Selector on mobile */}
-              <div className="hidden lg:flex">
-                <DateHeader className="w-auto shadow-none" compact={true} />
-              </div>
+              
+              {/* Date Selector - Primary Location */}
+              <DateHeader className="w-auto shadow-none bg-card/40 backdrop-blur-xl border border-border/40 shrink-0" compact={true} />
 
               {/* Actions Row */}
-              <div className="flex items-center gap-2 lg:gap-4 w-full lg:w-auto overflow-x-auto lg:overflow-visible no-scrollbar py-2 pt-3 lg:pt-3">
+              <div className="flex items-center gap-2 lg:gap-3 shrink-0">
                 {/* Filters button - hidden on mobile since the chart has a filter button */}
                 <div className="hidden lg:flex items-center overflow-visible">
                   <div className="relative group">
@@ -721,7 +675,7 @@ export default function DashboardPage() {
                     {activeFilterInfo.hasActive && (
                       <button
                         onClick={() => handleFilterChange("reset")}
-                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
                         title="נקה סינון"
                       >
                         <RotateCcw className="w-3 h-3" />
@@ -732,9 +686,9 @@ export default function DashboardPage() {
 
                 {/* Report Hub button */}
                 {!user?.is_temp_commander && (
-                  <div className="w-full lg:w-auto flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
+                  <div className="w-full lg:w-auto flex items-center gap-2">
                     <ReportHub
-                      className="w-full lg:w-auto h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-4 transition-all text-sm lg:text-xs shadow-none"
+                      className="w-full lg:w-auto h-9 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-3 transition-all text-sm lg:text-[11px] shadow-none"
                       onShareBirthdays={() => birthdaysRef.current?.share()}
                       initialViewMode={viewMode}
                       initialDate={selectedDate}
@@ -753,19 +707,21 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 w-full lg:w-auto lg:shrink-0">
                         <Button
                           onClick={() => setWhatsappBroadcastOpen(true)}
-                          className="flex-1 lg:flex-none h-10 rounded-xl border border-border/40 bg-green-500/10 text-green-600 hover:bg-green-500/20 gap-1.5 font-black px-3 sm:px-4 transition-all text-[11px] sm:text-xs"
+                          className="flex-1 lg:flex-none h-9 rounded-xl border border-border/40 bg-green-500/10 text-green-600 hover:bg-green-500/20 gap-1.5 font-black px-2 sm:px-3 transition-all text-[11px]"
                         >
-                          <MessageSquare className="w-4 h-4" />
-                          רשימת תפוצה
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">רשימת תפוצה</span>
+                          <span className="sm:hidden">תפוצה</span>
                         </Button>
 
                         {!user?.is_temp_commander && (
                           <Button
                             onClick={() => setGlobalEventOpen(true)}
-                            className="flex-1 lg:flex-none h-10 rounded-xl border border-border/40 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 gap-1.5 font-black px-3 sm:px-4 transition-all text-[11px] sm:text-xs"
+                            className="flex-1 lg:flex-none h-9 rounded-xl border border-border/40 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 gap-1.5 font-black px-2 sm:px-3 transition-all text-[11px]"
                           >
-                            <CalendarIcon className="w-4 h-4" />
-                            אירוע
+                            <CalendarIcon className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">אירוע</span>
+                            <span className="sm:hidden">אירוע</span>
                           </Button>
                         )}
                       </div>
@@ -777,41 +733,33 @@ export default function DashboardPage() {
           }
         />
 
+        {fetchError && (
+          <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 font-bold">
+            {fetchError}
+          </div>
+        )}
+
+
         {/* Content Area */}
-        <div className="space-y-10 sm:space-y-14 transition-all mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
+        <div className="space-y-6 sm:space-y-8 transition-all mt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
             {/* Main Attendance Chart */}
             <div className="flex flex-col h-full min-h-[400px]">
               <EmployeesChart
                 ref={snapshotRef}
                 stats={chartStats}
-                totalInUnit={totalUnitCount}
-                availableCount={kpiData.available}
-                reportedPct={kpiData.reportedPct}
-                loading={loading}
-                onOpenWhatsAppReport={
-                  user?.is_temp_commander
-                    ? undefined
-                    : () => setWhatsAppDialogOpen(true)
-                }
+                total={totalEmployees}
                 onStatusClick={handleStatusClick}
-                onFilterClick={
-                  setFilterOpen ? () => setFilterOpen(true) : undefined
-                }
-                title={chartTitle}
-                description={chartDescription}
-                selectedDate={selectedDate}
-                hideExportControls={user?.is_temp_commander}
-                unitName={unitName}
                 hasArchiveAccess={hasArchiveAccess}
                 onRequestRestore={() => setRestoreDialogOpen(true)}
+                selectedStatusId={selectedStatusId}
               />
             </div>
 
             {/* Right Sidebar: Birthdays & Age Distrib */}
             <div className="flex flex-col gap-4 sm:gap-6 h-full">
               <div className="flex flex-col flex-1 h-full">
-                <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} />
+                <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} selectedDate={selectedDate} />
               </div>
 
               {ageDistribution && ageDistribution.length > 0 && (
@@ -820,6 +768,7 @@ export default function DashboardPage() {
                     data={ageDistribution}
                     averageAge={averageAge}
                     onRangeSelect={(range) => handleFilterChange("ageRange", range)}
+                    selectedDate={selectedDate}
                   />
                 </div>
               )}
@@ -829,7 +778,7 @@ export default function DashboardPage() {
           {/* Bottom Section: Wider Comparison & Trend Charts - HIDDEN FOR TEMP COMMANDERS */}
           {!user?.is_temp_commander &&
             (showComparisonMatrix || showTrendGraph) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 items-stretch">
                 {showComparisonMatrix && (
                   <div className="order-2 md:order-1 flex flex-col w-full">
                     <StatsComparisonCard
@@ -934,3 +883,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

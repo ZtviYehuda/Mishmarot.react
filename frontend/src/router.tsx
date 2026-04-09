@@ -6,6 +6,7 @@ import {
   Outlet,
   useLocation,
 } from "react-router-dom";
+import LoginPage from "@/pages/LoginPage";
 import { useAuthContext } from "@/context/AuthContext";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import MainLayout from "@/components/layout/MainLayout";
@@ -13,7 +14,6 @@ import { EmployeeProvider } from "@/context/EmployeeContext";
 
 // ── Lazy-load every page so each is its own JS chunk ──────────────────────────
 // Pages load only when first navigated to → smaller initial bundle
-const LoginPage          = lazy(() => import("@/pages/LoginPage"));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 const SupportPage        = lazy(() => import("@/pages/SupportPage"));
 const TermsPage          = lazy(() => import("@/pages/TermsPage"));
@@ -95,7 +95,12 @@ const router = createBrowserRouter([
 
 export function AppRouter() {
   useEffect(() => {
-    try { localStorage.removeItem("read_notifications"); } catch {}
+    try {
+      localStorage.removeItem("read_notifications");
+    } catch (err) {
+      // ignore localStorage failures in old browsers or strict mode
+      console.warn("Failed to clear read_notifications", err);
+    }
   }, []);
 
   return <RouterProvider router={router} />;

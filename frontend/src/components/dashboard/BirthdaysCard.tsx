@@ -32,10 +32,11 @@ interface BirthdayEmployee {
 
 interface BirthdaysCardProps {
   birthdays: BirthdayEmployee[];
+  selectedDate?: Date;
 }
 
 export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
-  ({ birthdays }, ref) => {
+  ({ birthdays, selectedDate }, ref) => {
     const [isGreetingsModalOpen, setIsGreetingsModalOpen] = useState(false);
     const [showScrollHint, setShowScrollHint] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -72,10 +73,12 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
       return () => clearTimeout(timer);
     }, [birthdays]);
 
-    // Filter employees who have birthday TODAY
+    // Use selected date or today
+    const referenceDate = selectedDate || new Date();
+
+    // Filter employees who have birthday on the reference date
     const employeesToday = birthdays.filter((emp) => {
-      const today = new Date();
-      return emp.day === today.getDate() && emp.month === today.getMonth() + 1;
+      return emp.day === referenceDate.getDate() && emp.month === referenceDate.getMonth() + 1;
     });
 
     const handleSendWhatsApp = () => {
@@ -122,9 +125,9 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
       <>
         <Card
           id="birthdays-card"
-          className="bg-card/60 backdrop-blur-2xl text-card-foreground rounded-[2rem] border border-primary/10 flex flex-col overflow-hidden h-full relative"
+          className="bg-card/60 backdrop-blur-2xl text-card-foreground rounded-[1.5rem] border border-primary/10 flex flex-col overflow-hidden h-full relative"
         >
-          <CardHeader className="pb-3 sm:pb-4">
+          <CardHeader className="px-5 pt-2 pb-1">
             <div className="flex justify-between items-start gap-2">
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-base sm:text-lg lg:text-xl font-black text-foreground mb-0.5 flex items-center gap-2">
@@ -147,42 +150,37 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
           </CardHeader>
 
           <CardContent className="flex-1 p-0 flex flex-col min-h-0 relative group/card">
+            {/* Sticky Action for Greetings - Outside scroll area */}
+            <div className="px-4 pt-1 pb-2 shrink-0">
+              {birthdays.length > 0 && (
+                <Button
+                  onClick={() => setIsGreetingsModalOpen(true)}
+                  className={cn(
+                    "w-full border rounded-xl h-10 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] group",
+                    employeesToday.length > 0
+                      ? "bg-primary/10 hover:bg-primary/20 text-primary border-primary/20"
+                      : "bg-muted/50 hover:bg-muted text-muted-foreground border-border/50 hover:text-primary",
+                  )}
+                >
+                  <Sparkles
+                    className={cn(
+                      "w-4 h-4 transition-transform group-hover:rotate-12",
+                      employeesToday.length > 0
+                        ? "text-primary"
+                        : "text-muted-foreground group-hover:text-primary",
+                    )}
+                  />
+                  <span className="text-xs font-black">שלח ברכות השבוע</span>
+                </Button>
+              )}
+            </div>
+
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex-1 overflow-y-auto relative custom-scrollbar group/scroll bg-transparent max-h-[400px]"
+              className="flex-1 overflow-y-auto relative custom-scrollbar group/scroll bg-transparent max-h-[300px]"
             >
-              <div className="px-5 py-5 min-h-full">
-                {/* Padding on the sides and top/bottom to prevent border clipping */}
-                {/* Quick Action for Today's Birthdays */}
-                {/* Quick Action for Greetings */}
-                {birthdays.length > 0 && (
-                  <div className="mb-4">
-                    <Button
-                      onClick={() => setIsGreetingsModalOpen(true)}
-                      className={cn(
-                        "w-full border rounded-xl h-12 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] group",
-                        employeesToday.length > 0
-                          ? "bg-primary/10 hover:bg-primary/20 text-primary border-primary/20"
-                          : "bg-muted/50 hover:bg-muted text-muted-foreground border-border/50 hover:text-primary",
-                      )}
-                    >
-                      <Sparkles
-                        className={cn(
-                          "w-4 h-4",
-                          employeesToday.length > 0
-                            ? "text-primary animate-pulse"
-                            : "text-muted-foreground group-hover:text-primary transition-colors",
-                        )}
-                      />
-                      <span className="text-xs font-black">
-                        {employeesToday.length > 0
-                          ? `שלח ברכות השבוע (${birthdays.length})`
-                          : "שלח ברכות השבוע"}
-                      </span>
-                    </Button>
-                  </div>
-                )}
+              <div className="px-4 pb-4 min-h-full">
                 <div className="space-y-3 pb-4">
                   {birthdays.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10 opacity-40">
@@ -191,10 +189,9 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                     </div>
                   ) : (
                     birthdays.map((employee) => {
-                      const today = new Date();
                       const isToday =
-                        employee.day === today.getDate() &&
-                        employee.month === today.getMonth() + 1;
+                        employee.day === referenceDate.getDate() &&
+                        employee.month === referenceDate.getMonth() + 1;
 
                       const labels = [
                         "ינואר",
@@ -216,7 +213,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                         <div
                           key={employee.id}
                           className={cn(
-                            "flex items-center gap-4 p-4 rounded-[1.25rem] border transition-all hover:-translate-y-0.5 hover:shadow-sm",
+                            "flex items-center gap-2 p-2 rounded-[0.75rem] border transition-all hover:-translate-y-0.5 hover:shadow-sm",
                             isToday
                               ? "bg-primary/5 border-primary/30 "
                               : "bg-background border-border/60 hover:border-primary/20",
@@ -224,20 +221,20 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                         >
                           <div
                             className={cn(
-                              "w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2",
+                              "w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-2",
                               isToday
                                 ? "bg-white dark:bg-slate-800 border-primary text-primary "
                                 : "bg-muted dark:bg-slate-800/50 border-border/60 text-muted-foreground",
                             )}
                           >
-                            <User className="w-5 h-5" />
+                            <User className="w-4 h-4" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <EmployeeLink
                               employee={employee.id}
                               name={`${employee.first_name} ${employee.last_name}`}
                               className={cn(
-                                "text-sm font-black truncate block hover:text-primary transition-colors",
+                                "text-xs font-black truncate block hover:text-primary transition-colors",
                                 isToday ? "text-primary" : "text-foreground",
                               )}
                             />
