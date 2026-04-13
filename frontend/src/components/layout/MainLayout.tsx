@@ -809,7 +809,7 @@ export default function MainLayout() {
         </header>
 
         {/* Content Page */}
-        <main className="flex-grow overflow-y-auto bg-background custom-scrollbar px-4 lg:px-8">
+        <main className="flex-grow overflow-y-auto bg-background custom-scrollbar px-2 lg:px-6">
           <div className="w-full max-w-full mx-auto">
             <Outlet context={{ isSidebarOpen }} />
           </div>

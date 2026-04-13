@@ -229,7 +229,25 @@ body {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  
+  /* Focus management - remove browser defaults, use focus-visible */
+  :focus {
+    outline: none;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-ring/50 outline-offset-2;
+  }
+
+  /* Disable focus rings for charts specifically even on focus */
+  .recharts-wrapper,
+  .recharts-wrapper *,
+  svg.recharts-surface,
+  .recharts-surface:focus {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
   }
   
   button, 

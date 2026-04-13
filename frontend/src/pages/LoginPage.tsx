@@ -221,11 +221,49 @@ export default function LoginPage() {
   const [pinUsername, setPinUsername] = useState("");
   const { login, refreshUser } = useAuthContext();
 
+  // WebAuthn Helpers (Matching ProfileSettings)
+  const base64urlToBytes = (base64url: string): Uint8Array => {
+    const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+    const padLen = (4 - (base64.length % 4)) % 4;
+    const padded = base64 + "=".repeat(padLen);
+    const binary = window.atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  };
+
+  const bufferToBase64url = (buffer: ArrayBuffer): string => {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  };
+
+  // Check if WebAuthn is supported
+  const isWebAuthnSupported = typeof window !== "undefined" && !!window.PublicKeyCredential;
+
   useEffect(() => {
     // Check if quick login is available
     const lastUser = localStorage.getItem("biometric_last_user");
     const hasRegistration = lastUser && localStorage.getItem(`biometric_registered_${lastUser}`);
-    setIsBiometricAvailable(!!hasRegistration);
+    
+    if (isWebAuthnSupported) {
+      setIsBiometricAvailable(true);
+      // Auto-trigger biometric on mount if supported, a user is remembered, and not already loading
+      if (lastUser && !isLoading) {
+        // We delay slightly to let the UI settle
+        const timer = setTimeout(() => {
+          handleBiometricLogin();
+        }, 800);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      setIsBiometricAvailable(!!hasRegistration);
+    }
   }, []);
 
   // Hash function matching ProfileSettings
@@ -239,9 +277,100 @@ export default function LoginPage() {
 
   const handleBiometricLogin = async () => {
     setError("");
-    
-    // Determine which user to authenticate
-    const targetUsername = lockedUser?.username
+    let targetUsername = lockedUser?.username 
+      || username.trim() 
+      || localStorage.getItem("biometric_last_user");
+
+    if (!targetUsername) {
+      setError("יש להזין שם משתמש כדי להשתמש בכניסה ביומטרית");
+      return;
+    }
+
+    if (isWebAuthnSupported) {
+      try {
+        setIsLoading(true);
+        
+        // Step 1: Get authentication options from server
+        const optionsResp = await apiClient.post("/auth/webauthn/login/options", {
+          username: targetUsername
+        });
+        const options = optionsResp.data;
+
+        // Transform options for the browser
+        const assertionOptions: CredentialRequestOptions = {
+          publicKey: {
+            ...options,
+            challenge: base64urlToBytes(options.challenge),
+            allowCredentials: options.allowCredentials?.map((cred: any) => ({
+              ...cred,
+              id: base64urlToBytes(cred.id),
+            })),
+          },
+        };
+
+        // Step 2: Trigger the OS biometric prompt
+        const assertion = await navigator.credentials.get(assertionOptions) as any;
+
+        if (!assertion) {
+          throw new Error("לא התקבלו נתוני אימות מהמכשיר");
+        }
+
+        // Step 3: Prepare verify data for the server
+        const verifyData = {
+          id: assertion.id,
+          rawId: bufferToBase64url(assertion.rawId),
+          type: assertion.type,
+          response: {
+            authenticatorData: bufferToBase64url(assertion.response.authenticatorData),
+            clientDataJSON: bufferToBase64url(assertion.response.clientDataJSON),
+            signature: bufferToBase64url(assertion.response.signature),
+            userHandle: assertion.response.userHandle ? bufferToBase64url(assertion.response.userHandle) : undefined,
+          },
+        };
+
+        // Step 4: Finalize login with server
+        const response = await apiClient.post("/auth/webauthn/login/verify", verifyData);
+        
+        if (response.data?.success) {
+          const { token, user: loggedUser } = response.data;
+          
+          // Use the login function from AuthContext to set state
+          // We might need to handle the state manually if context login expects username/pass
+          // Actually, our verify endpoint returns the token and user, same as login.
+          // Let's assume context.login can accept partials or we update localstorage.
+          localStorage.setItem("token", token);
+          localStorage.setItem("user", JSON.stringify(loggedUser));
+          localStorage.setItem("biometric_last_user", targetUsername);
+          
+          await refreshUser(); // Essential to update context state
+          navigate("/", { replace: true });
+          return;
+        }
+
+      } catch (e: any) {
+        console.error("WebAuthn login failed:", e);
+        
+        if (e.name === "NotAllowedError") {
+          setIsLoading(false); // Silent fail on user cancel
+          return;
+        }
+
+        // Fallback to PIN if Passkey fails and we have a PIN setup
+        if (localStorage.getItem(`biometric_pin_${targetUsername}`)) {
+          setPinUsername(targetUsername);
+          setShowPinModal(true);
+          setIsLoading(false);
+          return;
+        }
+        
+        setError(e.response?.data?.error || "זיהוי ביומטרי נכשל. התחבר ידנית או באמצעות PIN.");
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    // Fallback: PIN-based quick login
+    targetUsername = lockedUser?.username
       || (username.trim() || null)
       || localStorage.getItem("biometric_last_user");
 
@@ -327,6 +456,23 @@ export default function LoginPage() {
     }
   }, []);
 
+  // Save credentials after successful login (triggers browser's native biometric save)
+  const saveCredentials = async (uname: string, pass: string) => {
+    if (!isCredentialManagerSupported) return;
+    try {
+      const cred = new (window as any).PasswordCredential({
+        id: uname,
+        password: pass,
+        name: uname,
+      });
+      await navigator.credentials.store(cred);
+      localStorage.setItem("biometric_last_user", uname);
+      localStorage.setItem(`biometric_registered_${uname}`, "1");
+    } catch (e) {
+      console.log("Credential Manager save skipped:", e);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -339,8 +485,12 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const success = await login(username.trim(), password.trim());
+      const trimmedUser = username.trim();
+      const trimmedPass = password.trim();
+      const success = await login(trimmedUser, trimmedPass);
       if (success) {
+        // Save credentials for biometric login next time
+        await saveCredentials(trimmedUser, trimmedPass);
         navigate("/", { replace: true });
       } else {
         setError("שם משתמש או סיסמה שגויים.");
@@ -403,7 +553,7 @@ export default function LoginPage() {
           <div className="text-center mb-10 md:mb-14 relative">
             <h1
               className={cn(
-                "text-4xl md:text-6xl font-black bg-clip-text text-transparent tracking-tight mb-2 md:mb-3 uppercase transition-all",
+                "text-3xl md:text-5xl font-black bg-clip-text text-transparent tracking-tight mb-2 md:mb-3 uppercase transition-all",
                 "",
                 isDark
                   ? "bg-gradient-to-br from-white via-white to-slate-500"
@@ -448,12 +598,12 @@ export default function LoginPage() {
                   </div>
                   <div
                     className={cn(
-                      "text-2xl font-bold mb-4",
+                      "text-xl font-bold mb-4",
                       isDark ? "text-white" : "text-slate-900",
                     )}
                   >
-                    <h1 className="text-2xl font-black mb-1">ברוך שובך</h1>
-                    <h2 className="text-2xl font-black mb-1">
+                    <h1 className="text-xl font-black mb-1">ברוך שובך</h1>
+                    <h2 className="text-xl font-black mb-1">
                       {"המפקד/ת"} {lockedUser.first_name}
                     </h2>
                   </div>
@@ -702,7 +852,7 @@ export default function LoginPage() {
                         disabled={isLoading}
                         className="flex-1 h-14 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-black text-lg rounded-2xl transition-all  active:scale-[0.98] border border-white/10 relative overflow-hidden group"
                       >
-                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+                        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
                         <div className="relative flex items-center justify-center gap-2">
                           {isLoading ? (
                             <>

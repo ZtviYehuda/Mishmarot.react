@@ -97,3 +97,62 @@ def get_suspicious_activity():
         return jsonify(suspicious)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@audit_bp.route("/archives", methods=["GET"])
+@jwt_required()
+def list_archives():
+    """List all archived audit log files (admin only)."""
+    try:
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        if not identity.get("is_admin", False):
+            return jsonify({"error": "Unauthorized: Admins only"}), 403
+
+        from app.utils.audit_rotation import get_archive_summary
+        return jsonify(get_archive_summary())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@audit_bp.route("/archives/<filename>", methods=["GET"])
+@jwt_required()
+def download_archive(filename):
+    """Download a specific archived audit log file (admin only)."""
+    try:
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        if not identity.get("is_admin", False):
+            return jsonify({"error": "Unauthorized: Admins only"}), 403
+
+        from app.utils.audit_rotation import read_archive_file
+        data = read_archive_file(filename)
+        if data is None:
+            return jsonify({"error": "File not found"}), 404
+
+        from flask import Response
+        return Response(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            mimetype="application/json",
+            headers={"Content-Disposition": f"attachment; filename={filename.replace('.gz', '')}"},
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+

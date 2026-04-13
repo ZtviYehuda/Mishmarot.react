@@ -22,6 +22,7 @@ def create_app():
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://powers-creator-broader-harper.trycloudflare.com",
+        "https://proud-roses-rescue.loca.lt",
     ]
 
     CORS(
@@ -78,6 +79,13 @@ def create_app():
         except Exception as e:
             print(f"⚠️ Database setup warning: {e}")
 
+        # Automatic audit log rotation (archives logs older than 7 days)
+        try:
+            from app.utils.audit_rotation import rotate_audit_logs
+            rotate_audit_logs()
+        except Exception as e:
+            print(f"⚠️ Audit rotation warning: {e}")
+
     # --- רישום הנתיבים (Blueprints) ---
     # זה החלק שחסר או שגוי אצלך שגורם לשגיאת 404
 
@@ -90,7 +98,7 @@ def create_app():
     from app.routes.support_routes import support_bp
     from app.routes.audit_routes import audit_bp
     from app.routes.archive_routes import archive_bp
-    from app.routes.webauthn_routes import webauthn_bp
+    # from app.routes.webauthn_routes import webauthn_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(emp_bp, url_prefix="/api/employees", strict_slashes=False)
@@ -105,6 +113,6 @@ def create_app():
     app.register_blueprint(support_bp, url_prefix="/api/support", strict_slashes=False)
     app.register_blueprint(audit_bp, url_prefix="/api/audit", strict_slashes=False)
     app.register_blueprint(archive_bp, url_prefix="/api/archive", strict_slashes=False)
-    app.register_blueprint(webauthn_bp)
+    # app.register_blueprint(webauthn_bp)
 
     return app

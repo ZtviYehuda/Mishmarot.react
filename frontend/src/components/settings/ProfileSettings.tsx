@@ -12,6 +12,7 @@ import {
   Fingerprint,
   CheckCircle2,
   ShieldOff,
+  Loader2,
   AlertCircle,
   Eye,
   EyeOff,
@@ -58,6 +59,28 @@ export function ProfileSettings({
     const stored = localStorage.getItem(`biometric_registered_${user?.username}`);
     setBiometricRegistered(!!stored);
   }, [user?.username]);
+
+  // WebAuthn Helpers
+  const base64urlToBytes = (base64url: string): Uint8Array => {
+    const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+    const padLen = (4 - (base64.length % 4)) % 4;
+    const padded = base64 + "=".repeat(padLen);
+    const binary = window.atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  };
+
+  const bufferToBase64url = (buffer: ArrayBuffer): string => {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  };
 
   // Simple hash function (better than base64, but still client-side)
   const hashPin = async (pin: string): Promise<string> => {
@@ -114,7 +137,7 @@ export function ProfileSettings({
     }
 
     if (newPin !== confirmPin) {
-      setBiometricError("הקודים אינם תואמים");
+      setBiometricError("הקודים אינם תואמות");
       return;
     }
 
@@ -124,7 +147,7 @@ export function ProfileSettings({
       // Hash the PIN
       const pinHash = await hashPin(newPin);
 
-      // Request refresh token from server (safe, does not store password)
+      // Request refresh token from server
       const refreshResp = await apiClient.post("/auth/refresh-token", {
         username: user.username,
         password: biometricPassword,
@@ -136,21 +159,102 @@ export function ProfileSettings({
 
       const refreshToken = refreshResp.data.refreshToken;
 
-      // Store PIN hash and refresh token only
+      // Store PIN hash and refresh token
       localStorage.setItem(`biometric_pin_${user.username}`, pinHash);
       localStorage.setItem(`biometric_refresh_${user.username}`, refreshToken);
       localStorage.setItem(`biometric_registered_${user.username}`, "1");
       localStorage.setItem("biometric_last_user", user.username);
 
       setBiometricRegistered(true);
-      setBiometricPassword("");
       setNewPin("");
       setConfirmPin("");
       setShowPinSetup(false);
-      toast.success("כניסה מהירה עם PIN הופעלה בהצלחה!");
+      
+      toast.success("קוד PIN הוגדר בהצלחה!");
+      
+      // Check if we can also register with browser Credential Manager
+      if ("credentials" in navigator && window.PasswordCredential) {
+        try {
+          const cred = new (window as any).PasswordCredential({
+            id: user.username,
+            password: biometricPassword,
+            name: `${user.first_name} ${user.last_name}`,
+          });
+          await navigator.credentials.store(cred);
+          toast.success("המכשיר סונכרן לזיהוי ביומטרי");
+        } catch (e) {
+          console.warn("Credential storage failed", e);
+        }
+      }
+      
+      setBiometricPassword("");
     } catch (err: any) {
       console.error("PIN registration error:", err);
       setBiometricError(err.message || "שגיאה בהפעלת כניסה מהירה");
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
+
+  const handleRegisterBiometricsOnly = async () => {
+    setBiometricLoading(true);
+    setBiometricError("");
+
+    try {
+      // Step 1: Get registration options from server
+      const optionsResp = await apiClient.get("/auth/webauthn/register/options");
+      const options = optionsResp.data;
+
+      // Transform from base64url to ArrayBuffers where needed
+      const creationOptions: CredentialCreationOptions = {
+        publicKey: {
+          ...options,
+          challenge: base64urlToBytes(options.challenge),
+          user: {
+            ...options.user,
+            id: base64urlToBytes(options.user.id),
+          },
+          excludeCredentials: options.excludeCredentials?.map((cred: any) => ({
+            ...cred,
+            id: base64urlToBytes(cred.id),
+          })),
+        },
+      };
+
+      // Step 2: Trigger the OS biometric prompt
+      const credential = await navigator.credentials.create(creationOptions) as any;
+
+      if (!credential) {
+        throw new Error("לא התקבלו פרטי זיהוי מהמכשיר");
+      }
+
+      // Step 3: Prepare response for server verification
+      const verifyData = {
+        id: credential.id,
+        rawId: bufferToBase64url(credential.rawId),
+        type: credential.type,
+        response: {
+          attestationObject: bufferToBase64url(credential.response.attestationObject),
+          clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+          transports: credential.getTransports ? credential.getTransports() : undefined,
+        },
+      };
+
+      // Step 4: Verify with server
+      await apiClient.post("/auth/webauthn/register/verify", verifyData);
+
+      localStorage.setItem(`biometric_registered_${user.username}`, "1");
+      localStorage.setItem("biometric_last_user", user.username);
+      setBiometricRegistered(true);
+      setBiometricPassword("");
+      toast.success("המכשיר נרשם לזיהוי ביומטרי (Passkey) בהצלחה!");
+    } catch (err: any) {
+      console.error("Passkey registration failed:", err);
+      if (err.name === "NotAllowedError") {
+        setBiometricError("הרישום בוטל על ידי המשתמש");
+      } else {
+        setBiometricError(err.message || "שגיאה ברישום הביומטרי. וודא שהדפדפן תומך.");
+      }
     } finally {
       setBiometricLoading(false);
     }
@@ -173,10 +277,42 @@ export function ProfileSettings({
   };
 
   return (
-    <div className=" w-full pb-24 lg:pb-0">
-      <div className="grid grid-cols-12 gap-4 sm:gap-8">
+    <div className="w-full pb-24 lg:pb-0">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+        
+        {/* ── DESKTOP SIDEBAR: PROFILE CARD (HERO) ── */}
+        <div className="hidden lg:block lg:w-80 xl:w-[360px] shrink-0 lg:sticky lg:top-24">
+          <div className="bg-card/40 backdrop-blur-xl rounded-3xl p-6 shadow-none border border-border/40 flex flex-col items-center text-center relative overflow-hidden">
+            {/* Decorative Background */}
+            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent -z-10" />
+
+            <div className="relative group mt-4">
+              <div className="w-28 h-28 rounded-3xl flex items-center justify-center text-4xl font-black border-[6px] border-white dark:border-slate-950 ring-1 ring-slate-100 dark:ring-slate-800 shadow-xl transition-all relative bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+                {formData.first_name?.[0]}
+                {formData.last_name?.[0]}
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-1.5 w-full">
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                {user?.first_name} {user?.last_name}
+              </h1>
+            </div>
+
+            <div className="w-full h-px bg-slate-100 dark:bg-slate-800 my-6" />
+
+            <div className="w-full space-y-3">
+              <div className="flex justify-center mt-2">
+                <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-black rounded-lg border border-primary/20">
+                  {user?.username}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Main Settings Area */}
-        <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-8 order-2 lg:order-1">
+        <div className="flex-1 w-full min-w-0 space-y-6 sm:space-y-8">
           <SectionCard icon={UserIcon} title="פרטים אישיים">
             <div className="grid grid-cols-1 gap-4 sm:gap-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
@@ -377,7 +513,7 @@ export function ProfileSettings({
           {!readOnly && (
             <SectionCard
               icon={Fingerprint}
-              title="כניסה מהירה עם PIN"
+              title="כניסה ביומטרית וזיהוי פנים"
               badge={
                 biometricRegistered ? (
                   <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-1">
@@ -390,157 +526,184 @@ export function ProfileSettings({
                 )
               }
             >
-              {biometricRegistered ? (
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                      <Fingerprint className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-black text-foreground">כניסה מהירה פעילה</p>
-                      <p className="text-[11px] font-bold text-muted-foreground">ניתן להתחבר עם קוד PIN מאובטח</p>
-                    </div>
+              <div className="flex flex-col gap-5">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Fingerprint className="w-6 h-6 text-primary" />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleRemoveBiometric}
-                    className="h-11 rounded-xl border-red-500/20 bg-red-500/5 text-red-600 hover:bg-red-500/10 font-black text-sm gap-2"
-                  >
-                    <ShieldOff className="w-4 h-4" />
-                    בטל כניסה מהירה
-                  </Button>
+                  <div className="space-y-1">
+                    <p className="text-sm font-black text-foreground">כניסה מהירה ומאובטחת</p>
+                    <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                      מאפשר להתחבר למערכת באמצעות טביעת אצבע, זיהוי פנים או קוד PIN, ללא צורך בהקשת סיסמה בכל פעם.
+                    </p>
+                  </div>
                 </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {!showPinSetup ? (
-                    <>
-                      <p className="text-xs font-bold text-muted-foreground leading-relaxed">
-                        הפעל כניסה מהירה עם קוד PIN מאובטח. הזן את הסיסמה שלך כדי לאשר את ההגדרה.
-                      </p>
-                      <div className="relative">
-                        <Input
-                          type={showBioPassword ? "text" : "password"}
-                          placeholder="הזן סיסמה נוכחית"
-                          value={biometricPassword}
-                          onChange={(e) => { setBiometricPassword(e.target.value); setBiometricError(""); }}
-                          className="h-12 rounded-xl border-border/40 bg-background/40 font-mono tracking-widest pr-4 pl-12"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowBioPassword(v => !v)}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {showBioPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
 
-                      {biometricError && (
-                        <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-xs font-bold">
-                          <AlertCircle className="w-4 h-4 shrink-0" />
-                          {biometricError}
+                {biometricRegistered ? (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-600 text-xs font-bold flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      המכשיר שלך רשום לכניסה מהירה.
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleRemoveBiometric}
+                      className="w-full h-12 rounded-xl border-red-500/20 bg-red-500/5 text-red-600 hover:bg-red-500/10 font-black text-sm gap-2"
+                    >
+                      <ShieldOff className="w-4 h-4" />
+                      בטל כניסה מהירה במכשיר זה
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {!showPinSetup ? (
+                      <>
+                        <div className="space-y-3">
+                          <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider pr-1">
+                            אימות סיסמה להפעלה
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type={showBioPassword ? "text" : "password"}
+                              placeholder="הזן את סיסמת המערכת שלך"
+                              value={biometricPassword}
+                              onChange={(e) => { setBiometricPassword(e.target.value); setBiometricError(""); }}
+                              className="h-12 rounded-xl border-border/40 bg-background/40 font-bold pr-4 pl-12"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowBioPassword(v => !v)}
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showBioPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
                         </div>
-                      )}
 
-                      <Button
-                        type="button"
-                        onClick={handleVerifyPassword}
-                        disabled={biometricLoading}
-                        className="h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm gap-2"
-                      >
-                        {biometricLoading ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
-                        ) : (
-                          <Fingerprint className="w-4 h-4" />
+                        {biometricError && (
+                          <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-xs font-bold">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            {biometricError}
+                          </div>
                         )}
-                        המשך להגדרת PIN
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-xs font-bold text-muted-foreground leading-relaxed">
-                        צור קוד PIN בן 4-6 ספרות לכניסה מהירה למערכת
-                      </p>
-                      
-                      <div className="space-y-3">
-                        <div>
-                          <Label className="text-xs font-bold text-muted-foreground mb-2 block">
-                            קוד PIN חדש
-                          </Label>
-                          <Input
-                            type="password"
-                            inputMode="numeric"
-                            placeholder="4-6 ספרות"
-                            value={newPin}
-                            onChange={(e) => { 
-                              const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                              setNewPin(val); 
-                              setBiometricError(""); 
+
+                        <div className="flex flex-col sm:flex-row gap-3 mt-2">
+                          <Button
+                            type="button"
+                            onClick={handleRegisterBiometricsOnly}
+                            disabled={biometricLoading || !biometricPassword}
+                            className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm gap-2"
+                          >
+                            {biometricLoading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Fingerprint className="w-4 h-4" />
+                            )}
+                            רשום ביומטרי (טביעת אצבע)
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleVerifyPassword}
+                            disabled={biometricLoading || !biometricPassword}
+                            className="flex-1 h-12 rounded-xl border-primary/20 hover:bg-primary/5 font-black text-sm gap-2 text-primary"
+                          >
+                            {biometricLoading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <ShieldCheck className="w-4 h-4" />
+                            )}
+                            הגדר קוד PIN לגיבוי
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10 text-blue-600 text-[11px] font-bold leading-relaxed">
+                          כעת הגדר קוד PIN לגיבוי. בפעם הבאה שתתחבר, תוכל להשתמש גם בזיהוי ביומטרי של המכשיר.
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider pr-1 text-center block">
+                              קוד PIN
+                            </Label>
+                            <Input
+                              type="password"
+                              inputMode="numeric"
+                              placeholder="4-6 ספרות"
+                              value={newPin}
+                              onChange={(e) => { 
+                                const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                                setNewPin(val); 
+                                setBiometricError(""); 
+                              }}
+                              className="h-12 rounded-xl border-border/40 bg-background/40 font-mono tracking-widest text-center text-xl"
+                              maxLength={6}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-wider pr-1 text-center block">
+                              אימות קוד
+                            </Label>
+                            <Input
+                              type="password"
+                              inputMode="numeric"
+                              placeholder="חזור על הקוד"
+                              value={confirmPin}
+                              onChange={(e) => { 
+                                const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                                setConfirmPin(val); 
+                                setBiometricError(""); 
+                              }}
+                              className="h-12 rounded-xl border-border/40 bg-background/40 font-mono tracking-widest text-center text-xl"
+                              maxLength={6}
+                            />
+                          </div>
+                        </div>
+
+                        {biometricError && (
+                          <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-xs font-bold">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            {biometricError}
+                          </div>
+                        )}
+
+                        <div className="flex gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setShowPinSetup(false);
+                              setNewPin("");
+                              setConfirmPin("");
+                              setBiometricError("");
                             }}
-                            className="h-12 rounded-xl border-border/40 bg-background/40 font-mono tracking-widest text-center text-2xl"
-                            maxLength={6}
-                          />
+                            className="flex-1 h-12 rounded-xl font-black text-sm"
+                          >
+                            ביטול
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={handleCreatePin}
+                            disabled={biometricLoading || !newPin || !confirmPin}
+                            className="flex-2 h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm gap-2"
+                          >
+                            {biometricLoading ? (
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4" />
+                            )}
+                            הפעל כניסה מהירה
+                          </Button>
                         </div>
-
-                        <div>
-                          <Label className="text-xs font-bold text-muted-foreground mb-2 block">
-                            אימות קוד PIN
-                          </Label>
-                          <Input
-                            type="password"
-                            inputMode="numeric"
-                            placeholder="הזן שוב"
-                            value={confirmPin}
-                            onChange={(e) => { 
-                              const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                              setConfirmPin(val); 
-                              setBiometricError(""); 
-                            }}
-                            className="h-12 rounded-xl border-border/40 bg-background/40 font-mono tracking-widest text-center text-2xl"
-                            maxLength={6}
-                          />
-                        </div>
-                      </div>
-
-                      {biometricError && (
-                        <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-xs font-bold">
-                          <AlertCircle className="w-4 h-4 shrink-0" />
-                          {biometricError}
-                        </div>
-                      )}
-
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setShowPinSetup(false);
-                            setNewPin("");
-                            setConfirmPin("");
-                            setBiometricError("");
-                          }}
-                          className="flex-1 h-12 rounded-xl font-black text-sm"
-                        >
-                          ביטול
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={handleCreatePin}
-                          disabled={biometricLoading || !newPin || !confirmPin}
-                          className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm gap-2"
-                        >
-                          {biometricLoading ? (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
-                          ) : (
-                            <CheckCircle2 className="w-4 h-4" />
-                          )}
-                          צור PIN
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </SectionCard>
           )}
 
@@ -561,36 +724,6 @@ export function ProfileSettings({
             </div>
           )}
         </div>
-
-        {/* Sidebar Summary */}
-        <div className="col-span-12 lg:col-span-4 space-y-4 sm:space-y-8 order-1 lg:order-2">
-          <SectionCard icon={UserIcon} title="פרופיל">
-            <div className="flex flex-col items-center">
-              <div className="relative mt-4">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 sm:border-8 border-background bg-card flex items-center justify-center text-primary text-3xl sm:text-5xl font-black z-10 relative overflow-hidden">
-                  <span>
-                    {user?.first_name?.[0]}
-                    {user?.last_name?.[0]}
-                  </span>
-                </div>
-                <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-emerald-500 border-2 sm:border-4 border-background rounded-full z-20" />
-              </div>
-
-              <div className="text-center mt-4 sm:mt-6 space-y-1">
-                <h2 className="text-xl sm:text-2xl font-black text-foreground">
-                  {user?.first_name} {user?.last_name}
-                </h2>
-                <div className="flex items-center justify-center gap-2">
-                  <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] sm:text-xs font-black rounded-full border border-border/40">
-                    {user?.username}
-                  </span>
-                </div>
-              </div>
-
-              <div className="w-full h-px bg-primary/5 my-6 sm:my-8" />
-            </div>
-          </SectionCard>
-        </div>
       </div>
     </div>
   );
@@ -603,32 +736,30 @@ function SectionCard({ icon: Icon, title, children, badge }: any) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border border-border/40 overflow-hidden"
+      className="bg-card/40 backdrop-blur-xl rounded-[2rem] border border-border/40 overflow-hidden"
     >
-      <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-border/40 bg-primary/5 flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-primary/10 text-primary">
-            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <h3 className="text-lg sm:text-xl font-black tracking-tight text-foreground">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-border/40">
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-5 bg-primary rounded-full shadow-sm" />
+          <h3 className="text-base font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
             {title}
           </h3>
         </div>
         {badge}
       </div>
-      <div className="p-5 sm:p-8">{children}</div>
+      <div className="p-6">{children}</div>
     </motion.div>
   );
 }
 
 function InputItem({ label, required, children }: any) {
   return (
-    <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[3rem] bg-background/30 border border-border/40 space-y-2 sm:space-y-3">
-      <Label className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground font-black uppercase tracking-widest pl-2">
+    <div className="flex flex-col gap-2 p-4 sm:p-5 rounded-[2rem] bg-slate-50/30 dark:bg-slate-900/30 border border-border/40 focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/5 transition-all">
+      <Label className="flex items-center gap-2 text-[10px] text-muted-foreground font-black uppercase tracking-widest pl-2">
         {label}
-        {required && <span className="text-red-500/80 mr-0.5">*</span>}
+        {required && <span className="text-rose-500/80 mr-0.5">*</span>}
       </Label>
-      {children}
+      <div className="relative mt-0.5">{children}</div>
     </div>
   );
 }

@@ -38,7 +38,7 @@ export function PageHeader({
                 </div>
 
                 <div className="text-right min-w-0">
-                  <h1 className="text-2xl lg:text-4xl font-black text-foreground tracking-tight leading-tight truncate">
+                  <h1 className="text-xl lg:text-3xl font-black text-foreground tracking-tight leading-tight truncate">
                     {title}
                   </h1>
                   {subtitle && (
@@ -49,7 +49,7 @@ export function PageHeader({
                 </div>
               </div>
 
-              {badge && <div className="shrink-0">{badge}</div>}
+              {badge && <div className="shrink-0 overflow-visible">{badge}</div>}
             </div>
           </div>
         </div>
@@ -79,7 +79,7 @@ export function PageHeader({
           </div>
 
           <div className="text-right min-w-0">
-            <h1 className="text-2xl lg:text-4xl font-black text-foreground tracking-tight leading-tight truncate">
+            <h1 className="text-xl lg:text-3xl font-black text-foreground tracking-tight leading-tight truncate">
               {title}
             </h1>
             {subtitle && (
@@ -90,7 +90,7 @@ export function PageHeader({
           </div>
         </div>
 
-        {badge && <div className="shrink-0">{badge}</div>}
+        {badge && <div className="shrink-0 overflow-visible">{badge}</div>}
       </div>
     </div>
   );

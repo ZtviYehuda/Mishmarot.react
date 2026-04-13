@@ -207,46 +207,23 @@ function SectionCard({
   variant = "default",
 }: any) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        "bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border overflow-hidden",
-        variant === "danger" ? "border-red-500/10" : "border-border/40",
-      )}
-    >
-      <div
-        className={cn(
-          "px-5 py-4 sm:px-8 sm:py-6 border-b flex items-center justify-between",
-          variant === "danger"
-            ? "bg-red-500/5 border-red-500/10"
-            : "bg-primary/5 border-border/40",
-        )}
-      >
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div
-            className={cn(
-              "p-2 sm:p-2.5 rounded-xl sm:rounded-2xl",
-              variant === "danger"
-                ? "bg-red-500/10 text-red-600"
-                : "bg-primary/10 text-primary",
-            )}
-          >
-            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <h3
-            className={cn(
-              "text-lg sm:text-xl font-black tracking-tight",
-              variant === "danger" ? "text-red-600" : "text-foreground",
-            )}
-          >
+    <div className="flex flex-col gap-3 sm:gap-4">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <Icon className={cn("w-4 h-4", variant === "danger" ? "text-red-500" : "text-primary")} />
+          <h3 className={cn("text-sm font-black tracking-tight", variant === "danger" ? "text-red-500" : "text-foreground")}>
             {title}
           </h3>
         </div>
         {badge}
       </div>
-      <div className="p-5 sm:p-8">{children}</div>
-    </motion.div>
+      <div className={cn(
+        "bg-card/40 backdrop-blur-xl rounded-[2rem] border p-4 sm:p-6 shadow-sm overflow-hidden h-full",
+        variant === "danger" ? "border-red-500/20 bg-red-500/5" : "border-border/40"
+      )}>
+        {children}
+      </div>
+    </div>
   );
 }
 

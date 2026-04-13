@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Popover,
@@ -34,29 +35,28 @@ export function ReportToolbar({
   maxDate,
 }: ReportToolbarProps) {
   return (
-    <div className="w-full flex flex-col items-stretch gap-3 bg-muted/30 p-1.5 rounded-2xl border border-border/40">
-      <div className="flex items-center gap-2 w-full">
+    <div className="w-full flex flex-col items-stretch gap-2 sm:gap-3 bg-muted/20 p-1 sm:p-1.5 rounded-2xl border border-border/40 min-w-fit">
+      <div className="flex items-center gap-1.5 sm:gap-2 w-full flex-nowrap">
         {/* View Mode Tabs - Flexible & Scrollable */}
         <Tabs
           value={viewMode}
           onValueChange={(val) => onViewModeChange(val as any)}
-          className="flex-1 min-w-0"
+          className="flex-1 min-w-0 shrink-0"
         >
           <TabsList
             dir="rtl"
-            className="flex items-center w-full h-10 p-1 gap-1 bg-background border border-border/60 rounded-xl overflow-x-auto no-scrollbar scroll-smooth"
+            className="flex items-center w-full h-10 p-1 gap-1 bg-background/50 border border-border/60 rounded-xl overflow-x-auto no-scrollbar scroll-smooth"
           >
             {[
               { id: "daily", label: "יומי" },
               { id: "weekly", label: "שבועי" },
               { id: "monthly", label: "חודשי" },
-              { id: "yearly", label: "שנתי" },
               { id: "custom", label: "טווח" },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-        className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]: transition-all"
+                className="shrink-0 rounded-lg px-2.5 sm:px-4 py-1.5 text-[11px] sm:text-xs font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
               >
                 {tab.label}
               </TabsTrigger>
@@ -64,24 +64,30 @@ export function ReportToolbar({
           </TabsList>
         </Tabs>
 
-        {/* Date Picker Area - Fixed Width on the side */}
-        <div className="shrink-0">
+        {/* Date Picker Area */}
+        <div className="shrink-0 flex-shrink-0">
           {viewMode !== "yearly" && (
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-         className="h-10 px-3 bg-background border-border/60 hover:bg-muted/50 rounded-xl transition-all gap-2 text-xs font-bold"
+                  className={cn(
+                    "h-10 px-2 sm:px-3 bg-background/50 border-border/60 hover:bg-muted/50 rounded-xl transition-all gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold min-w-fit",
+                    viewMode === "custom" && "bg-primary/5 border-primary/20"
+                  )}
                 >
                   <CalendarIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span className="truncate max-w-[90px] hidden xs:inline">
+                  <span className={cn(
+                    "truncate",
+                    viewMode === "custom" ? "max-w-[100px] sm:max-w-[150px]" : "max-w-[70px] sm:max-w-[100px]"
+                  )}>
                     {viewMode === "monthly" ? (
-                      format(date, "MMMM yy", { locale: he })
+                      format(date, "MM/yy")
                     ) : viewMode === "custom" && dateRange?.from ? (
                       <>
                         {format(dateRange.from, "dd/MM")}
                         {dateRange.to
-                          ? ` - ${format(dateRange.to, "dd/MM")}`
+                          ? `-${format(dateRange.to, "dd/MM")}`
                           : ""}
                       </>
                     ) : (

@@ -29,7 +29,10 @@ export function invalidateCache(pattern?: string) {
 // ── Axios instance ────────────────────────────────────────────────────────────
 const apiClient = axios.create({
   baseURL: API_URL,
-  headers: { "Content-Type": "application/json" },
+  headers: { 
+    "Content-Type": "application/json",
+    "bypass-tunnel-reminder": "true"
+  },
   // Reasonable timeout so hung requests don't block the UI
   timeout: 15_000,
 });

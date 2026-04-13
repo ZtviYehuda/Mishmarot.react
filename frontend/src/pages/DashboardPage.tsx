@@ -21,7 +21,7 @@ import { ReportHub } from "@/components/dashboard/ReportHub";
 import { DateHeader } from "@/components/common/DateHeader";
 import { RestorationRequestDialog } from "@/components/dashboard/RestorationRequestDialog";
 import { WhatsAppBroadcastModal } from "@/components/employees/modals/WhatsAppBroadcastModal";
-import { MessageSquare, Calendar as CalendarIcon, RotateCcw } from "lucide-react";
+import { MessageSquare, Calendar as CalendarIcon, RotateCcw, Filter } from "lucide-react";
 import { GlobalEventModal } from "@/components/employees/modals/GlobalEventModal";
 
 // Helper types for structure
@@ -381,11 +381,8 @@ export default function DashboardPage() {
 
   // Derived stats for the chart (Client-side drilling)
   const chartStats = useMemo(() => {
-    if (selectedStatusData) {
-      return stats.filter((s) => s.status_id === selectedStatusData.id);
-    }
     return stats;
-  }, [stats, selectedStatusData]);
+  }, [stats]);
 
   const handleFilterChange = (
     type:
@@ -419,26 +416,28 @@ export default function DashboardPage() {
     }
 
     if (type === "ageRange") {
-      if (!value || value === "all") {
+      // Logic to toggle: if clicking the same range, clear the filter
+      const currentString = selectedAgeRange?.min
+        ? selectedAgeRange.max
+          ? `${selectedAgeRange.min}-${selectedAgeRange.max}`
+          : `${selectedAgeRange.min}+`
+        : "all";
+
+      if (value === currentString || value === "all") {
         setSelectedAgeRange({});
-      } else {
-        const [min, max] = value
-          .split("-")
-          .map((v: string) => (v === "+" ? undefined : parseInt(v)));
+        return;
+      }
+
+      if (value === "50+") {
+        setSelectedAgeRange({ min: 50 });
+      } else if (value.includes("-")) {
+        const parts = value.split("-");
         setSelectedAgeRange({
-          min,
-          max: max || (value.endsWith("+") ? undefined : min),
+          min: parseInt(parts[0]),
+          max: parseInt(parts[1]),
         });
-        // Special case for ranges like 50+
-        if (value === "50+") {
-          setSelectedAgeRange({ min: 50 });
-        } else if (value.includes("-")) {
-          const parts = value.split("-");
-          setSelectedAgeRange({
-            min: parseInt(parts[0]),
-            max: parseInt(parts[1]),
-          });
-        }
+      } else {
+        setSelectedAgeRange({});
       }
     }
 
@@ -596,6 +595,40 @@ export default function DashboardPage() {
     user
   ]);
 
+  const activeFilterTags = useMemo(() => {
+    const tags: string[] = [];
+    if (selectedStatusData) tags.push(selectedStatusData.name);
+    if (selectedServiceTypes.length > 0) {
+      tags.push(...selectedServiceTypes);
+    }
+    if (selectedAgeRange.min || selectedAgeRange.max) {
+      const ageText = selectedAgeRange.max
+        ? `גילאי ${selectedAgeRange.min}-${selectedAgeRange.max}`
+        : `גילאי ${selectedAgeRange.min}+`;
+      tags.push(ageText);
+    }
+    
+    // For admin, add org filters if selected
+    if (user?.is_admin || user?.is_commander) {
+        if (selectedTeamId && currentTeam) tags.push(currentTeam.name);
+        else if (selectedSectionId && currentSection) tags.push(currentSection.name);
+        else if (selectedDeptId && currentDept) tags.push(currentDept.name);
+    }
+
+    return tags;
+  }, [
+    selectedStatusData,
+    selectedServiceTypes,
+    selectedAgeRange,
+    selectedDeptId,
+    selectedSectionId,
+    selectedTeamId,
+    currentDept,
+    currentSection,
+    currentTeam,
+    user,
+  ]);
+
   const handleStatusClick = (
     statusId: number,
     statusName: string,
@@ -636,21 +669,70 @@ export default function DashboardPage() {
           hideMobile={true}
           className="flex mb-0 px-0 pb-2 shrink-0 transition-all border-none"
           badge={
-            <div className="flex flex-row items-center justify-start lg:justify-end gap-2 lg:gap-3 w-full lg:w-auto overflow-x-auto no-scrollbar">
+            <div className="flex flex-row items-center justify-end gap-1.5 sm:gap-2 lg:gap-3 w-full overflow-x-auto no-scrollbar pt-1 pr-1">
               {isOldDate && (
                 <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-black px-2 py-0.5 rounded-lg shrink-0 text-[10px] sm:text-xs">
                   {hasArchiveAccess ? "משוחזר" : "ארכיון"}
                 </Badge>
               )}
               
-              {/* Date Selector - Primary Location */}
-              <DateHeader className="w-auto shadow-none bg-card/40 backdrop-blur-xl border border-border/40 shrink-0" compact={true} />
+              {/* Date Selector - Primary Location (Hidden on mobile to avoid overlap with Main Header) */}
+              <div className="hidden lg:block">
+                <DateHeader className="w-auto shrink-0" compact={true} />
+              </div>
 
-              {/* Actions Row */}
-              <div className="flex items-center gap-2 lg:gap-3 shrink-0">
-                {/* Filters button - hidden on mobile since the chart has a filter button */}
-                <div className="hidden lg:flex items-center overflow-visible">
-                  <div className="relative group">
+              {/* Actions Row - Filter on Far Left */}
+              <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
+                {/* 1. Social & Event Actions (Right side of the group) */}
+                {(user?.is_commander || user?.is_admin) && (
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <Button
+                      onClick={() => setWhatsappBroadcastOpen(true)}
+                      className="h-9 w-9 rounded-xl border border-green-500/20 bg-green-500/5 text-green-600 hover:bg-green-500/10 transition-all shrink-0 p-0 shadow-none border-none"
+                      variant="ghost"
+                      size="icon"
+                      title="רשימת תפוצה"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                    </Button>
+
+                    {!user?.is_temp_commander && (
+                      <Button
+                        onClick={() => setGlobalEventOpen(true)}
+                        className="h-9 w-9 rounded-xl border border-purple-500/20 bg-purple-500/5 text-purple-600 hover:bg-purple-500/10 transition-all shrink-0 p-0 shadow-none border-none"
+                        variant="ghost"
+                        size="icon"
+                        title="אירוע חדש"
+                      >
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* 2. Report Hub (Center of the group) */}
+                {!user?.is_temp_commander && (
+                  <ReportHub
+                    className="h-9 rounded-xl border-none bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 font-black transition-all px-3 sm:px-4 text-[11px] sm:text-xs shadow-none"
+                    onShareBirthdays={() => birthdaysRef.current?.share()}
+                    initialViewMode={viewMode}
+                    initialDate={selectedDate}
+                    filters={{
+                      department_id: selectedDeptId?.toString() || "",
+                      section_id: selectedSectionId?.toString() || "",
+                      team_id: selectedTeamId?.toString() || "",
+                      serviceTypes: selectedServiceTypes,
+                      unitName: unitName,
+                      statusName: selectedStatusData?.name,
+                      status_id: selectedStatusData?.id?.toString(),
+                    }}
+                  />
+                )}
+
+                {/* 3. Filters (Far Left) */}
+                <div className="flex items-center">
+                  {/* Desktop view */}
+                  <div className="hidden lg:block">
                     <DashboardFilters
                       structure={structure}
                       statuses={allStatuses}
@@ -671,63 +753,28 @@ export default function DashboardPage() {
                       user={user}
                       isMobile={false}
                     />
-
+                  </div>
+                  
+                  {/* Mobile view */}
+                  <Button
+                    onClick={() => setFilterOpen(true)}
+                    className={cn(
+                      "lg:hidden relative h-9 w-9 p-0 rounded-xl transition-all shadow-none border border-border/20",
+                      activeFilterInfo.hasActive 
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90 border-transparent" 
+                        : "bg-card/40 backdrop-blur-xl text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    )}
+                    variant="ghost"
+                    size="icon"
+                  >
+                    <Filter className="w-4 h-4" />
                     {activeFilterInfo.hasActive && (
-                      <button
-                        onClick={() => handleFilterChange("reset")}
-                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
-                        title="נקה סינון"
-                      >
-                        <RotateCcw className="w-3 h-3" />
-                      </button>
+                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center border-2 border-background animate-bounce">
+                        {activeFilterInfo.count}
+                      </span>
                     )}
-                  </div>
+                  </Button>
                 </div>
-
-                {/* Report Hub button */}
-                {!user?.is_temp_commander && (
-                  <div className="w-full lg:w-auto flex items-center gap-2">
-                    <ReportHub
-                      className="w-full lg:w-auto h-9 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-black px-3 transition-all text-sm lg:text-[11px] shadow-none"
-                      onShareBirthdays={() => birthdaysRef.current?.share()}
-                      initialViewMode={viewMode}
-                      initialDate={selectedDate}
-                      filters={{
-                        department_id: selectedDeptId?.toString() || "",
-                        section_id: selectedSectionId?.toString() || "",
-                        team_id: selectedTeamId?.toString() || "",
-                        serviceTypes: selectedServiceTypes,
-                        unitName: unitName,
-                        statusName: selectedStatusData?.name,
-                        status_id: selectedStatusData?.id?.toString(),
-                      }}
-                    />
-                    
-                    {(user?.is_commander || user?.is_admin) && (
-                      <div className="flex items-center gap-2 w-full lg:w-auto lg:shrink-0">
-                        <Button
-                          onClick={() => setWhatsappBroadcastOpen(true)}
-                          className="flex-1 lg:flex-none h-9 rounded-xl border border-border/40 bg-green-500/10 text-green-600 hover:bg-green-500/20 gap-1.5 font-black px-2 sm:px-3 transition-all text-[11px]"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">רשימת תפוצה</span>
-                          <span className="sm:hidden">תפוצה</span>
-                        </Button>
-
-                        {!user?.is_temp_commander && (
-                          <Button
-                            onClick={() => setGlobalEventOpen(true)}
-                            className="flex-1 lg:flex-none h-9 rounded-xl border border-border/40 bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 gap-1.5 font-black px-2 sm:px-3 transition-all text-[11px]"
-                          >
-                            <CalendarIcon className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">אירוע</span>
-                            <span className="sm:hidden">אירוע</span>
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           }
@@ -753,6 +800,7 @@ export default function DashboardPage() {
                 hasArchiveAccess={hasArchiveAccess}
                 onRequestRestore={() => setRestoreDialogOpen(true)}
                 selectedStatusId={selectedStatusId}
+                filterTags={activeFilterTags}
               />
             </div>
 
@@ -768,7 +816,15 @@ export default function DashboardPage() {
                     data={ageDistribution}
                     averageAge={averageAge}
                     onRangeSelect={(range) => handleFilterChange("ageRange", range)}
+                    selectedRange={
+                      selectedAgeRange?.min
+                        ? selectedAgeRange.max
+                          ? `${selectedAgeRange.min}-${selectedAgeRange.max}`
+                          : `${selectedAgeRange.min}+`
+                        : "all"
+                    }
                     selectedDate={selectedDate}
+                    filterTags={activeFilterTags}
                   />
                 </div>
               )}
@@ -789,6 +845,7 @@ export default function DashboardPage() {
                       unitName={unitName}
                       subtitle={chartDescription}
                       selectedDate={selectedDate}
+                      filterTags={activeFilterTags}
                     />
                   </div>
                 )}
@@ -805,6 +862,7 @@ export default function DashboardPage() {
                       unitName={unitName}
                       subtitle={chartDescription}
                       selectedDate={selectedDate}
+                      filterTags={activeFilterTags}
                     />
                   </div>
                 )}

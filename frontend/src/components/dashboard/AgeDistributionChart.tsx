@@ -10,21 +10,26 @@ import {
   Cell,
 } from "recharts";
 import { Card } from "@/components/ui/card";
-import { Timer } from "lucide-react";
+import { Timer, Filter } from "lucide-react";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 interface AgeDistributionChartProps {
   data: { range: string; count: number }[];
   averageAge: number;
   onRangeSelect?: (range: string) => void;
+  selectedRange?: string;
   selectedDate?: Date;
+  filterTags?: string[];
 }
 
 export const AgeDistributionChart = ({
   data,
   averageAge,
   onRangeSelect,
+  selectedRange = "all",
   selectedDate = new Date(),
+  filterTags = [],
 }: AgeDistributionChartProps) => {
   const chartData = useMemo(() => {
     return data;
@@ -39,13 +44,27 @@ export const AgeDistributionChart = ({
           <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center shrink-0 border border-border/40">
             <Timer className="w-6 h-6 text-muted-foreground" />
           </div>
-          <div className="text-right">
-            <h3 className="text-xl font-black text-foreground tracking-tight">
-              חתך גילאים
+          <div className="text-right flex flex-col">
+            <h3 className="text-xl font-black text-foreground tracking-tight flex items-center flex-wrap gap-2 sm:gap-3">
+              <span>חתך גילאים</span>
+              {filterTags.length > 0 && (
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                   <div className="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-400 font-black uppercase tracking-tight ml-1 animate-pulse">
+                    <Filter className="w-4 h-4" />
+                    <span>סינון פעיל:</span>
+                  </div>
+                  {filterTags.map((tag, idx) => (
+                    <Badge 
+                      key={idx} 
+                      variant="secondary" 
+                      className="text-[11px] h-6 px-3 font-black bg-blue-700 text-white border-none shadow-md shadow-blue-500/30 whitespace-nowrap rounded-lg"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </h3>
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">
-              התפלגות גילאית של כוח האדם • {format(selectedDate, "dd/MM/yyyy")}
-            </p>
           </div>
         </div>
         <div className="bg-muted/30 px-4 py-2 rounded-xl border border-border/40 flex items-center gap-3">
@@ -107,13 +126,17 @@ export const AgeDistributionChart = ({
               fill="currentColor"
               className="text-primary/70 hover:text-primary transition-colors"
             >
-              {chartData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  className="transition-all cursor-pointer"
-                  onClick={() => onRangeSelect?.(entry.range)}
-                />
-              ))}
+              {chartData.map((entry, index) => {
+                const isSelected = selectedRange === "all" || entry.range === selectedRange;
+                return (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    className="transition-all cursor-pointer"
+                    onClick={() => onRangeSelect?.(entry.range)}
+                    fillOpacity={isSelected ? 1 : 0.2}
+                  />
+                );
+              })}
               <LabelList
                 dataKey="count"
                 position="top"

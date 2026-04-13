@@ -1,7 +1,7 @@
 import React, { useMemo, useTransition } from "react";
 import { format, subDays, addDays, isSameDay, differenceInCalendarDays } from "date-fns";
 import { he } from "date-fns/locale";
-import { ChevronRight, ChevronLeft, RefreshCw, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronRight, ChevronLeft, RotateCcw, Calendar as CalendarIcon } from "lucide-react";
 import { useDateContext } from "@/context/DateContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -27,7 +27,7 @@ export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = (
 
   return (
     <div className={cn("relative group flex items-center shrink-0", className)}>
-      <div className={cn("flex-1 flex items-center justify-between bg-card/40 backdrop-blur-xl border border-border/40 rounded-xl overflow-hidden h-10 shadow-none relative", compact ? "px-0" : "px-1")}>
+      <div className={cn("flex-1 flex items-center justify-between bg-card/40 backdrop-blur-xl border border-border/40 rounded-xl h-10 shadow-none relative overflow-visible", compact ? "px-0" : "px-1")}>
         {/* Next Day (Right Arrow in RTL) */}
         {!compact && (
           <button
@@ -124,7 +124,7 @@ export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = (
           className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
           title="חזרה להיום"
         >
-          <RefreshCw className="w-3 h-3" />
+          <RotateCcw className="w-3 h-3" />
         </button>
       )}
     </div>

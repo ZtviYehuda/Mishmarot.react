@@ -12,29 +12,21 @@ import {
   CheckCircle2,
   Shield,
   Activity,
+  Cpu,
+  Wifi,
+  Search,
   Laptop2,
-  Monitor,
+  ChevronDown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import apiClient from "@/config/api.client";
 import { format } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
 
-interface AuditLog {
-  id: number;
-  user_id: number;
-  user_name?: string;
-  action_type: string;
-  description: string;
-  created_at: string;
-  ip_address: string;
-  metadata: any;
-  reason?: string; // For suspicious logs
-  target_name?: string;
-}
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface SecuritySettingsProps {
@@ -71,46 +63,28 @@ export function SecuritySettings({
           (1000 * 3600 * 24),
       )
     : 0;
-
-  // Activity Logs State
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [allActivity, setAllActivity] = useState<AuditLog[]>([]);
-  const [suspiciousActivity, setSuspiciousActivity] = useState<AuditLog[]>([]);
-  const [loadingLogs, setLoadingLogs] = useState(true);
-  const [activeTab, setActiveTab] = useState<"my" | "all" | "suspicious">("my");
+  
+  const [activity, setActivity] = useState<any[]>([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
 
   useEffect(() => {
-    const fetchLogs = async () => {
-      setLoadingLogs(true);
+    const fetchActivity = async () => {
+      setIsLoadingActivity(true);
       try {
-        const [myRes, allRes, suspRes] = await Promise.all([
-          apiClient.get("/audit/my-activity"),
-          user?.is_admin || user?.is_commander
-            ? apiClient.get("/audit/all-activity")
-            : Promise.resolve({ data: [] }),
-          user?.is_admin
-            ? apiClient.get("/audit/suspicious")
-            : Promise.resolve({ data: [] }),
-        ]);
-
-        setAuditLogs(myRes.data);
-        setAllActivity(allRes.data);
-        setSuspiciousActivity(suspRes.data);
+        const { data } = await apiClient.get("/auth/profile/activity?limit=10");
+        if (data.success) {
+          setActivity(data.logs);
+        }
       } catch (err) {
-        console.error("Failed to fetch audit logs", err);
+        console.error("Failed to fetch user activity", err);
       } finally {
-        setLoadingLogs(false);
+        setIsLoadingActivity(false);
       }
     };
-    fetchLogs();
-  }, [user]);
+    fetchActivity();
+  }, []);
 
-  const displayedLogs =
-    activeTab === "my"
-      ? auditLogs
-      : activeTab === "all"
-        ? allActivity
-        : suspiciousActivity;
+
 
   const shouldShowAlert = daysSinceChange > 180;
 
@@ -335,70 +309,7 @@ export function SecuritySettings({
             </div>
           </SectionCard>
 
-          {/* Activity Log Section */}
-          <SectionCard icon={Activity} title="יומן פעילות וניטור">
-            <div className="space-y-6">
-              <div className="flex justify-center md:justify-start">
-                <div className="flex bg-muted/60 p-1.5 rounded-2xl gap-1">
-                  <TabButton
-                    active={activeTab === "my"}
-                    label="הפעילות שלי"
-                    onClick={() => setActiveTab("my")}
-                  />
-                  {(user?.is_admin || user?.is_commander) && (
-                    <TabButton
-                      active={activeTab === "all"}
-                      label="כלל המשתמשים"
-                      onClick={() => setActiveTab("all")}
-                    />
-                  )}
-                  {user?.is_admin && (
-                    <TabButton
-                      active={activeTab === "suspicious"}
-                      label="פעילות חריגה"
-                      onClick={() => setActiveTab("suspicious")}
-                      isSuspicious
-                    />
-                  )}
-                </div>
-              </div>
 
-              <div className="min-h-[400px]">
-                {loadingLogs ? (
-                  <div className="h-[400px] flex flex-col items-center justify-center gap-4 text-muted-foreground">
-                    <Loader2 className="w-12 h-12 animate-spin text-primary/40" />
-                    <p className="font-black text-sm uppercase animate-pulse">
-                      טוען נתונים...
-                    </p>
-                  </div>
-                ) : displayedLogs.length === 0 ? (
-                  <div className="h-[400px] flex flex-col items-center justify-center gap-6 text-muted-foreground">
-                    <div className="p-8 bg-primary/5 rounded-[3rem] border border-primary/5">
-                      <ShieldCheck className="w-16 h-16 text-primary/20" />
-                    </div>
-                    <div className="text-center space-y-1">
-                      <p className="text-xl font-black text-foreground">
-                        אין תיעוד להצגה
-                      </p>
-                      <p className="text-sm font-medium">
-                        לא נמצאו רשומות רלוונטיות לתקופה זו.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-primary/5 -mx-8">
-                    {displayedLogs.map((log, idx) => (
-                      <ActivityLogItem
-                        key={`${log.id}-${idx}`}
-                        log={log}
-                        activeTab={activeTab}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </SectionCard>
         </div>
 
         {/* LEFT SIDE - Security Tips */}
@@ -437,104 +348,149 @@ export function SecuritySettings({
           </SectionCard>
         </div>
       </div>
+
+      {/* RECENT ACTIVITY - New Section */}
+      <div className="mt-8">
+        <SectionCard 
+            icon={History} 
+            title="פעילות אחרונה וחיבורים" 
+            badge={
+              <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-lg border border-primary/20">
+                10 כניסות אחרונות
+              </span>
+            }
+        >
+          <div className="space-y-2">
+            {isLoadingActivity ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-40">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <span className="text-xs font-bold">טוען היסטוריית חיבורים...</span>
+              </div>
+            ) : activity.length === 0 ? (
+              <div className="text-center py-12 bg-muted/20 rounded-[2rem] border border-dashed border-border/60">
+                <p className="text-xs font-bold text-muted-foreground">לא נמצאה פעילות מתועדת</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2">
+                {activity.map((log, idx) => (
+                  <UserActivityEntry key={log.id} log={log} index={idx} />
+                ))}
+              </div>
+            )}
+            
+            <div className="pt-6 flex flex-col sm:flex-row items-center gap-4 border-t border-primary/5 mt-4">
+              <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 flex items-center gap-3">
+                <Shield className="w-4 h-4 text-amber-600" />
+                <p className="text-[10px] font-bold text-amber-700 leading-tight">
+                  אם זיהית חיבור ממכשיר או מיקום שאינך מכיר, מומלץ להחליף סיסמה מיד.
+                </p>
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+      </div>
     </div>
+  );
+}
+
+function UserActivityEntry({ log, index }: { log: any, index: number }) {
+  const [expanded, setExpanded] = useState(false);
+  const isFailed = log.action_type === "FAILED_LOGIN" || log.action_type.includes("BLOCKED");
+  
+  const browser = log.metadata?.browser || "";
+  const ip = log.metadata?.real_ip || log.ip_address;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(browser);
+  const isWindows = /Windows/i.test(browser);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.03 }}
+      className={cn(
+        "group flex flex-col rounded-2xl border transition-all cursor-pointer overflow-hidden",
+        isFailed 
+          ? "bg-red-500/5 hover:bg-red-500/[0.08] border-red-100" 
+          : "bg-muted/10 hover:bg-muted/20 border-transparent hover:border-border/40",
+        expanded && "bg-muted/30 border-border/40"
+      )}
+      onClick={() => setExpanded(!expanded)}
+    >
+      <div className="p-3.5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={cn(
+            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border",
+            isFailed ? "bg-red-100 border-red-200 text-red-600" : "bg-background border-border/40 text-primary"
+          )}>
+            {log.action_type === "LOGIN" ? <Laptop2 className="w-4 h-4" /> : isFailed ? <AlertTriangle className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
+          </div>
+          
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2">
+              <span className={cn(
+                "text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border",
+                isFailed ? "bg-red-500 text-white border-transparent" : "bg-primary/5 border-primary/10 text-primary"
+              )}>
+                {log.action_type}
+              </span>
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {format(new Date(log.created_at), "HH:mm, dd/MM")}
+              </span>
+            </div>
+            <p className="text-[11px] font-bold text-foreground/80 truncate mt-0.5">
+              {log.description}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="hidden sm:flex flex-col items-end opacity-60">
+            <span className="text-[10px] font-mono font-bold">{ip}</span>
+            <span className="text-[9px] font-black text-muted-foreground uppercase">{isWindows ? "Windows" : isMobile ? "Mobile" : "Device"}</span>
+          </div>
+          <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", expanded && "rotate-180")} />
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: "auto" }}
+            exit={{ height: 0 }}
+            className="border-t border-border/20 bg-muted/40 overflow-hidden"
+          >
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-[10px]">
+              <div className="space-y-1">
+                <span className="font-black text-muted-foreground uppercase text-[8px] tracking-widest">תיאור מכשיר</span>
+                <div className="bg-background/40 p-2 rounded-lg border border-border/20 break-all font-mono leading-relaxed">
+                  {browser || "לא זוהה"}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="font-black text-muted-foreground uppercase text-[8px] tracking-widest">מידע רשת</span>
+                <div className="bg-background/40 p-2 rounded-lg border border-border/20 space-y-1 font-mono">
+                  <div className="flex justify-between">
+                    <span>IP:</span>
+                    <span className="font-bold text-primary">{ip}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>זמן מדויק:</span>
+                    <span className="font-bold">{format(new Date(log.created_at), "HH:mm:ss.SSS")}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
 // --- UI Components ---
 
-function ActivityLogItem({
-  log,
-  activeTab,
-}: {
-  log: AuditLog;
-  activeTab: string;
-}) {
-  const getActionColor = () => {
-    if (log.reason) return "text-red-600 bg-red-500/10 border-red-500/10";
-    if (log.action_type === "LOGIN")
-      return "text-emerald-600 bg-emerald-500/10 border-emerald-500/10";
-    if (log.action_type.includes("PASSWORD"))
-      return "text-amber-600 bg-amber-500/10 border-amber-500/10";
-    return "text-primary bg-primary/10 border-border/40";
-  };
 
-  const getLogTitle = () => {
-    if (log.reason) return log.reason;
-    switch (log.action_type) {
-      case "LOGIN":
-        return "התחברות מוצלחת";
-      case "FAILED_LOGIN":
-        return "ניסיון התחברות שנכשל";
-      case "PASSWORD_CHANGE":
-        return "שינוי סיסמה";
-      case "PROFILE_UPDATE":
-        return "עדכון פרטים";
-      default:
-        return log.action_type;
-    }
-  };
-
-  return (
-    <div
-      className={cn(
-        "p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all hover:bg-primary/[0.02]",
-        log.reason && "bg-destructive/[0.03]",
-      )}
-    >
-      <div className="flex items-start gap-4">
-        <div
-          className={cn(
-            "p-3 rounded-2xl border transition-transform shrink-0",
-            getActionColor(),
-          )}
-        >
-          {log.action_type === "LOGIN" ? (
-            <Laptop2 className="w-5 h-5" />
-          ) : (
-            <Activity className="w-5 h-5" />
-          )}
-        </div>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="font-black text-base tracking-tight">
-              {getLogTitle()}
-            </h4>
-            {log.user_name && activeTab !== "my" && (
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-primary/10 text-primary border border-border/40">
-                {log.user_name}
-              </span>
-            )}
-          </div>
-          <p className="text-muted-foreground text-xs font-medium leading-relaxed max-w-xl">
-            {log.description}
-          </p>
-          <div className="flex items-center gap-3 pt-2">
-            <span className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/60 bg-muted/50 px-2 py-0.5 rounded-lg border border-border/40">
-              <Shield className="w-3 h-3" />
-              {log.ip_address}
-            </span>
-            {log.metadata?.browser && (
-              <span className="hidden md:flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/60">
-                <Monitor className="w-3 h-3" />
-                {log.metadata.browser.split(" ")[0]}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-1">
-        <span className="text-sm font-black font-mono text-foreground">
-          {format(new Date(log.created_at), "HH:mm")}
-        </span>
-        <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-60">
-          {format(new Date(log.created_at), "dd/MM/yy")}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 function SectionCard({
   icon: Icon,
@@ -544,44 +500,23 @@ function SectionCard({
   variant = "default",
 }: any) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        "bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border overflow-hidden",
-        variant === "danger" ? "border-red-500/10" : "border-border/40",
-      )}
-    >
-      <div
-        className={cn(
-          "px-5 py-4 sm:px-8 sm:py-6 border-b flex items-center justify-between",
-          variant === "danger" ? "bg-red-500/5" : "bg-primary/5",
-        )}
-      >
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div
-            className={cn(
-              "p-2 sm:p-2.5 rounded-xl sm:rounded-2xl",
-              variant === "danger"
-                ? "bg-red-500/10 text-red-600"
-                : "bg-primary/10 text-primary",
-            )}
-          >
-            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-          <h3
-            className={cn(
-              "text-lg sm:text-xl font-black tracking-tight",
-              variant === "danger" ? "text-red-600" : "text-foreground",
-            )}
-          >
+    <div className="flex flex-col gap-3 sm:gap-4">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <Icon className={cn("w-4 h-4", variant === "danger" ? "text-red-500" : "text-primary")} />
+          <h3 className={cn("text-sm font-black tracking-tight", variant === "danger" ? "text-red-500" : "text-foreground")}>
             {title}
           </h3>
         </div>
         {badge}
       </div>
-      <div className="p-5 sm:p-8">{children}</div>
-    </motion.div>
+      <div className={cn(
+        "bg-card/40 backdrop-blur-xl rounded-[2rem] border p-4 sm:p-6 shadow-sm overflow-hidden h-full",
+        variant === "danger" ? "border-red-500/20 bg-red-500/5" : "border-border/40"
+      )}>
+        {children}
+      </div>
+    </div>
   );
 }
 

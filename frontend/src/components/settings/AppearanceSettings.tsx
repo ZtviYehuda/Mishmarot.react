@@ -1,4 +1,4 @@
-import { Palette, Moon, Sun, Monitor, Type, Sparkles } from "lucide-react";
+import { Palette, Moon, Sun, Type, Monitor } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -19,14 +19,15 @@ export function AppearanceSettings({
   fontSize,
   setFontSize,
 }: AppearanceSettingsProps) {
+  // Only showing the 7 colors that are defined in index.css themes for perfect functionality.
   const accentColors = [
-    { id: "blue", label: "כחול", class: "bg-blue-600" },
-    { id: "zinc", label: "אפור", class: "bg-zinc-600" },
-    { id: "emerald", label: "ירוק", class: "bg-emerald-600" },
-    { id: "violet", label: "סגול", class: "bg-violet-600" },
-    { id: "amber", label: "כתום", class: "bg-amber-600" },
-    { id: "rose", label: "אדום", class: "bg-rose-600" },
+    { id: "emerald", label: "אמרלד", class: "bg-emerald-500" },
     { id: "cyan", label: "ציאן", class: "bg-cyan-500" },
+    { id: "blue", label: "כחול", class: "bg-blue-500" },
+    { id: "violet", label: "סגול", class: "bg-violet-500" },
+    { id: "rose", label: "ורד", class: "bg-rose-500" },
+    { id: "amber", label: "ענבר", class: "bg-amber-500" },
+    { id: "zinc", label: "ניטרלי", class: "bg-slate-500" },
   ];
 
   const fontSizes = [
@@ -36,166 +37,157 @@ export function AppearanceSettings({
   ];
 
   return (
-    <div className=" w-full pb-24 lg:pb-0">
-      <div className="grid grid-cols-12 gap-4 sm:gap-8">
-        {/* Main Settings Area */}
-        <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-8">
-          <SectionCard icon={Palette} title="ערכת נושא">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
-              {["light", "dark"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTheme(t as any)}
-                  className={cn(
-                    "group relative h-32 sm:h-48 rounded-[1.5rem] sm:rounded-[2rem] border-2 transition-all overflow-hidden",
-                    theme === t
-                      ? "border-primary bg-primary/5 ring-4 ring-primary/5"
-                      : "border-border/40 bg-background/50 hover:border-border/40",
-                  )}
-                >
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8">
-                    <div
-                      className={cn(
-                        "p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all",
-                        theme === t
-                          ? "bg-primary text-white scale-110"
-                          : "bg-muted text-muted-foreground group-hover:bg-muted/80",
-                      )}
-                    >
-                      {t === "light" ? (
-                        <Sun className="w-5 h-5 sm:w-8 sm:h-8" />
-                      ) : (
-                        <Moon className="w-5 h-5 sm:w-8 sm:h-8" />
-                      )}
-                    </div>
-                    <span className="font-black text-sm sm:text-lg uppercase tracking-wider">
-                      {t === "light" ? "מראה יום" : "מראה לילה"}
-                    </span>
-                  </div>
-
-                  {theme === t && (
-                    <motion.div
-                      layoutId="active-theme"
-                      className="absolute top-3 right-3 sm:top-5 sm:right-5"
-                    >
-                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-primary" />
-                    </motion.div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard icon={Sparkles} title="צבע דגש">
-            <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 sm:gap-4">
-              {accentColors.map((color) => (
-                <button
-                  key={color.id}
-                  onClick={() => setAccentColor(color.id)}
-                  className={cn(
-                    "flex flex-col items-center gap-2 p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all",
-                    accentColor === color.id
-                      ? "bg-primary/10 border border-border/40"
-                      : "hover:bg-muted/50 border border-transparent",
-                  )}
-                >
+    <div className="w-full pb-24 lg:pb-0 max-w-7xl mx-auto space-y-6 sm:space-y-8">
+      {/* Top Row: Theme & Font Size Side by Side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 items-stretch">
+        <SectionCard icon={Palette} title="ערכת נושא">
+          <div className="grid grid-cols-2 gap-4 h-full">
+            {["light", "dark"].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTheme(t as any)}
+                className={cn(
+                  "group relative h-28 sm:h-36 rounded-2xl border transition-all overflow-hidden",
+                  theme === t
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
+                    : "border-border/40 bg-background/50 hover:border-border/60 hover:bg-muted/10",
+                )}
+              >
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                   <div
                     className={cn(
-                      "w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-transform",
-                      color.class,
-                      accentColor === color.id
-                        ? "scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background"
-                        : "hover:scale-105",
-                    )}
-                  />
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase text-muted-foreground truncate w-full text-center">
-                    {color.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard icon={Type} title="גודל גופן">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              {fontSizes.map((size) => (
-                <button
-                  key={size.id}
-                  onClick={() => setFontSize(size.id as any)}
-                  className={cn(
-                    "group relative p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] border-2 flex flex-col items-center gap-2 sm:gap-3 transition-all",
-                    fontSize === size.id
-                      ? "border-primary bg-primary/5 ring-4 ring-primary/5"
-                      : "border-border/40 bg-background/50 hover:border-border/40",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "font-black transition-all",
-                      size.id === "small" && "text-sm",
-                      size.id === "normal" && "text-base",
-                      size.id === "large" && "text-lg",
-                      fontSize === size.id
-                        ? "text-primary scale-110"
-                        : "text-muted-foreground/60 group-hover:text-muted-foreground",
+                      "p-3 rounded-full transition-all",
+                      theme === t
+                        ? "bg-primary text-white scale-110 shadow-sm shadow-primary/20"
+                        : "bg-muted text-muted-foreground group-hover:bg-muted/80",
                     )}
                   >
-                    אבג
+                    {t === "light" ? (
+                      <Sun className="w-5 h-5" />
+                    ) : (
+                      <Moon className="w-5 h-5" />
+                    )}
+                  </div>
+                  <span className={cn("font-bold text-sm tracking-wide transition-colors", theme === t ? "text-primary" : "text-muted-foreground")}>
+                    {t === "light" ? "מראה יום" : "מראה לילה"}
                   </span>
-                  <span className="font-black text-[9px] sm:text-[10px] uppercase text-muted-foreground">
-                    {size.label}
-                  </span>
+                </div>
 
-                  {fontSize === size.id && (
-                    <motion.div
-                      layoutId="active-font"
-                      className="absolute top-3 right-3 sm:top-4 sm:right-4"
-                    >
-                      <div className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-primary" />
-                    </motion.div>
+                {theme === t && (
+                  <motion.div
+                    layoutId="active-theme"
+                    className="absolute top-3 right-3"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                  </motion.div>
+                )}
+              </button>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard icon={Type} title="גודל גופן">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 h-full">
+            {fontSizes.map((size) => (
+              <button
+                key={size.id}
+                onClick={() => setFontSize(size.id as any)}
+                className={cn(
+                  "group relative rounded-2xl border flex flex-col items-center justify-center gap-2 p-4 transition-all h-28 sm:h-36",
+                  fontSize === size.id
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
+                    : "border-border/40 bg-background/50 hover:border-border/60 hover:bg-muted/10",
+                )}
+              >
+                <span
+                  className={cn(
+                    "font-black transition-all",
+                    size.id === "small" && "text-xs",
+                    size.id === "normal" && "text-base",
+                    size.id === "large" && "text-xl",
+                    fontSize === size.id
+                      ? "text-primary scale-110"
+                      : "text-muted-foreground group-hover:text-foreground",
                   )}
-                </button>
-              ))}
-            </div>
-          </SectionCard>
-        </div>
+                >
+                  אבג
+                </span>
+                <span className={cn("font-bold text-[10px] sm:text-xs", fontSize === size.id ? "text-primary" : "text-muted-foreground")}>
+                  {size.label}
+                </span>
 
-        {/* Info Area */}
-        <div className="col-span-12 lg:col-span-4 space-y-4 sm:space-y-8">
-          <SectionCard icon={Monitor} title="תצוגה מקדימה">
-            <div className="p-6 rounded-3xl bg-primary/5 border border-border/40 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-primary/20" />
-              <p className="text-sm font-black text-primary leading-relaxed relative z-10 transition-colors group-hover:text-primary/100">
-                שינויי העיצוב משפיעים על כל דפי המערכת באופן מיידי ומסונכרנים עם
-                חשבונך בכל המכשירים.
-              </p>
-            </div>
-          </SectionCard>
+                {fontSize === size.id && (
+                  <motion.div
+                    layoutId="active-font"
+                    className="absolute top-3 right-3"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                  </motion.div>
+                )}
+              </button>
+            ))}
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* Bottom Row: Full Palette */}
+      <SectionCard icon={Palette} title="מניפת צבעי מערכת">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          {accentColors.map((color) => (
+            <button
+              key={color.id}
+              onClick={() => setAccentColor(color.id)}
+              className={cn(
+                "relative group flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all",
+                accentColor === color.id
+                  ? "bg-muted/50 border border-border/60 shadow-sm"
+                  : "border border-transparent hover:bg-muted/20",
+              )}
+            >
+              <div
+                className={cn(
+                  "w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-transform",
+                  color.class,
+                  accentColor === color.id
+                    ? "scale-105 ring-2 ring-primary ring-offset-2 ring-offset-background shadow-md shadow-primary/20"
+                    : "hover:scale-110 shadow-sm hover:shadow-md",
+                )}
+              />
+              <span className={cn(
+                  "text-[9px] sm:text-[10px] font-bold text-center",
+                  accentColor === color.id ? "text-primary" : "text-muted-foreground"
+                )}>
+                {color.label}
+              </span>
+            </button>
+          ))}
         </div>
+      </SectionCard>
+
+      {/* Preview Info Mini-Header */}
+      <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary mt-4 max-w-xl">
+        <Monitor className="w-5 h-5 shrink-0 mt-0.5 opacity-80" />
+        <p className="text-xs font-bold leading-relaxed opacity-90">
+          שינויי התצוגה מיושמים אוטומטית ברחבי המערכת ונשמרים בחשבונך.
+        </p>
       </div>
     </div>
   );
 }
 
-// --- Reusable Internal UI Components ---
-
 function SectionCard({ icon: Icon, title, children }: any) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-card/50 backdrop-blur-xl rounded-2xl sm:rounded-[2.5rem] border border-border/40 overflow-hidden"
-    >
-      <div className="px-5 py-4 sm:px-8 sm:py-6 border-b border-border/40 bg-primary/5 flex items-center gap-2 sm:gap-3">
-        <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-primary/10 text-primary">
-          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-        </div>
-        <h3 className="text-lg sm:text-xl font-black tracking-tight text-foreground">
+    <div className="flex flex-col gap-3 sm:gap-4">
+      <div className="flex items-center gap-2 px-1">
+        <Icon className="w-4 h-4 text-primary" />
+        <h3 className="text-sm font-black text-foreground tracking-tight">
           {title}
         </h3>
       </div>
-      <div className="p-5 sm:p-8">{children}</div>
-    </motion.div>
+      <div className="bg-card/40 backdrop-blur-xl rounded-[2rem] border border-border/40 p-4 sm:p-6 shadow-sm overflow-hidden h-full">
+        {children}
+      </div>
+    </div>
   );
 }
 

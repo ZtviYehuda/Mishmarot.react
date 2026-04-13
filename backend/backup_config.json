@@ -1,5 +1,5 @@
 {
     "enabled": true,
-    "interval_days": 1,
-    "last_backup": "2026-04-09T10:11:13.711853"
+    "interval_days": 7,
+    "last_backup": "2026-04-13T10:15:07.904580"
 }

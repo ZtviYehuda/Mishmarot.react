@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Bell,
   Database,
+  Activity,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 
@@ -20,6 +21,7 @@ import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
+import { AuditLogsSettings } from "@/components/settings/AuditLogsSettings";
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuthContext();
@@ -445,6 +447,13 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("backup")}
             />
           )}
+          {user?.is_admin && (
+            <TabItem
+              label="יומן פעילות"
+              active={activeTab === "audit"}
+              onClick={() => setActiveTab("audit")}
+            />
+          )}
         </div>
 
         {/* Content Area */}
@@ -489,7 +498,29 @@ export default function SettingsPage() {
                   handleResetImpersonatedPassword
                 }
                 handleConfirmCurrentPassword={handleConfirmCurrentPassword}
-                onForgotPassword={() => { }}
+                onForgotPassword={async () => {
+                  if (!user?.email) {
+                    toast.error("לא מוגדרת כתובת אימייל בפרופיל שלך. פנה למנהל המערכת.", {
+                      description: "ניתן לעדכן אימייל בלשונית 'פרופיל אישי'",
+                    });
+                    return;
+                  }
+
+                  try {
+                    const { data } = await apiClient.post("/auth/forgot-password", {
+                      email: user.email,
+                    });
+                    if (data.success) {
+                      toast.success("קוד אימות נשלח למייל שלך", {
+                        description: `נשלח לכתובת: ${user.email}`,
+                      });
+                    } else {
+                      toast.error(data.error || "שגיאה בשליחת קוד אימות");
+                    }
+                  } catch (err) {
+                    toast.error("שגיאה בתקשורת עם השרת");
+                  }
+                }}
               />
             </>
           )}
@@ -515,6 +546,10 @@ export default function SettingsPage() {
               isRestoring={isRestoring}
               handleRestore={handleRestore}
             />
+          )}
+
+          {activeTab === "audit" && user?.is_admin && (
+            <AuditLogsSettings user={user} />
           )}
         </div>
 
@@ -556,6 +591,14 @@ export default function SettingsPage() {
               icon={Database}
               active={activeTab === "backup"}
               onClick={() => setActiveTab("backup")}
+            />
+          )}
+          {user?.is_admin && (
+            <MobileBottomNavLink
+              label="יומן"
+              icon={Activity}
+              active={activeTab === "audit"}
+              onClick={() => setActiveTab("audit")}
             />
           )}
         </div>

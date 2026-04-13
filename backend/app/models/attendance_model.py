@@ -1137,6 +1137,10 @@ class AttendanceModel:
                 WHERE {scope_where}
             """
 
+            # Special scope for Age Distribution: Ignore age filters so all columns stay visible
+            age_scope_conditions = [c for c in scope_conditions if "AGE(" not in c]
+            age_scope_where = " AND ".join(age_scope_conditions)
+
             age_query = f"""
                 WITH scoped_ages AS (
                     SELECT 
@@ -1148,7 +1152,7 @@ class AttendanceModel:
                     LEFT JOIN sections s_dir ON e.section_id = s_dir.id
                     LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                     LEFT JOIN service_types srv ON e.service_type_id = srv.id
-                    WHERE {scope_where} AND e.birth_date IS NOT NULL
+                    WHERE {age_scope_where} AND e.birth_date IS NOT NULL
                 ),
                 age_ranges AS (
                     SELECT 

@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info, Download } from "lucide-react";
+import { Info, Download, Filter } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { toPng, toBlob } from "html-to-image";
 import { toast } from "sonner";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
+import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
 interface ComparisonStat {
@@ -40,6 +41,8 @@ interface StatsComparisonCardProps {
   unitName?: string;
   subtitle?: string;
   selectedDate?: Date;
+  filterTags?: string[];
+  hideHeader?: boolean;
 }
 
 export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
@@ -52,6 +55,8 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
       unitName = "כלל היחידה",
       subtitle,
       selectedDate = new Date(),
+      filterTags = [],
+      hideHeader = false,
     },
     ref,
   ) => {
@@ -224,78 +229,100 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
     return (
       <Card
         ref={cardRef}
-        id="stats-comparison-card"
-        className={cn("h-full flex flex-col overflow-hidden", className)}
+        className={cn(
+          "bg-card/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-primary/10 py-3 flex flex-col overflow-hidden h-full relative transition-all",
+          className,
+          hideHeader && "border-none bg-transparent backdrop-blur-none shadow-none py-0"
+        )}
       >
-        <CardHeader className="pb-4 flex flex-row items-center justify-between space-y-0">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg font-bold">
-                השוואת כוח אדם
-              </CardTitle>
-              <TooltipProvider>
-                <Tooltip delayDuration={300}>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent
-                    className="max-w-[250px] text-right"
-                    dir="rtl"
-                  >
-                    <p className="font-bold mb-1">כיצד מחושב?</p>
-                    <ul className="text-xs space-y-1 list-disc list-inside">
-                      <li>
-                        <span className="font-semibold">נוכחים:</span> משרד, תגבור, קורס
-                      </li>
-                      <li>
-                        <span className="font-semibold">לא נוכחים:</span> חופשה, מחלה, חו"ל
-                      </li>
-                      <li>
-                        <span className="font-semibold">תקן:</span> ממוצע שוטרים
-                        פעילים בתקופה
-                      </li>
-                    </ul>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <CardDescription>
-              <span className="font-bold text-foreground">{unitName}</span>
-              {subtitle && (
-                <>
-                  {" "}
-                  | <span className="">{subtitle}</span>
-                </>
-              )}
-              <div className="text-[10px] text-muted-foreground mt-0.5">
-                {days === 1
-                  ? `תמונת מצב יומית להיום`
-                  : `ממוצע נוכחים - ${days === 7 ? "שבועית" : days === 30 ? "חודשית" : "שנתית"}`} • {format(selectedDate, "dd/MM/yyyy")}
+        {!hideHeader && (
+          <CardHeader className="px-5 sm:px-6 py-3 flex flex-row items-center justify-between space-y-0">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg font-bold flex items-center flex-wrap gap-2 sm:gap-3">
+                  <span>השוואת כוח אדם</span>
+                  {filterTags.length > 0 && (
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar ml-1">
+                      <div className="flex items-center gap-1.5 text-[10px] text-blue-700 dark:text-blue-400 font-black uppercase tracking-tight ml-1 animate-pulse">
+                        <Filter className="w-3 h-3" />
+                        <span>סינון פעיל:</span>
+                      </div>
+                      {filterTags.map((tag, idx) => (
+                        <Badge 
+                          key={idx} 
+                          variant="secondary" 
+                          className="text-[10px] h-5.5 px-3 font-black bg-blue-700 text-white border-none shadow-md shadow-blue-500/30 whitespace-nowrap rounded-lg"
+                        >
+                         {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </CardTitle>
+                <TooltipProvider>
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent
+                      className="max-w-[250px] text-right"
+                      dir="rtl"
+                    >
+                      <p className="font-bold mb-1">כיצד מחושב?</p>
+                      <ul className="text-xs space-y-1 list-disc list-inside">
+                        <li>
+                          <span className="font-semibold">נוכחים:</span> משרד, תגבור, קורס
+                        </li>
+                        <li>
+                          <span className="font-semibold">לא נוכחים:</span> חופשה, מחלה, חו"ל
+                        </li>
+                        <li>
+                          <span className="font-semibold">תקן:</span> ממוצע שוטרים
+                          פעילים בתקופה
+                        </li>
+                      </ul>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-            </CardDescription>
-          </div>
+              <CardDescription>
+                <span className="font-bold text-foreground">{unitName}</span>
+                {subtitle && (
+                  <>
+                    {" "}
+                    | <span className="">{subtitle}</span>
+                  </>
+                )}
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  {days === 1
+                    ? `תמונת מצב יומית להיום`
+                    : `ממוצע נוכחים - ${days === 7 ? "שבועית" : days === 30 ? "חודשית" : "שנתית"}`} • {format(selectedDate, "dd/MM/yyyy")}
+                </div>
+              </CardDescription>
+            </div>
 
-          <div className="flex items-center gap-1.5 no-export">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-primary rounded-lg transition-all"
-              onClick={handleDownload}
-              title="הורדה כתמונה"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1.5 no-export">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-primary rounded-lg transition-all"
+                onClick={handleDownload}
+                title="הורדה כתמונה"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
 
-            <WhatsAppButton
-              onClick={handleWhatsAppShare}
-              variant="outline"
-              className="h-8 w-8 p-0 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20"
-              skipDirectLink={true}
-            />
-          </div>
-        </CardHeader>
+              <WhatsAppButton
+                onClick={handleWhatsAppShare}
+                variant="outline"
+                className="h-8 w-8 p-0 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20"
+                skipDirectLink={true}
+              />
+            </div>
+          </CardHeader>
+        )}
 
-        <CardContent className="space-y-6 flex-1 overflow-auto">
+        <CardContent className={cn("flex-1 overflow-y-auto no-scrollbar p-0", !hideHeader && "px-4 sm:px-6")}>
           {!data || data.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-center bg-muted/20 rounded-xl border border-dashed border-border/50">
               <Info className="w-8 h-8 text-muted-foreground/50 mb-2" />

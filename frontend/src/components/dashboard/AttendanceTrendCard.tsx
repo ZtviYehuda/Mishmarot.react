@@ -26,10 +26,12 @@ import {
   TrendingUp,
   Users,
   Calendar as CalendarIcon,
+  Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toPng, toBlob } from "html-to-image";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 
 interface TrendData {
@@ -47,6 +49,8 @@ interface AttendanceTrendCardProps {
   unitName?: string;
   subtitle?: string;
   selectedDate?: Date;
+  filterTags?: string[];
+  hideHeader?: boolean;
 }
 
 export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
@@ -59,6 +63,8 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       unitName = "כלל היחידה",
       subtitle,
       selectedDate = new Date(),
+      filterTags = [],
+      hideHeader = false,
     },
     ref,
   ) => {
@@ -284,57 +290,78 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
     return (
       <Card
         ref={cardRef}
-        id="attendance-trend-card"
         className={cn(
-          "h-full flex flex-col relative overflow-hidden",
+          "bg-card/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-primary/10 py-3 flex flex-col overflow-hidden h-full relative transition-all",
           className,
+          hideHeader && "border-none bg-transparent backdrop-blur-none shadow-none py-0"
         )}
       >
-        <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-          <div className="space-y-1">
-            <CardTitle className="text-lg font-bold flex items-center gap-2 text-right">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              מגמת זמינות
-            </CardTitle>
-            <CardDescription className="text-right">
-              <span className="font-bold text-foreground">{unitName}</span>
-              {subtitle && (
-                <>
-                  {" "}
-                  | <span className="">{subtitle}</span>
-                </>
-              )}
-              <div className="text-[10px] text-muted-foreground mt-0.5">
-                {range === 7
-                  ? "7 ימים אחרונים"
-                  : range === 30
-                    ? "30 ימים אחרונים"
-                    : "מגמה שנתית"} • {format(selectedDate, "dd/MM/yyyy")}
-              </div>
-            </CardDescription>
-          </div>
+        {!hideHeader && (
+          <CardHeader className="px-5 sm:px-6 py-3 flex flex-row items-center justify-between space-y-0">
+            <div className="space-y-1">
+              <CardTitle className="text-lg font-bold flex items-center flex-wrap gap-2 sm:gap-3 text-right">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <span>מגמת זמינות</span>
+                </div>
+                {filterTags.length > 0 && (
+                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar ml-2">
+                    <div className="flex items-center gap-1.5 text-[10px] text-blue-700 dark:text-blue-400 font-black uppercase tracking-tight ml-1 animate-pulse">
+                      <Filter className="w-3 h-3" />
+                      <span>סינון פעיל:</span>
+                    </div>
+                    {filterTags.map((tag, idx) => (
+                      <Badge 
+                        key={idx} 
+                        variant="secondary" 
+                        className="text-[10px] h-5.5 px-3 font-black bg-blue-700 text-white border-none shadow-md shadow-blue-500/30 whitespace-nowrap rounded-lg"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </CardTitle>
+              <CardDescription className="text-right">
+                <span className="font-bold text-foreground">{unitName}</span>
+                {subtitle && (
+                  <>
+                    {" "}
+                    | <span className="">{subtitle}</span>
+                  </>
+                )}
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  {range === 7
+                    ? "7 ימים אחרונים"
+                    : range === 30
+                      ? "30 ימים אחרונים"
+                      : "מגמה שנתית"} • {format(selectedDate, "dd/MM/yyyy")}
+                </div>
+              </CardDescription>
+            </div>
 
-          <div className="flex items-center gap-1.5 no-export">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-primary rounded-lg transition-all"
-              onClick={handleDownload}
-              title="הורדה כתמונה"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1.5 no-export">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-primary rounded-lg transition-all"
+                onClick={handleDownload}
+                title="הורדה כתמונה"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
 
-            <WhatsAppButton
-              onClick={handleWhatsAppShare}
-              variant="outline"
-              className="h-8 w-8 p-0 rounded-lg text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all  border border-emerald-500/20 bg-emerald-50/50"
-              skipDirectLink={true}
-            />
-          </div>
-        </CardHeader>
+              <WhatsAppButton
+                onClick={handleWhatsAppShare}
+                variant="outline"
+                className="h-8 w-8 p-0 rounded-lg text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all  border border-emerald-500/20 bg-emerald-50/50"
+                skipDirectLink={true}
+              />
+            </div>
+          </CardHeader>
+        )}
 
-        <CardContent className="p-4 pt-2 flex-1 min-h-0 flex flex-col">
+        <CardContent className={cn("flex-1 flex flex-col min-h-0 min-h-[300px] sm:min-h-[350px] p-4 sm:p-6", hideHeader && "p-0")}>
           <div className="w-full h-full min-h-[250px] flex-1">
             <ResponsiveContainer width="100%" height="100%">
               {range <= 30 ? (

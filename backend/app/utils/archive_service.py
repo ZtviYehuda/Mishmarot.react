@@ -1,31 +1,28 @@
 from datetime import datetime, timedelta
 from app.utils.db import get_db_connection
+from app.utils.audit_rotation import rotate_audit_logs
 
 def run_archive_cycle():
     """
-    Moves logs older than 1 month to archive.
-    Example: If today is March 16th, anything before Feb 1st is archived.
+    Moves logs older than 1 month (attendance) and 1 week (audit) to archive.
     """
     conn = get_db_connection()
     if not conn:
         return
     
+    results = {}
+    
     try:
         cur = conn.cursor()
         
-        # Calculate cutoff: First day of previous month
-        # Logic: (Today -> Replace Day 1) -> First day of current month
-        # (First day current month - 1 day) -> Last day of previous month
-        # (Last day previous month -> Replace Day 1) -> First day of previous month
+        # --- 1. ATTENDANCE LOGS (Monthly) ---
         today = datetime.now().date()
         first_day_this_month = today.replace(day=1)
         last_month_end = first_day_this_month - timedelta(days=1)
-        cutoff_date = last_month_end.replace(day=1)
+        cutoff_date_attendance = last_month_end.replace(day=1)
         
-        print(f"[ARCHIVE] Starting archive cycle. Cutoff date: {cutoff_date}")
+        print(f"[ARCHIVE] Starting attendance archive. Cutoff: {cutoff_date_attendance}")
         
-        # 1. Copy to archive
-        # We use INSERT ... SELECT ... ON CONFLICT (id) DO NOTHING to be idempotent
         cur.execute("""
             INSERT INTO attendance_logs_archive (
                 id, employee_id, status_type_id, start_datetime, end_datetime, 
@@ -37,28 +34,26 @@ def run_archive_cycle():
             FROM attendance_logs
             WHERE start_datetime < %s
             ON CONFLICT (id) DO NOTHING
-        """, (cutoff_date,))
+        """, (cutoff_date_attendance,))
+        copied_att = cur.rowcount
         
-        copied_count = cur.rowcount
+        cur.execute("DELETE FROM attendance_logs WHERE start_datetime < %s", (cutoff_date_attendance,))
+        deleted_att = cur.rowcount
         
-        # 2. Delete from active
-        cur.execute("""
-            DELETE FROM attendance_logs
-            WHERE start_datetime < %s
-        """, (cutoff_date,))
-        
-        deleted_count = cur.rowcount
-        
+        results["attendance"] = {"archived": copied_att, "deleted": deleted_att}
+
+        # --- 2. AUDIT LOGS (Weekly, to FILE) ---
+        # Using unified service
+        audit_res = rotate_audit_logs()
+        results["audit"] = audit_res or {"status": "no activity"}
+
         conn.commit()
-        print(f"[ARCHIVE] Success. Archived {copied_count} logs, deleted {deleted_count} logs.")
-        return {
-            "cutoff_date": str(cutoff_date),
-            "archived": copied_count,
-            "deleted": deleted_count
-        }
+        return results
     except Exception as e:
-        conn.rollback()
+        if conn:
+            conn.rollback()
         print(f"[ARCHIVE] Error: {e}")
         return {"error": str(e)}
     finally:
-        conn.close()
+        if conn:
+            conn.close()

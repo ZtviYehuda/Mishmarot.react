@@ -798,6 +798,10 @@ export default function AttendancePage() {
                 statusTypes={statusTypes}
                 scopeEmployees={scopeEmployees}
                 onClose={closeCalendar}
+                departments={departments}
+                sections={sections}
+                teams={teams}
+                serviceTypes={serviceTypes}
               />
             </div>
           </motion.div>
@@ -845,34 +849,8 @@ export default function AttendancePage() {
                     </div>
                   </div>
 
-                  {/* Full-width Progress Display */}
-                  <div className="w-full space-y-3">
-                    <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider">
-                      <div className="flex items-center gap-2 text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>זמינים: {updatedTodayCount}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-primary/60 bg-primary/5 px-3 py-1 rounded-lg border border-primary/10">
-                        <span>{Math.round(progressPercent)}% הושלם</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 px-3 py-1 rounded-lg border border-rose-500/20">
-                        <span>{totalCount - updatedTodayCount} חסרים</span>
-                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                      </div>
-                    </div>
-                    
-                    <div className="h-3 w-full bg-slate-100 dark:bg-slate-800/40 rounded-full overflow-hidden border border-border/10 relative shadow-inner">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progressPercent}%` }}
-                        transition={{ duration: 1.2, ease: "circOut" }}
-                        className="absolute inset-y-0 right-0 bg-gradient-to-l from-emerald-500 via-emerald-400 to-emerald-300 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.4)] z-10"
-                      />
-                      <div className="absolute inset-0 bg-rose-500/10" />
-                    </div>
-                  </div>
                 </div>
-
+                
                 {/* Mobile Gauge Area */}
                 <div className="lg:hidden flex flex-col items-center pt-6 pb-4 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-border/20 mx-3 mb-2 overflow-hidden relative z-10">
                   {/* Semi-Circle Gauge - Ultra Wide Viewport to prevent clipping */}
@@ -1033,7 +1011,7 @@ export default function AttendancePage() {
                           animate={{ scale: 1, opacity: 1 }}
                           className="flex flex-col items-center"
                         >
-                          <span className="text-[34px] font-bold text-foreground tracking-tighter tabular-nums leading-none">
+                          <span className="text-2xl md:text-3xl font-black text-foreground tracking-tight tabular-nums leading-none">
                             {selectedStatusId === "all"
                               ? activeEmployees.length
                               : (mobileGaugeStats.find(
@@ -1091,9 +1069,7 @@ export default function AttendancePage() {
                         {/* Pulse ring */}
                         <div className="absolute inset-0 rounded-xl lg:rounded-2xl bg-primary/20 animate-ping opacity-20" />
                       </div>
-                      {/* Corner accent */}
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
-                    </div>
+                      </div>
 
                     <div className="flex-1 space-y-1 lg:space-y-1.5">
                       <div className="flex items-center gap-2">
