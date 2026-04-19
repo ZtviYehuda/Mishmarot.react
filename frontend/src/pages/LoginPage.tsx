@@ -245,6 +245,7 @@ export default function LoginPage() {
 
   // Check if WebAuthn is supported
   const isWebAuthnSupported = typeof window !== "undefined" && !!window.PublicKeyCredential;
+  const isCredentialManagerSupported = typeof window !== "undefined" && !!(window as any).PasswordCredential;
 
   useEffect(() => {
     // Check if quick login is available

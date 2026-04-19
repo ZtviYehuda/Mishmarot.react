@@ -491,6 +491,19 @@ export default function AttendancePage() {
       .sort((a, b) => b.count - a.count);
   }, [computedStats]);
 
+  const availabilityStats = useMemo(() => {
+    const availableKeywords = ["נוכח", "משרד", "תגבור", "קורס"];
+    const reported = activeEmployees.length;
+    const available = activeEmployees.filter((emp) =>
+      availableKeywords.some((kw) => emp.status_name?.includes(kw))
+    ).length;
+    return {
+      available,
+      unavailable: reported - available,
+      totalReported: reported
+    };
+  }, [activeEmployees]);
+
   const totalCount = scopeEmployees.length;
 
   const missingEmployeeIds = useMemo(() => {
@@ -549,7 +562,7 @@ export default function AttendancePage() {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl gap-2 font-bold px-4 justify-center transition-all shadow-none",
+                    "h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all shadow-none min-w-[64px]",
                     calendarOpen
                       ? "text-primary bg-primary/10 border-primary/30"
                       : "text-primary hover:bg-primary/5",
@@ -557,24 +570,24 @@ export default function AttendancePage() {
                   onClick={openCalendar}
                 >
                   <CalendarRange className="w-4 h-4" />
-                  <span className="text-xs">לוח שנה</span>
+                  <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">לוח שנה</span>
                 </Button>
 
                 {!user?.is_temp_commander && (
                   <Button
                     variant="ghost"
-                    className="h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-bold px-4 justify-center transition-all shadow-none"
+                    className="h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all shadow-none min-w-[64px]"
                     onClick={() => setExportDialogOpen(true)}
                   >
                     <Download className="w-4 h-4" />
-                    <span className="text-xs"> ייצוא דו"חות </span>
+                    <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">ייצוא</span>
                   </Button>
                 )}
 
                 <Button
                   variant={isReportedToday ? "default" : "ghost"}
                   className={cn(
-                    "h-10 rounded-xl gap-2 font-bold transition-all px-4 justify-center shadow-none backdrop-blur-xl",
+                    "h-11 rounded-xl flex-col gap-0.5 font-bold transition-all px-2 xl:px-4 py-1 justify-center shadow-none backdrop-blur-xl min-w-[64px]",
                     isReportedToday
                       ? "bg-emerald-500/90 hover:bg-emerald-600 border-white/20 text-white"
                       : "border border-border/40 bg-card/40 text-primary hover:bg-primary/5",
@@ -589,12 +602,12 @@ export default function AttendancePage() {
                   {isReportedToday ? (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      <span className="text-xs">דווח</span>
+                      <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">דווח</span>
                     </>
                   ) : (
                     <>
                       <ClipboardCheck className="w-4 h-4" />
-                      <span className="text-xs">דיווח עצמי</span>
+                      <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">דיווח עצמי</span>
                     </>
                   )}
                 </Button>
@@ -602,7 +615,7 @@ export default function AttendancePage() {
                 {unverifiedEmployees.length > 0 && (
                   <Button
                     variant="default"
-                    className="h-10 rounded-xl gap-2 font-bold px-4 justify-center transition-all bg-primary hover:bg-primary/90 text-white shadow-none"
+                    className="h-11 rounded-xl flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all bg-primary hover:bg-primary/90 text-white shadow-none min-w-[64px]"
                     onClick={async () => {
                       const success = await verifyRoster(
                         format(selectedDate, "yyyy-MM-dd"),
@@ -617,7 +630,7 @@ export default function AttendancePage() {
                     }}
                   >
                     <CheckCheck className="w-4 h-4" />
-                    <span className="text-xs">
+                    <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">
                       אישור ({unverifiedEmployees.length})
                     </span>
                   </Button>
@@ -626,7 +639,7 @@ export default function AttendancePage() {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "h-10 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 gap-2 font-bold px-4 justify-center transition-all shadow-none",
+                    "h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all shadow-none min-w-[64px]",
                     selectedEmployeeIds.length > 0 &&
                       "bg-primary/10 border-primary/20",
                   )}
@@ -636,7 +649,7 @@ export default function AttendancePage() {
                   }}
                 >
                   <ClipboardCheck className="w-4 h-4" />
-                  <span className="text-xs">עדכון מרוכז</span>
+                  <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">עדכון מרוכז</span>
                 </Button>
               </div>
             </div>
@@ -799,7 +812,7 @@ export default function AttendancePage() {
                 scopeEmployees={scopeEmployees}
                 onClose={closeCalendar}
                 departments={departments}
-                sections={sections}
+                        sections={sections}
                 teams={teams}
                 serviceTypes={serviceTypes}
               />
@@ -815,40 +828,78 @@ export default function AttendancePage() {
             className="pb-4 space-y-4"
           >
             {/* Summary Stats & Progress */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
-              <Card className="p-4 sm:p-8 lg:col-span-3 order-2 lg:order-1 relative overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+              <Card className="p-4 sm:p-8 lg:col-span-2 order-2 lg:order-1 relative overflow-hidden">
                 {/* Subtle Background Pattern */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
 
-                <div className="space-y-6 relative z-10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col gap-1 text-right">
-                      <span className="text-sm sm:text-lg font-black text-foreground tracking-tight">
+                <div className="flex flex-col md:h-full relative z-10 p-2 text-right">
+                  {/* Title & Primary Count Section */}
+                  <div className="flex items-center justify-between mb-8">
+                    {/* Title Section - Will appear on the RIGHT in RTL */}
+                    <div className="text-right">
+                       <h2 className="text-lg sm:text-2xl font-black text-foreground leading-none tracking-tight">
                         סיכום התייצבות למשמרת
-                      </span>
-                      <span className="text-[11px] sm:text-sm text-muted-foreground font-bold italic">
-                        מעקב דיווחים להיום,{" "}
-                        {format(selectedDate, "EEEE, d MMM", {
-                          locale: he,
-                        })}
-                      </span>
+                      </h2>
                     </div>
 
-                    <div className="text-right flex flex-col items-end">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl sm:text-4xl font-black text-primary">
-                          {updatedTodayCount}
-                        </span>
-                        <span className="text-base sm:text-xl font-bold text-muted-foreground/30">
-                          / {totalCount}
-                        </span>
-                      </div>
-                      <span className="text-[10px] sm:text-[11px] font-black text-muted-foreground uppercase opacity-60">
-                        שוטרים מדווחים
+                    {/* Numbers Section - Will appear on the LEFT in RTL */}
+                    <div className="flex items-baseline gap-1.5 translate-y-1">
+                      <span className="text-3xl sm:text-5xl font-black text-primary leading-none tracking-tighter">
+                        {updatedTodayCount}
+                      </span>
+                      <span className="text-xl sm:text-2xl font-black text-muted-foreground/10 leading-none">
+                        / {totalCount}
                       </span>
                     </div>
                   </div>
 
+                  {/* Spacer to push the rest to bottom */}
+                  <div className="flex-1" />
+
+                  {/* Progress & Stats Group - NOW AT BOTTOM */}
+                  <div className="space-y-4 pt-6 border-t border-border/5">
+                    {/* Multi-Segment Progress Bar */}
+                    <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden flex border border-border/10">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(availabilityStats.available / totalCount) * 100}%` }}
+                        className="h-full bg-emerald-500 shadow-inner"
+                      />
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(availabilityStats.unavailable / totalCount) * 100}%` }}
+                        className="h-full bg-amber-500"
+                      />
+                    </div>
+
+                    {/* Availability Status Row - THE ABSOLUTE BOTTOM */}
+                    <div className="flex items-center justify-end gap-5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-emerald-600">
+                          {availabilityStats.available}
+                        </span>
+                        <span className="text-[10px] font-bold text-muted-foreground/60">זמינים</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-amber-600">
+                          {availabilityStats.unavailable}
+                        </span>
+                        <span className="text-[10px] font-bold text-muted-foreground/60">לא זמינים</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-slate-400">
+                          {totalCount - updatedTodayCount}
+                        </span>
+                        <span className="text-[10px] font-bold text-muted-foreground/60">טרם דווחו</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Mobile Gauge Area */}
@@ -994,55 +1045,22 @@ export default function AttendancePage() {
                       <circle
                         cx="80"
                         cy="70"
-                        r="1"
-                        className="fill-foreground/10"
+                        r="38"
+                        fill="none"
+                        stroke="currentColor"
+                        className="text-muted/5"
+                        strokeWidth="1"
                       />
                     </svg>
 
-                    {/* Central Focus Display & Progress Integrated */}
-                    <div
-                      className="absolute top-[48%] flex flex-col items-center select-none"
-                      onClick={() => setSelectedStatusId("all")}
-                    >
-                      <AnimatePresence mode="wait">
-                        <motion.div
-                          key={selectedStatusId}
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="flex flex-col items-center"
-                        >
-                          <span className="text-2xl md:text-3xl font-black text-foreground tracking-tight tabular-nums leading-none">
-                            {selectedStatusId === "all"
-                              ? activeEmployees.length
-                              : (mobileGaugeStats.find(
-                                  (s) =>
-                                    s.status_id.toString() === selectedStatusId,
-                                )?.count ?? 0)}
-                          </span>
-                          <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30 mt-1">
-                            {selectedStatusId === "all"
-                              ? 'סה"כ מדווחים'
-                              : "נוכחות בסטטוס"}
-                          </span>
-                        </motion.div>
-                      </AnimatePresence>
-
-                      {/* Compact Progress Bar - Now inside the Gauge Area */}
-                      <div className="w-32 mt-5">
-                        <div className="flex items-center justify-between text-[7px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-1">
-                          <span>דיווח יחידתי</span>
-                          <span className="text-primary/60">
-                            {Math.round(progressPercent)}%
-                          </span>
-                        </div>
-                        <div className="h-1 w-full bg-muted/20 rounded-full overflow-hidden border border-border/5">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progressPercent}%` }}
-                            className="h-full bg-primary/80"
-                          />
-                        </div>
-                      </div>
+                    {/* Central Text Logic */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pt-4">
+                      <span className="text-3xl font-black text-foreground tabular-nums leading-none">
+                        {updatedTodayCount}
+                      </span>
+                      <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1">
+                        דווחו
+                      </span>
                     </div>
                   </div>
 

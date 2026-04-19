@@ -334,53 +334,55 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               </p>
             </div>
           ) : (
-            data.map((item) => {
-              const availability =
-                item.total_count > 0
-                  ? Math.round((item.present_count / item.total_count) * 100)
-                  : 0;
+            <div className="space-y-8 py-4">
+              {data.map((item) => {
+                const availability =
+                  item.total_count > 0
+                    ? Math.round((item.present_count / item.total_count) * 100)
+                    : 0;
 
-              let progressColor = "bg-emerald-500";
-              let textColor = "text-emerald-600 dark:text-emerald-400";
+                let progressColor = "bg-emerald-500";
+                let textColor = "text-emerald-600 dark:text-emerald-400";
 
-              if (availability < 50) {
-                progressColor = "bg-red-500";
-                textColor = "text-red-500 dark:text-red-400";
-              } else if (availability < 70) {
-                progressColor = "bg-orange-500";
-                textColor = "text-orange-500 dark:text-orange-400";
-              }
+                if (availability < 50) {
+                  progressColor = "bg-red-500";
+                  textColor = "text-red-500 dark:text-red-400";
+                } else if (availability < 70) {
+                  progressColor = "bg-orange-500";
+                  textColor = "text-orange-500 dark:text-orange-400";
+                }
 
-              return (
-                <div key={item.unit_id} className="space-y-2">
-                  <div className="flex justify-between items-center text-sm gap-2">
-                    <span
-                      className="font-semibold text-foreground truncate flex-1 min-w-0 ml-2"
-                      title={item.unit_name}
-                    >
-                      {item.unit_name}
-                    </span>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                        {Math.round(item.present_count)} נוכחים
+                return (
+                  <div key={item.unit_id} className="space-y-3">
+                    <div className="flex justify-between items-center text-sm gap-2">
+                      <span
+                        className="font-semibold text-foreground truncate flex-1 min-w-0 ml-2"
+                        title={item.unit_name}
+                      >
+                        {item.unit_name}
                       </span>
-                      <span>/</span>
-                      <span className="font-medium">
-                        {Math.round(item.total_count)} תקן
-                      </span>
-                      <span className={cn("ml-1 font-bold", textColor)}>
-                        ({availability}%)
-                      </span>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0 border-r pr-3 border-border/50">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                          {Math.round(item.present_count)} נוכחים
+                        </span>
+                        <span>/</span>
+                        <span className="font-bold">
+                          {Math.round(item.total_count)} תקן
+                        </span>
+                        <span className={cn("ml-1 font-black", textColor)}>
+                          ({availability}%)
+                        </span>
+                      </div>
                     </div>
+                    <Progress
+                      value={availability}
+                      className="h-2.5 rounded-full"
+                      indicatorClassName={progressColor}
+                    />
                   </div>
-                  <Progress
-                    value={availability}
-                    className="h-2"
-                    indicatorClassName={progressColor}
-                  />
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
           <div className="export-date-hidden absolute opacity-0 -z-50 text-center mt-4 pt-2 border-t border-border/50 text-sm font-bold text-muted-foreground">
             תאריך דוח: {format(selectedDate, "dd/MM/yyyy")}

@@ -37,7 +37,7 @@ export function AppearanceSettings({
   ];
 
   return (
-    <div className="w-full pb-24 lg:pb-0 max-w-7xl mx-auto space-y-6 sm:space-y-8">
+    <div className="w-full pb-24 lg:pb-0 space-y-6 sm:space-y-8">
       {/* Top Row: Theme & Font Size Side by Side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 items-stretch">
         <SectionCard icon={Palette} title="ערכת נושא">

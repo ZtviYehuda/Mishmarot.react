@@ -291,80 +291,24 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       <Card
         ref={cardRef}
         className={cn(
-          "bg-card/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-primary/10 py-3 flex flex-col overflow-hidden h-full relative transition-all",
+          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-none shadow-sm flex flex-col overflow-hidden h-full relative transition-all",
           className,
           hideHeader && "border-none bg-transparent backdrop-blur-none shadow-none py-0"
         )}
       >
         {!hideHeader && (
-          <CardHeader className="px-5 sm:px-6 py-3 flex flex-row items-center justify-between space-y-0">
-            <div className="space-y-1">
-              <CardTitle className="text-lg font-bold flex items-center flex-wrap gap-2 sm:gap-3 text-right">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  <span>מגמת זמינות</span>
-                </div>
-                {filterTags.length > 0 && (
-                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar ml-2">
-                    <div className="flex items-center gap-1.5 text-[10px] text-blue-700 dark:text-blue-400 font-black uppercase tracking-tight ml-1 animate-pulse">
-                      <Filter className="w-3 h-3" />
-                      <span>סינון פעיל:</span>
-                    </div>
-                    {filterTags.map((tag, idx) => (
-                      <Badge 
-                        key={idx} 
-                        variant="secondary" 
-                        className="text-[10px] h-5.5 px-3 font-black bg-blue-700 text-white border-none shadow-md shadow-blue-500/30 whitespace-nowrap rounded-lg"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+          <CardHeader className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-row items-center justify-between space-y-0">
+            <div className="space-y-1 text-right w-full">
+              <CardTitle className="text-sm font-black text-slate-500 uppercase tracking-widest">
+                מגמת זמינות — 30 ימים אחרונים
               </CardTitle>
-              <CardDescription className="text-right">
-                <span className="font-bold text-foreground">{unitName}</span>
-                {subtitle && (
-                  <>
-                    {" "}
-                    | <span className="">{subtitle}</span>
-                  </>
-                )}
-                <div className="text-[10px] text-muted-foreground mt-0.5">
-                  {range === 7
-                    ? "7 ימים אחרונים"
-                    : range === 30
-                      ? "30 ימים אחרונים"
-                      : "מגמה שנתית"} • {format(selectedDate, "dd/MM/yyyy")}
-                </div>
-              </CardDescription>
-            </div>
-
-            <div className="flex items-center gap-1.5 no-export">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-primary rounded-lg transition-all"
-                onClick={handleDownload}
-                title="הורדה כתמונה"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-
-              <WhatsAppButton
-                onClick={handleWhatsAppShare}
-                variant="outline"
-                className="h-8 w-8 p-0 rounded-lg text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all  border border-emerald-500/20 bg-emerald-50/50"
-                skipDirectLink={true}
-              />
             </div>
           </CardHeader>
         )}
 
-        <CardContent className={cn("flex-1 flex flex-col min-h-0 min-h-[300px] sm:min-h-[350px] p-4 sm:p-6", hideHeader && "p-0")}>
-          <div className="w-full h-full min-h-[250px] flex-1">
+        <CardContent className={cn("flex-1 flex flex-col min-h-[350px] p-6", hideHeader && "p-0")}>
+          <div className="w-full h-full min-h-[250px] flex-1" style={{ direction: "ltr" }}>
             <ResponsiveContainer width="100%" height="100%">
-              {range <= 30 ? (
                 <AreaChart
                   data={chartData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -377,8 +321,8 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                       x2="0"
                       y2="1"
                     >
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#0074ff" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#0074ff" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -393,168 +337,60 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                     tick={{
                       fontSize: 10,
                       fill: "var(--muted-foreground)",
-                      fontWeight: 500,
+                      fontWeight: 700,
                     }}
                     tickLine={false}
                     axisLine={false}
-                    dy={10}
+                    dy={16}
                   />
                   <YAxis
                     tick={{
                       fontSize: 10,
                       fill: "var(--muted-foreground)",
-                      fontWeight: 500,
+                      fontWeight: 700,
                     }}
                     tickLine={false}
                     axisLine={false}
                     domain={[
                       0,
-                      (dataMax: number) => Math.max(dataMax, maxTotal),
+                      (dataMax: number) => Math.floor(Math.max(dataMax, 10) * 1.2),
                     ]}
                   />
                   <Tooltip
-                    cursor={{ stroke: "var(--primary)", strokeWidth: 2 }}
+                    cursor={{ stroke: "var(--primary)", strokeWidth: 1, strokeDasharray: "4 4" }}
                     contentStyle={{
                       borderRadius: "12px",
                       border: "1px solid var(--border)",
-                      backgroundColor: "var(--card)",
+                      backgroundColor: "rgba(255, 255, 255, 0.95)",
                       boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
                       fontSize: "12px",
+                      fontWeight: "bold",
                     }}
                     labelFormatter={(label) =>
                       format(parseISO(label), "dd/MM/yyyy")
                     }
-                    itemStyle={{ fontWeight: "bold", padding: "2px 0" }}
-                    labelStyle={{
-                      fontWeight: "bold",
-                      marginBottom: "4px",
-                      color: "var(--muted-foreground)",
-                    }}
                   />
                   <Area
                     type="monotone"
                     dataKey="present_count"
-                    stroke="#10b981"
+                    stroke="#0074ff"
                     strokeWidth={3}
+                    dot={false}
                     fillOpacity={1}
                     fill="url(#colorPresent)"
                     animationDuration={1500}
                     activeDot={{
                       r: 6,
-                      fill: "#10b981",
-                      stroke: "var(--background)",
+                      fill: "#0074ff",
+                      stroke: "white",
                       strokeWidth: 2,
                     }}
                   />
                 </AreaChart>
-              ) : (
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="var(--border)"
-                    strokeOpacity={0.4}
-                  />
-                  <XAxis
-                    dataKey="date_str"
-                    tick={{
-                      fontSize: 10,
-                      fill: "var(--muted-foreground)",
-                      fontWeight: 500,
-                    }}
-                    tickLine={false}
-                    axisLine={false}
-                    dy={10}
-                  />
-                  <YAxis
-                    tick={{
-                      fontSize: 10,
-                      fill: "var(--muted-foreground)",
-                      fontWeight: 500,
-                    }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    cursor={{
-                      fill: "var(--primary)",
-                      opacity: 0.05,
-                      radius: 8,
-                    }}
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "1px solid var(--border)",
-                      backgroundColor: "var(--card)",
-                      boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-                      fontSize: "12px",
-                    }}
-                    itemStyle={{ fontWeight: "bold", padding: "2px 0" }}
-                    labelStyle={{
-                      fontWeight: "bold",
-                      marginBottom: "4px",
-                      color: "var(--muted-foreground)",
-                    }}
-                  />
-                  <Bar
-                    dataKey="present_count"
-                    radius={[6, 6, 0, 0]}
-                    barSize={range === 365 ? 24 : 16}
-                    animationDuration={1500}
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={getBarColor(
-                          entry.present_count,
-                          entry.total_employees,
-                        )}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              )}
             </ResponsiveContainer>
-          </div>
-
-          {stats && (
-            <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-border/50">
-              <div className="flex flex-col items-center text-center">
-                <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] mb-0.5">
-                  <Users className="w-3 h-3" />
-                  <span>ממוצע נוכחים</span>
-                </div>
-                <span className="text-sm font-bold text-primary">
-                  {stats.avgPresence}
-                </span>
-              </div>
-              <div className="flex flex-col items-center text-center border-x border-border/50">
-                <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] mb-0.5">
-                  <TrendingUp className="w-3 h-3" />
-                  <span>שיא התייצבות</span>
-                </div>
-                <span className="text-sm font-bold text-emerald-500">
-                  {stats.maxPresence}
-                </span>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] mb-0.5">
-                  <CalendarIcon className="w-3 h-3" />
-                  <span>יום שיא</span>
-                </div>
-                <span className="text-sm font-bold text-foreground font-mono">
-                  {stats.peakDay}
-                </span>
-              </div>
-            </div>
-          )}
-          <div className="export-date-hidden absolute opacity-0 -z-50 text-center mt-4 pt-2 border-t border-border/50 text-sm font-bold text-muted-foreground">
-            תאריך דוח: {format(selectedDate, "dd/MM/yyyy")}
           </div>
         </CardContent>
       </Card>
     );
-  },
+},
 );

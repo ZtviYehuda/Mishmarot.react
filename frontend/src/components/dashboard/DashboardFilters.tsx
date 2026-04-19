@@ -487,38 +487,53 @@ export const DashboardFilters = ({
       ) : (
         <div className={cn("flex flex-wrap items-center justify-end gap-2 w-full", className)}>
             <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "h-10 px-4 gap-2 rounded-xl border border-border/40 transition-all font-black text-xs whitespace-nowrap backdrop-blur-xl shadow-none",
-                    hasActiveFilters
-                      ? "bg-primary/5 text-primary hover:bg-primary/10 border-primary/20"
-                      : "bg-card/40 text-primary hover:bg-primary/5",
-                  )}
-                >
-                  <Filter className="w-4 h-4" />
-                  <span>סינון נתונים</span>
-                  {hasActiveFilters && (
-                    <Badge
-                      variant="secondary"
-                      className="ml-1 h-5 rounded-full px-1.5 min-w-5 flex items-center justify-center font-black bg-primary/20 text-primary hover:bg-primary/30 border-none"
-                    >
-                      {activeFilterCountExternal !== undefined 
-                        ? activeFilterCountExternal 
-                        : [
-                          isDeptActive,
-                          isSectionActive,
-                          isTeamActive,
-                          !!selectedStatusId,
-                          selectedServiceTypes.length > 0,
-                          !!selectedAgeRange?.min || !!selectedAgeRange?.max,
-                        ].filter(Boolean).length
-                      }
-                    </Badge>
-                  )}
-                </Button>
-              </PopoverTrigger>
+              <div className="relative group">
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "h-10 px-4 gap-2 rounded-xl border border-border/40 transition-all font-black text-xs whitespace-nowrap backdrop-blur-xl shadow-none",
+                      hasActiveFilters
+                        ? "bg-primary/5 text-primary hover:bg-primary/10 border-primary/20"
+                        : "bg-card/40 text-primary hover:bg-primary/5",
+                    )}
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span className="hidden xl:inline">סינון נתונים</span>
+                    {hasActiveFilters && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-1 h-5 rounded-full px-1.5 min-w-5 flex items-center justify-center font-black bg-primary/20 text-primary hover:bg-primary/30 border-none"
+                      >
+                        {activeFilterCountExternal !== undefined 
+                          ? activeFilterCountExternal 
+                          : [
+                            isDeptActive,
+                            isSectionActive,
+                            isTeamActive,
+                            !!selectedStatusId,
+                            selectedServiceTypes.length > 0,
+                            !!selectedAgeRange?.min || !!selectedAgeRange?.max,
+                          ].filter(Boolean).length
+                        }
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+
+                {hasActiveFilters && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFilterChange("reset");
+                    }}
+                    className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
+                    title="נקה הכל"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
               <PopoverContent
                 align="end"
                 sideOffset={12}

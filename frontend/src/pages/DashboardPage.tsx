@@ -13,6 +13,8 @@ import { useDateContext } from "@/context/DateContext";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LayoutDashboard } from "lucide-react";
 import { format, subDays, isBefore } from "date-fns";
+import { he } from "date-fns/locale";
+import { StatCards } from "@/components/dashboard/StatCards";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AgeDistributionChart } from "@/components/dashboard/AgeDistributionChart";
 import { Badge } from "@/components/ui/badge";
@@ -658,123 +660,80 @@ export default function DashboardPage() {
 
   return (
     <div
-      className="w-full relative min-h-screen pb-10 bg-background"
+      className="w-full relative min-h-screen pb-10"
       dir="rtl"
     >
-      <div className="relative z-10 space-y-3 sm:space-y-4 pt-4 transition-all">
-        {/* Header Section */}
+      <div className="relative z-10 space-y-6 pt-6 px-4 sm:px-6 max-w-full mx-auto transition-all">
+        {/* New Header Section - Matching Screenshot */}
         <PageHeader
           icon={LayoutDashboard}
-          title={selectedDeptId || selectedSectionId || selectedTeamId ? `לוח בקרה - ${unitName}` : "לוח בקרה"}
-          hideMobile={true}
-          className="flex mb-0 px-0 pb-2 shrink-0 transition-all border-none"
+          title="לוח בקרה"
+          subtitle={format(selectedDate, "EEEE, d MMMM yyyy", { locale: he })}
+          className="hidden md:flex mb-2"
           badge={
-            <div className="flex flex-row items-center justify-end gap-1.5 sm:gap-2 lg:gap-3 w-full overflow-x-auto no-scrollbar pt-1 pr-1">
-              {isOldDate && (
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-black px-2 py-0.5 rounded-lg shrink-0 text-[10px] sm:text-xs">
-                  {hasArchiveAccess ? "משוחזר" : "ארכיון"}
-                </Badge>
-              )}
+            <div className="flex items-center gap-2">
+              <DateHeader />
               
-              {/* Date Selector - Primary Location (Hidden on mobile to avoid overlap with Main Header) */}
-              <div className="hidden lg:block">
-                <DateHeader className="w-auto shrink-0" compact={true} />
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFilterOpen(true)}
+                className="lg:hidden h-10 w-10 p-0 rounded-xl bg-card/40 border border-border/40 text-primary"
+              >
+                <Filter className="w-4 h-4" />
+              </Button>
 
-              {/* Actions Row - Filter on Far Left */}
-              <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
-                {/* 1. Social & Event Actions (Right side of the group) */}
-                {(user?.is_commander || user?.is_admin) && (
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <Button
-                      onClick={() => setWhatsappBroadcastOpen(true)}
-                      className="h-9 w-9 rounded-xl border border-green-500/20 bg-green-500/5 text-green-600 hover:bg-green-500/10 transition-all shrink-0 p-0 shadow-none border-none"
-                      variant="ghost"
-                      size="icon"
-                      title="רשימת תפוצה"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                    </Button>
-
-                    {!user?.is_temp_commander && (
-                      <Button
-                        onClick={() => setGlobalEventOpen(true)}
-                        className="h-9 w-9 rounded-xl border border-purple-500/20 bg-purple-500/5 text-purple-600 hover:bg-purple-500/10 transition-all shrink-0 p-0 shadow-none border-none"
-                        variant="ghost"
-                        size="icon"
-                        title="אירוע חדש"
-                      >
-                        <CalendarIcon className="w-3.5 h-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {/* 2. Report Hub (Center of the group) */}
-                {!user?.is_temp_commander && (
-                  <ReportHub
-                    className="h-9 rounded-xl border-none bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 font-black transition-all px-3 sm:px-4 text-[11px] sm:text-xs shadow-none"
-                    onShareBirthdays={() => birthdaysRef.current?.share()}
-                    initialViewMode={viewMode}
-                    initialDate={selectedDate}
+              <div className="flex items-center gap-2">
+                <div className="hidden lg:flex items-center gap-2">
+                  <DashboardFilters
+                    structure={structure}
+                    statuses={allStatuses}
+                    allStatusTypes={allStatusTypes}
+                    selectedDeptId={selectedDeptId}
+                    selectedSectionId={selectedSectionId}
+                    selectedTeamId={selectedTeamId}
+                    selectedStatusId={selectedStatusData?.id?.toString()}
+                    serviceTypes={serviceTypes}
+                    selectedServiceTypes={selectedServiceTypes}
+                    selectedAgeRange={selectedAgeRange}
+                    onFilterChange={handleFilterChange}
+                    canSelectDept={canSelectDept}
+                    canSelectSection={canSelectSection}
+                    canSelectTeam={canSelectTeam}
+                    user={user}
+                  />
+                  
+                  <ReportHub 
+                    onShareBirthdays={() => setWhatsAppDialogOpen(true)}
                     filters={{
-                      department_id: selectedDeptId?.toString() || "",
-                      section_id: selectedSectionId?.toString() || "",
-                      team_id: selectedTeamId?.toString() || "",
+                      department_id: selectedDeptId,
+                      section_id: selectedSectionId,
+                      team_id: selectedTeamId,
                       serviceTypes: selectedServiceTypes,
                       unitName: unitName,
-                      statusName: selectedStatusData?.name,
-                      status_id: selectedStatusData?.id?.toString(),
+                      status_id: selectedStatusId?.toString()
                     }}
+                    initialDate={selectedDate}
                   />
-                )}
-
-                {/* 3. Filters (Far Left) */}
-                <div className="flex items-center">
-                  {/* Desktop view */}
-                  <div className="hidden lg:block">
-                    <DashboardFilters
-                      structure={structure}
-                      statuses={allStatuses}
-                      allStatusTypes={allStatusTypes}
-                      selectedDeptId={selectedDeptId}
-                      selectedSectionId={selectedSectionId}
-                      selectedTeamId={selectedTeamId}
-                      selectedStatusId={selectedStatusData?.id?.toString()}
-                      serviceTypes={serviceTypes}
-                      selectedServiceTypes={selectedServiceTypes}
-                      selectedAgeRange={selectedAgeRange}
-                      onFilterChange={handleFilterChange}
-                      canSelectDept={canSelectDept}
-                      canSelectSection={canSelectSection}
-                      canSelectTeam={canSelectTeam}
-                      hasActiveFiltersExternal={activeFilterInfo.hasActive}
-                      activeFilterCountExternal={activeFilterInfo.count}
-                      user={user}
-                      isMobile={false}
-                    />
-                  </div>
-                  
-                  {/* Mobile view */}
-                  <Button
-                    onClick={() => setFilterOpen(true)}
-                    className={cn(
-                      "lg:hidden relative h-9 w-9 p-0 rounded-xl transition-all shadow-none border border-border/20",
-                      activeFilterInfo.hasActive 
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90 border-transparent" 
-                        : "bg-card/40 backdrop-blur-xl text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    )}
-                    variant="ghost"
-                    size="icon"
-                  >
-                    <Filter className="w-4 h-4" />
-                    {activeFilterInfo.hasActive && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center border-2 border-background animate-bounce">
-                        {activeFilterInfo.count}
-                      </span>
-                    )}
-                  </Button>
                 </div>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => setGlobalEventOpen(true)}
+                  className="h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2.5 sm:px-3 xl:px-4 bg-card/40 border border-border/40 text-primary hover:bg-primary/5 shadow-none backdrop-blur-xl text-sm min-w-[60px] sm:min-w-[64px] py-1"
+                >
+                  <CalendarIcon className="w-4 h-4" />
+                  <span className="text-[9px] xl:text-[10px] leading-tight">אירוע</span>
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => setWhatsappBroadcastOpen(true)}
+                  className="h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2.5 sm:px-3 xl:px-4 bg-card/40 border border-border/40 text-primary hover:bg-primary/5 shadow-none backdrop-blur-xl text-sm min-w-[60px] sm:min-w-[64px] py-1"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span className="text-[9px] xl:text-[10px] leading-tight text-center">רשימת תפוצה</span>
+                </Button>
               </div>
             </div>
           }
@@ -786,12 +745,26 @@ export default function DashboardPage() {
           </div>
         )}
 
-
         {/* Content Area */}
-        <div className="space-y-6 sm:space-y-8 transition-all mt-2">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
-            {/* Main Attendance Chart */}
-            <div className="flex flex-col h-full min-h-[400px]">
+        <div className="space-y-8 transition-all mt-2">
+          {/* Stat Cards - New Redesigned Component */}
+          <StatCards stats={stats} totalEmployees={totalEmployees} />
+
+          {/* Middle Row - Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
+            {/* Left/Main Area Chart - Trend */}
+            <div className="md:col-span-2 xl:col-span-2">
+              <AttendanceTrendCard 
+                data={trendStats}
+                loading={loadingTrend}
+                range={trendRange}
+                unitName={unitName}
+                filterTags={activeFilterTags}
+              />
+            </div>
+
+            {/* Middle/Secondary Donut Chart - Status Distribution */}
+            <div className="md:col-span-1 xl:col-span-1">
               <EmployeesChart
                 ref={snapshotRef}
                 stats={chartStats}
@@ -799,78 +772,55 @@ export default function DashboardPage() {
                 onStatusClick={handleStatusClick}
                 hasArchiveAccess={hasArchiveAccess}
                 onRequestRestore={() => setRestoreDialogOpen(true)}
+                unitName={unitName}
+                selectedDate={selectedDate}
                 selectedStatusId={selectedStatusId}
                 filterTags={activeFilterTags}
+                title="חלוקת סטטוסים"
+                hideHeader={true}
               />
             </div>
 
-            {/* Right Sidebar: Birthdays & Age Distrib */}
-            <div className="flex flex-col gap-4 sm:gap-6 h-full">
-              <div className="flex flex-col flex-1 h-full">
-                <BirthdaysCard ref={birthdaysRef} birthdays={birthdays} selectedDate={selectedDate} />
-              </div>
-
-              {ageDistribution && ageDistribution.length > 0 && (
-                <div className="w-full">
-                  <AgeDistributionChart
-                    data={ageDistribution}
-                    averageAge={averageAge}
-                    onRangeSelect={(range) => handleFilterChange("ageRange", range)}
-                    selectedRange={
-                      selectedAgeRange?.min
-                        ? selectedAgeRange.max
-                          ? `${selectedAgeRange.min}-${selectedAgeRange.max}`
-                          : `${selectedAgeRange.min}+`
-                        : "all"
-                    }
-                    selectedDate={selectedDate}
-                    filterTags={activeFilterTags}
-                  />
-                </div>
-              )}
+            {/* Right/Third Chart - Age Distribution */}
+            <div className="md:col-span-1 xl:col-span-1">
+              <AgeDistributionChart
+                data={ageDistribution}
+                averageAge={averageAge}
+                selectedDate={selectedDate}
+                filterTags={activeFilterTags}
+                onRangeSelect={(range) => handleFilterChange("ageRange", range)}
+                selectedRange={
+                  selectedAgeRange?.min
+                    ? selectedAgeRange.max
+                      ? `${selectedAgeRange.min}-${selectedAgeRange.max}`
+                      : `${selectedAgeRange.min}+`
+                    : "all"
+                }
+              />
             </div>
           </div>
 
-          {/* Bottom Section: Wider Comparison & Trend Charts - HIDDEN FOR TEMP COMMANDERS */}
-          {!user?.is_temp_commander &&
-            (showComparisonMatrix || showTrendGraph) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 items-stretch">
-                {showComparisonMatrix && (
-                  <div className="order-2 md:order-1 flex flex-col w-full">
-                    <StatsComparisonCard
-                      ref={comparisonRef}
-                      data={comparisonStats}
-                      loading={loadingExtras}
-                      days={comparisonRange}
-                      unitName={unitName}
-                      subtitle={chartDescription}
-                      selectedDate={selectedDate}
-                      filterTags={activeFilterTags}
-                    />
-                  </div>
-                )}
-                {showTrendGraph && (
-                  <div 
-                    id="trend-section" 
-                    className={cn(!showComparisonMatrix ? "md:col-span-2" : "", "order-1 md:order-2 flex flex-col w-full")}
-                  >
-                    <AttendanceTrendCard
-                      ref={trendRef}
-                      data={trendStats}
-                      loading={loadingTrend}
-                      range={trendRange}
-                      unitName={unitName}
-                      subtitle={chartDescription}
-                      selectedDate={selectedDate}
-                      filterTags={activeFilterTags}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+          {/* Bottom Row - Lists */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+             {/* Birthdays */}
+             <BirthdaysCard 
+                ref={birthdaysRef}
+                birthdays={birthdays}
+                loading={loadingExtras}
+                unitName={unitName}
+             />
 
+             {/* Team Comparison */}
+             <StatsComparisonCard
+                ref={comparisonRef}
+                data={comparisonStats}
+                loading={loadingExtras}
+                range={comparisonRange}
+                unitName={unitName}
+             />
+          </div>
 
-          {/* Middle Section: Status Details Table (Full Width) */}
+          {/* Status Details Table (Full Width) */}
           {!user?.is_temp_commander && (
             <div id="status-details-table" className="w-full">
               <DashboardStatusTable

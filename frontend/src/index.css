@@ -16,6 +16,15 @@
   }
 }
 
+.grid-background {
+  background-image: radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.dark .grid-background {
+  background-image: radial-gradient(circle at 1px 1px, #1e293b 1px, transparent 0);
+}
+
 * {
   font-family: "Noto Sans Hebrew", sans-serif;
 }
@@ -280,6 +289,12 @@ html,
 body {
   overflow-x: hidden;
   max-width: 100vw;
+  background-color: #f8fafc; /* Professional light gray background from screenshot */
+}
+
+.dark html,
+.dark body {
+  background-color: #0b141a;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

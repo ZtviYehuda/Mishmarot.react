@@ -157,6 +157,15 @@ const EmployeesChartComponent = (
       }
     };
 
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+      const checkMobile = () => setIsMobile(window.innerWidth < 768);
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const { chartData, computedAvailableCount, computedUnavailableCount } = useMemo(() => {
       if (!stats || stats.length === 0)
         return { chartData: [], computedAvailableCount: 0, computedUnavailableCount: 0 };
@@ -166,12 +175,33 @@ const EmployeesChartComponent = (
       const viewTotal = sortedStats.reduce((acc, curr) => acc + curr.count, 0);
       const baseTotal = totalInUnit && totalInUnit > 0 ? totalInUnit : viewTotal;
 
-      const data = sortedStats.map((item) => ({
+      // Calculate initial rounded percentages
+      let percentages = sortedStats.map(item => 
+        baseTotal > 0 ? Math.round((item.count / baseTotal) * 100) : 0
+      );
+      
+      // Adjust to ensure sum is 100
+      const currentSum = percentages.reduce((a, b) => a + b, 0);
+      if (currentSum !== 100 && currentSum > 0 && percentages.length > 0) {
+        const diff = 100 - currentSum;
+        // Find index of the largest slice to absorb the rounding difference
+        let maxIndex = 0;
+        let maxValue = -1;
+        sortedStats.forEach((s, idx) => {
+          if (s.count > maxValue) {
+            maxValue = s.count;
+            maxIndex = idx;
+          }
+        });
+        percentages[maxIndex] += diff;
+      }
+
+      const data = sortedStats.map((item, idx) => ({
         id: item.status_id === null ? -1 : item.status_id,
         name: item.status_name || "לא דווח",
         value: item.count,
         fill: item.color || "#94a3b8",
-        percentage: baseTotal > 0 ? Math.round((item.count / baseTotal) * 100) : 0,
+        percentage: percentages[idx],
       }));
 
       const availableKeywords = ["משרד", "תגבור", "קורס"];
@@ -206,85 +236,103 @@ const EmployeesChartComponent = (
         ref={cardRef}
         id="attendance-snapshot-card"
         className={cn(
-          "bg-card/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-primary/10 py-3 flex flex-col overflow-hidden h-full relative transition-all",
-          hideHeader && "border-none bg-transparent backdrop-blur-none shadow-none py-0"
+          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-none shadow-sm flex flex-col overflow-hidden h-full relative transition-all"
         )}
       >
-        {!hideHeader && (
-          <CardHeader className="px-5 sm:px-6 py-3">
-            <div className="flex flex-row items-center justify-between gap-3">
-              <CardTitle className="text-base sm:text-xl font-black text-slate-800 dark:text-slate-100 leading-tight flex items-center flex-wrap gap-2">
-                {title}
-                {filterTags.length > 0 && filterTags.map((tag, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-[10px] h-5 px-2 font-black bg-blue-600 text-white rounded-md">{tag}</Badge>
-                ))}
-              </CardTitle>
-              <div className="flex shrink-0 items-center gap-2 no-export">
-                {!hideExportControls && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={handleDownload}><Download className="h-4 w-4" /></Button>
-                )}
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setChartType(prev => prev === "pie" ? "bar" : "pie")}>
-                  {chartType === "pie" ? <BarChart2 className="h-4 w-4" /> : <PieChartIcon className="h-4 w-4" />}
-                </Button>
-              </div>
+        {(!hideHeader || filterTags.length > 0) && (
+          <CardHeader className="px-6 py-2 border-none">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              {!hideHeader && (
+                <CardTitle className="text-sm font-black text-slate-500 uppercase tracking-widest">
+                  {title}
+                </CardTitle>
+              )}
+              {filterTags.length > 0 && (
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
+                   <div className="flex items-center gap-1.5 text-[10px] text-blue-700 dark:text-blue-400 font-black uppercase tracking-tight ml-1 animate-pulse">
+                    <Filter className="w-3 h-3" />
+                  </div>
+                  {filterTags.map((tag, idx) => (
+                    <Badge 
+                      key={idx} 
+                      variant="secondary" 
+                      className="text-[9px] h-5 px-2 font-black bg-blue-700 text-white border-none whitespace-nowrap rounded-md"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </CardHeader>
         )}
-        <CardContent className={cn("flex-1 flex flex-col min-h-0 relative p-4 sm:p-6", hideHeader && "p-0")}>
+        <CardContent className={cn("flex-1 flex flex-col min-h-[400px] relative px-2 py-4", hideHeader && (isMobile ? "p-4" : "p-8"))}>
           {total === 0 ? (
-            <div className="flex-1 flex items-center justify-center py-12 text-center text-muted-foreground font-bold">אין נתונים להצגה</div>
+            <div className="flex-1 flex items-center justify-center py-12 text-center text-muted-foreground font-bold tracking-tight">
+              אין נתונים להצגה
+            </div>
           ) : (
-            <>
-              <div className="flex-1 w-full flex-col min-h-0 min-h-[300px] relative" style={{ direction: "ltr" }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  {chartType === "pie" ? (
-                    <PieChart>
-                      <Pie
-                        data={chartData}
-                        cx="50%" cy="50%"
-                        innerRadius="35%" outerRadius="65%"
-                        paddingAngle={3}
-                        dataKey="value"
-                        stroke="none"
-                      >
-                        {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                    </PieChart>
-                  ) : (
-                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                      <XAxis dataKey="name" hide />
-                      <YAxis hide />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                        {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
-                        <LabelList dataKey="value" position="top" style={{ fill: "currentColor", fontSize: 12, fontWeight: 900 }} />
-                      </Bar>
-                    </BarChart>
-                  )}
-                </ResponsiveContainer>
-                {chartType === "pie" && (
-                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                     <p className="text-4xl sm:text-5xl font-black text-foreground leading-none">{total}</p>
-                     <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-70">נוכחות</p>
-                   </div>
-                )}
+            <div className="flex-1 w-full flex-col min-h-0 relative mt-0" style={{ direction: "ltr" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                  <PieChart margin={isMobile ? { left: 35, right: 35, top: 30, bottom: 30 } : { left: 85, right: 85, top: 0, bottom: 0 }}>
+                    <Pie
+                      data={chartData}
+                      cx="50%" cy="50%"
+                      innerRadius={isMobile ? "60%" : "50%"} 
+                      outerRadius={isMobile ? "95%" : "90%"}
+                      paddingAngle={5}
+                      minAngle={18}
+                      dataKey="value"
+                      stroke="none"
+                      animationDuration={1000}
+                      label={({ name, percentage, cx, x, y }) => {
+                        const isRight = x > cx;
+                        return (
+                          <text 
+                            x={x} 
+                            y={y} 
+                            fill="currentColor" 
+                            textAnchor={isRight ? "start" : "end"} 
+                            dominantBaseline="central"
+                            className={cn(
+                              "font-black fill-slate-700 dark:fill-slate-300",
+                              isMobile ? "text-[10px]" : "text-[12px]"
+                            )}
+                          >
+                            {`${name} (${percentage}%)`}
+                          </text>
+                        );
+                      }}
+                      labelLine={{ stroke: "rgba(148, 163, 184, 0.3)", strokeWidth: 1 }}
+                    >
+                      {chartData.map((entry, index) => {
+                        const isSelected = selectedStatusId === entry.id;
+                        const hasSelection = selectedStatusId !== null;
+                        return (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={entry.fill} 
+                            fillOpacity={!hasSelection || isSelected ? 1 : 0.25}
+                            stroke={isSelected ? entry.fill : "none"}
+                            strokeWidth={isSelected ? 3 : 0}
+                            strokeOpacity={0.8}
+                            className="cursor-pointer transition-all duration-500 outline-none"
+                            onClick={() => onStatusClick?.(entry.id, entry.name, entry.fill)}
+                          />
+                        );
+                      })}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 1000 }} />
+                  </PieChart>
+              </ResponsiveContainer>
+              
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                <div className="flex flex-col items-center justify-center">
+                  <p className={cn("font-black text-slate-900 dark:text-white leading-none", isMobile ? "text-3xl" : "text-4xl")}>{total}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase mt-1">נוכחות</p>
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-2 mt-4 no-export">
-                <div className="bg-emerald-500/10 p-2 rounded-xl text-center">
-                  <span className="block text-[8px] font-black text-emerald-600 uppercase">זמינים</span>
-                  <span className="text-sm font-black text-emerald-600">{computedAvailableCount}</span>
-                </div>
-                <div className="bg-rose-500/10 p-2 rounded-xl text-center">
-                  <span className="block text-[8px] font-black text-rose-600 uppercase">לא זמינים</span>
-                  <span className="text-sm font-black text-rose-600">{computedUnavailableCount}</span>
-                </div>
-                <div className="bg-slate-500/10 p-2 rounded-xl text-center">
-                  <span className="block text-[8px] font-black text-muted-foreground uppercase">סה"כ</span>
-                  <span className="text-sm font-black text-foreground">{total}</span>
-                </div>
-              </div>
-            </>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -28,16 +28,6 @@ export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = (
   return (
     <div className={cn("relative group flex items-center shrink-0", className)}>
       <div className={cn("flex-1 flex items-center justify-between bg-card/40 backdrop-blur-xl border border-border/40 rounded-xl h-10 shadow-none relative overflow-visible", compact ? "px-0" : "px-1")}>
-        {/* Next Day (Right Arrow in RTL) */}
-        {!compact && (
-          <button
-            onClick={handleNextDay}
-            className="w-10 h-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all active:scale-95 shrink-0 border-l border-border/40"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-
         {/* Date Display with Calendar Picker */}
         <Popover>
           <PopoverTrigger asChild>
@@ -105,16 +95,6 @@ export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = (
             />
           </PopoverContent>
         </Popover>
-
-        {/* Previous Day (Left Arrow in RTL) */}
-        {!compact && (
-          <button
-            onClick={handlePrevDay}
-            className="w-10 h-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all active:scale-95 shrink-0 border-r border-border/40"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-        )}
       </div>
 
       {/* Quick Today Toggle - FLOATING STYLE */}

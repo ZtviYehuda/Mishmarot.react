@@ -1,5 +1,5 @@
 from app.utils.db import get_db_connection
-from psycopg2.extras import RealDictCursor
+from psycopg2.extras import RealDictCursor, Json
 import datetime
 
 
@@ -45,6 +45,9 @@ class AuditLogModel:
             return
         try:
             with conn.cursor() as cur:
+                # Use Json wrapper for dict metadata to avoid adapter errors
+                json_metadata = Json(metadata) if isinstance(metadata, dict) else metadata
+                
                 cur.execute(
                     """
                     INSERT INTO audit_logs (user_id, action_type, description, target_id, ip_address, metadata)
@@ -56,12 +59,14 @@ class AuditLogModel:
                         description,
                         target_id,
                         ip_address,
-                        metadata,
+                        json_metadata,
                     ),
                 )
                 conn.commit()
         except Exception as e:
-            print(f"Error logging action: {e}")
+            print(f"❌ Error logging action: {e}")
+            # We don't want to crash the whole login flow if audit fails, 
+            # but we should know about it. 
         finally:
             conn.close()
 

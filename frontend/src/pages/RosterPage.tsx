@@ -99,6 +99,8 @@ const StatusCard = ({
     </div>
   </button>
 );
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -595,17 +597,30 @@ export default function RosterPage() {
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
-              <button
-                onClick={() => startTransition(() => setCurrentDate(new Date()))}
-                className="px-2 flex flex-col items-center"
-              >
-                <span className="text-[9px] font-black text-primary uppercase tracking-widest">
-                  {format(weekStart, "MMM", { locale: he })}
-                </span>
-                <span className="text-xs font-black text-foreground tabular-nums">
-                  {format(weekStart, "dd")}-{format(weekEnd, "dd")}
-                </span>
-              </button>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="px-2 flex flex-col items-center hover:bg-background/20 rounded-lg transition-colors">
+                    <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">
+                      {format(weekStart, "MMM", { locale: he })}
+                    </span>
+                    <span className="text-xs font-black text-foreground tabular-nums">
+                      {format(weekStart, "dd")}-{format(weekEnd, "dd")}
+                    </span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 rounded-2xl border-border/40" align="center">
+                  <Calendar
+                    mode="single"
+                    selected={currentDate}
+                    onSelect={(date) => date && startTransition(() => setCurrentDate(date))}
+                    initialFocus
+                    locale={he}
+                    className="rounded-2xl border-none"
+                  />
+                </PopoverContent>
+              </Popover>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -632,20 +647,34 @@ export default function RosterPage() {
                   <ChevronRight className="w-4 h-4" />
                 </Button>
                 
-                <div className="px-6 flex flex-col items-center">
-                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-black text-foreground tabular-nums tracking-tight">
-                      {format(weekStart, "dd")}
-                    </span>
-                    <span className="text-muted-foreground/30 font-light">-</span>
-                    <span className="text-sm font-black text-foreground tabular-nums tracking-tight">
-                      {format(weekEnd, "dd")}
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none mt-0.5">
-                    {format(weekStart, "MMMM yyyy", { locale: he })}
-                  </span>
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="px-6 flex flex-col items-center hover:bg-background/20 rounded-xl transition-all cursor-pointer py-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-foreground tabular-nums tracking-tight">
+                          {format(weekStart, "dd")}
+                        </span>
+                        <span className="text-muted-foreground/30 font-light">-</span>
+                        <span className="text-sm font-black text-foreground tabular-nums tracking-tight">
+                          {format(weekEnd, "dd")}
+                        </span>
+                      </div>
+                      <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none mt-0.5">
+                        {format(weekStart, "MMMM yyyy", { locale: he })}
+                      </span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 rounded-2xl border-border/40" align="center">
+                    <Calendar
+                      mode="single"
+                      selected={currentDate}
+                      onSelect={(date) => date && startTransition(() => setCurrentDate(date))}
+                      initialFocus
+                      locale={he}
+                      className="rounded-2xl border-none"
+                    />
+                  </PopoverContent>
+                </Popover>
 
                 <Button
                   variant="ghost"
@@ -658,14 +687,16 @@ export default function RosterPage() {
                 </Button>
               </div>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => startTransition(() => setCurrentDate(new Date()))}
-                className="h-9 rounded-2xl px-4 hover:bg-primary/5 text-primary text-[11px] font-black transition-all"
-              >
-                חזור להיום
-              </Button>
+              {!isSameDay(weekStart, startOfWeek(new Date(), { weekStartsOn: 0 })) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => startTransition(() => setCurrentDate(new Date()))}
+                  className="h-9 rounded-2xl px-4 hover:bg-primary/5 text-primary text-[11px] font-black transition-all"
+                >
+                  חזור להיום
+                </Button>
+              )}
             </div>
 
             {/* Right side: Filters & Search */}
