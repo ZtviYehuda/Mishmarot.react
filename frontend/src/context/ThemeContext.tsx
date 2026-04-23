@@ -9,14 +9,7 @@ import { useAuthContext } from "./AuthContext";
 import { useEmployees } from "@/hooks/useEmployees";
 
 type Theme = "dark" | "light";
-type AccentColor =
-  | "blue"
-  | "cyan"
-  | "emerald"
-  | "rose"
-  | "amber"
-  | "zinc"
-  | "violet";
+type AccentColor = string; // Support both presets (blue, emerald) and hex codes (#ff0000)
 type FontSize = "small" | "normal" | "large";
 
 interface ThemeContextType {
@@ -82,11 +75,46 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.classList.add(theme);
     localStorage.setItem("theme", theme);
 
-    // Accent Color class
+    // Accent Color class or Dynamic Variable
     root.classList.forEach((cls) => {
       if (cls.startsWith("accent-")) root.classList.remove(cls);
     });
-    root.classList.add(`accent-${accentColor}`);
+
+    if (accentColor.startsWith("#")) {
+      // Dynamic Custom Color
+      root.style.setProperty("--primary", accentColor);
+      
+      // Calculate secondary and accent (usually very light version of primary)
+      // For simplicity, we use the color with 0.1 opacity for secondary
+      const hexToRgb = (hex: string) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result 
+          ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
+          : "0, 116, 255";
+      };
+      
+      const rgb = hexToRgb(accentColor);
+      root.style.setProperty("--primary-rgb", rgb);
+      
+      if (theme === "light") {
+        root.style.setProperty("--secondary", `rgba(${rgb}, 0.1)`);
+        root.style.setProperty("--accent", `rgba(${rgb}, 0.1)`);
+        root.style.setProperty("--secondary-foreground", accentColor);
+      } else {
+        root.style.setProperty("--secondary", `rgba(${rgb}, 0.2)`);
+        root.style.setProperty("--accent", `rgba(${rgb}, 0.2)`);
+        root.style.setProperty("--secondary-foreground", "#ffffff");
+      }
+    } else {
+      // Preset from index.css
+      root.classList.add(`accent-${accentColor}`);
+      // Clear custom properties if they were set
+      root.style.removeProperty("--primary");
+      root.style.removeProperty("--primary-rgb");
+      root.style.removeProperty("--secondary");
+      root.style.removeProperty("--accent");
+      root.style.removeProperty("--secondary-foreground");
+    }
     localStorage.setItem("accentColor", accentColor);
 
     // Font Size style

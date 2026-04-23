@@ -113,17 +113,6 @@ export const DashboardFilters = ({
     return sec ? sec.teams : [];
   }, [selectedSectionId, sections]);
 
-  const hasActiveFilters = 
-    hasActiveFiltersExternal !== undefined 
-      ? hasActiveFiltersExternal 
-      : (!!selectedDeptId ||
-         !!selectedSectionId ||
-         !!selectedTeamId ||
-         !!selectedStatusId ||
-         selectedServiceTypes.length > 0 ||
-         !!selectedAgeRange?.min ||
-         !!selectedAgeRange?.max);
-
   const ageRanges = [
     { label: "כל הגילאים", value: "all" },
     { label: "18-21", value: "18-21" },
@@ -180,6 +169,17 @@ export const DashboardFilters = ({
     if (user?.assigned_team_id?.toString() === selectedTeamId) return false;
     return true;
   }, [selectedTeamId, user]);
+
+  const hasActiveFilters = 
+    hasActiveFiltersExternal !== undefined 
+      ? hasActiveFiltersExternal 
+      : (isDeptActive ||
+         isSectionActive ||
+         isTeamActive ||
+         !!selectedStatusId ||
+         selectedServiceTypes.length > 0 ||
+         !!selectedAgeRange?.min ||
+         !!selectedAgeRange?.max);
 
   const FilterContent = (
     <div className="space-y-2 pt-10 sm:pt-0">

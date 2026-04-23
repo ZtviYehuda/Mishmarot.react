@@ -23,7 +23,7 @@ import { ReportHub } from "@/components/dashboard/ReportHub";
 import { DateHeader } from "@/components/common/DateHeader";
 import { RestorationRequestDialog } from "@/components/dashboard/RestorationRequestDialog";
 import { WhatsAppBroadcastModal } from "@/components/employees/modals/WhatsAppBroadcastModal";
-import { MessageSquare, Calendar as CalendarIcon, RotateCcw, Filter } from "lucide-react";
+import { MessageSquare, Calendar as CalendarIcon, RotateCcw, Filter, Lock } from "lucide-react";
 import { GlobalEventModal } from "@/components/employees/modals/GlobalEventModal";
 
 // Helper types for structure
@@ -46,7 +46,7 @@ interface Department {
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
-  const { selectedDate } = useDateContext();
+  const { selectedDate, setSelectedDate } = useDateContext();
 
   // Refs for reports
   const snapshotRef = useRef<any>(null);
@@ -85,20 +85,7 @@ export default function DashboardPage() {
   );
   const [fetchError, setFetchError] = useState<string>("");
 
-  const trendRange = useMemo(() => {
-    switch (viewMode) {
-      case "daily":
-        return 7;
-      case "weekly":
-        return 7;
-      case "monthly":
-        return 30;
-      case "yearly":
-        return 365;
-      default:
-        return 7;
-    }
-  }, [viewMode]);
+  const [trendRange, setTrendRange] = useState<number>(30);
 
   const comparisonRange = useMemo(() => {
     switch (viewMode) {
@@ -122,8 +109,11 @@ export default function DashboardPage() {
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
 
   const isOldDate = useMemo(() => {
-    return isBefore(selectedDate, subDays(new Date(), 30));
-  }, [selectedDate]);
+    if (user?.is_admin) return false;
+    const today = new Date();
+    const startOfPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    return isBefore(selectedDate, startOfPrevMonth);
+  }, [selectedDate, user]);
 
   // Filters
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
@@ -258,12 +248,14 @@ export default function DashboardPage() {
     const fetchComparison = async () => {
       setLoadingExtras(true);
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      
+      // We intentionally do NOT pass department_id, section_id, team_id here
+      // so the card always shows the base "peer" list instead of drilling down
+      // and replacing the clicked row with its children.
       const compData = await getComparisonStats(
         formattedDate,
         comparisonRange,
         {
-          department_id: selectedDeptId,
-          section_id: selectedSectionId,
           status_id: selectedStatusData?.id?.toString(),
           serviceTypes: selectedServiceTypes.join(","),
           min_age: selectedAgeRange.min,
@@ -278,9 +270,6 @@ export default function DashboardPage() {
     getComparisonStats,
     selectedDate,
     comparisonRange,
-    selectedDeptId,
-    selectedSectionId,
-    selectedTeamId,
     selectedStatusData?.id,
     selectedServiceTypes,
     selectedAgeRange,
@@ -290,7 +279,11 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchTrend = async () => {
       setLoadingTrend(true);
-      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      // Use today as reference for trend unless we are looking at older historical data
+      // This prevents the chart from "sliding" when clicking dates within the current month
+      const referenceDate = isOldDate ? selectedDate : new Date();
+      const formattedDate = format(referenceDate, "yyyy-MM-dd");
+      
       const trendData = await getTrendStats(trendRange, formattedDate, {
         department_id: selectedDeptId,
         section_id: selectedSectionId,
@@ -305,7 +298,7 @@ export default function DashboardPage() {
     fetchTrend();
   }, [
     getTrendStats,
-    selectedDate,
+    isOldDate ? format(selectedDate, "yyyy-MM-dd") : "current",
     trendRange,
     selectedDeptId,
     selectedSectionId,
@@ -746,7 +739,29 @@ export default function DashboardPage() {
         )}
 
         {/* Content Area */}
-        <div className="space-y-8 transition-all mt-2">
+        <div className="space-y-8 transition-all mt-2 relative">
+          {(isOldDate && !hasArchiveAccess) && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-md rounded-3xl pb-[500px]">
+              <div className="bg-card border border-border/50 shadow-2xl rounded-[2rem] p-8 max-w-md text-center space-y-4 m-4">
+                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                  <Lock className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-black">נתוני ארכיון חסומים</h3>
+                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                  הנתונים מיום זה ({format(selectedDate, "dd/MM/yyyy")}) הועברו לארכיון המערכת (זמינים נתונים עד חודש קודם).
+                  <br/>
+                  על מנת לצפות בהם, עליך לבקש אישור גישה.
+                </p>
+                <Button 
+                  onClick={() => setRestoreDialogOpen(true)}
+                  className="w-full rounded-xl h-12 font-black mt-4"
+                >
+                  הגש בקשת גישה לארכיון
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Stat Cards - New Redesigned Component */}
           <StatCards stats={stats} totalEmployees={totalEmployees} />
 
@@ -760,6 +775,9 @@ export default function DashboardPage() {
                 range={trendRange}
                 unitName={unitName}
                 filterTags={activeFilterTags}
+                selectedDate={selectedDate}
+                onDateSelect={setSelectedDate}
+                onRangeChange={setTrendRange}
               />
             </div>
 
@@ -815,8 +833,25 @@ export default function DashboardPage() {
                 ref={comparisonRef}
                 data={comparisonStats}
                 loading={loadingExtras}
-                range={comparisonRange}
+                days={comparisonRange}
                 unitName={unitName}
+                selectedUnitId={
+                  selectedTeamId ? parseInt(selectedTeamId) :
+                  selectedSectionId ? parseInt(selectedSectionId) :
+                  selectedDeptId ? parseInt(selectedDeptId) : null
+                }
+                onUnitClick={(unitId, level) => {
+                  const isSelected = 
+                    (level === 'department' && selectedDeptId === unitId.toString()) ||
+                    (level === 'section' && selectedSectionId === unitId.toString()) ||
+                    (level === 'team' && selectedTeamId === unitId.toString());
+
+                  if (isSelected) {
+                    handleFilterChange(level as any, ""); // Clear the filter
+                  } else {
+                    handleFilterChange(level as any, unitId.toString());
+                  }
+                }}
              />
           </div>
 

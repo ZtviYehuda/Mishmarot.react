@@ -494,24 +494,28 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
     if (!target || isExporting) return;
     setIsExporting(true);
     try {
-      const bakeStyles = (el: Element) => {
-        if (!(el instanceof HTMLElement)) return;
-        const cs = getComputedStyle(el);
-        el.style.color = cs.color;
-        el.style.backgroundColor = cs.backgroundColor;
-        el.style.borderColor = cs.borderColor;
-        for (const child of Array.from(el.children)) bakeStyles(child);
-      };
-      const clone = target.cloneNode(true) as HTMLElement;
-      clone.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${target.offsetWidth}px;padding:24px;border-radius:16px;direction:rtl;`;
-      clone.style.backgroundColor = getComputedStyle(target).backgroundColor || "#1e293b";
-      document.body.appendChild(clone);
-      bakeStyles(clone);
-      const dataUrl = await toPng(clone, { quality: 1, pixelRatio: 2, cacheBust: true });
-      document.body.removeChild(clone);
+      const dataUrl = await toPng(target, { 
+        quality: 1, 
+        pixelRatio: 2, 
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        onClone: (clonedNode: HTMLElement) => {
+           clonedNode.style.padding = "24px";
+           clonedNode.style.borderRadius = "16px";
+           clonedNode.style.direction = "rtl";
+           
+           // Ensure colors are visible against white background
+           const textElements = clonedNode.querySelectorAll('*');
+           textElements.forEach((el: any) => {
+             if (window.getComputedStyle(el).color === 'rgb(255, 255, 255)') {
+                el.style.color = '#0f172a';
+             }
+           });
+        }
+      });
       const label = format(stats.date, "dd_MM_yyyy");
       const link = document.createElement("a");
-      link.download = `shiftguard_${label}.png`;
+      link.download = `attendance_${label}.png`;
       link.href = dataUrl;
       link.click();
       toast.success("התמונה יוצאה בהצלחה!");
@@ -702,13 +706,6 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
           </div>
         )}
 
-        {/* Branded footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-border/20 mt-2 opacity-60">
-          <span className="text-[9px] font-black text-primary tracking-widest uppercase">ShiftGuard Report System</span>
-          <span className="text-[9px] text-muted-foreground font-bold">
-            {format(stats.date, "dd/MM/yyyy HH:mm")}
-          </span>
-        </div>
       </div>
     </motion.div>
   );
@@ -802,39 +799,31 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
     return format(currentDate, "MMMM yyyy", { locale: he });
   }, [currentDate, viewMode]);
 
-  // Calendar image export (Always Light Mode for better reports)
+  // Calendar image export
   const handleExport = async () => {
     const target = exportRef.current;
     if (!target || isExporting) return;
     setIsExporting(true);
 
-    // Create a hidden container to force "Light Mode" for the export
-    const container = document.createElement("div");
-    container.style.position = "fixed";
-    container.style.left = "-9999px";
-    container.style.top = "0";
-    container.style.width = `${target.offsetWidth}px`;
-    container.className = "light"; // Force light theme
-    document.body.appendChild(container);
-
-    const clone = target.cloneNode(true) as HTMLElement;
-    // Remove fixed widths/heights that might interfere with layout
-    clone.style.width = "auto";
-    clone.style.height = "auto";
-    clone.style.backgroundColor = "#ffffff";
-    clone.style.padding = "32px";
-    clone.style.borderRadius = "24px";
-    container.appendChild(clone);
-
-    // Wait for the clone to "settle" and render in the DOM
-    await new Promise(r => setTimeout(r, 200));
-
     try {
-      const dataUrl = await toPng(clone, {
+      const dataUrl = await toPng(target, {
         quality: 1,
-        pixelRatio: 3,
+        pixelRatio: 2,
         backgroundColor: "#ffffff",
         cacheBust: true,
+        onClone: (clonedNode: HTMLElement) => {
+           clonedNode.style.padding = "32px";
+           clonedNode.style.borderRadius = "24px";
+           clonedNode.style.direction = "rtl";
+           
+           // Ensure colors are visible against white background
+           const textElements = clonedNode.querySelectorAll('*');
+           textElements.forEach((el: any) => {
+             if (window.getComputedStyle(el).color === 'rgb(255, 255, 255)') {
+                el.style.color = '#0f172a';
+             }
+           });
+        }
       });
 
       const label = periodLabel.replace(/[\s/–]/g, "_");
@@ -842,12 +831,11 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
       link.download = `attendance_report_${label}.png`;
       link.href = dataUrl;
       link.click();
-      toast.success("דו״ח הופק בהצלחה במצב בהיר!");
+      toast.success("דו״ח הופק בהצלחה!");
     } catch (e) {
       console.error("Export failed:", e);
       toast.error("שגיאה בהפקת הדו״ח - נסה שוב");
     } finally {
-      document.body.removeChild(container);
       setIsExporting(false);
     }
   };

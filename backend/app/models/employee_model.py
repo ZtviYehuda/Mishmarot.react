@@ -1215,3 +1215,63 @@ class EmployeeModel:
             return False
         finally:
             conn.close()
+
+    @staticmethod
+    def get_team_commander(team_id):
+        conn = get_db_connection()
+        if not conn:
+            return None
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute(
+                "SELECT e.id, e.first_name, e.last_name FROM teams t JOIN employees e ON t.commander_id = e.id WHERE t.id = %s",
+                (team_id,)
+            )
+            return cur.fetchone()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_section_commander(section_id):
+        conn = get_db_connection()
+        if not conn:
+            return None
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute(
+                "SELECT e.id, e.first_name, e.last_name FROM sections s JOIN employees e ON s.commander_id = e.id WHERE s.id = %s",
+                (section_id,)
+            )
+            return cur.fetchone()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_department_commander(dept_id):
+        conn = get_db_connection()
+        if not conn:
+            return None
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute(
+                "SELECT e.id, e.first_name, e.last_name FROM departments d JOIN employees e ON d.commander_id = e.id WHERE d.id = %s",
+                (dept_id,)
+            )
+            return cur.fetchone()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_admin():
+        conn = get_db_connection()
+        if not conn:
+            return None
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute(
+                "SELECT id, first_name, last_name FROM employees WHERE is_admin = TRUE AND is_active = TRUE ORDER BY id LIMIT 1"
+            )
+            return cur.fetchone()
+        finally:
+            conn.close()
+

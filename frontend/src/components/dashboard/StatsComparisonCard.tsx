@@ -41,6 +41,8 @@ interface StatsComparisonCardProps {
   unitName?: string;
   subtitle?: string;
   selectedDate?: Date;
+  selectedUnitId?: number | null;
+  onUnitClick?: (unitId: number, level: string) => void;
   filterTags?: string[];
   hideHeader?: boolean;
 }
@@ -55,6 +57,8 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
       unitName = "כלל היחידה",
       subtitle,
       selectedDate = new Date(),
+      selectedUnitId = null,
+      onUnitClick,
       filterTags = [],
       hideHeader = false,
     },
@@ -334,7 +338,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               </p>
             </div>
           ) : (
-            <div className="space-y-8 py-4">
+            <div className="space-y-4 py-4">
               {data.map((item) => {
                 const availability =
                   item.total_count > 0
@@ -352,8 +356,20 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                   textColor = "text-orange-500 dark:text-orange-400";
                 }
 
+                const isSelected = item.unit_id === selectedUnitId;
+
                 return (
-                  <div key={item.unit_id} className="space-y-3">
+                  <div 
+                    key={item.unit_id} 
+                    className={cn(
+                      "space-y-3 p-3 rounded-xl transition-all border-2",
+                      onUnitClick ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50" : "",
+                      isSelected ? "border-primary/50 bg-primary/5 shadow-sm scale-[1.02]" : "border-transparent"
+                    )}
+                    onClick={() => {
+                      if (onUnitClick) onUnitClick(item.unit_id, item.level);
+                    }}
+                  >
                     <div className="flex justify-between items-center text-sm gap-2">
                       <span
                         className="font-semibold text-foreground truncate flex-1 min-w-0 ml-2"
@@ -362,13 +378,29 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                         {item.unit_name}
                       </span>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0 border-r pr-3 border-border/50">
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                          {Math.round(item.present_count)} נוכחים
-                        </span>
-                        <span>/</span>
-                        <span className="font-bold">
-                          {Math.round(item.total_count)} תקן
-                        </span>
+                        {item.level === 'employee' ? (
+                          <>
+                            <span className={cn("font-bold", item.present_count > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
+                              {days > 1 ? `${Math.round(item.present_count * days)} ימי נוכחות` : item.present_count > 0 ? "נוכח/ת" : "חסר/ת"}
+                            </span>
+                            {days > 1 && (
+                              <>
+                                <span>/</span>
+                                <span className="font-bold">{days} ימים</span>
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                              {Math.round(item.present_count)} נוכחים
+                            </span>
+                            <span>/</span>
+                            <span className="font-bold">
+                              {Math.round(item.total_count)} תקן
+                            </span>
+                          </>
+                        )}
                         <span className={cn("ml-1 font-black", textColor)}>
                           ({availability}%)
                         </span>

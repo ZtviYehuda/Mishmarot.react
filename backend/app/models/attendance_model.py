@@ -145,22 +145,53 @@ class AttendanceModel:
             conn.close()
 
     @staticmethod
-    def _get_log_source(user_id=None, date_val=None):
+    def _get_log_source(user_id=None, date_val=None, requesting_user=None):
         """
         Returns the table(s) to query for logs.
-        If a restoration grant exists, returns a UNION of active and archive.
-        Otherwise, returns just active logs.
+        
+        Access rules:
+        - Current month + previous month: always accessible (attendance_logs)
+        - Older than previous month: requires an approved archive access request
+        - Admins: always get full access (both tables)
         """
         from app.models.archive_model import ArchiveModel
+        from datetime import date
+        from dateutil.relativedelta import relativedelta
+
+        cols = "id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at"
+        full_union = f"(SELECT {cols} FROM attendance_logs UNION ALL SELECT {cols} FROM attendance_logs_archive)"
+
+        # Admins always get full access
+        if requesting_user and requesting_user.get("is_admin"):
+            return full_union
 
         if not user_id or not date_val:
             return "attendance_logs"
 
-        # Check if there's an approved restore request for this user and date
+        # Parse the target date
+        try:
+            if isinstance(date_val, str):
+                target_date = date.fromisoformat(date_val[:10])
+            else:
+                target_date = date_val
+        except (ValueError, TypeError):
+            return "attendance_logs"
+
+        # Calculate the start of the previous month
+        today = date.today()
+        start_of_prev_month = today.replace(day=1) - relativedelta(months=1)
+
+        # If the date is within the current or previous month, allow normal access
+        if target_date >= start_of_prev_month:
+            return "attendance_logs"
+
+        # For older dates: check if user has an approved archive access request
         if ArchiveModel.check_access(user_id, date_val):
-            cols = "id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at"
-            return f"(SELECT {cols} FROM attendance_logs UNION ALL SELECT {cols} FROM attendance_logs_archive)"
-        return "attendance_logs"
+            return full_union
+
+        # No access - return empty result set (access denied)
+        return "(SELECT {cols} FROM attendance_logs WHERE FALSE)".format(cols=cols)
+
 
     @staticmethod
     def log_bulk_status(updates, reported_by=None):
@@ -1064,7 +1095,7 @@ class AttendanceModel:
             scope_where = " AND ".join(scope_conditions)
 
             requesting_user_id = requesting_user.get("id") if requesting_user else None
-            table_source = AttendanceModel._get_log_source(requesting_user_id, target_date)
+            table_source = AttendanceModel._get_log_source(requesting_user_id, target_date, requesting_user=requesting_user)
 
             query = f"""
                 WITH scoped_employees AS (
@@ -1343,7 +1374,7 @@ class AttendanceModel:
             # 3. If NOT persistent, must have started on one of the days in the range
             # Instead of a complex multi-join for each day, we fetch logs that meet basic Smart Continuity
             # criteria for the WHOLE range.
-            table_source = AttendanceModel._get_log_source(requesting_user_id, start_date)
+            table_source = AttendanceModel._get_log_source(requesting_user_id, start_date, requesting_user=requesting_user)
             query = f"""
                 SELECT 
                     al.id as log_id,

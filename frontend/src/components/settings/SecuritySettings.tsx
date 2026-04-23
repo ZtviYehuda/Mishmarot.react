@@ -349,46 +349,48 @@ export function SecuritySettings({
         </div>
       </div>
 
-      {/* RECENT ACTIVITY - New Section */}
-      <div className="mt-8">
-        <SectionCard 
-            icon={History} 
-            title="פעילות אחרונה וחיבורים" 
-            badge={
-              <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-lg border border-primary/20">
-                10 כניסות אחרונות
-              </span>
-            }
-        >
-          <div className="space-y-2">
-            {isLoadingActivity ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-40">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <span className="text-xs font-bold">טוען היסטוריית חיבורים...</span>
-              </div>
-            ) : activity.length === 0 ? (
-              <div className="text-center py-12 bg-muted/20 rounded-[2rem] border border-dashed border-border/60">
-                <p className="text-xs font-bold text-muted-foreground">לא נמצאה פעילות מתועדת</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-2">
-                {activity.map((log, idx) => (
-                  <UserActivityEntry key={log.id} log={log} index={idx} />
-                ))}
-              </div>
-            )}
-            
-            <div className="pt-6 flex flex-col sm:flex-row items-center gap-4 border-t border-primary/5 mt-4">
-              <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 flex items-center gap-3">
-                <Shield className="w-4 h-4 text-amber-600" />
-                <p className="text-[10px] font-bold text-amber-700 leading-tight">
-                  אם זיהית חיבור ממכשיר או מיקום שאינך מכיר, מומלץ להחליף סיסמה מיד.
-                </p>
+      {/* RECENT ACTIVITY - Admin Only */}
+      {user?.is_admin && (
+        <div className="mt-8">
+          <SectionCard 
+              icon={History} 
+              title="פעילות אחרונה וחיבורים" 
+              badge={
+                <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-lg border border-primary/20">
+                  10 כניסות אחרונות
+                </span>
+              }
+          >
+            <div className="space-y-2">
+              {isLoadingActivity ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-40">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <span className="text-xs font-bold">טוען היסטוריית חיבורים...</span>
+                </div>
+              ) : activity.length === 0 ? (
+                <div className="text-center py-12 bg-muted/20 rounded-[2rem] border border-dashed border-border/60">
+                  <p className="text-xs font-bold text-muted-foreground">לא נמצאה פעילות מתועדת</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2">
+                  {activity.map((log, idx) => (
+                    <UserActivityEntry key={log.id} log={log} index={idx} />
+                  ))}
+                </div>
+              )}
+              
+              <div className="pt-6 flex flex-col sm:flex-row items-center gap-4 border-t border-primary/5 mt-4">
+                <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 flex items-center gap-3">
+                  <Shield className="w-4 h-4 text-amber-600" />
+                  <p className="text-[10px] font-bold text-amber-700 leading-tight">
+                    אם זיהית חיבור ממכשיר או מיקום שאינך מכיר, מומלץ להחליף סיסמה מיד.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </SectionCard>
-      </div>
+          </SectionCard>
+        </div>
+      )}
     </div>
   );
 }

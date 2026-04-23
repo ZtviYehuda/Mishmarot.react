@@ -266,6 +266,30 @@ const EmployeesChartComponent = (
             </div>
           </CardHeader>
         )}
+        
+        <div className="absolute top-4 left-4 z-10 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg flex shadow-sm border border-border/50">
+          <button
+            onClick={() => setChartType("pie")}
+            className={cn(
+              "p-1.5 rounded-md transition-all",
+              chartType === "pie" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            )}
+            title="תצוגת עוגה"
+          >
+            <PieChartIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setChartType("bar")}
+            className={cn(
+              "p-1.5 rounded-md transition-all",
+              chartType === "bar" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            )}
+            title="תצוגת עמודות"
+          >
+            <BarChart2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
         <CardContent className={cn("flex-1 flex flex-col min-h-[400px] relative px-2 py-4", hideHeader && (isMobile ? "p-4" : "p-8"))}>
           {total === 0 ? (
             <div className="flex-1 flex items-center justify-center py-12 text-center text-muted-foreground font-bold tracking-tight">
@@ -274,6 +298,7 @@ const EmployeesChartComponent = (
           ) : (
             <div className="flex-1 w-full flex-col min-h-0 relative mt-0" style={{ direction: "ltr" }}>
               <ResponsiveContainer width="100%" height="100%">
+                {chartType === "pie" ? (
                   <PieChart margin={isMobile ? { left: 35, right: 35, top: 30, bottom: 30 } : { left: 85, right: 85, top: 0, bottom: 0 }}>
                     <Pie
                       data={chartData}
@@ -316,7 +341,7 @@ const EmployeesChartComponent = (
                             stroke={isSelected ? entry.fill : "none"}
                             strokeWidth={isSelected ? 3 : 0}
                             strokeOpacity={0.8}
-                            className="cursor-pointer transition-all duration-500 outline-none"
+                            className="cursor-pointer transition-all duration-500 outline-none hover:brightness-110"
                             onClick={() => onStatusClick?.(entry.id, entry.name, entry.fill)}
                           />
                         );
@@ -324,14 +349,48 @@ const EmployeesChartComponent = (
                     </Pie>
                     <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 1000 }} />
                   </PieChart>
+                ) : (
+                  <BarChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 35 }}>
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fill: "currentColor", fontSize: 10, fontWeight: 900 }} 
+                      axisLine={false} 
+                      tickLine={false} 
+                      interval={0}
+                    />
+                    <YAxis hide={true} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                    <Bar 
+                      dataKey="value" 
+                      radius={[6, 6, 6, 6]}
+                      maxBarSize={50}
+                    >
+                      {chartData.map((entry, index) => {
+                        const isSelected = selectedStatusId === entry.id;
+                        const hasSelection = selectedStatusId !== null;
+                        return (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={entry.fill} 
+                            fillOpacity={!hasSelection || isSelected ? 1 : 0.25}
+                            className="cursor-pointer transition-all duration-500 outline-none hover:brightness-110"
+                            onClick={() => onStatusClick?.(entry.id, entry.name, entry.fill)}
+                          />
+                        );
+                      })}
+                    </Bar>
+                  </BarChart>
+                )}
               </ResponsiveContainer>
               
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                <div className="flex flex-col items-center justify-center">
-                  <p className={cn("font-black text-slate-900 dark:text-white leading-none", isMobile ? "text-3xl" : "text-4xl")}>{total}</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase mt-1">נוכחות</p>
+              {chartType === "pie" && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                  <div className="flex flex-col items-center justify-center">
+                    <p className={cn("font-black text-slate-900 dark:text-white leading-none", isMobile ? "text-3xl" : "text-4xl")}>{total}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase mt-1">נוכחות</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </CardContent>

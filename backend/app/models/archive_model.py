@@ -153,3 +153,22 @@ class ArchiveModel:
             return cur.fetchall()
         finally:
             conn.close()
+
+    @staticmethod
+    def get_request_by_id(request_id):
+        conn = get_db_connection()
+        if not conn:
+            return None
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute("""
+                SELECT r.*, 
+                       (e.first_name || ' ' || e.last_name) as requester_name
+                FROM data_restore_requests r
+                JOIN employees e ON r.requester_id = e.id
+                WHERE r.id = %s
+            """, (request_id,))
+            return cur.fetchone()
+        finally:
+            conn.close()
+

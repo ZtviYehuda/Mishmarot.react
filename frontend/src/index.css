@@ -183,6 +183,36 @@ body {
     --secondary: #f5f3ff;
     --accent: #f5f3ff;
   }
+
+  &.accent-indigo {
+    --primary: #4f46e5;
+    --secondary: #eef2ff;
+    --accent: #eef2ff;
+  }
+
+  &.accent-teal {
+    --primary: #0d9488;
+    --secondary: #f0fdfa;
+    --accent: #f0fdfa;
+  }
+
+  &.accent-orange {
+    --primary: #f97316;
+    --secondary: #fff7ed;
+    --accent: #fff7ed;
+  }
+
+  &.accent-pink {
+    --primary: #db2777;
+    --secondary: #fdf2f8;
+    --accent: #fdf2f8;
+  }
+
+  &.accent-lime {
+    --primary: #65a30d;
+    --secondary: #f7fee7;
+    --accent: #f7fee7;
+  }
 }
 
 .dark {
@@ -233,6 +263,41 @@ body {
     --secondary: #26113f;
     --accent: #26113f;
     --primary-rgb: 163, 125, 250;
+  }
+
+  &.accent-indigo {
+    --primary: #818cf8;
+    --secondary: #1e1b4b;
+    --accent: #1e1b4b;
+    --primary-rgb: 129, 140, 248;
+  }
+
+  &.accent-teal {
+    --primary: #2dd4bf;
+    --secondary: #042f2e;
+    --accent: #042f2e;
+    --primary-rgb: 45, 212, 191;
+  }
+
+  &.accent-orange {
+    --primary: #fb923c;
+    --secondary: #431407;
+    --accent: #431407;
+    --primary-rgb: 251, 146, 60;
+  }
+
+  &.accent-pink {
+    --primary: #f472b6;
+    --secondary: #4a044e;
+    --accent: #4a044e;
+    --primary-rgb: 244, 114, 182;
+  }
+
+  &.accent-lime {
+    --primary: #a3e635;
+    --secondary: #1a2e05;
+    --accent: #1a2e05;
+    --primary-rgb: 163, 230, 53;
   }
 }
 

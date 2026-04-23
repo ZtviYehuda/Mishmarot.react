@@ -17,17 +17,20 @@ import {
   Gift,
   ArrowRight,
   Eye,
+  Lock,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ReportToolbar } from "@/components/dashboard/ReportToolbar";
 import { useEmployees } from "@/hooks/useEmployees";
+import { useAuthContext } from "@/context/AuthContext";
 import { AttendanceTrendCard } from "@/components/dashboard/AttendanceTrendCard";
 import { StatsComparisonCard } from "@/components/dashboard/StatsComparisonCard";
 import { EmployeesChart } from "@/components/dashboard/EmployeesChart";
-import { differenceInDays, format } from "date-fns";
+import { differenceInDays, format, isBefore } from "date-fns";
 import type { DateRange } from "react-day-picker";
+import { RestorationRequestDialog } from "@/components/dashboard/RestorationRequestDialog";
 
 interface ReportHubProps {
   onShareBirthdays: () => void;
@@ -72,6 +75,17 @@ export const ReportHub: React.FC<ReportHubProps> = ({
   const [snapshotStats, setSnapshotStats] = useState<any[]>([]);
   const [birthdays, setBirthdays] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasArchiveAccess, setHasArchiveAccess] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+
+  const { user } = useAuthContext();
+
+  const isOldDate = useMemo(() => {
+    if (user?.is_admin) return false;
+    const today = new Date();
+    const startOfPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    return isBefore(localDate, startOfPrevMonth);
+  }, [localDate, user]);
 
   const trendRef = useRef<any>(null);
   const comparisonRef = useRef<any>(null);
@@ -159,6 +173,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
         setComparisonStats(cData || []);
         setSnapshotStats(dData?.stats || []);
         setBirthdays(dData?.birthdays || []);
+        setHasArchiveAccess(dData?.has_archive_access || false);
       } catch (err) {
         toast.error("שגיאה בטעינת נתוני דוחות");
       } finally {
@@ -305,7 +320,27 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             <ReportToolbar viewMode={localViewMode} onViewModeChange={setLocalViewMode} date={localDate} onDateChange={setLocalDate} dateRange={dateRange} onDateRangeChange={setDateRange} maxDate={maxDate} />
           </div>
 
-          <div className={cn("p-2 sm:p-8 overflow-y-auto custom-scrollbar flex-1 bg-white/5", previewType && "p-2 sm:p-4")}>
+          <div className={cn("p-2 sm:p-8 overflow-y-auto custom-scrollbar flex-1 bg-white/5 relative", previewType && "p-2 sm:p-4")}>
+            {(isOldDate && !hasArchiveAccess) ? (
+              <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md rounded-b-[1.5rem] sm:rounded-b-[2rem]">
+                <div className="bg-card border border-border/50 shadow-2xl rounded-[2rem] p-8 max-w-md text-center space-y-4 m-4">
+                  <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                    <Lock className="w-8 h-8 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-black">נתוני ארכיון חסומים</h3>
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                    הנתונים מהתקופה הזו הועברו לארכיון. על מנת לצפות ולהפיק דוחות, עליך לבקש אישור גישה.
+                  </p>
+                  <Button 
+                    onClick={() => setRestoreDialogOpen(true)}
+                    className="w-full rounded-xl h-12 font-black mt-4"
+                  >
+                    הגש בקשת גישה לארכיון
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
             {previewType === null ? (
               <div className="grid grid-cols-2 gap-2 sm:gap-6 animate-in fade-in zoom-in-95 duration-300">
                 <ReportCard icon={Users} title="מצבת כוח אדם" description="חלוקה ויזואלית לפי סטטוס נוכחות." colorClass="bg-blue-500/20 text-blue-400" onClick={() => setPreviewType('snapshot')} onDownload={() => downloadCard(snapshotRef)} onWhatsApp={() => shareCard(snapshotRef)} />
@@ -382,6 +417,12 @@ export const ReportHub: React.FC<ReportHubProps> = ({
         <div style={{ width: "800px", height: "600px" }}><AttendanceTrendCard ref={trendRef} data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>
         <div style={{ width: "800px", height: "600px" }}><StatsComparisonCard ref={comparisonRef} data={comparisonStats} loading={loading} days={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>
       </div>
+
+      <RestorationRequestDialog
+        open={restoreDialogOpen}
+        onOpenChange={setRestoreDialogOpen}
+        targetDate={localDate}
+      />
     </>
   );
 };

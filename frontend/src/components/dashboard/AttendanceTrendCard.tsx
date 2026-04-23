@@ -19,7 +19,7 @@ import {
   Bar,
   Cell,
 } from "recharts";
-import { format, parseISO, startOfMonth } from "date-fns";
+import { format, parseISO, startOfMonth, isSameDay } from "date-fns";
 import { he } from "date-fns/locale";
 import {
   Download,
@@ -49,6 +49,8 @@ interface AttendanceTrendCardProps {
   unitName?: string;
   subtitle?: string;
   selectedDate?: Date;
+  onDateSelect?: (date: Date) => void;
+  onRangeChange?: (range: number) => void;
   filterTags?: string[];
   hideHeader?: boolean;
 }
@@ -63,6 +65,8 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       unitName = "כלל היחידה",
       subtitle,
       selectedDate = new Date(),
+      onDateSelect,
+      onRangeChange,
       filterTags = [],
       hideHeader = false,
     },
@@ -298,11 +302,37 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       >
         {!hideHeader && (
           <CardHeader className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-row items-center justify-between space-y-0">
-            <div className="space-y-1 text-right w-full">
+            <div className="space-y-1 text-right">
               <CardTitle className="text-sm font-black text-slate-500 uppercase tracking-widest">
-                מגמת זמינות — 30 ימים אחרונים
+                מגמת זמינות — {range === 7 ? "שבועי" : "חודשי"}
               </CardTitle>
             </div>
+            {onRangeChange && (
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                <button
+                  onClick={() => onRangeChange(7)}
+                  className={cn(
+                    "px-3 py-1 text-xs font-bold rounded-md transition-all",
+                    range === 7
+                      ? "bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-white"
+                      : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                  )}
+                >
+                  שבועי
+                </button>
+                <button
+                  onClick={() => onRangeChange(30)}
+                  className={cn(
+                    "px-3 py-1 text-xs font-bold rounded-md transition-all",
+                    range === 30
+                      ? "bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-white"
+                      : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                  )}
+                >
+                  חודשי
+                </button>
+              </div>
+            )}
           </CardHeader>
         )}
 
@@ -311,7 +341,18 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={chartData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 35 }}
+                  style={{ cursor: 'pointer' }}
+                  onMouseDown={(state: any) => {
+                    if (state && state.activePayload && state.activePayload.length > 0) {
+                      const dateStr = state.activePayload[0].payload.date;
+                      if (dateStr) {
+                        onDateSelect?.(parseISO(dateStr));
+                      }
+                    } else if (state && state.activeLabel) {
+                      onDateSelect?.(parseISO(state.activeLabel));
+                    }
+                  }}
                 >
                   <defs>
                     <linearGradient
@@ -333,7 +374,16 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   />
                   <XAxis
                     dataKey="date"
-                    tickFormatter={getAxisTickFormatter}
+                    tickFormatter={(value) => {
+                      if (!value) return "";
+                      try {
+                        const date = parseISO(value);
+                        if (!isNaN(date.getTime())) return format(date, "dd/MM");
+                      } catch (e) {
+                        return value;
+                      }
+                      return value;
+                    }}
                     tick={{
                       fontSize: 10,
                       fill: "var(--muted-foreground)",
@@ -341,7 +391,8 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                     }}
                     tickLine={false}
                     axisLine={false}
-                    dy={16}
+                    dy={10}
+                    minTickGap={5}
                   />
                   <YAxis
                     tick={{
@@ -369,16 +420,39 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                     labelFormatter={(label) =>
                       format(parseISO(label), "dd/MM/yyyy")
                     }
+                    formatter={(value: any, name: string) => [
+                      value,
+                      name === "present_count" ? "נוכחים" : name,
+                    ]}
                   />
                   <Area
                     type="monotone"
                     dataKey="present_count"
                     stroke="#0074ff"
                     strokeWidth={3}
-                    dot={false}
                     fillOpacity={1}
                     fill="url(#colorPresent)"
                     animationDuration={1500}
+                    dot={(props: any) => {
+                      const { cx, cy, payload } = props;
+                      if (!payload || !payload.date) return null as any;
+                      const isSelected = isSameDay(parseISO(payload.date), selectedDate);
+                      if (isSelected) {
+                        return (
+                          <circle
+                            key={`dot-${payload.date}`}
+                            cx={cx}
+                            cy={cy}
+                            r={6}
+                            fill="#0074ff"
+                            stroke="white"
+                            strokeWidth={3}
+                            style={{ filter: "drop-shadow(0 0 4px rgba(0,116,255,0.5))" }}
+                          />
+                        );
+                      }
+                      return null as any;
+                    }}
                     activeDot={{
                       r: 6,
                       fill: "#0074ff",

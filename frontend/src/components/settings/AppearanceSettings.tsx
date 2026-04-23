@@ -1,6 +1,7 @@
-import { Palette, Moon, Sun, Type, Monitor } from "lucide-react";
-import { motion } from "framer-motion";
+import { Palette, Moon, Sun, Type, Monitor, Pipette, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useState, useRef } from "react";
 
 interface AppearanceSettingsProps {
   theme: string;
@@ -19,14 +20,21 @@ export function AppearanceSettings({
   fontSize,
   setFontSize,
 }: AppearanceSettingsProps) {
-  // Only showing the 7 colors that are defined in index.css themes for perfect functionality.
+  const [isCustomOpen, setIsCustomOpen] = useState(accentColor.startsWith("#"));
+  const colorInputRef = useRef<HTMLInputElement>(null);
+
   const accentColors = [
-    { id: "emerald", label: "אמרלד", class: "bg-emerald-500" },
-    { id: "cyan", label: "ציאן", class: "bg-cyan-500" },
     { id: "blue", label: "כחול", class: "bg-blue-500" },
+    { id: "indigo", label: "אינדיגו", class: "bg-indigo-500" },
     { id: "violet", label: "סגול", class: "bg-violet-500" },
+    { id: "pink", label: "ורוד", class: "bg-pink-500" },
     { id: "rose", label: "ורד", class: "bg-rose-500" },
+    { id: "orange", label: "כתום", class: "bg-orange-500" },
     { id: "amber", label: "ענבר", class: "bg-amber-500" },
+    { id: "lime", label: "ליים", class: "bg-lime-500" },
+    { id: "emerald", label: "אמרלד", class: "bg-emerald-500" },
+    { id: "teal", label: "טורקיז", class: "bg-teal-500" },
+    { id: "cyan", label: "ציאן", class: "bg-cyan-500" },
     { id: "zinc", label: "ניטרלי", class: "bg-slate-500" },
   ];
 
@@ -35,6 +43,10 @@ export function AppearanceSettings({
     { id: "normal", label: "רגיל" },
     { id: "large", label: "גדול" },
   ];
+
+  const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAccentColor(e.target.value);
+  };
 
   return (
     <div className="w-full pb-24 lg:pb-0 space-y-6 sm:space-y-8">
@@ -131,36 +143,128 @@ export function AppearanceSettings({
       </div>
 
       {/* Bottom Row: Full Palette */}
-      <SectionCard icon={Palette} title="מניפת צבעי מערכת">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-          {accentColors.map((color) => (
-            <button
-              key={color.id}
-              onClick={() => setAccentColor(color.id)}
+      <SectionCard icon={Pipette} title="מניפת צבעי מערכת">
+        <div className="space-y-6">
+          <div className="flex items-start justify-between gap-1 overflow-x-auto no-scrollbar pb-2">
+            {accentColors.map((color, index) => (
+              <motion.button
+                key={color.id}
+                initial={{ opacity: 0, scale: 0.8, rotate: -20, y: 20 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0, y: 0 }}
+                transition={{ 
+                  delay: index * 0.04,
+                  type: "spring",
+                  stiffness: 260,
+                  damping: 20 
+                }}
+                onClick={() => {
+                  setAccentColor(color.id);
+                  setIsCustomOpen(false);
+                }}
+                className={cn(
+                  "relative flex flex-col items-center gap-1.5 p-1 rounded-xl transition-all min-w-[55px] sm:min-w-[65px] lg:min-w-[0] lg:flex-1",
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-9 h-9 sm:w-11 sm:h-11 lg:w-9 lg:h-9 xl:w-10 xl:h-10 rounded-full transition-all duration-300 relative flex items-center justify-center",
+                    color.class,
+                    accentColor === color.id && !isCustomOpen
+                      ? "scale-110 shadow-lg shadow-primary/25 ring-2 ring-primary ring-offset-2 ring-offset-background"
+                      : "hover:scale-110 shadow-sm",
+                  )}
+                >
+                  {accentColor === color.id && !isCustomOpen && (
+                    <Check className="w-5 h-5 text-white" />
+                  )}
+                </div>
+                <span className={cn(
+                    "text-[9px] sm:text-[10px] font-bold text-center truncate w-full",
+                    accentColor === color.id && !isCustomOpen ? "text-primary" : "text-muted-foreground"
+                  )}>
+                  {color.label}
+                </span>
+              </motion.button>
+            ))}
+
+            {/* Custom Color Button */}
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8, rotate: -20, y: 20 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0, y: 0 }}
+              transition={{ delay: accentColors.length * 0.04 }}
+              onClick={() => {
+                setIsCustomOpen(true);
+                colorInputRef.current?.click();
+              }}
               className={cn(
-                "relative group flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all",
-                accentColor === color.id
-                  ? "bg-muted/50 border border-border/60 shadow-sm"
-                  : "border border-transparent hover:bg-muted/20",
+                "relative flex flex-col items-center gap-1.5 p-1 rounded-xl transition-all min-w-[55px] sm:min-w-[65px] lg:min-w-[0] lg:flex-1",
               )}
             >
               <div
                 className={cn(
-                  "w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-transform",
-                  color.class,
-                  accentColor === color.id
-                    ? "scale-105 ring-2 ring-primary ring-offset-2 ring-offset-background shadow-md shadow-primary/20"
-                    : "hover:scale-110 shadow-sm hover:shadow-md",
+                  "w-9 h-9 sm:w-11 sm:h-11 lg:w-9 lg:h-9 xl:w-10 xl:h-10 rounded-full transition-all duration-300 relative flex items-center justify-center overflow-hidden",
+                  isCustomOpen
+                    ? "scale-110 shadow-lg ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    : "bg-linear-to-tr from-red-500 via-green-500 to-blue-500 hover:scale-110 shadow-sm",
                 )}
-              />
+                style={isCustomOpen ? { backgroundColor: accentColor } : {}}
+              >
+                {!isCustomOpen ? (
+                  <Pipette className="w-5 h-5 text-white drop-shadow-md" />
+                ) : (
+                  <Check className="w-5 h-5 text-white drop-shadow-md" />
+                )}
+                <input
+                  ref={colorInputRef}
+                  type="color"
+                  className="absolute inset-0 opacity-0 cursor-pointer pointer-events-none"
+                  value={accentColor.startsWith("#") ? accentColor : "#0074ff"}
+                  onChange={handleCustomColorChange}
+                />
+              </div>
               <span className={cn(
                   "text-[9px] sm:text-[10px] font-bold text-center",
-                  accentColor === color.id ? "text-primary" : "text-muted-foreground"
+                  isCustomOpen ? "text-primary" : "text-muted-foreground"
                 )}>
-                {color.label}
+                מותאם
               </span>
-            </button>
-          ))}
+            </motion.button>
+          </div>
+
+          <AnimatePresence>
+            {isCustomOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="flex items-center gap-4 p-5 rounded-[2.5rem] bg-muted/20 border border-border/40 backdrop-blur-md">
+                  <div 
+                    className="w-14 h-14 rounded-2xl shadow-inner border border-white/20 relative"
+                    style={{ backgroundColor: accentColor }}
+                  >
+                    <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/10" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex flex-col">
+                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">מזהה צבע נבחר</label>
+                      <div className="flex items-center gap-3">
+                         <span className="font-mono text-lg font-black tracking-tighter text-foreground">{accentColor.toUpperCase()}</span>
+                         <div className="h-4 w-px bg-border" />
+                         <button 
+                          onClick={() => colorInputRef.current?.click()}
+                          className="text-xs text-primary font-bold hover:underline"
+                         >
+                           שינוי צבע
+                         </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </SectionCard>
 
@@ -168,7 +272,7 @@ export function AppearanceSettings({
       <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary mt-4 max-w-xl">
         <Monitor className="w-5 h-5 shrink-0 mt-0.5 opacity-80" />
         <p className="text-xs font-bold leading-relaxed opacity-90">
-          שינויי התצוגה מיושמים אוטומטית ברחבי המערכת ונשמרים בחשבונך.
+          שינויי התצוגה מיושמים אוטומטית ברחבי המערכת ונשמרים בחשבונך. המערכת תתאים את צבעי הרקע והטקסט בהתאם לבחירתך.
         </p>
       </div>
     </div>
@@ -190,4 +294,5 @@ function SectionCard({ icon: Icon, title, children }: any) {
     </div>
   );
 }
+
 

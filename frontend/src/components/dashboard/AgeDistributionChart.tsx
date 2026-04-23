@@ -86,7 +86,7 @@ export const AgeDistributionChart = ({
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
-            margin={{ top: 30, right: 0, left: 0, bottom: 0 }}
+            margin={{ top: 30, right: 0, left: 0, bottom: 15 }}
             barCategoryGap="15%"
           >
             <XAxis
