@@ -219,7 +219,7 @@ const EmployeesChartComponent = (
       if (active && payload && payload.length) {
         const d = payload[0].payload;
         return (
-          <div className="bg-popover text-popover-foreground px-3 py-2 rounded text-sm border border-border shadow-xl">
+          <div className="bg-popover text-popover-foreground px-3 py-2 rounded text-sm border border-border">
             <p className="font-black">{d.name}</p>
             <p>{d.value} שוטרים</p>
             <p className="text-[10px] text-muted-foreground mt-1">{d.percentage}% מכלל היחידה</p>
@@ -236,82 +236,93 @@ const EmployeesChartComponent = (
         ref={cardRef}
         id="attendance-snapshot-card"
         className={cn(
-          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-none shadow-sm flex flex-col overflow-hidden h-full relative transition-all"
+          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all"
         )}
       >
-        {(!hideHeader || filterTags.length > 0) && (
-          <CardHeader className="px-6 py-2 border-none">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              {!hideHeader && (
-                <CardTitle className="text-sm font-black text-slate-500 uppercase tracking-widest">
-                  {title}
-                </CardTitle>
-              )}
-              {filterTags.length > 0 && (
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
-                   <div className="flex items-center gap-1.5 text-[10px] text-blue-700 dark:text-blue-400 font-black uppercase tracking-tight ml-1 animate-pulse">
-                    <Filter className="w-3 h-3" />
-                  </div>
-                  {filterTags.map((tag, idx) => (
-                    <Badge 
-                      key={idx} 
-                      variant="secondary" 
-                      className="text-[9px] h-5 px-2 font-black bg-blue-700 text-white border-none whitespace-nowrap rounded-md"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
+      <div className="p-4 sm:p-6 flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex flex-row justify-between items-center gap-3 mb-6 relative z-10 min-h-[70px]">
+          <div className="flex gap-3 items-center">
+            <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0 border border-border/40">
+              <Activity className="w-5 h-5 text-muted-foreground" />
             </div>
-          </CardHeader>
-        )}
-        
-        <div className="absolute top-4 left-4 z-10 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg flex shadow-sm border border-border/50">
-          <button
-            onClick={() => setChartType("pie")}
-            className={cn(
-              "p-1.5 rounded-md transition-all",
-              chartType === "pie" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            )}
-            title="תצוגת עוגה"
-          >
-            <PieChartIcon className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setChartType("bar")}
-            className={cn(
-              "p-1.5 rounded-md transition-all",
-              chartType === "bar" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            )}
-            title="תצוגת עמודות"
-          >
-            <BarChart2 className="w-3.5 h-3.5" />
-          </button>
+            <div className="text-right flex flex-col">
+              <h3 className="text-lg font-black text-foreground tracking-tight flex items-center flex-wrap gap-2">
+                <span>{title}</span>
+                {filterTags.length > 0 && (
+                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                    <div className="flex items-center gap-1.5 text-[10px] text-blue-700 dark:text-blue-400 font-black uppercase tracking-tight ml-1 animate-pulse">
+                      <Filter className="w-3 h-3" />
+                    </div>
+                    {filterTags.map((tag, idx) => (
+                      <Badge 
+                        key={idx} 
+                        variant="secondary" 
+                        className="text-[9px] h-5 px-2 font-black bg-blue-700 text-white border-none whitespace-nowrap rounded-md"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </h3>
+            </div>
+          </div>
+
+          <div className="bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-lg flex border border-border/50 backdrop-blur-md">
+            <button
+              onClick={() => setChartType("pie")}
+              className={cn(
+                "p-1.5 rounded-md transition-all",
+                chartType === "pie" ? "bg-white dark:bg-slate-700 text-primary" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              )}
+              title="תצוגת עוגה"
+            >
+              <PieChartIcon className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setChartType("bar")}
+              className={cn(
+                "p-1.5 rounded-md transition-all",
+                chartType === "bar" ? "bg-white dark:bg-slate-700 text-primary" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              )}
+              title="תצוגת עמודות"
+            >
+              <BarChart2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
-        <CardContent className={cn("flex-1 flex flex-col min-h-[400px] relative px-2 py-4", hideHeader && (isMobile ? "p-4" : "p-8"))}>
+        <div className="flex-1 flex flex-col min-h-[380px] relative p-0 mt-0">
           {total === 0 ? (
             <div className="flex-1 flex items-center justify-center py-12 text-center text-muted-foreground font-bold tracking-tight">
               אין נתונים להצגה
             </div>
           ) : (
-            <div className="flex-1 w-full flex-col min-h-0 relative mt-0" style={{ direction: "ltr" }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="flex-1 w-full flex-col min-h-0 relative mt-0" style={{ direction: "ltr", overflow: 'visible' }}>
+              <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
                 {chartType === "pie" ? (
-                  <PieChart margin={isMobile ? { left: 35, right: 35, top: 30, bottom: 30 } : { left: 85, right: 85, top: 0, bottom: 0 }}>
+                  <PieChart 
+                    margin={{ left: 40, right: 40, top: 20, bottom: 20 }}
+                    style={{ overflow: 'visible' }}
+                  >
                     <Pie
                       data={chartData}
                       cx="50%" cy="50%"
-                      innerRadius={isMobile ? "60%" : "50%"} 
-                      outerRadius={isMobile ? "95%" : "90%"}
-                      paddingAngle={5}
-                      minAngle={18}
+                      innerRadius={isMobile ? "30%" : "40%"} 
+                      outerRadius={isMobile ? "45%" : "55%"}
+                      paddingAngle={4}
+                      minAngle={15}
                       dataKey="value"
                       stroke="none"
                       animationDuration={1000}
-                      label={({ name, percentage, cx, x, y }) => {
+                      label={({ cx, cy, midAngle, outerRadius, name, percentage }) => {
+                        const RADIAN = Math.PI / 180;
+                        const radius = outerRadius + (isMobile ? 15 : 20);
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
                         const isRight = x > cx;
+
                         return (
                           <text 
                             x={x} 
@@ -319,9 +330,12 @@ const EmployeesChartComponent = (
                             fill="currentColor" 
                             textAnchor={isRight ? "start" : "end"} 
                             dominantBaseline="central"
+                            stroke="none"
+                            strokeWidth={0}
+                            style={{ overflow: 'visible' }}
                             className={cn(
-                              "font-black fill-slate-700 dark:fill-slate-300",
-                              isMobile ? "text-[10px]" : "text-[12px]"
+                              "font-black fill-slate-700 dark:fill-slate-300 transition-all duration-300",
+                              isMobile ? "text-[9px]" : "text-[11px]"
                             )}
                           >
                             {`${name} (${percentage}%)`}
@@ -350,10 +364,35 @@ const EmployeesChartComponent = (
                     <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 1000 }} />
                   </PieChart>
                 ) : (
-                  <BarChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 35 }}>
+                  <BarChart data={chartData} margin={{ top: 30, right: 10, left: 10, bottom: 40 }}>
                     <XAxis 
                       dataKey="name" 
-                      tick={{ fill: "currentColor", fontSize: 10, fontWeight: 900 }} 
+                      tick={(props) => {
+                        const { x, y, payload } = props;
+                        const name = payload.value;
+                        
+                        // Split name by spaces for wrapping if it's longer than a few chars
+                        const parts = name.length > 5 && name.includes(" ") ? name.split(" ") : [name];
+
+                        return (
+                          <g transform={`translate(${x},${y})`}>
+                            <text 
+                              x={0} y={0} dy={16} 
+                              textAnchor="middle" 
+                              className={cn("font-black fill-slate-500 dark:fill-slate-400", name.length > 10 ? "text-[8px]" : "text-[10px]")}
+                            >
+                              {parts.length > 1 ? (
+                                <>
+                                  <tspan x={0} dy="0em" dominantBaseline="hanging">{parts[0]}</tspan>
+                                  <tspan x={0} dy="1.2em" dominantBaseline="hanging">{parts.slice(1).join(" ")}</tspan>
+                                </>
+                              ) : (
+                                <tspan x={0} dy="0em" dominantBaseline="hanging">{name}</tspan>
+                              )}
+                            </text>
+                          </g>
+                        );
+                      }}
                       axisLine={false} 
                       tickLine={false} 
                       interval={0}
@@ -362,9 +401,18 @@ const EmployeesChartComponent = (
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
                     <Bar 
                       dataKey="value" 
-                      radius={[6, 6, 6, 6]}
-                      maxBarSize={50}
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={isMobile ? 28 : 40}
                     >
+                      <LabelList 
+                        dataKey="value" 
+                        position="top" 
+                        offset={10} 
+                        fill="currentColor" 
+                        fontSize={isMobile ? 9 : 11} 
+                        fontWeight={900} 
+                        className="fill-slate-600 dark:fill-slate-300"
+                      />
                       {chartData.map((entry, index) => {
                         const isSelected = selectedStatusId === entry.id;
                         const hasSelection = selectedStatusId !== null;
@@ -386,15 +434,16 @@ const EmployeesChartComponent = (
               {chartType === "pie" && (
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
                   <div className="flex flex-col items-center justify-center">
-                    <p className={cn("font-black text-slate-900 dark:text-white leading-none", isMobile ? "text-3xl" : "text-4xl")}>{total}</p>
-                    <p className="text-[10px] font-black text-slate-400 uppercase mt-1">נוכחות</p>
+                    <p className={cn("font-black text-slate-900 dark:text-white leading-none", isMobile ? "text-2xl" : "text-4xl")}>{total}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase mt-1">סה"כ</p>
                   </div>
                 </div>
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+    </Card>
     );
 };
 

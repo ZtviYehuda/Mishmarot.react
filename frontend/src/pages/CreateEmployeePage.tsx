@@ -245,7 +245,7 @@ const PersonalFormTab = ({
                           className={cn(
                             "px-4 py-2 rounded-xl text-sm font-black transition-all border",
                             formData.dominant_name === word
-                              ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-[1.02]"
+                              ? "bg-primary text-white border-primary scale-[1.02]"
                               : "bg-white dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:text-primary"
                           )}
                         >
@@ -921,7 +921,7 @@ export default function CreateEmployeePage() {
         <motion.div
           layoutId="activeTab"
           className={cn(
-            "absolute inset-1 bg-white dark:bg-slate-800 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] border border-slate-200/50 dark:border-slate-700/50",
+            "absolute inset-1 bg-white dark:bg-slate-800 rounded-xl dark: border border-slate-200/50 dark:border-slate-700/50",
           )}
           initial={false}
           transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
@@ -934,7 +934,7 @@ export default function CreateEmployeePage() {
               "rounded-lg flex items-center justify-center transition-all shrink-0",
               small ? "w-6 h-6" : "w-8 h-8",
               active
-                ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105"
+                ? "bg-primary text-white scale-105"
                 : "bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 group-hover:scale-110 group-hover:bg-slate-200 dark:group-hover:bg-slate-700",
             )}
           >
@@ -966,7 +966,7 @@ export default function CreateEmployeePage() {
         />
 
         {/* Inline Header Tabs */}
-        <div className="hidden sm:flex items-stretch bg-slate-200/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-[1.25rem] p-0.5 min-w-[300px] h-11 relative shadow-inner">
+        <div className="hidden sm:flex items-stretch bg-slate-200/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-[1.25rem] p-0.5 min-w-[300px] h-11 relative">
           <TabButton
             active={activeTab === "personal"}
             onClick={() => setActiveTab("personal")}
@@ -1009,7 +1009,7 @@ export default function CreateEmployeePage() {
 
       {/* Mobile-only tabs (original style) */}
       <div className="flex sm:hidden justify-center w-full mb-6 px-4 pt-2">
-        <div className="bg-slate-200/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-1 flex w-full h-10 shadow-inner">
+        <div className="bg-slate-200/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-1 flex w-full h-10">
           <TabButton
             active={activeTab === "personal"}
             onClick={() => setActiveTab("personal")}

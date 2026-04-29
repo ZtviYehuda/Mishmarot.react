@@ -63,7 +63,7 @@ export function ThemeToggle({
           "absolute inset-y-1 w-[calc(50%-4px)] rounded-full transition-all ease-spring",
           theme === "dark"
             ? "translate-x-[calc(100%+4px)] bg-primary/20 border border-primary/30"
-            : "translate-x-0 ml-1 bg-white shadow-sm",
+            : "translate-x-0 ml-1 bg-white",
         )}
       />
 

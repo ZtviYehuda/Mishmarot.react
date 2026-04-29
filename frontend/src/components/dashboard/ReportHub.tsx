@@ -198,11 +198,11 @@ export const ReportHub: React.FC<ReportHubProps> = ({
   const ReportCard = ({ icon: Icon, title, description, colorClass, onDownload, onWhatsApp, hasDownload = true, onClick }: any) => (
     <div 
       onClick={onClick}
-      className="group relative bg-white/[0.04] dark:bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-primary/40 rounded-[1.25rem] sm:rounded-[2rem] p-2 sm:p-5 transition-all active:scale-[0.98] overflow-hidden flex flex-col h-full shadow-lg cursor-pointer"
+      className="group relative bg-white/[0.04] dark:bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-primary/40 rounded-[1.25rem] sm:rounded-[2rem] p-2 sm:p-5 transition-all active:scale-[0.98] overflow-hidden flex flex-col h-full cursor-pointer"
     >
       <div className="flex flex-col items-center sm:items-start gap-1.5 sm:gap-4 mb-2 sm:mb-4">
         <div className={cn(
-          "p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shrink-0 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
+          "p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
           colorClass.replace("bg-", "bg-").replace("text-", "text-")
         )}>
           <Icon className="w-4 h-4 sm:w-7 sm:h-7" />
@@ -263,7 +263,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
   const PreviewHeader = ({ title, icon: Icon, colorClass }: any) => (
     <div className="flex items-center justify-between mb-2 sm:mb-4 animate-in slide-in-from-top-4 duration-300">
       <div className="flex items-center gap-2 sm:gap-4">
-        <div className={cn("p-1.5 sm:p-3 rounded-lg sm:rounded-xl shadow-xl", colorClass)}>
+        <div className={cn("p-1.5 sm:p-3 rounded-lg sm:rounded-xl", colorClass)}>
           <Icon className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-white" />
         </div>
         <div>
@@ -287,14 +287,33 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" className={cn("h-10 rounded-xl gap-2 font-black transition-all px-5 bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 shadow-none backdrop-blur-xl text-sm", className)}>
-            <FileText className="w-4 h-4" />
-            <span>מרכז דוחות</span>
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "rounded-xl font-black transition-all bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 backdrop-blur-xl",
+              className?.includes("h-20") 
+                ? className 
+                : cn("h-9 gap-2 px-4 text-[13px]", className)
+            )}
+          >
+            {className?.includes("flex-col") ? (
+              <>
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <span className="text-[10px]">דוחות</span>
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4" />
+                <span>מרכז דוחות</span>
+              </>
+            )}
           </Button>
         </DialogTrigger>
 
         <DialogContent className={cn(
-          "w-[98vw] max-w-[98vw] sm:max-w-4xl p-0 overflow-hidden border-none bg-background/95 backdrop-blur-3xl rounded-[1.5rem] sm:rounded-[2rem] flex flex-col shadow-2xl transition-all duration-300",
+          "w-[98vw] max-w-[98vw] sm:max-w-4xl p-0 overflow-hidden border-none bg-background/95 backdrop-blur-3xl rounded-[1.5rem] sm:rounded-[2rem] flex flex-col transition-all duration-300",
           previewType === null ? "h-auto" : "h-[90vh] sm:max-h-[92vh]"
         )}>
           {/* Header - Hides on mobile preview */}
@@ -304,7 +323,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
           )}>
             <DialogHeader className="text-right">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="p-1.5 sm:p-4 bg-primary text-white rounded-xl sm:rounded-2xl shadow-2xl shadow-primary/20 rotate-3">
+                <div className="p-1.5 sm:p-4 bg-primary text-white rounded-xl sm:rounded-2xl rotate-3">
                   <FileText className="w-4 h-4 sm:w-8 sm:h-8" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -323,7 +342,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
           <div className={cn("p-2 sm:p-8 overflow-y-auto custom-scrollbar flex-1 bg-white/5 relative", previewType && "p-2 sm:p-4")}>
             {(isOldDate && !hasArchiveAccess) ? (
               <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md rounded-b-[1.5rem] sm:rounded-b-[2rem]">
-                <div className="bg-card border border-border/50 shadow-2xl rounded-[2rem] p-8 max-w-md text-center space-y-4 m-4">
+                <div className="bg-card border border-border/50 rounded-[2rem] p-8 max-w-md text-center space-y-4 m-4">
                   <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
                     <Lock className="w-8 h-8 text-primary" />
                   </div>
@@ -364,7 +383,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                   previewType === 'comparison' ? "bg-purple-500" : "bg-rose-500"
                 } />
 
-                <div className="flex-1 flex flex-col min-h-0 bg-card/60 rounded-[1.25rem] sm:rounded-[2.5rem] border border-white/10 shadow-3xl overflow-hidden backdrop-blur-2xl">
+                <div className="flex-1 flex flex-col min-h-0 bg-card/60 rounded-[1.25rem] sm:rounded-[2.5rem] border border-white/10 overflow-hidden backdrop-blur-2xl">
                   <div className="flex-1 overflow-y-auto no-scrollbar p-1.5 sm:p-6 flex flex-col">
                     {previewType === 'snapshot' && (
                       <EmployeesChart stats={snapshotStats} total={snapshotTotal} loading={loading} hideHeader={true} unitName={filters.unitName} selectedDate={localDate} />
@@ -384,7 +403,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                             {birthdays.map((emp, i) => (
                               <div key={i} className="flex items-center justify-between p-2.5 sm:p-4 bg-white/5 rounded-2xl border border-white/5">
                                 <div className="flex items-center gap-3 sm:gap-4">
-                                  <div className="w-9 h-9 rounded-full bg-rose-500 text-white flex items-center justify-center font-black text-[11px] shadow-lg shadow-rose-500/20">{emp.first_name[0]}{emp.last_name[0]}</div>
+                                  <div className="w-9 h-9 rounded-full bg-rose-500 text-white flex items-center justify-center font-black text-[11px]-500/20">{emp.first_name[0]}{emp.last_name[0]}</div>
                                   <div><p className="font-black text-xs sm:text-sm text-foreground">{emp.first_name} {emp.last_name}</p><p className="text-[10px] font-bold text-muted-foreground">{emp.sub_unit || filters.unitName}</p></div>
                                 </div>
                                 <div className="text-left"><p className="text-xs font-black text-rose-500">{format(new Date(emp.birth_date), 'dd/MM')}</p></div>
@@ -400,10 +419,10 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                 {/* Compact Actions inside Preview */}
                 <div className="mt-2.5 sm:mt-6 flex items-center gap-2 sm:gap-3 shrink-0 pb-1">
                   {(previewType !== 'birthdays') && (
-                    <Button onClick={() => { if (previewType === 'snapshot') downloadCard(snapshotRef); if (previewType === 'trend') downloadCard(trendRef); if (previewType === 'comparison') downloadCard(comparisonRef); }} disabled={loading} className="h-10 sm:h-14 rounded-2xl bg-primary text-white font-black text-xs sm:text-base flex-1 shadow-2xl shadow-primary/30 gap-2 sm:gap-3 active:scale-95 transition-all">
+                    <Button onClick={() => { if (previewType === 'snapshot') downloadCard(snapshotRef); if (previewType === 'trend') downloadCard(trendRef); if (previewType === 'comparison') downloadCard(comparisonRef); }} disabled={loading} className="h-10 sm:h-14 rounded-2xl bg-primary text-white font-black text-xs sm:text-base flex-1 gap-2 sm:gap-3 active:scale-95 transition-all">
                       <Download className="w-4 h-4 sm:w-6 sm:h-6" /><span>הורדה</span></Button>
                   )}
-                  <Button onClick={() => { if (previewType === 'birthdays') onShareBirthdays(); else if (previewType === 'snapshot') shareCard(snapshotRef); else if (previewType === 'trend') shareCard(trendRef); else if (previewType === 'comparison') shareCard(comparisonRef); }} disabled={loading} className={cn("h-10 sm:h-14 rounded-2xl bg-emerald-500 text-white font-black text-xs sm:text-base shadow-2xl shadow-emerald-500/20 gap-2 sm:gap-3 active:scale-95 transition-all flex-1")}>
+                  <Button onClick={() => { if (previewType === 'birthdays') onShareBirthdays(); else if (previewType === 'snapshot') shareCard(snapshotRef); else if (previewType === 'trend') shareCard(trendRef); else if (previewType === 'comparison') shareCard(comparisonRef); }} disabled={loading} className={cn("h-10 sm:h-14 rounded-2xl bg-emerald-500 text-white font-black text-xs sm:text-base-500/20 gap-2 sm:gap-3 active:scale-95 transition-all flex-1")}>
                     <FaWhatsapp className="w-5 h-5 sm:w-7 sm:h-7" /><span>שיתוף</span></Button>
                 </div>
               </div>

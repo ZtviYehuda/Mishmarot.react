@@ -205,7 +205,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
   const cardBase =
     "flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border-2 transition-all w-full text-right";
   const cardActive =
-    "border-primary bg-primary/10 text-primary shadow-sm scale-[1.02]";
+    "border-primary bg-primary/10 text-primary scale-[1.02]";
   const cardInactive =
     "border-border/50 hover:border-border hover:bg-muted/50 text-muted-foreground";
   const cardDisabled =
@@ -213,11 +213,11 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-lg p-0 overflow-hidden bg-background border-border/40 shadow-2xl rounded-[2rem] flex flex-col">
+      <DialogContent className="w-[95vw] max-w-lg p-0 overflow-hidden bg-background border-border/40 rounded-[2rem] flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-border/40 bg-muted/20 relative shrink-0">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
               <Calendar className="w-6 h-6" />
             </div>
             <div className="min-w-0 text-right">
@@ -281,7 +281,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                               <SelectValue placeholder="מחלקה" />
                             </span>
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-border/40 shadow-xl max-h-48 custom-scrollbar relative z-[100]">
+                        <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
                           {departments.map((d: any) => (
                             <SelectItem key={d.id} value={d.id.toString()} className="font-bold cursor-pointer">
                               {d.name}
@@ -324,7 +324,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                               <SelectValue placeholder="מדור" />
                             </span>
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-border/40 shadow-xl max-h-48 custom-scrollbar relative z-[100]">
+                        <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
                           {availableSections.map((s: any) => (
                             <SelectItem key={s.id} value={s.id.toString()} className="font-bold cursor-pointer">
                               {s.name} <span className="text-[9px] text-muted-foreground mr-1">({s.dept_name})</span>
@@ -370,7 +370,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                               <SelectValue placeholder="חוליה" />
                             </span>
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-border/40 shadow-xl max-h-48 custom-scrollbar relative z-[100]">
+                        <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
                           {availableTeams.map((t: any) => (
                             <SelectItem key={t.id} value={t.id.toString()} className="font-bold cursor-pointer">
                               {t.name} <span className="text-[9px] text-muted-foreground mr-1">({t.section_name})</span>
@@ -431,7 +431,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
           </div>
         </div>
 
-        <div className="p-5 border-t border-border/40 bg-muted/10 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] relative z-20 flex gap-3">
+        <div className="p-5 border-t border-border/40 bg-muted/10 shrink-0 relative z-20 flex gap-3">
           <Button
             variant="ghost"
             className="flex-1 rounded-xl h-12 font-bold text-muted-foreground hover:bg-muted transition-all"
@@ -440,7 +440,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
             ביטול
           </Button>
           <Button
-            className="flex-[2] rounded-xl h-12 font-black text-base shadow-[0_10px_20px_rgba(var(--primary-rgb),0.2)] hover:shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] hover:-translate-y-0.5 transition-all"
+            className="flex-[2] rounded-xl h-12 font-black text-base hover: hover:-translate-y-0.5 transition-all"
             onClick={handleSubmit}
             disabled={isUpdatingScope || !hasCommandPower || !targetId}
           >

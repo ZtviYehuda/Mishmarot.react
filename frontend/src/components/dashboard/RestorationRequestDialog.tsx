@@ -52,13 +52,13 @@ export function RestorationRequestDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="w-[95vw] max-w-lg p-0 overflow-hidden bg-background border-border/40 shadow-2xl rounded-[2.5rem] flex flex-col" 
+        className="w-[95vw] max-w-lg p-0 overflow-hidden bg-background border-border/40 rounded-[2.5rem] flex flex-col" 
         dir="rtl"
       >
         {/* Header */}
         <div className="p-6 border-b border-border/40 bg-muted/20 relative shrink-0">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
               <Calendar className="w-6 h-6" />
             </div>
             <div className="min-w-0 text-right">
@@ -96,7 +96,7 @@ export function RestorationRequestDialog({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-border/40 bg-muted/10 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex gap-3">
+        <div className="p-6 border-t border-border/40 bg-muted/10 shrink-0 flex gap-3">
           <Button
             variant="ghost"
             className="flex-1 rounded-2xl h-12 font-bold text-muted-foreground hover:bg-muted transition-all"
@@ -108,7 +108,7 @@ export function RestorationRequestDialog({
           <Button
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-[2] rounded-2xl h-12 font-black text-base shadow-[0_10px_20px_rgba(var(--primary-rgb),0.2)] hover:shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] hover:-translate-y-0.5 transition-all"
+            className="flex-[2] rounded-2xl h-12 font-black text-base hover: hover:-translate-y-0.5 transition-all"
           >
             {loading ? (
               <span className="flex items-center gap-3">

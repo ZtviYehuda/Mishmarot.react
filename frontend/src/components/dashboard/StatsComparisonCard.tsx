@@ -236,7 +236,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
         className={cn(
           "bg-card/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-primary/10 py-3 flex flex-col overflow-hidden h-full relative transition-all",
           className,
-          hideHeader && "border-none bg-transparent backdrop-blur-none shadow-none py-0"
+          hideHeader && "border-none bg-transparent backdrop-blur-none py-0"
         )}
       >
         {!hideHeader && (
@@ -255,7 +255,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                         <Badge 
                           key={idx} 
                           variant="secondary" 
-                          className="text-[10px] h-5.5 px-3 font-black bg-blue-700 text-white border-none shadow-md shadow-blue-500/30 whitespace-nowrap rounded-lg"
+                          className="text-[10px] h-5.5 px-3 font-black bg-blue-700 text-white border-none-500/30 whitespace-nowrap rounded-lg"
                         >
                          {tag}
                         </Badge>
@@ -338,79 +338,82 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               </p>
             </div>
           ) : (
-            <div className="space-y-4 py-4">
+            <div className="space-y-3 py-4">
               {data.map((item) => {
                 const availability =
                   item.total_count > 0
                     ? Math.round((item.present_count / item.total_count) * 100)
                     : 0;
 
-                let progressColor = "bg-emerald-500";
+                let barColor = "bg-emerald-500";
                 let textColor = "text-emerald-600 dark:text-emerald-400";
+                let bgColor = "bg-emerald-50 dark:bg-emerald-900/10";
 
                 if (availability < 50) {
-                  progressColor = "bg-red-500";
+                  barColor = "bg-red-500";
                   textColor = "text-red-500 dark:text-red-400";
+                  bgColor = "bg-red-50 dark:bg-red-900/10";
                 } else if (availability < 70) {
-                  progressColor = "bg-orange-500";
+                  barColor = "bg-orange-500";
                   textColor = "text-orange-500 dark:text-orange-400";
+                  bgColor = "bg-orange-50 dark:bg-orange-900/10";
                 }
 
                 const isSelected = item.unit_id === selectedUnitId;
 
                 return (
-                  <div 
-                    key={item.unit_id} 
+                  <div
+                    key={item.unit_id}
                     className={cn(
-                      "space-y-3 p-3 rounded-xl transition-all border-2",
-                      onUnitClick ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50" : "",
-                      isSelected ? "border-primary/50 bg-primary/5 shadow-sm scale-[1.02]" : "border-transparent"
+                      "p-3 rounded-2xl transition-all border",
+                      onUnitClick ? "cursor-pointer" : "",
+                      isSelected
+                        ? "border-primary/30 bg-primary/5"
+                        : "border-transparent hover:border-border/50 hover:bg-muted/30"
                     )}
                     onClick={() => {
                       if (onUnitClick) onUnitClick(item.unit_id, item.level);
                     }}
                   >
-                    <div className="flex justify-between items-center text-sm gap-2">
+                    {/* Header row: name + count */}
+                    <div className="flex justify-between items-center mb-2">
                       <span
-                        className="font-semibold text-foreground truncate flex-1 min-w-0 ml-2"
+                        className="text-[13px] font-bold text-foreground truncate flex-1 min-w-0 ml-2"
                         title={item.unit_name}
                       >
                         {item.unit_name}
                       </span>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0 border-r pr-3 border-border/50">
+                      <span className="text-xs font-bold text-muted-foreground shrink-0">
                         {item.level === 'employee' ? (
-                          <>
-                            <span className={cn("font-bold", item.present_count > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
-                              {days > 1 ? `${Math.round(item.present_count * days)} ימי נוכחות` : item.present_count > 0 ? "נוכח/ת" : "חסר/ת"}
-                            </span>
-                            {days > 1 && (
-                              <>
-                                <span>/</span>
-                                <span className="font-bold">{days} ימים</span>
-                              </>
-                            )}
-                          </>
+                          item.present_count > 0 ? "נוכח/ת" : "חסר/ת"
                         ) : (
-                          <>
-                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                              {Math.round(item.present_count)} נוכחים
-                            </span>
-                            <span>/</span>
-                            <span className="font-bold">
-                              {Math.round(item.total_count)} תקן
-                            </span>
-                          </>
+                          <span>
+                            <span className="text-emerald-600 dark:text-emerald-400">{Math.round(item.present_count)}</span>
+                            <span className="text-muted-foreground/60 mx-1">/</span>
+                            <span>{Math.round(item.total_count)}</span>
+                          </span>
                         )}
-                        <span className={cn("ml-1 font-black", textColor)}>
-                          ({availability}%)
-                        </span>
-                      </div>
+                      </span>
                     </div>
-                    <Progress
-                      value={availability}
-                      className="h-2.5 rounded-full"
-                      indicatorClassName={progressColor}
-                    />
+
+                    {/* Bar with percentage inside */}
+                    <div className={cn("relative w-full h-6 rounded-full overflow-hidden", bgColor)}>
+                      <div
+                        className={cn("h-full rounded-full transition-all duration-700 flex items-center justify-end", barColor)}
+                        style={{ width: `${Math.max(availability, 8)}%` }}
+                      >
+                        {availability >= 20 && (
+                          <span className="text-white text-[10px] font-black px-2 leading-none">
+                            {availability}%
+                          </span>
+                        )}
+                      </div>
+                      {availability < 20 && (
+                        <span className={cn("absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black", textColor)}>
+                          {availability}%
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}

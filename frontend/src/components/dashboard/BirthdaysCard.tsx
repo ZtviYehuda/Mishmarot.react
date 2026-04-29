@@ -3,7 +3,6 @@ import {
   useImperativeHandle,
   useState,
   useRef,
-  useEffect,
 } from "react";
 import {
   Card,
@@ -13,12 +12,12 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, User, Sparkles, ChevronDown } from "lucide-react";
+import { Calendar, Gift, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { EmployeeLink } from "@/components/common/EmployeeLink";
 import { BirthdayGreetingsModal } from "./BirthdayGreetingsModal";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
+import { useEmployeeContext } from "@/context/EmployeeContext";
 
 interface BirthdayEmployee {
   id: number;
@@ -35,90 +34,38 @@ interface BirthdaysCardProps {
   selectedDate?: Date;
 }
 
+const MONTH_LABELS = [
+  "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
+  "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר",
+];
+
 export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
   ({ birthdays, selectedDate }, ref) => {
+    const { openProfile } = useEmployeeContext();
     const [isGreetingsModalOpen, setIsGreetingsModalOpen] = useState(false);
-    const [showScrollHint, setShowScrollHint] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useImperativeHandle(ref, () => ({
       share: handleSendWhatsApp,
     }));
 
-    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-      const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-      setShowScrollHint(scrollHeight - scrollTop - clientHeight > 20);
-    };
-
-    const scrollToBottom = () => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTo({
-          top: scrollRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-      }
-    };
-
-    useEffect(() => {
-      const checkScroll = () => {
-        if (scrollRef.current) {
-          const { scrollHeight, clientHeight, scrollTop } = scrollRef.current;
-          setShowScrollHint(scrollHeight - scrollTop - clientHeight > 20);
-        }
-      };
-
-      checkScroll();
-      // Re-check after a short delay for content rendering
-      const timer = setTimeout(checkScroll, 500);
-      return () => clearTimeout(timer);
-    }, [birthdays]);
-
-    // Use selected date or today
     const referenceDate = selectedDate || new Date();
-
-    // Filter employees who have birthday on the reference date
-    const employeesToday = birthdays.filter((emp) => {
-      return emp.day === referenceDate.getDate() && emp.month === referenceDate.getMonth() + 1;
-    });
 
     const handleSendWhatsApp = () => {
       if (!birthdays.length) return;
 
       const title = `ימי הולדת השבוע (${birthdays.length})`;
-      const labels = [
-        "ינואר",
-        "פברואר",
-        "מרץ",
-        "אפריל",
-        "מאי",
-        "יוני",
-        "יולי",
-        "אוגוסט",
-        "ספטמבר",
-        "אוקטובר",
-        "נובמבר",
-        "דצמבר",
-      ];
-
       const list = birthdays
         .map((emp) => {
-          const dateStr = `${emp.day} ב${labels[emp.month - 1]}`;
-          // הסרת מקפים ורווחים ממספר הטלפון
-          const cleanPhone = emp.phone_number
-            ? emp.phone_number.replace(/\D/g, "")
-            : "";
+          const dateStr = `${emp.day} ב${MONTH_LABELS[emp.month - 1]}`;
+          const cleanPhone = emp.phone_number ? emp.phone_number.replace(/\D/g, "") : "";
           const phoneStr = cleanPhone ? ` (${cleanPhone})` : "";
-
           return `- ${emp.first_name} ${emp.last_name} | ${dateStr}${phoneStr}`;
         })
         .join("\n");
 
       const message = `*${title}*\n\n${list}`;
-      const encodedMessage = encodeURIComponent(message);
-      window.open(
-        `https://api.whatsapp.com/send?text=${encodedMessage}`,
-        "_blank",
-      );
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, "_blank");
     };
 
     return (
@@ -127,144 +74,116 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
           id="birthdays-card"
           className="bg-card/60 backdrop-blur-2xl text-card-foreground rounded-[1.5rem] border border-primary/10 flex flex-col overflow-hidden h-full relative"
         >
-          <CardHeader className="px-5 pt-2 pb-1">
-            <div className="flex justify-between items-start gap-2">
-              <div className="flex-1 min-w-0">
-                <CardTitle className="text-base sm:text-lg lg:text-xl font-black text-foreground mb-0.5 flex items-center gap-2">
-                  <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                  <span className="truncate">ימי הולדת</span>
-                </CardTitle>
-                <CardDescription className="font-bold text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">
-                  חוגגים השבוע
-                </CardDescription>
+          <CardHeader className="px-6 py-4 border-b border-border/40">
+            <div className="flex justify-between items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                  <Gift className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-black text-foreground mb-0.5">
+                    ימי הולדת
+                  </CardTitle>
+                  <CardDescription className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                    חוגגים השבוע
+                  </CardDescription>
+                </div>
               </div>
-              {birthdays.length > 0 && (
-                <WhatsAppButton
-                  onClick={handleSendWhatsApp}
-                  variant="outline"
-                  className="h-8 w-8 p-0 rounded-lg border-emerald-500/30 dark:border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all "
-                  skipDirectLink={true}
-                />
-              )}
+
+              <div className="flex items-center gap-2">
+                {birthdays.length > 0 && (
+                  <>
+                    <Button
+                      onClick={() => setIsGreetingsModalOpen(true)}
+                      variant="outline"
+                      size="sm"
+                      className="hidden sm:flex h-9 rounded-xl gap-2 font-black text-xs border-primary/20 hover:bg-primary/5 text-primary"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>שליחת ברכה</span>
+                    </Button>
+                    <WhatsAppButton
+                      onClick={handleSendWhatsApp}
+                      variant="outline"
+                      className="h-9 w-9 p-0 rounded-xl border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all"
+                      skipDirectLink={true}
+                    />
+                  </>
+                )}
+              </div>
             </div>
           </CardHeader>
 
-          <CardContent className="flex-1 p-0 flex flex-col min-h-0 relative group/card">
-            {/* Sticky Action for Greetings - Outside scroll area */}
-            <div className="px-4 pt-1 pb-2 shrink-0">
-              {birthdays.length > 0 && (
-                <Button
-                  onClick={() => setIsGreetingsModalOpen(true)}
-                  className={cn(
-                    "w-full border rounded-xl h-10 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] group",
-                    employeesToday.length > 0
-                      ? "bg-primary/10 hover:bg-primary/20 text-primary border-primary/20"
-                      : "bg-muted/50 hover:bg-muted text-muted-foreground border-border/50 hover:text-primary",
-                  )}
-                >
-                  <Sparkles
-                    className={cn(
-                      "w-4 h-4 transition-transform group-hover:rotate-12",
-                      employeesToday.length > 0
-                        ? "text-primary"
-                        : "text-muted-foreground group-hover:text-primary",
-                    )}
-                  />
-                  <span className="text-xs font-black">שלח ברכות השבוע</span>
-                </Button>
-              )}
-            </div>
-
+          <CardContent className="flex-1 p-0 flex flex-col min-h-0 relative">
             <div
               ref={scrollRef}
-              onScroll={handleScroll}
-              className="flex-1 overflow-y-auto relative custom-scrollbar group/scroll bg-transparent max-h-[300px]"
+              className="flex-1 overflow-x-auto overflow-y-hidden no-scrollbar relative scroll-smooth"
             >
-              <div className="px-4 pb-4 min-h-full">
-                <div className="space-y-3 pb-4">
-                  {birthdays.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 opacity-40">
-                      <Calendar className="w-8 h-8 mb-2" />
-                      <p className="text-xs font-bold">אין ימי הולדת השבוע</p>
-                    </div>
-                  ) : (
-                    birthdays.map((employee) => {
-                      const isToday =
-                        employee.day === referenceDate.getDate() &&
-                        employee.month === referenceDate.getMonth() + 1;
+              {birthdays.length === 0 ? (
+                <div className="flex flex-col items-center justify-center w-full py-12 opacity-40">
+                  <Calendar className="w-10 h-10 mb-3 text-muted-foreground" />
+                  <p className="text-sm font-bold">אין ימי הולדת השבוע</p>
+                </div>
+              ) : (
+                <div className="flex gap-4 px-5 py-5 h-full">
+                  {birthdays.map((employee) => {
+                    const isToday =
+                      employee.day === referenceDate.getDate() &&
+                      employee.month === referenceDate.getMonth() + 1;
 
-                      const labels = [
-                        "ינואר",
-                        "פברואר",
-                        "מרץ",
-                        "אפריל",
-                        "מאי",
-                        "יוני",
-                        "יולי",
-                        "אוגוסט",
-                        "ספטמבר",
-                        "אוקטובר",
-                        "נובמבר",
-                        "דצמבר",
-                      ];
-                      const dateStr = `${employee.day} ב${labels[employee.month - 1]}`;
+                    const initials = `${employee.first_name[0]}${employee.last_name[0]}`;
 
-                      return (
-                        <div
-                          key={employee.id}
-                          className={cn(
-                            "flex items-center gap-2 p-2 rounded-[0.75rem] border transition-all hover:-translate-y-0.5 hover:shadow-sm",
-                            isToday
-                              ? "bg-primary/5 border-primary/30 "
-                              : "bg-background border-border/60 hover:border-primary/20",
-                          )}
-                        >
+                    return (
+                      <div
+                        key={employee.id}
+                        onClick={() => openProfile(employee.id)}
+                        className="shrink-0 flex flex-col items-center gap-2 cursor-pointer group/bday w-[72px] transition-all"
+                      >
+                        {/* Avatar Circle */}
+                        <div className="relative">
                           <div
                             className={cn(
-                              "w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-2",
+                              "w-14 h-14 rounded-full flex items-center justify-center text-base font-black transition-all group-hover/bday:scale-110",
                               isToday
-                                ? "bg-white dark:bg-slate-800 border-primary text-primary "
-                                : "bg-muted dark:bg-slate-800/50 border-border/60 text-muted-foreground",
+                                ? "bg-amber-400 text-white shadow-lg shadow-amber-400/40 ring-2 ring-amber-300 ring-offset-2"
+                                : "bg-primary/10 text-primary group-hover/bday:bg-primary/20"
                             )}
                           >
-                            <User className="w-4 h-4" />
+                            {initials}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <EmployeeLink
-                              employee={employee.id}
-                              name={`${employee.first_name} ${employee.last_name}`}
-                              className={cn(
-                                "text-xs font-black truncate block hover:text-primary transition-colors",
-                                isToday ? "text-primary" : "text-foreground",
-                              )}
-                            />
-                            <p className="text-[11px] font-bold text-muted-foreground">
-                              {dateStr}
-                            </p>
+                          {/* Date badge on avatar */}
+                          <div
+                            className={cn(
+                              "absolute -bottom-1 -left-1 rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none",
+                              isToday
+                                ? "bg-amber-500 text-white"
+                                : "bg-card border border-border text-muted-foreground"
+                            )}
+                          >
+                            {employee.day}/{employee.month}
                           </div>
                           {isToday && (
-                            <div className="shrink-0 bg-primary/20 text-primary p-1.5 rounded-lg animate-bounce">
-                              <Gift className="w-4 h-4" />
+                            <div className="absolute -top-1 -right-1 bg-amber-400 text-white p-1 rounded-full shadow-md animate-bounce z-10">
+                              <Sparkles className="w-2.5 h-2.5" />
                             </div>
                           )}
                         </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {/* Floating Scroll Indicator Icon - Fixed to the bottom of CardContent */}
-            {showScrollHint && (
-              <button
-                onClick={scrollToBottom}
-                className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 animate-bounce bg-primary text-primary-foreground p-2 rounded-full shadow-lg border border-primary-foreground/20 hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                title="גלול לסוף הרשימה"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </button>
-            )}
+                        {/* Name below avatar */}
+                        <p
+                          className={cn(
+                            "text-[10px] font-bold text-center leading-tight w-full truncate",
+                            isToday ? "text-amber-600 dark:text-amber-400" : "text-slate-600 dark:text-slate-400 group-hover/bday:text-primary"
+                          )}
+                        >
+                          {employee.first_name}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 

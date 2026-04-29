@@ -547,10 +547,7 @@ export default function AttendancePage() {
           hideMobile={true}
           badge={
             <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6 w-full lg:w-auto mt-4 lg:mt-0">
-              {/* Unified Date Selector */}
-              <div className="hidden lg:flex">
-                <DateHeader className="w-auto shadow-none" compact={true} />
-              </div>
+              {/* Unified Date Selector (Removed as it is now Global) */}
               {/* Mobile-First Action Bar */}
               <div className="lg:hidden">
                 {/* Mobile buttons outside PageHeader to achieve full screen width */}
@@ -562,7 +559,7 @@ export default function AttendancePage() {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all shadow-none min-w-[64px]",
+                    "h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all min-w-[64px]",
                     calendarOpen
                       ? "text-primary bg-primary/10 border-primary/30"
                       : "text-primary hover:bg-primary/5",
@@ -576,7 +573,7 @@ export default function AttendancePage() {
                 {!user?.is_temp_commander && (
                   <Button
                     variant="ghost"
-                    className="h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all shadow-none min-w-[64px]"
+                    className="h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all min-w-[64px]"
                     onClick={() => setExportDialogOpen(true)}
                   >
                     <Download className="w-4 h-4" />
@@ -587,7 +584,7 @@ export default function AttendancePage() {
                 <Button
                   variant={isReportedToday ? "default" : "ghost"}
                   className={cn(
-                    "h-11 rounded-xl flex-col gap-0.5 font-bold transition-all px-2 xl:px-4 py-1 justify-center shadow-none backdrop-blur-xl min-w-[64px]",
+                    "h-11 rounded-xl flex-col gap-0.5 font-bold transition-all px-2 xl:px-4 py-1 justify-center backdrop-blur-xl min-w-[64px]",
                     isReportedToday
                       ? "bg-emerald-500/90 hover:bg-emerald-600 border-white/20 text-white"
                       : "border border-border/40 bg-card/40 text-primary hover:bg-primary/5",
@@ -615,7 +612,7 @@ export default function AttendancePage() {
                 {unverifiedEmployees.length > 0 && (
                   <Button
                     variant="default"
-                    className="h-11 rounded-xl flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all bg-primary hover:bg-primary/90 text-white shadow-none min-w-[64px]"
+                    className="h-11 rounded-xl flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all bg-primary hover:bg-primary/90 text-white min-w-[64px]"
                     onClick={async () => {
                       const success = await verifyRoster(
                         format(selectedDate, "yyyy-MM-dd"),
@@ -639,7 +636,7 @@ export default function AttendancePage() {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all shadow-none min-w-[64px]",
+                    "h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all min-w-[64px]",
                     selectedEmployeeIds.length > 0 &&
                       "bg-primary/10 border-primary/20",
                   )}
@@ -765,7 +762,7 @@ export default function AttendancePage() {
         <div className="lg:hidden w-full mb-4">
           {!isAllReported && (
             <div
-              className="w-full bg-amber-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-3 flex items-center justify-between cursor-pointer active:scale-95 transition-all shadow-sm"
+              className="w-full bg-amber-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-3 flex items-center justify-between cursor-pointer active:scale-95 transition-all"
               onClick={() => {
                 setAlertContext({ missing_ids: missingEmployeeIds });
                 setSelectedEmployeeIds(missingEmployeeIds);
@@ -806,7 +803,7 @@ export default function AttendancePage() {
             transition={{ duration: 0.2 }}
             className="flex-1 px-2 sm:px-4 pb-4"
           >
-            <div className="bg-card border border-border/50 rounded-2xl p-3 sm:p-4 md:p-5 shadow-sm h-full">
+            <div className="bg-card border border-border/50 rounded-2xl p-3 sm:p-4 md:p-5 h-full">
               <AttendanceCalendarView
                 statusTypes={statusTypes}
                 scopeEmployees={scopeEmployees}
@@ -864,7 +861,7 @@ export default function AttendancePage() {
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${(availabilityStats.available / totalCount) * 100}%` }}
-                        className="h-full bg-emerald-500 shadow-inner"
+                        className="h-full bg-emerald-500"
                       />
                       <motion.div 
                         initial={{ width: 0 }}

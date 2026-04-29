@@ -218,7 +218,7 @@ function SectionCard({
         {badge}
       </div>
       <div className={cn(
-        "bg-card/40 backdrop-blur-xl rounded-[2rem] border p-4 sm:p-6 shadow-sm overflow-hidden h-full",
+        "bg-card/40 backdrop-blur-xl rounded-[2rem] border p-4 sm:p-6 overflow-hidden h-full",
         variant === "danger" ? "border-red-500/20 bg-red-500/5" : "border-border/40"
       )}>
         {children}

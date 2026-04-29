@@ -49,9 +49,9 @@ export const LoadingScreen = () => {
             <img 
               src="/logo_unit.png" 
               alt="ינשוף - סמל היחידה" 
-              className="w-36 h-36 sm:w-40 sm:h-40 object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.25)] dark:drop-shadow-[0_20px_20px_rgba(0,0,0,0.5)]"
+              className="w-36 h-36 sm:w-40 sm:h-40 object-contain"
             />
-            {/* Subtle shadow underneath to enhance the floating effect */}
+            {/* Subtle underneath to enhance the floating effect */}
             <motion.div 
               className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-16 h-2 bg-black/20 dark:bg-black/40 rounded-full blur-md"
               animate={{ scale: [1, 0.6, 1], opacity: [0.5, 0.2, 0.5] }}
@@ -68,7 +68,7 @@ export const LoadingScreen = () => {
           transition={{ delay: 0.3, duration: 0.8 }}
         >
           {/* Main Title */}
-          <h1 className="text-3xl font-black text-foreground tracking-tight text-center drop-shadow-sm">
+          <h1 className="text-3xl font-black text-foreground tracking-tight text-center">
             {systemName}
           </h1>
 

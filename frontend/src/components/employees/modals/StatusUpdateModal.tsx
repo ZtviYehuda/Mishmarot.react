@@ -515,7 +515,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                         subStatusMap[activeParentId].length > 0 && (
                           <div
                             key={`sub-${activeParentId}`}
-                            className="mt-6 p-4 bg-primary/[0.03] dark:bg-primary/[0.02] border border-primary/20 rounded-[2rem] shadow-xl shadow-primary/5 backdrop-blur-md relative overflow-visible"
+                            className="mt-6 p-4 bg-primary/[0.03] dark:bg-primary/[0.02] border border-primary/20 rounded-[2rem] backdrop-blur-md relative overflow-visible"
                           >
                             <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.05] to-transparent pointer-events-none" />
                             <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em] mb-4 px-1 text-center relative z-10">
@@ -541,7 +541,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                       className={cn(
                                         "flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all text-center h-full min-h-[85px] group relative",
                                         isSubSel
-                                          ? "bg-white dark:bg-slate-800 border-primary shadow-lg shadow-primary/10 scale-[1.05] z-10"
+                                          ? "bg-white dark:bg-slate-800 border-primary scale-[1.05] z-10"
                                           : "bg-background/50 border-border/40 text-muted-foreground hover:border-primary/40 hover:bg-white dark:hover:bg-slate-800",
                                       )}
                                     >
@@ -567,7 +567,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                       </span>
                                       {isSubSel && (
                                         <div
-                                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-800"
+                                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center border-2 border-white dark:border-slate-800"
                                         >
                                           <CheckCircle2 className="w-2.5 h-2.5 text-white" />
                                         </div>

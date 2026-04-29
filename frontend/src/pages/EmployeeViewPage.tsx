@@ -228,7 +228,7 @@ const ActiveStatusPopover = ({ isActive, onChange, disabled }: any) => {
         <button
           disabled={disabled}
           className={cn(
-            "w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm",
+            "w-8 h-8 rounded-full flex items-center justify-center transition-all",
             isActive
               ? "bg-emerald-500 text-white hover:bg-emerald-600"
               : "bg-rose-500 text-white hover:bg-rose-600",
@@ -239,7 +239,7 @@ const ActiveStatusPopover = ({ isActive, onChange, disabled }: any) => {
           <div className={cn("w-2.5 h-2.5 rounded-full bg-white", isActive ? "animate-pulse" : "")} />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-4 rounded-2xl border-border/40 shadow-xl" dir="rtl">
+      <PopoverContent className="w-56 p-4 rounded-2xl border-border/40" dir="rtl">
         <div className="space-y-3">
           <p className="text-[11px] text-muted-foreground font-bold leading-relaxed">
             {isActive 
@@ -278,7 +278,7 @@ const TabButton = ({ active, onClick, icon: Icon, label }: any) => (
     {active && (
       <motion.div
         layoutId="activeTab"
-        className="absolute inset-1 bg-white dark:bg-slate-800 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] border border-slate-200/50 dark:border-slate-700/50"
+        className="absolute inset-1 bg-white dark:bg-slate-800 rounded-xl dark: border border-slate-200/50 dark:border-slate-700/50"
         initial={false}
         transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
       />
@@ -297,7 +297,7 @@ const TabButton = ({ active, onClick, icon: Icon, label }: any) => (
           className={cn(
             "w-8 h-8 rounded-xl flex items-center justify-center transition-all shrink-0",
             active
-              ? "bg-primary text-white shadow-lg shadow-primary/25 scale-105"
+              ? "bg-primary text-white scale-105"
               : "bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 group-hover:scale-110",
           )}
         >
@@ -317,12 +317,12 @@ const MobileProfileHeader = ({
   editMode,
   handleFieldChange,
 }: any) => (
-  <div className="flex flex-col items-center text-center p-6 bg-card/40 backdrop-blur-xl rounded-3xl border border-border/40 shadow-sm mb-6 lg:hidden relative overflow-hidden">
+  <div className="flex flex-col items-center text-center p-6 bg-card/40 backdrop-blur-xl rounded-3xl border border-border/40 mb-6 lg:hidden relative overflow-hidden">
     <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
 
     <div
       className={cn(
-        "w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black border-[4px] border-white dark:border-slate-900 shadow-lg mb-4 relative",
+        "w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black border-[4px] border-white dark:border-slate-900 mb-4 relative",
         employee.is_active
           ? "bg-primary text-primary-foreground"
           : "bg-slate-200 text-slate-500",
@@ -365,13 +365,13 @@ const MobileProfileHeader = ({
 
 // ── Action Footer (Sticky for Mobile) ────────────────────────────────────────
 const ActionFooter = ({ editMode, onEdit, onSave, onCancel, saving }: any) => (
-  <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-50 flex gap-3 shadow-[0_-8px_30px_rgb(0,0,0,0.05)]">
+  <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-50 flex gap-3">
     {editMode ? (
       <>
         <Button
           onClick={onSave}
           disabled={saving}
-          className="flex-1 rounded-xl h-12 font-black shadow-lg shadow-primary/20"
+          className="flex-1 rounded-xl h-12 font-black"
         >
           {saving ? (
             <Loader2 className="w-4 h-4 animate-spin ml-2" />
@@ -391,7 +391,7 @@ const ActionFooter = ({ editMode, onEdit, onSave, onCancel, saving }: any) => (
     ) : (
       <Button
         onClick={onEdit}
-        className="w-full rounded-xl h-12 font-black shadow-lg shadow-primary/20"
+        className="w-full rounded-xl h-12 font-black"
       >
         <Settings className="w-4 h-4 ml-2" /> עריכת פרופיל
       </Button>
@@ -549,10 +549,14 @@ export default function EmployeeViewPage() {
         {/* Top bar with back button */}
         <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() =>
-              navigate(editMode ? `/employees/${id}` : "/employees")
-            }
-            className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary transition-colors bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
+            onClick={() => {
+              if (editMode) {
+                navigate(`/employees/${id}`);
+              } else {
+                navigate(-1);
+              }
+            }}
+            className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary transition-colors bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800"
           >
             <ArrowRight className="w-4 h-4" />{" "}
             <span className="hidden sm:inline">חזרה</span>
@@ -581,14 +585,14 @@ export default function EmployeeViewPage() {
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           {/* ── DESKTOP SIDEBAR: PROFILE CARD (HERO) ── */}
           <div className="hidden lg:block lg:w-80 xl:w-[360px] shrink-0 lg:sticky lg:top-24">
-            <div className="bg-card/40 backdrop-blur-xl rounded-3xl p-6 shadow-none border border-border/40 flex flex-col items-center text-center relative overflow-hidden">
+            <div className="bg-card/40 backdrop-blur-xl rounded-3xl p-6 border border-border/40 flex flex-col items-center text-center relative overflow-hidden">
               {/* Decorative Background */}
               <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent -z-10" />
 
               <div className="relative group mt-4">
                 <div
                   className={cn(
-                    "w-28 h-28 rounded-3xl flex items-center justify-center text-4xl font-black border-[6px] border-white dark:border-slate-950 ring-1 ring-slate-100 dark:ring-slate-800 shadow-xl transition-all relative",
+                    "w-28 h-28 rounded-3xl flex items-center justify-center text-4xl font-black border-[6px] border-white dark:border-slate-950 ring-1 ring-slate-100 dark:ring-slate-800 transition-all relative",
                     employee.is_active
                       ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground"
                       : "bg-slate-200 text-slate-500 grayscale",
@@ -634,7 +638,7 @@ export default function EmployeeViewPage() {
                   {selectedDeptId && (
                     <Badge
                       variant="secondary"
-                      className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold px-3 py-1 text-[10px] rounded-lg border-0 shadow-sm"
+                      className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold px-3 py-1 text-[10px] rounded-lg border-0"
                     >
                       {cleanUnitName(
                         structure.find(
@@ -646,7 +650,7 @@ export default function EmployeeViewPage() {
                   {selectedSectionId && (
                     <Badge
                       variant="secondary"
-                      className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold px-3 py-1 text-[10px] rounded-lg border-0 shadow-sm"
+                      className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold px-3 py-1 text-[10px] rounded-lg border-0"
                     >
                       {cleanUnitName(
                         sections.find(
@@ -658,7 +662,7 @@ export default function EmployeeViewPage() {
                   {formData.team_id && (
                     <Badge
                       variant="secondary"
-                      className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold px-3 py-1 text-[10px] rounded-lg border-0 shadow-sm"
+                      className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold px-3 py-1 text-[10px] rounded-lg border-0"
                     >
                       {cleanUnitName(
                         teams.find((t: any) => t.id === formData.team_id)?.name,
@@ -684,7 +688,7 @@ export default function EmployeeViewPage() {
                       size="lg"
                       onClick={handleSubmit}
                       disabled={saving}
-                      className="w-full rounded-xl font-black h-12 shadow-md shadow-primary/20"
+                      className="w-full rounded-xl font-black h-12"
                     >
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin ml-2" />
@@ -707,7 +711,7 @@ export default function EmployeeViewPage() {
                     <Button
                       variant="outline"
                       onClick={() => navigate(`/employees/edit/${id}`)}
-                      className="w-full h-12 rounded-xl font-black text-sm bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-primary transition-all shadow-sm"
+                      className="w-full h-12 rounded-xl font-black text-sm bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-primary transition-all"
                     >
                       <Settings className="w-4 h-4 ml-2" />
                       עריכת פרופיל
@@ -718,7 +722,7 @@ export default function EmployeeViewPage() {
             </div>
 
             {/* Desktop Tab buttons */}
-            <div className="mt-4 bg-card/40 backdrop-blur-xl border border-border/40 rounded-2xl p-1.5 flex shadow-sm h-14 items-stretch w-full overflow-hidden">
+            <div className="mt-4 bg-card/40 backdrop-blur-xl border border-border/40 rounded-2xl p-1.5 flex h-14 items-stretch w-full overflow-hidden">
               <TabButton
                 active={activeTab === "personal"}
                 onClick={() => setActiveTab("personal")}
@@ -737,7 +741,7 @@ export default function EmployeeViewPage() {
           {/* ── MAIN CONTENT AREA ── */}
           <div className="flex-1 w-full min-w-0">
             {/* Mobile Tab Control — Visible in both modes on small screens */}
-            <div className="mb-6 lg:hidden bg-white/50 dark:bg-slate-950/50 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1.5 flex shadow-sm h-14 items-stretch overflow-x-auto scrollbar-none">
+            <div className="mb-6 lg:hidden bg-white/50 dark:bg-slate-950/50 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1.5 flex h-14 items-stretch overflow-x-auto scrollbar-none">
               <TabButton
                 active={activeTab === "personal"}
                 onClick={() => setActiveTab("personal")}
@@ -971,7 +975,7 @@ export default function EmployeeViewPage() {
                                       e.target.value,
                                     )
                                   }
-                                  className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 shadow-none font-bold text-[15px]"
+                                  className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 font-bold text-[15px]"
                                 />
                               </EditField>
 
@@ -984,7 +988,7 @@ export default function EmployeeViewPage() {
                                       e.target.value,
                                     )
                                   }
-                                  className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 shadow-none font-bold text-[15px]"
+                                  className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 font-bold text-[15px]"
                                 />
                               </EditField>
 
@@ -994,7 +998,7 @@ export default function EmployeeViewPage() {
                                   onChange={(e) =>
                                     handleFieldChange("city", e.target.value)
                                   }
-                                  className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 shadow-none font-bold text-[15px]"
+                                  className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 font-bold text-[15px]"
                                 />
                               </EditField>
                             </div>
@@ -1007,7 +1011,7 @@ export default function EmployeeViewPage() {
                                     handleFieldChange("gender", val)
                                   }
                                 >
-                                  <SelectTrigger className="h-8 border-0 bg-transparent px-0 focus:ring-0 shadow-none font-bold text-[15px]">
+                                  <SelectTrigger className="h-8 border-0 bg-transparent px-0 focus:ring-0 font-bold text-[15px]">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent dir="rtl">
@@ -1031,7 +1035,7 @@ export default function EmployeeViewPage() {
                                       e.target.value,
                                     )
                                   }
-                                  className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 shadow-none font-bold text-[15px]"
+                                  className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 font-bold text-[15px]"
                                 />
                               </EditField>
                             </div>
@@ -1049,7 +1053,7 @@ export default function EmployeeViewPage() {
                                     e.target.value,
                                   )
                                 }
-                                className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 shadow-none font-bold text-[15px]"
+                                className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 font-bold text-[15px]"
                                 dir="ltr"
                               />
                             </EditField>
@@ -1060,7 +1064,7 @@ export default function EmployeeViewPage() {
                                 onChange={(e) =>
                                   handleFieldChange("email", e.target.value)
                                 }
-                                className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 shadow-none font-bold text-[15px]"
+                                className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 font-bold text-[15px]"
                                 dir="ltr"
                               />
                             </EditField>
@@ -1091,7 +1095,7 @@ export default function EmployeeViewPage() {
                                   `${e.target.value} - ${phone || ""}`,
                                 );
                               }}
-                              className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 shadow-none font-bold text-[15px]"
+                              className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 font-bold text-[15px]"
                             />
                           </EditField>
                           <EditField label="טלפון חירום" icon={Phone}>
@@ -1112,7 +1116,7 @@ export default function EmployeeViewPage() {
                                   `${name || ""} - ${e.target.value}`,
                                 );
                               }}
-                              className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 shadow-none font-bold text-[15px]"
+                              className="h-8 border-0 bg-transparent px-0 focus-visible:ring-0 font-bold text-[15px]"
                               dir="ltr"
                             />
                           </EditField>

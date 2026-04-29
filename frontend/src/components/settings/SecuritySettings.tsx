@@ -63,28 +63,6 @@ export function SecuritySettings({
           (1000 * 3600 * 24),
       )
     : 0;
-  
-  const [activity, setActivity] = useState<any[]>([]);
-  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
-
-  useEffect(() => {
-    const fetchActivity = async () => {
-      setIsLoadingActivity(true);
-      try {
-        const { data } = await apiClient.get("/auth/profile/activity?limit=10");
-        if (data.success) {
-          setActivity(data.logs);
-        }
-      } catch (err) {
-        console.error("Failed to fetch user activity", err);
-      } finally {
-        setIsLoadingActivity(false);
-      }
-    };
-    fetchActivity();
-  }, []);
-
-
 
   const shouldShowAlert = daysSinceChange > 180;
 
@@ -349,144 +327,7 @@ export function SecuritySettings({
         </div>
       </div>
 
-      {/* RECENT ACTIVITY - Admin Only */}
-      {user?.is_admin && (
-        <div className="mt-8">
-          <SectionCard 
-              icon={History} 
-              title="פעילות אחרונה וחיבורים" 
-              badge={
-                <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-lg border border-primary/20">
-                  10 כניסות אחרונות
-                </span>
-              }
-          >
-            <div className="space-y-2">
-              {isLoadingActivity ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-40">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <span className="text-xs font-bold">טוען היסטוריית חיבורים...</span>
-                </div>
-              ) : activity.length === 0 ? (
-                <div className="text-center py-12 bg-muted/20 rounded-[2rem] border border-dashed border-border/60">
-                  <p className="text-xs font-bold text-muted-foreground">לא נמצאה פעילות מתועדת</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-2">
-                  {activity.map((log, idx) => (
-                    <UserActivityEntry key={log.id} log={log} index={idx} />
-                  ))}
-                </div>
-              )}
-              
-              <div className="pt-6 flex flex-col sm:flex-row items-center gap-4 border-t border-primary/5 mt-4">
-                <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 flex items-center gap-3">
-                  <Shield className="w-4 h-4 text-amber-600" />
-                  <p className="text-[10px] font-bold text-amber-700 leading-tight">
-                    אם זיהית חיבור ממכשיר או מיקום שאינך מכיר, מומלץ להחליף סיסמה מיד.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </SectionCard>
-        </div>
-      )}
     </div>
-  );
-}
-
-function UserActivityEntry({ log, index }: { log: any, index: number }) {
-  const [expanded, setExpanded] = useState(false);
-  const isFailed = log.action_type === "FAILED_LOGIN" || log.action_type.includes("BLOCKED");
-  
-  const browser = log.metadata?.browser || "";
-  const ip = log.metadata?.real_ip || log.ip_address;
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(browser);
-  const isWindows = /Windows/i.test(browser);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.03 }}
-      className={cn(
-        "group flex flex-col rounded-2xl border transition-all cursor-pointer overflow-hidden",
-        isFailed 
-          ? "bg-red-500/5 hover:bg-red-500/[0.08] border-red-100" 
-          : "bg-muted/10 hover:bg-muted/20 border-transparent hover:border-border/40",
-        expanded && "bg-muted/30 border-border/40"
-      )}
-      onClick={() => setExpanded(!expanded)}
-    >
-      <div className="p-3.5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={cn(
-            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border",
-            isFailed ? "bg-red-100 border-red-200 text-red-600" : "bg-background border-border/40 text-primary"
-          )}>
-            {log.action_type === "LOGIN" ? <Laptop2 className="w-4 h-4" /> : isFailed ? <AlertTriangle className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
-          </div>
-          
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2">
-              <span className={cn(
-                "text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border",
-                isFailed ? "bg-red-500 text-white border-transparent" : "bg-primary/5 border-primary/10 text-primary"
-              )}>
-                {log.action_type}
-              </span>
-              <span className="text-[10px] font-bold text-muted-foreground">
-                {format(new Date(log.created_at), "HH:mm, dd/MM")}
-              </span>
-            </div>
-            <p className="text-[11px] font-bold text-foreground/80 truncate mt-0.5">
-              {log.description}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 shrink-0">
-          <div className="hidden sm:flex flex-col items-end opacity-60">
-            <span className="text-[10px] font-mono font-bold">{ip}</span>
-            <span className="text-[9px] font-black text-muted-foreground uppercase">{isWindows ? "Windows" : isMobile ? "Mobile" : "Device"}</span>
-          </div>
-          <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", expanded && "rotate-180")} />
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: "auto" }}
-            exit={{ height: 0 }}
-            className="border-t border-border/20 bg-muted/40 overflow-hidden"
-          >
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-[10px]">
-              <div className="space-y-1">
-                <span className="font-black text-muted-foreground uppercase text-[8px] tracking-widest">תיאור מכשיר</span>
-                <div className="bg-background/40 p-2 rounded-lg border border-border/20 break-all font-mono leading-relaxed">
-                  {browser || "לא זוהה"}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <span className="font-black text-muted-foreground uppercase text-[8px] tracking-widest">מידע רשת</span>
-                <div className="bg-background/40 p-2 rounded-lg border border-border/20 space-y-1 font-mono">
-                  <div className="flex justify-between">
-                    <span>IP:</span>
-                    <span className="font-bold text-primary">{ip}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>זמן מדויק:</span>
-                    <span className="font-bold">{format(new Date(log.created_at), "HH:mm:ss.SSS")}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
   );
 }
 
@@ -513,7 +354,7 @@ function SectionCard({
         {badge}
       </div>
       <div className={cn(
-        "bg-card/40 backdrop-blur-xl rounded-[2rem] border p-4 sm:p-6 shadow-sm overflow-hidden h-full",
+        "bg-card/40 backdrop-blur-xl rounded-[2rem] border p-4 sm:p-6 overflow-hidden h-full",
         variant === "danger" ? "border-red-500/20 bg-red-500/5" : "border-border/40"
       )}>
         {children}

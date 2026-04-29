@@ -54,9 +54,9 @@ function WeekColumnCell({ stats, selectedDate, onClick }: {
       className={cn(
         "relative flex flex-col p-4 rounded-2xl border transition-all cursor-pointer h-full min-h-[300px]",
         isWeekend && "opacity-40 pointer-events-none bg-muted/20",
-        isSelected ? "border-primary bg-primary/10 ring-2 ring-primary/20 shadow-xl z-10"
-          : today ? "border-primary/40 bg-primary/5 shadow-md shadow-primary/5"
-          : "border-border/40 bg-card/60 hover:border-primary/30 hover:bg-card hover:shadow-lg hover:shadow-primary/5",
+        isSelected ? "border-primary bg-primary/10 ring-2 ring-primary/20 z-10"
+          : today ? "border-primary/40 bg-primary/5"
+          : "border-border/40 bg-card/60 hover:border-primary/30 hover:bg-card hover: hover:",
       )}>
       
       {/* Header Area */}
@@ -318,9 +318,9 @@ function MonthDayCell({ stats, isCurrentMonth, selectedDate, onClick }: {
         !isCurrentMonth && "opacity-20 pointer-events-none",
         isWeekend && isCurrentMonth && "bg-muted/10 opacity-40",
         getHeatmapClass(),
-        isSelected ? "border-primary bg-primary/10 ring-2 ring-primary/20 z-10 shadow-lg shadow-primary/10"
+        isSelected ? "border-primary bg-primary/10 ring-2 ring-primary/20 z-10"
           : today ? "border-primary/60 bg-primary/5"
-          : "border-border/30 bg-card/60 hover:border-primary/30 hover:bg-card hover:shadow-md hover:shadow-primary/5",
+          : "border-border/30 bg-card/60 hover:border-primary/30 hover:bg-card hover: hover:",
       )}>
       
       {/* 📅 Date & Report Summary */}
@@ -358,7 +358,7 @@ function MonthDayCell({ stats, isCurrentMonth, selectedDate, onClick }: {
         <div className="hidden md:flex gap-1.5 md:gap-2 items-center justify-center w-full pb-1 md:pb-2">
           {stats.statuses.slice(0, 3).map((s, i) => (
             <div key={i} className="flex items-center gap-0.5" title={s.name}>
-               <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full shadow-sm" style={{ backgroundColor: s.color }} />
+               <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full" style={{ backgroundColor: s.color }} />
                <span className="text-[9px] md:text-[11px] font-black text-foreground/70">{s.count}</span>
             </div>
           ))}
@@ -570,8 +570,8 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
               {format(stats.date, "EEEE, d MMMM yyyy", { locale: he })}
             </p>
 
-            <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/10 rounded-3xl px-5 py-3 shadow-sm self-start sm:self-center">
-              <div className="flex items-center justify-center w-11 h-11 rounded-full bg-emerald-500/10 shrink-0 shadow-inner">
+            <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/10 rounded-3xl px-5 py-3 self-start sm:self-center">
+              <div className="flex items-center justify-center w-11 h-11 rounded-full bg-emerald-500/10 shrink-0">
                  <span className={cn("text-base font-black tabular-nums", presentPct < 0.5 ? "text-rose-500" : "text-emerald-600")}>
                    {Math.round(presentPct * 100)}%
                  </span>
@@ -612,7 +612,7 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="mt-2 p-4 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-500/10 rounded-3xl overflow-hidden shadow-sm"
+              className="mt-2 p-4 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-500/10 rounded-3xl overflow-hidden"
             >
               <div className="space-y-4">
                  {Object.entries(
@@ -630,8 +630,8 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
                        {emps.map((m) => (
                          <button key={m.id} onClick={(e) => { e.stopPropagation(); openProfile(m.id); }}
-                           className="flex items-center gap-3 p-3 rounded-2xl text-sm font-black border border-rose-500/10 bg-white/70 dark:bg-rose-900/40 text-rose-600 hover:bg-rose-500 hover:text-white transition-all shadow-sm group">
-                           <div className="w-2 h-2 rounded-full bg-rose-500 group-hover:bg-white shadow-sm shrink-0" />
+                           className="flex items-center gap-3 p-3 rounded-2xl text-sm font-black border border-rose-500/10 bg-white/70 dark:bg-rose-900/40 text-rose-600 hover:bg-rose-500 hover:text-white transition-all group">
+                           <div className="w-2 h-2 rounded-full bg-rose-500 group-hover:bg-white shrink-0" />
                            <span className="truncate">{m.name}</span>
                          </button>
                        ))}
@@ -654,12 +654,12 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
                 return (
                   <div key={group.name}
                     className={cn("flex flex-col rounded-3xl border transition-all h-fit",
-                      isExpanded ? "bg-white/90 dark:bg-slate-900/90 border-primary/20 shadow-xl" : "bg-card/40 border-border/40")}>
+                      isExpanded ? "bg-white/90 dark:bg-slate-900/90 border-primary/20" : "bg-card/40 border-border/40")}>
                     <button onClick={() => toggleGroup(group.name)}
                       className="flex items-center justify-between p-4 w-full group">
                       <div className="flex flex-col items-start gap-1 flex-1">
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: group.color }} />
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: group.color }} />
                           <span className="text-sm font-black text-foreground">{group.name}</span>
                           <span className="text-xs font-bold text-muted-foreground">({group.emps.length})</span>
                         </div>
@@ -687,8 +687,8 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                    {emps.map((e) => (
                                      <button key={e.id} onClick={(e_evt) => { e_evt.stopPropagation(); openProfile(e.id); }}
-                                       className="flex items-center gap-3 p-3 rounded-2xl text-sm font-bold border border-border/40 bg-muted/10 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm group text-right">
-                                       <div className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform shadow-sm" style={{ backgroundColor: group.color }} />
+                                       className="flex items-center gap-3 p-3 rounded-2xl text-sm font-bold border border-border/40 bg-muted/10 hover:bg-white dark:hover:bg-slate-800 transition-all group text-right">
+                                       <div className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform" style={{ backgroundColor: group.color }} />
                                        <span className="truncate">{e.name}</span>
                                      </button>
                                    ))}
@@ -884,12 +884,12 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
           <div className="flex items-center gap-0.5 bg-muted/50 rounded-xl p-1 border border-border/40 shrink-0">
             <button onClick={() => setViewMode("week")}
               className={cn("flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all",
-                viewMode === "week" ? "bg-card text-primary shadow-sm border border-border/40" : "text-muted-foreground hover:text-foreground")}>
+                viewMode === "week" ? "bg-card text-primary border border-border/40" : "text-muted-foreground hover:text-foreground")}>
               <CalendarDays className="w-3.5 h-3.5" /><span className="hidden sm:inline">שבועי</span>
             </button>
             <button onClick={() => setViewMode("month")}
               className={cn("flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all",
-                viewMode === "month" ? "bg-card text-primary shadow-sm border border-border/40" : "text-muted-foreground hover:text-foreground")}>
+                viewMode === "month" ? "bg-card text-primary border border-border/40" : "text-muted-foreground hover:text-foreground")}>
               <CalendarRange className="w-3.5 h-3.5" /><span className="hidden sm:inline">חודשי</span>
             </button>
           </div>
@@ -905,7 +905,7 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 5 }}
                   onClick={() => { setDeptFilters([]); setSrvFilters([]); setAgeFilters([]); }}
-                  className="absolute -top-6 right-0 left-0 mx-auto w-fit flex items-center gap-1.5 text-[9px] font-black text-muted-foreground hover:text-destructive transition-all whitespace-nowrap bg-background/80 px-2.5 py-0.5 rounded-full border border-border/20 backdrop-blur-md shadow-sm z-20"
+                  className="absolute -top-6 right-0 left-0 mx-auto w-fit flex items-center gap-1.5 text-[9px] font-black text-muted-foreground hover:text-destructive transition-all whitespace-nowrap bg-background/80 px-2.5 py-0.5 rounded-full border border-border/20 backdrop-blur-md z-20"
                 >
                   <RotateCcw className="w-2.5 h-2.5" />
                   <span className="hidden sm:inline">נקה סינון</span>
@@ -927,7 +927,7 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="start" side="bottom" className="w-[300px] sm:w-[450px] p-5 rounded-3xl backdrop-blur-3xl border-primary/10 bg-card/95 shadow-2xl z-50">
+              <PopoverContent align="start" side="bottom" className="w-[300px] sm:w-[450px] p-5 rounded-3xl backdrop-blur-3xl border-primary/10 bg-card/95 z-50">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between border-b border-border/40 pb-3">
                     <h4 className="text-sm font-black flex items-center gap-2">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import apiClient from "@/config/api.client";
@@ -12,6 +12,7 @@ import {
   Bell,
   Database,
   Activity,
+  History,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 
@@ -21,7 +22,6 @@ import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
-import { AuditLogsSettings } from "@/components/settings/AuditLogsSettings";
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuthContext();
@@ -34,6 +34,7 @@ export default function SettingsPage() {
     setFontSize,
   } = useTheme();
 
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const urlTab = searchParams.get("tab");
 
@@ -450,8 +451,8 @@ export default function SettingsPage() {
           {user?.is_admin && (
             <TabItem
               label="יומן פעילות"
-              active={activeTab === "audit"}
-              onClick={() => setActiveTab("audit")}
+              active={false}
+              onClick={() => navigate("/activity-log")}
             />
           )}
         </div>
@@ -548,9 +549,6 @@ export default function SettingsPage() {
             />
           )}
 
-          {activeTab === "audit" && user?.is_admin && (
-            <AuditLogsSettings user={user} />
-          )}
         </div>
 
         {/* Mobile Bottom Navigation Bar - Standard Fixed */}
@@ -595,10 +593,10 @@ export default function SettingsPage() {
           )}
           {user?.is_admin && (
             <MobileBottomNavLink
-              label="יומן"
+              label="יומן פעילות"
               icon={Activity}
-              active={activeTab === "audit"}
-              onClick={() => setActiveTab("audit")}
+              active={false}
+              onClick={() => navigate("/activity-log")}
             />
           )}
         </div>

@@ -528,7 +528,7 @@ export default function RosterPage() {
                   <Button
                     variant="outline"
                     onClick={() => setIsAddModalOpen(true)}
-                    className="h-10 rounded-xl border-border/40 bg-card/80 text-foreground hover:bg-primary/5 hover:text-primary gap-2 font-black transition-all shadow-sm"
+                    className="h-10 rounded-xl border-border/40 bg-card/80 text-foreground hover:bg-primary/5 hover:text-primary gap-2 font-black transition-all"
                   >
                     <Plus className="w-4 h-4" />
                     <span className="text-xs">איש צוות</span>
@@ -640,7 +640,7 @@ export default function RosterPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-xl hover:bg-background hover:shadow-sm transition-all"
+                  className="h-8 w-8 rounded-xl hover:bg-background hover: transition-all"
                   onClick={() => startTransition(() => setCurrentDate(subWeeks(currentDate, 1)))}
                   disabled={isPendingDate}
                 >
@@ -679,7 +679,7 @@ export default function RosterPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-xl hover:bg-background hover:shadow-sm transition-all"
+                  className="h-8 w-8 rounded-xl hover:bg-background hover: transition-all"
                   onClick={() => startTransition(() => setCurrentDate(addWeeks(currentDate, 1)))}
                   disabled={isPendingDate}
                 >
@@ -715,7 +715,7 @@ export default function RosterPage() {
               <div className="flex items-center gap-2 bg-muted/20 p-1 rounded-2xl border border-transparent hover:border-border/40 transition-all">
                 {/* Dept Select */}
                 <Select value={selectedDept} onValueChange={(val) => { setSelectedDept(val); setSelectedSection("all"); setSelectedTeam("all"); }}>
-                  <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover:shadow-sm rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
+                  <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover: rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
                     <SelectValue placeholder="מחלקה" />
                   </SelectTrigger>
                   <SelectContent dir="rtl" className="rounded-2xl font-bold">
@@ -728,7 +728,7 @@ export default function RosterPage() {
                 {selectedDept !== "all" && sections.length > 0 && (
                   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                     <Select value={selectedSection} onValueChange={(val) => { setSelectedSection(val); setSelectedTeam("all"); }}>
-                      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover:shadow-sm rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
+                      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover: rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
                         <SelectValue placeholder="מדור" />
                       </SelectTrigger>
                       <SelectContent dir="rtl" className="rounded-2xl font-bold">
@@ -743,7 +743,7 @@ export default function RosterPage() {
                 {selectedSection !== "all" && teams.length > 0 && (
                   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                     <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover:shadow-sm rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
+                      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover: rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
                         <SelectValue placeholder="חוליה" />
                       </SelectTrigger>
                       <SelectContent dir="rtl" className="rounded-2xl font-bold">
@@ -756,7 +756,7 @@ export default function RosterPage() {
 
                 {/* Status Select */}
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover:shadow-sm rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px] text-primary">
+                  <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover: rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px] text-primary">
                     <SelectValue placeholder="סטטוס" />
                   </SelectTrigger>
                   <SelectContent dir="rtl" className="rounded-2xl font-bold border-primary/20">
@@ -798,7 +798,7 @@ export default function RosterPage() {
                       "flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all relative",
                       "active:scale-95",
                       isSelected
-                        ? "bg-primary text-primary-foreground shadow-md"
+                        ? "bg-primary text-primary-foreground"
                         : weekend
                           ? "bg-amber-500/5 border border-amber-500/20"
                           : "bg-transparent hover:bg-muted/50",
@@ -1205,7 +1205,7 @@ export default function RosterPage() {
             </DialogHeader>
 
             <div className="px-6 py-4 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-              <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-white/5 rounded-2xl border border-border/40 dark:border-white/10 shadow-sm transition-all hover:bg-primary/10 dark:hover:bg-white/10">
+              <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-white/5 rounded-2xl border border-border/40 dark:border-white/10 transition-all hover:bg-primary/10 dark:hover:bg-white/10">
                 <div className="flex items-center gap-3">
                   <CalendarRange className="w-5 h-5 text-primary/70" />
                   <span className="text-sm font-bold text-foreground">

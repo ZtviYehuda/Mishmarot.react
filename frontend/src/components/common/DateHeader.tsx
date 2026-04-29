@@ -11,100 +11,63 @@ export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = (
   const { selectedDate, setSelectedDate } = useDateContext();
   const [isPending, startTransition] = useTransition();
 
-  const handlePrevDay = () => startTransition(() => setSelectedDate(subDays(selectedDate, 1)));
-  const handleNextDay = () => startTransition(() => setSelectedDate(addDays(selectedDate, 1)));
   const handleToday = () => startTransition(() => setSelectedDate(new Date()));
-
   const isToday = useMemo(() => isSameDay(selectedDate, new Date()), [selectedDate]);
 
-  const relativeDayInfo = useMemo(() => {
-    if (isToday) return null;
-    const diff = differenceInCalendarDays(selectedDate, new Date());
-    return diff < 0
-      ? { label: "עבר", isPast: true }
-      : { label: "עתיד", isPast: false };
-  }, [selectedDate, isToday]);
-
   return (
-    <div className={cn("relative group flex items-center shrink-0", className)}>
-      <div className={cn("flex-1 flex items-center justify-between bg-card/40 backdrop-blur-xl border border-border/40 rounded-xl h-10 shadow-none relative overflow-visible", compact ? "px-0" : "px-1")}>
-        {/* Date Display with Calendar Picker */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <div
-              className={cn(
-                "flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 transition-all flex-1 min-w-0 px-3 sm:px-4 h-full",
-                isPending && "opacity-50 grayscale-[0.5] scale-95"
-              )}
-            >
-              <span className="hidden sm:block text-[9px] font-black text-primary/60 uppercase tracking-[0.1em] leading-none mb-0.5">
+    <div className={cn("flex items-center gap-2", className)}>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            className={cn(
+              "flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl transition-all",
+              "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800",
+              isPending && "opacity-50"
+            )}
+          >
+            <CalendarIcon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            
+            <div className="flex items-center text-[13px] tracking-tight">
+              {/* Day name (Hidden on mobile if compact mode is not strictly forced, but requested "if not enough space, show only number". We'll hide day on mobile) */}
+              <span className="hidden sm:inline font-normal mr-1.5">
                 {format(selectedDate, "EEEE", { locale: he })}
               </span>
-              <div className="flex items-center gap-1.5">
-                <CalendarIcon className="hidden sm:block w-3 h-3 text-primary/40 shrink-0" />
-                <span className="text-xs sm:text-sm font-black text-primary tabular-nums leading-none whitespace-nowrap tracking-tight sm:tracking-normal">
-                  {format(selectedDate, "d/M/yy")}
-                </span>
-
-                {/* היום */}
-                {isToday && (
-                  <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20" title="היום">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="hidden sm:block text-[8px] font-black text-emerald-600 uppercase">היום</span>
-                  </div>
-                )}
-
-                {/* עבר / עתיד */}
-                {relativeDayInfo && (
-                  <div
-                    className={cn(
-                      "flex items-center gap-1 px-1.5 py-0.5 rounded-full border",
-                      relativeDayInfo.isPast
-                        ? "bg-amber-500/10 border-amber-500/20"
-                        : "bg-violet-500/10 border-violet-500/20"
-                    )}
-                    title={relativeDayInfo.label}
-                  >
-                    <div
-                      className={cn(
-                        "w-1.5 h-1.5 rounded-full shrink-0",
-                        relativeDayInfo.isPast ? "bg-amber-500" : "bg-violet-500"
-                      )}
-                    />
-                    <span
-                      className={cn(
-                        "hidden sm:block text-[8px] font-black uppercase",
-                        relativeDayInfo.isPast ? "text-amber-600" : "text-violet-600"
-                      )}
-                    >
-                      {relativeDayInfo.label}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <span className="hidden sm:inline text-slate-300 dark:text-slate-700 mx-1.5 font-light">|</span>
+              
+              <span className="font-semibold tabular-nums">
+                {format(selectedDate, "dd/MM/yy")}
+              </span>
             </div>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 rounded-2xl border-border/40" align="center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && startTransition(() => setSelectedDate(date))}
-              initialFocus
-              locale={he}
-              className="rounded-2xl border-none"
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
 
-      {/* Quick Today Toggle - FLOATING STYLE */}
+            {/* "Today" badge - shown optionally if needed, but let's keep it very minimal */}
+            {isToday && (
+              <div className="hidden sm:flex items-center gap-1 mr-2 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
+                <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                <span className="text-[9px] font-bold">היום</span>
+              </div>
+            )}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0 rounded-2xl border-border/40" align="end">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => date && startTransition(() => setSelectedDate(date))}
+            initialFocus
+            locale={he}
+            className="rounded-2xl border-none"
+          />
+        </PopoverContent>
+      </Popover>
+
+      {/* Quick Today Toggle */}
       {!isToday && (
         <button
           onClick={handleToday}
-          className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
+          className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center transition-all hover:bg-primary/20 hover:scale-105 active:scale-95"
           title="חזרה להיום"
         >
-          <RotateCcw className="w-3 h-3" />
+          <RotateCcw className="w-3.5 h-3.5" />
         </button>
       )}
     </div>

@@ -393,6 +393,24 @@ body {
   animation: shimmer 3s ease-in-out infinite;
 }
 
+@keyframes birthday-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.animate-birthday-pulse {
+  animation: birthday-pulse 2s ease-in-out infinite;
+}
+
+.custom-scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* 🔄 Global Close Button Rotation Animation 
    Whenever an 'X' or 'XIcon' from Lucide is inside a button, rotate it on hover. */
 button:hover svg.lucide-x,

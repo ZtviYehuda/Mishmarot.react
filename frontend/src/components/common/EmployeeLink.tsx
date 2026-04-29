@@ -56,7 +56,7 @@ export const EmployeeLink: React.FC<EmployeeLinkProps> = ({
         <div className="flex items-center gap-1 mr-1">
           {employee.is_commander && (
             <span title="מפקד">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 drop-" />
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
             </span>
           )}
           {employee.birth_date &&
@@ -64,7 +64,7 @@ export const EmployeeLink: React.FC<EmployeeLinkProps> = ({
             new Date(employee.birth_date).getMonth() ===
               new Date().getMonth() && (
               <span title="יום הולדת שמח!">
-                <Cake className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400 drop- animate-bounce" />
+                <Cake className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400 animate-bounce" />
               </span>
             )}
         </div>

@@ -282,12 +282,12 @@ export function ProfileSettings({
         
         {/* ── DESKTOP SIDEBAR: PROFILE CARD (HERO) ── */}
         <div className="hidden lg:block lg:w-80 xl:w-[360px] shrink-0 lg:sticky lg:top-24">
-          <div className="bg-card/40 backdrop-blur-xl rounded-3xl p-6 shadow-none border border-border/40 flex flex-col items-center text-center relative overflow-hidden">
+          <div className="bg-card/40 backdrop-blur-xl rounded-3xl p-6 border border-border/40 flex flex-col items-center text-center relative overflow-hidden">
             {/* Decorative Background */}
             <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent -z-10" />
 
             <div className="relative group mt-4">
-              <div className="w-28 h-28 rounded-3xl flex items-center justify-center text-4xl font-black border-[6px] border-white dark:border-slate-950 ring-1 ring-slate-100 dark:ring-slate-800 shadow-xl transition-all relative bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+              <div className="w-28 h-28 rounded-3xl flex items-center justify-center text-4xl font-black border-[6px] border-white dark:border-slate-950 ring-1 ring-slate-100 dark:ring-slate-800 transition-all relative bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
                 {formData.first_name?.[0]}
                 {formData.last_name?.[0]}
               </div>
@@ -740,7 +740,7 @@ function SectionCard({ icon: Icon, title, children, badge }: any) {
     >
       <div className="flex items-center justify-between px-6 py-5 border-b border-border/40">
         <div className="flex items-center gap-3">
-          <div className="w-1 h-5 bg-primary rounded-full shadow-sm" />
+          <div className="w-1 h-5 bg-primary rounded-full" />
           <h3 className="text-base font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
             {title}
           </h3>

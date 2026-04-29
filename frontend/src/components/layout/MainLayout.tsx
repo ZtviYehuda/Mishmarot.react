@@ -23,6 +23,7 @@ import {
   MessageCircle,
   Megaphone,
   CalendarRange,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -192,6 +193,9 @@ export default function MainLayout() {
         { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
       ]
       : []),
+    ...(user?.is_admin
+      ? [{ name: "יומן פעילות", path: "/activity-log", icon: Activity }]
+      : []),
     { name: "הגדרות", path: "/settings", icon: Settings },
   ];
 
@@ -205,7 +209,7 @@ export default function MainLayout() {
         onDoubleClick={() => setIsSidebarOpen((prev) => !prev)}
         className={cn(
           // Base: fixed to RIGHT edge (RTL), full height
-          "bg-card/80 backdrop-blur-xl border-l border-border/40 flex flex-col z-[100] fixed right-0 lg:sticky lg:right-auto top-0 h-[100dvh] overflow-hidden flex-shrink-0",
+          "bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-2xl border-l border-border shadow-[4px_0_24px_-12px_rgba(0,0,0,0.15)] flex flex-col z-[100] fixed right-0 lg:sticky lg:right-auto top-0 h-[100dvh] overflow-hidden flex-shrink-0",
           // Mobile: keep w-72 always, only slide translateX (RIGHT = off-screen in RTL)
           // Desktop: width animates between w-24 ↔ w-72
           "w-72 transition-transform lg:transition-all ease-out",
@@ -406,10 +410,12 @@ export default function MainLayout() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            {/* DateHeader for Mobile */}
-            <div className="lg:hidden shrink-0 mt-0.5">
-              <DateHeader compact />
+            {/* Global DateHeader */}
+            <div className="shrink-0">
+              <DateHeader />
             </div>
+
+            <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
 
             {/* Notifications Bell */}
             <Popover>

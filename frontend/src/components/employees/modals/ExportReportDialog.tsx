@@ -273,7 +273,7 @@ export function ExportReportDialog({
                       "text-base sm:text-lg font-black text-slate-900 dark:text-white",
                     nav: "absolute top-0 left-0 right-0 flex items-center justify-between px-3 h-10",
                     nav_button:
-                      "h-9 w-9 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-all flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-pointer pointer-events-auto",
+                      "h-9 w-9 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-all flex items-center justify-center border border-slate-200 dark:border-slate-700 hover: cursor-pointer pointer-events-auto",
                     nav_button_previous: "order-1",
                     nav_button_next: "order-2",
                     table: "w-full border-collapse",
@@ -284,9 +284,9 @@ export function ExportReportDialog({
                     cell: "flex items-center justify-center cursor-pointer pointer-events-auto",
                     day: "h-10 w-10 font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-sm text-slate-900 dark:text-slate-100 transition-all hover:scale-105 border border-transparent cursor-pointer pointer-events-auto",
                     day_selected:
-                      "bg-primary text-white hover:bg-primary hover:text-white shadow-lg scale-105 border-primary/20",
+                      "bg-primary text-white hover:bg-primary hover:text-white scale-105 border-primary/20",
                     day_today:
-                      "bg-slate-100 dark:bg-slate-800 text-primary font-black border-2 border-primary/40 shadow-sm",
+                      "bg-slate-100 dark:bg-slate-800 text-primary font-black border-2 border-primary/40",
                     day_outside: "text-slate-300 dark:text-slate-600 opacity-40",
                     day_disabled: "text-slate-300 dark:text-slate-600 opacity-30",
                     day_range_middle:

@@ -155,11 +155,11 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
         onOpenChange(val);
       }}
     >
-      <DialogContent className="w-[95vw] max-w-xl h-[90vh] sm:h-[85vh] p-0 overflow-hidden bg-background border-border/40 shadow-2xl rounded-[2rem] flex flex-col">
+      <DialogContent className="w-[95vw] max-w-xl h-[90vh] sm:h-[85vh] p-0 overflow-hidden bg-background border-border/40 rounded-[2rem] flex flex-col">
         {/* Header - Fixed */}
         <div className="p-5 sm:p-6 border-b border-border/40 bg-muted/20 relative shrink-0">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-600 shadow-sm shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-600 shrink-0">
               <MessageSquare className="w-6 h-6" />
             </div>
             <div className="min-w-0">
@@ -216,7 +216,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         onClick={() => setScope("team")}
                         className={cn(
                           "rounded-xl h-9 font-black text-xs px-4 transition-all flex-1",
-                          scope === "team" && "shadow-md shadow-primary/20",
+                          scope === "team" && "",
                         )}
                       >
                         חוליה
@@ -229,7 +229,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         onClick={() => setScope("section")}
                         className={cn(
                           "rounded-xl h-9 font-black text-xs px-4 transition-all flex-1",
-                          scope === "section" && "shadow-md shadow-primary/20",
+                          scope === "section" && "",
                         )}
                       >
                         מדור
@@ -243,7 +243,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         className={cn(
                           "rounded-xl h-9 font-black text-xs px-4 transition-all flex-1",
                           scope === "department" &&
-                            "shadow-md shadow-primary/20",
+                            "",
                         )}
                       >
                         מחלקה
@@ -306,7 +306,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                           "p-3 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer",
                           selectedIds.has(emp.id)
                             ? "bg-primary/5 border-primary/30"
-                            : "bg-card border-transparent shadow-sm hover:border-primary/20",
+                            : "bg-card border-transparent hover:border-primary/20",
                           !emp.phone_number &&
                             "opacity-50 grayscale cursor-not-allowed",
                         )}
@@ -369,7 +369,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                 </div>
                 <Textarea
                   placeholder="הקלידו כאן את תוכן ההודעה המלא..."
-                  className="flex-1 min-h-[150px] resize-none bg-muted/10 border-border/40 focus:border-green-500/50 rounded-2xl p-4 sm:p-5 font-bold text-base sm:text-lg leading-relaxed shadow-inner w-full custom-scrollbar"
+                  className="flex-1 min-h-[150px] resize-none bg-muted/10 border-border/40 focus:border-green-500/50 rounded-2xl p-4 sm:p-5 font-bold text-base sm:text-lg leading-relaxed w-full custom-scrollbar"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
@@ -411,7 +411,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
         </div>
 
         {/* Footer - Dynamic based on step */}
-        <div className="p-4 sm:p-5 border-t border-border/40 bg-card shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] relative z-20">
+        <div className="p-4 sm:p-5 border-t border-border/40 bg-card shrink-0 relative z-20">
           {/* Footer: Step 1 */}
           {step === 1 && !broadcastMode && (
             <div className="flex items-center gap-3">
@@ -428,7 +428,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               <Button
                 onClick={() => setStep(2)}
                 disabled={selectedIds.size === 0}
-                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black h-12 sm:h-14 rounded-xl gap-2 shadow-lg shadow-primary/20 text-sm sm:text-base transition-all active:scale-[0.98]"
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black h-12 sm:h-14 rounded-xl gap-2 text-sm sm:text-base transition-all active:scale-[0.98]"
               >
                 המשך לניסוח ההודעה
               </Button>
@@ -448,7 +448,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               <Button
                 onClick={handleStartBroadcast}
                 disabled={selectedIds.size === 0}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-black h-12 sm:h-14 rounded-xl gap-2 shadow-lg shadow-green-500/20 text-sm sm:text-base transition-all active:scale-[0.98]"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-black h-12 sm:h-14 rounded-xl gap-2-500/20 text-sm sm:text-base transition-all active:scale-[0.98]"
               >
                 <Send className="w-5 h-5 -scale-x-100" />
                 {selectedEmployeesList.length === 1
@@ -481,7 +481,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                 </Button>
                 <Button
                   onClick={handleSendNext}
-                  className="group bg-green-600 hover:bg-green-700 text-white font-black h-14 rounded-xl flex-[2] gap-2 shadow-lg shadow-green-500/30 text-base transition-all active:scale-[0.98] overflow-hidden relative"
+                  className="group bg-green-600 hover:bg-green-700 text-white font-black h-14 rounded-xl flex-[2] gap-2-500/30 text-base transition-all active:scale-[0.98] overflow-hidden relative"
                 >
                   <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform pointer-events-none" />
                   <Send className="w-5 h-5 fill-white -scale-x-100 mr-1" />

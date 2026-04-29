@@ -29,6 +29,7 @@ const TransfersPage      = lazy(() => import("@/pages/TransfersPage"));
 const AttendancePage     = lazy(() => import("@/pages/AttendancePage"));
 const RosterPage         = lazy(() => import("@/pages/RosterPage"));
 const ChangePasswordPage = lazy(() => import("@/pages/ChangePasswordPage"));
+const ActivityLogPage    = lazy(() => import("@/pages/ActivityLogPage"));
 
 // ── Page-level suspense wrapper ───────────────────────────────────────────────
 // Keeps UX smooth: shows LoadingScreen while the chunk downloads
@@ -45,8 +46,8 @@ function DefaultErrorBoundary() {
   
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 font-sans" dir="rtl">
-      <div className="max-w-xl w-full bg-white dark:bg-slate-900 rounded-[2.5rem] p-10 border border-border/40 shadow-xl text-center space-y-6 overflow-hidden">
-        <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center text-rose-500 mx-auto shadow-inner">
+      <div className="max-w-xl w-full bg-white dark:bg-slate-900 rounded-[2.5rem] p-10 border border-border/40 text-center space-y-6 overflow-hidden">
+        <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center text-rose-500 mx-auto">
           <AlertCircle className="w-10 h-10" />
         </div>
         <div className="space-y-2">
@@ -66,7 +67,7 @@ function DefaultErrorBoundary() {
         <div className="flex gap-4">
           <Button 
             onClick={() => window.location.reload()}
-            className="flex-1 h-14 rounded-2xl font-black text-lg gap-2 shadow-lg shadow-primary/20"
+            className="flex-1 h-14 rounded-2xl font-black text-lg gap-2"
           >
             <RefreshCw className="w-5 h-5" />
             רענן ונסה שוב
@@ -142,6 +143,7 @@ const router = createBrowserRouter([
           { path: "/attendance",          element: <PageSuspense><AttendancePage /></PageSuspense> },
           { path: "/roster",              element: <PageSuspense><RosterPage /></PageSuspense> },
           { path: "/settings",            element: <SettingsPage /> },
+          { path: "/activity-log",        element: <PageSuspense><ActivityLogPage /></PageSuspense> },
         ],
       },
     ]

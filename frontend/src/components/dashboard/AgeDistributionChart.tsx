@@ -36,10 +36,11 @@ export const AgeDistributionChart = ({
   }, [data]);
 
   return (
-    <Card className="rounded-[1.5rem] sm:rounded-[2rem] border border-primary/10 bg-card/60 backdrop-blur-2xl overflow-hidden p-4 sm:p-6 h-full flex flex-col relative">
+    <Card className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all">
+      <div className="p-4 sm:p-6 flex-1 flex flex-col">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 relative z-10">
+      <div className="flex flex-row justify-between items-center gap-3 mb-6 relative z-10 min-h-[70px]">
         <div className="flex gap-3 items-center">
           <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0 border border-border/40">
             <Timer className="w-5 h-5 text-muted-foreground" />
@@ -82,11 +83,11 @@ export const AgeDistributionChart = ({
       </div>
 
       {/* Chart Container */}
-      <div className="flex-1 min-h-[200px] w-full mt-2 relative z-10">
+      <div className="flex-1 min-h-[200px] w-full relative z-10">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
-            margin={{ top: 30, right: 0, left: 0, bottom: 15 }}
+            margin={{ top: 30, right: 10, left: 10, bottom: 40 }}
             barCategoryGap="15%"
           >
             <XAxis
@@ -102,7 +103,7 @@ export const AgeDistributionChart = ({
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="bg-popover text-popover-foreground border border-border p-2 rounded-xl shadow-xl">
+                    <div className="bg-popover text-popover-foreground border border-border p-2 rounded-xl">
                       <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">
                         טווח: {payload[0].payload.range}
                       </p>
@@ -146,6 +147,7 @@ export const AgeDistributionChart = ({
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+      </div>
       </div>
     </Card>
   );

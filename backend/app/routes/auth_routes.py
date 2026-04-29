@@ -972,7 +972,6 @@ def get_my_activity():
     limit = request.args.get("limit", 20, type=int)
     logs = AuditLogModel.get_user_activity(user_id, limit=limit)
     
-    # Process logs to match frontend expectations (ensure metadata is readable)
     return jsonify({
         "success": True,
         "logs": logs

@@ -213,7 +213,7 @@ export const DashboardFilters = ({
                         onValueChange={(val) => onFilterChange("department", val === "all" ? undefined : val)}
                         disabled={!canSelectDept && !!selectedDeptId}
                       >
-                        <SelectTrigger className="h-10 px-3 text-[13px] font-bold rounded-xl border border-primary/10 hover:bg-white/50 dark:hover:bg-slate-800 transition-colors focus:ring-0 text-right bg-white dark:bg-slate-900 shadow-sm">
+                        <SelectTrigger className="h-10 px-3 text-[13px] font-bold rounded-xl border border-primary/10 hover:bg-white/50 dark:hover:bg-slate-800 transition-colors focus:ring-0 text-right bg-white dark:bg-slate-900">
                           <SelectValue placeholder="מחלקה" />
                         </SelectTrigger>
                         <SelectContent dir="rtl" className="rounded-xl border-border/40 backdrop-blur-xl">
@@ -231,7 +231,7 @@ export const DashboardFilters = ({
                         onValueChange={(val) => onFilterChange("section", val === "all" ? undefined : val)}
                         disabled={(!selectedDeptId && !canSelectDept) || (!canSelectSection && !!selectedSectionId) || (canSelectDept && !selectedDeptId)}
                       >
-                        <SelectTrigger className="h-10 px-3 text-[13px] font-bold rounded-xl border border-primary/10 hover:bg-white/50 dark:hover:bg-slate-800 transition-colors focus:ring-0 text-right bg-white dark:bg-slate-900 shadow-sm">
+                        <SelectTrigger className="h-10 px-3 text-[13px] font-bold rounded-xl border border-primary/10 hover:bg-white/50 dark:hover:bg-slate-800 transition-colors focus:ring-0 text-right bg-white dark:bg-slate-900">
                           <SelectValue placeholder="מדור" />
                         </SelectTrigger>
                         <SelectContent dir="rtl" className="rounded-xl border-border/40 backdrop-blur-xl">
@@ -249,7 +249,7 @@ export const DashboardFilters = ({
                         onValueChange={(val) => onFilterChange("team", val === "all" ? undefined : val)}
                         disabled={(!selectedSectionId && !canSelectSection) || (!canSelectTeam && !!selectedTeamId) || (canSelectSection && !selectedSectionId)}
                       >
-                        <SelectTrigger className="h-10 px-3 text-[13px] font-bold rounded-xl border border-primary/10 hover:bg-white/50 dark:hover:bg-slate-800 transition-colors focus:ring-0 text-right bg-white dark:bg-slate-900 shadow-sm">
+                        <SelectTrigger className="h-10 px-3 text-[13px] font-bold rounded-xl border border-primary/10 hover:bg-white/50 dark:hover:bg-slate-800 transition-colors focus:ring-0 text-right bg-white dark:bg-slate-900">
                           <SelectValue placeholder="חוליה" />
                         </SelectTrigger>
                         <SelectContent dir="rtl" className="rounded-xl border-border/40 backdrop-blur-xl">
@@ -300,9 +300,9 @@ export const DashboardFilters = ({
                         size="sm"
                         onClick={() => onFilterChange("status", type.id.toString())}
                         className={cn(
-                          "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all bg-white dark:bg-slate-900 shadow-sm",
+                          "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all bg-white dark:bg-slate-900",
                           selectedStatusId === type.id.toString()
-                            ? "bg-primary text-white border-primary shadow-md hover:bg-primary/90"
+                            ? "bg-primary text-white border-primary hover:bg-primary/90"
                             : "hover:bg-primary/5 hover:border-primary/30"
                         )}
                       >
@@ -357,9 +357,9 @@ export const DashboardFilters = ({
                             onFilterChange("serviceType", newTypes);
                           }}
                           className={cn(
-                            "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all bg-white dark:bg-slate-900 shadow-sm",
+                            "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all bg-white dark:bg-slate-900",
                             isActive
-                              ? "bg-primary text-white border-primary shadow-md hover:bg-primary/90"
+                              ? "bg-primary text-white border-primary hover:bg-primary/90"
                               : "hover:bg-primary/5 hover:border-primary/30"
                           )}
                         >
@@ -404,9 +404,9 @@ export const DashboardFilters = ({
                         size="sm"
                         onClick={() => onFilterChange("ageRange", range.value)}
                         className={cn(
-                          "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all bg-white dark:bg-slate-900 shadow-sm",
+                          "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all bg-white dark:bg-slate-900",
                           currentAgeValue === range.value
-                            ? "bg-primary text-white border-primary shadow-md hover:bg-primary/90"
+                            ? "bg-primary text-white border-primary hover:bg-primary/90"
                             : "hover:bg-primary/5 hover:border-primary/30"
                         )}
                       >
@@ -426,7 +426,7 @@ export const DashboardFilters = ({
   return (
     <div className="w-full">
       {isMobile ? (
-        <Card className="relative border-none bg-background rounded-b-3xl p-4 shadow-none">
+        <Card className="relative border-none bg-background rounded-b-3xl p-4">
           <div className="relative z-10">{FilterContent}</div>
         </Card>
       ) : pillsOnly ? (
@@ -473,7 +473,7 @@ export const DashboardFilters = ({
                 </Badge>
               )}
               {selectedServiceTypes.length > 0 && (
-                <Badge variant="outline" className="h-7 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-sm border-primary/10 font-medium text-[11px] text-muted-foreground">
+                <Badge variant="outline" className="h-7 gap-1.5 rounded-full pl-2 pr-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-primary/10 font-medium text-[11px] text-muted-foreground">
                   מעמד:{" "}<span className="font-bold text-foreground">{selectedServiceTypes.join(", ")}</span>
                   <button onClick={() => onFilterChange("serviceType", [])} className="mr-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 text-foreground/50 hover:text-foreground transition-colors"><X className="w-3 h-3" /></button>
                 </Badge>
@@ -492,7 +492,7 @@ export const DashboardFilters = ({
                   <Button
                     variant="ghost"
                     className={cn(
-                      "h-10 px-4 gap-2 rounded-xl border border-border/40 transition-all font-black text-xs whitespace-nowrap backdrop-blur-xl shadow-none",
+                      "h-9 px-3.5 gap-2 rounded-xl border border-border/40 transition-all font-black text-[11px] whitespace-nowrap backdrop-blur-xl",
                       hasActiveFilters
                         ? "bg-primary/5 text-primary hover:bg-primary/10 border-primary/20"
                         : "bg-card/40 text-primary hover:bg-primary/5",
@@ -527,7 +527,7 @@ export const DashboardFilters = ({
                       e.stopPropagation();
                       onFilterChange("reset");
                     }}
-                    className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
+                    className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
                     title="נקה הכל"
                   >
                     <RotateCcw className="w-3 h-3" />

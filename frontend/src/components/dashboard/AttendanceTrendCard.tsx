@@ -295,9 +295,9 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       <Card
         ref={cardRef}
         className={cn(
-          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-none shadow-sm flex flex-col overflow-hidden h-full relative transition-all",
+          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all",
           className,
-          hideHeader && "border-none bg-transparent backdrop-blur-none shadow-none py-0"
+          hideHeader && "border-none bg-transparent backdrop-blur-none py-0"
         )}
       >
         {!hideHeader && (
@@ -314,7 +314,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   className={cn(
                     "px-3 py-1 text-xs font-bold rounded-md transition-all",
                     range === 7
-                      ? "bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-white"
+                      ? "bg-white text-primary dark:bg-slate-700 dark:text-white"
                       : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                   )}
                 >
@@ -325,7 +325,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   className={cn(
                     "px-3 py-1 text-xs font-bold rounded-md transition-all",
                     range === 30
-                      ? "bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-white"
+                      ? "bg-white text-primary dark:bg-slate-700 dark:text-white"
                       : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                   )}
                 >
@@ -355,15 +355,10 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   }}
                 >
                   <defs>
-                    <linearGradient
-                      id="colorPresent"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#0074ff" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#0074ff" stopOpacity={0} />
+                    <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
+                      <stop offset="60%" stopColor="var(--primary)" stopOpacity={0.08} />
+                      <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid

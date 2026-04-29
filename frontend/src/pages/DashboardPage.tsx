@@ -656,24 +656,22 @@ export default function DashboardPage() {
       className="w-full relative min-h-screen pb-10"
       dir="rtl"
     >
-      <div className="relative z-10 space-y-6 pt-6 px-4 sm:px-6 max-w-full mx-auto transition-all">
+      <div className="relative z-10 space-y-4 pt-4 px-4 sm:px-6 max-w-full mx-auto transition-all">
         {/* New Header Section - Matching Screenshot */}
         <PageHeader
           icon={LayoutDashboard}
           title="לוח בקרה"
           subtitle={format(selectedDate, "EEEE, d MMMM yyyy", { locale: he })}
-          className="hidden md:flex mb-2"
+          className="hidden md:flex mb-1"
           badge={
             <div className="flex items-center gap-2">
-              <DateHeader />
-              
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setFilterOpen(true)}
-                className="lg:hidden h-10 w-10 p-0 rounded-xl bg-card/40 border border-border/40 text-primary"
+                className="lg:hidden h-9 w-9 p-0 rounded-xl bg-card/40 border border-border/40 text-primary"
               >
-                <Filter className="w-4 h-4" />
+                <Filter className="w-3.5 h-3.5" />
               </Button>
 
               <div className="flex items-center gap-2">
@@ -713,24 +711,77 @@ export default function DashboardPage() {
                 <Button
                   variant="ghost"
                   onClick={() => setGlobalEventOpen(true)}
-                  className="h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2.5 sm:px-3 xl:px-4 bg-card/40 border border-border/40 text-primary hover:bg-primary/5 shadow-none backdrop-blur-xl text-sm min-w-[60px] sm:min-w-[64px] py-1"
+                  className="h-9 rounded-xl flex-col gap-0.5 font-black transition-all px-2 sm:px-2.5 xl:px-3.5 text-slate-500 hover:text-primary hover:bg-primary/5 text-sm min-w-[60px] sm:min-w-[64px] py-1"
                 >
-                  <CalendarIcon className="w-4 h-4" />
-                  <span className="text-[9px] xl:text-[10px] leading-tight">אירוע</span>
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  <span className="text-[8.5px] xl:text-[9.5px] leading-tight">אירוע</span>
                 </Button>
 
                 <Button
                   variant="ghost"
                   onClick={() => setWhatsappBroadcastOpen(true)}
-                  className="h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2.5 sm:px-3 xl:px-4 bg-card/40 border border-border/40 text-primary hover:bg-primary/5 shadow-none backdrop-blur-xl text-sm min-w-[60px] sm:min-w-[64px] py-1"
+                  className="h-9 rounded-xl flex-col gap-0.5 font-black transition-all px-2 sm:px-2.5 xl:px-3.5 text-slate-500 hover:text-primary hover:bg-primary/5 text-sm min-w-[60px] sm:min-w-[64px] py-1"
                 >
-                  <MessageSquare className="w-4 h-4" />
-                  <span className="text-[9px] xl:text-[10px] leading-tight text-center">רשימת תפוצה</span>
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span className="text-[8.5px] xl:text-[9.5px] leading-tight text-center">רשימת תפוצה</span>
                 </Button>
               </div>
             </div>
           }
         />
+
+        {/* Mobile Quick Actions Bar - New Section */}
+        <div className="grid grid-cols-4 gap-2 md:hidden mb-4 animate-in fade-in slide-in-from-top-2 duration-500">
+          <Button
+            variant="ghost"
+            onClick={() => setFilterOpen(true)}
+            className="flex-col gap-1.5 h-20 rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl"
+          >
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Filter className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-black">סינון</span>
+          </Button>
+
+          <ReportHub 
+            onShareBirthdays={() => setWhatsAppDialogOpen(true)}
+            filters={{
+              department_id: selectedDeptId,
+              section_id: selectedSectionId,
+              team_id: selectedTeamId,
+              serviceTypes: selectedServiceTypes,
+              unitName: unitName,
+              status_id: selectedStatusId?.toString()
+            }}
+            initialDate={selectedDate}
+            className="flex-col gap-1.5 h-20 w-full rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0"
+            // We'll update ReportHub to handle a simpler child if needed, but for now we pass className
+          >
+            {/* The ReportHub component uses its trigger button by default, so we pass styles via className */}
+          </ReportHub>
+
+          <Button
+            variant="ghost"
+            onClick={() => setGlobalEventOpen(true)}
+            className="flex-col gap-1.5 h-20 rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl"
+          >
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <CalendarIcon className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-black">אירוע</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            onClick={() => setWhatsappBroadcastOpen(true)}
+            className="flex-col gap-1.5 h-20 rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl"
+          >
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-black">תפוצה</span>
+          </Button>
+        </div>
 
         {fetchError && (
           <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 font-bold">
@@ -739,10 +790,10 @@ export default function DashboardPage() {
         )}
 
         {/* Content Area */}
-        <div className="space-y-8 transition-all mt-2 relative">
+        <div className="space-y-5 transition-all mt-1 relative">
           {(isOldDate && !hasArchiveAccess) && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-md rounded-3xl pb-[500px]">
-              <div className="bg-card border border-border/50 shadow-2xl rounded-[2rem] p-8 max-w-md text-center space-y-4 m-4">
+              <div className="bg-card border border-border/50 rounded-[2rem] p-8 max-w-md text-center space-y-4 m-4">
                 <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
                   <Lock className="w-8 h-8 text-primary" />
                 </div>
@@ -795,7 +846,6 @@ export default function DashboardPage() {
                 selectedStatusId={selectedStatusId}
                 filterTags={activeFilterTags}
                 title="חלוקת סטטוסים"
-                hideHeader={true}
               />
             </div>
 

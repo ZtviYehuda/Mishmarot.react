@@ -61,7 +61,7 @@ export function AppearanceSettings({
                 className={cn(
                   "group relative h-28 sm:h-36 rounded-2xl border transition-all overflow-hidden",
                   theme === t
-                    ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                     : "border-border/40 bg-background/50 hover:border-border/60 hover:bg-muted/10",
                 )}
               >
@@ -70,7 +70,7 @@ export function AppearanceSettings({
                     className={cn(
                       "p-3 rounded-full transition-all",
                       theme === t
-                        ? "bg-primary text-white scale-110 shadow-sm shadow-primary/20"
+                        ? "bg-primary text-white scale-110"
                         : "bg-muted text-muted-foreground group-hover:bg-muted/80",
                     )}
                   >
@@ -107,7 +107,7 @@ export function AppearanceSettings({
                 className={cn(
                   "group relative rounded-2xl border flex flex-col items-center justify-center gap-2 p-4 transition-all h-28 sm:h-36",
                   fontSize === size.id
-                    ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                     : "border-border/40 bg-background/50 hover:border-border/60 hover:bg-muted/10",
                 )}
               >
@@ -170,8 +170,8 @@ export function AppearanceSettings({
                     "w-9 h-9 sm:w-11 sm:h-11 lg:w-9 lg:h-9 xl:w-10 xl:h-10 rounded-full transition-all duration-300 relative flex items-center justify-center",
                     color.class,
                     accentColor === color.id && !isCustomOpen
-                      ? "scale-110 shadow-lg shadow-primary/25 ring-2 ring-primary ring-offset-2 ring-offset-background"
-                      : "hover:scale-110 shadow-sm",
+                      ? "scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background"
+                      : "hover:scale-110",
                   )}
                 >
                   {accentColor === color.id && !isCustomOpen && (
@@ -204,15 +204,15 @@ export function AppearanceSettings({
                 className={cn(
                   "w-9 h-9 sm:w-11 sm:h-11 lg:w-9 lg:h-9 xl:w-10 xl:h-10 rounded-full transition-all duration-300 relative flex items-center justify-center overflow-hidden",
                   isCustomOpen
-                    ? "scale-110 shadow-lg ring-2 ring-primary ring-offset-2 ring-offset-background"
-                    : "bg-linear-to-tr from-red-500 via-green-500 to-blue-500 hover:scale-110 shadow-sm",
+                    ? "scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    : "bg-linear-to-tr from-red-500 via-green-500 to-blue-500 hover:scale-110",
                 )}
                 style={isCustomOpen ? { backgroundColor: accentColor } : {}}
               >
                 {!isCustomOpen ? (
-                  <Pipette className="w-5 h-5 text-white drop-shadow-md" />
+                  <Pipette className="w-5 h-5 text-white" />
                 ) : (
-                  <Check className="w-5 h-5 text-white drop-shadow-md" />
+                  <Check className="w-5 h-5 text-white" />
                 )}
                 <input
                   ref={colorInputRef}
@@ -241,7 +241,7 @@ export function AppearanceSettings({
               >
                 <div className="flex items-center gap-4 p-5 rounded-[2.5rem] bg-muted/20 border border-border/40 backdrop-blur-md">
                   <div 
-                    className="w-14 h-14 rounded-2xl shadow-inner border border-white/20 relative"
+                    className="w-14 h-14 rounded-2xl border border-white/20 relative"
                     style={{ backgroundColor: accentColor }}
                   >
                     <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/10" />
@@ -288,7 +288,7 @@ function SectionCard({ icon: Icon, title, children }: any) {
           {title}
         </h3>
       </div>
-      <div className="bg-card/40 backdrop-blur-xl rounded-[2rem] border border-border/40 p-4 sm:p-6 shadow-sm overflow-hidden h-full">
+      <div className="bg-card/40 backdrop-blur-xl rounded-[2rem] border border-border/40 p-4 sm:p-6 overflow-hidden h-full">
         {children}
       </div>
     </div>
