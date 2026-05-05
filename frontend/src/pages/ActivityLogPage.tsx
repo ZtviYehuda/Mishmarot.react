@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   History,
   Activity,
@@ -62,6 +63,19 @@ const ACTION_CONFIG: Record<string, { label: string; icon: any; color: string; b
 
 export default function ActivityLogPage() {
   const { user } = useAuthContext();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-clear tutorial param after 5 seconds
+  useEffect(() => {
+    if (searchParams.get("tutorial")) {
+      const timer = setTimeout(() => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("tutorial");
+        setSearchParams(newParams, { replace: true });
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, setSearchParams]);
   const [activeTab, setActiveTab] = useState<"all" | "suspicious" | "archives">("all");
   
   // Data states
@@ -236,38 +250,44 @@ export default function ActivityLogPage() {
 
   return (
     <div className="flex flex-col h-full bg-background/50 overflow-hidden" dir="rtl">
-      <PageHeader 
-        title="מרכז ניטור וביקורת"
-        subtitle={activeTab === "my" ? "מעקב אחר פעילות החשבון האישי שלך וחיבורים אחרונים" : "יומן פעילות מלא, זיהוי אנומליות וניהול ארכיונים"}
-        icon={History}
-        actions={
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="outline" 
-              className="rounded-2xl h-11 border-border/40 bg-card hover:bg-muted/50 font-bold"
-              onClick={fetchData}
-              disabled={isLoading}
-            >
-              <RefreshCw className={cn("w-4 h-4 ml-2", isLoading && "animate-spin")} />
-              רענן
-            </Button>
-            {user?.is_admin && (
+      <div className="pt-6 pb-4 px-4 sm:px-6 shrink-0 transition-all">
+        <PageHeader 
+          id="activity-log-header"
+          title="מרכז ניטור וביקורת"
+          icon={History}
+          className={cn(
+            "mb-0",
+            searchParams.get("tutorial") === "activity-log" && "tutorial-highlight"
+          )}
+          badge={
+            <div className="flex items-center gap-3">
               <Button 
-                onClick={handleExport}
-                disabled={isExporting}
-                className="rounded-2xl h-11 font-black"
+                variant="outline" 
+                className="rounded-2xl h-11 border-border/40 bg-card hover:bg-muted/50 font-bold"
+                onClick={fetchData}
+                disabled={isLoading}
               >
-                {isExporting ? (
-                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                ) : (
-                  <Download className="w-4 h-4 ml-2" />
-                )}
-                ייצוא דוח ביקורת מלא
+                <RefreshCw className={cn("w-4 h-4 ml-2", isLoading && "animate-spin")} />
+                רענן
               </Button>
-            )}
-          </div>
-        }
-      />
+              {user?.is_admin && (
+                <Button 
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className="rounded-2xl h-11 font-black"
+                >
+                  {isExporting ? (
+                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 ml-2" />
+                  )}
+                  ייצוא דוח ביקורת מלא
+                </Button>
+              )}
+            </div>
+          }
+        />
+      </div>
 
       <main className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 space-y-8">
         {/* Stats Grid */}
@@ -309,7 +329,7 @@ export default function ActivityLogPage() {
         {/* Main Content Card */}
         <Card className="rounded-[2.5rem] border-border/40 overflow-hidden flex flex-col min-h-[650px] bg-card/60 backdrop-blur-xl">
           {/* Custom Tabs */}
-          <div className="flex bg-muted/30 px-6 pt-6 border-b border-border/40 gap-2 overflow-x-auto no-scrollbar">
+          <div className="flex bg-background/20 px-6 pt-6 border-b border-border/40 gap-2 overflow-x-auto no-scrollbar">
              <button onClick={() => setActiveTab("my")} className={cn("px-6 py-3 text-xs font-black rounded-t-2xl transition-all border-t border-x", activeTab === "my" ? "bg-card text-primary border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
                <div className="flex items-center gap-2">
                  <UserCheck className="w-4 h-4" />
@@ -345,7 +365,7 @@ export default function ActivityLogPage() {
           </div>
 
           {/* Toolbar & Advanced Filters */}
-          <div className="p-6 border-b border-border/40 space-y-4 bg-muted/10">
+          <div className="p-6 border-b border-border/40 space-y-4 bg-background/20">
             <div className="flex flex-col lg:flex-row items-center gap-4">
                 <div className="relative w-full lg:flex-1">
                     <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
@@ -434,7 +454,7 @@ export default function ActivityLogPage() {
                                 {/* Status Filter (Radio-like) */}
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">סטטוס פעולה</label>
-                                    <div className="flex bg-muted/40 p-1 rounded-xl gap-1">
+                                    <div className="flex bg-card p-1 rounded-xl gap-1 border border-border/40">
                                         {[
                                             { id: "all", label: "הכל", icon: Activity },
                                             { id: "success", label: "תקין", icon: UserCheck },
@@ -478,7 +498,7 @@ export default function ActivityLogPage() {
 
                             <div className="flex items-center justify-between pt-4 border-t border-border/10">
                                 <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-background/50 border border-border/40 px-3 py-1.5 rounded-full">
                                         <Zap className="w-3 h-3 text-amber-500" />
                                         נמצאו <span className="font-black text-foreground">{filteredLogs.length}</span> תוצאות מתאימות
                                     </div>
@@ -532,7 +552,7 @@ export default function ActivityLogPage() {
               </div>
             ) : filteredLogs.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center py-32 text-center space-y-4">
-                <div className="w-20 h-20 bg-muted/50 rounded-[2rem] flex items-center justify-center text-muted-foreground/20">
+                <div className="w-20 h-20 bg-background/50 border border-border/20 rounded-[2rem] flex items-center justify-center text-muted-foreground/20">
                   <Search className="w-10 h-10" />
                 </div>
                 <div className="space-y-1">
@@ -560,7 +580,7 @@ export default function ActivityLogPage() {
           </div>
 
           {/* Footer Info */}
-          <div className="p-4 border-t border-border/40 bg-muted/10 flex items-center justify-center gap-3">
+          <div className="p-4 border-t border-border/40 bg-background/20 flex items-center justify-center gap-3">
               <Info className="w-4 h-4 text-primary/50" />
               <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
                 {activeTab === "archives" 
@@ -683,8 +703,8 @@ function ActivityEntry({ log, index, isSuspicious }: { log: any, index: number, 
         "group flex flex-col rounded-[1.5rem] border transition-all cursor-pointer overflow-hidden",
         isError 
           ? "bg-red-500/[0.02] hover:bg-red-500/[0.05] border-red-500/10" 
-          : "bg-card hover:bg-muted/30 border-border/40",
-        expanded && "bg-muted/50 ring-1 ring-primary/20 border-primary/20"
+          : "bg-card hover:bg-background border-border/40",
+        expanded && "bg-background/80 ring-1 ring-primary/20 border-primary/20"
       )}
       onClick={() => setExpanded(!expanded)}
     >
@@ -705,7 +725,7 @@ function ActivityEntry({ log, index, isSuspicious }: { log: any, index: number, 
               )}>
                 {config.label}
               </span>
-              <span className="text-[11px] font-bold text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-full flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-muted-foreground bg-background/60 border border-border/20 px-2 py-0.5 rounded-full flex items-center gap-1.5">
                 <Calendar className="w-3 h-3" />
                 {log.created_at ? format(new Date(log.created_at), "HH:mm, dd/MM/yyyy", { locale: he }) : "זמן לא ידוע"}
               </span>
@@ -742,7 +762,7 @@ function ActivityEntry({ log, index, isSuspicious }: { log: any, index: number, 
                <div className={cn("w-1.5 h-1.5 rounded-full", isMobile ? "bg-blue-500" : "bg-emerald-500")} />
             </div>
           </div>
-          <div className="p-2 rounded-xl bg-muted/50 group-hover:bg-primary/10 transition-colors">
+          <div className="p-2 rounded-xl bg-background/50 border border-border/20 group-hover:bg-primary/10 transition-colors">
             <ChevronDown className={cn("w-5 h-5 text-muted-foreground transition-transform duration-300", expanded && "rotate-180")} />
           </div>
         </div>
@@ -754,7 +774,7 @@ function ActivityEntry({ log, index, isSuspicious }: { log: any, index: number, 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t border-border/20 bg-muted/20"
+            className="border-t border-border/20 bg-background/30"
           >
             <div className="p-8 space-y-10">
               {/* Device and Environment Header */}

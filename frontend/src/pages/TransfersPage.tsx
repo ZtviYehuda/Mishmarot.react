@@ -382,11 +382,11 @@ export default function TransfersPage() {
 
   return (
     <div className="flex flex-col" dir="rtl">
-      <div className="pt-6 pb-4 shrink-0 transition-all">
+      <div className="pt-6 pb-4 px-4 sm:px-6 shrink-0 transition-all">
         <PageHeader
           icon={ArrowLeftRight}
           title="בקשות העברה ושיבוץ"
-          className="mb-0 px-4 pb-2 shrink-0 transition-all"
+          className="mb-0"
           hideMobile={true}
         />
       </div>
@@ -809,7 +809,7 @@ export default function TransfersPage() {
                     </div>
 
                     <div className="flex flex-col gap-2.5 mb-4">
-                      <div className="bg-muted/30 dark:bg-slate-900/50 rounded-2xl p-3 text-right flex flex-col justify-center min-h-[60px] border border-border/20">
+                      <div className="bg-background/40 dark:bg-slate-900/50 rounded-2xl p-3 text-right flex flex-col justify-center min-h-[60px] border border-border/20">
                         <span className="text-[9px] font-black text-muted-foreground uppercase block mb-1.5 tracking-widest pl-2">
                           מעבר מ:
                         </span>
@@ -853,7 +853,7 @@ export default function TransfersPage() {
             <div className="hidden md:block bg-card rounded-2xl border border-border  overflow-hidden">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-muted/30">
+                  <TableHeader className="bg-background/20 backdrop-blur-sm">
                     <TableRow className="hover:bg-transparent border-b">
                       <TableHead className="text-right px-6 font-black text-muted-foreground uppercase text-[10px] tracking-widest h-12">
                         שוטר
@@ -899,12 +899,12 @@ export default function TransfersPage() {
                       filteredHistory.map((req) => (
                         <TableRow
                           key={req.id}
-                          className="hover:bg-muted/10 border-b last:border-0 transition-colors"
+                          className="hover:bg-background/60 border-b last:border-0 transition-colors"
                         >
                           <TableCell className="px-6 py-4 align-middle">
                             <button
                               onClick={() => openProfile(req.employee_id)}
-                              className="flex items-center gap-3 text-right hover:bg-muted/50 p-2 -mr-2 rounded-xl transition-colors outline-none group/btn max-w-full"
+                              className="flex items-center gap-3 text-right hover:bg-background border border-transparent hover:border-border/40 p-2 -mr-2 rounded-xl transition-all outline-none group/btn max-w-full"
                             >
                               <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center font-black text-[10px] text-muted-foreground  shrink-0">
                                 {req.employee_name?.[0]}
@@ -1002,7 +1002,7 @@ export default function TransfersPage() {
                         <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                         <Input
                           placeholder="חפש לפי שם או שם משתמש..."
-                          className="pr-10 sm:pr-12 h-12 sm:h-14 text-right rounded-xl sm:rounded-2xl bg-muted/30 border-input focus:bg-background focus:ring-4 focus:ring-primary/20 transition-all text-sm sm:text-base"
+                          className="pr-10 sm:pr-12 h-12 sm:h-14 text-right rounded-xl sm:rounded-2xl bg-background border-border/40 focus:ring-4 focus:ring-primary/10 transition-all text-sm sm:text-base hover:border-border/80"
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -1011,7 +1011,7 @@ export default function TransfersPage() {
                             {filteredEmployeesList.map((emp) => (
                               <button
                                 key={emp.id}
-                                className="w-full p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/50 text-right transition-colors border-b border-border/50 last:border-0 group"
+                                className="w-full p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-background text-right transition-colors border-b border-border/50 last:border-0 group"
                                 onClick={() => {
                                   setSelectedEmployee(emp);
                                   setSearchTerm("");
@@ -1089,7 +1089,7 @@ export default function TransfersPage() {
                             setTargetTeamId("");
                           }}
                         >
-                          <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-muted/30 border-input focus:ring-2 focus:ring-primary/20 font-medium text-xs sm:text-sm transition-all focus:bg-background text-right">
+                          <SelectTrigger className="h-11 sm:h-12 rounded-xl bg-background border border-border/40 hover:border-border/80 focus:ring-2 focus:ring-primary/10 font-medium text-xs sm:text-sm transition-all text-right">
                             <SelectValue placeholder="בחר מחלקה..." />
                           </SelectTrigger>
                           <SelectContent
@@ -1192,7 +1192,7 @@ export default function TransfersPage() {
 
                     <textarea
                       placeholder="פרט את הסיבה לבקשה..."
-                      className="w-full min-h-[120px] sm:min-h-[140px] p-4 bg-muted/30 rounded-xl sm:rounded-2xl text-xs sm:text-sm border-input focus:bg-background focus:ring-4 focus:ring-primary/20 transition-all resize-none font-sans"
+                      className="w-full min-h-[120px] sm:min-h-[140px] p-4 bg-background rounded-xl sm:rounded-2xl text-xs sm:text-sm border border-border/40 focus:ring-4 focus:ring-primary/10 transition-all resize-none font-sans hover:border-border/80"
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
                       dir="rtl"
@@ -1273,7 +1273,7 @@ export default function TransfersPage() {
             {viewingEmployee && (
               <div className="flex flex-col">
                 {/* Header */}
-                <div className="p-6 border-b border-border/40 bg-muted/20">
+                <div className="p-6 border-b border-border/40 bg-background/20">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
@@ -1327,7 +1327,7 @@ export default function TransfersPage() {
                       </div>
                     </a>
 
-                  <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 transition-all hover:border-border">
+                  <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-background/40 transition-all hover:border-border">
                     <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center border border-border/50 shrink-0">
                       <MapPin className="w-4 h-4 text-muted-foreground" />
                     </div>
@@ -1384,7 +1384,7 @@ export default function TransfersPage() {
                   </div>
 
                   {/* Professional Status Card */}
-                  <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 transition-all hover:border-border">
+                  <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-background/40 transition-all hover:border-border">
                     <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center border border-border/50 shrink-0">
                       <ShieldCheck className="w-4 h-4 text-muted-foreground" />
                     </div>
@@ -1451,7 +1451,7 @@ export default function TransfersPage() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-muted/10 border-t border-border/50 flex justify-end">
+                <div className="p-4 bg-background/20 border-t border-border/50 flex justify-end">
                   <Button
                     variant="outline"
                     className="h-9 rounded-xl font-black text-xs px-6 border-border hover:bg-muted"
@@ -1476,7 +1476,7 @@ export default function TransfersPage() {
           >
             {selectedRequest && (
               <div className="flex flex-col h-full">
-                <div className="px-6 py-5 border-b border-border/40 bg-muted/20 flex items-center justify-between shrink-0 pl-12">
+                <div className="px-6 py-5 border-b border-border/40 bg-background/20 flex items-center justify-between shrink-0 pl-12">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-base border border-primary/10">
                       {selectedRequest.employee_name?.[0]}

@@ -128,10 +128,13 @@ def setup_database():
             );""",
             """CREATE TABLE IF NOT EXISTS support_tickets (
                 id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES employees(id),
                 full_name VARCHAR(100) NOT NULL,
                 subject VARCHAR(200) NOT NULL,
                 message TEXT NOT NULL,
                 status VARCHAR(20) DEFAULT 'open',
+                admin_reply TEXT,
+                context_page TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );""",
             """CREATE TABLE IF NOT EXISTS audit_logs (
@@ -142,6 +145,18 @@ def setup_database():
                 target_id INTEGER,
                 ip_address VARCHAR(45),
                 metadata JSONB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );""",
+            """CREATE TABLE IF NOT EXISTS request_approvals (
+                id SERIAL PRIMARY KEY,
+                request_type VARCHAR(50) NOT NULL,
+                request_id INTEGER NOT NULL,
+                approver_id INTEGER REFERENCES employees(id),
+                approver_rank_level VARCHAR(50),
+                status VARCHAR(20) DEFAULT 'pending',
+                comment TEXT,
+                ip_address VARCHAR(45),
+                digital_signature TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );""",
             """CREATE TABLE IF NOT EXISTS delegations (
@@ -177,6 +192,18 @@ def setup_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 resolved_at TIMESTAMP,
                 expires_at TIMESTAMP
+            );""",
+            """CREATE TABLE IF NOT EXISTS feedbacks (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES employees(id),
+                category VARCHAR(50),
+                description TEXT NOT NULL,
+                status VARCHAR(20) DEFAULT 'received',
+                admin_reply TEXT,
+                screenshot_url TEXT,
+                context_page TEXT,
+                user_agent TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );""",
         ]
 
@@ -245,6 +272,17 @@ def setup_database():
             cur.execute(
                 "ALTER TABLE status_types ADD COLUMN IF NOT EXISTS parent_status_id INTEGER REFERENCES status_types(id);"
             )
+            
+            # Support Tickets Migrations
+            cur.execute(
+                "ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES employees(id);"
+            )
+            cur.execute(
+                "ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS admin_reply TEXT;"
+            )
+            cur.execute(
+                "ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS context_page TEXT;"
+            )
 
             # Transfer Requests Migrations
             cur.execute(
@@ -284,7 +322,7 @@ def setup_database():
             """
             )
         except Exception as e:
-            print(f"ℹ️ Migration info: {e}")
+            print(f"Migration info: {e}")
             conn.rollback()
             cur = conn.cursor()
 
@@ -347,7 +385,7 @@ def setup_database():
                         mishrad_id,
                     ),
                 )
-            print("✅ Sub-statuses for 'משרד' added")
+            print("[SUCCESS] Sub-statuses for 'משרד' added")
 
         # 3. יצירת Admin דיפולטיבי (אם לא קיים)
         # 3. יצירת/תיקון Admin דיפולטיבי
@@ -375,11 +413,11 @@ def setup_database():
                     False,
                 ),
             )
-            print("✅ Default Admin created: User: admin, Pass: 123456")
+            print("[SUCCESS] Default Admin created: User: admin, Pass: 123456")
         else:
             current_hash = admin_row[1]
             if not current_hash or not str(current_hash).startswith("scrypt"):
-                print("⚠️  Admin user found with invalid data. Resetting admin...")
+                print("[WARNING]  Admin user found with invalid data. Resetting admin...")
                 cur.execute(
                     """
                     UPDATE employees 
@@ -395,7 +433,7 @@ def setup_database():
                     """,
                     (admin_pw_hash, admin_row[0]),
                 )
-                print("✅ Default Admin reset: User: admin, Pass: 123456")
+                print("[SUCCESS] Default Admin reset: User: admin, Pass: 123456")
 
         # 2b. הזרקת נתוני Service Types
         # 2b. הזרקת נתוני Service Types
@@ -421,13 +459,13 @@ def setup_database():
                     (st,),
                 )
 
-            print("✅ Service Types inserted successfully.")
+            print("[SUCCESS] Service Types inserted successfully.")
 
         conn.commit()
-        print("✅ Database setup completed successfully.")
+        print("[SUCCESS] Database setup completed successfully.")
 
     except Exception as e:
-        print(f"❌ Database setup failed: {e}")
+        print(f"[ERROR] Database setup failed: {e}")
         conn.rollback()
     finally:
         conn.close()

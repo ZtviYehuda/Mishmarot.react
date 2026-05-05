@@ -80,7 +80,7 @@ def rotate_audit_logs():
             old_logs = cur.fetchall()
 
             if not old_logs:
-                print(f"✅ Audit rotation: No logs older than {RETENTION_DAYS} days. Nothing to archive.")
+                print(f"[SUCCESS] Audit rotation: No logs older than {RETENTION_DAYS} days. Nothing to archive.")
                 _mark_completed()
                 return
 
@@ -102,14 +102,14 @@ def rotate_audit_logs():
 
             file_size_kb = os.path.getsize(archive_file) / 1024
             print(
-                f"✅ Audit rotation: Archived {len(old_logs)} logs → {os.path.basename(archive_file)} "
+                f"[SUCCESS] Audit rotation: Archived {len(old_logs)} logs → {os.path.basename(archive_file)} "
                 f"({file_size_kb:.1f} KB). DB cleaned."
             )
 
     except Exception as e:
         if conn:
             conn.rollback()
-        print(f"❌ Audit rotation error: {e}")
+        print(f"[ERROR] Audit rotation error: {e}")
         return {"error": str(e)}
     finally:
         if conn:

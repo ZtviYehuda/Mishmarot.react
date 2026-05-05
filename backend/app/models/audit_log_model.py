@@ -64,7 +64,7 @@ class AuditLogModel:
                 )
                 conn.commit()
         except Exception as e:
-            print(f"❌ Error logging action: {e}")
+            print(f"[ERROR] Error logging action: {e}")
             # We don't want to crash the whole login flow if audit fails, 
             # but we should know about it. 
         finally:

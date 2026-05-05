@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 import { useAuthContext } from "@/context/AuthContext";
+import { useFeedback } from "@/context/FeedbackContext";
 
 interface EmployeeDetailsModalProps {
   open: boolean;
@@ -101,6 +102,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
+  const { openFeedback } = useFeedback();
   const [searchParams] = useSearchParams();
 
   if (!employee) return null;
@@ -326,10 +328,10 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         </div>
 
         {/* ─── Footer ─── */}
-        <div className="px-5 py-4 border-t border-border/30">
+        <div className="px-5 py-4 border-t border-border/30 flex flex-col gap-3">
           <Button
             variant="default"
-            className="w-full gap-2 font-black bg-primary hover:bg-primary/90 text-primary-foreground h-12 rounded-2xl transition-all active:scale-[0.98] text-sm"
+            className="w-full gap-2 font-black bg-primary hover:bg-primary/90 text-primary-foreground h-12 rounded-2xl transition-all active:scale-[0.98] text-sm shadow-lg shadow-primary/20"
             onClick={() => {
               navigate(`/employees/${employee.id}`);
               onOpenChange(false);
@@ -338,6 +340,14 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             <ExternalLink className="w-4 h-4" />
             צפייה בפרופיל מלא
           </Button>
+
+          {/* Contextual Feedback Link */}
+          <button
+            onClick={() => openFeedback(`פרופיל שוטר: ${employee.first_name} ${employee.last_name}`)}
+            className="w-full text-[11px] font-bold text-muted-foreground hover:text-primary transition-colors text-center py-1"
+          >
+            מצאת טעות? יש לך הצעה לדף זה? <span className="underline decoration-primary/30 underline-offset-4">לחץ כאן</span>
+          </button>
         </div>
       </DialogContent>
     </Dialog>

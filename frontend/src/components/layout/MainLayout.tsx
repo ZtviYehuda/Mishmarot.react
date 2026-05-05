@@ -46,6 +46,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { GlobalAiSupport } from "@/components/common/GlobalAiSupport";
+import { MessageSquarePlus, MessageSquare } from "lucide-react";
 
 function getAlertConfig(alert: {
   id: string;
@@ -142,6 +144,24 @@ export default function MainLayout() {
 
   const [sickModalOpen, setSickModalOpen] = React.useState(false);
   const [sickEmployees, setSickEmployees] = React.useState<any[]>([]);
+  const [pendingRequestsCount, setPendingRequestsCount] = React.useState(0);
+
+  const fetchPendingCount = async () => {
+    if (!user?.is_admin) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/support/tickets/pending-count`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await res.json();
+      setPendingRequestsCount(data.count || 0);
+    } catch (err) { console.error(err); }
+  };
+
+  React.useEffect(() => {
+    fetchPendingCount();
+    const interval = setInterval(fetchPendingCount, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Check for critical morning alerts
   React.useEffect(() => {
@@ -186,6 +206,7 @@ export default function MainLayout() {
     { name: "לוח בקרה ראשי", path: "/", icon: LayoutDashboard },
     { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
     { name: "סידור עבודה", path: "/roster", icon: CalendarRange },
+    { name: "מרכז משוב", path: "/feedback", icon: MessageSquarePlus },
     // Only show these if NOT a temp commander
     ...(!user?.is_temp_commander
       ? [
@@ -417,14 +438,26 @@ export default function MainLayout() {
 
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
 
+            {/* Feedback Center Button - Now a Link */}
+            <Link
+              to="/feedback"
+              title="מרכז משוב והצעות"
+              className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all"
+            >
+              <MessageSquarePlus className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Link>
+
             {/* Notifications Bell */}
             <Popover>
               <PopoverTrigger asChild>
                 <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all">
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-primary text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card  ">
-                      {unreadCount}
+                  {(unreadCount + (user?.is_admin ? pendingRequestsCount : 0)) > 0 && (
+                    <span className={cn(
+                      "absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card animate-in zoom-in-50",
+                      pendingRequestsCount > 0 && user?.is_admin ? "bg-amber-500 shadow-lg shadow-amber-500/20" : "bg-primary"
+                    )}>
+                      {unreadCount + (user?.is_admin ? pendingRequestsCount : 0)}
                     </span>
                   )}
                 </button>
@@ -802,15 +835,7 @@ export default function MainLayout() {
 
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
 
-            <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/20  transition-all hover:bg-emerald-500/10">
-              <div className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </div>
-              <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">
-                מערכת במצב פעיל
-              </span>
-            </div>
+
           </div>
         </header>
 
@@ -900,6 +925,7 @@ export default function MainLayout() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <GlobalAiSupport />
       </div >
     </div >
   );

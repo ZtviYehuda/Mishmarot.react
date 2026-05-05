@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -79,6 +80,22 @@ export const ReportHub: React.FC<ReportHubProps> = ({
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
 
   const { user } = useAuthContext();
+  const [activeTutorial, setActiveTutorial] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const tutorial = searchParams.get("tutorial");
+    if (tutorial === "report-hub") {
+      setActiveTutorial(tutorial);
+      const timer = setTimeout(() => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("tutorial");
+        setSearchParams(newParams, { replace: true });
+        setTimeout(() => setActiveTutorial(null), 1000);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, setSearchParams]);
 
   const isOldDate = useMemo(() => {
     if (user?.is_admin) return false;
@@ -283,17 +300,20 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     </div>
   );
 
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button 
+            id="report-hub-card"
             variant="ghost" 
             className={cn(
               "rounded-xl font-black transition-all bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 backdrop-blur-xl",
               className?.includes("h-20") 
                 ? className 
-                : cn("h-9 gap-2 px-4 text-[13px]", className)
+                : cn("h-9 gap-2 px-4 text-[13px]", className),
+              searchParams.get("tutorial") === "report-hub" || activeTutorial === "report-hub" ? "tutorial-highlight" : ""
             )}
           >
             {className?.includes("flex-col") ? (

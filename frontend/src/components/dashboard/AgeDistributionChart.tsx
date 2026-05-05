@@ -50,24 +50,24 @@ export const AgeDistributionChart = ({
               <span>חתך גילאים</span>
               {filterTags.length > 0 && (
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                   <div className="flex items-center gap-1.5 text-[10px] text-blue-700 dark:text-blue-400 font-black uppercase tracking-tight ml-1 animate-pulse">
-                    <Filter className="w-3 h-3" />
-                  </div>
-                  {filterTags.map((tag, idx) => (
-                    <Badge 
-                      key={idx} 
-                      variant="secondary" 
-                      className="text-[9px] h-5 px-2 font-black bg-blue-700 text-white border-none whitespace-nowrap rounded-md"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
+                    <div className="flex items-center gap-1.5 text-[10px] text-primary/60 font-black uppercase tracking-tight ml-1">
+                      <Filter className="w-3 h-3" />
+                    </div>
+                    {filterTags.map((tag, idx) => (
+                      <Badge 
+                        key={idx} 
+                        variant="outline" 
+                        className="text-[10px] h-6 px-2.5 font-bold bg-background/20 text-primary border-primary/20 backdrop-blur-sm whitespace-nowrap rounded-lg hover:bg-primary/5 transition-all"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
                 </div>
               )}
             </h3>
           </div>
         </div>
-        <div className="bg-muted/30 px-3 py-1.5 rounded-lg border border-border/40 flex items-center gap-2">
+        <div className="bg-background/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-border/40 flex items-center gap-2">
           <div className="flex flex-col items-end">
             <span className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.1em] leading-none mb-1">
               גיל ממוצע

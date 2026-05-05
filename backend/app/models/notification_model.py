@@ -525,7 +525,7 @@ class NotificationModel:
             return True
         except Exception as e:
             conn.rollback()
-            print(f"❌ Error marking notification as read: {e}")
+            print(f"[ERROR] Error marking notification as read: {e}")
             return False
         finally:
             conn.close()
@@ -549,7 +549,7 @@ class NotificationModel:
             return True
         except Exception as e:
             conn.rollback()
-            print(f"❌ Error marking notification as unread: {e}")
+            print(f"[ERROR] Error marking notification as unread: {e}")
             return False
         finally:
             conn.close()
@@ -598,7 +598,7 @@ class NotificationModel:
             return True
         except Exception as e:
             conn.rollback()
-            print(f"❌ Error marking all notifications as read: {e}")
+            print(f"[ERROR] Error marking all notifications as read: {e}")
             import traceback
 
             traceback.print_exc()
@@ -625,7 +625,7 @@ class NotificationModel:
             return True
         except Exception as e:
             conn.rollback()
-            print(f"❌ Error sending message: {e}")
+            print(f"[ERROR] Error sending message: {e}")
             return False
         finally:
             conn.close()
@@ -650,7 +650,7 @@ class NotificationModel:
             # Ensure IDs are strings to match the alerts formatting
             return {str(row[0]) for row in rows}
         except Exception as e:
-            print(f"❌ Error getting read notifications: {e}")
+            print(f"[ERROR] Error getting read notifications: {e}")
             return set()
         finally:
             conn.close()
@@ -711,7 +711,7 @@ class NotificationModel:
 
             return history
         except Exception as e:
-            print(f"❌ Error getting notification history: {e}")
+            print(f"[ERROR] Error getting notification history: {e}")
             import traceback
 
             traceback.print_exc()

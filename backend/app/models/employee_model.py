@@ -854,7 +854,7 @@ class EmployeeModel:
             import traceback
 
             error_trace = traceback.format_exc()
-            print(f"❌ Error updating employee {emp_id}: {e}")
+            print(f"[ERROR] Error updating employee {emp_id}: {e}")
             print(error_trace)
             # Re-raising for the route to catch it if possible,
             # or we can return False if we want to stick to the original pattern

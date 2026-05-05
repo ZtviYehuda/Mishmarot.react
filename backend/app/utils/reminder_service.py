@@ -268,9 +268,9 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
             # Combine Status Sections
             status_summary_html = roster_reminder_html
             if not self_reported:
-                status_summary_html += f"""<div style="margin-bottom: 16px; padding: 16px; border-right: 4px solid #ef4444; background-color: #fafafa;"><h4 style="margin: 0 0 4px 0; color: #b91c1c; font-size: 15px; font-weight: 700;">⚠️ טרם דיווחת היום</h4><p style="margin: 0; color: #7f1d1d; font-size: 13px;">נא לעדכן את הסטטוס האישי שלך במערכת.</p></div>"""
+                status_summary_html += f"""<div style="margin-bottom: 16px; padding: 16px; border-right: 4px solid #ef4444; background-color: #fafafa;"><h4 style="margin: 0 0 4px 0; color: #b91c1c; font-size: 15px; font-weight: 700;">[WARNING] טרם דיווחת היום</h4><p style="margin: 0; color: #7f1d1d; font-size: 13px;">נא לעדכן את הסטטוס האישי שלך במערכת.</p></div>"""
             else:
-                status_summary_html += f"""<div style="margin-bottom: 16px; padding: 16px; border-right: 4px solid #10b981; background-color: #fafafa;"><h4 style="margin: 0 0 4px 0; color: #065f46; font-size: 15px; font-weight: 700;">✅דיווח עצמי מעודכן </h4></div>"""
+                status_summary_html += f"""<div style="margin-bottom: 16px; padding: 16px; border-right: 4px solid #10b981; background-color: #fafafa;"><h4 style="margin: 0 0 4px 0; color: #065f46; font-size: 15px; font-weight: 700;">[SUCCESS]דיווח עצמי מעודכן </h4></div>"""
 
             for sub in sub_reports_found:
                 status_summary_html += f"""

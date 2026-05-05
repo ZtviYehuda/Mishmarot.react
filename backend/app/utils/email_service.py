@@ -26,10 +26,10 @@ def send_email(to_email, subject, body_html):
             server.login(smtp_email, smtp_password)
             server.sendmail(smtp_email, to_email, msg.as_string())
             server.quit()
-            print(f"✅ Email sent successfully to {to_email}")
+            print(f"[SUCCESS] Email sent successfully to {to_email}")
             return True
         except Exception as e:
-            print(f"❌ Failed to send real email: {e}")
+            print(f"[ERROR] Failed to send real email: {e}")
             logging.error(f"Failed to send email: {e}")
             return False  # Return False here because we tried real SMTP and it failed
 

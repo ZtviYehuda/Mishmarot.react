@@ -49,7 +49,7 @@ def get_employees():
         employees = EmployeeModel.get_all_employees(filters, requesting_user=requester)
         return jsonify(employees)
     except Exception as e:
-        print(f"❌ Error in GET /employees: {e}")
+        print(f"[ERROR] Error in GET /employees: {e}")
         import traceback
 
         traceback.print_exc()
@@ -196,7 +196,7 @@ def update_employee(emp_id):
                     metadata=data,
                 )
             except Exception as log_err:
-                print(f"⚠️ Audit logging failed: {log_err}")
+                print(f"[WARNING] Audit logging failed: {log_err}")
 
             return jsonify({"success": True, "message": "User updated"})
         return jsonify({"success": False, "error": "Update failed in database"}), 500
@@ -204,7 +204,7 @@ def update_employee(emp_id):
     except Exception as e:
         import traceback
 
-        print(f"❌ CRITICAL ERROR in update_employee: {e}")
+        print(f"[ERROR] CRITICAL ERROR in update_employee: {e}")
         traceback.print_exc()
         return (
             jsonify(

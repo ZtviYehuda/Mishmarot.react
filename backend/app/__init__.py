@@ -1,5 +1,5 @@
-from flask import Flask
-from flask_cors import CORS
+from flask import Flask, request, jsonify, make_response
+
 from flask_jwt_extended import JWTManager
 from app.config import Config
 from app.utils.json_provider import CustomJSONProvider
@@ -16,37 +16,29 @@ def create_app():
     # הגדרת פורמט JSON תקין
     app.json = CustomJSONProvider(app)
 
-    # --- תיקון CORS קריטי ---
-    # הגדרת מקורות מורשים ספציפיים במקום כוכבית כדי לאפשר Credentials
-    origins_list = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "https://powers-creator-broader-harper.trycloudflare.com",
-        "https://proud-roses-rescue.loca.lt",
-    ]
-
-    CORS(
-        app,
-        resources={
-            r"/api/*": {
-                "origins": origins_list,
-                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-                "allow_headers": [
-                    "Content-Type",
-                    "Authorization",
-                    "Access-Control-Allow-Private-Network",
-                ],
-                "expose_headers": ["Content-Type"],
-                "max_age": 3600,
-            }
-        },
-        supports_credentials=True,
-    )
+    # --- Manual CORS Handling (The "Iron" Solution) ---
+    @app.before_request
+    def handle_options_preflight():
+        if request.method == 'OPTIONS':
+            response = make_response()
+            origin = request.headers.get('Origin')
+            if origin:
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+                response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Access-Control-Allow-Private-Network, bypass-tunnel-reminder"
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+                response.headers["Access-Control-Allow-Private-Network"] = "true"
+            return response
 
     @app.after_request
     def add_cors_headers(response):
-        # PNA Header must be present to allow HTTPS public site to talk to HTTP localhost
-        response.headers["Access-Control-Allow-Private-Network"] = "true"
+        origin = request.headers.get('Origin')
+        if origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Access-Control-Allow-Private-Network, bypass-tunnel-reminder"
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Private-Network"] = "true"
         return response
 
     jwt = JWTManager(app)
@@ -77,14 +69,14 @@ def create_app():
         try:
             setup_database()
         except Exception as e:
-            print(f"⚠️ Database setup warning: {e}")
+            print(f"Database setup warning: {e}")
 
         # Automatic audit log rotation (archives logs older than 7 days)
         try:
             from app.utils.audit_rotation import rotate_audit_logs
             rotate_audit_logs()
         except Exception as e:
-            print(f"⚠️ Audit rotation warning: {e}")
+            print(f"Audit rotation warning: {e}")
 
     # --- רישום הנתיבים (Blueprints) ---
     # זה החלק שחסר או שגוי אצלך שגורם לשגיאת 404
@@ -98,6 +90,7 @@ def create_app():
     from app.routes.support_routes import support_bp
     from app.routes.audit_routes import audit_bp
     from app.routes.archive_routes import archive_bp
+    from app.routes.feedback_routes import feedback_bp
     # from app.routes.webauthn_routes import webauthn_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
@@ -113,6 +106,7 @@ def create_app():
     app.register_blueprint(support_bp, url_prefix="/api/support", strict_slashes=False)
     app.register_blueprint(audit_bp, url_prefix="/api/audit", strict_slashes=False)
     app.register_blueprint(archive_bp, url_prefix="/api/archive", strict_slashes=False)
+    app.register_blueprint(feedback_bp, url_prefix="/api/feedback", strict_slashes=False)
     # app.register_blueprint(webauthn_bp)
 
     return app

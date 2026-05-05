@@ -144,7 +144,7 @@ def refresh_token():
     except Exception as e:
         conn.rollback()
         import traceback
-        print(f"❌ Refresh token error: {traceback.format_exc()}")
+        print(f"[ERROR] Refresh token error: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
@@ -316,7 +316,7 @@ def login():
     except Exception as e:
         import traceback
 
-        print("\n❌ CRITICAL ERROR DURING LOGIN:")
+        print("\n[ERROR] CRITICAL ERROR DURING LOGIN:")
         print(traceback.format_exc())
         logging.error("Error during login process:", exc_info=True)
         return (

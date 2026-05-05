@@ -71,7 +71,7 @@ class TransferModel:
             try:
                 TransferModel._notify_transfer_event(new_id, "created")
             except Exception as e:
-                print(f"⚠️ Notification failed after transfer creation: {e}")
+                print(f"[WARNING] Notification failed after transfer creation: {e}")
 
             return new_id
         except Exception as e:
@@ -460,7 +460,7 @@ class TransferModel:
             try:
                 TransferModel._notify_transfer_event(request_id, "approved")
             except Exception as e:
-                print(f"⚠️ Notification failed after transfer approval: {e}")
+                print(f"[WARNING] Notification failed after transfer approval: {e}")
 
             return True
         except Exception as e:
@@ -521,7 +521,7 @@ class TransferModel:
             try:
                 TransferModel._notify_transfer_event(request_id, "rejected")
             except Exception as e:
-                print(f"⚠️ Notification failed after transfer rejection: {e}")
+                print(f"[WARNING] Notification failed after transfer rejection: {e}")
 
             return True
         except Exception:

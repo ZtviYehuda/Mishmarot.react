@@ -105,7 +105,7 @@ const UnitPicker = ({
         <SelectTrigger
           className={cn(
             "h-10 w-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl transition-all px-4 hover:border-primary/30 focus:ring-0 text-right font-bold",
-            !value && "bg-slate-50/30 border-dashed",
+            !value && "bg-background border-dashed",
             disabled && "opacity-30 grayscale pointer-events-none",
           )}
         >
@@ -382,7 +382,7 @@ const PersonalFormTab = ({
                     value={emergencyDetails.name}
                     onChange={(e) => setEmergencyDetails({ ...emergencyDetails, name: e.target.value })}
                     placeholder="שם איש הקשר"
-                    className="w-full h-10 bg-white dark:bg-slate-900/50 border-rose-500/10 focus-visible:ring-rose-500/20 rounded-xl font-bold"
+                    className="h-10 bg-background border border-border/40 focus-visible:ring-rose-500/20 font-bold rounded-xl hover:border-border/80 transition-all"
                   />
                 </InputItem>
                 <InputItem label="קרבה" className="sm:col-span-2">
@@ -957,7 +957,7 @@ export default function CreateEmployeePage() {
   return (
     <div id="create-page-root" className="flex flex-col pb-10">
       {/* Page Header - matches system layout */}
-      <div className="pt-6 pb-4 shrink-0 flex items-center justify-between gap-4 border-b border-border/40 mb-6">
+      <div className="pt-6 pb-4 px-4 sm:px-6 shrink-0 flex items-center justify-between gap-4 border-b border-border/40 mb-6">
         <PageHeader
           icon={UserPlus}
           title="הוספת שוטר חדש"

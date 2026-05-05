@@ -24,6 +24,7 @@ import { DateHeader } from "@/components/common/DateHeader";
 import { RestorationRequestDialog } from "@/components/dashboard/RestorationRequestDialog";
 import { WhatsAppBroadcastModal } from "@/components/employees/modals/WhatsAppBroadcastModal";
 import { MessageSquare, Calendar as CalendarIcon, RotateCcw, Filter, Lock } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { GlobalEventModal } from "@/components/employees/modals/GlobalEventModal";
 
 // Helper types for structure
@@ -45,8 +46,27 @@ interface Department {
 }
 
 export default function DashboardPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuthContext();
   const { selectedDate, setSelectedDate } = useDateContext();
+
+  const [activeTutorial, setActiveTutorial] = useState<string | null>(null);
+
+  // Auto-clear tutorial param and manage local state
+  useEffect(() => {
+    const tutorial = searchParams.get("tutorial");
+    if (tutorial) {
+      setActiveTutorial(tutorial);
+      const timer = setTimeout(() => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("tutorial");
+        setSearchParams(newParams, { replace: true });
+        // We keep activeTutorial for a bit longer to ensure visibility
+        setTimeout(() => setActiveTutorial(null), 1000);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, setSearchParams]);
 
   // Refs for reports
   const snapshotRef = useRef<any>(null);
@@ -656,13 +676,13 @@ export default function DashboardPage() {
       className="w-full relative min-h-screen pb-10"
       dir="rtl"
     >
-      <div className="relative z-10 space-y-4 pt-4 px-4 sm:px-6 max-w-full mx-auto transition-all">
+      <div className="relative z-10 space-y-4 pt-6 pb-4 px-4 sm:px-6 max-w-full mx-auto transition-all">
         {/* New Header Section - Matching Screenshot */}
         <PageHeader
           icon={LayoutDashboard}
           title="לוח בקרה"
           subtitle={format(selectedDate, "EEEE, d MMMM yyyy", { locale: he })}
-          className="hidden md:flex mb-1"
+          className="hidden md:flex mb-0"
           badge={
             <div className="flex items-center gap-2">
               <Button
@@ -709,18 +729,26 @@ export default function DashboardPage() {
                 </div>
 
                 <Button
+                  id="event-button"
                   variant="ghost"
                   onClick={() => setGlobalEventOpen(true)}
-                  className="h-9 rounded-xl flex-col gap-0.5 font-black transition-all px-2 sm:px-2.5 xl:px-3.5 text-slate-500 hover:text-primary hover:bg-primary/5 text-sm min-w-[60px] sm:min-w-[64px] py-1"
+                  className={cn(
+                    "h-9 rounded-xl flex-col gap-0.5 font-black transition-all px-2 sm:px-2.5 xl:px-3.5 text-primary hover:bg-primary/5 text-sm min-w-[60px] sm:min-w-[64px] py-1",
+                    activeTutorial === "event" && "tutorial-highlight"
+                  )}
                 >
                   <CalendarIcon className="w-3.5 h-3.5" />
                   <span className="text-[8.5px] xl:text-[9.5px] leading-tight">אירוע</span>
                 </Button>
 
                 <Button
+                  id="broadcast-button"
                   variant="ghost"
                   onClick={() => setWhatsappBroadcastOpen(true)}
-                  className="h-9 rounded-xl flex-col gap-0.5 font-black transition-all px-2 sm:px-2.5 xl:px-3.5 text-slate-500 hover:text-primary hover:bg-primary/5 text-sm min-w-[60px] sm:min-w-[64px] py-1"
+                  className={cn(
+                    "h-9 rounded-xl flex-col gap-0.5 font-black transition-all px-2 sm:px-2.5 xl:px-3.5 text-primary hover:bg-primary/5 text-sm min-w-[60px] sm:min-w-[64px] py-1",
+                    activeTutorial === "broadcast" && "tutorial-highlight"
+                  )}
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span className="text-[8.5px] xl:text-[9.5px] leading-tight text-center">רשימת תפוצה</span>
@@ -761,9 +789,13 @@ export default function DashboardPage() {
           </ReportHub>
 
           <Button
+            id="mobile-event-button"
             variant="ghost"
             onClick={() => setGlobalEventOpen(true)}
-            className="flex-col gap-1.5 h-20 rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl"
+            className={cn(
+              "flex-col gap-1.5 h-20 rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl",
+              activeTutorial === "event" && "tutorial-highlight"
+            )}
           >
             <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
               <CalendarIcon className="w-5 h-5" />
@@ -772,9 +804,13 @@ export default function DashboardPage() {
           </Button>
 
           <Button
+            id="mobile-broadcast-button"
             variant="ghost"
             onClick={() => setWhatsappBroadcastOpen(true)}
-            className="flex-col gap-1.5 h-20 rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl"
+            className={cn(
+              "flex-col gap-1.5 h-20 rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl",
+              activeTutorial === "broadcast" && "tutorial-highlight"
+            )}
           >
             <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
               <MessageSquare className="w-5 h-5" />
@@ -872,10 +908,14 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
              {/* Birthdays */}
              <BirthdaysCard 
+                id="birthdays-card"
                 ref={birthdaysRef}
                 birthdays={birthdays}
                 loading={loadingExtras}
                 unitName={unitName}
+                className={cn(
+                  activeTutorial === "birthdays" && "tutorial-highlight"
+                )}
              />
 
              {/* Team Comparison */}

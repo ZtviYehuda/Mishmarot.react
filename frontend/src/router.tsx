@@ -30,6 +30,7 @@ const AttendancePage     = lazy(() => import("@/pages/AttendancePage"));
 const RosterPage         = lazy(() => import("@/pages/RosterPage"));
 const ChangePasswordPage = lazy(() => import("@/pages/ChangePasswordPage"));
 const ActivityLogPage    = lazy(() => import("@/pages/ActivityLogPage"));
+const FeedbackPage       = lazy(() => import("@/pages/FeedbackPage"));
 
 // ── Page-level suspense wrapper ───────────────────────────────────────────────
 // Keeps UX smooth: shows LoadingScreen while the chunk downloads
@@ -45,37 +46,37 @@ function DefaultErrorBoundary() {
   const errorMessage = error?.message || error?.statusText || "שגיאה לא ידועה";
   
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 font-sans" dir="rtl">
-      <div className="max-w-xl w-full bg-white dark:bg-slate-900 rounded-[2.5rem] p-10 border border-border/40 text-center space-y-6 overflow-hidden">
-        <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center text-rose-500 mx-auto">
-          <AlertCircle className="w-10 h-10" />
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-6 bg-slate-50 dark:bg-slate-950 font-sans" dir="rtl">
+      <div className="max-w-xl w-full bg-white dark:bg-slate-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border border-border/40 text-center space-y-6 overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none">
+        <div className="w-16 h-16 md:w-20 md:h-20 bg-rose-500/10 rounded-2xl md:rounded-3xl flex items-center justify-center text-rose-500 mx-auto animate-bounce">
+          <AlertCircle className="w-8 h-8 md:w-10 md:h-10" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-black text-slate-800 dark:text-white">אופס! משהו השתבש</h1>
-          <p className="text-muted-foreground font-medium text-sm leading-relaxed">
+          <h1 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight">אופס! משהו השתבש</h1>
+          <p className="text-muted-foreground font-medium text-[13px] md:text-sm leading-relaxed px-2">
             המערכת נתקלה בשגיאה טכנית. פרטי השגיאה מוצגים למטה:
           </p>
         </div>
         
-        <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-left overflow-x-auto max-h-40">
-          <pre className="text-[10px] font-mono text-rose-600 dark:text-rose-400 whitespace-pre-wrap">
+        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl md:rounded-2xl text-left overflow-x-auto max-h-40 border border-slate-200/50 dark:border-white/5">
+          <pre className="text-[10px] font-mono text-rose-600 dark:text-rose-400 whitespace-pre-wrap break-all">
             {errorMessage}
             {error?.stack && `\n\nStack:\n${error.stack}`}
           </pre>
         </div>
         
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <Button 
             onClick={() => window.location.reload()}
-            className="flex-1 h-14 rounded-2xl font-black text-lg gap-2"
+            className="flex-1 h-12 md:h-14 rounded-xl md:rounded-2xl font-black text-md md:text-lg gap-2 shadow-lg shadow-primary/20"
           >
-            <RefreshCw className="w-5 h-5" />
+            <RefreshCw className="w-4 h-4 md:w-5 md:h-5" />
             רענן ונסה שוב
           </Button>
           <Button 
             variant="outline"
             onClick={() => window.location.href = "/login"}
-            className="flex-1 h-14 rounded-2xl font-black text-lg"
+            className="flex-1 h-12 md:h-14 rounded-xl md:rounded-2xl font-black text-md md:text-lg border-slate-200 dark:border-slate-700"
           >
             חזרה להתחברות
           </Button>
@@ -143,6 +144,7 @@ const router = createBrowserRouter([
           { path: "/attendance",          element: <PageSuspense><AttendancePage /></PageSuspense> },
           { path: "/roster",              element: <PageSuspense><RosterPage /></PageSuspense> },
           { path: "/settings",            element: <SettingsPage /> },
+          { path: "/feedback",            element: <PageSuspense><FeedbackPage /></PageSuspense> },
           { path: "/activity-log",        element: <PageSuspense><ActivityLogPage /></PageSuspense> },
         ],
       },

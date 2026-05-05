@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const API_URL = "/api";
+export const API_URL = "http://localhost:5000/api";
 
 // ── Simple in-memory cache for GET requests ───────────────────────────────────
 // Avoids refetching reference data (statusTypes, structure, etc.)

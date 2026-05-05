@@ -42,7 +42,7 @@ import {
   History,
 } from "lucide-react";
 import { AttendanceCalendarView } from "@/components/attendance/AttendanceCalendarView";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn, cleanUnitName } from "@/lib/utils";
@@ -524,6 +524,20 @@ export default function AttendancePage() {
     return "שוטר";
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-clear tutorial param after 5 seconds
+  useEffect(() => {
+    if (searchParams.get("tutorial")) {
+      const timer = setTimeout(() => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("tutorial");
+        setSearchParams(newParams, { replace: true });
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, setSearchParams]);
+
   const isReportedToday = currentUserEmp
     ? isReportedOnDate(currentUserEmp, selectedDate)
     : false;
@@ -535,15 +549,19 @@ export default function AttendancePage() {
 
   return (
     <div
+      id="attendance-header"
       className="flex flex-col min-h-full selection:bg-primary/10 selection:text-primary transition-all"
       dir="rtl"
     >
-      <div className="pt-3 pb-1 shrink-0 transition-all px-4">
+      <div className="pt-6 pb-4 shrink-0 transition-all px-4 sm:px-6">
         {/* Premium Page Header Section */}
         <PageHeader
           icon={CalendarDays}
           title="מעקב נוכחות"
-          className="mb-2"
+          className={cn(
+            "mb-0",
+            searchParams.get("tutorial") === "attendance" && "tutorial-highlight"
+          )}
           hideMobile={true}
           badge={
             <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6 w-full lg:w-auto mt-4 lg:mt-0">
@@ -582,12 +600,14 @@ export default function AttendancePage() {
                 )}
 
                 <Button
+                  id="self-report-button"
                   variant={isReportedToday ? "default" : "ghost"}
                   className={cn(
                     "h-11 rounded-xl flex-col gap-0.5 font-bold transition-all px-2 xl:px-4 py-1 justify-center backdrop-blur-xl min-w-[64px]",
                     isReportedToday
                       ? "bg-emerald-500/90 hover:bg-emerald-600 border-white/20 text-white"
                       : "border border-border/40 bg-card/40 text-primary hover:bg-primary/5",
+                    searchParams.get("tutorial") === "self-report" && "tutorial-highlight"
                   )}
                   onClick={() => {
                     if (currentUserEmp) {
@@ -1150,14 +1170,14 @@ export default function AttendancePage() {
             </div>
 
             {/* Filters Bar */}
-            <Card className="p-4 sm:p-6 overflow-hidden">
+            <Card id="status-filters" className="p-4 sm:p-6 overflow-hidden">
               {/* Mobile View: Search + Filter Button */}
               <div className="flex md:hidden gap-3 items-center">
                 <div className="relative flex-1">
                   <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                   <Input
                     placeholder="חיפוש שם או מ.א..."
-                    className="h-11 pr-10 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-sm font-bold w-full"
+                    className="h-11 pr-10 bg-background border border-border/40 focus:ring-ring/20 focus:border-ring rounded-xl text-sm font-bold w-full transition-all hover:border-border/80"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -1181,7 +1201,7 @@ export default function AttendancePage() {
                     <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                     <Input
                       placeholder="שם שוטר או שם משתמש..."
-                      className="h-11 pr-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl text-sm font-bold"
+                      className="h-11 pr-11 bg-background border border-border/40 focus:ring-ring/20 focus:border-ring rounded-xl text-sm font-bold transition-all hover:border-border/80"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -1205,7 +1225,7 @@ export default function AttendancePage() {
                         !!(user && !user.is_admin && user.department_id)
                       }
                     >
-                      <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
+                      <SelectTrigger className="h-11 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
                         <SelectValue placeholder="כל המחלקות" />
                       </SelectTrigger>
                       <SelectContent dir="rtl">
@@ -1238,7 +1258,7 @@ export default function AttendancePage() {
                         !!(user && !user.is_admin && user.section_id)
                       }
                     >
-                      <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
+                      <SelectTrigger className="h-11 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
                         <SelectValue placeholder="כל המדורים" />
                       </SelectTrigger>
                       <SelectContent dir="rtl">
@@ -1268,7 +1288,7 @@ export default function AttendancePage() {
                         !!(user && !user.is_admin && user.team_id)
                       }
                     >
-                      <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
+                      <SelectTrigger className="h-11 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
                         <SelectValue placeholder="כל החוליות" />
                       </SelectTrigger>
                       <SelectContent dir="rtl">
@@ -1291,7 +1311,7 @@ export default function AttendancePage() {
                     value={selectedStatusId}
                     onValueChange={(val) => setSelectedStatusId(val)}
                   >
-                    <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
+                    <SelectTrigger className="h-11 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
                       <SelectValue placeholder="הכל" />
                     </SelectTrigger>
                     <SelectContent dir="rtl">
@@ -1313,7 +1333,7 @@ export default function AttendancePage() {
                     value={selectedServiceTypeId}
                     onValueChange={(val) => setSelectedServiceTypeId(val)}
                   >
-                    <SelectTrigger className="h-11 bg-muted/50 border-input focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
+                    <SelectTrigger className="h-11 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
                       <SelectValue placeholder="הכל" />
                     </SelectTrigger>
                     <SelectContent dir="rtl">
@@ -1369,7 +1389,7 @@ export default function AttendancePage() {
             <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
               <DialogContent className="w-[90vw] max-w-[340px] p-0 border-none bg-transparent">
                 <div className="bg-card border border-border flex flex-col rounded-2xl  overflow-hidden max-h-[85vh]">
-                  <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
+                  <div className="flex items-center justify-between p-4 border-b border-border bg-background/20">
                     <div className="flex items-center gap-2 font-bold text-sm text-foreground">
                       <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
                         <Filter className="w-4 h-4" />
@@ -1524,7 +1544,7 @@ export default function AttendancePage() {
                     </div>
                   </div>
 
-                  <div className="p-4 border-t border-border bg-muted/30 flex gap-3">
+                  <div className="p-4 border-t border-border bg-background/20 flex gap-3">
                     <Button
                       className="flex-1 font-bold rounded-xl"
                       onClick={() => setFilterOpen(false)}
@@ -1554,10 +1574,10 @@ export default function AttendancePage() {
             </Dialog>
 
             {/* Attendance Table - Desktop Only */}
-            <div className="hidden lg:block bg-card rounded-2xl border border-border  overflow-hidden">
+            <div id="attendance-table" className="hidden lg:block bg-card rounded-2xl border border-border  overflow-hidden">
               <div className="overflow-x-auto">
                 <Table className="min-w-[800px]">
-                  <TableHeader className="bg-muted/30 backdrop-blur-sm">
+                  <TableHeader className="bg-background/20 backdrop-blur-sm">
                     <TableRow className="border-b border-border/60 hover:bg-transparent">
                       <TableHead className="w-[60px] text-center px-4 h-16">
                         <div className="flex items-center justify-center">
@@ -1694,10 +1714,10 @@ export default function AttendancePage() {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex flex-col">
-                                <Badge
-                                  variant="outline"
-                                  className="font-medium text-[10px] border-none px-2.5 py-1 bg-muted text-muted-foreground w-fit mb-1"
-                                >
+                                  <Badge
+                                    variant="outline"
+                                    className="font-medium text-[10px] border-none px-2.5 py-1 bg-background/50 text-muted-foreground w-fit mb-1 border border-border/20"
+                                  >
                                   {getProfessionalTitle(emp)}
                                 </Badge>
                                 {emp.service_type_name && (

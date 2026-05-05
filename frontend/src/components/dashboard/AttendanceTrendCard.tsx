@@ -293,6 +293,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
 
     return (
       <Card
+        id="attendance-chart"
         ref={cardRef}
         className={cn(
           "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all",

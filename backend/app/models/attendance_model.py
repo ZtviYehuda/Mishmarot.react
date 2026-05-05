@@ -1374,7 +1374,7 @@ class AttendanceModel:
             # 3. If NOT persistent, must have started on one of the days in the range
             # Instead of a complex multi-join for each day, we fetch logs that meet basic Smart Continuity
             # criteria for the WHOLE range.
-            table_source = AttendanceModel._get_log_source(requesting_user_id, start_date, requesting_user=requesting_user)
+            table_source = AttendanceModel._get_log_source(requesting_user_id, start_date)
             query = f"""
                 SELECT 
                     al.id as log_id,

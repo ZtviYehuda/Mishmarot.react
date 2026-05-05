@@ -141,12 +141,12 @@ def resolve_request(request_id):
         end_date = req_details.get('end_date')
 
         if status == 'approved':
-            title = "✅ בקשת הגישה לארכיון אושרה"
+            title = "[SUCCESS] בקשת הגישה לארכיון אושרה"
             body = (f"בקשתך לגישה לנתוני ארכיון ({start_date} עד {end_date}) "
                     f"אושרה על ידי {approver_name}.\n"
                     f"הגישה תקפה ל-24 שעות.")
         else:
-            title = "❌ בקשת הגישה לארכיון נדחתה"
+            title = "[ERROR] בקשת הגישה לארכיון נדחתה"
             body = (f"בקשתך לגישה לנתוני ארכיון ({start_date} עד {end_date}) "
                     f"נדחתה על ידי {approver_name}.")
             if rejection_reason:

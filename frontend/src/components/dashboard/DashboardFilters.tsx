@@ -302,7 +302,7 @@ export const DashboardFilters = ({
                         className={cn(
                           "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all bg-white dark:bg-slate-900",
                           selectedStatusId === type.id.toString()
-                            ? "bg-primary text-white border-primary hover:bg-primary/90"
+                            ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 shadow-none"
                             : "hover:bg-primary/5 hover:border-primary/30"
                         )}
                       >
@@ -359,7 +359,7 @@ export const DashboardFilters = ({
                           className={cn(
                             "h-8 px-3 rounded-full text-[11px] font-bold border-primary/10 transition-all bg-white dark:bg-slate-900",
                             isActive
-                              ? "bg-primary text-white border-primary hover:bg-primary/90"
+                              ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 shadow-none"
                               : "hover:bg-primary/5 hover:border-primary/30"
                           )}
                         >
@@ -494,8 +494,8 @@ export const DashboardFilters = ({
                     className={cn(
                       "h-9 px-3.5 gap-2 rounded-xl border border-border/40 transition-all font-black text-[11px] whitespace-nowrap backdrop-blur-xl",
                       hasActiveFilters
-                        ? "bg-primary/5 text-primary hover:bg-primary/10 border-primary/20"
-                        : "bg-card/40 text-primary hover:bg-primary/5",
+                        ? "bg-background text-primary hover:bg-muted/30 border-primary/30"
+                        : "bg-background text-muted-foreground hover:bg-muted/30 hover:text-foreground",
                     )}
                   >
                     <Filter className="w-4 h-4" />

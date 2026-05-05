@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 
 import { DateProvider } from "./context/DateContext";
+import { FeedbackProvider } from "./context/FeedbackContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -15,8 +16,10 @@ createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <ThemeProvider>
           <DateProvider>
-            <AppRouter />
-            <Toaster richColors position="top-center" dir="rtl" />
+            <FeedbackProvider>
+              <AppRouter />
+              <Toaster richColors position="top-center" dir="rtl" />
+            </FeedbackProvider>
           </DateProvider>
         </ThemeProvider>
       </AuthProvider>

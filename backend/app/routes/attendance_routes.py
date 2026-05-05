@@ -32,7 +32,7 @@ def get_status_types():
         types = AttendanceModel.get_status_types()
         return jsonify(types)
     except Exception as e:
-        print(f"❌ Error in /status-types: {e}")
+        print(f"[ERROR] Error in /status-types: {e}")
         import traceback
 
         traceback.print_exc()
@@ -110,7 +110,7 @@ def get_stats():
             }
         )
     except Exception as e:
-        print(f"❌ Error in /stats: {e}")
+        print(f"[ERROR] Error in /stats: {e}")
         import traceback
 
         traceback.print_exc()
@@ -163,7 +163,7 @@ def get_comparison_stats():
         )
         return jsonify(data)
     except Exception as e:
-        print(f"❌ Error in /stats/comparison: {e}")
+        print(f"[ERROR] Error in /stats/comparison: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -211,7 +211,7 @@ def get_trend_stats():
         )
         return jsonify(data)
     except Exception as e:
-        print(f"❌ Error in /stats/trend: {e}")
+        print(f"[ERROR] Error in /stats/trend: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -267,7 +267,7 @@ def get_daily_log():
             f.write(f"\n--- ERROR in /daily-log at {datetime.now()} ---\n")
             f.write(traceback.format_exc())
             f.write("\n")
-        print(f"❌ Error in /daily-log: {e}")
+        print(f"[ERROR] Error in /daily-log: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -462,7 +462,7 @@ def get_employee_history(emp_id):
         history = AttendanceModel.get_employee_history(emp_id)
         return jsonify(history)
     except Exception as e:
-        print(f"❌ Error in /history/{emp_id}: {e}")
+        print(f"[ERROR] Error in /history/{emp_id}: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -531,7 +531,7 @@ def export_employee_history(emp_id):
         )
 
     except Exception as e:
-        print(f"❌ Error exporting history: {e}")
+        print(f"[ERROR] Error exporting history: {e}")
         import traceback
 
         traceback.print_exc()
@@ -590,6 +590,8 @@ def get_roster_matrix():
             filters=filters, requesting_user=requester
         )
 
+        print(f"[DEBUG] /roster-matrix: Fetching for user {user_id}. Found {len(employees)} employees with filters: {filters}")
+
         # 2. Fetch Logs for these employees in range
         if not employees:
             return jsonify({"employees": [], "logs": []})
@@ -611,7 +613,7 @@ def get_roster_matrix():
         return jsonify({"employees": employees, "logs": logs})
 
     except Exception as e:
-        print(f"❌ Error in /roster-matrix: {e}")
+        print(f"[ERROR] Error in /roster-matrix: {e}")
         return jsonify({"error": str(e)}), 500
 
 

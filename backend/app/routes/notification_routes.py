@@ -47,7 +47,7 @@ def get_alerts():
 
         return jsonify(unread_alerts)
     except Exception as e:
-        print(f"❌ Error in /notifications/alerts: {e}")
+        print(f"[ERROR] Error in /notifications/alerts: {e}")
         import traceback
 
         traceback.print_exc()
@@ -75,7 +75,7 @@ def get_alerts_history():
         return jsonify(history)
 
     except Exception as e:
-        print(f"❌ Error fetching notification history: {e}")
+        print(f"[ERROR] Error fetching notification history: {e}")
         import traceback
 
         traceback.print_exc()
@@ -121,7 +121,7 @@ def mark_notification_read(notification_id):
             return jsonify({"success": False, "error": "Failed to mark as read"}), 500
 
     except Exception as e:
-        print(f"❌ Error marking notification as read: {e}")
+        print(f"[ERROR] Error marking notification as read: {e}")
         import traceback
 
         traceback.print_exc()
@@ -164,7 +164,7 @@ def mark_all_notifications_read():
             )
 
     except Exception as e:
-        print(f"❌ Error marking all notifications as read: {e}")
+        print(f"[ERROR] Error marking all notifications as read: {e}")
         import traceback
 
         traceback.print_exc()
@@ -198,7 +198,7 @@ def mark_notification_unread(notification_id):
             return jsonify({"success": False, "error": "Failed to mark as unread"}), 500
 
     except Exception as e:
-        print(f"❌ Error marking notification as unread: {e}")
+        print(f"[ERROR] Error marking notification as unread: {e}")
         import traceback
 
         traceback.print_exc()
@@ -240,7 +240,7 @@ def send_internal_message():
             return jsonify({"success": False, "error": "Failed to send message"}), 500
 
     except Exception as e:
-        print(f"❌ Error sending message: {e}")
+        print(f"[ERROR] Error sending message: {e}")
         import traceback
 
         traceback.print_exc()

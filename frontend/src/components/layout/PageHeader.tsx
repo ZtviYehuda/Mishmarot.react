@@ -27,7 +27,7 @@ export function PageHeader({
         <div className="hidden lg:block">
           <div className={cn("flex flex-col gap-0", className)}>
             <div className="items-center justify-between gap-4 w-full flex">
-              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className="flex items-center gap-8 sm:gap-10 min-w-0">
                 <div
                   className={cn(
                     "w-12 h-12 lg:w-16 lg:h-16 rounded-2xl lg:rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex items-center justify-center shrink-0",
@@ -68,7 +68,7 @@ export function PageHeader({
   return (
     <div className={cn("flex flex-col gap-0", className)}>
       <div className="items-center justify-between gap-4 w-full flex">
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+        <div className="flex items-center gap-8 sm:gap-10 min-w-0">
           <div
             className={cn(
               "w-12 h-12 lg:w-16 lg:h-16 rounded-2xl lg:rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex items-center justify-center shrink-0",

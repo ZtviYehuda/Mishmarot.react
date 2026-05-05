@@ -545,7 +545,7 @@ export default function EmployeeViewPage() {
         }
       />
 
-      <div className="w-full max-w-[1800px] mx-auto p-4 sm:p-6 lg:p-8 2xl:p-12 pb-32 lg:pb-12">
+      <div className="w-full max-w-full mx-auto pt-6 pb-4 px-4 sm:px-6 transition-all pb-32 lg:pb-12">
         {/* Top bar with back button */}
         <div className="flex items-center justify-between mb-6">
           <button
@@ -628,8 +628,6 @@ export default function EmployeeViewPage() {
                   </div>
                 )}
               </div>
-
-              <div className="w-full h-px bg-slate-100 dark:bg-slate-800 my-6" />
 
               <div className="w-full h-px bg-slate-100 dark:bg-slate-800 my-6" />
 

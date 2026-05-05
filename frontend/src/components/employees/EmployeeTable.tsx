@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthContext } from "@/context/AuthContext";
 import {
   Table,
@@ -51,6 +51,20 @@ export const EmployeeTable = ({
   initialFilters,
 }: EmployeeTableProps) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-clear tutorial param after 5 seconds
+  useEffect(() => {
+    if (searchParams.get("tutorial")) {
+      const timer = setTimeout(() => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("tutorial");
+        setSearchParams(newParams, { replace: true });
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, setSearchParams]);
+
   const { user } = useAuthContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -215,7 +229,7 @@ export const EmployeeTable = ({
   return (
     <div className="space-y-3 sm:space-y-5">
       {/* Search & Filter Bar */}
-      <Card className="flex flex-col gap-2 p-3 sm:p-5">
+      <Card id="employees-search-container" className="flex flex-col gap-2 p-3 sm:p-5">
         <div className="relative w-full">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -252,7 +266,11 @@ export const EmployeeTable = ({
 
           {!user?.is_temp_commander && (
             <Button
-              className="h-9 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground   rounded-xl w-full sm:w-auto justify-center sm:mr-auto"
+              id="add-employee-button"
+              className={cn(
+                "h-9 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl w-full sm:w-auto justify-center sm:mr-auto",
+                searchParams.get("tutorial") === "add-employee" && "tutorial-highlight"
+              )}
               onClick={() => navigate("/employees/new")}
             >
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />

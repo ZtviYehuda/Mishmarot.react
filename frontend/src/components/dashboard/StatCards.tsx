@@ -68,7 +68,7 @@ export const StatCards = ({ stats, totalEmployees }: StatCardsProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div id="stats-grid" className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {cards.map((card, idx) => (
         <Card
           key={idx}

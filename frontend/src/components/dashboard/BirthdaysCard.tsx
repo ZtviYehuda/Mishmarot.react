@@ -12,7 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, Sparkles } from "lucide-react";
+import { Calendar, Gift, Sparkles, ChevronLeft } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { BirthdayGreetingsModal } from "./BirthdayGreetingsModal";
@@ -125,62 +125,89 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                   <p className="text-sm font-bold">אין ימי הולדת השבוע</p>
                 </div>
               ) : (
-                <div className="flex gap-4 px-5 py-5 h-full">
-                  {birthdays.map((employee) => {
-                    const isToday =
-                      employee.day === referenceDate.getDate() &&
-                      employee.month === referenceDate.getMonth() + 1;
+                <div className="p-4 sm:p-6 h-full flex flex-col overflow-hidden">
+                  <div className="w-full flex-1 flex flex-nowrap items-center gap-4 overflow-x-auto no-scrollbar pb-4 pr-1">
+                    {birthdays.map((employee) => {
+                      const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+                      const isToday =
+                        employee.day === today.getDate() &&
+                        employee.month === today.getMonth() + 1;
+                      
+                      const isTomorrow = !isToday && (() => {
+                        const tomorrow = new Date(today);
+                        tomorrow.setDate(today.getDate() + 1);
+                        return employee.day === tomorrow.getDate() && employee.month === tomorrow.getMonth() + 1;
+                      })();
 
-                    const initials = `${employee.first_name[0]}${employee.last_name[0]}`;
+                      const dateLabel = isToday ? "היום" : isTomorrow ? "מחר" : `${employee.day} ב${MONTH_LABELS[employee.month - 1]}`;
+                      const initials = `${employee.first_name[0]}${employee.last_name[0]}`;
 
-                    return (
-                      <div
-                        key={employee.id}
-                        onClick={() => openProfile(employee.id)}
-                        className="shrink-0 flex flex-col items-center gap-2 cursor-pointer group/bday w-[72px] transition-all"
-                      >
-                        {/* Avatar Circle */}
-                        <div className="relative">
-                          <div
-                            className={cn(
-                              "w-14 h-14 rounded-full flex items-center justify-center text-base font-black transition-all group-hover/bday:scale-110",
-                              isToday
-                                ? "bg-amber-400 text-white shadow-lg shadow-amber-400/40 ring-2 ring-amber-300 ring-offset-2"
-                                : "bg-primary/10 text-primary group-hover/bday:bg-primary/20"
-                            )}
-                          >
-                            {initials}
-                          </div>
-                          {/* Date badge on avatar */}
-                          <div
-                            className={cn(
-                              "absolute -bottom-1 -left-1 rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none",
-                              isToday
-                                ? "bg-amber-500 text-white"
-                                : "bg-card border border-border text-muted-foreground"
-                            )}
-                          >
-                            {employee.day}/{employee.month}
-                          </div>
-                          {isToday && (
-                            <div className="absolute -top-1 -right-1 bg-amber-400 text-white p-1 rounded-full shadow-md animate-bounce z-10">
-                              <Sparkles className="w-2.5 h-2.5" />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Name below avatar */}
-                        <p
+                      return (
+                        <div
+                          key={employee.id}
+                          onClick={() => openProfile(employee.id)}
                           className={cn(
-                            "text-[10px] font-bold text-center leading-tight w-full truncate",
-                            isToday ? "text-amber-600 dark:text-amber-400" : "text-slate-600 dark:text-slate-400 group-hover/bday:text-primary"
+                            "flex flex-col items-center justify-center rounded-[2.5rem] border transition-all cursor-pointer group/mini relative overflow-hidden shrink-0",
+                            // Cool Vertical Stretch Layout
+                            "w-[110px] h-[160px] sm:w-[150px] sm:h-[220px] p-4 sm:p-6", 
+                            isToday
+                              ? "bg-primary/[0.04] border-primary/20 ring-8 ring-primary/5 shadow-xl shadow-primary/5"
+                              : "bg-background/40 border-border/40 hover:border-primary/30 hover:bg-background/60 hover:shadow-lg hover:shadow-primary/5"
                           )}
                         >
-                          {employee.first_name}
-                        </p>
-                      </div>
-                    );
-                  })}
+                          {/* Decorative Background */}
+                          <div className={cn(
+                            "absolute -right-4 -bottom-4 opacity-[0.03] transition-transform duration-700 group-hover/mini:scale-110 group-hover/mini:-rotate-12",
+                            isToday ? "text-primary" : "text-muted-foreground"
+                          )}>
+                            <Gift className="w-24 h-24 sm:w-32 sm:h-32" />
+                          </div>
+
+                          {/* Avatar */}
+                          <div className="relative mb-3 sm:mb-6">
+                            <div
+                              className={cn(
+                                "w-12 h-12 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-sm sm:text-2xl font-black transition-all duration-500 group-hover/mini:scale-110 group-hover/mini:rotate-3",
+                                isToday
+                                  ? "bg-primary text-white shadow-2xl shadow-primary/40 ring-4 ring-primary/20"
+                                  : "bg-primary/10 text-primary group-hover/mini:bg-primary/20"
+                              )}
+                            >
+                              {initials}
+                            </div>
+                            {isToday && (
+                              <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-primary text-white p-1 sm:p-2 rounded-full shadow-lg animate-bounce">
+                                <Sparkles className="w-3 h-3 sm:w-5 sm:h-5" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex flex-col gap-1 sm:gap-2 w-full relative z-10">
+                            <p className={cn(
+                              "text-[12px] sm:text-[18px] font-black leading-tight px-1 text-center line-clamp-2 w-full",
+                              isToday ? "text-primary" : "text-foreground group-hover/mini:text-primary transition-colors"
+                            )}>
+                              {employee.first_name?.split(" ")[0]} {employee.last_name}
+                            </p>
+                            <div className="flex items-center justify-center gap-1.5 opacity-60">
+                              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <p className="text-[10px] sm:text-[13px] font-bold uppercase tracking-widest">
+                                {dateLabel}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* View Profile Indicator (Desktop only) */}
+                          <div className="mt-4 opacity-0 group-hover/mini:opacity-100 transition-all translate-y-2 group-hover/mini:translate-y-0 hidden sm:block">
+                            <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-tighter">
+                               פרופיל
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>

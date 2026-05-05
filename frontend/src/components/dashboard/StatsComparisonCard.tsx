@@ -247,15 +247,15 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                   <span>השוואת כוח אדם</span>
                   {filterTags.length > 0 && (
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar ml-1">
-                      <div className="flex items-center gap-1.5 text-[10px] text-blue-700 dark:text-blue-400 font-black uppercase tracking-tight ml-1 animate-pulse">
+                      <div className="flex items-center gap-1.5 text-[10px] text-primary/60 font-black uppercase tracking-tight ml-1">
                         <Filter className="w-3 h-3" />
                         <span>סינון פעיל:</span>
                       </div>
                       {filterTags.map((tag, idx) => (
                         <Badge 
                           key={idx} 
-                          variant="secondary" 
-                          className="text-[10px] h-5.5 px-3 font-black bg-blue-700 text-white border-none-500/30 whitespace-nowrap rounded-lg"
+                          variant="outline" 
+                          className="text-[10px] h-6 px-2.5 font-bold bg-background/20 text-primary border-primary/20 backdrop-blur-sm whitespace-nowrap rounded-lg hover:bg-primary/5 transition-all"
                         >
                          {tag}
                         </Badge>

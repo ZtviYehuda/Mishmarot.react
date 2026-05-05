@@ -32,6 +32,7 @@ import {
   Filter,
   Info,
   TrendingUp,
+  X,
 } from "lucide-react";
 
 import { ShabbatIcon } from "@/components/common/ShabbatIcon";
@@ -120,6 +121,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { useDateContext } from "@/context/DateContext";
 
 export default function RosterPage() {
   const { getRosterMatrix, getStatusTypes, getStructure, logBulkStatus } =
@@ -128,8 +130,7 @@ export default function RosterPage() {
   // const navigate = useNavigate();
 
   // State
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [isPendingDate, startTransition] = useTransition();
+  const { selectedDate: currentDate } = useDateContext();
 
   const [employees, setEmployees] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
@@ -411,6 +412,24 @@ export default function RosterPage() {
   );
   const teams = activeSection?.teams || [];
 
+  const activeTeam = useMemo(
+    () => teams.find((t: any) => t.id.toString() === selectedTeam),
+    [teams, selectedTeam],
+  );
+
+  const filterButtonLabel = useMemo(() => {
+    const activeUnitName = activeTeam?.name || activeSection?.name || activeDepartment?.name;
+    const activeStatusName =
+      statusFilter === "none"
+        ? "לא דווח"
+        : statusFilter !== "all"
+        ? statusTypes.find((s) => s.id.toString() === statusFilter)?.name
+        : null;
+
+    const parts = [activeUnitName, activeStatusName].filter(Boolean);
+    return parts.length > 0 ? parts.join(" • ") : null;
+  }, [activeDepartment, activeSection, activeTeam, statusFilter, statusTypes]);
+
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
       const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
@@ -448,7 +467,7 @@ export default function RosterPage() {
       let present = 0;
       let absent = 0;
 
-      employees.forEach((emp) => {
+      filteredEmployees.forEach((emp) => {
         const log = getLogForCell(emp.id, day);
         if (log) {
           const st = statusTypes.find((s) => s.id === log.status_type_id);
@@ -461,20 +480,20 @@ export default function RosterPage() {
     });
 
     return totals;
-  }, [logs, employees, weekDays, statusTypes]);
+  }, [logs, filteredEmployees, weekDays, statusTypes]);
 
   const weekdayAverageAttendance = useMemo(() => {
     const workDayEntries = Object.entries(dailyTotals).filter(([dateKey]) => {
       const d = new Date(dateKey + "T12:00:00");
       return getDay(d) !== 5 && getDay(d) !== 6;
     });
-    if (workDayEntries.length === 0) return 0;
+    if (workDayEntries.length === 0 || filteredEmployees.length === 0) return 0;
     const sum = workDayEntries.reduce(
-      (acc, [, v]) => acc + v.present / (v.total || 1),
+      (acc, [, v]) => acc + (v.present / filteredEmployees.length),
       0,
     );
     return Math.round((sum / workDayEntries.length) * 100);
-  }, [dailyTotals]);
+  }, [dailyTotals, filteredEmployees.length]);
 
   const rosterParentStatuses = useMemo(
     () => statusTypes.filter((s: any) => !s.parent_status_id),
@@ -498,7 +517,8 @@ export default function RosterPage() {
     >
       <div className="flex flex-col h-full">
         {/* Unified Page Header - Premium Layout Style */}
-        <div className="pt-6 pb-2 shrink-0 transition-all px-4">
+        {/* Unified Page Header - Hyper Minimalist */}
+        <div className="pt-6 pb-2 shrink-0 transition-all px-4 sm:px-6">
           <PageHeader
             icon={CalendarRange}
             title={
@@ -506,278 +526,170 @@ export default function RosterPage() {
                 ? "מעקב נוכחות יומי"
                 : "סידור עבודה שבועי"
             }
+            subtitle={
+              <span className="flex items-center gap-2 mt-1">
+                <span>{filteredEmployees.length} שוטרים בסינון</span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                <span className="text-primary">{weekdayAverageAttendance}% ממוצע נוכחות</span>
+              </span>
+            }
             className="mb-0"
             hideMobile={true}
             badge={
-              <div className="flex flex-col lg:flex-row lg:items-center justify-end gap-3 flex-wrap mt-4 lg:mt-0">
-                {/* Minimal Stats Card */}
-                <div className="hidden md:flex items-center bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl h-10 px-4 gap-4 text-xs font-black">
-                  <div className="flex items-center gap-2 text-muted-foreground border-l border-border/40 pl-4">
-                    <span className="text-foreground">
-                      {filteredEmployees.length} שוטרים
-                    </span>
-                    <Users className="w-4 h-4 text-primary/70" />
-                  </div>
-                  <div className="flex items-center gap-2 text-emerald-600">
-                    <span>{weekdayAverageAttendance}% ממוצע שבועי</span>
-                    <TrendingUp className="w-4 h-4" />
-                  </div>
-                </div>
-
-                {/* {!user?.is_temp_commander && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="h-10 rounded-xl border-border/40 bg-card/80 text-foreground hover:bg-primary/5 hover:text-primary gap-2 font-black transition-all"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span className="text-xs">איש צוות</span>
-                  </Button>
-                )} */}
-
+              <div className="flex flex-col sm:flex-row items-center gap-3 mt-4 lg:mt-0 w-full sm:w-auto">
+                
+                {/* Save/Undo Actions */}
                 <AnimatePresence>
                   {pendingUpdates.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95, y: 10 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                      className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-1.5"
+                      className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-1.5 shrink-0"
                     >
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={handleUndoAll}
-                        className="h-10 w-10 p-0 rounded-xl text-amber-600 hover:text-amber-700 hover:bg-amber-500/20 transition-all"
+                        className="h-9 w-9 p-0 rounded-xl text-amber-600 hover:text-amber-700 hover:bg-amber-500/20 transition-all"
                         title="בטל הכל"
                       >
-                        <Undo2 className="w-5 h-5" />
+                        <Undo2 className="w-4 h-4" />
                       </Button>
                       <Button
                         size="sm"
                         onClick={handleSaveAll}
                         disabled={saving}
-                        className="h-10 rounded-xl px-5 text-sm font-black bg-amber-500 hover:bg-amber-600 text-white gap-2 transition-all"
+                        className="h-9 rounded-xl px-4 text-xs font-black bg-amber-500 hover:bg-amber-600 text-white gap-2 transition-all"
                       >
                         {saving ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
-                          <Save className="w-4 h-4" />
+                          <Save className="w-3.5 h-3.5" />
                         )}
                         שמור חלון ({pendingUpdates.length})
                       </Button>
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Filters & Search - Minimalist Right Side */}
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("h-9 rounded-full px-4 border-border/40 hover:bg-muted/30 font-bold text-xs gap-2 shrink-0 shadow-sm transition-all bg-background", filterButtonLabel ? "text-primary border-primary/30" : "")}>
+                        <Filter className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">{filterButtonLabel || "סינון נתונים"}</span>
+                        <span className="sm:hidden">{filterButtonLabel || "סינון"}</span>
+                        {(selectedDept !== "all" || statusFilter !== "all" || selectedSection !== "all" || selectedTeam !== "all") && (
+                          <span className="w-2 h-2 rounded-full bg-primary relative -right-1 shadow-sm" />
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-80 rounded-3xl border-border/40 p-5 shadow-2xl bg-card/95 backdrop-blur-xl">
+                      <div className="space-y-5">
+                        <div className="space-y-3">
+                          <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest px-1">סינון יחידה</span>
+                          <Select value={selectedDept} onValueChange={(val) => { setSelectedDept(val); setSelectedSection("all"); setSelectedTeam("all"); }}>
+                            <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
+                              <SelectValue placeholder="כל היחידה" />
+                            </SelectTrigger>
+                            <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
+                              <SelectItem value="all">כל היחידה</SelectItem>
+                              {departments.map((d: any) => (<SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>))}
+                            </SelectContent>
+                          </Select>
+                          {/* Section Select */}
+                          {selectedDept !== "all" && sections.length > 0 && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                              <Select value={selectedSection} onValueChange={(val) => { setSelectedSection(val); setSelectedTeam("all"); }}>
+                                <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
+                                  <SelectValue placeholder="כל המדורים" />
+                                </SelectTrigger>
+                                <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
+                                  <SelectItem value="all">כל המדורים</SelectItem>
+                                  {sections.map((s: any) => (<SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>))}
+                                </SelectContent>
+                              </Select>
+                            </motion.div>
+                          )}
+                          {/* Team Select */}
+                          {selectedSection !== "all" && teams.length > 0 && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                                <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
+                                  <SelectValue placeholder="כל החוליות" />
+                                </SelectTrigger>
+                                <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
+                                  <SelectItem value="all">כל החוליות</SelectItem>
+                                  {teams.map((t: any) => (<SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>))}
+                                </SelectContent>
+                              </Select>
+                            </motion.div>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-3 pt-4 border-t border-border/20">
+                          <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest px-1">סטטוס משמרת</span>
+                          <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
+                              <SelectValue placeholder="סטטוס: הכל" />
+                            </SelectTrigger>
+                            <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
+                              <SelectItem value="all">סטטוס: הכל</SelectItem>
+                              <SelectItem value="none" className="text-rose-500">לא דווח</SelectItem>
+                              {rosterParentStatuses.map((st: any) => (
+                                <SelectItem key={st.id} value={st.id.toString()}>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full shadow-sm border border-black/10" style={{ backgroundColor: st.color }} />
+                                    {st.name}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+
+                  {(selectedDept !== "all" || statusFilter !== "all" || selectedSection !== "all" || selectedTeam !== "all") && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedDept("all");
+                        setSelectedSection("all");
+                        setSelectedTeam("all");
+                        setStatusFilter("all");
+                      }}
+                      className="h-9 rounded-full px-3 gap-1 hover:bg-destructive/10 text-destructive hover:text-destructive font-bold text-xs shrink-0 transition-colors"
+                      title="נקה סינונים"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">נקה סינון</span>
+                    </Button>
+                  )}
+
+                  {/* Minimal Search Pill */}
+                  <div className="relative group/search flex-1 sm:flex-none w-full">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 group-focus-within/search:text-primary transition-colors z-10" />
+                    <Input
+                      placeholder="חיפוש..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="h-9 w-full sm:w-32 lg:w-40 pr-9 pl-4 bg-background border-border/40 hover:bg-muted/20 focus:bg-background focus:border-primary/30 focus:sm:w-48 focus:lg:w-56 rounded-full font-bold text-xs transition-all duration-300 shadow-sm"
+                    />
+                  </div>
+                </div>
+
               </div>
             }
           />
         </div>
 
-        {/* New Consolidated COMMAND CENTER Bar */}
-        <div className="pb-4 space-y-2 shrink-0 relative z-10 w-full">
-          {/* Mobile: compact row with search + week nav */}
-          <div className="flex lg:hidden items-center gap-2">
-            {/* Search */}
-            <div className="relative group/search flex-1">
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 group-focus-within/search:text-primary transition-all z-10" />
-              <Input
-                placeholder="חיפוש שם..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-10 pr-10 pl-3 bg-muted/30 border-transparent rounded-2xl font-bold text-sm placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-primary/10 transition-all"
-              />
-            </div>
-            {/* Mobile Week Nav */}
-            <div className="flex items-center gap-1 shrink-0 bg-muted/30 rounded-2xl p-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-xl"
-                onClick={() => startTransition(() => setCurrentDate(subWeeks(currentDate, 1)))}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button className="px-2 flex flex-col items-center hover:bg-background/20 rounded-lg transition-colors">
-                    <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">
-                      {format(weekStart, "MMM", { locale: he })}
-                    </span>
-                    <span className="text-xs font-black text-foreground tabular-nums">
-                      {format(weekStart, "dd")}-{format(weekEnd, "dd")}
-                    </span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-2xl border-border/40" align="center">
-                  <Calendar
-                    mode="single"
-                    selected={currentDate}
-                    onSelect={(date) => date && startTransition(() => setCurrentDate(date))}
-                    initialFocus
-                    locale={he}
-                    className="rounded-2xl border-none"
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-xl"
-                onClick={() => startTransition(() => setCurrentDate(addWeeks(currentDate, 1)))}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Desktop Toolbar - MINIMALIST & CLEAN */}
-          <div className="hidden lg:flex items-center justify-between gap-4 py-6 px-1">
-            {/* Left side: Navigation */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center bg-muted/30 p-1 rounded-2xl border border-border/40">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-xl hover:bg-background hover: transition-all"
-                  onClick={() => startTransition(() => setCurrentDate(subWeeks(currentDate, 1)))}
-                  disabled={isPendingDate}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-                
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button className="px-6 flex flex-col items-center hover:bg-background/20 rounded-xl transition-all cursor-pointer py-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-foreground tabular-nums tracking-tight">
-                          {format(weekStart, "dd")}
-                        </span>
-                        <span className="text-muted-foreground/30 font-light">-</span>
-                        <span className="text-sm font-black text-foreground tabular-nums tracking-tight">
-                          {format(weekEnd, "dd")}
-                        </span>
-                      </div>
-                      <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none mt-0.5">
-                        {format(weekStart, "MMMM yyyy", { locale: he })}
-                      </span>
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 rounded-2xl border-border/40" align="center">
-                    <Calendar
-                      mode="single"
-                      selected={currentDate}
-                      onSelect={(date) => date && startTransition(() => setCurrentDate(date))}
-                      initialFocus
-                      locale={he}
-                      className="rounded-2xl border-none"
-                    />
-                  </PopoverContent>
-                </Popover>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-xl hover:bg-background hover: transition-all"
-                  onClick={() => startTransition(() => setCurrentDate(addWeeks(currentDate, 1)))}
-                  disabled={isPendingDate}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-              </div>
-
-              {!isSameDay(weekStart, startOfWeek(new Date(), { weekStartsOn: 0 })) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => startTransition(() => setCurrentDate(new Date()))}
-                  className="h-9 rounded-2xl px-4 hover:bg-primary/5 text-primary text-[11px] font-black transition-all"
-                >
-                  חזור להיום
-                </Button>
-              )}
-            </div>
-
-            {/* Right side: Filters & Search */}
-            <div className="flex items-center gap-3">
-              {/* Search Pill */}
-              <div className="relative group/search">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 group-focus-within/search:text-primary transition-all z-10" />
-                <Input
-                  placeholder="חיפוש מהיר..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-9 w-48 pr-9 pl-4 bg-muted/20 border-transparent hover:bg-muted/40 focus:bg-background focus:border-border/40 focus:w-64 rounded-2xl font-bold text-[11px] transition-all"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 bg-muted/20 p-1 rounded-2xl border border-transparent hover:border-border/40 transition-all">
-                {/* Dept Select */}
-                <Select value={selectedDept} onValueChange={(val) => { setSelectedDept(val); setSelectedSection("all"); setSelectedTeam("all"); }}>
-                  <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover: rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
-                    <SelectValue placeholder="מחלקה" />
-                  </SelectTrigger>
-                  <SelectContent dir="rtl" className="rounded-2xl font-bold">
-                    <SelectItem value="all">כל היחידה</SelectItem>
-                    {departments.map((d: any) => (<SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-
-                {/* Section Select - Sequential */}
-                {selectedDept !== "all" && sections.length > 0 && (
-                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                    <Select value={selectedSection} onValueChange={(val) => { setSelectedSection(val); setSelectedTeam("all"); }}>
-                      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover: rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
-                        <SelectValue placeholder="מדור" />
-                      </SelectTrigger>
-                      <SelectContent dir="rtl" className="rounded-2xl font-bold">
-                        <SelectItem value="all">כל המדורים</SelectItem>
-                        {sections.map((s: any) => (<SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>))}
-                      </SelectContent>
-                    </Select>
-                  </motion.div>
-                )}
-
-                {/* Team Select - Sequential */}
-                {selectedSection !== "all" && teams.length > 0 && (
-                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                    <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                      <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover: rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px]">
-                        <SelectValue placeholder="חוליה" />
-                      </SelectTrigger>
-                      <SelectContent dir="rtl" className="rounded-2xl font-bold">
-                        <SelectItem value="all">כל החוליות</SelectItem>
-                        {teams.map((t: any) => (<SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>))}
-                      </SelectContent>
-                    </Select>
-                  </motion.div>
-                )}
-
-                {/* Status Select */}
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-8 border-none bg-transparent hover:bg-background hover: rounded-xl px-3 font-bold text-[11px] transition-all min-w-[100px] text-primary">
-                    <SelectValue placeholder="סטטוס" />
-                  </SelectTrigger>
-                  <SelectContent dir="rtl" className="rounded-2xl font-bold border-primary/20">
-                    <SelectItem value="all">סטטוס: הכל</SelectItem>
-                    <SelectItem value="none" className="text-rose-500">לא דווח</SelectItem>
-                    {rosterParentStatuses.map((st: any) => (
-                      <SelectItem key={st.id} value={st.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: st.color }} />
-                          {st.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-auto py-3 sm:py-4 md:py-6 custom-scrollbar">
+        <div className="flex-1 overflow-auto py-3 sm:py-4 md:py-6 custom-scrollbar relative">
+          
+          
           {/* Mobile Day Selector - Only visible on small screens */}
           <div className="lg:hidden bg-background/95 backdrop-blur-xl sticky top-0 z-40 mb-4 -mx-4 border-b border-border/40 px-4 pt-2 pb-3">
             {/* Day pills row */}

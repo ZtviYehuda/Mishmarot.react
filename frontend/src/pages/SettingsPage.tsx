@@ -15,6 +15,7 @@ import {
   History,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { cn } from "@/lib/utils";
 
 // Import Settings Components
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
@@ -35,7 +36,19 @@ export default function SettingsPage() {
   } = useTheme();
 
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-clear tutorial param after 5 seconds
+  useEffect(() => {
+    if (searchParams.get("tutorial")) {
+      const timer = setTimeout(() => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("tutorial");
+        setSearchParams(newParams, { replace: true });
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, setSearchParams]);
   const urlTab = searchParams.get("tab");
 
   const [activeTab, setActiveTab] = useState(
@@ -403,7 +416,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col min-h-full pb-20">
-      <div className="pt-6 pb-2 shrink-0 transition-all px-4">
+      <div className="pt-6 pb-4 shrink-0 transition-all px-4 sm:px-6">
         <PageHeader
           icon={SettingsIcon}
           title="הגדרות מערכת"
@@ -417,18 +430,23 @@ export default function SettingsPage() {
         <div className="hidden lg:flex items-center gap-1 border-b border-border sticky top-[-35px] bg-background/95 backdrop-blur z-50 pb-0 overflow-x-auto no-scrollbar pt-2 px-4">
           {!user?.is_temp_commander && (
             <TabItem
+              id="profile-tab"
               label="פרופיל אישי"
               active={activeTab === "profile"}
               onClick={() => setActiveTab("profile")}
+              className={cn(searchParams.get("tutorial") === "profile" && "tutorial-highlight")}
             />
           )}
           <TabItem
+            id="appearance-tab"
             label="מראה ותצוגה"
             active={activeTab === "appearance"}
             onClick={() => setActiveTab("appearance")}
+            className={cn(searchParams.get("tutorial") === "settings" && "tutorial-highlight")}
           />
           {!user?.is_temp_commander && (
             <TabItem
+              id="security-tab"
               label="אבטחה"
               active={activeTab === "security"}
               onClick={() => setActiveTab("security")}
@@ -636,24 +654,29 @@ function MobileBottomNavLink({
 }
 
 function TabItem({
+  id,
   label,
   active,
   onClick,
+  className,
 }: {
+  id?: string;
   label: string;
   active: boolean;
   onClick: () => void;
+  className?: string;
 }) {
   return (
     <button
+      id={id}
       onClick={onClick}
-      className={`
-        relative px-4 py-2.5 rounded-lg transition-all font-bold text-sm whitespace-nowrap
-        ${active
+      className={cn(
+        "relative px-4 py-2.5 rounded-lg transition-all font-bold text-sm whitespace-nowrap",
+        active
           ? "text-primary bg-primary/10"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-        }
-      `}
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+        className
+      )}
     >
       {label}
       {active && (

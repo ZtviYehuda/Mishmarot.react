@@ -45,7 +45,7 @@ def start_scheduler():
     )
 
     scheduler.start()
-    print("✅ [SCHEDULER] Background scheduler started. Tasks scheduled.")
+    print("[SCHEDULER] Background scheduler started. Tasks scheduled.")
 
     # Shut down the scheduler when exiting the app
     atexit.register(lambda: scheduler.shutdown())
