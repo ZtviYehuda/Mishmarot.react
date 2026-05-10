@@ -47,7 +47,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { GlobalAiSupport } from "@/components/common/GlobalAiSupport";
-import { MessageSquarePlus, MessageSquare } from "lucide-react";
+import { ChatSidebar } from "./ChatSidebar";
+import { MessageSquare } from "lucide-react";
+import { useChat } from "@/context/ChatContext";
 
 function getAlertConfig(alert: {
   id: string;
@@ -126,8 +128,10 @@ export default function MainLayout() {
     fetchHistory,
     markAllAsRead,
     toggleRead,
+    markAsRead,
     markAsUnread,
   } = useNotifications();
+  const { openChat, toggleChat } = useChat();
   const location = useLocation();
   const navigate = useNavigate();
   // Sidebar closed by default on mobile and desktop
@@ -187,10 +191,22 @@ export default function MainLayout() {
         toast(alert.title, {
           description: alert.description,
           duration: 5000,
+          action: {
+            label: "פתח צ'אט",
+            onClick: () => {
+              markAsRead(alert.id);
+              navigate('/feedback?tab=messages');
+              openChat({
+                id: alert.data?.sender_id || 0,
+                name: alert.data?.sender || alert.title.replace("הודעה מאת ", ""),
+                role: "מפקד"
+              });
+            }
+          }
         });
       }
     });
-  }, [alerts, user]);
+  }, [alerts, user, navigate, openChat, markAsRead]);
 
   // Handle window resize - keep closed by default unless user interacts
   React.useEffect(() => {
@@ -206,7 +222,7 @@ export default function MainLayout() {
     { name: "לוח בקרה ראשי", path: "/", icon: LayoutDashboard },
     { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
     { name: "סידור עבודה", path: "/roster", icon: CalendarRange },
-    { name: "מרכז משוב", path: "/feedback", icon: MessageSquarePlus },
+    { name: "מרכז משוב", path: "/feedback", icon: MessageSquare },
     // Only show these if NOT a temp commander
     ...(!user?.is_temp_commander
       ? [
@@ -404,24 +420,24 @@ export default function MainLayout() {
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col min-w-0">
         <header className="h-16 bg-card border-b border-border/40 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40 transition-none flex-none">
-          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 ml-2">
             {/* Mobile Menu Toggle — floating logo, no box */}
             <button
               onClick={() => setIsSidebarOpen(true)}
               className="lg:hidden flex items-center justify-center shrink-0 active:scale-90 transition-all"
               aria-label="Open menu"
             >
-              <img src="/logo_unit.png" alt="לוגו" className="w-12 h-12 object-contain" />
+              <img src="/logo_unit.png" alt="לוגו" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
             </button>
 
-            <div className="flex flex-col text-right leading-none flex-1 min-w-0 overflow-hidden">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] md:text-[11px] font-black text-primary uppercase leading-none truncate opacity-80">
-                  מוקד שליטה ובקרה
+            <div className="flex flex-col text-right leading-none min-w-0 overflow-hidden">
+              <div className="hidden xs:flex items-center gap-1.5 mb-1">
+                <span className="text-[9px] md:text-[11px] font-black text-primary uppercase leading-none truncate opacity-80">
+                  מוקד שליטה
                 </span>
-                <div className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <div className="flex h-1 w-1 rounded-full bg-emerald-500 shrink-0" />
               </div>
-              <h1 className="lg:hidden text-xl md:text-2xl font-black text-foreground tracking-tight leading-none truncate">
+              <h1 className="lg:hidden text-base md:text-2xl font-black text-foreground tracking-tight leading-none truncate">
                 {location.pathname === "/"
                   ? "לוח בקרה"
                   : navItems.find((n) => location.pathname.startsWith(n.path) && n.path !== "/")
@@ -438,14 +454,14 @@ export default function MainLayout() {
 
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
 
-            {/* Feedback Center Button - Now a Link */}
-            <Link
-              to="/feedback"
-              title="מרכז משוב והצעות"
-              className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all"
+            <button
+              onClick={toggleChat}
+              title="צ'אט והודעות"
+              className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all relative"
             >
-              <MessageSquarePlus className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Link>
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+              {/* Optional: Unread indicator dot could go here */}
+            </button>
 
             {/* Notifications Bell */}
             <Popover>
@@ -911,6 +927,30 @@ export default function MainLayout() {
               >
                 סגור
               </Button>
+              {selectedAlert?.data?.is_message && selectedAlert?.data?.sender_id && (
+                <Button
+                  className="flex-1 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                  onClick={() => {
+                    const alertCopy = selectedAlert;
+                    setSelectedAlert(null);
+                    setMsgRecipient({
+                      id: alertCopy.data.sender_id,
+                      name: alertCopy.data.sender,
+                    });
+                    setMsgDefaults({
+                      title: `תגובה: ${alertCopy.title.replace("הודעה מאת ", "")}`,
+                      description: "",
+                    });
+                    setMsgDialogOpen(true);
+                    if (!readIds.includes(alertCopy.id)) {
+                      toggleRead(alertCopy.id);
+                    }
+                  }}
+                >
+                  <Send className="w-4 h-4 ml-2" />
+                  השב לשולח
+                </Button>
+              )}
               {selectedAlert?.link && (
                 <Button
                   className="flex-1 rounded-xl font-bold"
@@ -926,6 +966,7 @@ export default function MainLayout() {
           </DialogContent>
         </Dialog>
         <GlobalAiSupport />
+        <ChatSidebar />
       </div >
     </div >
   );

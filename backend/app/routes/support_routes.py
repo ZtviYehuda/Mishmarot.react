@@ -42,7 +42,17 @@ def create_ticket():
 @support_bp.route('/tickets', methods=['GET'])
 @jwt_required()
 def get_all_tickets():
-    # Only admins should see all tickets
+    import json
+    identity_raw = get_jwt_identity()
+    try:
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+    except:
+        identity = identity_raw
+        
+    # Check if user is admin
+    if not (isinstance(identity, dict) and identity.get('is_admin')):
+        return jsonify({"error": "Unauthorized"}), 403
+        
     tickets = SupportModel.get_all_tickets()
     return jsonify(tickets), 200
 

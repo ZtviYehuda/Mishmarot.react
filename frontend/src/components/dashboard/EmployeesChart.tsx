@@ -1,15 +1,9 @@
 import { useRef, useMemo, forwardRef, useImperativeHandle, useState, useEffect } from "react";
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Download, Activity, ShieldCheck, BarChart2, PieChart as PieChartIcon } from "lucide-react";
-import { WhatsAppButton } from "@/components/common/WhatsAppButton";
+import { Activity, BarChart2, PieChart as PieChartIcon, X } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -24,8 +18,9 @@ import {
 } from "recharts";
 import { toPng, toBlob } from "html-to-image";
 import { toast } from "sonner";
-import { format, subDays, isBefore } from "date-fns";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface EmployeesChartProps {
   stats: {
@@ -36,63 +31,39 @@ interface EmployeesChartProps {
   }[];
   total: number;
   loading?: boolean;
-  onOpenWhatsAppReport?: () => void;
   onStatusClick?: (statusId: number, statusName: string, color: string) => void;
-  onFilterClick?: () => void;
   title?: string;
-  description?: string;
-  selectedDate?: Date;
-  hideExportControls?: boolean;
   unitName?: string;
   totalInUnit?: number;
-  availableCount?: number;
-  reportedPct?: number;
-  fullUnitStats?: {
-    status_id: number;
-    status_name: string;
-    count: number;
-    color: string;
-  }[];
-  hasArchiveAccess?: boolean;
-  onRequestRestore?: () => void;
+  selectedUnitId?: number | null;
+  selectedDate?: Date;
   selectedStatusId?: number | null;
   filterTags?: string[];
+  hasArchiveAccess?: boolean;
+  onRequestRestore?: () => void;
   hideHeader?: boolean;
 }
+
+const OFFICE_GROUP_NAME = "משרד";
+const OFFICE_SUB_STATUSES = ["משרד", "מתקן חיצוני", "מהבית", "בשטח"];
 
 const EmployeesChartComponent = (
   {
     stats,
     total,
-    loading = false,
-    onOpenWhatsAppReport,
     onStatusClick,
-    onFilterClick,
     title = "מצבת כוח אדם",
-    description = "סטטוס נוכחות בזמן אמת",
     selectedDate = new Date(),
-    hideExportControls = false,
     unitName = "כלל היחידה",
     totalInUnit = 0,
-    availableCount = 0,
-    reportedPct = 0,
-    hasArchiveAccess = false,
-    onRequestRestore,
     selectedStatusId = null,
     filterTags = [],
-    hideHeader = false,
   }: EmployeesChartProps,
   ref: any,
 ) => {
     const cardRef = useRef<HTMLDivElement>(null);
     const [chartType, setChartType] = useState<"pie" | "bar">("pie");
-
-    useEffect(() => {
-      const isMobile = window.innerWidth < 640;
-      if (isMobile) {
-        setChartType("pie");
-      }
-    }, []);
+    const [isOfficeSelected, setIsOfficeSelected] = useState(false);
 
     useImperativeHandle(ref, () => ({
       download: handleDownload,
@@ -102,63 +73,30 @@ const EmployeesChartComponent = (
     const handleDownload = async () => {
       if (!cardRef.current) return;
       try {
-        const dataUrl = await toPng(cardRef.current, {
-          cacheBust: true,
-          backgroundColor: "white",
-          onClone: (clonedNode: any) => {
-            const dateEl = clonedNode.querySelector(".export-date-hidden");
-            if (dateEl) {
-              dateEl.style.position = "absolute";
-              dateEl.style.top = "20px";
-              dateEl.style.left = "20px";
-              dateEl.style.opacity = "1";
-              dateEl.style.zIndex = "50";
-              dateEl.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
-              dateEl.style.padding = "4px 12px";
-              dateEl.style.borderRadius = "8px";
-              dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-              dateEl.style.border = "1px solid #e2e8f0";
-              dateEl.style.color = "#0f172a";
-              dateEl.innerText = `תאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}`;
-            }
-            const hideEls = clonedNode.querySelectorAll(".export-hide");
-            hideEls.forEach((el: any) => (el.style.display = "none"));
-          },
-        } as any);
+        const dataUrl = await toPng(cardRef.current, { cacheBust: true, backgroundColor: "white" } as any);
         const link = document.createElement("a");
         link.download = `attendance-snapshot-${format(selectedDate, "yyyy-MM-dd")}.png`;
         link.href = dataUrl;
         link.click();
-        toast.success("גרף הורד בהצלחה");
-      } catch (err) {
-        toast.error("שגיאה בהורדת הגרף");
-      }
+      } catch (err) { toast.error("שגיאה בהורדת הגרף"); }
     };
 
     const handleWhatsAppShare = async () => {
       if (cardRef.current === null) return;
       try {
-        const blob = await toBlob(cardRef.current, {
-          cacheBust: true,
-          backgroundColor: "#ffffff",
-        } as any);
-        if (!blob) throw new Error("Failed to capture image");
-        const titleText = `${title} - ${unitName}`;
-        const message = `*${titleText}*\nתאריך הפקה: ${format(new Date(), "dd/MM/yyyy")}\nתאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}\n\nסיכום: ${total} שוטרים ביחידה.`;
+        const blob = await toBlob(cardRef.current, { cacheBust: true, backgroundColor: "#ffffff" } as any);
+        if (!blob) return;
+        const message = `*${title} - ${unitName}*\nתאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}\n\nסיכום: ${total} שוטרים ביחידה.`;
         const file = new File([blob], `attendance-snapshot.png`, { type: "image/png" });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: titleText, text: message });
+          await navigator.share({ files: [file], title, text: message });
           return;
         }
-        const encodedMessage = encodeURIComponent(message);
-        window.open(`https://wa.me/?text=${encodedMessage}`, "_blank");
-      } catch (err) {
-        toast.error("שגיאה בהכנת הדוח ל-WhatsApp");
-      }
+        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+      } catch (err) { toast.error("שגיאה בשיתוף"); }
     };
 
     const [isMobile, setIsMobile] = useState(false);
-
     useEffect(() => {
       const checkMobile = () => setIsMobile(window.innerWidth < 768);
       checkMobile();
@@ -166,62 +104,75 @@ const EmployeesChartComponent = (
       return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    const { chartData, computedAvailableCount, computedUnavailableCount } = useMemo(() => {
-      if (!stats || stats.length === 0)
-        return { chartData: [], computedAvailableCount: 0, computedUnavailableCount: 0 };
+    // Sync isOfficeSelected with global selection
+    useEffect(() => {
+      const selectedStatus = stats.find(s => s.status_id === selectedStatusId);
+      if (selectedStatus && OFFICE_SUB_STATUSES.includes(selectedStatus.status_name)) {
+        setIsOfficeSelected(true);
+      } else if (selectedStatusId !== -999) {
+        setIsOfficeSelected(false);
+      }
+    }, [selectedStatusId, stats]);
+
+    const { chartData, officeSubItems } = useMemo(() => {
+      if (!stats || stats.length === 0) return { chartData: [], officeSubItems: [] };
 
       const priorityMap: Record<string, number> = { "משרד": 1, "נוכח": 1, "תגבור": 2, "קורס": 3, "חופשה": 4, "חולה": 6, "לא דווח": 7 };
-      const sortedStats = [...stats].sort((a, b) => (priorityMap[a.status_name] || 99) - (priorityMap[b.status_name] || 99));
-      const viewTotal = sortedStats.reduce((acc, curr) => acc + curr.count, 0);
-      const baseTotal = totalInUnit && totalInUnit > 0 ? totalInUnit : viewTotal;
-
-      // Calculate initial rounded percentages
-      let percentages = sortedStats.map(item => 
-        baseTotal > 0 ? Math.round((item.count / baseTotal) * 100) : 0
-      );
       
-      // Adjust to ensure sum is 100
-      const currentSum = percentages.reduce((a, b) => a + b, 0);
-      if (currentSum !== 100 && currentSum > 0 && percentages.length > 0) {
-        const diff = 100 - currentSum;
-        // Find index of the largest slice to absorb the rounding difference
-        let maxIndex = 0;
-        let maxValue = -1;
-        sortedStats.forEach((s, idx) => {
-          if (s.count > maxValue) {
-            maxValue = s.count;
-            maxIndex = idx;
-          }
-        });
-        percentages[maxIndex] += diff;
-      }
+      const officeItems = stats.filter(s => OFFICE_SUB_STATUSES.includes(s.status_name));
+      const nonOfficeItems = stats.filter(s => !OFFICE_SUB_STATUSES.includes(s.status_name));
 
-      const data = sortedStats.map((item, idx) => ({
-        id: item.status_id === null ? -1 : item.status_id,
-        name: item.status_name || "לא דווח",
-        value: item.count,
-        fill: item.color || "#94a3b8",
-        percentage: percentages[idx],
-      }));
+      const totalOfficeCount = officeItems.reduce((acc, curr) => acc + curr.count, 0);
+      const mainOfficeColor = officeItems.find(s => s.status_name === "משרד")?.color || "#22c55e";
 
-      const availableKeywords = ["משרד", "תגבור", "קורס"];
-      let accAvail = 0; let accUnavail = 0;
-      data.forEach(item => {
-        if (item.name !== "לא דווח") {
-          if (availableKeywords.some(kw => item.name.includes(kw))) accAvail += item.value;
-          else accUnavail += item.value;
-        }
+      const processedStats = [
+        ...nonOfficeItems,
+        ...(totalOfficeCount > 0 ? [{
+          status_id: -999,
+          status_name: OFFICE_GROUP_NAME,
+          count: totalOfficeCount,
+          color: mainOfficeColor,
+          isGroup: true
+        }] : [])
+      ];
+
+      const sortedStats = processedStats.sort((a, b) => (priorityMap[a.status_name] || 99) - (priorityMap[b.status_name] || 99));
+      const baseTotal = totalInUnit && totalInUnit > 0 ? totalInUnit : sortedStats.reduce((a,b)=>a+b.count,0);
+
+      const data = sortedStats.map((item) => {
+        const rawName = item.status_name?.trim() || "";
+        const name = (rawName === "חופשה חול" || rawName === "חופשה חו\"ל") ? "חו' חול" : (rawName || "לא דווח");
+        return {
+          id: item.status_id === null ? -1 : item.status_id,
+          name,
+          value: item.count,
+          fill: item.color || "#94a3b8",
+          percentage: baseTotal > 0 ? Math.round((item.count / baseTotal) * 100) : 0,
+          isGroup: (item as any).isGroup
+        };
       });
-      return { chartData: data, computedAvailableCount: accAvail, computedUnavailableCount: accUnavail };
+
+      return { chartData: data, officeSubItems: officeItems };
     }, [stats, totalInUnit]);
+
+    const handleStatusInteraction = (entry: any) => {
+      if (entry.isGroup) {
+        setIsOfficeSelected(true);
+        // We can also trigger a generic office filter if desired
+        onStatusClick?.(entry.id, entry.name, entry.fill);
+      } else {
+        onStatusClick?.(entry.id, entry.name, entry.fill);
+        setIsOfficeSelected(false);
+      }
+    };
 
     const CustomTooltip = ({ active, payload }: any) => {
       if (active && payload && payload.length) {
         const d = payload[0].payload;
         return (
-          <div className="bg-popover text-popover-foreground px-3 py-2 rounded text-sm border border-border">
-            <p className="font-black">{d.name}</p>
-            <p>{d.value} שוטרים</p>
+          <div className="bg-popover text-popover-foreground px-4 py-2.5 rounded-2xl text-sm border border-border shadow-2xl backdrop-blur-md">
+            <p className="font-black text-[13px] mb-1">{d.name}</p>
+            <p className="font-bold text-primary">{d.value} שוטרים</p>
             <p className="text-[10px] text-muted-foreground mt-1">{d.percentage}% מכלל היחידה</p>
           </div>
         );
@@ -229,37 +180,28 @@ const EmployeesChartComponent = (
       return null;
     };
 
-    const isOldData = useMemo(() => isBefore(selectedDate, subDays(new Date(), 30)), [selectedDate]);
-
     return (
       <Card
         ref={cardRef}
         id="attendance-snapshot-card"
         className={cn(
-          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all"
+          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm flex flex-col overflow-hidden h-full relative transition-all"
         )}
       >
-      <div className="p-4 sm:p-6 flex-1 flex flex-col">
+      <div className="p-4 sm:p-6 flex-1 flex flex-col relative">
         {/* Header */}
-        <div className="flex flex-row justify-between items-center gap-3 mb-6 relative z-10 min-h-[70px]">
-          <div className="flex gap-3 items-center">
-            <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0 border border-border/40">
-              <Activity className="w-5 h-5 text-muted-foreground" />
+        <div className="flex flex-row justify-between items-center gap-3 mb-2 relative z-10 min-h-[70px]">
+          <div className="flex gap-3 items-center min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/10">
+              <Activity className="w-5 h-5 text-primary" />
             </div>
-            <div className="text-right flex flex-col">
-              <h3 className="text-lg font-black text-foreground tracking-tight flex items-center flex-wrap gap-2">
+            <div className="text-right flex flex-col min-w-0">
+              <h3 className="text-lg font-black text-foreground tracking-tight flex items-center flex-wrap gap-2 truncate">
                 <span>{title}</span>
                 {filterTags.length > 0 && (
                   <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                    <div className="flex items-center gap-1.5 text-[10px] text-primary/60 font-black uppercase tracking-tight ml-1">
-                      <Filter className="w-3 h-3" />
-                    </div>
                     {filterTags.map((tag, idx) => (
-                      <Badge 
-                        key={idx} 
-                        variant="outline" 
-                        className="text-[10px] h-6 px-2.5 font-bold bg-background/20 text-primary border-primary/20 backdrop-blur-sm whitespace-nowrap rounded-lg hover:bg-primary/5 transition-all"
-                      >
+                      <Badge key={idx} variant="outline" className="text-[10px] h-6 px-2.5 font-bold bg-primary/5 text-primary border-primary/20 rounded-lg">
                         {tag}
                       </Badge>
                     ))}
@@ -269,75 +211,83 @@ const EmployeesChartComponent = (
             </div>
           </div>
 
-          <div className="bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-lg flex border border-border/50 backdrop-blur-md">
-            <button
-              onClick={() => setChartType("pie")}
-              className={cn(
-                "p-1.5 rounded-md transition-all",
-                chartType === "pie" ? "bg-white dark:bg-slate-700 text-primary" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              )}
-              title="תצוגת עוגה"
-            >
-              <PieChartIcon className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setChartType("bar")}
-              className={cn(
-                "p-1.5 rounded-md transition-all",
-                chartType === "bar" ? "bg-white dark:bg-slate-700 text-primary" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              )}
-              title="תצוגת עמודות"
-            >
-              <BarChart2 className="w-3.5 h-3.5" />
-            </button>
+          <div className="bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-lg flex border border-border/50 backdrop-blur-md shrink-0">
+            <button onClick={() => setChartType("pie")} className={cn("p-1.5 rounded-md transition-all", chartType === "pie" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-400")}><PieChartIcon className="w-3.5 h-3.5" /></button>
+            <button onClick={() => setChartType("bar")} className={cn("p-1.5 rounded-md transition-all", chartType === "bar" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-400")}><BarChart2 className="w-3.5 h-3.5" /></button>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col min-h-[380px] relative p-0 mt-0">
-          {total === 0 ? (
+        {/* Premium Pills Filter for Office - Contextual */}
+        <div className={cn(
+          "flex flex-col items-center gap-2 transition-all duration-500 overflow-hidden",
+          isOfficeSelected ? "max-h-20 opacity-100 mb-4" : "max-h-0 opacity-0 mb-0"
+        )}>
+          <div className="flex items-center gap-1.5 p-1.5 bg-muted/30 dark:bg-slate-800/30 rounded-2xl border border-border/20 shadow-inner">
+            {OFFICE_SUB_STATUSES.map(name => {
+              const item = stats.find(s => s.status_name === name);
+              const id = item?.status_id || -1;
+              const color = item?.color || "#22c55e";
+              const isSelected = selectedStatusId === id;
+              
+              return (
+                <button
+                  key={name}
+                  onClick={() => onStatusClick?.(id, name, color)}
+                  className={cn(
+                    "px-4 py-2 rounded-xl text-[10px] font-black transition-all whitespace-nowrap flex items-center gap-2",
+                    isSelected 
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                      : "text-muted-foreground hover:bg-white/50 dark:hover:bg-slate-800/50 hover:text-foreground"
+                  )}
+                >
+                  <div className={cn("w-1.5 h-1.5 rounded-full", isSelected ? "bg-white" : "bg-emerald-500")} />
+                  {name}
+                </button>
+              );
+            })}
+            <div className="w-[1px] h-4 bg-border/40 mx-1" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => {
+                onStatusClick?.(-999, OFFICE_GROUP_NAME, "#22c55e");
+                setIsOfficeSelected(false);
+              }}
+              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-rose-500"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col min-h-[360px] relative p-0 mt-0">
+          {chartData.length === 0 ? (
             <div className="flex-1 flex items-center justify-center py-12 text-center text-muted-foreground font-bold tracking-tight">
               אין נתונים להצגה
             </div>
           ) : (
-            <div className="flex-1 w-full flex-col min-h-0 relative mt-0" style={{ direction: "ltr", overflow: 'visible' }}>
-              <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
+            <div className="flex-1 w-full flex-col min-h-0 relative mt-0" style={{ direction: "ltr" }}>
+              <ResponsiveContainer width="100%" height="100%">
                 {chartType === "pie" ? (
-                  <PieChart 
-                    margin={{ left: 40, right: 40, top: 20, bottom: 20 }}
-                    style={{ overflow: 'visible' }}
-                  >
+                  <PieChart margin={{ left: 40, right: 40, top: 10, bottom: 10 }}>
                     <Pie
                       data={chartData}
                       cx="50%" cy="50%"
-                      innerRadius={isMobile ? "30%" : "40%"} 
-                      outerRadius={isMobile ? "45%" : "55%"}
+                      innerRadius={isMobile ? "30%" : "42%"} 
+                      outerRadius={isMobile ? "45%" : "58%"}
                       paddingAngle={4}
                       minAngle={15}
                       dataKey="value"
                       stroke="none"
                       animationDuration={1000}
-                      label={({ cx, cy, midAngle, outerRadius, name, percentage }) => {
+                      label={({ cx, cy, midAngle, outerRadius, name, percentage }: any) => {
                         const RADIAN = Math.PI / 180;
-                        const radius = outerRadius + (isMobile ? 15 : 20);
-                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                        const radius = outerRadius + (isMobile ? 15 : 22);
+                        const x = cx + radius * Math.cos(-(midAngle || 0) * RADIAN);
+                        const y = cy + radius * Math.sin(-(midAngle || 0) * RADIAN);
                         const isRight = x > cx;
-
                         return (
-                          <text 
-                            x={x} 
-                            y={y} 
-                            fill="currentColor" 
-                            textAnchor={isRight ? "start" : "end"} 
-                            dominantBaseline="central"
-                            stroke="none"
-                            strokeWidth={0}
-                            style={{ overflow: 'visible' }}
-                            className={cn(
-                              "font-black fill-slate-700 dark:fill-slate-300 transition-all duration-300",
-                              isMobile ? "text-[9px]" : "text-[11px]"
-                            )}
-                          >
+                          <text x={x} y={y} fill="currentColor" textAnchor={isRight ? "start" : "end"} dominantBaseline="central" className={cn("font-black fill-slate-700 dark:fill-slate-300", isMobile ? "text-[9px]" : "text-[11px]")}>
                             {`${name} (${percentage}%)`}
                           </text>
                         );
@@ -345,7 +295,7 @@ const EmployeesChartComponent = (
                       labelLine={{ stroke: "rgba(148, 163, 184, 0.3)", strokeWidth: 1 }}
                     >
                       {chartData.map((entry, index) => {
-                        const isSelected = selectedStatusId === entry.id;
+                        const isSelected = selectedStatusId === entry.id || (entry.isGroup && officeSubItems.some(s => s.status_id === selectedStatusId));
                         const hasSelection = selectedStatusId !== null;
                         return (
                           <Cell 
@@ -356,75 +306,24 @@ const EmployeesChartComponent = (
                             strokeWidth={isSelected ? 3 : 0}
                             strokeOpacity={0.8}
                             className="cursor-pointer transition-all duration-500 outline-none hover:brightness-110"
-                            onClick={() => onStatusClick?.(entry.id, entry.name, entry.fill)}
+                            onClick={() => handleStatusInteraction(entry)}
                           />
                         );
                       })}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 1000 }} />
+                    <Tooltip content={<CustomTooltip />} />
                   </PieChart>
                 ) : (
                   <BarChart data={chartData} margin={{ top: 30, right: 10, left: 10, bottom: 40 }}>
-                    <XAxis 
-                      dataKey="name" 
-                      tick={(props) => {
-                        const { x, y, payload } = props;
-                        const name = payload.value;
-                        
-                        // Split name by spaces for wrapping if it's longer than a few chars
-                        const parts = name.length > 5 && name.includes(" ") ? name.split(" ") : [name];
-
-                        return (
-                          <g transform={`translate(${x},${y})`}>
-                            <text 
-                              x={0} y={0} dy={16} 
-                              textAnchor="middle" 
-                              className={cn("font-black fill-slate-500 dark:fill-slate-400", name.length > 10 ? "text-[8px]" : "text-[10px]")}
-                            >
-                              {parts.length > 1 ? (
-                                <>
-                                  <tspan x={0} dy="0em" dominantBaseline="hanging">{parts[0]}</tspan>
-                                  <tspan x={0} dy="1.2em" dominantBaseline="hanging">{parts.slice(1).join(" ")}</tspan>
-                                </>
-                              ) : (
-                                <tspan x={0} dy="0em" dominantBaseline="hanging">{name}</tspan>
-                              )}
-                            </text>
-                          </g>
-                        );
-                      }}
-                      axisLine={false} 
-                      tickLine={false} 
-                      interval={0}
-                    />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} interval={0} tick={{ fontSize: 9, fontWeight: 900, fill: '#94a3b8' }} />
                     <YAxis hide={true} />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                    <Bar 
-                      dataKey="value" 
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={isMobile ? 28 : 40}
-                    >
-                      <LabelList 
-                        dataKey="value" 
-                        position="top" 
-                        offset={10} 
-                        fill="currentColor" 
-                        fontSize={isMobile ? 9 : 11} 
-                        fontWeight={900} 
-                        className="fill-slate-600 dark:fill-slate-300"
-                      />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={isMobile ? 16 : 24}>
+                      <LabelList dataKey="value" position="top" offset={10} fill="currentColor" fontSize={isMobile ? 9 : 12} fontWeight={900} className="fill-slate-600 dark:fill-slate-300" />
                       {chartData.map((entry, index) => {
-                        const isSelected = selectedStatusId === entry.id;
-                        const hasSelection = selectedStatusId !== null;
-                        return (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={entry.fill} 
-                            fillOpacity={!hasSelection || isSelected ? 1 : 0.25}
-                            className="cursor-pointer transition-all duration-500 outline-none hover:brightness-110"
-                            onClick={() => onStatusClick?.(entry.id, entry.name, entry.fill)}
-                          />
-                        );
+                         const isSelected = selectedStatusId === entry.id || (entry.isGroup && officeSubItems.some(s => s.status_id === selectedStatusId));
+                         const hasSelection = selectedStatusId !== null;
+                         return <Cell key={`cell-${index}`} fill={entry.fill} fillOpacity={!hasSelection || isSelected ? 1 : 0.25} className="cursor-pointer transition-all duration-500" onClick={() => handleStatusInteraction(entry)} />;
                       })}
                     </Bar>
                   </BarChart>

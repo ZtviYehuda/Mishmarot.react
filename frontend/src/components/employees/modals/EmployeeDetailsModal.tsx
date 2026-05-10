@@ -11,7 +11,6 @@ import { cn, cleanUnitName } from "@/lib/utils";
 import {
   Phone,
   MapPin,
-  Building2,
   Cake,
   User,
   Mail,

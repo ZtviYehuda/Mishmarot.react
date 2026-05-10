@@ -12,18 +12,16 @@ import { useEmployees } from "@/hooks/useEmployees";
 import { useDateContext } from "@/context/DateContext";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LayoutDashboard } from "lucide-react";
-import { format, subDays, isBefore } from "date-fns";
+import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { StatCards } from "@/components/dashboard/StatCards";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AgeDistributionChart } from "@/components/dashboard/AgeDistributionChart";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ReportHub } from "@/components/dashboard/ReportHub";
-import { DateHeader } from "@/components/common/DateHeader";
 import { RestorationRequestDialog } from "@/components/dashboard/RestorationRequestDialog";
 import { WhatsAppBroadcastModal } from "@/components/employees/modals/WhatsAppBroadcastModal";
-import { MessageSquare, Calendar as CalendarIcon, RotateCcw, Filter, Lock } from "lucide-react";
+import { MessageSquare, Filter, Calendar } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { GlobalEventModal } from "@/components/employees/modals/GlobalEventModal";
 
@@ -70,23 +68,20 @@ export default function DashboardPage() {
 
   // Refs for reports
   const snapshotRef = useRef<any>(null);
-  const trendRef = useRef<any>(null);
   const comparisonRef = useRef<any>(null);
-  const birthdaysRef = useRef<any>(null);
   const {
     getStructure,
     getDashboardStats,
     getComparisonStats,
     getTrendStats,
-    getServiceTypes,
     getStatusTypes,
+    getServiceTypes,
   } = useEmployees();
 
   const [stats, setStats] = useState<any[]>([]);
   const [totalEmployees, setTotalEmployees] = useState(0);
-  const [allStatuses, setAllStatuses] = useState<any[]>([]);
   const [allStatusTypes, setAllStatusTypes] = useState<any[]>([]);
-  const [birthdays, setBirthdays] = useState<any[]>([]);
+  const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
   const [structure, setStructure] = useState<Department[]>([]);
 
   // Filter Modal State
@@ -96,14 +91,12 @@ export default function DashboardPage() {
   const [comparisonStats, setComparisonStats] = useState<any[]>([]);
   const [trendStats, setTrendStats] = useState<any[]>([]);
   const [loadingExtras, setLoadingExtras] = useState(true);
-  const [loadingTrend, setLoadingTrend] = useState(true);
   const [ageDistribution, setAgeDistribution] = useState<any[]>([]);
   const [averageAge, setAverageAge] = useState(0);
 
   const [viewMode] = useState<"daily" | "weekly" | "monthly" | "yearly">(
     "weekly",
   );
-  const [fetchError, setFetchError] = useState<string>("");
 
   const [trendRange, setTrendRange] = useState<number>(30);
 
@@ -125,15 +118,8 @@ export default function DashboardPage() {
   const [whatsappBroadcastOpen, setWhatsappBroadcastOpen] = useState(false);
   const [globalEventOpen, setGlobalEventOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [hasArchiveAccess, setHasArchiveAccess] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
 
-  const isOldDate = useMemo(() => {
-    if (user?.is_admin) return false;
-    const today = new Date();
-    const startOfPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    return isBefore(selectedDate, startOfPrevMonth);
-  }, [selectedDate, user]);
 
   // Filters
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
@@ -144,7 +130,6 @@ export default function DashboardPage() {
     name: string;
     color: string;
   } | null>(null);
-  const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
   const [selectedServiceTypes, setSelectedServiceTypes] = useState<string[]>(
     [],
@@ -153,6 +138,13 @@ export default function DashboardPage() {
     min?: number;
     max?: number;
   }>({});
+  const isOldDate = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selected = new Date(selectedDate);
+    selected.setHours(0, 0, 0, 0);
+    return selected < today;
+  }, [selectedDate]);
 
   // Load filters from localStorage on mount
   useEffect(() => {
@@ -252,10 +244,8 @@ export default function DashboardPage() {
         setStructure(struct);
         setAllStatusTypes(stTypes);
         setServiceTypes(svTypes);
-        setFetchError("");
       } catch (error) {
         console.error("DashboardPage init error", error);
-        setFetchError("שגיאה בטעינת נתוני לוח הבקרה. בדוק את חיבור השרת או ההרשאות.");
       } finally {
         setIsInitialized(true);
       }
@@ -298,7 +288,6 @@ export default function DashboardPage() {
   // Fetch Trend Stats
   useEffect(() => {
     const fetchTrend = async () => {
-      setLoadingTrend(true);
       // Use today as reference for trend unless we are looking at older historical data
       // This prevents the chart from "sliding" when clicking dates within the current month
       const referenceDate = isOldDate ? selectedDate : new Date();
@@ -313,7 +302,6 @@ export default function DashboardPage() {
         max_age: selectedAgeRange.max,
       });
       setTrendStats(trendData);
-      setLoadingTrend(false);
     };
     fetchTrend();
   }, [
@@ -328,30 +316,6 @@ export default function DashboardPage() {
     selectedAgeRange,
   ]);
 
-  // Fetch active statuses
-  useEffect(() => {
-    const fetchActiveStatuses = async () => {
-      const data = await getDashboardStats({
-        department_id: selectedDeptId,
-        section_id: selectedSectionId,
-        team_id: selectedTeamId,
-        date: format(selectedDate, "yyyy-MM-dd"),
-      });
-
-      if (data && data.stats) {
-        setAllStatuses(data.stats.filter((s: any) => s.status_id !== null));
-      }
-    };
-
-    fetchActiveStatuses();
-  }, [
-    selectedDeptId,
-    selectedSectionId,
-    selectedTeamId,
-    selectedServiceTypes,
-    getDashboardStats,
-    selectedDate,
-  ]);
 
   // Fetch birthdays and unverified count - ALWAYS get full breakdown for the selected group
   useEffect(() => {
@@ -371,15 +335,13 @@ export default function DashboardPage() {
         if (data) {
           setStats(data.stats || []);
           setTotalEmployees(data.total_employees || 0);
-          setBirthdays(data.birthdays || []);
+          // setBirthdays(data.birthdays || []);
           setAgeDistribution(data.age_distribution || []);
           setAverageAge(data.average_age || 0);
-          setHasArchiveAccess(data.has_archive_access || false);
+          // setHasArchiveAccess(data.has_archive_access || false);
         }
-        setFetchError("");
       } catch (error) {
         console.error("DashboardPage fetchStatsData error", error);
-        setFetchError("שגיאה בטעינת נתוני הסטטוס. נסה לרענן את הדף.");
       }
     };
 
@@ -469,16 +431,16 @@ export default function DashboardPage() {
       setSelectedTeamId(value || "");
     } else if (type === "status") {
       // If clicking the same status, deselect it
-      if (selectedStatusId === value?.toString()) {
+      if (selectedStatusId === (value ? parseInt(value) : null)) {
         setSelectedStatusId(null);
         setSelectedStatusData(null);
         return;
       }
 
       // Look up status in both active stats and all possible types
-      const statusType = allStatusTypes.find((s) => s.id.toString() === value?.toString());
-      const activeStatus = allStatuses.find(
-        (s) => s.status_id.toString() === value?.toString(),
+      const statusType = allStatusTypes.find((s: any) => s.id.toString() === value?.toString());
+      const activeStatus = stats.find(
+        (s: any) => s.status_id?.toString() === value?.toString(),
       );
 
       if (statusType) {
@@ -502,22 +464,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Comparison Matrix: Admin, Dept Commander, Section Commander (Hide for Team Commander)
-  const showComparisonMatrix = useMemo(() => {
-    if (user?.is_admin) return true;
-    if (user?.commands_department_id) return true;
-    if (user?.commands_section_id) return true;
-    return false;
-  }, [user]);
-
-  // Trend Graph: Admin, Dept, Section, and Team Commanders
-  const showTrendGraph = useMemo(() => {
-    if (user?.is_admin) return true;
-    if (user?.commands_department_id) return true;
-    if (user?.commands_section_id) return true;
-    if (user?.commands_team_id) return true;
-    return false;
-  }, [user]);
 
   const currentDept = structure.find((d) => d.id.toString() === selectedDeptId);
   const currentSection = currentDept?.sections.find(
@@ -546,31 +492,7 @@ export default function DashboardPage() {
     user,
   ]);
 
-  const serviceTypeLabel =
-    selectedServiceTypes.length > 0
-      ? selectedServiceTypes.length === 1
-        ? selectedServiceTypes[0]
-        : `${selectedServiceTypes.length} מעמדות`
-      : "";
 
-  const chartDescription = useMemo(() => {
-    if (selectedStatusData) {
-      return `פירוט נוכחות עבור ${selectedStatusData.name}`;
-    }
-    if (selectedAgeRange.min || selectedAgeRange.max) {
-      const ageText = selectedAgeRange.max
-        ? `בגילאי ${selectedAgeRange.min}-${selectedAgeRange.max}`
-        : `בגילאי ${selectedAgeRange.min}+`;
-      return `פירוט נוכחות עבור ${ageText}`;
-    }
-
-    const filters: string[] = [];
-    if (serviceTypeLabel) filters.push(`ב - ${serviceTypeLabel}`);
-
-    const filterText =
-      filters.length > 0 ? `\nמציג שוטרים ${filters.join(" ו")}` : "";
-    return `פירוט נוכחות וסטטיסטיקה עבור ${unitName}${filterText}`;
-  }, [unitName, selectedStatusData, serviceTypeLabel, selectedAgeRange]);
 
   const activeFilterInfo = useMemo(() => {
     const filters = [
@@ -612,7 +534,9 @@ export default function DashboardPage() {
 
   const activeFilterTags = useMemo(() => {
     const tags: string[] = [];
-    if (selectedStatusData) tags.push(selectedStatusData.name);
+    if (selectedStatusData) {
+      tags.push(selectedStatusData.name);
+    }
     if (selectedServiceTypes.length > 0) {
       tags.push(...selectedServiceTypes);
     }
@@ -698,12 +622,12 @@ export default function DashboardPage() {
                 <div className="hidden lg:flex items-center gap-2">
                   <DashboardFilters
                     structure={structure}
-                    statuses={allStatuses}
+                    statuses={allStatusTypes.map((s: any) => ({ status_id: s.id, status_name: s.name, color: s.color }))}
                     allStatusTypes={allStatusTypes}
                     selectedDeptId={selectedDeptId}
                     selectedSectionId={selectedSectionId}
                     selectedTeamId={selectedTeamId}
-                    selectedStatusId={selectedStatusData?.id?.toString()}
+                    selectedStatusId={selectedStatusId?.toString()}
                     serviceTypes={serviceTypes}
                     selectedServiceTypes={selectedServiceTypes}
                     selectedAgeRange={selectedAgeRange}
@@ -715,6 +639,7 @@ export default function DashboardPage() {
                   />
                   
                   <ReportHub 
+                    id="report-hub-card"
                     onShareBirthdays={() => setWhatsAppDialogOpen(true)}
                     filters={{
                       department_id: selectedDeptId,
@@ -737,7 +662,7 @@ export default function DashboardPage() {
                     activeTutorial === "event" && "tutorial-highlight"
                   )}
                 >
-                  <CalendarIcon className="w-3.5 h-3.5" />
+                  <Calendar className="w-3.5 h-3.5" />
                   <span className="text-[8.5px] xl:text-[9.5px] leading-tight">אירוע</span>
                 </Button>
 
@@ -772,6 +697,7 @@ export default function DashboardPage() {
           </Button>
 
           <ReportHub 
+            id="report-hub-card-mobile"
             onShareBirthdays={() => setWhatsAppDialogOpen(true)}
             filters={{
               department_id: selectedDeptId,
@@ -798,7 +724,7 @@ export default function DashboardPage() {
             )}
           >
             <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <CalendarIcon className="w-5 h-5" />
+              <Calendar className="w-5 h-5" />
             </div>
             <span className="text-[10px] font-black">אירוע</span>
           </Button>
@@ -819,35 +745,9 @@ export default function DashboardPage() {
           </Button>
         </div>
 
-        {fetchError && (
-          <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 font-bold">
-            {fetchError}
-          </div>
-        )}
 
         {/* Content Area */}
         <div className="space-y-5 transition-all mt-1 relative">
-          {(isOldDate && !hasArchiveAccess) && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-md rounded-3xl pb-[500px]">
-              <div className="bg-card border border-border/50 rounded-[2rem] p-8 max-w-md text-center space-y-4 m-4">
-                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
-                  <Lock className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-black">נתוני ארכיון חסומים</h3>
-                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-                  הנתונים מיום זה ({format(selectedDate, "dd/MM/yyyy")}) הועברו לארכיון המערכת (זמינים נתונים עד חודש קודם).
-                  <br/>
-                  על מנת לצפות בהם, עליך לבקש אישור גישה.
-                </p>
-                <Button 
-                  onClick={() => setRestoreDialogOpen(true)}
-                  className="w-full rounded-xl h-12 font-black mt-4"
-                >
-                  הגש בקשת גישה לארכיון
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Stat Cards - New Redesigned Component */}
           <StatCards stats={stats} totalEmployees={totalEmployees} />
@@ -858,7 +758,7 @@ export default function DashboardPage() {
             <div className="md:col-span-2 xl:col-span-2">
               <AttendanceTrendCard 
                 data={trendStats}
-                loading={loadingTrend}
+                loading={loadingExtras}
                 range={trendRange}
                 unitName={unitName}
                 filterTags={activeFilterTags}
@@ -875,7 +775,7 @@ export default function DashboardPage() {
                 stats={chartStats}
                 total={totalEmployees}
                 onStatusClick={handleStatusClick}
-                hasArchiveAccess={hasArchiveAccess}
+                hasArchiveAccess={true}
                 onRequestRestore={() => setRestoreDialogOpen(true)}
                 unitName={unitName}
                 selectedDate={selectedDate}
@@ -890,7 +790,6 @@ export default function DashboardPage() {
               <AgeDistributionChart
                 data={ageDistribution}
                 averageAge={averageAge}
-                selectedDate={selectedDate}
                 filterTags={activeFilterTags}
                 onRangeSelect={(range) => handleFilterChange("ageRange", range)}
                 selectedRange={
@@ -909,8 +808,7 @@ export default function DashboardPage() {
              {/* Birthdays */}
              <BirthdaysCard 
                 id="birthdays-card"
-                ref={birthdaysRef}
-                birthdays={birthdays}
+                birthdays={[]}
                 loading={loadingExtras}
                 unitName={unitName}
                 className={cn(
@@ -986,12 +884,12 @@ export default function DashboardPage() {
           <DialogContent className="p-0 border-none bg-transparent max-w-[340px] w-full mx-auto">
             <DashboardFilters
               structure={structure}
-              statuses={allStatuses}
+              statuses={allStatusTypes.map((s: any) => ({ status_id: s.id, status_name: s.name, color: s.color }))}
               allStatusTypes={allStatusTypes}
               selectedDeptId={selectedDeptId}
               selectedSectionId={selectedSectionId}
               selectedTeamId={selectedTeamId}
-              selectedStatusId={selectedStatusData?.id?.toString()}
+              selectedStatusId={selectedStatusId?.toString()}
               serviceTypes={serviceTypes}
               selectedServiceTypes={selectedServiceTypes}
               selectedAgeRange={selectedAgeRange}

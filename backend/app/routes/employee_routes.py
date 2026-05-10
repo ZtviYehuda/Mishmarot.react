@@ -556,3 +556,39 @@ def update_preferences():
     if EmployeeModel.update_preferences(user_id, theme, accent_color, font_size):
         return jsonify({"success": True, "message": "Preferences updated"})
     return jsonify({"success": False, "error": "Update failed"}), 500
+@emp_bp.route("/import", methods=["POST"])
+@jwt_required()
+def import_employees_route():
+    identity_raw = get_jwt_identity()
+    try:
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    is_admin = identity.get("is_admin", False) if isinstance(identity, dict) else False
+    if not is_admin:
+        return jsonify({"success": False, "error": "Admins only"}), 403
+
+    if "file" not in request.files:
+        return jsonify({"success": False, "error": "No file uploaded"}), 400
+
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"success": False, "error": "No file selected"}), 400
+
+    try:
+        if file.filename.endswith(".csv"):
+            df = pd.read_csv(io.StringIO(file.stream.read().decode("utf-8")))
+        else:
+            df = pd.read_excel(file)
+        
+        data_list = df.to_dict(orient="records")
+        count, error = EmployeeModel.import_employees(data_list)
+        
+        if error:
+            return jsonify({"success": False, "error": error}), 500
+            
+        return jsonify({"success": True, "message": f"יובאו בהצלחה {count} שוטרים"})
+    except Exception as e:
+        print(f"Error in import route: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500

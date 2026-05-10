@@ -12,7 +12,6 @@ import {
   Bell,
   Database,
   Activity,
-  History,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
@@ -454,6 +453,7 @@ export default function SettingsPage() {
           )}
           {!user?.is_temp_commander && (
             <TabItem
+              id="notifications-tab"
               label="התראות"
               active={activeTab === "notifications"}
               onClick={() => setActiveTab("notifications")}
@@ -461,6 +461,7 @@ export default function SettingsPage() {
           )}
           {user?.is_admin && (
             <TabItem
+              id="backup-tab"
               label="גיבוי ושחזור"
               active={activeTab === "backup"}
               onClick={() => setActiveTab("backup")}

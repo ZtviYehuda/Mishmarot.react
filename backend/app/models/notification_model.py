@@ -288,11 +288,12 @@ class NotificationModel:
 
             # 4. Check for Internal Messages
             query_msgs = """
-                SELECT um.id, um.title, um.description, um.created_at, 
+                SELECT um.id, um.sender_id, um.title, um.description, um.created_at, 
                        s.first_name, s.last_name
                 FROM user_messages um
                 LEFT JOIN employees s ON um.sender_id = s.id
                 WHERE um.recipient_id = %s
+                AND um.sender_id != um.recipient_id
                 ORDER BY um.created_at DESC
             """
             cur.execute(query_msgs, (requesting_user["id"],))
@@ -310,8 +311,12 @@ class NotificationModel:
                         "title": f"הודעה מאת {sender_name}",
                         "description": msg["title"] + ": " + msg["description"],
                         "sender": sender_name,
-                        "link": "",
-                        "data": {"is_message": True, "sender": sender_name},
+                        "link": "/feedback?tab=messages",
+                        "data": {
+                            "is_message": True, 
+                            "sender": sender_name,
+                            "sender_id": msg["sender_id"]
+                        },
                     }
                 )
 
@@ -609,6 +614,9 @@ class NotificationModel:
     @staticmethod
     def send_message(sender_id, recipient_id, title, description):
         """Send an internal message to a specific user"""
+        if str(sender_id) == str(recipient_id):
+            return True # Silently succeed if trying to send to self, but don't save it
+            
         conn = get_db_connection()
         if not conn:
             return False

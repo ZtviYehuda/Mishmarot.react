@@ -11,7 +11,6 @@ import {
 } from "recharts";
 import { Card } from "@/components/ui/card";
 import { Timer, Filter } from "lucide-react";
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
 interface AgeDistributionChartProps {
@@ -19,7 +18,6 @@ interface AgeDistributionChartProps {
   averageAge: number;
   onRangeSelect?: (range: string) => void;
   selectedRange?: string;
-  selectedDate?: Date;
   filterTags?: string[];
 }
 
@@ -28,7 +26,6 @@ export const AgeDistributionChart = ({
   averageAge,
   onRangeSelect,
   selectedRange = "all",
-  selectedDate = new Date(),
   filterTags = [],
 }: AgeDistributionChartProps) => {
   const chartData = useMemo(() => {
@@ -88,7 +85,6 @@ export const AgeDistributionChart = ({
           <BarChart
             data={chartData}
             margin={{ top: 30, right: 10, left: 10, bottom: 40 }}
-            barCategoryGap="15%"
           >
             <XAxis
               dataKey="range"
@@ -122,6 +118,7 @@ export const AgeDistributionChart = ({
             <Bar
               dataKey="count"
               radius={[6, 6, 2, 2]}
+              barSize={24}
               fill="currentColor"
               className="text-primary/70 hover:text-primary transition-colors"
             >

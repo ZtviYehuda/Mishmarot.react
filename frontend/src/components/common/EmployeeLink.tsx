@@ -4,6 +4,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import type { Employee } from "@/types/employee.types";
 import { toast } from "sonner";
+import { useChat } from "@/context/ChatContext";
 import { Cake, ShieldCheck } from "lucide-react";
 
 interface EmployeeLinkProps {
@@ -20,6 +21,7 @@ export const EmployeeLink: React.FC<EmployeeLinkProps> = ({
   showIcon = false,
 }) => {
   const { openProfile } = useEmployeeContext();
+  const { openChat } = useChat();
   const { user } = useAuthContext();
 
   const displayName =
@@ -39,7 +41,17 @@ export const EmployeeLink: React.FC<EmployeeLinkProps> = ({
           return;
         }
 
-        openProfile(employee);
+        if (typeof employee === "object") {
+          openChat({
+            id: employee.id,
+            name: `${employee.first_name} ${employee.last_name}`,
+            role: employee.is_commander ? "מפקד" : "שוטר"
+          });
+        } else {
+          // If only ID is provided, we can't easily open chat without more info, 
+          // so fallback to profile for now or fetch info
+          openProfile(employee);
+        }
       }}
       className={cn(
         "text-primary hover:text-primary/80 hover:underline font-bold transition-all text-right items-center gap-1 inline-flex",

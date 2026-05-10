@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   History,
@@ -18,7 +18,6 @@ import {
   User,
   ArrowLeftRight,
   Settings,
-  Bell,
   Lock,
   Archive,
   FileText,
@@ -76,7 +75,7 @@ export default function ActivityLogPage() {
       return () => clearTimeout(timer);
     }
   }, [searchParams, setSearchParams]);
-  const [activeTab, setActiveTab] = useState<"all" | "suspicious" | "archives">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "suspicious" | "archives" | "my">("all");
   
   // Data states
   const [activity, setActivity] = useState<any[]>([]);
@@ -259,6 +258,7 @@ export default function ActivityLogPage() {
             "mb-0",
             searchParams.get("tutorial") === "activity-log" && "tutorial-highlight"
           )}
+          hideMobile={true}
           badge={
             <div className="flex items-center gap-3">
               <Button 

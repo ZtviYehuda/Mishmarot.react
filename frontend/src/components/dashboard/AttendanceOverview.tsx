@@ -42,7 +42,10 @@ export const AttendanceOverview = ({ stats }: AttendanceOverviewProps) => {
                     style={{ backgroundColor: s.color }}
                   />
                   <span className="text-sm font-black text-slate-700 dark:text-slate-200">
-                    {s.status_name}
+                    {(() => {
+                      const n = s.status_name?.trim() || "";
+                      return (n === "חופשה חול" || n === "חופשה חו\"ל") ? "חו' חול" : n;
+                    })()}
                   </span>
                 </div>
                 <div className="flex flex-col items-end">

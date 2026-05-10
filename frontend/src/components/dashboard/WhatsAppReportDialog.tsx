@@ -101,7 +101,8 @@ export const WhatsAppReportDialog = ({
     reportData.byStatus.forEach(({ status_name, count }) => {
       const percentage =
         reportData.total > 0 ? Math.round((count / reportData.total) * 100) : 0;
-      message += `- ${status_name}: ${count} (${percentage}%)\n`;
+      const displayName = (status_name === "חופשה חול" || status_name === "חופשה חו\"ל") ? "חו' חול" : status_name;
+      message += `- ${displayName}: ${count} (${percentage}%)\n`;
     });
 
     return message;

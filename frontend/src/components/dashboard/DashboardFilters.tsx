@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { RotateCcw, Cake, Briefcase, Filter, X, Users, Activity, ChevronDown } from "lucide-react";
+import { RotateCcw, Cake, Briefcase, Filter, X, Users, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -277,7 +277,7 @@ export const DashboardFilters = ({
             className="w-full flex items-center justify-between py-3 px-1 sm:p-4 hover:bg-primary/5 transition-colors group"
           >
             <h5 className="text-[11px] sm:text-xs font-black text-primary/70 group-hover:text-primary uppercase tracking-widest flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5" />
+              <Filter className="w-3.5 h-3.5" />
               סטטוסים
             </h5>
             <ChevronDown className={cn("w-4 h-4 text-primary/30 transition-transform duration-300", expandedSections.status && "rotate-180")} />
@@ -310,7 +310,10 @@ export const DashboardFilters = ({
                           className="w-2 h-2 rounded-full ml-1.5" 
                           style={{ backgroundColor: type.color || "currentColor" }} 
                         />
-                        {type.name}
+                        {(() => {
+                          const n = type.name?.trim() || "";
+                          return (n === "חופשה חול" || n === "חופשה חו\"ל") ? "חו' חול" : n;
+                        })()}
                       </Button>
                     ))}
                   </div>

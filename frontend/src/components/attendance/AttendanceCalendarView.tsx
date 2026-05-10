@@ -42,10 +42,8 @@ function WeekColumnCell({ stats, selectedDate, onClick }: {
   const today = isToday(stats.date);
   const isWeekend = getDay(stats.date) === 5 || getDay(stats.date) === 6;
   const total = stats.total;
-  const reported = stats.reported;
   const present = stats.present;
 
-  const reportPct = total > 0 ? reported / total : 0;
   const presentPct = total > 0 ? present / total : 0;
 
   return (
@@ -213,7 +211,7 @@ function computeDayStats(
   for (const emp of parsedEmps) {
     const deptName = emp.rawEmp.department_name || "ללא מחלקה";
     if (!isReportedOnDay(emp, dayMidnightTs, dayEndTs)) {
-      missing.push({ id: emp.id, name: emp.fullName, deptName });
+      missing.push({ id: emp.id, name: emp.fullName, deptName } as any);
       continue;
     }
     reported++;
@@ -230,14 +228,14 @@ function computeDayStats(
     const existing = statusMap.get(key);
     if (existing) { 
       existing.count++; 
-      existing.emps.push({ id: emp.id, name: emp.fullName, deptName }); 
+      existing.emps.push({ id: emp.id, name: emp.fullName, deptName } as any); 
     }
     else {
       statusMap.set(key, { 
         name: key, 
         color, 
         count: 1, 
-        emps: [{ id: emp.id, name: emp.fullName, deptName }] 
+        emps: [{ id: emp.id, name: emp.fullName, deptName } as any] 
       });
     }
   }
@@ -499,19 +497,6 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
         pixelRatio: 2, 
         cacheBust: true,
         backgroundColor: "#ffffff",
-        onClone: (clonedNode: HTMLElement) => {
-           clonedNode.style.padding = "24px";
-           clonedNode.style.borderRadius = "16px";
-           clonedNode.style.direction = "rtl";
-           
-           // Ensure colors are visible against white background
-           const textElements = clonedNode.querySelectorAll('*');
-           textElements.forEach((el: any) => {
-             if (window.getComputedStyle(el).color === 'rgb(255, 255, 255)') {
-                el.style.color = '#0f172a';
-             }
-           });
-        }
       });
       const label = format(stats.date, "dd_MM_yyyy");
       const link = document.createElement("a");
@@ -526,7 +511,6 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
     }
   };
 
-  const pct = stats.total > 0 ? stats.reported / stats.total : 0;
   const presentPct = stats.total > 0 ? stats.present / stats.total : 0;
   const today = isToday(stats.date);
 
@@ -676,7 +660,7 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
                           <div className="px-4 pb-4 space-y-4">
                              {Object.entries(
                                group.emps.reduce((acc, curr) => {
-                                 const dept = curr.deptName || "אחר";
+                                 const dept = (curr as any).deptName || "אחר";
                                  if (!acc[dept]) acc[dept] = [];
                                  acc[dept].push(curr);
                                  return acc;
@@ -712,7 +696,7 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, departments = [], sections = [], teams = [], serviceTypes = [] }: Props) {
+export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, departments = [], serviceTypes = [] }: Props) {
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -811,19 +795,6 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
         pixelRatio: 2,
         backgroundColor: "#ffffff",
         cacheBust: true,
-        onClone: (clonedNode: HTMLElement) => {
-           clonedNode.style.padding = "32px";
-           clonedNode.style.borderRadius = "24px";
-           clonedNode.style.direction = "rtl";
-           
-           // Ensure colors are visible against white background
-           const textElements = clonedNode.querySelectorAll('*');
-           textElements.forEach((el: any) => {
-             if (window.getComputedStyle(el).color === 'rgb(255, 255, 255)') {
-                el.style.color = '#0f172a';
-             }
-           });
-        }
       });
 
       const label = periodLabel.replace(/[\s/–]/g, "_");

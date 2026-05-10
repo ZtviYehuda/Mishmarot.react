@@ -36,6 +36,7 @@ import { RestorationRequestDialog } from "@/components/dashboard/RestorationRequ
 interface ReportHubProps {
   onShareBirthdays: () => void;
   className?: string;
+  id?: string;
   initialDate?: Date;
   initialViewMode?: "daily" | "weekly" | "monthly" | "yearly" | "custom";
   filters?: {
@@ -52,6 +53,7 @@ interface ReportHubProps {
 export const ReportHub: React.FC<ReportHubProps> = ({
   onShareBirthdays,
   className,
+  id,
   initialDate = new Date(),
   initialViewMode = "weekly",
   filters = {
@@ -306,7 +308,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button 
-            id="report-hub-card"
+            id={id || "report-hub-card"}
             variant="ghost" 
             className={cn(
               "rounded-xl font-black transition-all bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 backdrop-blur-xl",

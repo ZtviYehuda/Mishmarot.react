@@ -3,20 +3,16 @@ import apiClient, { API_URL } from "../../config/api.client";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { toast } from "sonner";
 import {
   Send,
   Loader2,
-  Clock,
-  Wrench,
   CheckCircle2
 } from "lucide-react";
 import { Badge } from "../ui/badge";

@@ -173,7 +173,7 @@ export function ProfileSettings({
       toast.success("קוד PIN הוגדר בהצלחה!");
       
       // Check if we can also register with browser Credential Manager
-      if ("credentials" in navigator && window.PasswordCredential) {
+      if ("credentials" in navigator && (window as any).PasswordCredential) {
         try {
           const cred = new (window as any).PasswordCredential({
             id: user.username,
@@ -731,7 +731,7 @@ export function ProfileSettings({
 
 // --- Uniform UI Components for Settings ---
 
-function SectionCard({ icon: Icon, title, children, badge }: any) {
+function SectionCard({ title, children, badge }: any) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

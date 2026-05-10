@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
   MessageSquare, 
   Send, 
@@ -6,70 +6,69 @@ import {
   Sparkles, 
   AlertCircle, 
   CheckCircle2, 
-  Plus,
-  MessageCircle,
   X,
   Settings,
   Search,
-  Check,
   User,
-  LayoutDashboard,
-  MessageSquarePlus,
   Activity,
   Archive, 
   RefreshCw,
-  ChevronLeft
+  ChevronLeft,
+  ShieldCheck,
+  Download,
+  Eye
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import apiClient from "../config/api.client";
 import { toast } from "sonner";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
 import { Card } from "../components/ui/card";
 import { useAuthContext } from "../context/AuthContext";
+import { useChat } from "@/context/ChatContext";
 
-interface Ticket {
-  id: number;
-  user_id: number;
-  first_name?: string;
-  last_name?: string;
-  category: string;
-  description: string;
-  status: 'received' | 'reviewing' | 'in_progress' | 'done' | 'dismissed' | 'irrelevant';
-  admin_reply: string | null;
-  created_at: string;
-}
-
-interface SupportTicket {
-  id: number;
-  user_id: number;
-  full_name: string;
-  subject: string;
-  message: string;
-  status: string;
-  admin_reply: string | null;
-  is_read_by_user: boolean;
-  created_at: string;
-}
+import { PageHeader } from "@/components/layout/PageHeader";
+import type { SupportTicket, Ticket } from "@/types/feedback.types";
 
 const FeedbackPage = () => {
-  const navigate = useNavigate();
   const { user: currentUser } = useAuthContext();
+  const { openChat } = useChat();
   const isAdmin = currentUser?.is_admin;
   
-  const [activeTab, setActiveTab] = useState<'send' | 'my-tickets' | 'admin-view' | 'whats-new'>(isAdmin ? 'admin-view' : 'send');
-  const [category, setCategory] = useState("bug");
-  const [description, setDescription] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') as any || (isAdmin ? 'admin-view' : 'send');
+  const [activeTab, setActiveTab] = useState<'send' | 'my-tickets' | 'admin-view' | 'whats-new' | 'messages' | 'chat-admin'>(initialTab);
   const [myTickets, setMyTickets] = useState<Ticket[]>([]);
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   
+  // Admin Chat Management State
+  const [allConversations, setAllConversations] = useState<any[]>([]);
+  const [selectedConvExport, setSelectedConvExport] = useState<any | null>(null);
+  const [convMessages, setConvMessages] = useState<any[]>([]);
+  const [loadingConv, setLoadingConv] = useState(false);
+  const [convSearch, setConvSearch] = useState("");
+  const [convSortBy, setConvSortBy] = useState<'name' | 'date' | 'count'>('name');
+
+  // Message Board State
+  const [internalMessages, setInternalMessages] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [composeTo, setComposeTo] = useState("");
+  const [isBroadcast, setIsBroadcast] = useState(false);
+  const [composeToList, setComposeToList] = useState<string[]>([]);
+  const [composeTitle, setComposeTitle] = useState("");
+  const [composeDesc, setComposeDesc] = useState("");
+  const [recipientSearch, setRecipientSearch] = useState("");
+  
+  // SaaS Filters
+  const [searchQuery, setSearchQuery] = useState("");
   const [adminFilter, setAdminFilter] = useState<'all' | 'pending' | 'done' | 'dismissed'>('pending');
+  const [adminCategoryFilter, setAdminCategoryFilter] = useState<'all' | 'bug' | 'improvement' | 'feature' | 'support'>('all');
+  
   const [selectedItem, setSelectedItem] = useState<{data: any, type: 'feedback' | 'support'} | null>(null);
   const [replyText, setReplyText] = useState("");
 
@@ -95,10 +94,98 @@ const FeedbackPage = () => {
     finally { setIsLoadingTickets(false); }
   };
 
+  const fetchInternalMessages = async () => {
+    setIsLoadingTickets(true);
+    try {
+      const response = await apiClient.get("/notifications/messages");
+      setInternalMessages(response.data);
+    } catch (error) { console.error(error); }
+    finally { setIsLoadingTickets(false); }
+  };
+  
+  const fetchEmployeesForMessages = async () => {
+    try {
+      const response = await apiClient.get("/employees");
+      setEmployees(response.data.filter((e: any) => e.is_active));
+    } catch (error) { console.error(error); }
+  };
+
+  const fetchAllConversations = async () => {
+    try {
+      const { data } = await apiClient.get("/notifications/messages/admin/all-conversations");
+      setAllConversations(data);
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchConvMessages = async (user1_id: number, user2_id: number) => {
+    setLoadingConv(true);
+    try {
+      const { data } = await apiClient.get(`/notifications/messages/conversation/${user1_id}/${user2_id}/export`);
+      setConvMessages(data.messages || []);
+    } catch (e) { console.error(e); }
+    finally { setLoadingConv(false); }
+  };
+
+  const handleExportJson = (conv: any) => {
+    const dataStr = JSON.stringify({ ...conv, messages: convMessages }, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat_${conv.user1_name}_${conv.user2_name}_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const sortedConversations = useMemo(() => {
+    let list = [...allConversations];
+    if (convSearch) {
+      const q = convSearch.toLowerCase();
+      list = list.filter(c =>
+        c.user1_name?.toLowerCase().includes(q) ||
+        c.user2_name?.toLowerCase().includes(q)
+      );
+    }
+    if (convSortBy === 'name') {
+      list.sort((a, b) => (a.user1_name || '').localeCompare(b.user1_name || '', 'he'));
+    } else if (convSortBy === 'date') {
+      list.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
+    } else if (convSortBy === 'count') {
+      list.sort((a, b) => b.total_messages - a.total_messages);
+    }
+    return list;
+  }, [allConversations, convSearch, convSortBy]);
+
   useEffect(() => {
     if (activeTab === 'my-tickets') fetchMyTickets();
-    else if (activeTab === 'admin-view') fetchAdminTickets();
-  }, [activeTab]);
+    else if (activeTab === 'admin-view' && isAdmin) fetchAdminTickets();
+    else if (activeTab === 'messages') {
+        fetchInternalMessages();
+        if (employees.length === 0) fetchEmployeesForMessages();
+    } else if (activeTab === 'chat-admin' && isAdmin) fetchAllConversations();
+  }, [activeTab, isAdmin]);
+
+  const handleSendInternalMessage = async () => {
+    if ((!isBroadcast && !composeTo) || (isBroadcast && composeToList.length === 0) || !composeTitle) return;
+    try {
+      await apiClient.post("/notifications/send", {
+        recipient_id: isBroadcast ? undefined : composeTo,
+        recipient_ids: isBroadcast ? composeToList : undefined,
+        title: composeTitle,
+        description: composeDesc
+      });
+      toast.success(isBroadcast ? "ההודעות נשלחו בהצלחה לקבוצה" : "הודעה נשלחה בהצלחה");
+      setComposeOpen(false);
+      setComposeTo("");
+      setComposeToList([]);
+      setIsBroadcast(false);
+      setComposeTitle("");
+      setComposeDesc("");
+      fetchInternalMessages();
+    } catch (error) {
+      toast.error("שגיאה בשליחת ההודעה");
+    }
+  };
 
   const handleAdminReply = async () => {
     if (!replyText.trim() || !selectedItem) return;
@@ -115,218 +202,570 @@ const FeedbackPage = () => {
     } catch (error) { toast.error("שגיאה בשליחה"); }
   };
 
-  const updateStatus = async (id: number, type: 'feedback' | 'support', status: string) => {
-    try {
-      if (type === 'feedback') {
-        await apiClient.put(`/feedback/admin/update/${id}`, { status, admin_reply: selectedItem?.data.admin_reply });
-      }
-      toast.success("סטטוס עודכן");
-      fetchAdminTickets();
-      setSelectedItem(null);
-    } catch (err) { toast.error("שגיאה בעדכון סטטוס"); }
-  };
+  const availableCommanders = useMemo(() => {
+    if (!currentUser) return [];
+    
+    // If Admin: Can message ANYONE
+    if (currentUser.is_admin) {
+      return employees.filter(e => e.id !== currentUser.id);
+    }
 
-  const filteredItems = isAdmin ? [
-    ...allTickets.map(t => ({ ...t, type: 'feedback' as const })),
-    ...supportTickets.map(t => ({ ...t, type: 'support' as const, description: t.message, category: t.subject }))
-  ].filter(item => {
-    if (adminFilter === 'all') return true;
-    if (adminFilter === 'pending') return item.status !== 'done' && item.status !== 'dismissed' && item.status !== 'irrelevant';
-    if (adminFilter === 'done') return item.status === 'done';
-    if (adminFilter === 'dismissed') return item.status === 'dismissed' || item.status === 'irrelevant';
-    return true;
-  }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) : [];
+    // If Commander: Message subordinates or other commanders
+    const commanders = employees.filter(e => {
+        if (!e.is_commander || e.id === currentUser.id) return false;
+        
+        // Hierarchy logic
+        if (currentUser.commands_department_id && e.department_id === currentUser.commands_department_id) return true;
+        if (currentUser.commands_section_id && e.section_id === currentUser.commands_section_id) return true;
+        if (currentUser.commands_team_id && e.team_id === currentUser.commands_team_id) return true;
+        
+        return false;
+    });
+
+    if (commanders.length > 0) return commanders;
+
+    // Fallback: Show all commanders in the unit if no subordinates found
+    return employees.filter(e => e.is_commander && e.id !== currentUser.id);
+  }, [employees, currentUser]);
+
+  const filteredItems = useMemo(() => {
+    if (!isAdmin) return [];
+    const items = [
+      ...allTickets.map(t => ({ ...t, type: 'feedback' as const })),
+      ...supportTickets.map(t => ({ ...t, type: 'support' as const, description: t.message, category: t.subject }))
+    ];
+    return items.filter(item => {
+      if (searchQuery && !`${(item as any).first_name || ''} ${(item as any).last_name || ''} ${(item as any).full_name || ''} ${item.description}`.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (adminFilter === 'pending' && (item.status === 'done' || item.status === 'dismissed' || item.status === 'irrelevant')) return false;
+      if (adminFilter === 'done' && item.status !== 'done') return false;
+      if (adminFilter === 'dismissed' && item.status !== 'dismissed' && item.status !== 'irrelevant') return false;
+      if (adminCategoryFilter === 'support' && item.type !== 'support') return false;
+      if (adminCategoryFilter === 'bug' && (item.type !== 'feedback' || item.category !== 'bug')) return false;
+      if (adminCategoryFilter === 'improvement' && (item.type !== 'feedback' || item.category !== 'improvement')) return false;
+      if (adminCategoryFilter === 'feature' && (item.type !== 'feedback' || item.category !== 'feature')) return false;
+      return true;
+    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [allTickets, supportTickets, adminFilter, adminCategoryFilter, searchQuery, isAdmin]);
 
   const getStatusBadge = (status: string) => {
     const configs: any = {
-      received: { label: "ממתין", color: "bg-slate-100 text-slate-600 border-slate-200" },
-      reviewing: { label: "בבדיקה", color: "bg-blue-50 text-blue-600 border-blue-200" },
-      in_progress: { label: "בטיפול", color: "bg-amber-50 text-amber-600 border-amber-200" },
-      done: { label: "בוצע", color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
-      dismissed: { label: "נדחה", color: "bg-rose-50 text-rose-600 border-rose-200" },
-      irrelevant: { label: "לא רלוונטי", color: "bg-slate-200 text-slate-500 border-slate-300" },
-      open: { label: "פתוח", color: "bg-blue-50 text-blue-600 border-blue-200" },
-      closed: { label: "נענה", color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
+      received: { label: "ממתין", classes: "bg-orange-500/10 text-orange-400 border-orange-500/20" },
+      reviewing: { label: "בבדיקה", classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+      in_progress: { label: "בטיפול", classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
+      done: { label: "בוצע", classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+      dismissed: { label: "נדחה", classes: "bg-rose-500/10 text-rose-400 border-rose-500/20" },
+      irrelevant: { label: "לא רלוונטי", classes: "bg-slate-500/10 text-slate-400 border-slate-500/20" },
+      open: { label: "פתוח", classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+      closed: { label: "נענה", classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
     };
     const config = configs[status] || configs.received;
-    return <Badge variant="outline" className={cn("px-2 py-0 rounded-lg font-black text-[9px] border", config.color)}>{config.label}</Badge>;
+    return <Badge className={cn("px-3 py-1 rounded-full font-black text-[10px] border shadow-sm", config.classes)}>{config.label}</Badge>;
   };
 
   return (
-    <div className="flex flex-col h-full bg-background/50 overflow-hidden" dir="rtl">
-      <div className="pt-6 pb-4 px-4 sm:px-6 shrink-0 transition-all">
+    <div className="w-full relative min-h-screen pb-10 bg-background font-assistant" dir="rtl">
+      {/* Page Header - Consistent with other pages */}
+      <div className="relative z-10 pt-6 pb-4 px-4 sm:px-6 max-w-full mx-auto transition-all">
         <PageHeader 
-          icon={MessageSquarePlus}
-          title={isAdmin ? "מערכת ניהול פניות" : "מרכז משוב והצעות"}
-          subtitle={isAdmin ? "מעקב וטיפול בפניות מפקדים מהשטח." : "הפידבק שלך עוזר לנו לבנות מערכת טובה יותר."}
-          className="mb-0"
+          icon={MessageSquare}
+          title="הודעות וניהול פניות"
+          subtitle="ניהול התכתבויות פנימיות ופניות למערכת"
+          hideMobile={true}
+          className="mb-6"
           badge={
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button 
                 variant="outline" 
-                className="rounded-2xl h-11 border-border/40 bg-card hover:bg-muted/50 font-bold"
-                onClick={isAdmin ? fetchAdminTickets : fetchMyTickets}
+                className="h-10 rounded-xl border-border/40 bg-card/40 backdrop-blur-xl font-black text-[10px] sm:text-xs text-foreground shadow-sm hover:bg-primary/5 transition-all" 
+                onClick={isAdmin ? fetchAdminTickets : fetchMyTickets} 
                 disabled={isLoadingTickets}
               >
-                <RefreshCw className={cn("w-4 h-4 ml-2", isLoadingTickets && "animate-spin")} />
-                רענן
+                <RefreshCw className={cn("w-3.5 h-3.5 sm:w-4 h-4 ml-1.5 sm:ml-2", isLoadingTickets && "animate-spin")} />
+                סנכרון
               </Button>
             </div>
           }
         />
+
+        {/* Tab Pills */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto no-scrollbar pb-2">
+          {isAdmin && <TabButton active={activeTab === 'admin-view'} onClick={() => {setActiveTab('admin-view'); setSearchParams({tab: 'admin-view'})}} icon={<Settings className="w-4 h-4" />} label="ניהול משימות" />}
+          {isAdmin && <TabButton active={activeTab === 'chat-admin'} onClick={() => {setActiveTab('chat-admin'); setSearchParams({tab: 'chat-admin'})}} icon={<ShieldCheck className="w-4 h-4" />} label="גיבוי צ'אטים" />}
+          <TabButton active={activeTab === 'messages'} onClick={() => {setActiveTab('messages'); setSearchParams({tab: 'messages'})}} icon={<MessageSquare className="w-4 h-4" />} label="הודעות מפקדים" />
+          <TabButton active={activeTab === 'my-tickets'} onClick={() => { setActiveTab('my-tickets'); setSearchParams({tab: 'my-tickets'}); fetchMyTickets(); }} icon={<History className="w-4 h-4" />} label={isAdmin ? "ארכיון שלי" : "הפניות שלי"} />
+          <TabButton active={activeTab === 'whats-new'} onClick={() => {setActiveTab('whats-new'); setSearchParams({tab: 'whats-new'})}} icon={<Sparkles className="w-4 h-4" />} label="מה חדש?" />
+        </div>
+
+        <main className="space-y-6 relative z-10">
+          <AnimatePresence mode="wait">
+            {activeTab === 'admin-view' && isAdmin && (
+              <motion.div key="admin-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                
+                {/* Stats Row - Compact on Mobile */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <StatItem label="פניות פתוחות" value={filteredItems.filter(i => ['pending', 'open', 'received'].includes(i.status)).length} sub="ממתינות" icon={AlertCircle} color="text-rose-500" bgColor="bg-rose-500/10" />
+                  <StatItem label="בטיפול" value={filteredItems.filter(i => ['in_progress', 'reviewing'].includes(i.status)).length} sub="נבדקות" icon={Activity} color="text-amber-500" bgColor="bg-amber-500/10" />
+                  <StatItem label="טופלו היום" value={filteredItems.filter(i => (['done', 'closed', 'approved'].includes(i.status)) && new Date(i.created_at).toDateString() === new Date().toDateString()).length} sub="סגורות" icon={CheckCircle2} color="text-emerald-500" bgColor="bg-emerald-500/10" />
+                  <StatItem label="סה״כ פניות" value={filteredItems.length} sub="במערכת" icon={MessageSquare} color="text-primary" bgColor="bg-primary/10" />
+                </div>
+
+                {/* Modern Toolbar - Optimized for Mobile */}
+                <Card className="bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-3 sm:p-4 flex flex-col lg:flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
+                    <select value={adminFilter} onChange={(e) => setAdminFilter(e.target.value as any)} className="w-full sm:w-auto h-10 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] cursor-pointer shadow-sm">
+                      <option value="pending">ממתין לטיפול</option>
+                      <option value="done">טופל בהצלחה</option>
+                      <option value="dismissed">ארכיון</option>
+                      <option value="all">כל הסטטוסים</option>
+                    </select>
+                    <select value={adminCategoryFilter} onChange={(e) => setAdminCategoryFilter(e.target.value as any)} className="w-full sm:w-auto h-10 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] cursor-pointer shadow-sm">
+                      <option value="all">כל הסוגים</option>
+                      <option value="bug">באג במערכת</option>
+                      <option value="improvement">הצעה לשיפור</option>
+                      <option value="feature">פיצ'ר חדש</option>
+                      <option value="support">קריאת תמיכה</option>
+                    </select>
+                  </div>
+
+                  <div className="relative w-full lg:w-72">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input 
+                      type="text"
+                      placeholder="חיפוש פנייה..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full h-10 pr-10 pl-4 bg-background/50 border border-border/50 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
+                    />
+                  </div>
+                </Card>
+
+                {/* Stylized Cards List */}
+                <div className="space-y-3">
+                  {filteredItems.length === 0 ? (
+                    <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
+                       <Sparkles className="w-12 h-12 text-muted-foreground/30 mb-3" />
+                       <h3 className="text-sm font-black text-foreground">אין פניות תואמות</h3>
+                       <p className="text-xs text-muted-foreground mt-1">לא נמצאו פניות שעונות לסינון שהגדרת.</p>
+                    </div>
+                  ) : filteredItems.map(item => (
+                    <Card key={`${item.type}-${item.id}`} onClick={() => setSelectedItem({data: item, type: item.type})} className="group bg-card/40 border border-border/40 backdrop-blur-xl rounded-3xl p-4 sm:p-5 hover:bg-card/60 hover:border-primary/30 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-sm active:scale-[0.98]">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm sm:text-base shrink-0 border border-primary/20">
+                          {(item.type === 'feedback' ? item.first_name?.[0] : item.full_name?.[0]) || 'U'}
+                        </div>
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-sm text-foreground truncate">{item.type === 'feedback' ? `${item.first_name} ${item.last_name}` : item.full_name}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full shrink-0">{new Date(item.created_at).toLocaleDateString('he-IL')}</span>
+                          </div>
+                          <p className="text-xs font-medium text-muted-foreground line-clamp-1 opacity-70">{item.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between sm:justify-end gap-4 mt-1 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/10">
+                        {getStatusBadge(item.status)}
+                        <ChevronLeft className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all translate-x-1 group-hover:translate-x-0" />
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'messages' && (
+              <motion.div key="messages-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <Card className="bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                  <div>
+                    <h2 className="text-lg font-black text-foreground tracking-tight">לוח הודעות פנימי</h2>
+                    <p className="text-xs text-muted-foreground">התכתבויות מאובטחות עם מפקדים אחרים ביחידה.</p>
+                  </div>
+                  <Button onClick={() => setComposeOpen(true)} className="h-10 rounded-xl font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20">
+                    <Send className="w-4 h-4 ml-2" />
+                    הודעה חדשה
+                  </Button>
+                </Card>
+                
+                <div className="space-y-3">
+                  {internalMessages.length === 0 ? (
+                    <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
+                       <MessageSquare className="w-12 h-12 text-muted-foreground/30 mb-3" />
+                       <h3 className="text-sm font-black text-foreground">אין הודעות פנימיות</h3>
+                       <p className="text-xs text-muted-foreground mt-1">לחץ על הודעה חדשה כדי להתחיל התכתבות.</p>
+                    </div>
+                  ) : internalMessages.map(msg => (
+                    <Card key={msg.id} onClick={() => {
+                        openChat({
+                          id: msg.other_id,
+                          name: `${msg.other_first} ${msg.other_last}`,
+                          role: "מפקד"
+                        });
+                    }} className="group bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-4 hover:bg-card/60 hover:border-primary/30 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 border", msg.direction === 'received' ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" : "bg-muted text-muted-foreground border-border")}>
+                          {msg.direction === 'received' ? 'נכנס' : 'יוצא'}
+                        </div>
+                        <div className="space-y-1 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-sm text-foreground">{msg.other_first} {msg.other_last}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">{new Date(msg.created_at).toLocaleString('he-IL', {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'})}</span>
+                          </div>
+                          <p className="text-sm font-black text-foreground leading-tight">{msg.title}</p>
+                          <p className="text-xs font-medium text-muted-foreground line-clamp-1 max-w-xl">{msg.description}</p>
+                        </div>
+                      </div>
+                      <ChevronLeft className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 hidden sm:block" />
+                    </Card>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'my-tickets' && (
+              <motion.div key="history-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="space-y-3">
+                  {myTickets.length === 0 ? (
+                    <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
+                       <Archive className="w-12 h-12 text-muted-foreground/30 mb-3" />
+                       <h3 className="text-sm font-black text-foreground">אין פניות היסטוריות</h3>
+                    </div>
+                  ) : myTickets.map(ticket => (
+                    <Card key={ticket.id} className="group bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-4 hover:bg-card/60 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-sm text-foreground">{ticket.category}</span>
+                          <span className="text-[10px] font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">{new Date(ticket.created_at).toLocaleDateString('he-IL')}</span>
+                        </div>
+                        <p className="text-xs font-medium text-muted-foreground line-clamp-1 max-w-xl">{ticket.description}</p>
+                        {ticket.admin_reply && (
+                           <div className="mt-2 p-3 bg-primary/5 border border-primary/10 rounded-xl">
+                             <p className="text-[10px] font-black uppercase text-primary/70 mb-1">תשובת צוות ניהול</p>
+                             <p className="text-xs font-bold text-foreground">{ticket.admin_reply}</p>
+                           </div>
+                        )}
+                      </div>
+                      <div className="self-start sm:self-center">
+                        {getStatusBadge(ticket.status)}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+            
+            {activeTab === 'chat-admin' && isAdmin && (
+              <motion.div key="chat-admin-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                <Card className="bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-4 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-black text-foreground">גיבוי התכתבויות</h2>
+                    <p className="text-xs text-muted-foreground">כל השיחות הפנימיות — לחץ לצפייה וייצוא</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="rounded-xl text-xs font-black" onClick={fetchAllConversations}>
+                    <RefreshCw className="w-3.5 h-3.5 ml-1.5" />רענן
+                  </Button>
+                </Card>
+
+                {selectedConvExport ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Button variant="ghost" size="sm" className="rounded-xl text-xs font-black" onClick={() => { setSelectedConvExport(null); setConvMessages([]); }}>
+                        <ChevronLeft className="w-4 h-4 ml-1" />חזרה לרשימה
+                      </Button>
+                      <span className="text-sm font-black text-foreground">{selectedConvExport.user1_name} ↔ {selectedConvExport.user2_name}</span>
+                      <Button size="sm" className="mr-auto rounded-xl text-xs font-black bg-primary hover:bg-primary/90" onClick={() => handleExportJson(selectedConvExport)}>
+                        <Download className="w-3.5 h-3.5 ml-1.5" />ייצוא JSON
+                      </Button>
+                    </div>
+                    <Card className="bg-card/40 border border-border/40 rounded-2xl overflow-hidden">
+                      {loadingConv ? (
+                        <div className="p-10 text-center text-xs text-muted-foreground">טוען...</div>
+                      ) : convMessages.length === 0 ? (
+                        <div className="p-10 text-center text-xs text-muted-foreground">אין הודעות</div>
+                      ) : (
+                        <div className="divide-y divide-border/30 max-h-[60vh] overflow-y-auto">
+                          {convMessages.map((msg: any) => (
+                            <div key={msg.id} className="p-4 flex gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xs font-black shrink-0">
+                                {msg.sender_first?.[0]}{msg.sender_last?.[0]}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs font-black text-foreground">{msg.sender_first} {msg.sender_last}</span>
+                                  <span className="text-[10px] text-muted-foreground">{new Date(msg.created_at).toLocaleString('he-IL')}</span>
+                                  {(msg.is_deleted_by_sender || msg.is_deleted_by_recipient) && (
+                                    <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full font-bold">נמחק מהתצוגה</span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-foreground">{msg.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </Card>
+                  </div>
+                ) : (
+                  <Card className="bg-card/40 border border-border/40 rounded-2xl overflow-hidden">
+                    {allConversations.length === 0 ? (
+                      <div className="py-12 flex flex-col items-center justify-center text-center">
+                        <MessageSquare className="w-12 h-12 text-muted-foreground/30 mb-3" />
+                        <h3 className="text-sm font-black">אין התכתבויות במערכת</h3>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex flex-col sm:flex-row gap-3 px-5 py-4 border-b border-border/40">
+                          <div className="relative flex-1">
+                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <input
+                              type="text"
+                              placeholder="חיפוש לפי שם..."
+                              value={convSearch}
+                              onChange={(e) => setConvSearch(e.target.value)}
+                              className="w-full h-9 pr-9 pl-4 bg-background/50 border border-border/50 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground"
+                            />
+                          </div>
+                          <select
+                            value={convSortBy}
+                            onChange={(e) => setConvSortBy(e.target.value as any)}
+                            className="h-9 px-3 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer w-full sm:w-auto"
+                          >
+                            <option value="name">מיון לפי שם (א-ת)</option>
+                            <option value="date">מיון לפי תאריך</option>
+                            <option value="count">מיון לפי כמות הודעות</option>
+                          </select>
+                        </div>
+                        {/* Table Header */}
+                        <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 px-5 py-3 border-b border-border/40 bg-muted/20">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">משתתפים</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center w-24">הודעות</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center w-28">תאריך אחרון</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center w-28">פעולות</span>
+                        </div>
+                        {/* Rows */}
+                        <div className="divide-y divide-border/30 max-h-[60vh] overflow-y-auto">
+                          {sortedConversations.length === 0 ? (
+                             <div className="p-8 text-center text-xs font-bold text-muted-foreground">לא נמצאו תוצאות לחיפוש.</div>
+                          ) : sortedConversations.map((conv: any, idx: number) => (
+                            <div key={idx} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 hover:bg-muted/20 transition-colors">
+                              {/* Users */}
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex -space-x-2 rtl:space-x-reverse shrink-0">
+                                  <div className="w-8 h-8 rounded-full bg-primary/15 text-primary border-2 border-card flex items-center justify-center text-[11px] font-black z-10">
+                                    {conv.user1_name?.[0]}
+                                  </div>
+                                  <div className="w-8 h-8 rounded-full bg-indigo-500/15 text-indigo-500 border-2 border-card flex items-center justify-center text-[11px] font-black">
+                                    {conv.user2_name?.[0]}
+                                  </div>
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-black text-foreground leading-tight">
+                                    {conv.user1_name}
+                                    <span className="mx-1.5 text-muted-foreground/40 font-normal">↔</span>
+                                    {conv.user2_name}
+                                  </p>
+                                </div>
+                              </div>
+                              {/* Count */}
+                              <div className="flex justify-start sm:justify-center w-24">
+                                <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-[11px] font-black px-2.5 py-1 rounded-full border border-primary/20">
+                                  <MessageSquare className="w-3 h-3" />
+                                  {conv.total_messages}
+                                </span>
+                              </div>
+                              {/* Date */}
+                              <div className="hidden sm:flex justify-center w-28">
+                                <span className="text-[11px] text-muted-foreground font-bold">
+                                  {conv.last_message_at ? new Date(conv.last_message_at).toLocaleDateString('he-IL') : '—'}
+                                </span>
+                              </div>
+                              {/* Actions */}
+                              <div className="flex items-center gap-1.5 justify-start sm:justify-center w-28">
+                                <button
+                                  className="h-7 px-2.5 rounded-lg text-[11px] font-black text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex items-center gap-1"
+                                  onClick={() => { setSelectedConvExport(conv); fetchConvMessages(conv.user1_id, conv.user2_id); }}
+                                >
+                                  <Eye className="w-3.5 h-3.5" />צפה
+                                </button>
+                                <button
+                                  className="h-7 px-2.5 rounded-lg text-[11px] font-black text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors flex items-center gap-1"
+                                  onClick={async () => { setSelectedConvExport(conv); await fetchConvMessages(conv.user1_id, conv.user2_id); handleExportJson(conv); }}
+                                >
+                                  <Download className="w-3.5 h-3.5" />ייצא
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </Card>
+                )}
+              </motion.div>
+            )}
+
+            {activeTab === 'whats-new' && (
+               <motion.div key="whats-new-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                 <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
+                   <Sparkles className="w-12 h-12 text-primary mb-3" />
+                   <h3 className="text-lg font-black text-foreground">אין עדכונים חדשים</h3>
+                   <p className="text-sm text-muted-foreground mt-1">המערכת מעודכנת לגרסה האחרונה.</p>
+                 </div>
+               </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
       </div>
 
-      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 space-y-8">
-        {isAdmin && activeTab === 'admin-view' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatItem label="פניות פתוחות" value={filteredItems.filter(i => ['pending', 'open', 'received'].includes(i.status)).length} sub="ממתינות למענה" icon={AlertCircle} color="bg-rose-500/10 text-rose-600" />
-            <StatItem label="בטיפול" value={filteredItems.filter(i => ['in_progress', 'reviewing'].includes(i.status)).length} sub="נבדקות כעת" icon={Activity} color="bg-amber-500/10 text-amber-600" />
-            <StatItem label="טופלו היום" value={filteredItems.filter(i => (['done', 'closed', 'approved'].includes(i.status)) && new Date(i.created_at).toDateString() === new Date().toDateString()).length} sub="סגורות להיום" icon={CheckCircle2} color="bg-emerald-500/10 text-emerald-600" />
-            <StatItem label="סה״כ פניות" value={filteredItems.length} sub="במערכת" icon={MessageSquare} color="bg-blue-500/10 text-blue-600" />
-          </div>
-        )}
-
-        <Card className="rounded-[2.5rem] border-border/40 overflow-hidden flex flex-col min-h-[650px] bg-card/60 backdrop-blur-xl">
-          <div className="flex bg-background/20 px-6 pt-6 border-b border-border/40 gap-2 overflow-x-auto no-scrollbar">
-            {!isAdmin && (
-              <button onClick={() => setActiveTab('send')} className={cn("px-6 py-3 text-xs font-black rounded-t-2xl transition-all border-t border-x", activeTab === 'send' ? "bg-card text-primary border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
-                <div className="flex items-center gap-2"><Send className="w-4 h-4" />שליחת משוב</div>
-              </button>
-            )}
-            <button onClick={() => setActiveTab('my-tickets')} className={cn("px-6 py-3 text-xs font-black rounded-t-2xl transition-all border-t border-x", activeTab === 'my-tickets' ? "bg-card text-primary border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
-              <div className="flex items-center gap-2"><History className="w-4 h-4" />{isAdmin ? "ארכיון שלי" : "הפניות שלי"}</div>
-            </button>
-            {isAdmin && (
-              <button onClick={() => setActiveTab('admin-view')} className={cn("px-6 py-3 text-xs font-black rounded-t-2xl transition-all border-t border-x", activeTab === 'admin-view' ? "bg-card text-primary border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
-                <div className="flex items-center gap-2"><Settings className="w-4 h-4" />ניהול משימות</div>
-              </button>
-            )}
-            <button onClick={() => setActiveTab('whats-new')} className={cn("px-6 py-3 text-xs font-black rounded-t-2xl transition-all border-t border-x", activeTab === 'whats-new' ? "bg-card text-primary border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
-              <div className="flex items-center gap-2"><Sparkles className="w-4 h-4" />מה חדש?</div>
-            </button>
-          </div>
-
-          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar relative">
-            <AnimatePresence mode="wait">
-              {activeTab === 'send' && !isAdmin && (
-                <motion.div key="send-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  <div className="lg:col-span-8">
-                    <div className="bg-card border border-border/40 rounded-3xl p-8 shadow-sm">
-                      <form onSubmit={(e) => { e.preventDefault(); toast.success("נשלח!"); }} className="space-y-8">
-                        <div>
-                          <label className="block text-foreground font-black text-xs mb-6 uppercase tracking-widest opacity-80">סוג הפנייה</label>
-                          <div className="grid grid-cols-3 gap-4">
-                            {[
-                              { id: "bug", label: "דיווח על באג", icon: AlertCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
-                              { id: "improvement", label: "הצעה לשיפור", icon: CheckCircle2, color: "text-amber-500", bg: "bg-amber-500/10" },
-                              { id: "feature", label: "פיצ'ר חדש", icon: Plus, color: "text-blue-500", bg: "bg-blue-500/10" }
-                            ].map((cat) => (
-                              <button key={cat.id} type="button" onClick={() => setCategory(cat.id)} className={cn( "flex flex-col items-center justify-center gap-4 p-6 rounded-2xl border-2 transition-all active:scale-[0.98]", category === cat.id ? "border-primary bg-primary/5 text-primary shadow-sm" : "border-border/40 text-muted-foreground hover:bg-muted/50" )}>
-                                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", cat.bg)}><cat.icon className={cn("w-6 h-6", cat.color)} /></div>
-                                <span className="font-black text-[11px] uppercase tracking-wider">{cat.label}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          <label className="block text-foreground font-black text-xs uppercase tracking-widest opacity-80">תיאור מפורט</label>
-                          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="ספר לנו מה קרה..." className="w-full h-48 p-6 bg-muted/20 border border-border/40 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all resize-none text-sm font-medium" />
-                        </div>
-                        <Button type="submit" className="w-full h-14 rounded-xl font-black text-md gap-4">שליחת משוב לצוות הפיתוח <Send className="w-4 h-4" /></Button>
-                      </form>
-                    </div>
-                  </div>
-                  <div className="lg:col-span-4 space-y-6">
-                    <div className="bg-card border border-border/40 rounded-3xl p-6 shadow-sm">
-                      <h3 className="font-black text-[11px] mb-6 flex items-center gap-3 uppercase tracking-widest text-primary"><Sparkles className="w-4 h-4" />למה המשוב חשוב?</h3>
-                      <div className="space-y-6">
-                        {[{ icon: CheckCircle2, text: "צוות הפיתוח קורא כל משוב ומתעדף תיקונים באופן שוטף.", color: "text-emerald-500" }, { icon: Plus, text: "רוב היכולות החדשות במערכת נולדו ישירות מהצעות שלכם.", color: "text-blue-500" }].map((item, i) => (
-                          <div key={i} className="flex gap-4 items-start">
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800"><item.icon className={cn("w-4 h-4", item.color)} /></div>
-                            <p className="text-[11px] text-muted-foreground font-bold leading-relaxed pt-1">{item.text}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'admin-view' && isAdmin && (
-                <motion.div key="admin-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-border p-1 rounded-xl shadow-sm">
-                      {[{ id: 'pending', label: 'ממתין', color: 'bg-amber-500' }, { id: 'done', label: 'בוצע', color: 'bg-emerald-500' }, { id: 'dismissed', label: 'ארכיון', color: 'bg-slate-500' }, { id: 'all', label: 'הכל', color: 'bg-primary' }].map(f => (
-                        <Button key={f.id} variant={adminFilter === f.id ? "secondary" : "ghost"} size="sm" onClick={() => setAdminFilter(f.id as any)} className="h-7 px-3 rounded-lg font-black text-[10px] gap-2">
-                          <div className={cn("w-1.5 h-1.5 rounded-full", f.color)} />{f.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-                    <table className="w-full text-right border-collapse">
-                      <thead>
-                        <tr className="bg-transparent border-b border-border/40">
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">שם המפקד</th>
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">תוכן הפנייה</th>
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">תאריך</th>
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">סטטוס</th>
-                          <th className="px-6 py-4 w-10"></th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {filteredItems.map(item => (
-                          <tr key={`${item.type}-${item.id}`} onClick={() => setSelectedItem({data: item, type: item.type})} className="hover:bg-muted/50 cursor-pointer transition-colors group">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[10px] shrink-0">{(item.type === 'feedback' ? item.first_name?.[0] : item.full_name?.[0]) || 'U'}</div>
-                                <span className="font-bold text-sm">{item.type === 'feedback' ? `${item.first_name} ${item.last_name}` : item.full_name}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 max-w-md"><p className="text-xs font-medium text-muted-foreground truncate">{item.description}</p></td>
-                            <td className="px-6 py-4 whitespace-nowrap"><span className="text-[10px] font-bold text-muted-foreground">{new Date(item.created_at).toLocaleDateString('he-IL')}</span></td>
-                            <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(item.status)}</td>
-                            <td className="px-6 py-4"><ChevronLeft className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0" /></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </motion.div>
-              )}
-              {activeTab === 'my-tickets' && <motion.div key="history-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="py-32 text-center opacity-30"><History className="w-16 h-16 mx-auto mb-4" /><h3 className="font-black text-xl">ארכיון פניות</h3></motion.div>}
-              {activeTab === 'whats-new' && <motion.div key="new-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-3xl p-12 text-center shadow-sm"><h3 className="font-black text-3xl mb-4">גרסה 2.4.0 יצאה לדרך!</h3></motion.div>}
-            </AnimatePresence>
-          </div>
-        </Card>
-      </main>
-
+      {/* Detail Slider */}
       <AnimatePresence>
         {selectedItem && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedItem(null)} className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[200]" />
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed top-0 left-0 h-screen w-full sm:w-[450px] bg-white dark:bg-slate-900 shadow-2xl z-[250] flex flex-col border-r border-border">
-              <div className="p-6 border-b border-border bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedItem(null)} className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[200]" />
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed top-0 right-0 h-screen w-full sm:w-[450px] bg-card border-r border-border/50 shadow-2xl z-[250] flex flex-col">
+              <div className="p-4 sm:p-6 border-b border-border/50 flex items-center justify-between bg-card/50 backdrop-blur-xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center"><User className="w-5 h-5" /></div>
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20"><User className="w-4 h-4 sm:w-5 sm:h-5" /></div>
                   <div>
-                    <h3 className="font-black text-sm">{selectedItem.type === 'feedback' ? `${selectedItem.data.first_name} ${selectedItem.data.last_name}` : selectedItem.data.full_name}</h3>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">{selectedItem.type === 'feedback' ? 'פניית משוב' : 'שיחת תמיכה'}</span>
+                    <h3 className="font-black text-xs sm:text-sm text-foreground truncate max-w-[180px] sm:max-w-none">{selectedItem.type === 'feedback' ? `${(selectedItem.data as any).first_name} ${(selectedItem.data as any).last_name}` : (selectedItem.data as any).full_name}</h3>
+                    <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{selectedItem.type === 'feedback' ? 'פניית משוב' : 'שיחת תמיכה'}</span>
                   </div>
                 </div>
-                <button onClick={() => setSelectedItem(null)} className="p-2 hover:bg-muted rounded-xl transition-all"><X className="w-5 h-5" /></button>
+                <button onClick={() => setSelectedItem(null)} className="p-2 text-muted-foreground hover:bg-muted rounded-xl transition-all"><X className="w-5 h-5" /></button>
               </div>
-              <div className="flex-grow p-6 overflow-y-auto space-y-6">
+              <div className="flex-grow p-6 overflow-y-auto space-y-6 custom-scrollbar">
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">תוכן הפנייה</label>
-                  <div className="p-4 bg-muted/30 rounded-2xl text-[13px] font-medium leading-relaxed border border-border/40">{selectedItem.data.description}</div>
+                  <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">תוכן הפנייה</label>
+                  <div className="p-4 bg-muted/30 rounded-2xl text-sm font-medium leading-relaxed text-foreground border border-border/50">{selectedItem.data.description}</div>
                 </div>
-                <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">מענה רשמי</label>
-                  <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="הקלד את תשובתך כאן..." className="w-full h-32 p-4 bg-white dark:bg-slate-800 border border-border rounded-2xl text-xs font-medium focus:ring-4 focus:ring-primary/10 transition-all resize-none" />
-                  <Button onClick={handleAdminReply} className="w-full h-12 rounded-xl font-black gap-2"><Send className="w-4 h-4" /> שליחת תשובה</Button>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">מענה רשמי</label>
+                  <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="כתוב כאן את התשובה..." className="w-full h-32 p-4 bg-background border border-border/50 rounded-2xl text-sm font-medium text-foreground focus:ring-2 focus:ring-primary/20 transition-all resize-none" />
+                  <Button onClick={handleAdminReply} className="w-full h-12 rounded-xl font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20">שליחת מענה</Button>
                 </div>
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Compose Message Dialog */}
+      <AnimatePresence>
+        {composeOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setComposeOpen(false)} 
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[200]" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95, y: 20 }} 
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-card border border-border/50 rounded-3xl shadow-2xl z-[250] overflow-hidden p-6 sm:p-8 flex flex-col gap-6" 
+              dir="rtl"
+            >
+               <div className="flex justify-between items-center pb-4 border-b border-border/50">
+                  <div className="flex items-center gap-3">
+                     <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center rotate-3">
+                       <MessageSquare className="w-6 h-6" />
+                     </div>
+                     <div>
+                        <h3 className="font-black text-lg text-foreground tracking-tight">הודעה חדשה</h3>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">שלח הודעה פנימית למפקד</p>
+                     </div>
+                  </div>
+                  <button onClick={() => setComposeOpen(false)} className="p-2 text-muted-foreground hover:bg-muted rounded-xl transition-all">
+                    <X className="w-5 h-5" />
+                  </button>
+               </div>
+               
+               <div className="space-y-5 overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
+                  {/* Recipient Selection Area */}
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">בחירת נמען</label>
+                    
+                    {availableCommanders.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="relative">
+                          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                          <input 
+                            type="text"
+                            placeholder="חיפוש לפי שם..."
+                            value={recipientSearch}
+                            onChange={(e) => setRecipientSearch(e.target.value)}
+                            className="w-full h-10 pr-9 pl-4 bg-muted/30 border border-border/50 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto p-1">
+                          {availableCommanders
+                            .filter(c => !recipientSearch || `${c.first_name} ${c.last_name}`.toLowerCase().includes(recipientSearch.toLowerCase()))
+                            .map(c => (
+                              <button 
+                                key={c.id}
+                                onClick={() => setComposeTo(c.id.toString())}
+                                className={cn(
+                                  "flex items-center gap-3 p-2 rounded-xl transition-all border",
+                                  composeTo === c.id.toString() 
+                                    ? "bg-primary/10 border-primary/20 shadow-sm" 
+                                    : "bg-background/40 border-transparent hover:bg-muted/50"
+                                )}
+                              >
+                                <div className={cn(
+                                  "w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px] shrink-0",
+                                  composeTo === c.id.toString() ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                                )}>
+                                  {c.first_name?.[0]}{c.last_name?.[0]}
+                                </div>
+                                <div className="flex flex-col text-right min-w-0">
+                                  <span className="text-xs font-bold text-foreground truncate">{c.first_name} {c.last_name}</span>
+                                  <span className="text-[9px] font-medium text-muted-foreground truncate">{c.department_name || "מפקד"}</span>
+                                </div>
+                                {composeTo === c.id.toString() && (
+                                  <CheckCircle2 className="w-4 h-4 text-primary mr-auto" />
+                                )}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center bg-muted/20 border border-dashed border-border rounded-2xl">
+                        <p className="text-xs font-bold text-muted-foreground">לא נמצאו נמענים זמינים.</p>
+                        <p className="text-[9px] text-muted-foreground/60 mt-1">יש להוסיף שוטרים/מפקדים למערכת כדי להתחיל התכתבות.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">נושא ההודעה</label>
+                    <input 
+                      type="text" 
+                      value={composeTitle} 
+                      onChange={e => setComposeTitle(e.target.value)} 
+                      placeholder="הזן כותרת עניינית..." 
+                      className="w-full h-12 px-4 bg-background border border-border/50 rounded-xl text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/20 transition-all outline-none" 
+                    />
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">תוכן ההודעה</label>
+                    <textarea 
+                      value={composeDesc} 
+                      onChange={e => setComposeDesc(e.target.value)} 
+                      placeholder="כתוב את הודעתך כאן..." 
+                      className="w-full h-32 p-4 bg-background border border-border/50 rounded-xl text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/20 transition-all resize-none outline-none custom-scrollbar" 
+                    />
+                  </div>
+               </div>
+               
+               <Button 
+                 onClick={handleSendInternalMessage} 
+                 disabled={!composeTo || !composeTitle || !composeDesc} 
+                 className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base shadow-lg shadow-primary/20 active:scale-[0.98] transition-all mt-2"
+               >
+                 <Send className="w-5 h-5 ml-2" />
+                 שלח הודעה כעת
+               </Button>
             </motion.div>
           </>
         )}
@@ -335,19 +774,31 @@ const FeedbackPage = () => {
   );
 };
 
-export default FeedbackPage;
-
-function StatItem({ label, value, sub, icon: Icon, color }: any) {
+function TabButton({ active, onClick, icon, label }: any) {
   return (
-    <Card className="border-border/40 p-6 rounded-[2rem] hover: transition-all group hover:-translate-y-1 bg-card/80">
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{label}</p>
-          <p className="text-3xl font-black tracking-tight">{value}</p>
-          <p className="text-[11px] font-bold text-muted-foreground/60">{sub}</p>
+    <button onClick={onClick} className={cn("px-5 py-2 text-[11px] font-black rounded-full transition-all flex items-center gap-2 border", active ? "bg-primary/10 text-primary border-primary/20 shadow-sm" : "text-muted-foreground hover:text-foreground border-transparent hover:bg-muted/50")}>
+      {icon}{label}
+    </button>
+  );
+}
+
+function StatItem({ label, value, sub, icon: Icon, color, bgColor }: any) {
+  return (
+    <Card className="border border-border/40 p-3 sm:p-5 rounded-2xl bg-card/40 backdrop-blur-xl shadow-sm h-fit hover:bg-card/60 transition-all">
+      <div className="flex items-center justify-between gap-2">
+        <div className="space-y-0.5 sm:space-y-1 min-w-0">
+          <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">{label}</p>
+          <div className="flex items-baseline gap-1.5">
+            <p className="text-lg sm:text-2xl font-black text-foreground">{value}</p>
+            <p className="text-[8px] sm:text-[10px] font-medium text-muted-foreground truncate">{sub}</p>
+          </div>
         </div>
-        <div className={cn("p-4 rounded-2xl transition-transform group-hover:scale-110", color)}><Icon className="w-6 h-6" /></div>
+        <div className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0", bgColor)}>
+          <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", color)} />
+        </div>
       </div>
     </Card>
   );
 }
+
+export default FeedbackPage;

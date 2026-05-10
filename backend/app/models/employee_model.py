@@ -171,8 +171,8 @@ class EmployeeModel:
                 # Do NOT bubble up to parents - that causes the system to think they command the parent unit.
 
                 # Fetch IDs from the direct subquery columns
-                d_id = user.get("commands_department_id_direct")
-                s_id = user.get("commands_section_id_direct")
+                d_id = user.get("commands_department_id")
+                s_id = user.get("commands_section_id")
                 t_id = user.get("commands_team_id")
 
                 # Normalize to None if 0 or falsy (IDs should be > 0)
@@ -1258,6 +1258,85 @@ class EmployeeModel:
                 (dept_id,)
             )
             return cur.fetchone()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def import_employees(data_list):
+        conn = get_db_connection()
+        if not conn:
+            return 0, "Database connection failed"
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # 1. Pre-fetch structure for mapping names to IDs
+            cur.execute("SELECT id, name FROM departments")
+            depts = {row["name"]: row["id"] for row in cur.fetchall()}
+            
+            cur.execute("SELECT id, name, department_id FROM sections")
+            sections = {row["name"]: row for row in cur.fetchall()}
+            
+            cur.execute("SELECT id, name, section_id FROM teams")
+            teams = {row["name"]: row for row in cur.fetchall()}
+            
+            cur.execute("SELECT id, name FROM service_types")
+            service_types = {row["name"]: row["id"] for row in cur.fetchall()}
+            
+            count = 0
+            for row in data_list:
+                # Basic validation
+                username = str(row.get("שם משתמש") or row.get("מספר אישי") or "").strip()
+                first_name = str(row.get("שם פרטי") or "").strip()
+                last_name = str(row.get("שם משפחה") or "").strip()
+                
+                if not username or not first_name:
+                    continue
+                
+                # Mapping units
+                dept_id = depts.get(row.get("מחלקה"))
+                sec_name = row.get("מדור")
+                sec_id = sections.get(sec_name, {}).get("id") if sec_name else None
+                team_name = row.get("צוות") or row.get("חוליה")
+                team_id = teams.get(team_name, {}).get("id") if team_name else None
+                
+                # Service type mapping
+                srv_type_id = service_types.get(row.get("סוג שירות")) or service_types.get("חובה")
+                
+                # Password logic (default to username if not provided)
+                raw_password = str(row.get("סיסמה") or username)
+                pw_hash = generate_password_hash(raw_password)
+                
+                # Check if exists
+                cur.execute("SELECT id FROM employees WHERE username = %s", (username,))
+                existing = cur.fetchone()
+                
+                if existing:
+                    # Update
+                    cur.execute("""
+                        UPDATE employees SET 
+                            first_name = %s, last_name = %s, department_id = %s, 
+                            section_id = %s, team_id = %s, service_type_id = %s,
+                            phone_number = %s, is_active = TRUE
+                        WHERE id = %s
+                    """, (first_name, last_name, dept_id, sec_id, team_id, srv_type_id, row.get("טלפון"), existing["id"]))
+                else:
+                    # Insert
+                    cur.execute("""
+                        INSERT INTO employees (
+                            username, first_name, last_name, password_hash, 
+                            department_id, section_id, team_id, service_type_id,
+                            phone_number, must_change_password, is_active
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, TRUE)
+                    """, (username, first_name, last_name, pw_hash, dept_id, sec_id, team_id, srv_type_id, row.get("טלפון")))
+                
+                count += 1
+            
+            conn.commit()
+            return count, None
+        except Exception as e:
+            conn.rollback()
+            print(f"Error importing employees: {e}")
+            return 0, str(e)
         finally:
             conn.close()
 

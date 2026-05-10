@@ -4,6 +4,7 @@ from app.models.feedback_model import FeedbackModel
 
 feedback_bp = Blueprint('feedback', __name__)
 
+@feedback_bp.route('/', methods=['POST'])
 @feedback_bp.route('/create', methods=['POST'])
 @jwt_required()
 def submit_feedback():
@@ -14,7 +15,19 @@ def submit_feedback():
     except (json.JSONDecodeError, TypeError):
         user_identity = identity_raw
 
-    user_id = user_identity.get('id') if isinstance(user_identity, dict) else user_identity
+    # Robust user_id extraction
+    user_id = None
+    if isinstance(user_identity, dict):
+        user_id = user_identity.get('id')
+    else:
+        try:
+            user_id = int(user_identity)
+        except (ValueError, TypeError):
+            user_id = user_identity
+
+    # Final check: if user_id is still a dict for some reason, try to get 'id' from it
+    if isinstance(user_id, dict):
+        user_id = user_id.get('id')
     
     data = request.get_json()
     
@@ -71,7 +84,16 @@ def get_my_feedback():
 @feedback_bp.route('/admin/all', methods=['GET'])
 @jwt_required()
 def get_all_feedback():
-    # In a real app, check if user is admin
+    identity_raw = get_jwt_identity()
+    try:
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+    except:
+        identity = identity_raw
+    
+    # Check if user is admin
+    if not (isinstance(identity, dict) and identity.get('is_admin')):
+        return jsonify({"error": "Unauthorized"}), 403
+        
     feedbacks = FeedbackModel.get_all_feedbacks()
     return jsonify(feedbacks), 200
 

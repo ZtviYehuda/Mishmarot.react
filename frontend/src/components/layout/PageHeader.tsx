@@ -9,6 +9,7 @@ interface PageHeaderProps {
   badge?: React.ReactNode;
   className?: string;
   hideMobile?: boolean;
+  id?: string;
 }
 
 export function PageHeader({

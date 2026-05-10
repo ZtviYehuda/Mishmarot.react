@@ -143,7 +143,8 @@ export function AppearanceSettings({
       </div>
 
       {/* Bottom Row: Full Palette */}
-      <SectionCard icon={Pipette} title="מניפת צבעי מערכת">
+      <div id="color-palette-container">
+        <SectionCard icon={Pipette} title="מניפת צבעי מערכת">
         <div className="space-y-6">
           <div className="flex items-start justify-between gap-1 overflow-x-auto no-scrollbar pb-2">
             {accentColors.map((color, index) => (
@@ -266,7 +267,8 @@ export function AppearanceSettings({
             )}
           </AnimatePresence>
         </div>
-      </SectionCard>
+        </SectionCard>
+      </div>
 
       {/* Preview Info Mini-Header */}
       <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary mt-4 max-w-xl">

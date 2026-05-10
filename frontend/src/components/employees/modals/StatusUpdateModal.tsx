@@ -494,7 +494,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                   sel ? "text-white" : "text-foreground/80",
                                 )}
                               >
-                                {type.name}
+                                {(type.name === "חופשה חול" || type.name === "חופשה חו\"ל") ? "חו' חול" : type.name}
                               </span>
                             </div>
                             {sel &&
@@ -563,7 +563,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                             : "text-foreground/70 group-hover:text-primary",
                                         )}
                                       >
-                                        {sub.name}
+                                        {(sub.name === "חופשה חול" || sub.name === "חופשה חו\"ל") ? "חו' חול" : sub.name}
                                       </span>
                                       {isSubSel && (
                                         <div

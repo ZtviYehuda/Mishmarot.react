@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, HelpCircle, AlertCircle, TrendingUp, Search } from "lucide-react";
+import { Users, AlertCircle, TrendingUp, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StatCardsProps {
@@ -18,9 +18,6 @@ export const StatCards = ({ stats, totalEmployees }: StatCardsProps) => {
     .reduce((acc, curr) => acc + curr.count, 0);
 
   // Operational availability = (Total - Missing - Unavailable) / Total
-  const reportedCount = stats
-    .filter(s => s.status_name !== "לא דווח")
-    .reduce((acc, curr) => acc + curr.count, 0);
   
   const presentKeywords = ["נוכח", "משרד", "תגבור", "קורס"];
   const presentCount = stats

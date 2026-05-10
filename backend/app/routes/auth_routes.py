@@ -860,8 +860,8 @@ def impersonate_user():
         # 3. Authorization check for commanders
         # Commanders can only impersonate members of their commanded unit
         if is_commander and not is_admin:
-            target_dept = target_user.get("department_id")
-            target_section = target_user.get("section_id")
+            target_dept = target_user.get("assigned_department_id") or target_user.get("department_id")
+            target_section = target_user.get("assigned_section_id") or target_user.get("section_id")
             target_team = target_user.get("team_id")
 
             commander_dept = requesting_user.get("commands_department_id")

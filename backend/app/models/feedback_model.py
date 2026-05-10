@@ -29,9 +29,12 @@ class FeedbackModel:
         except Exception as e:
             conn.rollback()
             import sys
-            print(f"CRITICAL DB ERROR in create_feedback: {str(e)}", file=sys.stderr, flush=True)
+            error_msg = f"CRITICAL DB ERROR in create_feedback: {str(e)}"
+            print(error_msg, file=sys.stderr, flush=True)
             import traceback
-            traceback.print_exc(file=sys.stderr)
+            trace_msg = traceback.format_exc()
+            with open('debug.log', 'a', encoding='utf-8') as f:
+                f.write(f"{error_msg}\n{trace_msg}\n")
             return None
         finally:
             conn.close()

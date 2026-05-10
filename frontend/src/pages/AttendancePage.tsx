@@ -5,7 +5,6 @@ import { useEmployees } from "@/hooks/useEmployees";
 import { useAuthContext } from "@/context/AuthContext";
 import { useDateContext } from "@/context/DateContext";
 import { format } from "date-fns";
-import { he } from "date-fns/locale";
 import {
   Table,
   TableBody,
@@ -52,7 +51,6 @@ import {
   StatusHistoryModal,
   ExportReportDialog,
 } from "@/components/employees/modals";
-import { DateHeader } from "@/components/common/DateHeader";
 import type { Employee } from "@/types/employee.types";
 
 export default function AttendancePage() {
@@ -542,8 +540,6 @@ export default function AttendancePage() {
     ? isReportedOnDate(currentUserEmp, selectedDate)
     : false;
 
-  const progressPercent =
-    totalCount > 0 ? (updatedTodayCount / totalCount) * 100 : 0;
 
   const isAllReported = totalCount > 0 && activeEmployees.length === totalCount;
 
@@ -1030,7 +1026,7 @@ export default function AttendancePage() {
                                       : "fill-muted-foreground/50",
                                   )}
                                 >
-                                  {s.status_name}
+                                  {(s.status_name === "חופשה חול" || s.status_name === "חופשה חו\"ל") ? "חו' חול" : s.status_name}
                                 </text>
                                 <text
                                   x={lx}
@@ -1768,8 +1764,8 @@ export default function AttendancePage() {
                                         selectedDate.toDateString() ===
                                         new Date().toDateString();
 
-                                      const statusName =
-                                        emp.status_name?.trim() || "";
+                                      const rawName = emp.status_name?.trim() || "";
+                                      const statusName = (rawName === "חופשה חול" || rawName === "חופשה חו\"ל") ? "חו' חול" : rawName;
                                       const isDefaultStatus = [
                                         "משרד",
                                         "נוכח",
@@ -1798,8 +1794,8 @@ export default function AttendancePage() {
                                       new Date().toDateString();
 
                                     // Check if status is "Default" (Office/Present)
-                                    const statusName =
-                                      emp.status_name?.trim() || "";
+                                    const rawName = emp.status_name?.trim() || "";
+                                    const statusName = (rawName === "חופשה חול" || rawName === "חופשה חו\"ל") ? "חו' חול" : rawName;
                                     const isDefaultStatus = [
                                       "משרד",
                                       "נוכח",
@@ -1893,7 +1889,7 @@ export default function AttendancePage() {
               </div>
             </div>
 
-            <div className="lg:hidden space-y-3">
+            <div id="attendance-table-mobile" className="lg:hidden space-y-3">
               {loading ? (
                 <div className="bg-card rounded-2xl p-8 text-center border border-border ">
                   <p className="text-xs font-bold text-muted-foreground">
@@ -2109,8 +2105,8 @@ export default function AttendancePage() {
                                       const isToday =
                                         selectedDate.toDateString() ===
                                         new Date().toDateString();
-                                      const statusName =
-                                        emp.status_name?.trim() || "";
+                                      const rawName = emp.status_name?.trim() || "";
+                                      const statusName = (rawName === "חופשה חול" || rawName === "חופשה חו\"ל") ? "חו' חול" : rawName;
                                       const isLongTermStatus = [
                                         "חופש",
                                         "מחלה",

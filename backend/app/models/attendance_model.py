@@ -1023,9 +1023,9 @@ class AttendanceModel:
                 ORDER BY p.date ASC
             """
 
-            userId = requesting_user["id"] if requesting_user else None
+            userId = requesting_user["id"] if requesting_user else -1
             final_params = (
-                date_params + [days - 1] + ([userId] if userId else []) + scoping_params
+                date_params + [days - 1] + [userId] + scoping_params
             )
             cur.execute(query, tuple(final_params))
             return cur.fetchall()
@@ -1282,9 +1282,9 @@ class AttendanceModel:
                     params.append(requesting_user["id"])
 
             # Exclude requesting user from birthdays
-            if requesting_user:
-                query += " AND e.id != %s"
-                params.append(requesting_user["id"])
+            req_user_id = requesting_user.get("id") if requesting_user else -1
+            query += " AND e.id != %s"
+            params.append(req_user_id)
 
             query += f"""
                 AND (

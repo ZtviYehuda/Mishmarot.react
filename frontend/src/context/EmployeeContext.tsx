@@ -14,6 +14,7 @@ interface EmployeeContextType {
   statusTypes: any[];
   serviceTypes: any[];
   roles: any[];
+  employees: Employee[];
   loading: boolean;
   openProfile: (employee: Employee | number) => void;
   refreshReferenceData: () => Promise<void>;
@@ -25,11 +26,13 @@ const EmployeeContext = createContext<EmployeeContextType | undefined>(
 
 export function EmployeeProvider({ children }: { children: React.ReactNode }) {
   const {
+    employees,
     getStructure,
     getStatusTypes,
     getRoles,
     getServiceTypes,
     getEmployeeById,
+    fetchEmployees,
   } = useEmployees();
 
   const [structure, setStructure] = useState<DepartmentNode[]>([]);
@@ -58,6 +61,8 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
         getServiceTypes(),
       ]);
 
+      await fetchEmployees();
+
       if (struct) setStructure(struct);
       if (statuses) setStatusTypes(statuses);
       if (allRoles) setRoles(allRoles);
@@ -67,7 +72,7 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [getStructure, getStatusTypes, getRoles, getServiceTypes]);
+  }, [getStructure, getStatusTypes, getRoles, getServiceTypes, fetchEmployees]);
 
   useEffect(() => {
     refreshReferenceData();
@@ -96,6 +101,7 @@ export function EmployeeProvider({ children }: { children: React.ReactNode }) {
         statusTypes,
         serviceTypes,
         roles,
+        employees,
         loading,
         openProfile,
         refreshReferenceData,

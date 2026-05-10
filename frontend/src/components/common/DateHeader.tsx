@@ -1,13 +1,13 @@
 import React, { useMemo, useTransition } from "react";
-import { format, subDays, addDays, isSameDay, differenceInCalendarDays } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { he } from "date-fns/locale";
-import { ChevronRight, ChevronLeft, RotateCcw, Calendar as CalendarIcon } from "lucide-react";
+import { RotateCcw, Calendar as CalendarIcon } from "lucide-react";
 import { useDateContext } from "@/context/DateContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
-export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = ({ className, compact }) => {
+export const DateHeader: React.FC<{ className?: string }> = ({ className }) => {
   const { selectedDate, setSelectedDate } = useDateContext();
   const [isPending, startTransition] = useTransition();
 
@@ -25,10 +25,10 @@ export const DateHeader: React.FC<{ className?: string; compact?: boolean }> = (
               isPending && "opacity-50"
             )}
           >
-            <CalendarIcon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <CalendarIcon className="hidden xs:block w-4 h-4 text-slate-400 dark:text-slate-500" />
             
-            <div className="flex items-center text-[13px] tracking-tight">
-              {/* Day name (Hidden on mobile if compact mode is not strictly forced, but requested "if not enough space, show only number". We'll hide day on mobile) */}
+            <div className="flex items-center text-[11px] sm:text-[13px] tracking-tight">
+              {/* Day name (Hidden on mobile) */}
               <span className="hidden sm:inline font-normal mr-1.5">
                 {format(selectedDate, "EEEE", { locale: he })}
               </span>

@@ -12,7 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, Sparkles, ChevronLeft } from "lucide-react";
+import { Calendar, Gift, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { BirthdayGreetingsModal } from "./BirthdayGreetingsModal";
@@ -30,8 +30,12 @@ interface BirthdayEmployee {
 }
 
 interface BirthdaysCardProps {
+  id?: string;
   birthdays: BirthdayEmployee[];
   selectedDate?: Date;
+  loading?: boolean;
+  unitName?: string;
+  className?: string;
 }
 
 const MONTH_LABELS = [
@@ -40,7 +44,7 @@ const MONTH_LABELS = [
 ];
 
 export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
-  ({ birthdays, selectedDate }, ref) => {
+  ({ id, birthdays, selectedDate, className }, ref) => {
     const { openProfile } = useEmployeeContext();
     const [isGreetingsModalOpen, setIsGreetingsModalOpen] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -71,8 +75,11 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
     return (
       <>
         <Card
-          id="birthdays-card"
-          className="bg-card/60 backdrop-blur-2xl text-card-foreground rounded-[1.5rem] border border-primary/10 flex flex-col overflow-hidden h-full relative"
+          id={id || "birthdays-card"}
+          className={cn(
+            "bg-card/60 backdrop-blur-2xl text-card-foreground rounded-[1.5rem] border border-primary/10 flex flex-col overflow-hidden h-full relative",
+            className
+          )}
         >
           <CardHeader className="px-6 py-4 border-b border-border/40">
             <div className="flex justify-between items-center gap-4">

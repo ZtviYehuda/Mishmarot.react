@@ -9,6 +9,7 @@ import { ErrorBoundary } from "./components/common/ErrorBoundary";
 
 import { DateProvider } from "./context/DateContext";
 import { FeedbackProvider } from "./context/FeedbackContext";
+import { ChatProvider } from "./context/ChatContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -17,8 +18,10 @@ createRoot(document.getElementById("root")!).render(
         <ThemeProvider>
           <DateProvider>
             <FeedbackProvider>
-              <AppRouter />
-              <Toaster richColors position="top-center" dir="rtl" />
+              <ChatProvider>
+                <AppRouter />
+                <Toaster richColors position="top-center" dir="rtl" />
+              </ChatProvider>
             </FeedbackProvider>
           </DateProvider>
         </ThemeProvider>

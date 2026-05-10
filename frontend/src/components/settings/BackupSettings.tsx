@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface BackupSettingsProps {

@@ -15,24 +15,11 @@ import {
   ResponsiveContainer,
   Area,
   AreaChart,
-  BarChart,
-  Bar,
-  Cell,
 } from "recharts";
 import { format, parseISO, startOfMonth, isSameDay } from "date-fns";
 import { he } from "date-fns/locale";
-import {
-  Download,
-  TrendingUp,
-  Users,
-  Calendar as CalendarIcon,
-  Filter,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { toPng, toBlob } from "html-to-image";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 
 interface TrendData {
   date_str: string;
@@ -67,7 +54,6 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       selectedDate = new Date(),
       onDateSelect,
       onRangeChange,
-      filterTags = [],
       hideHeader = false,
     },
     ref,
@@ -250,32 +236,8 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       }
     };
 
-    const getAxisTickFormatter = (value: string) => {
-      if (!value) return "";
-      try {
-        const date = parseISO(value);
-        if (!isNaN(date.getTime())) {
-          return format(date, "dd/MM");
-        }
-      } catch (e) {
-        // ignore
-      }
-      return value;
-    };
 
-    const maxTotal = useMemo(() => {
-      if (!chartData || chartData.length === 0) return 10;
-      const max = Math.max(...chartData.map((d) => d.total_employees || 0), 10);
-      return max;
-    }, [chartData]);
 
-    const getBarColor = (present: number, total: number) => {
-      if (!total) return "#ef4444";
-      const percentage = (present / total) * 100;
-      if (percentage >= 70) return "#10b981";
-      if (percentage >= 50) return "#f97316";
-      return "#ef4444";
-    };
 
     if (loading) {
       return (
@@ -416,7 +378,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                     labelFormatter={(label) =>
                       format(parseISO(label), "dd/MM/yyyy")
                     }
-                    formatter={(value: any, name: string) => [
+                    formatter={(value: any, name: any) => [
                       value,
                       name === "present_count" ? "נוכחים" : name,
                     ]}

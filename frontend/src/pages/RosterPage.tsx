@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useTransition } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAuthContext } from "@/context/AuthContext";
 import { EmployeeLink } from "@/components/common/EmployeeLink";
@@ -6,8 +6,6 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import {
   startOfWeek,
   endOfWeek,
-  addWeeks,
-  subWeeks,
   format,
   addDays,
   isSameDay,
@@ -20,9 +18,6 @@ import {
   Search,
   Plus,
   Calendar as CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-
   CalendarRange,
   BadgeInfo,
   Undo2,
@@ -30,8 +25,6 @@ import {
   Loader2,
   AlertCircle,
   Filter,
-  Info,
-  TrendingUp,
   X,
 } from "lucide-react";
 
@@ -101,7 +94,6 @@ const StatusCard = ({
   </button>
 );
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -512,6 +504,7 @@ export default function RosterPage() {
 
   return (
     <div
+      id="roster-page-container"
       className="flex flex-col h-full selection:bg-primary/10 selection:text-primary"
       dir="rtl"
     >

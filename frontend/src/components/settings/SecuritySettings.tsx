@@ -11,17 +11,8 @@ import {
   HelpCircle,
   CheckCircle2,
   Shield,
-  Activity,
-  Cpu,
-  Wifi,
-  Search,
-  Laptop2,
-  ChevronDown,
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import apiClient from "@/config/api.client";
-import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 
 import { Label } from "@/components/ui/label";
@@ -379,23 +370,6 @@ function InputItem({ label, icon: Icon, required, children, extra }: any) {
   );
 }
 
-function TabButton({ active, label, onClick, isSuspicious }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "px-5 py-2 rounded-xl text-xs font-black transition-all",
-        active
-          ? isSuspicious
-            ? "bg-destructive text-white  "
-            : "bg-background text-primary  "
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {label}
-    </button>
-  );
-}
 
 function SecurityGuideItem({ icon: Icon, title, desc, color }: any) {
   return (
