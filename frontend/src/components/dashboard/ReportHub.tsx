@@ -406,7 +406,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                 } />
 
                 <div className="flex-1 flex flex-col min-h-0 bg-card/60 rounded-[1.25rem] sm:rounded-[2.5rem] border border-white/10 overflow-hidden backdrop-blur-2xl">
-                  <div className="flex-1 overflow-y-auto no-scrollbar p-1.5 sm:p-6 flex flex-col">
+                  <div className="flex-1 overflow-y-auto no-scrollbar p-0 sm:p-6 flex flex-col h-full">
                     {previewType === 'snapshot' && (
                       <EmployeesChart stats={snapshotStats} total={snapshotTotal} loading={loading} hideHeader={true} unitName={filters.unitName} selectedDate={localDate} />
                     )}
@@ -439,25 +439,27 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                 </div>
                 
                 {/* Compact Actions inside Preview */}
-                <div className="mt-2.5 sm:mt-6 flex items-center gap-2 sm:gap-3 shrink-0 pb-1">
+                <div className="mt-3 sm:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 shrink-0 pb-2">
                   {(previewType !== 'birthdays') && (
-                    <Button onClick={() => { if (previewType === 'snapshot') downloadCard(snapshotRef); if (previewType === 'trend') downloadCard(trendRef); if (previewType === 'comparison') downloadCard(comparisonRef); }} disabled={loading} className="h-10 sm:h-14 rounded-2xl bg-primary text-white font-black text-xs sm:text-base flex-1 gap-2 sm:gap-3 active:scale-95 transition-all">
-                      <Download className="w-4 h-4 sm:w-6 sm:h-6" /><span>הורדה</span></Button>
+                    <Button onClick={() => { if (previewType === 'snapshot') downloadCard(snapshotRef); if (previewType === 'trend') downloadCard(trendRef); if (previewType === 'comparison') downloadCard(comparisonRef); }} disabled={loading} className="h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-primary text-white font-black text-sm sm:text-base flex-1 gap-2 sm:gap-3 active:scale-95 transition-all">
+                      <Download className="w-5 h-5 sm:w-6 sm:h-6" /><span>הורדה למכשיר</span></Button>
                   )}
-                  <Button onClick={() => { if (previewType === 'birthdays') onShareBirthdays(); else if (previewType === 'snapshot') shareCard(snapshotRef); else if (previewType === 'trend') shareCard(trendRef); else if (previewType === 'comparison') shareCard(comparisonRef); }} disabled={loading} className={cn("h-10 sm:h-14 rounded-2xl bg-emerald-500 text-white font-black text-xs sm:text-base-500/20 gap-2 sm:gap-3 active:scale-95 transition-all flex-1")}>
-                    <FaWhatsapp className="w-5 h-5 sm:w-7 sm:h-7" /><span>שיתוף</span></Button>
+                  <Button onClick={() => { if (previewType === 'birthdays') onShareBirthdays(); else if (previewType === 'snapshot') shareCard(snapshotRef); else if (previewType === 'trend') shareCard(trendRef); else if (previewType === 'comparison') shareCard(comparisonRef); }} disabled={loading} className={cn("h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-emerald-500 text-white font-black text-sm sm:text-base gap-2 sm:gap-3 active:scale-95 transition-all flex-1")}>
+                    <FaWhatsapp className="w-5 h-5 sm:w-7 sm:h-7" /><span>שיתוף מהיר</span></Button>
                 </div>
               </div>
             )}
           </div>
         </DialogContent>
       </Dialog>
-      {/* Hidden high-res capture divs */}
-      <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none text-right" dir="rtl">
-        <div style={{ width: "800px", height: "600px" }}><EmployeesChart ref={snapshotRef} stats={snapshotStats} total={snapshotTotal} loading={loading} unitName={filters.unitName} selectedDate={localDate} /></div>
-        <div style={{ width: "800px", height: "600px" }}><AttendanceTrendCard ref={trendRef} data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>
-        <div style={{ width: "800px", height: "600px" }}><StatsComparisonCard ref={comparisonRef} data={comparisonStats} loading={loading} days={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>
-      </div>
+      {/* Hidden high-res capture divs — only mount when dialog is open to prevent recharts measuring zero-sized containers */}
+      {isOpen && (
+        <div className="fixed -left-[9999px] top-0 pointer-events-none text-right" dir="rtl" style={{ visibility: 'hidden' }}>
+          <div style={{ width: "800px", height: "600px" }}><EmployeesChart ref={snapshotRef} stats={snapshotStats} total={snapshotTotal} loading={loading} unitName={filters.unitName} selectedDate={localDate} /></div>
+          <div style={{ width: "800px", height: "600px" }}><AttendanceTrendCard ref={trendRef} data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>
+          <div style={{ width: "800px", height: "600px" }}><StatsComparisonCard ref={comparisonRef} data={comparisonStats} loading={loading} days={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>
+        </div>
+      )}
 
       <RestorationRequestDialog
         open={restoreDialogOpen}

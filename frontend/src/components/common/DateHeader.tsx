@@ -20,14 +20,14 @@ export const DateHeader: React.FC<{ className?: string }> = ({ className }) => {
         <PopoverTrigger asChild>
           <button
             className={cn(
-              "flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl transition-all",
+              "flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 py-1.5 rounded-xl transition-all",
               "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800",
               isPending && "opacity-50"
             )}
           >
-            <CalendarIcon className="hidden xs:block w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <CalendarIcon className="hidden sm:block w-4 h-4 text-slate-400 dark:text-slate-500" />
             
-            <div className="flex items-center text-[11px] sm:text-[13px] tracking-tight">
+            <div className="flex items-center text-[10px] sm:text-[13px] tracking-tight">
               {/* Day name (Hidden on mobile) */}
               <span className="hidden sm:inline font-normal mr-1.5">
                 {format(selectedDate, "EEEE", { locale: he })}

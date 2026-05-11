@@ -185,18 +185,18 @@ const EmployeesChartComponent = (
         ref={cardRef}
         id="attendance-snapshot-card"
         className={cn(
-          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm flex flex-col overflow-hidden h-full relative transition-all"
+          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-2xl sm:rounded-[1.5rem] border-0 shadow-sm flex flex-col overflow-hidden h-full relative transition-all"
         )}
       >
-      <div className="p-4 sm:p-6 flex-1 flex flex-col relative">
+      <div className="p-3 sm:p-4 md:p-6 flex-1 flex flex-col relative">
         {/* Header */}
-        <div className="flex flex-row justify-between items-center gap-3 mb-2 relative z-10 min-h-[70px]">
-          <div className="flex gap-3 items-center min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/10">
-              <Activity className="w-5 h-5 text-primary" />
+        <div className="flex flex-row justify-between items-center gap-2 sm:gap-3 mb-2 relative z-10 min-h-[48px] sm:min-h-[70px]">
+          <div className="flex gap-2 sm:gap-3 items-center min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/10">
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
             <div className="text-right flex flex-col min-w-0">
-              <h3 className="text-lg font-black text-foreground tracking-tight flex items-center flex-wrap gap-2 truncate">
+              <h3 className="text-sm sm:text-lg font-black text-foreground tracking-tight flex items-center flex-wrap gap-2 truncate">
                 <span>{title}</span>
                 {filterTags.length > 0 && (
                   <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
@@ -260,7 +260,7 @@ const EmployeesChartComponent = (
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col min-h-[360px] relative p-0 mt-0">
+        <div className="flex-1 flex flex-col min-h-[260px] sm:min-h-[360px] relative p-0 mt-0">
           {chartData.length === 0 ? (
             <div className="flex-1 flex items-center justify-center py-12 text-center text-muted-foreground font-bold tracking-tight">
               אין נתונים להצגה

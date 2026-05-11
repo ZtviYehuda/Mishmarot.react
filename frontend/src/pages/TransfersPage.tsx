@@ -392,22 +392,22 @@ export default function TransfersPage() {
       </div>
 
       <div className="space-y-4 sm:space-y-6 pb-6">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        {/* Stats Overview - Compact Grid (No Scroll) */}
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-6 mb-4 sm:mb-6">
           <button
             onClick={() => setActiveTab("pending")}
-            className="bg-card rounded-[20px] p-4 sm:p-6 border border-border  flex items-center justify-between hover:border-amber-500/50 hover: transition-all active:scale-[0.98] cursor-pointer"
+            className="bg-card rounded-xl sm:rounded-[20px] p-2 sm:p-6 border border-border flex flex-col items-center sm:flex-row sm:justify-between hover:border-amber-500/50 hover:shadow-sm transition-all active:scale-[0.95] cursor-pointer"
           >
-            <div className="flex flex-col">
-              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+            <div className="flex flex-col items-center sm:items-start text-center sm:text-right w-full mb-1 sm:mb-0">
+              <span className="text-[8px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-0.5 sm:mb-1">
                 ממתינות
               </span>
-              <span className="text-2xl sm:text-4xl font-black text-amber-500">
+              <span className="text-lg sm:text-4xl font-black text-amber-500 leading-none">
                 {stats.pending}
               </span>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 dark:text-amber-400" />
+            <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-full bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center shrink-0">
+              <Clock className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-amber-500 dark:text-amber-400" />
             </div>
           </button>
 
@@ -416,18 +416,18 @@ export default function TransfersPage() {
               setActiveTab("history");
               setHistoryFilter("approved");
             }}
-            className="bg-card rounded-[20px] p-4 sm:p-6 border border-border  flex items-center justify-between hover:border-emerald-500/50 hover: transition-all active:scale-[0.98] cursor-pointer"
+            className="bg-card rounded-xl sm:rounded-[20px] p-2 sm:p-6 border border-border flex flex-col items-center sm:flex-row sm:justify-between hover:border-emerald-500/50 hover:shadow-sm transition-all active:scale-[0.95] cursor-pointer"
           >
-            <div className="flex flex-col">
-              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+            <div className="flex flex-col items-center sm:items-start text-center sm:text-right w-full mb-1 sm:mb-0">
+              <span className="text-[8px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-0.5 sm:mb-1">
                 אושרו
               </span>
-              <span className="text-2xl sm:text-4xl font-black text-emerald-500">
+              <span className="text-lg sm:text-4xl font-black text-emerald-500 leading-none">
                 {stats.approved}
               </span>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-400/10 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500 dark:text-emerald-400" />
+            <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-full bg-emerald-500/10 dark:bg-emerald-400/10 flex items-center justify-center shrink-0">
+              <CheckCircle className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-emerald-500 dark:text-emerald-400" />
             </div>
           </button>
 
@@ -436,18 +436,18 @@ export default function TransfersPage() {
               setActiveTab("history");
               setHistoryFilter("rejected");
             }}
-            className="bg-card rounded-[20px] p-4 sm:p-6 border border-border  flex items-center justify-between hover:border-rose-500/50 hover: transition-all active:scale-[0.98] cursor-pointer"
+            className="bg-card rounded-xl sm:rounded-[20px] p-2 sm:p-6 border border-border flex flex-col items-center sm:flex-row sm:justify-between hover:border-rose-500/50 hover:shadow-sm transition-all active:scale-[0.95] cursor-pointer"
           >
-            <div className="flex flex-col">
-              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+            <div className="flex flex-col items-center sm:items-start text-center sm:text-right w-full mb-1 sm:mb-0">
+              <span className="text-[8px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-0.5 sm:mb-1">
                 נדחו
               </span>
-              <span className="text-2xl sm:text-4xl font-black text-rose-500">
+              <span className="text-lg sm:text-4xl font-black text-rose-500 leading-none">
                 {stats.rejected}
               </span>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-rose-500/10 dark:bg-rose-400/10 flex items-center justify-center">
-              <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500 dark:text-rose-400" />
+            <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-full bg-rose-500/10 dark:bg-rose-400/10 flex items-center justify-center shrink-0">
+              <XCircle className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-rose-500 dark:text-rose-400" />
             </div>
           </button>
         </div>

@@ -65,42 +65,38 @@ export const StatCards = ({ stats, totalEmployees }: StatCardsProps) => {
   ];
 
   return (
-    <div id="stats-grid" className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div 
+      id="stats-grid" 
+      className="grid grid-cols-4 gap-1.5 sm:gap-4 pb-2 lg:pb-0"
+    >
       {cards.map((card, idx) => (
         <Card
           key={idx}
           className={cn(
-            "group relative overflow-hidden border-0 transition-all rounded-[1rem] sm:rounded-3xl shadow-sm hover:shadow-md",
+            "group relative overflow-hidden border-0 transition-all rounded-xl sm:rounded-3xl shadow-sm hover:shadow-md",
             // Add a very subtle background tint based on color
-            card.color === "blue" && "bg-blue-50/30 dark:bg-blue-900/10",
-            card.color === "amber" && "bg-amber-50/30 dark:bg-amber-900/10",
-            card.color === "emerald" && "bg-emerald-50/30 dark:bg-emerald-900/10",
-            card.color === "indigo" && "bg-indigo-50/30 dark:bg-indigo-900/10"
+            card.color === "blue" && "bg-blue-50/40 dark:bg-blue-900/10",
+            card.color === "amber" && "bg-amber-50/40 dark:bg-amber-900/10",
+            card.color === "emerald" && "bg-emerald-50/40 dark:bg-emerald-900/10",
+            card.color === "indigo" && "bg-indigo-50/40 dark:bg-indigo-900/10"
           )}
         >
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex justify-between items-center">
-              <div className="flex flex-col z-10">
-                <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white leading-none tracking-tight mb-1">
-                  {card.value}
-                </div>
-                <div className="text-[11px] sm:text-xs font-bold text-slate-500">
-                  {card.label}
-                </div>
-                {card.subValue && (
-                  <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 mt-0.5">
-                     {card.subValue}
-                  </div>
-                )}
-              </div>
-
-              {/* Icon */}
+          <CardContent className="p-1.5 sm:p-5 flex flex-col items-center sm:items-start lg:items-center text-center sm:text-right">
+            <div className="flex flex-col items-center sm:items-start lg:items-center z-10 min-w-0 w-full">
+              {/* Icon - Restored & Compact */}
               <div className={cn(
-                "w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0",
+                "w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 mb-1 sm:mb-2",
                 card.iconBg,
                 card.iconColor
               )}>
-                <card.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <card.icon className="w-3.5 h-3.5 sm:w-6 sm:h-6" />
+              </div>
+
+              <div className="text-lg sm:text-4xl font-black text-slate-900 dark:text-white leading-none tracking-tight mb-0.5 sm:mb-1 truncate w-full">
+                {card.value}
+              </div>
+              <div className="text-[8px] sm:text-xs font-bold text-slate-500 truncate uppercase tracking-tighter sm:tracking-normal w-full">
+                {card.label}
               </div>
             </div>
           </CardContent>

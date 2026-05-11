@@ -641,14 +641,14 @@ export default function DashboardPage() {
                   <ReportHub 
                     id="report-hub-card"
                     onShareBirthdays={() => setWhatsAppDialogOpen(true)}
-                    filters={{
+                    filters={useMemo(() => ({
                       department_id: selectedDeptId,
                       section_id: selectedSectionId,
                       team_id: selectedTeamId,
                       serviceTypes: selectedServiceTypes,
                       unitName: unitName,
                       status_id: selectedStatusId?.toString()
-                    }}
+                    }), [selectedDeptId, selectedSectionId, selectedTeamId, selectedServiceTypes, unitName, selectedStatusId])}
                     initialDate={selectedDate}
                   />
                 </div>
@@ -683,15 +683,15 @@ export default function DashboardPage() {
           }
         />
 
-        {/* Mobile Quick Actions Bar - New Section */}
-        <div className="grid grid-cols-4 gap-2 md:hidden mb-4 animate-in fade-in slide-in-from-top-2 duration-500">
+        {/* Mobile Quick Actions Bar - Compact Grid (No Scroll) */}
+        <div className="grid grid-cols-4 gap-1.5 md:hidden mb-6">
           <Button
             variant="ghost"
             onClick={() => setFilterOpen(true)}
-            className="flex-col gap-1.5 h-20 rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl"
+            className="flex-col gap-1 h-16 rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0"
           >
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Filter className="w-5 h-5" />
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Filter className="w-4 h-4" />
             </div>
             <span className="text-[10px] font-black">סינון</span>
           </Button>
@@ -708,23 +708,20 @@ export default function DashboardPage() {
               status_id: selectedStatusId?.toString()
             }}
             initialDate={selectedDate}
-            className="flex-col gap-1.5 h-20 w-full rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0"
-            // We'll update ReportHub to handle a simpler child if needed, but for now we pass className
-          >
-            {/* The ReportHub component uses its trigger button by default, so we pass styles via className */}
-          </ReportHub>
+            className="flex-col gap-1 h-16 rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0"
+          />
 
           <Button
             id="mobile-event-button"
             variant="ghost"
             onClick={() => setGlobalEventOpen(true)}
             className={cn(
-              "flex-col gap-1.5 h-20 rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl",
+              "flex-col gap-1 h-16 rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0",
               activeTutorial === "event" && "tutorial-highlight"
             )}
           >
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Calendar className="w-5 h-5" />
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Calendar className="w-4 h-4" />
             </div>
             <span className="text-[10px] font-black">אירוע</span>
           </Button>
@@ -734,12 +731,12 @@ export default function DashboardPage() {
             variant="ghost"
             onClick={() => setWhatsappBroadcastOpen(true)}
             className={cn(
-              "flex-col gap-1.5 h-20 rounded-2xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl",
+              "flex-col gap-1 h-16 rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0",
               activeTutorial === "broadcast" && "tutorial-highlight"
             )}
           >
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <MessageSquare className="w-5 h-5" />
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <MessageSquare className="w-4 h-4" />
             </div>
             <span className="text-[10px] font-black">תפוצה</span>
           </Button>
@@ -747,13 +744,13 @@ export default function DashboardPage() {
 
 
         {/* Content Area */}
-        <div className="space-y-5 transition-all mt-1 relative">
+        <div className="space-y-3 sm:space-y-5 transition-all mt-1 relative">
 
           {/* Stat Cards - New Redesigned Component */}
           <StatCards stats={stats} totalEmployees={totalEmployees} />
 
           {/* Middle Row - Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 items-stretch">
             {/* Left/Main Area Chart - Trend */}
             <div className="md:col-span-2 xl:col-span-2">
               <AttendanceTrendCard 
@@ -804,7 +801,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Bottom Row - Lists */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
              {/* Birthdays */}
              <BirthdaysCard 
                 id="birthdays-card"

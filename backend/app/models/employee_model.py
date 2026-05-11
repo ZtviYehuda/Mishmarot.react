@@ -107,7 +107,7 @@ class EmployeeModel:
                        e.enlistment_date, e.discharge_date, e.assignment_date,
                        e.security_clearance, e.police_license, e.is_active,
                        e.must_change_password, e.is_admin, e.is_commander,
-                       e.last_password_change, e.gender,
+                       e.last_password_change, e.gender, e.last_login, e.previous_login,
                        e.theme, e.accent_color, e.font_size,
                        e.service_type_id, svt.name as service_type_name,
                        COALESCE(d.name, d_s_dir.name, d_dir.name) as department_name, 
@@ -1114,47 +1114,71 @@ class EmployeeModel:
             conn.close()
 
     @staticmethod
-    def get_structure_tree():
+    def get_structure_tree(requesting_user=None):
         conn = get_db_connection()
         if not conn:
             return []
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
-            # Departments with commander info
-            cur.execute(
-                """
-                SELECT d.id, d.name, d.commander_id, 
-                       CONCAT(e.first_name, ' ', e.last_name) as commander_name 
-                FROM departments d
-                LEFT JOIN employees e ON d.commander_id = e.id
-                ORDER BY d.name
-            """
-            )
+            # 1. Scoping Logic
+            dept_id = requesting_user.get("commands_department_id") if requesting_user else None
+            sect_id = requesting_user.get("commands_section_id") if requesting_user else None
+            team_id = requesting_user.get("commands_team_id") if requesting_user else None
+            is_admin = requesting_user.get("is_admin", False) if requesting_user else False
+
+            # Departments
+            dept_query = "SELECT d.id, d.name, d.commander_id, CONCAT(e.first_name, ' ', e.last_name) as commander_name FROM departments d LEFT JOIN employees e ON d.commander_id = e.id"
+            dept_params = []
+            if not is_admin:
+                if dept_id:
+                    dept_query += " WHERE d.id = %s"
+                    dept_params.append(dept_id)
+                elif sect_id:
+                    dept_query += " WHERE d.id = (SELECT department_id FROM sections WHERE id = %s)"
+                    dept_params.append(sect_id)
+                elif team_id:
+                    dept_query += " WHERE d.id = (SELECT department_id FROM sections WHERE id = (SELECT section_id FROM teams WHERE id = %s))"
+                    dept_params.append(team_id)
+            
+            dept_query += " ORDER BY d.name"
+            cur.execute(dept_query, tuple(dept_params))
             depts = cur.fetchall()
 
-            # Sections with commander info
-            cur.execute(
-                """
-                SELECT s.id, s.name, s.department_id, s.commander_id,
-                       CONCAT(e.first_name, ' ', e.last_name) as commander_name
-                FROM sections s
-                LEFT JOIN employees e ON s.commander_id = e.id
-                ORDER BY s.name
-            """
-            )
+            # Sections
+            sect_query = "SELECT s.id, s.name, s.department_id, s.commander_id, CONCAT(e.first_name, ' ', e.last_name) as commander_name FROM sections s LEFT JOIN employees e ON s.commander_id = e.id"
+            sect_params = []
+            if not is_admin:
+                if dept_id:
+                    sect_query += " WHERE s.department_id = %s"
+                    sect_params.append(dept_id)
+                elif sect_id:
+                    sect_query += " WHERE s.id = %s"
+                    sect_params.append(sect_id)
+                elif team_id:
+                    sect_query += " WHERE s.id = (SELECT section_id FROM teams WHERE id = %s)"
+                    sect_params.append(team_id)
+            
+            sect_query += " ORDER BY s.name"
+            cur.execute(sect_query, tuple(sect_params))
             sections = cur.fetchall()
 
-            # Teams with commander info
-            cur.execute(
-                """
-                SELECT t.id, t.name, t.section_id, t.commander_id,
-                       CONCAT(e.first_name, ' ', e.last_name) as commander_name
-                FROM teams t
-                LEFT JOIN employees e ON t.commander_id = e.id
-                ORDER BY t.name
-            """
-            )
+            # Teams
+            team_query = "SELECT t.id, t.name, t.section_id, t.commander_id, CONCAT(e.first_name, ' ', e.last_name) as commander_name FROM teams t LEFT JOIN employees e ON t.commander_id = e.id"
+            team_params = []
+            if not is_admin:
+                if dept_id:
+                    team_query += " WHERE t.section_id IN (SELECT id FROM sections WHERE department_id = %s)"
+                    team_params.append(dept_id)
+                elif sect_id:
+                    team_query += " WHERE t.section_id = %s"
+                    team_params.append(sect_id)
+                elif team_id:
+                    team_query += " WHERE t.id = %s"
+                    team_params.append(team_id)
+            
+            team_query += " ORDER BY t.name"
+            cur.execute(team_query, tuple(team_params))
             teams = cur.fetchall()
 
             structure = []

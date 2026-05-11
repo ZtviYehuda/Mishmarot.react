@@ -257,7 +257,17 @@ def delete_employee(emp_id):
 @emp_bp.route("/structure", methods=["GET"])
 @jwt_required()
 def get_structure():
-    tree = EmployeeModel.get_structure_tree()
+    identity_str = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_str) if isinstance(identity_str, str) else identity_str
+        )
+        user_id = identity.get("id") if isinstance(identity, dict) else identity
+    except (json.JSONDecodeError, AttributeError):
+        user_id = identity_str
+
+    requester = EmployeeModel.get_employee_by_id(user_id)
+    tree = EmployeeModel.get_structure_tree(requesting_user=requester)
     return jsonify(tree)
 
 

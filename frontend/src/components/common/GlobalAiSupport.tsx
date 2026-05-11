@@ -276,7 +276,7 @@ export function GlobalAiSupport() {
 
       <motion.button whileHover={{ scale: 1.1 }} onClick={() => { setIsOpen(true); setIsMinimized(false); }}
         className={cn(
-          "fixed bottom-6 left-6 w-14 h-14 rounded-full bg-blue-600 text-white shadow-2xl z-[100] flex items-center justify-center", 
+          "fixed bottom-6 left-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl z-[100] flex items-center justify-center", 
           (isOpen || (currentTourIndex >= 0 && TOUR_STEPS[currentTourIndex]?.path === location.pathname)) && "hidden"
         )}>
         <Sparkles className="w-6 h-6" />
@@ -284,10 +284,23 @@ export function GlobalAiSupport() {
 
       <AnimatePresence>
         {isOpen && !isMinimized && (
-          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-6 left-6 w-[350px] sm:w-[380px] h-[580px] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl z-[200] flex flex-col border border-border overflow-hidden"
-          >
-            <div onDoubleClick={() => setIsMinimized(true)} className="p-5 bg-blue-600 text-white flex items-center justify-between shadow-lg cursor-pointer">
+          <>
+            {/* Backdrop for mobile */}
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] sm:hidden"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed inset-x-4 bottom-4 sm:bottom-6 sm:left-6 sm:right-auto sm:inset-x-auto w-auto sm:w-[380px] h-[calc(100dvh-32px)] sm:h-[600px] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl z-[200] flex flex-col border border-border overflow-hidden"
+            >
+            <div onDoubleClick={() => setIsMinimized(true)} className="p-5 bg-primary text-primary-foreground flex items-center justify-between shadow-lg cursor-pointer">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><Sparkles className="w-4 h-4 text-white" /></div>
                 <h3 className="font-black text-xs uppercase">צ'אט תמיכה</h3>
@@ -305,7 +318,7 @@ export function GlobalAiSupport() {
                 <div className="h-full overflow-y-auto p-5 space-y-2 no-scrollbar">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">חיפושים אחרונים</h4>
-                    <button onClick={() => setShowHistory(false)} className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">חזור לצ'אט</button>
+                    <button onClick={() => setShowHistory(false)} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg">חזור לצ'אט</button>
                   </div>
                   {messages.filter(m => !m.isBot).length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10 opacity-40">
@@ -320,10 +333,10 @@ export function GlobalAiSupport() {
                           setChatInput(msg.text);
                           setShowHistory(false);
                         }} 
-                        className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-700 border border-border/50 flex justify-between items-center group transition-colors"
+                        className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-primary/10 dark:hover:bg-slate-700 border border-border/50 flex justify-between items-center group transition-colors"
                       >
                         <span className="truncate pl-2">{msg.text}</span>
-                        <History className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                        <History className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       </div>
                     ))
                   )}
@@ -332,13 +345,13 @@ export function GlobalAiSupport() {
                 <div className="h-full overflow-y-auto p-5 space-y-4 no-scrollbar">
                   {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full opacity-40 text-center space-y-4">
-                      <CalendarDays className="w-12 h-12 text-blue-600" />
+                      <CalendarDays className="w-12 h-12 text-primary" />
                       <p className="text-sm font-black">במה אוכל לעזור היום?</p>
                     </div>
                   )}
                   {messages.map((msg) => (
                     <div key={msg.id} className="flex flex-col gap-2">
-                      <div className={cn("p-4 rounded-[1.5rem] text-[12px] font-bold shadow-sm", msg.isBot ? "bg-white dark:bg-slate-800 text-slate-700 ml-8 rounded-tl-none border border-border/50" : "bg-blue-600 text-white mr-8 rounded-tr-none text-left shadow-md shadow-blue-600/20")}>
+                      <div className={cn("p-4 rounded-[1.5rem] text-[12px] font-bold shadow-sm", msg.isBot ? "bg-white dark:bg-slate-800 text-slate-700 ml-8 rounded-tl-none border border-border/50" : "bg-primary text-primary-foreground mr-8 rounded-tr-none text-left shadow-md shadow-primary/20")}>
                         {msg.text}
                       </div>
                       {msg.isBot && msg.action && (
@@ -349,7 +362,7 @@ export function GlobalAiSupport() {
                       {msg.isBot && msg.suggestions && (
                         <div className="ml-8 flex flex-col gap-2">
                           {msg.suggestions.map((s, idx) => (
-                            <Button key={idx} variant="outline" size="sm" className="rounded-xl border-blue-100 text-blue-600 font-black text-[11px] h-9 justify-start gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20" onClick={() => handleAction(s.stepId)}>
+                            <Button key={idx} variant="outline" size="sm" className="rounded-xl border-primary/20 text-primary font-black text-[11px] h-9 justify-start gap-2 hover:bg-primary/10 dark:hover:bg-primary/20" onClick={() => handleAction(s.stepId)}>
                               <Sparkles className="w-3.5 h-3.5" />{s.label}
                             </Button>
                           ))}
@@ -365,10 +378,11 @@ export function GlobalAiSupport() {
             <div className="p-5 border-t border-border bg-white dark:bg-slate-900">
               <form onSubmit={handleSend} className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl">
                 <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="שאל אותי משהו..." className="flex-grow bg-transparent border-none text-xs font-bold px-3 focus:ring-0" />
-                <button type="submit" className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg"><Send className="w-4 h-4" /></button>
+                <button type="submit" className="w-10 h-10 bg-primary text-primary-foreground rounded-xl flex items-center justify-center shadow-lg"><Send className="w-4 h-4" /></button>
               </form>
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>

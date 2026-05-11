@@ -33,17 +33,17 @@ export const AgeDistributionChart = ({
   }, [data]);
 
   return (
-    <Card className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all">
-      <div className="p-4 sm:p-6 flex-1 flex flex-col">
+    <Card className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-2xl sm:rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all">
+      <div className="p-3 sm:p-4 md:p-6 flex-1 flex flex-col">
       
       {/* Header */}
-      <div className="flex flex-row justify-between items-center gap-3 mb-6 relative z-10 min-h-[70px]">
-        <div className="flex gap-3 items-center">
-          <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0 border border-border/40">
-            <Timer className="w-5 h-5 text-muted-foreground" />
+      <div className="flex flex-row justify-between items-center gap-2 sm:gap-3 mb-3 sm:mb-6 relative z-10 min-h-[48px] sm:min-h-[70px]">
+        <div className="flex gap-2 sm:gap-3 items-center">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-muted/50 flex items-center justify-center shrink-0 border border-border/40">
+            <Timer className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
           </div>
           <div className="text-right flex flex-col">
-            <h3 className="text-lg font-black text-foreground tracking-tight flex items-center flex-wrap gap-2">
+            <h3 className="text-sm sm:text-lg font-black text-foreground tracking-tight flex items-center flex-wrap gap-2">
               <span>חתך גילאים</span>
               {filterTags.length > 0 && (
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
@@ -64,14 +64,14 @@ export const AgeDistributionChart = ({
             </h3>
           </div>
         </div>
-        <div className="bg-background/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-border/40 flex items-center gap-2">
+        <div className="bg-background/40 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border border-border/40 flex items-center gap-2">
           <div className="flex flex-col items-end">
-            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.1em] leading-none mb-1">
+            <span className="text-[7px] sm:text-[8px] font-black text-muted-foreground uppercase tracking-[0.1em] leading-none mb-0.5 sm:mb-1">
               גיל ממוצע
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="text-lg font-black text-foreground tabular-nums leading-none">
+              <span className="text-base sm:text-lg font-black text-foreground tabular-nums leading-none">
                 {averageAge}
               </span>
             </div>
@@ -80,7 +80,7 @@ export const AgeDistributionChart = ({
       </div>
 
       {/* Chart Container */}
-      <div className="flex-1 min-h-[200px] w-full relative z-10">
+      <div className="flex-1 min-h-[180px] sm:min-h-[200px] w-full relative z-10">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}

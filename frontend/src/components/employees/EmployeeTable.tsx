@@ -271,12 +271,12 @@ export const EmployeeTable = ({
           />
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
+        <div className="flex flex-row items-center gap-2 w-full">
           <Button
             variant="outline"
             size="sm"
             className={cn(
-              "h-9 sm:h-10 text-xs sm:text-sm border-input hover:bg-muted rounded-xl w-full sm:w-auto justify-center",
+              "h-9 sm:h-10 text-xs sm:text-sm border-input hover:bg-muted rounded-xl flex-1 sm:flex-none sm:w-auto justify-center",
               Object.keys(activeFilters).length > 0
                 ? "text-primary border-primary"
                 : "text-muted-foreground",
@@ -304,7 +304,7 @@ export const EmployeeTable = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 sm:h-10 text-xs sm:text-sm border-input hover:bg-muted rounded-xl w-full sm:w-auto justify-center"
+                className="h-9 sm:h-10 text-xs sm:text-sm border-input hover:bg-muted rounded-xl flex-1 sm:flex-none sm:w-auto justify-center"
                 onClick={() => document.getElementById("import-employees-input")?.click()}
               >
                 <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
@@ -317,7 +317,7 @@ export const EmployeeTable = ({
             <Button
               id="add-employee-button"
               className={cn(
-                "h-9 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl w-full sm:w-auto justify-center sm:mr-auto",
+                "h-9 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl flex-1 sm:flex-none sm:w-auto justify-center sm:mr-auto",
                 searchParams.get("tutorial") === "add-employee" && "tutorial-highlight"
               )}
               onClick={() => navigate("/employees/new")}

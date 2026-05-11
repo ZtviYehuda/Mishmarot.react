@@ -41,6 +41,7 @@ import {
   History,
 } from "lucide-react";
 import { AttendanceCalendarView } from "@/components/attendance/AttendanceCalendarView";
+import { AttendanceStatCards } from "@/components/attendance/AttendanceStatCards";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -182,6 +183,21 @@ export default function AttendancePage() {
       const struct = await getStructure();
       if (struct) {
         setDepartments(struct);
+
+        // Auto-initialize filters based on user command scope if NOT already loaded from localStorage
+        const savedFilters = localStorage.getItem("attendance_filters");
+        if (!savedFilters && user && !user.is_admin) {
+          if (user.commands_department_id) {
+            setSelectedDeptId(user.commands_department_id.toString());
+          } else if (user.commands_section_id) {
+            if (user.assigned_department_id) setSelectedDeptId(user.assigned_department_id.toString());
+            setSelectedSectionId(user.commands_section_id.toString());
+          } else if (user.commands_team_id) {
+            if (user.assigned_department_id) setSelectedDeptId(user.assigned_department_id.toString());
+            if (user.assigned_section_id) setSelectedSectionId(user.assigned_section_id.toString());
+            setSelectedTeamId(user.commands_team_id.toString());
+          }
+        }
       }
 
       const statuses = await getStatusTypes();
@@ -203,18 +219,26 @@ export default function AttendancePage() {
     const currentDept = departments.find(
       (d: any) => d.id.toString() === selectedDeptId,
     );
-    setSections(currentDept?.sections || []);
-    setSelectedSectionId("all"); // Reset section when department changes
-    setTeams([]); // Reset teams
-    setSelectedTeamId("all"); // Reset team
+    const newSections = currentDept?.sections || [];
+    setSections(newSections);
+    
+    // Only reset if the current selection is no longer valid
+    if (selectedSectionId !== "all" && !newSections.find(s => s.id.toString() === selectedSectionId)) {
+        setSelectedSectionId("all");
+    }
   }, [selectedDeptId, departments]);
 
   useEffect(() => {
     const currentSection = sections.find(
       (s: any) => s.id.toString() === selectedSectionId,
     );
-    setTeams(currentSection?.teams || []);
-    setSelectedTeamId("all"); // Reset team when section changes
+    const newTeams = currentSection?.teams || [];
+    setTeams(newTeams);
+    
+    // Only reset if the current selection is no longer valid
+    if (selectedTeamId !== "all" && !newTeams.find(t => t.id.toString() === selectedTeamId)) {
+        setSelectedTeamId("all");
+    }
   }, [selectedSectionId, sections]);
 
   // Smart Continuity Logic - matches the backend get_dashboard_stats and the Work Roster
@@ -840,331 +864,6 @@ export default function AttendancePage() {
             transition={{ duration: 0.2 }}
             className="pb-4 space-y-4"
           >
-            {/* Summary Stats & Progress */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
-              <Card className="p-4 sm:p-8 lg:col-span-2 order-2 lg:order-1 relative overflow-hidden">
-                {/* Subtle Background Pattern */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
-
-                <div className="flex flex-col md:h-full relative z-10 p-2 text-right">
-                  {/* Title & Primary Count Section */}
-                  <div className="flex items-center justify-between mb-8">
-                    {/* Title Section - Will appear on the RIGHT in RTL */}
-                    <div className="text-right">
-                       <h2 className="text-lg sm:text-2xl font-black text-foreground leading-none tracking-tight">
-                        סיכום התייצבות למשמרת
-                      </h2>
-                    </div>
-
-                    {/* Numbers Section - Will appear on the LEFT in RTL */}
-                    <div className="flex items-baseline gap-1.5 translate-y-1">
-                      <span className="text-3xl sm:text-5xl font-black text-primary leading-none tracking-tighter">
-                        {updatedTodayCount}
-                      </span>
-                      <span className="text-xl sm:text-2xl font-black text-muted-foreground/10 leading-none">
-                        / {totalCount}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Spacer to push the rest to bottom */}
-                  <div className="flex-1" />
-
-                  {/* Progress & Stats Group - NOW AT BOTTOM */}
-                  <div className="space-y-4 pt-6 border-t border-border/5">
-                    {/* Multi-Segment Progress Bar */}
-                    <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden flex border border-border/10">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(availabilityStats.available / totalCount) * 100}%` }}
-                        className="h-full bg-emerald-500"
-                      />
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(availabilityStats.unavailable / totalCount) * 100}%` }}
-                        className="h-full bg-amber-500"
-                      />
-                    </div>
-
-                    {/* Availability Status Row - THE ABSOLUTE BOTTOM */}
-                    <div className="flex items-center justify-end gap-5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-black text-emerald-600">
-                          {availabilityStats.available}
-                        </span>
-                        <span className="text-[10px] font-bold text-muted-foreground/60">זמינים</span>
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-black text-amber-600">
-                          {availabilityStats.unavailable}
-                        </span>
-                        <span className="text-[10px] font-bold text-muted-foreground/60">לא זמינים</span>
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-black text-slate-400">
-                          {totalCount - updatedTodayCount}
-                        </span>
-                        <span className="text-[10px] font-bold text-muted-foreground/60">טרם דווחו</span>
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Mobile Gauge Area */}
-                <div className="lg:hidden flex flex-col items-center pt-6 pb-4 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-border/20 mx-3 mb-2 overflow-hidden relative z-10">
-                  {/* Semi-Circle Gauge - Ultra Wide Viewport to prevent clipping */}
-                  <div className="relative w-full max-w-[360px] aspect-[1.6/1] flex flex-col items-center justify-center">
-                    <svg
-                      viewBox="0 0 160 100"
-                      className="w-full h-full overflow-visible"
-                    >
-                      {/* Gauge Base Track - Centered at 80, 75 with R=50 */}
-                      <path
-                        d="M 30 70 A 50 50 0 0 1 130 70"
-                        fill="none"
-                        stroke="currentColor"
-                        className="text-muted/10"
-                        strokeWidth="12"
-                        strokeLinecap="round"
-                      />
-
-                      {/* Categorized Segments with Intelligent Labels */}
-                      {(() => {
-                        let cumulativePercentage = 0;
-                        const totalReported =
-                          mobileGaugeStats.reduce(
-                            (sum, s) => sum + s.count,
-                            0,
-                          ) || 1;
-                        const circumference = 157.08; // PI * R (R=50)
-
-                        return mobileGaugeStats.map((s) => {
-                          const share = s.count / totalReported;
-                          const size = share * 100;
-                          const dashArray = `${share * circumference} ${circumference * 2}`;
-                          const dashOffset = -(
-                            (cumulativePercentage / 100) *
-                            circumference
-                          );
-
-                          const isSelected =
-                            selectedStatusId === s.status_id.toString();
-                          const isAnySelected = selectedStatusId !== "all";
-
-                          // Label Geometry Positioning
-                          const midShare = cumulativePercentage + size / 2;
-                          const angle = 180 - midShare * 1.8;
-                          const rad = (angle * Math.PI) / 180;
-
-                          // Intelligent radius: push further out at the edges to avoid caps
-                          const lr = angle < 25 || angle > 155 ? 80 : 74;
-                          const lx = 80 + lr * Math.cos(rad);
-                          const ly = 70 - lr * Math.sin(rad);
-
-                          cumulativePercentage += size;
-
-                          if (s.count === 0) return null;
-
-                          return (
-                            <g
-                              key={s.status_id}
-                              className="cursor-pointer group"
-                              onClick={() =>
-                                setSelectedStatusId(
-                                  isSelected ? "all" : s.status_id.toString(),
-                                )
-                              }
-                            >
-                              <circle
-                                cx="80"
-                                cy="70"
-                                r="50"
-                                fill="none"
-                                stroke={s.color}
-                                strokeWidth={isSelected ? 16 : 12}
-                                strokeDasharray={dashArray}
-                                strokeDashoffset={dashOffset}
-                                strokeLinecap="butt"
-                                transform="rotate(180 80 70)"
-                                className="transition-all"
-                                style={{
-                                  opacity:
-                                    isAnySelected && !isSelected ? 0.2 : 1,
-                                  filter: isSelected
-                                    ? `drop-shadow(0 0 10px ${s.color}44)`
-                                    : "none",
-                                }}
-                              />
-
-                              {/* Refined Label & Count Spacing */}
-                              <motion.g
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="pointer-events-none"
-                              >
-                                <text
-                                  x={lx}
-                                  y={ly}
-                                  textAnchor={
-                                    angle > 140
-                                      ? "end"
-                                      : angle < 40
-                                        ? "start"
-                                        : "middle"
-                                  }
-                                  direction="rtl"
-                                  unicodeBidi="isolate"
-                                  className={cn(
-                                    "text-[4px] font-bold tracking-tight transition-all",
-                                    isSelected
-                                      ? "fill-foreground"
-                                      : "fill-muted-foreground/50",
-                                  )}
-                                >
-                                  {(s.status_name === "חופשה חול" || s.status_name === "חופשה חו\"ל") ? "חו' חול" : s.status_name}
-                                </text>
-                                <text
-                                  x={lx}
-                                  y={ly + 4.5}
-                                  textAnchor={
-                                    angle > 140
-                                      ? "end"
-                                      : angle < 40
-                                        ? "start"
-                                        : "middle"
-                                  }
-                                  direction="rtl"
-                                  unicodeBidi="isolate"
-                                  className={cn(
-                                    "text-[5px] font-bold tabular-nums transition-all",
-                                    isSelected
-                                      ? "fill-foreground"
-                                      : "fill-muted-foreground/80",
-                                  )}
-                                >
-                                  {s.count}
-                                </text>
-                              </motion.g>
-                            </g>
-                          );
-                        });
-                      })()}
-
-                      <circle
-                        cx="80"
-                        cy="70"
-                        r="38"
-                        fill="none"
-                        stroke="currentColor"
-                        className="text-muted/5"
-                        strokeWidth="1"
-                      />
-                    </svg>
-
-                    {/* Central Text Logic */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pt-4">
-                      <span className="text-3xl font-black text-foreground tabular-nums leading-none">
-                        {updatedTodayCount}
-                      </span>
-                      <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mt-1">
-                        דווחו
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Reset Control - Tightened spacing */}
-                  {selectedStatusId !== "all" && (
-                    <button
-                      onClick={() => setSelectedStatusId("all")}
-                      className="mt-4 text-[10px] font-bold text-primary/60 hover:text-primary uppercase tracking-[0.2em] transition-colors"
-                    >
-                      לביטול הבחירה
-                    </button>
-                  )}
-                </div>
-              </Card>
-
-              {!isAllReported ? (
-                <div className="hidden lg:flex bg-card/40 dark:bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl lg:rounded-3xl p-4 lg:p-6 flex-row lg:flex-col items-center lg:items-start justify-between gap-4 order-1 lg:order-2 hover:border-border transition-all">
-                  {/* Header Section */}
-                  <div className="flex items-start gap-3 lg:gap-4 flex-1">
-                    <div className="relative">
-                      {/* Icon Container with subtle pulse */}
-                      <div className="relative p-2.5 lg:p-3 bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 rounded-xl lg:rounded-2xl border border-primary/20 dark:border-primary/30">
-                        <Clock className="w-5 h-5 lg:w-6 lg:h-6 text-primary" />
-                        {/* Pulse ring */}
-                        <div className="absolute inset-0 rounded-xl lg:rounded-2xl bg-primary/20 animate-ping opacity-20" />
-                      </div>
-                      </div>
-
-                    <div className="flex-1 space-y-1 lg:space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm lg:text-lg font-bold text-foreground">
-                          תזכורת דיווח
-                        </h3>
-                        <div className="hidden lg:block px-2 py-0.5 bg-primary/10 dark:bg-primary/20 rounded-full">
-                          <span className="text-[10px] font-bold text-primary">
-                            דחוף
-                          </span>
-                        </div>
-                      </div>
-                      <p className="hidden lg:block text-xs lg:text-sm text-muted-foreground font-medium leading-relaxed">
-                        יש להשלים את דיווחי הנוכחות של כלל השוטרים במחלקה עד
-                        השעה{" "}
-                        <span className="font-bold text-foreground">
-                          09:00
-                        </span>
-                      </p>
-                      <p className="lg:hidden text-[10px] text-muted-foreground font-medium">
-                        השלמה עד{" "}
-                        <span className="font-bold text-foreground">
-                          09:00
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <div className="w-full lg:flex lg:justify-center">
-                    <button
-                      className="group relative h-10 lg:h-11 w-full lg:w-auto px-4 lg:px-6 bg-primary hover:bg-primary/90 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
-                      onClick={() => {
-                        setAlertContext({ missing_ids: missingEmployeeIds });
-                        setBulkModalOpen(true);
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
-                      <AlertCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary-foreground relative z-10" />
-                      <span className="text-xs lg:text-sm font-bold text-primary-foreground whitespace-nowrap relative z-10">
-                        נותרו: {totalCount - updatedTodayCount}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="hidden lg:flex bg-emerald-500/10 border border-emerald-500/20 rounded-2xl lg:rounded-3xl p-3 lg:p-6 flex-row lg:flex-col justify-between lg:justify-center items-center text-right lg:text-center gap-3 lg:gap-2 order-1 lg:order-2">
-                  <div className="flex items-center lg:flex-col gap-3 lg:gap-2">
-                    <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="space-y-0.5 lg:space-y-1">
-                      <h3 className="text-xs lg:text-lg font-bold text-emerald-800 leading-none">
-                        הושלם הדיווח!
-                      </h3>
-                      <p className="text-[9px] lg:text-xs text-emerald-700/80 font-bold leading-none">
-                        כלל השוטרים ({totalCount}) דווחו
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Filters Bar */}
             <Card id="status-filters" className="p-4 sm:p-6 overflow-hidden">
               {/* Mobile View: Search + Filter Button */}
@@ -1225,7 +924,7 @@ export default function AttendancePage() {
                         <SelectValue placeholder="כל המחלקות" />
                       </SelectTrigger>
                       <SelectContent dir="rtl">
-                        <SelectItem value="all">כל המחלקות</SelectItem>
+                        {user?.is_admin && <SelectItem value="all">כל המחלקות</SelectItem>}
                         {departments.map((d) => (
                           <SelectItem key={d.id} value={d.id.toString()}>
                             {d.name}
@@ -1258,7 +957,7 @@ export default function AttendancePage() {
                         <SelectValue placeholder="כל המדורים" />
                       </SelectTrigger>
                       <SelectContent dir="rtl">
-                        <SelectItem value="all">כל המדורים</SelectItem>
+                        {(user?.is_admin || user?.commands_department_id) && <SelectItem value="all">כל המדורים</SelectItem>}
                         {sections.map((s: any) => (
                           <SelectItem key={s.id} value={s.id.toString()}>
                             {s.name}
@@ -1288,7 +987,7 @@ export default function AttendancePage() {
                         <SelectValue placeholder="כל החוליות" />
                       </SelectTrigger>
                       <SelectContent dir="rtl">
-                        <SelectItem value="all">כל החוליות</SelectItem>
+                        {(user?.is_admin || user?.commands_department_id || user?.commands_section_id) && <SelectItem value="all">כל החוליות</SelectItem>}
                         {teams.map((t: any) => (
                           <SelectItem key={t.id} value={t.id.toString()}>
                             {t.name}

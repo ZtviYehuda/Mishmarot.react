@@ -217,7 +217,7 @@ export const DashboardFilters = ({
                           <SelectValue placeholder="מחלקה" />
                         </SelectTrigger>
                         <SelectContent dir="rtl" className="rounded-xl border-border/40 backdrop-blur-xl">
-                          <SelectItem value="all" className="font-bold">כל המחלקות</SelectItem>
+                          {user?.is_admin && <SelectItem value="all" className="font-bold">כל המחלקות</SelectItem>}
                           {structure.map((dept) => (
                             <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
                           ))}
@@ -235,7 +235,7 @@ export const DashboardFilters = ({
                           <SelectValue placeholder="מדור" />
                         </SelectTrigger>
                         <SelectContent dir="rtl" className="rounded-xl border-border/40 backdrop-blur-xl">
-                          <SelectItem value="all" className="font-bold">כל המדורים</SelectItem>
+                          {(user?.is_admin || user?.commands_department_id) && <SelectItem value="all" className="font-bold">כל המדורים</SelectItem>}
                           {sections.map((sec) => (
                             <SelectItem key={sec.id} value={sec.id.toString()}>{sec.name}</SelectItem>
                           ))}
@@ -253,7 +253,7 @@ export const DashboardFilters = ({
                           <SelectValue placeholder="חוליה" />
                         </SelectTrigger>
                         <SelectContent dir="rtl" className="rounded-xl border-border/40 backdrop-blur-xl">
-                          <SelectItem value="all" className="font-bold">כל החוליות</SelectItem>
+                          {(user?.is_admin || user?.commands_department_id || user?.commands_section_id) && <SelectItem value="all" className="font-bold">כל החוליות</SelectItem>}
                           {teams.map((team) => (
                             <SelectItem key={team.id} value={team.id.toString()}>{team.name}</SelectItem>
                           ))}

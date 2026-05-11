@@ -258,48 +258,61 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
         id="attendance-chart"
         ref={cardRef}
         className={cn(
-          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all",
+          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-2xl sm:rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all",
           className,
           hideHeader && "border-none bg-transparent backdrop-blur-none py-0"
         )}
       >
         {!hideHeader && (
-          <CardHeader className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-row items-center justify-between space-y-0">
-            <div className="space-y-1 text-right">
-              <CardTitle className="text-sm font-black text-slate-500 uppercase tracking-widest">
+          <CardHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+            <div className="flex items-center justify-between w-full sm:w-auto">
+              <CardTitle className="text-xs sm:text-sm font-black text-slate-500 uppercase tracking-widest">
                 מגמת זמינות — {range === 7 ? "שבועי" : "חודשי"}
               </CardTitle>
+              {onRangeChange && (
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 sm:p-1 rounded-lg sm:mr-0">
+                  <button
+                    onClick={() => onRangeChange(7)}
+                    className={cn(
+                      "px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-md transition-all",
+                      range === 7
+                        ? "bg-white text-primary dark:bg-slate-700 dark:text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    )}
+                  >
+                    שבועי
+                  </button>
+                  <button
+                    onClick={() => onRangeChange(30)}
+                    className={cn(
+                      "px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-md transition-all",
+                      range === 30
+                        ? "bg-white text-primary dark:bg-slate-700 dark:text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    )}
+                  >
+                    חודשי
+                  </button>
+                </div>
+              )}
             </div>
-            {onRangeChange && (
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                <button
-                  onClick={() => onRangeChange(7)}
-                  className={cn(
-                    "px-3 py-1 text-xs font-bold rounded-md transition-all",
-                    range === 7
-                      ? "bg-white text-primary dark:bg-slate-700 dark:text-white"
-                      : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                  )}
-                >
-                  שבועי
-                </button>
-                <button
-                  onClick={() => onRangeChange(30)}
-                  className={cn(
-                    "px-3 py-1 text-xs font-bold rounded-md transition-all",
-                    range === 30
-                      ? "bg-white text-primary dark:bg-slate-700 dark:text-white"
-                      : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                  )}
-                >
-                  חודשי
-                </button>
+            {/* Mobile inline stats */}
+            {stats && (
+              <div className="flex sm:hidden items-center gap-2 w-full overflow-x-auto pb-0.5">
+                <div className="flex items-center gap-1.5 bg-primary/5 rounded-full px-2.5 py-1 shrink-0">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">ממוצע: {stats.avgPresence}</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-full px-2.5 py-1 shrink-0">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">שיא: {stats.maxPresence} ({stats.peakDay})</span>
+                </div>
               </div>
             )}
           </CardHeader>
         )}
 
-        <CardContent className={cn("flex-1 flex flex-col min-h-[350px] p-6", hideHeader && "p-0")}>
+        <CardContent className={cn("flex-1 flex flex-col min-h-[240px] sm:min-h-[350px] p-3 sm:p-6", hideHeader && "p-0")}>
           <div className="w-full h-full min-h-[250px] flex-1" style={{ direction: "ltr" }}>
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart

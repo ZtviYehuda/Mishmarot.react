@@ -21,9 +21,11 @@ import {
   Undo2,
   Thermometer,
   MessageCircle,
+  MessageSquare,
   Megaphone,
   CalendarRange,
   Activity,
+  ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -48,7 +50,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { GlobalAiSupport } from "@/components/common/GlobalAiSupport";
 import { ChatSidebar } from "./ChatSidebar";
-import { MessageSquare } from "lucide-react";
 import { useChat } from "@/context/ChatContext";
 
 function getAlertConfig(alert: {
@@ -137,7 +138,7 @@ export default function MainLayout() {
   // Sidebar closed by default on mobile and desktop
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [notificationTab, setNotificationTab] = React.useState<
-    "active" | "history"
+    "active" | "history" | "messages"
   >("active");
   const [msgDialogOpen, setMsgDialogOpen] = React.useState(false);
   const [selectedAlert, setSelectedAlert] = React.useState<any>(null);
@@ -156,9 +157,14 @@ export default function MainLayout() {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/support/tickets/pending-count`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
+      if (!res.ok) return; // Endpoint may not exist — fail silently
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) return;
       const data = await res.json();
       setPendingRequestsCount(data.count || 0);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      // Silently ignore — endpoint may not be deployed
+    }
   };
 
   React.useEffect(() => {
@@ -419,9 +425,10 @@ export default function MainLayout() {
 
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col min-w-0">
-        <header className="h-16 bg-card border-b border-border/40 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40 transition-none flex-none">
-          <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 ml-2">
-            {/* Mobile Menu Toggle — floating logo, no box */}
+        <header className="h-16 bg-card border-b border-border/40 px-4 lg:px-8 flex items-center justify-between gap-x-4 sticky top-0 z-40 transition-none flex-none">
+          {/* Right side: Logo + Page Title + Status Dot */}
+          <div className="flex items-center gap-1 sm:gap-4 flex-1 min-w-0 ml-2">
+            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setIsSidebarOpen(true)}
               className="lg:hidden flex items-center justify-center shrink-0 active:scale-90 transition-all"
@@ -430,14 +437,57 @@ export default function MainLayout() {
               <img src="/logo_unit.png" alt="לוגו" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
             </button>
 
-            <div className="flex flex-col text-right leading-none min-w-0 overflow-hidden">
-              <div className="hidden xs:flex items-center gap-1.5 mb-1">
+            {/* Green pulsing status dot — always visible, clickable for last login info */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button title="סטטוס מערכת" className="flex items-center shrink-0 focus:outline-none p-1">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  </span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-4 rounded-2xl border-border shadow-xl backdrop-blur-xl bg-card/95" align="start" dir="rtl">
+                <div className="space-y-3 text-right">
+                  <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                    <span className="relative flex h-2.5 w-2.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <div>
+                      <h4 className="text-xs font-black text-foreground">המערכת פעילה</h4>
+                      <p className="text-[10px] font-bold text-muted-foreground">חיבור מאובטח</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-muted-foreground">משתמש מחובר:</span>
+                      <span className="text-[10px] font-black text-foreground">{user?.first_name} {user?.last_name}</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-muted/30 border border-border/20">
+                      <p className="text-[10px] font-bold text-muted-foreground mb-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        כניסה קודמת:
+                      </p>
+                      <p className="text-[11px] font-black text-primary">
+                        {(user as any)?.previous_login
+                          ? new Date((user as any).previous_login).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+                          : "כניסה ראשונה"
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <div className="flex flex-col text-right leading-none min-w-0">
+              <div className="hidden sm:flex items-center gap-1.5 mb-1">
                 <span className="text-[9px] md:text-[11px] font-black text-primary uppercase leading-none truncate opacity-80">
                   מוקד שליטה
                 </span>
-                <div className="flex h-1 w-1 rounded-full bg-emerald-500 shrink-0" />
               </div>
-              <h1 className="lg:hidden text-base md:text-2xl font-black text-foreground tracking-tight leading-none truncate">
+              <h1 className="text-sm xs:text-base md:text-2xl font-black text-foreground tracking-tight leading-none whitespace-nowrap">
                 {location.pathname === "/"
                   ? "לוח בקרה"
                   : navItems.find((n) => location.pathname.startsWith(n.path) && n.path !== "/")
@@ -446,56 +496,55 @@ export default function MainLayout() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-6 shrink-0">
             {/* Global DateHeader */}
             <div className="shrink-0">
-              <DateHeader />
+              <DateHeader className="sm:scale-100 scale-90 origin-left" />
             </div>
 
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
 
-            <button
-              onClick={toggleChat}
-              title="צ'אט והודעות"
-              className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all relative"
-            >
-              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-              {/* Optional: Unread indicator dot could go here */}
-            </button>
-
-            {/* Notifications Bell */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all">
-                  <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                  {(unreadCount + (user?.is_admin ? pendingRequestsCount : 0)) > 0 && (
-                    <span className={cn(
-                      "absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card animate-in zoom-in-50",
-                      pendingRequestsCount > 0 && user?.is_admin ? "bg-amber-500 shadow-lg shadow-amber-500/20" : "bg-primary"
-                    )}>
-                      {unreadCount + (user?.is_admin ? pendingRequestsCount : 0)}
-                    </span>
-                  )}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-[90vw] sm:w-[450px] p-0 overflow-hidden rounded-2xl border-border  mr-2"
-                align="start"
+            <div className="flex items-center gap-1.5 sm:gap-3">
+              {/* Desktop Only: Separate Chat Button */}
+              <button
+                onClick={toggleChat}
+                title="צ'אט והודעות"
+                className="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all relative"
               >
+                <MessageSquare className="w-5 h-5" />
+              </button>
+
+              {/* Combined Notifications/Messages Popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all">
+                    <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                    {(unreadCount + (user?.is_admin ? pendingRequestsCount : 0)) > 0 && (
+                      <span className={cn(
+                        "absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card animate-in zoom-in-50",
+                        pendingRequestsCount > 0 && user?.is_admin ? "bg-amber-500 shadow-lg shadow-amber-500/20" : "bg-primary"
+                      )}>
+                        {unreadCount + (user?.is_admin ? pendingRequestsCount : 0)}
+                      </span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[95vw] xs:w-[450px] p-0 overflow-hidden rounded-2xl border-border mr-4 sm:mr-0 shadow-2xl"
+                  align="start"
+                >
                 <div className="p-4 border-b border-border bg-card sticky top-0 z-10">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black text-foreground text-right">
-                        מרכז התראות
+                        {notificationTab === "messages" ? "מרכז הודעות" : "מרכז התראות"}
                       </span>
                       <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-black">
-                        {notificationTab === "active"
-                          ? alerts.length
-                          : history.length}
+                        {notificationTab === "active" ? alerts.length : notificationTab === "history" ? history.length : "צ'אט"}
                       </span>
                     </div>
                     <div className="flex items-center gap-4">
-                      {notificationTab === "active" && (
+                      {notificationTab === "active" && alerts.length > 0 && (
                         <button
                           onClick={markAllAsRead}
                           className="text-[10px] font-black text-primary hover:underline flex items-center gap-1"
@@ -508,25 +557,40 @@ export default function MainLayout() {
                         onClick={
                           notificationTab === "active"
                             ? refreshAlerts
-                            : fetchHistory
+                            : notificationTab === "history"
+                              ? fetchHistory
+                              : () => {}
                         }
                         className="text-[10px] font-black text-muted-foreground hover:text-primary hover:underline"
                       >
-                        רענן רשימה
+                        {notificationTab === "messages" ? "" : "רענן רשימה"}
                       </button>
                     </div>
                   </div>
-                  <div className="flex gap-2 border-b border-border/40 -mb-px">
+                  <div className="flex gap-1 border-b border-border/40 -mb-px">
                     <button
                       onClick={() => setNotificationTab("active")}
                       className={cn(
-                        "flex-1 px-3 py-2 text-[11px] font-black rounded-t-lg transition-all",
+                        "flex-1 px-2 py-2 text-[10px] sm:text-[11px] font-black rounded-t-lg transition-all flex items-center justify-center gap-1.5",
                         notificationTab === "active"
                           ? "bg-background text-primary border-b-2 border-primary"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                       )}
                     >
+                      <Activity className="w-3 h-3" />
                       פעילות ({alerts.length})
+                    </button>
+                    <button
+                      onClick={() => setNotificationTab("messages")}
+                      className={cn(
+                        "flex-1 px-2 py-2 text-[10px] sm:text-[11px] font-black rounded-t-lg transition-all flex items-center justify-center gap-1.5",
+                        notificationTab === "messages"
+                          ? "bg-background text-primary border-b-2 border-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                      )}
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                      הודעות
                     </button>
                     <button
                       onClick={() => {
@@ -534,18 +598,38 @@ export default function MainLayout() {
                         fetchHistory();
                       }}
                       className={cn(
-                        "flex-1 px-3 py-2 text-[11px] font-black rounded-t-lg transition-all",
+                        "flex-1 px-2 py-2 text-[10px] sm:text-[11px] font-black rounded-t-lg transition-all flex items-center justify-center gap-1.5",
                         notificationTab === "history"
                           ? "bg-background text-primary border-b-2 border-primary"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                       )}
                     >
+                      <History className="w-3 h-3" />
                       היסטוריה ({history.length})
                     </button>
                   </div>
                 </div>
                 <div className="max-h-[60vh] sm:max-h-[400px] overflow-y-auto custom-scrollbar bg-muted/50">
-                  {notificationTab === "active" ? (
+                  {notificationTab === "messages" ? (
+                    <div className="p-8 flex flex-col items-center justify-center gap-4 text-center">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <MessageSquare className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-foreground mb-1">צ'אט והודעות מערכת</p>
+                        <p className="text-[10px] font-medium text-muted-foreground max-w-[200px]">נהל שיחות עם מפקדים וקבל הודעות עדכון בזמן אמת</p>
+                      </div>
+                      <Button 
+                        onClick={() => {
+                          toggleChat();
+                        }}
+                        className="rounded-xl font-black text-xs gap-2 px-6"
+                      >
+                        פתח את מרכז ההודעות
+                        <ArrowLeft className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : notificationTab === "active" ? (
                     loadingNotifs ? (
                       <div className="p-12 flex flex-col items-center justify-center gap-3 opacity-50">
                         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -848,10 +932,7 @@ export default function MainLayout() {
                 )}
               </PopoverContent>
             </Popover>
-
-            <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
-
-
+            </div>
           </div>
         </header>
 

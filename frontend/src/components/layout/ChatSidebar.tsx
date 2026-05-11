@@ -119,41 +119,40 @@ export const ChatSidebar: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeChat}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[200] lg:hidden"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] sm:hidden"
           />
 
-          {/* Sidebar Panel */}
+          {/* Window Panel */}
           <motion.div
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 h-dvh w-full sm:w-[400px] bg-card border-r border-border/50 shadow-2xl z-[250] flex flex-col overflow-hidden"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed inset-x-4 bottom-4 sm:bottom-6 sm:left-6 sm:right-auto sm:inset-x-auto w-auto sm:w-[420px] h-[calc(100dvh-32px)] sm:h-[650px] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl z-[250] flex flex-col border border-border overflow-hidden"
             dir="rtl"
           >
             {selectedRecipient ? (
               <>
                 {/* Header for Conversation */}
-                <div className="p-4 sm:p-6 border-b border-border/50 bg-card/50 backdrop-blur-xl flex items-center justify-between shrink-0">
+                <div className="p-5 bg-primary text-primary-foreground flex items-center justify-between shadow-lg shrink-0">
                   <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" onClick={() => openChat(null as any)} className="rounded-full h-8 w-8">
+                    <Button variant="ghost" size="icon" onClick={() => openChat(null as any)} className="h-8 w-8 rounded-xl text-white/80 hover:bg-white/20 hover:text-white">
                       <ChevronLeft className="w-5 h-5 rotate-180" />
                     </Button>
                     <div 
                       className="relative cursor-pointer hover:scale-105 transition-transform"
                       onClick={() => selectedRecipient && openProfile(selectedRecipient.id)}
                     >
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 font-black">
+                      <div className="w-10 h-10 rounded-2xl bg-white/20 text-white flex items-center justify-center border border-white/30 font-black backdrop-blur-md">
                         {selectedRecipient.name?.[0]}
                       </div>
-                      <div className="absolute -bottom-0.5 -left-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-card rounded-full" />
+                      <div className="absolute -bottom-0.5 -left-0.5 w-3 h-3 bg-emerald-400 border-2 border-primary rounded-full" />
                     </div>
                     <div className="flex flex-col">
-                      <h3 className="font-black text-sm sm:text-base text-foreground leading-tight">
+                      <h3 className="font-black text-xs sm:text-sm text-white leading-tight">
                         {selectedRecipient.name}
                       </h3>
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
-                        {selectedRecipient.role || "מחובר כעת"}
+                      <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest">
+                        {selectedRecipient.role || "פעיל כעת"}
                       </span>
                     </div>
                   </div>
@@ -167,7 +166,7 @@ export const ChatSidebar: React.FC = () => {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="rounded-xl text-muted-foreground/60 hover:text-primary transition-colors"
+                                className="h-9 w-9 rounded-xl text-white/80 hover:bg-white/20 hover:text-white transition-colors"
                                 onClick={() => window.location.href = `tel:${emp.phone_number}`}
                                 title={`חיוג ל-${emp.phone_number}`}
                               >
@@ -181,11 +180,11 @@ export const ChatSidebar: React.FC = () => {
                     )}
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground/60 hover:text-primary transition-colors">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-white/80 hover:bg-white/20 hover:text-white transition-colors">
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-48 p-1 rounded-xl shadow-xl border-border/40 backdrop-blur-xl bg-card/95" align="start">
+                      <PopoverContent className="w-48 p-1 rounded-2xl shadow-2xl border-border/40 backdrop-blur-xl bg-card/95" align="start">
                         <div className="flex flex-col gap-1">
                           <button
                             onClick={() => {
@@ -193,7 +192,7 @@ export const ChatSidebar: React.FC = () => {
                                 openProfile(selectedRecipient.id);
                               }
                             }}
-                            className="flex items-center gap-2 px-3 py-2.5 text-xs font-bold hover:bg-muted rounded-lg transition-colors text-right w-full"
+                            className="flex items-center gap-2 px-3 py-2.5 text-xs font-bold hover:bg-muted rounded-xl transition-colors text-right w-full"
                           >
                             <UserCircle className="w-4 h-4 text-primary" />
                             <span>צפה בפרופיל מלא</span>
@@ -203,7 +202,7 @@ export const ChatSidebar: React.FC = () => {
                           
                           <button
                             onClick={handleClearHistory}
-                            className="flex items-center gap-2 px-3 py-2.5 text-xs font-bold hover:bg-destructive/10 text-destructive rounded-lg transition-colors text-right w-full"
+                            className="flex items-center gap-2 px-3 py-2.5 text-xs font-bold hover:bg-destructive/10 text-destructive rounded-xl transition-colors text-right w-full"
                           >
                             <Trash2 className="w-4 h-4" />
                             <span>מחק היסטוריית צ'אט</span>
@@ -211,7 +210,7 @@ export const ChatSidebar: React.FC = () => {
                         </div>
                       </PopoverContent>
                     </Popover>
-                    <Button variant="ghost" size="icon" onClick={closeChat} className="hidden lg:flex rounded-xl text-muted-foreground hover:bg-muted">
+                    <Button variant="ghost" size="icon" onClick={closeChat} className="h-9 w-9 rounded-xl text-white/80 hover:bg-white/20 hover:text-white">
                       <X className="w-5 h-5" />
                     </Button>
                   </div>
@@ -269,20 +268,20 @@ export const ChatSidebar: React.FC = () => {
             ) : (
               <>
                 {/* Header for Contacts List */}
-                <div className="p-6 border-b border-border/50 bg-card/50 backdrop-blur-xl shrink-0">
+                <div className="p-6 bg-primary shadow-lg shrink-0 rounded-t-[2.5rem]">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-black text-xl text-foreground tracking-tight">הודעות</h3>
-                    <Button variant="ghost" size="icon" onClick={closeChat} className="rounded-xl text-muted-foreground">
+                    <h3 className="font-black text-xl text-white tracking-tight">הודעות</h3>
+                    <Button variant="ghost" size="icon" onClick={closeChat} className="rounded-xl text-white/80 hover:bg-white/20 hover:text-white">
                       <X className="w-5 h-5" />
                     </Button>
                   </div>
                   <div className="relative">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
                     <Input
                       placeholder="חיפוש איש קשר..."
                       value={contactSearch}
                       onChange={(e) => setContactSearch(e.target.value)}
-                      className="pr-10 h-11 bg-muted/30 border-border/50 rounded-2xl text-xs font-bold"
+                      className="pr-10 h-11 bg-white/10 border-white/20 rounded-2xl text-xs font-bold text-white placeholder:text-white/60 focus-visible:ring-white/30"
                     />
                   </div>
                 </div>

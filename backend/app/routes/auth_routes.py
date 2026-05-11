@@ -246,8 +246,7 @@ def login():
                 403,
             )
 
-        # שלב 3: יצירת טוקן
-        print("DEBUG LOGIN: Generating Token...")
+        # Step 3: Generate Token
         token = create_access_token(
             identity=json.dumps(
                 {
@@ -257,7 +256,6 @@ def login():
                 }
             )
         )
-        print("DEBUG LOGIN: Token generated successfully.")
 
         meta["success"] = True
         AuditLogModel.log_action(
@@ -267,6 +265,18 @@ def login():
             ip_address=real_ip,
             metadata=meta,
         )
+
+        # Step 4: Update login times
+        conn = get_db_connection()
+        if conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    UPDATE employees 
+                    SET previous_login = last_login, last_login = NOW() 
+                    WHERE id = %s
+                """, (user["id"],))
+                conn.commit()
+            conn.close()
 
         return jsonify(
             {
@@ -306,9 +316,9 @@ def login():
                     "assignment_date": user.get("assignment_date"),
                     "police_license": user.get("police_license"),
                     "security_clearance": user.get("security_clearance"),
-                    "theme": user.get("theme"),
-                    "accent_color": user.get("accent_color"),
                     "font_size": user.get("font_size"),
+                    "last_login": user.get("last_login"),
+                    "previous_login": user.get("previous_login"),
                 },
             }
         )
@@ -391,9 +401,9 @@ def get_current_user():
                 "security_clearance": user.get("security_clearance"),
                 "is_temp_commander": user.get("is_temp_commander", False),
                 "active_delegate_id": user.get("active_delegate_id"),
-                "theme": user.get("theme"),
-                "accent_color": user.get("accent_color"),
                 "font_size": user.get("font_size"),
+                "last_login": user.get("last_login"),
+                "previous_login": user.get("previous_login"),
             }
         )
     return jsonify({"error": "User not found"}), 404

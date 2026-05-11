@@ -290,39 +290,39 @@ export default function ActivityLogPage() {
       </div>
 
       <main className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 space-y-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Stats Grid - Compact Grid (No Scroll) */}
+        <div className="grid grid-cols-4 lg:grid-cols-4 gap-1.5 sm:gap-4 mb-4 sm:mb-8">
           <StatItem 
-            label={activeTab === "my" ? "פעולות שביצעתי" : "פעולות במערכת"} 
+            label={activeTab === "my" ? "פעולות שלי" : "פעולות"} 
             value={activity.length} 
-            sub={activeTab === "my" ? "בהיסטוריה הקרובה" : "במטמון המהיר"} 
-            icon={Activity} 
             color="bg-blue-500/10 text-blue-600"
+            className="p-1.5 sm:p-6"
           />
-          {user?.is_admin && (
+          {user?.is_admin ? (
             <>
               <StatItem 
-                label="התראות אבטחה" 
+                label="התראות" 
                 value={suspicious.length} 
-                sub="אנומליות שזוהו" 
-                icon={AlertTriangle} 
                 color="bg-red-500/10 text-red-600"
+                className="p-1.5 sm:p-6"
               />
               <StatItem 
-                label="ארכיוני לוגים" 
+                label="ארכיון" 
                 value={archives.length} 
-                sub="דחוסים בשרת" 
-                icon={Archive} 
                 color="bg-purple-500/10 text-purple-600"
+                className="p-1.5 sm:p-6"
               />
+            </>
+          ) : (
+            <>
+              <div className="col-span-2" />
             </>
           )}
           <StatItem 
-            label="מצב מערכת" 
+            label="מערכת" 
             value="פעיל" 
-            sub="ניטור בזמן אמת" 
-            icon={Shield} 
             color="bg-emerald-500/10 text-emerald-600"
+            className="p-1.5 sm:p-6"
           />
         </div>
 
@@ -594,18 +594,13 @@ export default function ActivityLogPage() {
   );
 }
 
-function StatItem({ label, value, sub, icon: Icon, color }: any) {
+function StatItem({ label, value, sub, color, className }: any) {
   return (
-    <Card className="border-border/40 p-6 rounded-[2rem] hover: transition-all group hover:-translate-y-1 bg-card/80">
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{label}</p>
-          <p className="text-3xl font-black tracking-tight">{value}</p>
-          <p className="text-[11px] font-bold text-muted-foreground/60">{sub}</p>
-        </div>
-        <div className={cn("p-4 rounded-2xl transition-transform group-hover:scale-110", color)}>
-          <Icon className="w-6 h-6" />
-        </div>
+    <Card className={cn("border-border/40 p-2 sm:p-6 rounded-xl sm:rounded-[2rem] hover: transition-all group hover:-translate-y-1 bg-card/80 flex flex-col items-center sm:items-start text-center sm:text-right", className)}>
+      <div className="space-y-1 sm:space-y-2 w-full">
+        <p className="text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-tighter sm:tracking-widest leading-none">{label}</p>
+        <p className={cn("text-lg sm:text-3xl font-black tracking-tight", color.split(" ")[1])}>{value}</p>
+        <p className="text-[7px] sm:text-[11px] font-bold text-muted-foreground/60">{sub}</p>
       </div>
     </Card>
   );

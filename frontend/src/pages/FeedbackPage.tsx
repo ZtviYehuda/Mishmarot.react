@@ -301,12 +301,12 @@ const FeedbackPage = () => {
             {activeTab === 'admin-view' && isAdmin && (
               <motion.div key="admin-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                 
-                {/* Stats Row - Compact on Mobile */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                  <StatItem label="פניות פתוחות" value={filteredItems.filter(i => ['pending', 'open', 'received'].includes(i.status)).length} sub="ממתינות" icon={AlertCircle} color="text-rose-500" bgColor="bg-rose-500/10" />
-                  <StatItem label="בטיפול" value={filteredItems.filter(i => ['in_progress', 'reviewing'].includes(i.status)).length} sub="נבדקות" icon={Activity} color="text-amber-500" bgColor="bg-amber-500/10" />
-                  <StatItem label="טופלו היום" value={filteredItems.filter(i => (['done', 'closed', 'approved'].includes(i.status)) && new Date(i.created_at).toDateString() === new Date().toDateString()).length} sub="סגורות" icon={CheckCircle2} color="text-emerald-500" bgColor="bg-emerald-500/10" />
-                  <StatItem label="סה״כ פניות" value={filteredItems.length} sub="במערכת" icon={MessageSquare} color="text-primary" bgColor="bg-primary/10" />
+                {/* Stats Row - Compact Grid (No Scroll) */}
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-4 mb-4 sm:mb-6">
+                  <StatItem label="פתוחות" value={filteredItems.filter(i => ['pending', 'open', 'received'].includes(i.status)).length} icon={AlertCircle} color="text-rose-500" bgColor="bg-rose-500/10" className="p-1.5 sm:p-5" />
+                  <StatItem label="בטיפול" value={filteredItems.filter(i => ['in_progress', 'reviewing'].includes(i.status)).length} icon={Activity} color="text-amber-500" bgColor="bg-amber-500/10" className="p-1.5 sm:p-5" />
+                  <StatItem label="טופלו" value={filteredItems.filter(i => (['done', 'closed', 'approved'].includes(i.status)) && new Date(i.created_at).toDateString() === new Date().toDateString()).length} icon={CheckCircle2} color="text-emerald-500" bgColor="bg-emerald-500/10" className="p-1.5 sm:p-5" />
+                  <StatItem label="סה״כ" value={filteredItems.length} icon={MessageSquare} color="text-primary" bgColor="bg-primary/10" className="p-1.5 sm:p-5" />
                 </div>
 
                 {/* Modern Toolbar - Optimized for Mobile */}
@@ -782,20 +782,16 @@ function TabButton({ active, onClick, icon, label }: any) {
   );
 }
 
-function StatItem({ label, value, sub, icon: Icon, color, bgColor }: any) {
+function StatItem({ label, value, sub, icon: Icon, color, bgColor, className }: any) {
   return (
-    <Card className="border border-border/40 p-3 sm:p-5 rounded-2xl bg-card/40 backdrop-blur-xl shadow-sm h-fit hover:bg-card/60 transition-all">
-      <div className="flex items-center justify-between gap-2">
-        <div className="space-y-0.5 sm:space-y-1 min-w-0">
-          <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">{label}</p>
-          <div className="flex items-baseline gap-1.5">
-            <p className="text-lg sm:text-2xl font-black text-foreground">{value}</p>
-            <p className="text-[8px] sm:text-[10px] font-medium text-muted-foreground truncate">{sub}</p>
-          </div>
-        </div>
-        <div className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0", bgColor)}>
-          <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", color)} />
-        </div>
+    <Card className={cn("border border-border/40 p-1.5 sm:p-5 rounded-xl sm:rounded-2xl bg-card/40 backdrop-blur-xl shadow-sm h-fit hover:bg-card/60 transition-all flex flex-col items-center sm:items-start text-center sm:text-right", className)}>
+      <div className={cn("w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center mb-1 sm:mb-2", bgColor)}>
+        <Icon className={cn("w-3.5 h-3.5 sm:w-5 sm:h-5", color)} />
+      </div>
+      <p className="text-[8px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-tighter sm:tracking-widest truncate w-full">{label}</p>
+      <div className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-1.5 w-full">
+        <p className={cn("text-lg sm:text-2xl font-black", color || "text-foreground")}>{value}</p>
+        {sub && <p className="text-[7px] sm:text-[10px] font-medium text-muted-foreground truncate">{sub}</p>}
       </div>
     </Card>
   );
