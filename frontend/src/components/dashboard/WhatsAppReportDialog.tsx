@@ -5,7 +5,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
+  DialogDragHandle,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ import {
   FilterX,
   Send,
   RefreshCw,
-  ArrowLeft,
   LayoutDashboard,
   Check,
 } from "lucide-react";
@@ -118,161 +117,109 @@ export const WhatsAppReportDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl p-0 border-none bg-card  flex flex-col rounded-3xl overflow-hidden"
+        className="sm:max-w-xl p-0 border-none bg-card flex flex-col overflow-hidden"
         dir="rtl"
       >
-        <DialogHeader className="p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="w-16 h-16 rounded-[24px] bg-primary/10 border border-primary/20 flex items-center justify-center text-primary  shrink-0 rotate-3">
-              <Send className="w-8 h-8" />
+        <DialogDragHandle />
+
+        {/* ── Slim inline header ── */}
+        <div className="px-5 pt-3 pb-4 sm:px-8 sm:pt-6 sm:pb-5 border-b border-border/30 text-right shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <Send className="w-[18px] h-[18px]" />
             </div>
-            <div className="flex-1 min-w-0 pt-1 text-center sm:text-right">
-              <DialogTitle className="text-2xl font-black text-foreground tracking-tight mb-1">
+            <div className="flex-1 min-w-0">
+              <DialogTitle className="text-[15px] sm:text-lg font-black text-foreground tracking-tight leading-none mb-0.5">
                 שיתוף דוח נוכחות
               </DialogTitle>
-              <DialogDescription className="text-sm font-bold text-muted-foreground italic">
-                ייצוא נתוני המצבה ושליחתם למפקדים בווטסאפ בצורה מאובטחת
+              <DialogDescription className="text-[11px] font-medium text-muted-foreground leading-none">
+                ייצוא מצבה ושליחה בווטסאפ
               </DialogDescription>
             </div>
           </div>
-        </DialogHeader>
+        </div>
 
-        <div className="flex-1 p-6 sm:p-8 space-y-8 overflow-y-auto custom-scrollbar">
-          {/* Status Selection / Mode Switcher */}
-          <div className="space-y-4">
-            <h3 className="text-[11px] font-black text-primary uppercase tracking-widest leading-none pr-1">
-              בחר את היקף הנתונים לדוח:
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* ── Scrollable body ── */}
+        <div className="flex-1 px-5 py-4 sm:px-8 sm:py-6 space-y-5 overflow-y-auto custom-scrollbar">
+          {/* Segmented control for mode switching */}
+          <div className="space-y-2.5">
+            <span className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest pr-0.5">
+              היקף הדוח
+            </span>
+            <div className="flex bg-muted/50 rounded-xl p-1 gap-1">
               <button
                 onClick={() => setIsFullMode(false)}
                 className={cn(
-                  "p-5 rounded-2xl border-2 transition-all text-right group",
+                  "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-black transition-all",
                   !isFullMode
-                    ? "bg-primary border-primary text-primary-foreground  "
-                    : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted",
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <div className="flex items-center gap-3 mb-2">
-                  <div
-                    className={cn(
-                      "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
-                      !isFullMode
-                        ? "bg-white/20 text-white"
-                        : "bg-background text-muted-foreground ",
-                    )}
-                  >
-                    <FilterX className="w-4 h-4" />
-                  </div>
-                  {!isFullMode && (
-                    <Check className="w-4 h-4 mr-auto opacity-50" />
-                  )}
-                </div>
-                <span className="text-sm font-black block leading-tight">
-                  דוח מסונן
-                </span>
-                <span
-                  className={cn(
-                    "text-[10px] font-bold block mt-1",
-                    !isFullMode
-                      ? "text-primary-foreground/70"
-                      : "text-muted-foreground/60",
-                  )}
-                >
-                  ל{unitTypeLabel}: {unitName}
-                </span>
+                <FilterX className="w-3.5 h-3.5" />
+                <span>מסונן</span>
+                {!isFullMode && <Check className="w-3 h-3 text-primary" />}
               </button>
-
               <button
                 onClick={() => setIsFullMode(true)}
                 className={cn(
-                  "p-5 rounded-2xl border-2 transition-all text-right group",
+                  "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-black transition-all",
                   isFullMode
-                    ? "bg-amber-600 border-amber-600 text-white  -600/20"
-                    : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted",
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <div className="flex items-center gap-3 mb-2">
-                  <div
-                    className={cn(
-                      "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
-                      isFullMode
-                        ? "bg-white/20 text-white"
-                        : "bg-background text-muted-foreground ",
-                    )}
-                  >
-                    <LayoutDashboard className="w-4 h-4" />
-                  </div>
-                  {isFullMode && (
-                    <Check className="w-4 h-4 mr-auto opacity-50" />
-                  )}
-                </div>
-                <span className="text-sm font-black block leading-tight">
-                  דוח כללי
-                </span>
-                <span
-                  className={cn(
-                    "text-[10px] font-bold block mt-1",
-                    isFullMode ? "text-white/70" : "text-muted-foreground/60",
-                  )}
-                >
-                  כלל שוטרי ה{unitTypeLabel}
-                </span>
+                <LayoutDashboard className="w-3.5 h-3.5" />
+                <span>כללי</span>
+                {isFullMode && <Check className="w-3 h-3 text-primary" />}
               </button>
             </div>
+            <p className="text-[10px] text-muted-foreground/60 font-bold pr-0.5 leading-tight">
+              {isFullMode ? `כלל שוטרי ה${unitTypeLabel}` : `${unitTypeLabel}: ${unitName}`}
+            </p>
           </div>
 
           {/* Message Preview */}
-          <div className="space-y-4">
-            <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest leading-none pr-1">
-              תצוגה מקדימה להודעה הנשלחת:
-            </h3>
-            <div className="relative group overflow-hidden">
-              <div className="absolute top-0 right-0 w-2 h-2 rounded-tr-xl bg-muted z-10" />
-              <div className="bg-muted/30 p-6 rounded-2xl border border-border/50 text-[13px] font-bold text-foreground whitespace-pre-wrap leading-relaxed  min-h-[160px] max-h-[280px] overflow-y-auto custom-scrollbar">
-                {loadingFull ? (
-                  <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
-                    <RefreshCw className="w-6 h-6 animate-spin text-primary/40" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">
-                      טוען נתונים מלאים...
-                    </span>
-                  </div>
-                ) : (
-                  generateWhatsAppMessage()
-                )}
-              </div>
+          <div className="space-y-2.5">
+            <span className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest pr-0.5">
+              תצוגה מקדימה
+            </span>
+            <div className="bg-muted/30 p-4 rounded-xl border border-border/40 text-[12px] font-medium text-foreground whitespace-pre-wrap leading-relaxed max-h-[220px] overflow-y-auto custom-scrollbar">
+              {loadingFull ? (
+                <div className="flex items-center justify-center py-8 gap-2.5 text-muted-foreground">
+                  <RefreshCw className="w-4 h-4 animate-spin text-primary/40" />
+                  <span className="text-[10px] font-bold">טוען...</span>
+                </div>
+              ) : (
+                generateWhatsAppMessage()
+              )}
             </div>
           </div>
 
-          {/* Info Card */}
-          <div className="flex items-start gap-4 bg-blue-50/50 p-5 rounded-2xl border border-blue-100 ">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0">
-              <Info className="w-5 h-5" />
-            </div>
-            <p className="text-[11px] text-blue-800 leading-normal font-black tracking-tight opacity-70">
-              הדוח כולל פילוח סטטיסטי מספרי בלבד. שמות שוטרים, מספרי טלפון
-              ופרטים אישיים רגישים אינם נשלחים בווטסאפ מטעמי אבטחת מידע ושמירה
-              על פרטיות.
+          {/* Compact info notice */}
+          <div className="flex items-center gap-3 px-3 py-2.5 bg-blue-50/60 dark:bg-blue-950/20 rounded-xl">
+            <Info className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+            <p className="text-[10px] text-blue-700 dark:text-blue-300 leading-snug font-medium">
+              הדוח כולל פילוח מספרי בלבד — ללא פרטים אישיים.
             </p>
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
-          <Button
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            className="w-full sm:w-auto px-8 h-12 font-black text-muted-foreground hover:text-foreground hover:bg-transparent rounded-2xl transition-all order-2 sm:order-1 text-xs uppercase tracking-widest gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            ביטול וחזרה
-          </Button>
-
+        {/* ── Pinned footer — safe area ── */}
+        <div className="px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-8 sm:pb-6 border-t border-border/30 shrink-0 flex flex-col gap-2">
           <WhatsAppButton
             onClick={handleSendWhatsApp}
             skipDirectLink={true}
-            label="שלח דוח כעת"
-            className="w-full sm:w-auto h-14 px-10 rounded-2xl  -500/20 order-1 sm:order-2 font-black text-base"
+            label="שלח דוח בווטסאפ"
+            className="w-full h-12 rounded-xl font-black text-sm shadow-none"
           />
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="text-[11px] font-bold text-muted-foreground/50 hover:text-muted-foreground transition-colors py-1 text-center"
+          >
+            ביטול
+          </button>
         </div>
       </DialogContent>
     </Dialog>

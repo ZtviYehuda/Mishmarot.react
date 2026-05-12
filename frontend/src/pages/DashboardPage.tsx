@@ -684,16 +684,16 @@ export default function DashboardPage() {
         />
 
         {/* Mobile Quick Actions Bar - Compact Grid (No Scroll) */}
-        <div className="grid grid-cols-4 gap-1.5 md:hidden mb-6">
+        <div className="grid grid-cols-4 gap-1.5 md:hidden mb-4">
           <Button
             variant="ghost"
             onClick={() => setFilterOpen(true)}
-            className="flex-col gap-1 h-16 rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0"
+            className="flex-col gap-1 h-[52px] rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0"
           >
-            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Filter className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Filter className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[10px] font-black">סינון</span>
+            <span className="text-[10px] font-black leading-none">סינון</span>
           </Button>
 
           <ReportHub 
@@ -708,7 +708,7 @@ export default function DashboardPage() {
               status_id: selectedStatusId?.toString()
             }}
             initialDate={selectedDate}
-            className="flex-col gap-1 h-16 rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0"
+            className="flex-col gap-1 h-[52px] rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0"
           />
 
           <Button
@@ -716,14 +716,14 @@ export default function DashboardPage() {
             variant="ghost"
             onClick={() => setGlobalEventOpen(true)}
             className={cn(
-              "flex-col gap-1 h-16 rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0",
+              "flex-col gap-1 h-[52px] rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0",
               activeTutorial === "event" && "tutorial-highlight"
             )}
           >
-            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Calendar className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[10px] font-black">אירוע</span>
+            <span className="text-[10px] font-black leading-none">אירוע</span>
           </Button>
 
           <Button
@@ -731,14 +731,14 @@ export default function DashboardPage() {
             variant="ghost"
             onClick={() => setWhatsappBroadcastOpen(true)}
             className={cn(
-              "flex-col gap-1 h-16 rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0",
+              "flex-col gap-1 h-[52px] rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0",
               activeTutorial === "broadcast" && "tutorial-highlight"
             )}
           >
-            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-              <MessageSquare className="w-4 h-4" />
+            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[10px] font-black">תפוצה</span>
+            <span className="text-[10px] font-black leading-none">תפוצה</span>
           </Button>
         </div>
 

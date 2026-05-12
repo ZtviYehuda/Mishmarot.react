@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDragHandle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import type { Employee } from "@/types/employee.types";
@@ -157,9 +158,10 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[94vw] max-w-[420px] p-0 overflow-hidden border-0 bg-card rounded-3xl shadow-2xl shadow-black/15"
+        className="sm:max-w-[420px]"
         dir="rtl"
       >
+        <DialogDragHandle />
         {/* ─── Header ─── */}
         <DialogHeader className="px-6 pt-8 pb-5 text-center bg-card">
           <div className="flex flex-col items-center gap-3">

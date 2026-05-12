@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
+  DialogDragHandle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -446,9 +447,10 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
         onOpenChange={(v) => (!v ? handleCloseAttempt() : onOpenChange(v))}
       >
         <DialogContent
-          className="w-[100vw] h-[100dvh] sm:h-[85vh] sm:w-[95vw] sm:max-w-7xl p-0 border-none bg-background  flex flex-col sm:rounded-3xl overflow-hidden"
+          className="sm:h-[85vh] sm:w-[95vw] sm:max-w-7xl sm:rounded-3xl"
           dir="rtl"
         >
+          <DialogDragHandle />
           {/* Sticky Header */}
           <div className="flex-none p-4 sm:p-6 border-b border-border/40 bg-background/80 backdrop-blur-xl z-20">
             <div className="flex items-center justify-between gap-4 mb-4">

@@ -44,6 +44,7 @@ export const StatCards = ({ stats, totalEmployees }: StatCardsProps) => {
       color: "amber",
       iconBg: "bg-amber-50 dark:bg-amber-900/20",
       iconColor: "text-amber-500",
+      hideOnMobile: true,
     },
     {
       label: "זמינות מבצעית",
@@ -61,19 +62,21 @@ export const StatCards = ({ stats, totalEmployees }: StatCardsProps) => {
       color: "indigo",
       iconBg: "bg-indigo-50 dark:bg-indigo-900/20",
       iconColor: "text-indigo-500",
+      hideOnMobile: true,
     },
   ];
 
   return (
     <div 
       id="stats-grid" 
-      className="grid grid-cols-4 gap-1.5 sm:gap-4 pb-2 lg:pb-0"
+      className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-4 pb-2 lg:pb-0"
     >
       {cards.map((card, idx) => (
         <Card
           key={idx}
           className={cn(
             "group relative overflow-hidden border-0 transition-all rounded-xl sm:rounded-3xl shadow-sm hover:shadow-md",
+            card.hideOnMobile ? "hidden md:block" : "",
             // Add a very subtle background tint based on color
             card.color === "blue" && "bg-blue-50/40 dark:bg-blue-900/10",
             card.color === "amber" && "bg-amber-50/40 dark:bg-amber-900/10",

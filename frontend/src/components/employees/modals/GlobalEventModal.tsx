@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDragHandle,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
@@ -213,246 +214,220 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-lg p-0 overflow-hidden bg-background border-border/40 rounded-[2rem] flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b border-border/40 bg-muted/20 relative shrink-0">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <Calendar className="w-6 h-6" />
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-background border-border/40 flex flex-col">
+        <DialogDragHandle />
+
+        {/* ── Slim inline header ── */}
+        <div className="px-5 pt-3 pb-3 sm:px-6 sm:pt-5 sm:pb-4 border-b border-border/30 text-right shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <Calendar className="w-[18px] h-[18px]" />
             </div>
-            <div className="min-w-0 text-right">
-              <DialogTitle className="text-xl font-black tracking-tight truncate">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-[15px] sm:text-lg font-black tracking-tight leading-none mb-0.5">
                 הוספת אירוע יחידה
               </DialogTitle>
-              <DialogDescription className="text-xs font-bold text-muted-foreground/60 truncate">
-                קביעת יום מחלקה, מדור או חוליה לכלל שרשרת הפיקוד
+              <DialogDescription className="text-[11px] font-medium text-muted-foreground/70 leading-none">
+                קביעת יום מחלקה, מדור או חוליה
               </DialogDescription>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col p-6 space-y-6 overflow-y-auto custom-scrollbar">
+        {/* ── Scrollable body ── */}
+        <div className="flex-1 flex flex-col px-5 py-4 sm:px-6 sm:py-5 space-y-4 overflow-y-auto custom-scrollbar">
           {hasCommandPower ? (
             <>
-              {/* Scope + Unit Selection — combined into 3 cards */}
-              {/* Scope Selection (Toggle Cards) */}
-              {/* Level Selection Cards / Dropdowns */}
+              {/* Scope selection — compact inline dropdowns */}
               {(isAdmin ||
                 user?.commands_department_id ||
                 user?.commands_section_id) && (
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 pr-1">
-                      <Users className="w-4 h-4 text-primary" />
-                      1. בחר רמה פיקודית ויחידה
-                    </Label>
+                <div className="space-y-3">
+                  <span className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest pr-0.5">
+                    בחר יחידה
+                  </span>
+                  <div className="space-y-2">
+                    {/* Department */}
+                    <Select
+                      value={scope === "department" && targetId ? targetId : undefined}
+                      onValueChange={(val) => {
+                        setScope("department");
+                        setTargetId(val);
+                        setSelectedDeptId(val);
+                        setSelectedSectionId("");
+                      }}
+                      disabled={isScopeDisabled("department") || departments.length === 0}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          "h-11 rounded-xl border text-right font-bold text-[13px] transition-all",
+                          scope === "department" && targetId
+                            ? "border-primary/40 bg-primary/5 text-primary"
+                            : "border-border/50 bg-background",
+                          (isScopeDisabled("department") || departments.length === 0) && "opacity-40",
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Building2 className="w-4 h-4 shrink-0 text-muted-foreground" />
+                          <SelectValue placeholder="מחלקה" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
+                        {departments.map((d: any) => (
+                          <SelectItem key={d.id} value={d.id.toString()} className="font-bold cursor-pointer">
+                            {d.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                    <div className="grid grid-cols-3 gap-3">
-                      {/* Department Select */}
-                        <Select
-                          value={scope === "department" && targetId ? targetId : undefined}
-                          onValueChange={(val) => {
-                            setScope("department");
-                            setTargetId(val);
-                            setSelectedDeptId(val);
-                            setSelectedSectionId("");
-                          }}
-                          disabled={isScopeDisabled("department") || departments.length === 0}
-                        >
-                        <SelectTrigger
-                          className={cn(
-                            cardBase,
-                            "h-full justify-start py-4 focus:ring-0 outline-none [&>svg]:hidden whitespace-normal text-center [&_[data-slot=select-value]]:line-clamp-3 [&_[data-slot=select-value]]:whitespace-normal [&_[data-slot=select-value]]:text-center",
-                            scope === "department" && targetId ? cardActive : cardInactive,
-                            (isScopeDisabled("department") || departments.length === 0) && cardDisabled,
-                          )}
-                        >
-                            <div
-                              className={cn(
-                                "p-2 rounded-xl mb-1 transition-colors shrink-0",
-                                scope === "department" && targetId
-                                  ? "bg-primary/20"
-                                  : "bg-muted",
-                              )}
-                            >
-                              <Building2 className="w-5 h-5" />
-                            </div>
-                            <span className="text-xs sm:text-[13px] font-black w-full text-center px-0.5 break-words leading-tight">
-                              <SelectValue placeholder="מחלקה" />
-                            </span>
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
-                          {departments.map((d: any) => (
-                            <SelectItem key={d.id} value={d.id.toString()} className="font-bold cursor-pointer">
-                              {d.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    {/* Section */}
+                    <Select
+                      value={scope === "section" && targetId ? targetId : undefined}
+                      onValueChange={(val) => {
+                        setScope("section");
+                        setTargetId(val);
+                        setSelectedSectionId(val);
+                        const s = allSections.find((x: any) => x.id.toString() === val);
+                        if (s) setSelectedDeptId(s.dept_id.toString());
+                      }}
+                      disabled={isScopeDisabled("section") || availableSections.length === 0}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          "h-11 rounded-xl border text-right font-bold text-[13px] transition-all",
+                          scope === "section" && targetId
+                            ? "border-primary/40 bg-primary/5 text-primary"
+                            : "border-border/50 bg-background",
+                          (isScopeDisabled("section") || availableSections.length === 0) && "opacity-40",
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <LayoutPanelLeft className="w-4 h-4 shrink-0 text-muted-foreground" />
+                          <SelectValue placeholder="מדור" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
+                        {availableSections.map((s: any) => (
+                          <SelectItem key={s.id} value={s.id.toString()} className="font-bold cursor-pointer">
+                            {s.name} <span className="text-[9px] text-muted-foreground mr-1">({s.dept_name})</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                      {/* Section Select */}
-                      <Select
-                        value={scope === "section" && targetId ? targetId : undefined}
-                        onValueChange={(val) => {
-                          setScope("section");
-                          setTargetId(val);
-                          setSelectedSectionId(val);
-                          const s = allSections.find((x: any) => x.id.toString() === val);
+                    {/* Team */}
+                    <Select
+                      value={scope === "team" && targetId ? targetId : undefined}
+                      onValueChange={(val) => {
+                        setScope("team");
+                        setTargetId(val);
+                        const t = allTeams.find((x: any) => x.id.toString() === val);
+                        if (t) {
+                          setSelectedSectionId(t.section_id.toString());
+                          const s = allSections.find((x: any) => x.id === t.section_id);
                           if (s) setSelectedDeptId(s.dept_id.toString());
-                        }}
-                        disabled={isScopeDisabled("section") || availableSections.length === 0}
+                        }
+                      }}
+                      disabled={isScopeDisabled("team") || availableTeams.length === 0}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          "h-11 rounded-xl border text-right font-bold text-[13px] transition-all",
+                          scope === "team" && targetId
+                            ? "border-primary/40 bg-primary/5 text-primary"
+                            : "border-border/50 bg-background",
+                          (isScopeDisabled("team") || availableTeams.length === 0) && "opacity-40",
+                        )}
                       >
-                        <SelectTrigger
-                          className={cn(
-                            cardBase,
-                            "h-full justify-start py-4 focus:ring-0 outline-none [&>svg]:hidden whitespace-normal text-center [&_[data-slot=select-value]]:line-clamp-3 [&_[data-slot=select-value]]:whitespace-normal [&_[data-slot=select-value]]:text-center",
-                            scope === "section" && targetId ? cardActive : cardInactive,
-                            (isScopeDisabled("section") || availableSections.length === 0) && cardDisabled,
-                          )}
-                        >
-                            <div
-                              className={cn(
-                                "p-2 rounded-xl mb-1 transition-colors shrink-0",
-                                scope === "section" && targetId
-                                  ? "bg-primary/20"
-                                  : "bg-muted",
-                              )}
-                            >
-                              <LayoutPanelLeft className="w-5 h-5" />
-                            </div>
-                            <span className="text-xs sm:text-[13px] font-black w-full text-center px-0.5 break-words leading-tight">
-                              <SelectValue placeholder="מדור" />
-                            </span>
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
-                          {availableSections.map((s: any) => (
-                            <SelectItem key={s.id} value={s.id.toString()} className="font-bold cursor-pointer">
-                              {s.name} <span className="text-[9px] text-muted-foreground mr-1">({s.dept_name})</span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      {/* Team Select */}
-                      <Select
-                        value={scope === "team" && targetId ? targetId : undefined}
-                        onValueChange={(val) => {
-                          setScope("team");
-                          setTargetId(val);
-                          const t = allTeams.find((x: any) => x.id.toString() === val);
-                          if (t) {
-                            setSelectedSectionId(t.section_id.toString());
-                            const s = allSections.find((x: any) => x.id === t.section_id);
-                            if (s) setSelectedDeptId(s.dept_id.toString());
-                          }
-                        }}
-                        disabled={isScopeDisabled("team") || availableTeams.length === 0}
-                      >
-                        <SelectTrigger
-                          className={cn(
-                            cardBase,
-                            "h-full justify-start py-4 focus:ring-0 outline-none [&>svg]:hidden whitespace-normal text-center [&_[data-slot=select-value]]:line-clamp-3 [&_[data-slot=select-value]]:whitespace-normal [&_[data-slot=select-value]]:text-center",
-                            scope === "team" && targetId ? cardActive : cardInactive,
-                            (isScopeDisabled("team") || availableTeams.length === 0) && cardDisabled,
-                          )}
-                        >
-                            <div
-                              className={cn(
-                                "p-2 rounded-xl mb-1 transition-colors shrink-0",
-                                scope === "team" && targetId
-                                  ? "bg-primary/20"
-                                  : "bg-muted",
-                              )}
-                            >
-                              <Users className="w-5 h-5" />
-                            </div>
-                            <span className="text-xs sm:text-[13px] font-black w-full text-center px-0.5 break-words leading-tight">
-                              <SelectValue placeholder="חוליה" />
-                            </span>
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
-                          {availableTeams.map((t: any) => (
-                            <SelectItem key={t.id} value={t.id.toString()} className="font-bold cursor-pointer">
-                              {t.name} <span className="text-[9px] text-muted-foreground mr-1">({t.section_name})</span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                        <div className="flex items-center gap-2.5">
+                          <Users className="w-4 h-4 shrink-0 text-muted-foreground" />
+                          <SelectValue placeholder="חוליה" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
+                        {availableTeams.map((t: any) => (
+                          <SelectItem key={t.id} value={t.id.toString()} className="font-bold cursor-pointer">
+                            {t.name} <span className="text-[9px] text-muted-foreground mr-1">({t.section_name})</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               )}
             </>
           ) : (
-            <div className="flex items-center justify-center gap-2 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive">
-              <AlertCircle className="w-5 h-5" />
-              <p className="text-sm font-bold">
+            <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive">
+              <AlertCircle className="w-4 h-4" />
+              <p className="text-xs font-bold">
                 אין לך הרשאות פיקודיות לביצוע פעולה זו
               </p>
             </div>
           )}
 
-          {/* Date Selection */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-6">
-            <div className="space-y-2.5">
-              <Label className="text-xs sm:text-sm font-bold pr-1">תאריך התחלה</Label>
+          {/* Date Selection — compact */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest">תאריך התחלה</Label>
               <Input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-muted/30 border-border/50 h-12 rounded-xl focus:ring-primary/20 font-medium px-2 sm:px-4 text-xs sm:text-base w-full block text-center"
+                className="bg-background border-border/50 h-10 rounded-xl font-bold px-2 text-xs w-full block text-center"
               />
             </div>
-            <div className="space-y-2.5">
-              <Label className="text-xs sm:text-sm font-bold pr-1">תאריך סיום</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest">תאריך סיום</Label>
               <Input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-muted/30 border-border/50 h-12 rounded-xl focus:ring-primary/20 font-medium px-2 sm:px-4 text-xs sm:text-base w-full block text-center"
+                className="bg-background border-border/50 h-10 rounded-xl font-bold px-2 text-xs w-full block text-center"
               />
             </div>
           </div>
 
           {/* Note */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-bold flex items-center gap-2 pr-1">
-              תוכן האירוע / שם האירוע
-              <span className="text-[11px] text-muted-foreground font-normal">
-                (יופיע ביומן ובדיווחים)
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest flex items-center gap-1.5">
+              תוכן האירוע
+              <span className="text-[9px] text-muted-foreground/40 font-normal normal-case tracking-normal">
+                (יופיע ביומן)
               </span>
             </Label>
             <Textarea
-              placeholder="לדוגמה: יום מחלקה בירושלים, גיבוש צוותי, השתלמות מקצועית..."
+              placeholder="לדוגמה: יום מחלקה בירושלים..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="resize-none min-h-[110px] bg-muted/30 border-border/50 rounded-xl focus:ring-primary/20 p-4 text-sm leading-relaxed"
+              className="resize-none min-h-[80px] bg-background border-border/50 rounded-xl p-3 text-sm leading-relaxed"
             />
           </div>
         </div>
 
-        <div className="p-5 border-t border-border/40 bg-muted/10 shrink-0 relative z-20 flex gap-3">
+        {/* ── Pinned footer — safe area ── */}
+        <div className="px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-5 border-t border-border/30 shrink-0">
           <Button
-            variant="ghost"
-            className="flex-1 rounded-xl h-12 font-bold text-muted-foreground hover:bg-muted transition-all"
-            onClick={onClose}
-          >
-            ביטול
-          </Button>
-          <Button
-            className="flex-[2] rounded-xl h-12 font-black text-base hover: hover:-translate-y-0.5 transition-all"
+            className="w-full rounded-xl h-12 font-black text-sm transition-all active:scale-[0.98]"
             onClick={handleSubmit}
             disabled={isUpdatingScope || !hasCommandPower || !targetId}
           >
             {isUpdatingScope ? (
-              <span className="flex items-center gap-3">
-                <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                מעדכן את כולם...
+              <span className="flex items-center gap-2.5">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                מעדכן...
               </span>
             ) : (
-              <span className="flex items-center gap-2">עדכן אירוע לכולם</span>
+              "עדכן אירוע לכולם"
             )}
           </Button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full text-[11px] font-bold text-muted-foreground/50 hover:text-muted-foreground transition-colors py-2 text-center"
+          >
+            ביטול
+          </button>
         </div>
       </DialogContent>
     </Dialog>

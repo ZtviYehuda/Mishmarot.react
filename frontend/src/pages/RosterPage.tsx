@@ -28,6 +28,7 @@ import {
   Filter,
   X,
   Sparkles,
+  RotateCcw,
 } from "lucide-react";
 
 import { ShabbatIcon } from "@/components/common/ShabbatIcon";
@@ -410,6 +411,51 @@ export default function RosterPage() {
     [teams, selectedTeam],
   );
 
+  const hasActiveFilters = useMemo(() => {
+    if (statusFilter !== "all" || searchTerm !== "") return true;
+    if (user?.is_admin) {
+      return selectedDept !== "all" || selectedSection !== "all" || selectedTeam !== "all";
+    }
+    if (user?.commands_department_id) {
+      return selectedDept !== user.commands_department_id.toString() || selectedSection !== "all" || selectedTeam !== "all";
+    }
+    if (user?.commands_section_id) {
+      return selectedSection !== user.commands_section_id.toString() || selectedTeam !== "all";
+    }
+    if (user?.commands_team_id) {
+      return selectedTeam !== user.commands_team_id.toString();
+    }
+    return false;
+  }, [selectedDept, selectedSection, selectedTeam, statusFilter, searchTerm, user]);
+
+  const handleResetFilters = () => {
+    if (!user || user.is_admin) {
+      setSelectedDept("all");
+      setSelectedSection("all");
+      setSelectedTeam("all");
+    } else {
+      if (user.commands_department_id) {
+        setSelectedDept(user.commands_department_id.toString());
+        setSelectedSection("all");
+        setSelectedTeam("all");
+      } else if (user.commands_section_id) {
+        if (user.assigned_department_id) setSelectedDept(user.assigned_department_id.toString());
+        setSelectedSection(user.commands_section_id.toString());
+        setSelectedTeam("all");
+      } else if (user.commands_team_id) {
+        if (user.assigned_department_id) setSelectedDept(user.assigned_department_id.toString());
+        if (user.assigned_section_id) setSelectedSection(user.assigned_section_id.toString());
+        setSelectedTeam(user.commands_team_id.toString());
+      } else {
+        setSelectedDept("all");
+        setSelectedSection("all");
+        setSelectedTeam("all");
+      }
+    }
+    setStatusFilter("all");
+    setSearchTerm("");
+  };
+
   const filterButtonLabel = useMemo(() => {
     const activeUnitName = activeTeam?.name || activeSection?.name || activeDepartment?.name;
     const activeStatusName =
@@ -575,35 +621,54 @@ export default function RosterPage() {
                     </div>
                     
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("h-10 w-10 p-0 rounded-xl border-border/40 hover:bg-muted/30 shrink-0 shadow-sm transition-all bg-background", filterButtonLabel ? "text-primary border-primary/30" : "")}>
-                          <Filter className="w-4 h-4" />
-                          {(selectedDept !== "all" || statusFilter !== "all" || selectedSection !== "all" || selectedTeam !== "all") && (
-                            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary shadow-sm border border-background" />
-                          )}
-                        </Button>
-                      </PopoverTrigger>
+                      <div className="relative group">
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className={cn("h-10 w-10 p-0 rounded-xl border-border/40 hover:bg-muted/30 shrink-0 shadow-sm transition-all bg-background", hasActiveFilters ? "text-primary border-primary/30 bg-primary/5" : "")}>
+                            <Filter className="w-4 h-4" />
+                            {hasActiveFilters && (
+                              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary shadow-sm border border-background" />
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        {hasActiveFilters && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleResetFilters();
+                            }}
+                            className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 shadow-sm"
+                            title="נקה הכל"
+                          >
+                            <RotateCcw className="w-2.5 h-2.5" />
+                          </button>
+                        )}
+                      </div>
                       <PopoverContent align="end" className="w-80 rounded-3xl border-border/40 p-5 shadow-2xl bg-card/95 backdrop-blur-xl">
                         <div className="space-y-5">
                           <div className="space-y-3">
-                            <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest px-1">סינון יחידה</span>
-                            <Select value={selectedDept} onValueChange={(val) => { setSelectedDept(val); setSelectedSection("all"); setSelectedTeam("all"); }}>
+                            <div className="flex items-center justify-between px-1">
+                              <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">סינון יחידה</span>
+                              {hasActiveFilters && (
+                                <button onClick={handleResetFilters} className="text-[10px] font-bold text-primary hover:text-primary/80">נקה הכל</button>
+                              )}
+                            </div>
+                            <Select value={selectedDept} onValueChange={(val) => { setSelectedDept(val); setSelectedSection("all"); setSelectedTeam("all"); }} disabled={!user?.is_admin}>
                               <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
                                 <SelectValue placeholder="כל היחידה" />
                               </SelectTrigger>
                               <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
-                                <SelectItem value="all">כל היחידה</SelectItem>
+                                {user?.is_admin && <SelectItem value="all">כל היחידה</SelectItem>}
                                 {departments.map((d: any) => (<SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>))}
                               </SelectContent>
                             </Select>
                             {selectedDept !== "all" && sections.length > 0 && (
                               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                                <Select value={selectedSection} onValueChange={(val) => { setSelectedSection(val); setSelectedTeam("all"); }}>
+                                <Select value={selectedSection} onValueChange={(val) => { setSelectedSection(val); setSelectedTeam("all"); }} disabled={!(user?.is_admin || user?.commands_department_id)}>
                                   <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
                                     <SelectValue placeholder="כל המדורים" />
                                   </SelectTrigger>
                                   <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
-                                    <SelectItem value="all">כל המדורים</SelectItem>
+                                    {(user?.is_admin || user?.commands_department_id) && <SelectItem value="all">כל המדורים</SelectItem>}
                                     {sections.map((s: any) => (<SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>))}
                                   </SelectContent>
                                 </Select>
@@ -611,12 +676,12 @@ export default function RosterPage() {
                             )}
                             {selectedSection !== "all" && teams.length > 0 && (
                               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                                <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                                <Select value={selectedTeam} onValueChange={setSelectedTeam} disabled={!(user?.is_admin || user?.commands_department_id || user?.commands_section_id)}>
                                   <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
                                     <SelectValue placeholder="כל החוליות" />
                                   </SelectTrigger>
                                   <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
-                                    <SelectItem value="all">כל החוליות</SelectItem>
+                                    {(user?.is_admin || user?.commands_department_id || user?.commands_section_id) && <SelectItem value="all">כל החוליות</SelectItem>}
                                     {teams.map((t: any) => (<SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>))}
                                   </SelectContent>
                                 </Select>
@@ -652,51 +717,100 @@ export default function RosterPage() {
                   {/* Desktop Only Filter/Search */}
                   <div className="hidden lg:flex items-center gap-2">
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("h-9 rounded-full px-4 border-border/40 hover:bg-muted/30 font-bold text-xs gap-2 shrink-0 shadow-sm transition-all bg-background", filterButtonLabel ? "text-primary border-primary/30" : "")}>
-                          <Filter className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">{filterButtonLabel || "סינון נתונים"}</span>
-                          <span className="sm:hidden">{filterButtonLabel || "סינון"}</span>
-                          {(selectedDept !== "all" || statusFilter !== "all" || selectedSection !== "all" || selectedTeam !== "all") && (
-                            <span className="w-2 h-2 rounded-full bg-primary relative -right-1 shadow-sm" />
-                          )}
-                        </Button>
-                      </PopoverTrigger>
+                      <div className="relative group">
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className={cn("h-9 rounded-full px-4 border-border/40 hover:bg-muted/30 font-bold text-xs gap-2 shrink-0 shadow-sm transition-all bg-background", hasActiveFilters ? "text-primary border-primary/30 bg-primary/5" : "")}>
+                            <Filter className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">{filterButtonLabel || "סינון נתונים"}</span>
+                            <span className="sm:hidden">{filterButtonLabel || "סינון"}</span>
+                            {hasActiveFilters && (
+                              <span className="w-2 h-2 rounded-full bg-primary relative -right-1 shadow-sm" />
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        {hasActiveFilters && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleResetFilters();
+                            }}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 shadow-sm"
+                            title="נקה הכל"
+                          >
+                            <RotateCcw className="w-2.5 h-2.5" />
+                          </button>
+                        )}
+                      </div>
                       <PopoverContent align="start" className="w-80 rounded-3xl border-border/40 p-5 shadow-2xl bg-card/95 backdrop-blur-xl">
-                        {/* Same Popover Content as Mobile (Extracted for brevity in real implementation) */}
+                        {/* Same Popover Content as Mobile */}
                         <div className="space-y-5">
                           <div className="space-y-3">
-                            <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest px-1">סינון יחידה</span>
-                            <Select value={selectedDept} onValueChange={(val) => { setSelectedDept(val); setSelectedSection("all"); setSelectedTeam("all"); }}>
+                            <div className="flex items-center justify-between px-1">
+                              <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">סינון יחידה</span>
+                              {hasActiveFilters && (
+                                <button onClick={handleResetFilters} className="text-[10px] font-bold text-primary hover:text-primary/80">נקה הכל</button>
+                              )}
+                            </div>
+                            <Select value={selectedDept} onValueChange={(val) => { setSelectedDept(val); setSelectedSection("all"); setSelectedTeam("all"); }} disabled={!user?.is_admin}>
                               <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
                                 <SelectValue placeholder="כל היחידה" />
                               </SelectTrigger>
                               <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
-                                <SelectItem value="all">כל היחידה</SelectItem>
+                                {user?.is_admin && <SelectItem value="all">כל היחידה</SelectItem>}
                                 {departments.map((d: any) => (<SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>))}
+                              </SelectContent>
+                            </Select>
+                            {selectedDept !== "all" && sections.length > 0 && (
+                              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                                <Select value={selectedSection} onValueChange={(val) => { setSelectedSection(val); setSelectedTeam("all"); }} disabled={!(user?.is_admin || user?.commands_department_id)}>
+                                  <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
+                                    <SelectValue placeholder="כל המדורים" />
+                                  </SelectTrigger>
+                                  <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
+                                    {(user?.is_admin || user?.commands_department_id) && <SelectItem value="all">כל המדורים</SelectItem>}
+                                    {sections.map((s: any) => (<SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>))}
+                                  </SelectContent>
+                                </Select>
+                              </motion.div>
+                            )}
+                            {selectedSection !== "all" && teams.length > 0 && (
+                              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                                <Select value={selectedTeam} onValueChange={setSelectedTeam} disabled={!(user?.is_admin || user?.commands_department_id || user?.commands_section_id)}>
+                                  <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
+                                    <SelectValue placeholder="כל החוליות" />
+                                  </SelectTrigger>
+                                  <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
+                                    {(user?.is_admin || user?.commands_department_id || user?.commands_section_id) && <SelectItem value="all">כל החוליות</SelectItem>}
+                                    {teams.map((t: any) => (<SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>))}
+                                  </SelectContent>
+                                </Select>
+                              </motion.div>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-3 pt-4 border-t border-border/20">
+                            <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest px-1">סטטוס משמרת</span>
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                              <SelectTrigger className="w-full rounded-2xl bg-background border border-border/40 hover:border-border/80 font-bold text-xs h-10 transition-colors">
+                                <SelectValue placeholder="סטטוס: הכל" />
+                              </SelectTrigger>
+                              <SelectContent dir="rtl" className="rounded-2xl font-bold border-border/40">
+                                <SelectItem value="all">סטטוס: הכל</SelectItem>
+                                <SelectItem value="none" className="text-rose-500">לא דווח</SelectItem>
+                                {rosterParentStatuses.map((st: any) => (
+                                  <SelectItem key={st.id} value={st.id.toString()}>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2.5 h-2.5 rounded-full shadow-sm border border-black/10" style={{ backgroundColor: st.color }} />
+                                      {st.name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>
                         </div>
                       </PopoverContent>
                     </Popover>
-
-                    {(selectedDept !== "all" || statusFilter !== "all" || selectedSection !== "all" || selectedTeam !== "all") && (
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setSelectedDept("all");
-                          setSelectedSection("all");
-                          setSelectedTeam("all");
-                          setStatusFilter("all");
-                        }}
-                        className="h-9 rounded-full px-3 gap-1 hover:bg-destructive/10 text-destructive hover:text-destructive font-bold text-xs shrink-0 transition-colors"
-                        title="נקה סינונים"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">נקה סינון</span>
-                      </Button>
-                    )}
 
                     <div className="relative group/search">
                       <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 group-focus-within/search:text-primary transition-colors z-10" />

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
+  DialogDragHandle,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -262,13 +262,11 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={cn(
-          "w-[95vw] sm:w-full max-w-md p-0 border-none bg-card dark:bg-[#0f172a] rounded-2xl sm:rounded-3xl overflow-hidden",
-          delegationResult ? "sm:max-w-md" : "sm:max-w-md",
-        )}
+        className="sm:max-w-md p-0 border-none bg-card dark:bg-[#0f172a] overflow-hidden"
         dir="rtl"
-        showCloseButton={true}
+        showCloseButton={false}
       >
+        <DialogDragHandle />
         {delegationResult ? (
           // View 2: Delegation Result
           <div className="p-8 space-y-8 text-center relative">
@@ -376,32 +374,32 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
         ) : (
           // View 1: Status Update Form
           <>
-            {/* ── Compact Header ── */}
-            <DialogHeader className="px-5 pt-5 pb-4 border-b border-border/40 text-right">
+            {/* ── Slim inline header ── */}
+            <div className="px-5 pt-2 pb-3 border-b border-border/30 text-right">
               <div className="flex items-center gap-3">
-                <div className="relative shrink-0 w-11 h-11 rounded-xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-sm font-black text-primary">
+                <div className="relative shrink-0 w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-xs font-black text-primary">
                   {employee.first_name[0]}
                   {employee.last_name[0]}
                   {employee.status_color && (
                     <span
-                      className="absolute -bottom-1 -left-1 w-3.5 h-3.5 rounded-full border-2 border-background"
+                      className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full border-2 border-card"
                       style={{ backgroundColor: employee.status_color }}
                     />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <DialogTitle className="text-base font-black text-foreground leading-none mb-1">
+                  <DialogTitle className="text-[14px] font-black text-foreground leading-none mb-0.5">
                     {employee.first_name} {employee.last_name}
                   </DialogTitle>
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-mono text-muted-foreground">
                       {employee.username}
                     </span>
                     {employee.status_name && (
                       <>
-                        <span className="text-muted-foreground/30">•</span>
+                        <span className="text-muted-foreground/30">·</span>
                         <span
-                          className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
                           style={{
                             backgroundColor:
                               (employee.status_color || "#94a3b8") + "22",
@@ -415,7 +413,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                   </div>
                 </div>
               </div>
-            </DialogHeader>
+            </div>
 
             {/* ── Scrollable Body ── */}
             <div className="overflow-y-auto max-h-[62vh] custom-scrollbar">
@@ -755,18 +753,15 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
               </div>
             </div>
 
-            {/* ── Sticky Footer ── */}
-            <div className="px-4 py-3 border-t border-border/40 bg-background/80 dark:bg-slate-900/80 backdrop-blur-sm flex flex-col gap-2">
+            {/* ── Pinned Footer — safe area ── */}
+            <div className="px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-border/30 shrink-0">
               <Button
                 onClick={handleSubmit}
                 disabled={loading || !formData.status_type_id}
-                className="w-full h-11 rounded-xl font-black text-sm gap-2 transition-all active:scale-[0.98] disabled:opacity-30 text-white"
+                className="w-full h-12 rounded-xl font-black text-sm gap-2 transition-all active:scale-[0.98] disabled:opacity-30 text-white shadow-none"
                 style={
                   selectedStatus
-                    ? {
-                        backgroundColor: selectedStatus.color,
-                        boxShadow: `0 4px 14px ${selectedStatus.color}44`,
-                      }
+                    ? { backgroundColor: selectedStatus.color }
                     : { backgroundColor: "hsl(var(--primary))" }
                 }
               >
@@ -782,7 +777,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="text-[11px] font-black text-muted-foreground/60 hover:text-muted-foreground transition-colors uppercase tracking-widest py-1"
+                className="w-full text-[11px] font-bold text-muted-foreground/50 hover:text-muted-foreground transition-colors py-2 text-center"
               >
                 ביטול
               </button>

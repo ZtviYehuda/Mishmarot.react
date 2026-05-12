@@ -394,9 +394,8 @@ export default function TransfersPage() {
       <div className="space-y-4 sm:space-y-6 pb-6">
         {/* Stats Overview - Compact Grid (No Scroll) */}
         <div className="grid grid-cols-3 gap-1.5 sm:gap-6 mb-4 sm:mb-6">
-          <button
-            onClick={() => setActiveTab("pending")}
-            className="bg-card rounded-xl sm:rounded-[20px] p-2 sm:p-6 border border-border flex flex-col items-center sm:flex-row sm:justify-between hover:border-amber-500/50 hover:shadow-sm transition-all active:scale-[0.95] cursor-pointer"
+          <div
+            className="bg-card rounded-xl sm:rounded-[20px] p-2 sm:p-6 border border-border flex flex-col items-center sm:flex-row sm:justify-between transition-all"
           >
             <div className="flex flex-col items-center sm:items-start text-center sm:text-right w-full mb-1 sm:mb-0">
               <span className="text-[8px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-0.5 sm:mb-1">
@@ -409,14 +408,10 @@ export default function TransfersPage() {
             <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-full bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center shrink-0">
               <Clock className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-amber-500 dark:text-amber-400" />
             </div>
-          </button>
+          </div>
 
-          <button
-            onClick={() => {
-              setActiveTab("history");
-              setHistoryFilter("approved");
-            }}
-            className="bg-card rounded-xl sm:rounded-[20px] p-2 sm:p-6 border border-border flex flex-col items-center sm:flex-row sm:justify-between hover:border-emerald-500/50 hover:shadow-sm transition-all active:scale-[0.95] cursor-pointer"
+          <div
+            className="bg-card rounded-xl sm:rounded-[20px] p-2 sm:p-6 border border-border flex flex-col items-center sm:flex-row sm:justify-between transition-all"
           >
             <div className="flex flex-col items-center sm:items-start text-center sm:text-right w-full mb-1 sm:mb-0">
               <span className="text-[8px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-0.5 sm:mb-1">
@@ -429,14 +424,10 @@ export default function TransfersPage() {
             <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-full bg-emerald-500/10 dark:bg-emerald-400/10 flex items-center justify-center shrink-0">
               <CheckCircle className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-emerald-500 dark:text-emerald-400" />
             </div>
-          </button>
+          </div>
 
-          <button
-            onClick={() => {
-              setActiveTab("history");
-              setHistoryFilter("rejected");
-            }}
-            className="bg-card rounded-xl sm:rounded-[20px] p-2 sm:p-6 border border-border flex flex-col items-center sm:flex-row sm:justify-between hover:border-rose-500/50 hover:shadow-sm transition-all active:scale-[0.95] cursor-pointer"
+          <div
+            className="bg-card rounded-xl sm:rounded-[20px] p-2 sm:p-6 border border-border flex flex-col items-center sm:flex-row sm:justify-between transition-all"
           >
             <div className="flex flex-col items-center sm:items-start text-center sm:text-right w-full mb-1 sm:mb-0">
               <span className="text-[8px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-0.5 sm:mb-1">
@@ -449,54 +440,84 @@ export default function TransfersPage() {
             <div className="w-7 h-7 sm:w-12 sm:h-12 rounded-lg sm:rounded-full bg-rose-500/10 dark:bg-rose-400/10 flex items-center justify-center shrink-0">
               <XCircle className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-rose-500 dark:text-rose-400" />
             </div>
-          </button>
+          </div>
         </div>
 
         {/* Main Toolbar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-card/60 backdrop-blur-2xl p-2 sm:pl-4 rounded-[2rem] border border-primary/10 overflow-hidden">
-          <Tabs
-            value={activeTab}
-            onValueChange={(val) => {
-              setActiveTab(val);
-              if (val !== "history") setHistoryFilter(null);
-            }}
-            className="w-full md:w-auto"
-          >
-            <TabsList className="bg-muted p-1 h-10 sm:h-auto sm:p-1.5 rounded-full gap-1 border border-border/50 w-full sm:w-auto flex overflow-x-auto no-scrollbar justify-start sm:justify-center">
-              <TabsTrigger
-                value="history"
-                className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]: text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border whitespace-nowrap"
-              >
-                <History className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-                <span>ארכיון</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="pending"
-                className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]: text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border whitespace-nowrap"
-              >
-                <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-                <span>ממתינות</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="new"
-                className="h-8 sm:h-9 rounded-full px-4 sm:px-5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]: text-muted-foreground font-bold text-[10px] sm:text-xs transition-all flex items-center gap-2 border border-transparent data-[state=active]:border-border hover:text-primary whitespace-nowrap"
-              >
-                <Plus className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-                <span>בקשה חדשה</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-card/40 backdrop-blur-2xl p-2 sm:px-4 rounded-3xl border border-primary/5 overflow-hidden min-h-[64px]">
+          {/* Right Side: Primary Action (RTL: Right) */}
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <Button
+              onClick={() => setActiveTab("new")}
+              className={cn(
+                "h-11 px-6 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-[0.98] shadow-sm",
+                activeTab === "new"
+                  ? "bg-primary text-primary-foreground shadow-primary/20"
+                  : "bg-primary/10 text-primary hover:bg-primary/20"
+              )}
+            >
+              <Plus className="w-4.5 h-4.5" strokeWidth={2.5} />
+              <span>בקשה חדשה</span>
+            </Button>
+            
+            {/* Vertical Divider */}
+            <div className="hidden md:block w-px h-6 bg-border/60 mx-1" />
+          </div>
 
-          {activeTab !== "new" && (
-            <div className="relative w-full md:w-64 lg:w-72 px-2 sm:px-0">
-              <Search className="absolute right-5 sm:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="חיפוש מהיר..."
-                className="pr-10 sm:pr-10 h-10 bg-muted/30 border-input hover:bg-muted/50 font-medium text-sm rounded-full focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all text-right"
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          {/* Left Side: Navigation & Filter (RTL: Left) */}
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+            {/* Search Input */}
+            {activeTab !== "new" && (
+              <div className="relative w-full md:w-64 lg:w-72">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                <Input
+                  placeholder="חיפוש מהיר..."
+                  className="pr-10 h-11 bg-muted/40 border-none hover:bg-muted/60 font-medium text-xs rounded-xl focus:bg-background focus:ring-2 focus:ring-primary/10 transition-all text-right"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* Segmented Control / Navigation */}
+            <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-xl border border-border/30 w-full md:w-auto">
+              <div className="flex items-center gap-2 px-3 border-l border-border/40 ml-1">
+                <History className="w-4 h-4 text-muted-foreground/40" strokeWidth={1.5} />
+                <span className="text-[11px] font-bold text-muted-foreground/50 hidden lg:inline">תצוגה</span>
+              </div>
+              
+              <div className="flex gap-1 flex-1 sm:flex-none">
+                <button
+                  onClick={() => {
+                    setActiveTab("pending");
+                    setHistoryFilter(null);
+                  }}
+                  className={cn(
+                    "flex-1 sm:flex-none h-9 px-5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+                    activeTab === "pending"
+                      ? "bg-background text-primary shadow-sm border border-border/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <Clock className="w-3.5 h-3.5" strokeWidth={2} />
+                  <span>פעיל</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("history");
+                  }}
+                  className={cn(
+                    "flex-1 sm:flex-none h-9 px-5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+                    activeTab === "history"
+                      ? "bg-background text-primary shadow-sm border border-border/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <History className="w-3.5 h-3.5" strokeWidth={2} />
+                  <span>היסטוריה</span>
+                </button>
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {activeTab === "pending" && (

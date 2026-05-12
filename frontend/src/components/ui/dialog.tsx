@@ -37,10 +37,27 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/50",
+        "fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         className,
       )}
       {...props}
+    />
+  );
+}
+
+/**
+ * Drag Handle — visual indicator for bottom sheet swipe affordance.
+ * Renders a small pill at the top center of the dialog. Only visible on mobile.
+ */
+function DialogDragHandle({ className }: { className?: string }) {
+  return (
+    <div
+      data-slot="dialog-drag-handle"
+      className={cn(
+        "mx-auto mt-3 mb-1 w-9 h-[5px] rounded-full bg-foreground/20 shrink-0 sm:hidden",
+        className,
+      )}
+      aria-hidden
     />
   );
 }
@@ -59,16 +76,26 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background text-foreground fixed top-[50%] left-[50%] z-50 flex flex-col w-full max-w-[calc(100%-2rem)] max-h-[calc(100svh-2rem)] translate-x-[-50%] translate-y-[-50%] rounded-2xl border outline-none sm:max-w-lg overflow-hidden",
+          // ── Mobile: Native Bottom Sheet ──
+          "bg-background text-foreground fixed z-50 flex flex-col w-full outline-none overflow-hidden border-none",
+          // Edge-to-edge, dynamic height, safe-area bottom padding
+          "bottom-0 left-0 right-0 max-h-[92svh] rounded-t-2xl",
+          // Mobile slide-up animation
+          "data-[state=open]:animate-slide-up-mobile data-[state=closed]:animate-slide-down-mobile",
+          // ── Desktop: Centered Modal ──
+          "sm:bottom-auto sm:left-[50%] sm:top-[50%] sm:right-auto sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-lg sm:max-h-[calc(100svh-2rem)] sm:rounded-2xl sm:border",
+          // Desktop fade animation (override mobile)
+          "sm:data-[state=open]:animate-in sm:data-[state=closed]:animate-out sm:data-[state=closed]:fade-out-0 sm:data-[state=open]:fade-in-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95",
           className,
         )}
         {...props}
       >
         {children}
+        {/* Close button: hidden on mobile (drag handle replaces it), visible on desktop */}
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="absolute left-4 top-4 p-0 rounded-full opacity-70 ring-offset-background transition-all hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-white/80 dark:bg-black/40 backdrop-blur-md border border-black/5 dark:border-white/10 h-9 w-9 flex items-center justify-center z-[50] [&_svg]:size-5 [&_svg]:text-foreground/80 hover:bg-white dark:hover:bg-black hover:[&_svg]:rotate-90 [&_svg]:transition-transform"
+            className="hidden sm:flex absolute left-4 top-4 p-0 rounded-full opacity-70 ring-offset-background transition-all hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-white/80 dark:bg-black/40 backdrop-blur-md border border-black/5 dark:border-white/10 h-9 w-9 items-center justify-center z-[50] [&_svg]:size-5 [&_svg]:text-foreground/80 hover:bg-white dark:hover:bg-black hover:[&_svg]:rotate-90 [&_svg]:transition-transform"
           >
             <XIcon />
             <span className="sr-only">Close</span>
@@ -147,6 +174,7 @@ export {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogDragHandle,
   DialogFooter,
   DialogHeader,
   DialogOverlay,
@@ -154,4 +182,3 @@ export {
   DialogTitle,
   DialogTrigger,
 };
-

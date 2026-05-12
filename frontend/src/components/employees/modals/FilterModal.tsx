@@ -3,7 +3,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
+  DialogDragHandle,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -242,33 +242,38 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-full sm:max-w-2xl h-[92vh] sm:h-auto sm:max-h-[85vh] p-0 border-none bg-card flex flex-col rounded-t-[32px] sm:rounded-3xl overflow-hidden !gap-0 pointer-events-auto"
+        className="sm:max-w-2xl sm:max-h-[85vh] p-0 border-none bg-card flex flex-col overflow-hidden !gap-0 pointer-events-auto"
         dir="rtl"
       >
-        <DialogHeader className="p-5 sm:p-8 pb-4 border-b border-border/50 bg-muted/20 text-right shrink-0 space-y-0">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
-            <div className="text-center sm:text-right flex-1">
-              <DialogTitle className="text-xl sm:text-2xl font-black text-foreground mb-1 tracking-tight">
-                סינון שוטרים מתקדם
+        <DialogDragHandle />
+        {/* ── Slim inline header with search ── */}
+        <div className="px-5 pt-2 pb-3 sm:px-8 sm:pt-5 sm:pb-4 border-b border-border/30 text-right shrink-0 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <Filter className="w-[18px] h-[18px]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <DialogTitle className="text-[15px] sm:text-lg font-black text-foreground tracking-tight leading-none mb-0.5">
+                סינון שוטרים
               </DialogTitle>
-              <DialogDescription className="text-[11px] sm:text-sm font-bold text-muted-foreground italic tracking-tight leading-relaxed">
-                התאם את התצוגה המבוקשת לפי מדרג ארגוני, מעמד או מאפיינים אישיים
+              <DialogDescription className="text-[11px] font-medium text-muted-foreground leading-none">
+                לפי מדרג, מעמד או מאפיינים
               </DialogDescription>
             </div>
           </div>
 
-          <div className="relative mt-6 sm:mt-8 group">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/40 transition-colors group-focus-within:text-primary" />
+          <div className="relative group">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 transition-colors group-focus-within:text-primary" />
             <Input
-              placeholder="חיפוש חופשי (שם, מנ'א, תפקיד)..."
+              placeholder="חיפוש (שם, מנ'א, תפקיד)..."
               value={filters.searchText}
               onChange={(e) =>
                 setFilters({ ...filters, searchText: e.target.value })
               }
-              className="h-12 pr-11 pl-4 bg-background border-border/50 rounded-2xl text-sm font-black text-foreground focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/30"
+              className="h-10 pr-9 pl-3 bg-background border-border/40 rounded-xl text-sm font-bold text-foreground transition-all placeholder:text-muted-foreground/30"
             />
           </div>
-        </DialogHeader>
+        </div>
 
         <div className="flex-1 overflow-y-auto px-5 sm:px-10 py-6 sm:py-8 space-y-8 sm:space-y-10 custom-scrollbar">
           {/* Organizational Structure */}
@@ -570,27 +575,28 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           </div>
         </div>
 
-        <div className="p-5 sm:p-10 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center shrink-0">
+        {/* ── Pinned footer — safe area ── */}
+        <div className="px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-8 sm:pb-6 border-t border-border/30 shrink-0 flex flex-col gap-2">
           <Button
             onClick={handleApply}
-            className="w-full sm:flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl h-14 sm:h-14 transition-all active:scale-[0.98] gap-3 text-base"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl h-12 transition-all active:scale-[0.98] gap-2 text-sm shadow-none"
           >
-            <Filter className="w-5 h-5 shrink-0" />
-            <span className="truncate">החל את הגדרות הסינון</span>
+            <Filter className="w-4 h-4 shrink-0" />
+            <span>החל סינון</span>
             {activeFiltersCount > 0 && (
-              <span className="bg-primary-foreground/20 px-2.5 py-0.5 rounded-full text-[11px] font-black">
+              <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-[10px] font-black">
                 {activeFiltersCount}
               </span>
             )}
           </Button>
-          <Button
-            variant="ghost"
+          <button
+            type="button"
             onClick={handleReset}
-      className="w-full sm:w-auto px-8 rounded-2xl h-12 sm:h-14 font-black text-muted-foreground hover:text-foreground hover:bg-muted transition-all gap-2 text-sm"
+            className="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold text-muted-foreground/50 hover:text-muted-foreground transition-colors py-1.5"
           >
-            <RotateCcw className="w-4 h-4 opacity-70" />
-            איפוס הגדרות
-          </Button>
+            <RotateCcw className="w-3 h-3" />
+            איפוס הכל
+          </button>
         </div>
       </DialogContent>
     </Dialog>

@@ -3,6 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDragHandle,
 } from "@/components/ui/dialog";
 import type { Employee } from "@/types/employee.types";
 import { History, ArrowLeft } from "lucide-react";
@@ -26,9 +27,10 @@ export default function StatusHistoryModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 border-none bg-card  rounded-3xl"
+        className="sm:max-w-2xl"
         dir="rtl"
       >
+        <DialogDragHandle />
         <DialogHeader className="p-6 sm:p-8 border-b border-border/50 bg-transparent text-right shrink-0">
           <div className="flex items-center gap-5">
             <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center  shrink-0 rotate-3">

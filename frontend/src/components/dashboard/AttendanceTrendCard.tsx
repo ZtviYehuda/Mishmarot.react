@@ -1,4 +1,4 @@
-import { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
+import { useRef, useMemo, forwardRef, useImperativeHandle, useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -64,6 +64,14 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       download: handleDownload,
       share: handleWhatsAppShare,
     }));
+
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 640);
+      handleResize();
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     const chartData = useMemo(() => {
       if (range < 365) return data;
@@ -264,17 +272,29 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
         )}
       >
         {!hideHeader && (
-          <CardHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-            <div className="flex items-center justify-between w-full sm:w-auto">
-              <CardTitle className="text-xs sm:text-sm font-black text-slate-500 uppercase tracking-widest">
-                מגמת זמינות — {range === 7 ? "שבועי" : "חודשי"}
-              </CardTitle>
+          <CardHeader className="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <div className="flex items-center justify-between w-full sm:w-auto">
+                <CardTitle className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100 uppercase sm:normal-case tracking-widest sm:tracking-normal">
+                  מגמת זמינות <span className="hidden sm:inline text-slate-400 font-medium tracking-normal">— {range === 7 ? "שבועי" : "חודשי"}</span>
+                </CardTitle>
+                
+                {/* Mobile Stats inside the top row */}
+                {stats && (
+                  <div className="flex sm:hidden items-center gap-2">
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">ממוצע {stats.avgPresence}</span>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md">שיא {stats.maxPresence}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Toggle Row (Full width on mobile) */}
               {onRangeChange && (
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 sm:p-1 rounded-lg sm:mr-0">
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-full sm:w-auto mt-1 sm:mt-0">
                   <button
                     onClick={() => onRangeChange(7)}
                     className={cn(
-                      "px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-md transition-all",
+                      "flex-1 sm:flex-none px-4 py-1.5 text-[11px] sm:text-xs font-bold rounded-md transition-all",
                       range === 7
                         ? "bg-white text-primary dark:bg-slate-700 dark:text-white shadow-sm"
                         : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -285,7 +305,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                   <button
                     onClick={() => onRangeChange(30)}
                     className={cn(
-                      "px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-md transition-all",
+                      "flex-1 sm:flex-none px-4 py-1.5 text-[11px] sm:text-xs font-bold rounded-md transition-all",
                       range === 30
                         ? "bg-white text-primary dark:bg-slate-700 dark:text-white shadow-sm"
                         : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -296,28 +316,23 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                 </div>
               )}
             </div>
-            {/* Mobile inline stats */}
+
+            {/* Desktop Stats */}
             {stats && (
-              <div className="flex sm:hidden items-center gap-2 w-full overflow-x-auto pb-0.5">
-                <div className="flex items-center gap-1.5 bg-primary/5 rounded-full px-2.5 py-1 shrink-0">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">ממוצע: {stats.avgPresence}</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-full px-2.5 py-1 shrink-0">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">שיא: {stats.maxPresence} ({stats.peakDay})</span>
-                </div>
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">ממוצע: {stats.avgPresence}</span>
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 rounded-md">שיא: {stats.maxPresence} ({stats.peakDay})</span>
               </div>
             )}
           </CardHeader>
         )}
 
-        <CardContent className={cn("flex-1 flex flex-col min-h-[240px] sm:min-h-[350px] p-3 sm:p-6", hideHeader && "p-0")}>
+        <CardContent className={cn("flex-1 flex flex-col min-h-[240px] sm:min-h-[350px] p-2 sm:p-6", hideHeader && "p-0")}>
           <div className="w-full h-full min-h-[250px] flex-1" style={{ direction: "ltr" }}>
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={chartData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 35 }}
+                  margin={{ top: 10, right: isMobile ? 5 : 10, left: -25, bottom: isMobile ? 0 : 35 }}
                   style={{ cursor: 'pointer' }}
                   onMouseDown={(state: any) => {
                     if (state && state.activePayload && state.activePayload.length > 0) {
@@ -349,21 +364,23 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                       if (!value) return "";
                       try {
                         const date = parseISO(value);
-                        if (!isNaN(date.getTime())) return format(date, "dd/MM");
+                        if (!isNaN(date.getTime())) {
+                           return isMobile ? format(date, "d/M") : format(date, "dd/MM");
+                        }
                       } catch (e) {
                         return value;
                       }
                       return value;
                     }}
                     tick={{
-                      fontSize: 10,
+                      fontSize: isMobile ? 10 : 11,
                       fill: "var(--muted-foreground)",
-                      fontWeight: 700,
+                      fontWeight: 600,
                     }}
                     tickLine={false}
                     axisLine={false}
-                    dy={10}
-                    minTickGap={5}
+                    dy={isMobile ? 8 : 12}
+                    minTickGap={isMobile ? 15 : 20}
                   />
                   <YAxis
                     tick={{
