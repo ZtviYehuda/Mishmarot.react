@@ -1,0 +1,428 @@
+import { useRef, forwardRef, useImperativeHandle } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info, Download, Filter } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { toPng, toBlob } from "html-to-image";
+import { toast } from "sonner";
+import { WhatsAppButton } from "@/components/common/WhatsAppButton";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+
+interface ComparisonStat {
+  unit_id: number;
+  unit_name: string;
+  total_count: number;
+  present_count: number;
+  absent_count: number;
+  unknown_count: number;
+  level: string;
+}
+
+interface StatsComparisonCardProps {
+  data: ComparisonStat[];
+  loading?: boolean;
+  days: number;
+  className?: string;
+  onShare?: () => void;
+  unitName?: string;
+  subtitle?: string;
+  selectedDate?: Date;
+  selectedUnitId?: number | null;
+  onUnitClick?: (unitId: number, level: string) => void;
+  filterTags?: string[];
+  hideHeader?: boolean;
+}
+
+export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
+  (
+    {
+      data,
+      loading,
+      days,
+      className,
+      unitName = "כלל היחידה",
+      subtitle,
+      selectedDate = new Date(),
+      selectedUnitId = null,
+      onUnitClick,
+      filterTags = [],
+      hideHeader = false,
+    },
+    ref,
+  ) => {
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    useImperativeHandle(ref, () => ({
+      download: handleDownload,
+      share: handleWhatsAppShare,
+    }));
+
+    const handleDownload = async () => {
+      if (cardRef.current === null) return;
+
+      try {
+        const dataUrl = await toPng(cardRef.current, {
+          cacheBust: true,
+          backgroundColor: "#ffffff",
+          onClone: (clonedNode: any) => {
+            const dateEl = clonedNode.querySelector(".export-date-hidden");
+            if (dateEl) {
+              dateEl.style.position = "absolute";
+              dateEl.style.top = "20px";
+              dateEl.style.left = "20px";
+              dateEl.style.opacity = "1";
+              dateEl.style.zIndex = "50";
+              dateEl.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
+              dateEl.style.padding = "4px 12px";
+              dateEl.style.borderRadius = "8px";
+              dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              dateEl.style.border = "1px solid #e2e8f0";
+              dateEl.style.color = "#0f172a";
+            }
+            const hideEls = clonedNode.querySelectorAll(".export-hide");
+            hideEls.forEach((el: any) => (el.style.display = "none"));
+            const noExportEls = clonedNode.querySelectorAll(".no-export");
+            noExportEls.forEach((el: any) => (el.style.display = "none"));
+          },
+        } as any);
+        const link = document.createElement("a");
+        link.download = `unit-comparison-${days}-days.png`;
+        link.href = dataUrl;
+        link.click();
+        toast.success("הגרף יוצא כתמונה בהצלחה");
+      } catch (err) {
+        console.error("Failed to download image", err);
+        toast.error("שגיאה בייצוא הגרף");
+      }
+    };
+
+    const handleWhatsAppShare = async () => {
+      if (cardRef.current === null) return;
+
+      try {
+        const blob = await toBlob(cardRef.current, {
+          cacheBust: true,
+          backgroundColor: "#ffffff",
+          onClone: (clonedNode: any) => {
+            const dateEl = clonedNode.querySelector(".export-date-hidden");
+            if (dateEl) {
+              dateEl.style.position = "absolute";
+              dateEl.style.top = "20px";
+              dateEl.style.left = "20px";
+              dateEl.style.opacity = "1";
+              dateEl.style.zIndex = "50";
+              dateEl.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
+              dateEl.style.padding = "4px 12px";
+              dateEl.style.borderRadius = "8px";
+              dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              dateEl.style.border = "1px solid #e2e8f0";
+              dateEl.style.color = "#0f172a";
+            }
+            const hideEls = clonedNode.querySelectorAll(".export-hide");
+            hideEls.forEach((el: any) => (el.style.display = "none"));
+            const noExportEls = clonedNode.querySelectorAll(".no-export");
+            noExportEls.forEach((el: any) => (el.style.display = "none"));
+          },
+        } as any);
+
+        if (!blob) throw new Error("Failed to capture image");
+
+        const rangeText =
+          days === 1 ? "יומית" : days === 7 ? "שבועית" : "חודשית";
+        const statsSummary =
+          data && data.length > 0
+            ? `\n*סיכום:* ${data.length} יחידות מוצגות.`
+            : "";
+        const filterText = subtitle ? `\n*סינון:* ${subtitle}` : "";
+        const title = `דוח השוואת כוח אדם (${rangeText}) - ${unitName}`;
+        const message = `*${title}*\nתאריך הפקה: ${format(new Date(), "dd/MM/yyyy")}\nתאריך דוח: ${format(selectedDate, "dd/MM/yyyy")}${filterText}${statsSummary}`;
+
+        const file = new File([blob], `comparison-${days}.png`, {
+          type: "image/png",
+        });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: title,
+              text: message,
+            });
+            toast.success("הדוח שותף בהצלחה");
+            return;
+          } catch (shareErr) {
+            if ((shareErr as Error).name !== "AbortError") {
+              console.warn("Web Share failed:", shareErr);
+            } else {
+              return;
+            }
+          }
+        }
+
+        try {
+          const item = new ClipboardItem({ "image/png": blob });
+          await navigator.clipboard.write([item]);
+        } catch (clipErr) {
+          console.warn("Clipboard copy failed", clipErr);
+        }
+
+        const dataUrl = await toPng(cardRef.current, {
+          backgroundColor: "#ffffff",
+          onClone: (clonedNode: any) => {
+            const dateEl = clonedNode.querySelector(".export-date-hidden");
+            if (dateEl) {
+              dateEl.style.position = "absolute";
+              dateEl.style.top = "20px";
+              dateEl.style.left = "20px";
+              dateEl.style.opacity = "1";
+              dateEl.style.zIndex = "50";
+              dateEl.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
+              dateEl.style.padding = "4px 12px";
+              dateEl.style.borderRadius = "8px";
+              dateEl.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              dateEl.style.border = "1px solid #e2e8f0";
+              dateEl.style.color = "#0f172a";
+              dateEl.innerText = `תאריך: ${format(selectedDate, "dd/MM/yyyy")}`;
+            }
+            const hideEls = clonedNode.querySelectorAll(".export-hide");
+            hideEls.forEach((el: any) => (el.style.display = "none"));
+            const noExportEls = clonedNode.querySelectorAll(".no-export");
+            noExportEls.forEach((el: any) => (el.style.display = "none"));
+          },
+        } as any);
+        const link = document.createElement("a");
+        link.download = `השוואת_כוחות_${format(selectedDate, "yyyy-MM-dd")}.png`;
+        link.href = dataUrl;
+        link.click();
+
+        const encodedMessage = encodeURIComponent(message);
+        window.open(`https://wa.me/?text=${encodedMessage}`, "_blank");
+
+        toast.success("התמונה הועתקה! נא לבצע 'הדבק' (Ctrl+V) בווצאפ");
+      } catch (err) {
+        console.error("WhatsApp share failed", err);
+        toast.error("שגיאה בהכנת הדוח ל-WhatsApp");
+      }
+    };
+
+    if (loading) {
+      return (
+        <Card className={cn("h-full", className)}>
+          <CardHeader>
+            <CardTitle className="text-lg animate-pulse bg-muted h-6 w-32 rounded"></CardTitle>
+            <CardDescription className="animate-pulse bg-muted h-4 w-48 rounded mt-2"></CardDescription>
+          </CardHeader>
+        </Card>
+      );
+    }
+
+    return (
+      <Card
+        ref={cardRef}
+        className={cn(
+          "bg-card/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-primary/10 py-3 flex flex-col overflow-hidden h-full relative transition-all",
+          className,
+          hideHeader && "border-none bg-transparent backdrop-blur-none py-0"
+        )}
+      >
+        {!hideHeader && (
+          <CardHeader className="px-5 sm:px-6 py-3 flex flex-row items-center justify-between space-y-0">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg font-bold flex items-center flex-wrap gap-2 sm:gap-3">
+                  <span>השוואת כוח אדם</span>
+                  {filterTags.length > 0 && (
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar ml-1">
+                      <div className="flex items-center gap-1.5 text-[10px] text-primary/60 font-black uppercase tracking-tight ml-1">
+                        <Filter className="w-3 h-3" />
+                        <span>סינון פעיל:</span>
+                      </div>
+                      {filterTags.map((tag, idx) => (
+                        <Badge 
+                          key={idx} 
+                          variant="outline" 
+                          className="text-[10px] h-6 px-2.5 font-bold bg-background/20 text-primary border-primary/20 backdrop-blur-sm whitespace-nowrap rounded-lg hover:bg-primary/5 transition-all"
+                        >
+                         {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </CardTitle>
+                <TooltipProvider>
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent
+                      className="max-w-[250px] text-right"
+                      dir="rtl"
+                    >
+                      <p className="font-bold mb-1">כיצד מחושב?</p>
+                      <ul className="text-xs space-y-1 list-disc list-inside">
+                        <li>
+                          <span className="font-semibold">נוכחים:</span> משרד, תגבור, קורס
+                        </li>
+                        <li>
+                          <span className="font-semibold">לא נוכחים:</span> חופשה, מחלה, חו"ל
+                        </li>
+                        <li>
+                          <span className="font-semibold">תקן:</span> ממוצע שוטרים
+                          פעילים בתקופה
+                        </li>
+                      </ul>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <CardDescription>
+                <span className="font-bold text-foreground">{unitName}</span>
+                {subtitle && (
+                  <>
+                    {" "}
+                    | <span className="">{subtitle}</span>
+                  </>
+                )}
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  {days === 1
+                    ? `תמונת מצב יומית להיום`
+                    : `ממוצע נוכחים - ${days === 7 ? "שבועית" : days === 30 ? "חודשית" : "שנתית"}`} • {format(selectedDate, "dd/MM/yyyy")}
+                </div>
+              </CardDescription>
+            </div>
+
+            <div className="flex items-center gap-1.5 no-export">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-primary rounded-lg transition-all"
+                onClick={handleDownload}
+                title="הורדה כתמונה"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+
+              <WhatsAppButton
+                onClick={handleWhatsAppShare}
+                variant="outline"
+                className="h-8 w-8 p-0 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20"
+                skipDirectLink={true}
+              />
+            </div>
+          </CardHeader>
+        )}
+
+        <CardContent className={cn("flex-1 overflow-y-auto no-scrollbar p-0", !hideHeader && "px-4 sm:px-6")}>
+          {!data || data.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-48 text-center bg-muted/20 rounded-xl border border-dashed border-border/50">
+              <Info className="w-8 h-8 text-muted-foreground/50 mb-2" />
+              <p className="text-sm font-bold text-muted-foreground">
+                אין נתונים להשוואה
+              </p>
+              <p className="text-xs text-muted-foreground">
+                לא נמצאו יחידות להשוואה בחתך הנבחר
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3 py-4">
+              {data.map((item) => {
+                const availability =
+                  item.total_count > 0
+                    ? Math.round((item.present_count / item.total_count) * 100)
+                    : 0;
+
+                let barColor = "bg-emerald-500";
+                let textColor = "text-emerald-600 dark:text-emerald-400";
+                let bgColor = "bg-emerald-50 dark:bg-emerald-900/10";
+
+                if (availability < 50) {
+                  barColor = "bg-red-500";
+                  textColor = "text-red-500 dark:text-red-400";
+                  bgColor = "bg-red-50 dark:bg-red-900/10";
+                } else if (availability < 70) {
+                  barColor = "bg-orange-500";
+                  textColor = "text-orange-500 dark:text-orange-400";
+                  bgColor = "bg-orange-50 dark:bg-orange-900/10";
+                }
+
+                const isSelected = item.unit_id === selectedUnitId;
+
+                return (
+                  <div
+                    key={item.unit_id}
+                    className={cn(
+                      "p-3 rounded-2xl transition-all border",
+                      onUnitClick ? "cursor-pointer" : "",
+                      isSelected
+                        ? "border-primary/30 bg-primary/5"
+                        : "border-transparent hover:border-border/50 hover:bg-muted/30"
+                    )}
+                    onClick={() => {
+                      if (onUnitClick) onUnitClick(item.unit_id, item.level);
+                    }}
+                  >
+                    {/* Header row: name + count */}
+                    <div className="flex justify-between items-center mb-2">
+                      <span
+                        className="text-[13px] font-bold text-foreground truncate flex-1 min-w-0 ml-2"
+                        title={item.unit_name}
+                      >
+                        {item.unit_name}
+                      </span>
+                      <span className="text-xs font-bold text-muted-foreground shrink-0">
+                        {item.level === 'employee' ? (
+                          item.present_count > 0 ? "נוכח/ת" : "חסר/ת"
+                        ) : (
+                          <span>
+                            <span className="text-emerald-600 dark:text-emerald-400">{Math.round(item.present_count)}</span>
+                            <span className="text-muted-foreground/60 mx-1">/</span>
+                            <span>{Math.round(item.total_count)}</span>
+                          </span>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Bar with percentage inside */}
+                    <div className={cn("relative w-full h-6 rounded-full overflow-hidden", bgColor)}>
+                      <div
+                        className={cn("h-full rounded-full transition-all duration-700 flex items-center justify-end", barColor)}
+                        style={{ width: `${Math.max(availability, 8)}%` }}
+                      >
+                        {availability >= 20 && (
+                          <span className="text-white text-[10px] font-black px-2 leading-none">
+                            {availability}%
+                          </span>
+                        )}
+                      </div>
+                      {availability < 20 && (
+                        <span className={cn("absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black", textColor)}>
+                          {availability}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div className="export-date-hidden absolute opacity-0 -z-50 text-center mt-4 pt-2 border-t border-border/50 text-sm font-bold text-muted-foreground">
+            תאריך דוח: {format(selectedDate, "dd/MM/yyyy")}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  },
+);

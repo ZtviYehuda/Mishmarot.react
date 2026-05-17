@@ -1,0 +1,234 @@
+from flask import Blueprint, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.models.audit_log_model import AuditLogModel
+import json
+
+audit_bp = Blueprint("audit", __name__)
+
+
+@audit_bp.route("/my-activity", methods=["GET"])
+@jwt_required()
+def get_my_activity():
+    """
+    Get recent activity for the current logged-in user.
+    """
+    try:
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        user_id = identity["id"] if isinstance(identity, dict) else identity
+
+        logs = AuditLogModel.get_user_activity(user_id, limit=20)
+        return jsonify(logs)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@audit_bp.route("/all-activity", methods=["GET"])
+@jwt_required()
+def get_all_activity():
+    """
+    Get recent system-wide activity (Admin/Commander only).
+    """
+    try:
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        is_admin = (
+            identity.get("is_admin", False) if isinstance(identity, dict) else False
+        )
+        is_commander = (
+            identity.get("is_commander", False) if isinstance(identity, dict) else False
+        )
+
+        if not (is_admin or is_commander):
+            return jsonify({"error": "Unauthorized"}), 403
+
+        from flask import request
+
+        filters = {
+            "user_id": request.args.get("user_id"),
+            "action_type": request.args.get("action_type"),
+        }
+
+        limit = request.args.get("limit", 100, type=int)
+
+        logs = AuditLogModel.get_recent_activity(limit=limit, filters=filters)
+        return jsonify(logs)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@audit_bp.route("/suspicious", methods=["GET"])
+@jwt_required()
+def get_suspicious_activity():
+    """
+    Get detected anomalies for admin review.
+    """
+    try:
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        if not identity.get("is_admin", False):
+            return jsonify({"error": "Unauthorized: Admins only"}), 403
+
+        suspicious = AuditLogModel.get_suspicious_activity()
+        return jsonify(suspicious)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@audit_bp.route("/archives", methods=["GET"])
+@jwt_required()
+def list_archives():
+    """List all archived audit log files (admin only)."""
+    try:
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        if not identity.get("is_admin", False):
+            return jsonify({"error": "Unauthorized: Admins only"}), 403
+
+        from app.utils.audit_rotation import get_archive_summary
+        return jsonify(get_archive_summary())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@audit_bp.route("/archives/<filename>", methods=["GET"])
+@jwt_required()
+def download_archive(filename):
+    """Download a specific archived audit log file (admin only)."""
+    try:
+        identity_raw = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_raw)
+                if isinstance(identity_raw, str)
+                else identity_raw
+            )
+        except (json.JSONDecodeError, TypeError):
+            identity = identity_raw
+
+        if not identity.get("is_admin", False):
+            return jsonify({"error": "Unauthorized: Admins only"}), 403
+
+        from app.utils.audit_rotation import read_archive_file
+        data = read_archive_file(filename)
+        if data is None:
+            return jsonify({"error": "File not found"}), 404
+
+        from flask import Response
+        return Response(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            mimetype="application/json",
+            headers={"Content-Disposition": f"attachment; filename={filename.replace('.gz', '')}"},
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@audit_bp.route("/export", methods=["GET"])
+@jwt_required()
+def export_audit_logs():
+    """
+    Generates a detailed human-readable CSV report of system activity.
+    """
+    from flask import request, make_response
+    import io
+    import csv
+    from datetime import datetime
+
+    identity_raw = get_jwt_identity()
+    try:
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+    except:
+        identity = identity_raw
+
+    if not identity.get("is_admin"):
+        return jsonify({"error": "Unauthorized: Admins only"}), 403
+
+    limit = request.args.get("limit", 1000, type=int)
+    logs = AuditLogModel.get_recent_activity(limit=limit)
+
+    output = io.StringIO()
+    output.write('\ufeff') # BOM for Excel Hebrew support
+    writer = csv.writer(output)
+    
+    writer.writerow([
+        "מזהה", "זמן", "משתמש", "סוג פעולה", "תיאור", "מטרה", "כתובת IP", "מידע טכני נוסף"
+    ])
+
+    # Hebrew Mapping for Export
+    ACTION_MAP = {
+        "LOGIN": "התחברות למערכת",
+        "FAILED_LOGIN": "ניסיון התחברות כושל",
+        "BLOCKED_LOGIN": "חסימת התחברות (אבטחה)",
+        "PASSWORD_CHANGE": "שינוי סיסמה",
+        "PROFILE_UPDATE": "עדכון פרטי פרופיל",
+        "TRANSFER_CREATE": "יצירת בקשת העברה",
+        "TRANSFER_APPROVE": "אישור בקשת העברה",
+        "TRANSFER_REJECT": "דחיית בקשת העברה",
+        "TRANSFER_CANCEL": "ביטול בקשת העברה",
+        "IMPERSONATION_START": "התחלת מצב התחזות מנהל",
+        "WEBAUTHN_REGISTER": "רישום מפתח ביומטרי",
+        "WEBAUTHN_LOGIN": "התחברות ביומטרית",
+        "EMPLOYEE_CREATE": "יצירת שוטר חדש",
+        "EMPLOYEE_UPDATE": "עדכון פרטי שוטר",
+        "REPORT_STATUS": "דיווח סטטוס נוכחות",
+    }
+
+    for log in logs:
+        action_he = ACTION_MAP.get(log.get("action_type"), log.get("action_type"))
+        meta_str = ""
+        if log.get("metadata"):
+            try:
+                meta_str = json.dumps(log["metadata"], ensure_ascii=False)
+            except:
+                meta_str = str(log["metadata"])
+
+        writer.writerow([
+            log.get("id"),
+            log.get("created_at").strftime("%d/%m/%Y %H:%M:%S") if log.get("created_at") else "",
+            log.get("user_name") or "מערכת",
+            action_he,
+            log.get("description"),
+            log.get("target_name") or "",
+            log.get("ip_address"),
+            meta_str
+        ])
+
+    response = make_response(output.getvalue())
+    response.headers["Content-Disposition"] = f"attachment; filename=system_audit_report_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+    response.headers["Content-type"] = "text/csv; charset=utf-8"
+    return response
+
+

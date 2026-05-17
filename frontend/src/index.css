@@ -1,0 +1,428 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@100..900&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Custom Calendar Grid - Responsive Optimization */
+.grid-calendar-view {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+@media (min-width: 768px) {
+  .grid-calendar-view {
+    grid-template-columns: repeat(5, 1fr) 0.7fr 0.7fr;
+  }
+}
+
+.grid-background {
+  background-image: radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.dark .grid-background {
+  background-image: radial-gradient(circle at 1px 1px, #1e293b 1px, transparent 0);
+}
+
+* {
+  font-family: "Noto Sans Hebrew", sans-serif;
+}
+
+html,
+body {
+  direction: rtl;
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow: hidden;
+  /* Use dynamic viewport height so mobile browser UI (address bar) doesn't clip content */
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Base transitions - scoped for better performance */
+.btn-transition {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50 transition-colors;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --: 0 20px 50px -12px rgba(var(--primary-rgb), 0.05);
+  --: 0 30px 60px -12px rgba(var(--primary-rgb), 0.08);
+}
+
+:root {
+  color-scheme: light;
+  --radius: 0.75rem;
+  --background: #ffffff;
+  --foreground: #001e30;
+  --card: #ffffff;
+  --card-foreground: #001e30;
+  --popover: #ffffff;
+  --popover-foreground: #001e30;
+  --primary: #0074ff;
+  --primary-foreground: #ffffff;
+  --secondary: #eff6ff;
+  --secondary-foreground: var(--primary);
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --accent: #eff6ff;
+  --accent-foreground: var(--primary);
+  --destructive: #df1b12;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: var(--primary);
+  --primary-rgb: 0, 116, 255;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0b141a;
+  --foreground: #e9edef;
+  --card: #111b21;
+  --card-foreground: #e9edef;
+  --popover: #111b21;
+  --popover-foreground: #e9edef;
+  --primary: #00a884; /* Adjusted to WhatsApp-style green for better visibility in this theme */
+  --primary-foreground: #ffffff;
+  --secondary: #202c33;
+  --secondary-foreground: #e9edef;
+  --muted: #202c33;
+  --muted-foreground: #8696a0;
+  --accent: #2a3942;
+  --accent-foreground: var(--primary);
+  --destructive: #ef4444;
+  --border: #222d34;
+  --input: #222d34;
+  --ring: var(--primary);
+  --primary-rgb: 0, 168, 132;
+}
+
+/* Accent Color Overrides - Highest Specificity */
+:root {
+  &.accent-cyan {
+    --primary: #06b6d4;
+    --secondary: #ecfeff;
+    --accent: #ecfeff;
+  }
+
+  &.accent-emerald {
+    --primary: #10b981;
+    --secondary: #ecfdf5;
+    --accent: #ecfdf5;
+  }
+
+  &.accent-rose {
+    --primary: #f43f5e;
+    --secondary: #fff1f2;
+    --accent: #fff1f2;
+  }
+
+  &.accent-amber {
+    --primary: #f59e0b;
+    --secondary: #fffbeb;
+    --accent: #fffbeb;
+  }
+
+  &.accent-blue {
+    --primary: #0074ff;
+    --secondary: #eff6ff;
+    --accent: #eff6ff;
+  }
+
+  &.accent-zinc {
+    --primary: #475569;
+    --secondary: #f1f5f9;
+    --accent: #f1f5f9;
+  }
+
+  &.accent-violet {
+    --primary: #7c3aed;
+    --secondary: #f5f3ff;
+    --accent: #f5f3ff;
+  }
+
+  &.accent-indigo {
+    --primary: #4f46e5;
+    --secondary: #eef2ff;
+    --accent: #eef2ff;
+  }
+
+  &.accent-teal {
+    --primary: #0d9488;
+    --secondary: #f0fdfa;
+    --accent: #f0fdfa;
+  }
+
+  &.accent-orange {
+    --primary: #f97316;
+    --secondary: #fff7ed;
+    --accent: #fff7ed;
+  }
+
+  &.accent-pink {
+    --primary: #db2777;
+    --secondary: #fdf2f8;
+    --accent: #fdf2f8;
+  }
+
+  &.accent-lime {
+    --primary: #65a30d;
+    --secondary: #f7fee7;
+    --accent: #f7fee7;
+  }
+}
+
+.dark {
+  &.accent-cyan {
+    --primary: #47c1d3;
+    --secondary: #0b2f36;
+    --accent: #0b2f36;
+    --primary-rgb: 71, 193, 211;
+  }
+
+  &.accent-emerald {
+    --primary: #00a884; /* WhatsApp Green */
+    --secondary: #113f34;
+    --accent: #113f34;
+    --primary-rgb: 0, 168, 132;
+  }
+
+  &.accent-rose {
+    --primary: #f25c78;
+    --secondary: #3f1120;
+    --accent: #3f1120;
+    --primary-rgb: 242, 92, 120;
+  }
+
+  &.accent-amber {
+    --primary: #ffbc2d;
+    --secondary: #3f2f11;
+    --accent: #3f2f11;
+    --primary-rgb: 255, 188, 45;
+  }
+
+  &.accent-blue {
+    --primary: #3390ff;
+    --secondary: #112b3f;
+    --accent: #112b3f;
+    --primary-rgb: 51, 144, 255;
+  }
+
+  &.accent-zinc {
+    --primary: #aab2c0;
+    --secondary: #1e293b;
+    --accent: #1e293b;
+    --primary-rgb: 170, 178, 192;
+  }
+
+  &.accent-violet {
+    --primary: #a37dfa;
+    --secondary: #26113f;
+    --accent: #26113f;
+    --primary-rgb: 163, 125, 250;
+  }
+
+  &.accent-indigo {
+    --primary: #818cf8;
+    --secondary: #1e1b4b;
+    --accent: #1e1b4b;
+    --primary-rgb: 129, 140, 248;
+  }
+
+  &.accent-teal {
+    --primary: #2dd4bf;
+    --secondary: #042f2e;
+    --accent: #042f2e;
+    --primary-rgb: 45, 212, 191;
+  }
+
+  &.accent-orange {
+    --primary: #fb923c;
+    --secondary: #431407;
+    --accent: #431407;
+    --primary-rgb: 251, 146, 60;
+  }
+
+  &.accent-pink {
+    --primary: #f472b6;
+    --secondary: #4a044e;
+    --accent: #4a044e;
+    --primary-rgb: 244, 114, 182;
+  }
+
+  &.accent-lime {
+    --primary: #a3e635;
+    --secondary: #1a2e05;
+    --accent: #1a2e05;
+    --primary-rgb: 163, 230, 53;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  /* Focus management - remove browser defaults, use focus-visible */
+  :focus {
+    outline: none;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-ring/50 outline-offset-2;
+  }
+
+  /* Disable focus rings for charts specifically even on focus */
+  .recharts-wrapper,
+  .recharts-wrapper *,
+  svg.recharts-surface,
+  .recharts-surface:focus {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  button, 
+  [role="button"],
+  a,
+  select,
+  input[type="checkbox"],
+  input[type="radio"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
+/* Responsive utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Prevent horizontal overflow */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  background-color: #f8fafc; /* Professional light gray background from screenshot */
+}
+
+.dark html,
+.dark body {
+  background-color: #0b141a;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+/* Shimmer animation for birthday badge */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes birthday-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.animate-birthday-pulse {
+  animation: birthday-pulse 2s ease-in-out infinite;
+}
+
+.custom-scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 🔄 Global Close Button Rotation Animation 
+   Whenever an 'X' or 'XIcon' from Lucide is inside a button, rotate it on hover. */
+button:hover svg.lucide-x,
+button:hover svg.lucide-x-icon {
+  transform: rotate(90deg);
+}
+
+svg.lucide-x-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Hide Global AI Support button when any modal is open */
+body[data-scroll-locked] .global-ai-support-btn {
+  display: none !important;
+}
