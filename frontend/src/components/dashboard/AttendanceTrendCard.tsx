@@ -329,7 +329,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
 
         <CardContent className={cn("flex-1 flex flex-col min-h-[240px] sm:min-h-[350px] p-2 sm:p-6", hideHeader && "p-0")}>
           <div className="w-full h-full min-h-[250px] flex-1" style={{ direction: "ltr" }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                 <AreaChart
                   data={chartData}
                   margin={{ top: 10, right: isMobile ? 5 : 10, left: -25, bottom: isMobile ? 0 : 35 }}

@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ShieldCheck,
   Download,
-  Eye
+  Eye,
+  Filter
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
@@ -28,6 +29,7 @@ import { cn } from "../lib/utils";
 import { Card } from "../components/ui/card";
 import { useAuthContext } from "../context/AuthContext";
 import { useChat } from "@/context/ChatContext";
+import { Dialog, DialogContent } from "../components/ui/dialog";
 
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { SupportTicket, Ticket } from "@/types/feedback.types";
@@ -71,6 +73,7 @@ const FeedbackPage = () => {
   
   const [selectedItem, setSelectedItem] = useState<{data: any, type: 'feedback' | 'support'} | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const fetchMyTickets = async () => {
     setIsLoadingTickets(true);
@@ -272,29 +275,49 @@ const FeedbackPage = () => {
           subtitle="ניהול התכתבויות פנימיות ופניות למערכת"
           className="mb-0"
           hideMobile={true}
-          badge={
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Button 
-                variant="outline" 
-                size="icon"
-                className="h-10 w-10 rounded-full border-border/40 bg-card/40 backdrop-blur-xl text-primary shadow-sm hover:bg-primary/5 active:scale-95 transition-all" 
-                onClick={isAdmin ? fetchAdminTickets : fetchMyTickets} 
-                disabled={isLoadingTickets}
-                title="ריענון וסנכרון פניות"
-              >
-                <RefreshCw className={cn("w-4 h-4", isLoadingTickets && "animate-spin")} />
-              </Button>
-            </div>
-          }
         />
 
-        {/* Tab Pills */}
-        <div className="flex items-center gap-2 mb-6 overflow-x-auto no-scrollbar pb-2">
-          {isAdmin && <TabButton active={activeTab === 'admin-view'} onClick={() => {setActiveTab('admin-view'); setSearchParams({tab: 'admin-view'})}} icon={<Settings className="w-4 h-4" />} label="ניהול משימות" />}
-          {isAdmin && <TabButton active={activeTab === 'chat-admin'} onClick={() => {setActiveTab('chat-admin'); setSearchParams({tab: 'chat-admin'})}} icon={<ShieldCheck className="w-4 h-4" />} label="גיבוי צ'אטים" />}
-          <TabButton active={activeTab === 'messages'} onClick={() => {setActiveTab('messages'); setSearchParams({tab: 'messages'})}} icon={<MessageSquare className="w-4 h-4" />} label="הודעות מפקדים" />
-          <TabButton active={activeTab === 'my-tickets'} onClick={() => { setActiveTab('my-tickets'); setSearchParams({tab: 'my-tickets'}); fetchMyTickets(); }} icon={<History className="w-4 h-4" />} label={isAdmin ? "ארכיון שלי" : "הפניות שלי"} />
-          <TabButton active={activeTab === 'whats-new'} onClick={() => {setActiveTab('whats-new'); setSearchParams({tab: 'whats-new'})}} icon={<Sparkles className="w-4 h-4" />} label="מה חדש?" />
+        {/* Tab Pills - Optimized Grid for Mobile, Flex for Desktop */}
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 mb-6 transition-all">
+          {isAdmin && (
+            <TabButton 
+              active={activeTab === 'admin-view'} 
+              onClick={() => {setActiveTab('admin-view'); setSearchParams({tab: 'admin-view'})}} 
+              icon={<Settings className="w-4 h-4" />} 
+              label="ניהול משימות" 
+              className="col-span-1"
+            />
+          )}
+          {isAdmin && (
+            <TabButton 
+              active={activeTab === 'chat-admin'} 
+              onClick={() => {setActiveTab('chat-admin'); setSearchParams({tab: 'chat-admin'})}} 
+              icon={<ShieldCheck className="w-4 h-4" />} 
+              label="גיבוי צ'אטים" 
+              className="col-span-1"
+            />
+          )}
+          <TabButton 
+            active={activeTab === 'messages'} 
+            onClick={() => {setActiveTab('messages'); setSearchParams({tab: 'messages'})}} 
+            icon={<MessageSquare className="w-4 h-4" />} 
+            label="הודעות מפקדים" 
+            className="col-span-1"
+          />
+          <TabButton 
+            active={activeTab === 'my-tickets'} 
+            onClick={() => { setActiveTab('my-tickets'); setSearchParams({tab: 'my-tickets'}); fetchMyTickets(); }} 
+            icon={<History className="w-4 h-4" />} 
+            label={isAdmin ? "ארכיון שלי" : "הפניות שלי"} 
+            className="col-span-1"
+          />
+          <TabButton 
+            active={activeTab === 'whats-new'} 
+            onClick={() => {setActiveTab('whats-new'); setSearchParams({tab: 'whats-new'})}} 
+            icon={<Sparkles className="w-4 h-4" />} 
+            label="מה חדש?" 
+            className="col-span-2 sm:col-span-1"
+          />
         </div>
 
         <main className="space-y-6 relative z-10">
@@ -311,34 +334,113 @@ const FeedbackPage = () => {
                 </div>
 
                 {/* Modern Toolbar - Optimized for Mobile */}
-                <Card className="bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-3 sm:p-4 flex flex-col lg:flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm">
-                  <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
-                    <select value={adminFilter} onChange={(e) => setAdminFilter(e.target.value as any)} className="w-full sm:w-auto h-10 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] cursor-pointer shadow-sm">
-                      <option value="pending">ממתין לטיפול</option>
-                      <option value="done">טופל בהצלחה</option>
-                      <option value="dismissed">ארכיון</option>
-                      <option value="all">כל הסטטוסים</option>
-                    </select>
-                    <select value={adminCategoryFilter} onChange={(e) => setAdminCategoryFilter(e.target.value as any)} className="w-full sm:w-auto h-10 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] cursor-pointer shadow-sm">
-                      <option value="all">כל הסוגים</option>
-                      <option value="bug">באג במערכת</option>
-                      <option value="improvement">הצעה לשיפור</option>
-                      <option value="feature">פיצ'ר חדש</option>
-                      <option value="support">קריאת תמיכה</option>
-                    </select>
-                  </div>
+                <Card className="bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-2 sm:p-4 flex items-center justify-between gap-2 sm:gap-4 shadow-sm">
+                  <div className="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
+                    <div className="relative flex-1 max-w-sm">
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 h-4 text-muted-foreground" />
+                      <input 
+                        type="text"
+                        placeholder="חיפוש פנייה..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-9 sm:h-10 pr-9 sm:pr-10 pl-4 bg-background/50 border border-border/50 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
+                      />
+                    </div>
 
-                  <div className="relative w-full lg:w-72">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input 
-                      type="text"
-                      placeholder="חיפוש פנייה..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full h-10 pr-10 pl-4 bg-background/50 border border-border/50 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
-                    />
+                    <div className="flex items-center gap-1.5 lg:gap-2">
+                      {/* Filter Trigger (Mobile) / Selects (Desktop) */}
+                      <div className="hidden lg:flex items-center gap-2">
+                        <select value={adminFilter} onChange={(e) => setAdminFilter(e.target.value as any)} className="h-10 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] cursor-pointer shadow-sm">
+                          <option value="pending">ממתין לטיפול</option>
+                          <option value="done">טופל בהצלחה</option>
+                          <option value="dismissed">ארכיון</option>
+                          <option value="all">כל הסטטוסים</option>
+                        </select>
+                        <select value={adminCategoryFilter} onChange={(e) => setAdminCategoryFilter(e.target.value as any)} className="h-10 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] cursor-pointer shadow-sm">
+                          <option value="all">כל הסוגים</option>
+                          <option value="bug">באג במערכת</option>
+                          <option value="improvement">הצעה לשיפור</option>
+                          <option value="feature">פיצ'ר חדש</option>
+                          <option value="support">קריאת תמיכה</option>
+                        </select>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setIsFilterOpen(true)}
+                        className="lg:hidden h-9 w-9 rounded-xl border-border/40 bg-card/40 backdrop-blur-xl text-primary"
+                      >
+                        <Filter className="w-4 h-4" />
+                      </Button>
+
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl border-border/40 bg-card/40 backdrop-blur-xl text-primary shadow-sm hover:bg-primary/5 active:scale-95 transition-all" 
+                        onClick={isAdmin ? fetchAdminTickets : fetchMyTickets} 
+                        disabled={isLoadingTickets}
+                      >
+                        <RefreshCw className={cn("w-3.5 h-3.5 sm:w-4 h-4", isLoadingTickets && "animate-spin")} />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
+
+                {/* Mobile Filter Dialog */}
+                <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                  <DialogContent className="p-0 border-none sm:max-w-lg overflow-hidden rounded-t-[2rem] sm:rounded-[2rem] bottom-0 sm:bottom-auto fixed sm:relative translate-y-0 sm:-translate-y-1/2">
+                    <div className="p-6 space-y-6 bg-card/95 backdrop-blur-xl">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base font-black text-foreground flex items-center gap-2">
+                          <Filter className="w-5 h-5 text-primary" />
+                          סינון פניות
+                        </h3>
+                        <Button variant="ghost" size="icon" onClick={() => setIsFilterOpen(false)} className="rounded-full">
+                          <X className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">סטטוס פנייה</label>
+                          <select 
+                            value={adminFilter} 
+                            onChange={(e) => setAdminFilter(e.target.value as any)}
+                            className="w-full h-12 px-4 bg-background/50 border border-border/50 rounded-2xl text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                          >
+                            <option value="pending">ממתין לטיפול</option>
+                            <option value="done">טופל בהצלחה</option>
+                            <option value="dismissed">ארכיון</option>
+                            <option value="all">כל הסטטוסים</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">סוג פנייה</label>
+                          <select 
+                            value={adminCategoryFilter} 
+                            onChange={(e) => setAdminCategoryFilter(e.target.value as any)}
+                            className="w-full h-12 px-4 bg-background/50 border border-border/50 rounded-2xl text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                          >
+                            <option value="all">כל הסוגים</option>
+                            <option value="bug">באג במערכת</option>
+                            <option value="improvement">הצעה לשיפור</option>
+                            <option value="feature">פיצ'ר חדש</option>
+                            <option value="support">קריאת תמיכה</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <Button 
+                        onClick={() => setIsFilterOpen(false)}
+                        className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20"
+                      >
+                        החל סינון
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
                 {/* Stylized Cards List */}
                 <div className="space-y-3">
@@ -775,19 +877,28 @@ const FeedbackPage = () => {
   );
 };
 
-function TabButton({ active, onClick, icon, label }: any) {
+function TabButton({ active, onClick, icon, label, className }: any) {
   return (
     <button 
       onClick={onClick} 
       className={cn(
-        "px-4 py-2 text-[10px] sm:text-xs font-black rounded-xl transition-all flex items-center gap-2 border whitespace-nowrap", 
+        "transition-all flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1.5 sm:gap-2.5 border outline-none active:scale-95",
+        "p-3 sm:px-5 sm:py-2.5 rounded-2xl sm:rounded-xl min-h-[70px] sm:min-h-0",
         active 
-          ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20 scale-[1.02]" 
-          : "bg-card/40 text-muted-foreground hover:text-foreground border-border/40 hover:bg-card/60"
+          ? "bg-primary/20 text-primary border-primary/50 shadow-md shadow-primary/5 scale-[1.02] z-10" 
+          : "bg-card/40 text-muted-foreground hover:text-foreground border-border/40 hover:bg-card/60",
+        className
       )}
     >
-      <span className={cn("shrink-0", active ? "text-primary-foreground" : "text-primary")}>{icon}</span>
-      {label}
+      <div className={cn(
+        "w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center rounded-lg transition-colors",
+        active ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary"
+      )}>
+        {icon}
+      </div>
+      <span className="text-[10px] sm:text-xs font-black tracking-tight sm:tracking-normal leading-tight">
+        {label}
+      </span>
     </button>
   );
 }

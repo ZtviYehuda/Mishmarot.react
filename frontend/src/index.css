@@ -426,3 +426,46 @@ svg.lucide-x-icon {
 body[data-scroll-locked] .global-ai-support-btn {
   display: none !important;
 }
+
+/* 🌟 Premium Tutorial Highlight Styling with perfect centering and pulsing animation */
+.tutorial-highlight {
+  position: relative !important;
+  animation: tutorial-pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 30%, transparent) !important;
+  z-index: 40 !important;
+}
+
+.tutorial-highlight::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: -6px !important;
+  border: 2px dashed var(--primary) !important;
+  border-radius: inherit !important;
+  animation: tutorial-ring-ping 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+  pointer-events: none !important;
+  opacity: 0;
+  z-index: -1 !important;
+}
+
+@keyframes tutorial-ring-ping {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
+@keyframes tutorial-pulse {
+  0%, 100% {
+    transform: scale(1);
+    background-color: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+  }
+  50% {
+    transform: scale(1.02);
+    background-color: color-mix(in srgb, var(--primary) 22%, transparent) !important;
+  }
+}

@@ -602,3 +602,64 @@ def import_employees_route():
     except Exception as e:
         print(f"Error in import route: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@emp_bp.route("/chat/status", methods=["PUT", "OPTIONS"])
+@jwt_required(optional=True)
+def update_chat_status_route():
+    if request.method == "OPTIONS":
+        return {}, 200
+    from flask_jwt_extended import verify_jwt_in_request
+    try:
+        verify_jwt_in_request()
+    except Exception as jwt_err:
+        print(f"[JWT ERROR] in chat/status: {jwt_err}")
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    identity_raw = get_jwt_identity()
+    try:
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+    data = request.get_json() or {}
+    
+    chat_status = data.get("chat_status", "online")
+    chat_status_custom = data.get("chat_status_custom")
+    
+    if EmployeeModel.update_chat_status(user_id, chat_status, chat_status_custom):
+        return jsonify({"success": True, "message": "סטטוס עודכן בהצלחה"})
+    return jsonify({"success": False, "error": "שגיאה בעדכון הסטטוס"}), 500
+
+
+@emp_bp.route("/chat/heartbeat", methods=["POST", "OPTIONS"])
+@jwt_required(optional=True)
+def chat_heartbeat_route():
+    if request.method == "OPTIONS":
+        return {}, 200
+    from flask_jwt_extended import verify_jwt_in_request
+    try:
+        verify_jwt_in_request()
+    except Exception as jwt_err:
+        print(f"[JWT ERROR] in chat/heartbeat: {jwt_err}")
+        return jsonify({"error": "Unauthorized"}), 401
+
+    identity_raw = get_jwt_identity()
+    try:
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+    except (json.JSONDecodeError, TypeError):
+        identity = identity_raw
+
+    user_id = identity["id"] if isinstance(identity, dict) else identity
+    data = request.get_json() or {}
+    
+    recipient_id = data.get("recipient_id")
+    is_typing = data.get("is_typing", False)
+    
+    recipient_info = EmployeeModel.update_heartbeat(user_id, recipient_id, is_typing)
+    
+    return jsonify({
+        "success": True,
+        "recipient": recipient_info
+    })

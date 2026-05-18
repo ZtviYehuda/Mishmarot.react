@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Users, AlertCircle, TrendingUp, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -69,46 +69,40 @@ export const StatCards = ({ stats, totalEmployees }: StatCardsProps) => {
   return (
     <div 
       id="stats-grid" 
-      className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 pb-2 lg:pb-0"
+      className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 pb-2 lg:pb-0"
     >
       {cards.map((card, idx) => (
         <Card
           key={idx}
           className={cn(
-            "group relative overflow-hidden border-0 transition-all rounded-2xl sm:rounded-[2rem] shadow-sm hover:shadow-md py-0 aspect-square flex items-center justify-center",
-            card.hideOnMobile ? "hidden md:flex" : "flex",
-            card.color === "blue" && "bg-blue-50/40 dark:bg-blue-900/10",
-            card.color === "amber" && "bg-amber-50/40 dark:bg-amber-900/10",
-            card.color === "emerald" && "bg-emerald-50/40 dark:bg-emerald-900/10",
-            card.color === "indigo" && "bg-indigo-50/40 dark:bg-indigo-900/10"
+            "group relative overflow-hidden border border-border/40 p-3 sm:p-4 rounded-xl sm:rounded-2xl hover:shadow-md transition-all bg-card/80 flex items-center justify-between",
+            card.hideOnMobile ? "hidden md:flex" : "flex"
           )}
         >
-          <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center gap-1.5 sm:gap-3 w-full h-full">
+          <div className="flex items-center justify-between w-full gap-2">
+            <div className="space-y-0.5 text-right min-w-0 flex-1">
+              <p className="text-[9px] sm:text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wide leading-none truncate">
+                {card.label}
+              </p>
+              <p className="text-base sm:text-xl font-black tracking-tight text-foreground leading-none mt-1">
+                {card.value}
+              </p>
+              {card.subValue && (
+                <p className="text-[8px] sm:text-[9px] font-semibold text-muted-foreground/50 leading-none mt-1">
+                  {card.subValue}
+                </p>
+              )}
+            </div>
             <div className={cn(
-              "w-8 h-8 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0 shadow-sm",
+              "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 shrink-0 shadow-sm",
               card.iconBg,
               card.iconColor
             )}>
-              <card.icon className="w-4 h-4 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
+              <card.icon className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-
-            <div className="flex flex-col items-center text-center min-w-0">
-              <div className="text-xl sm:text-2xl lg:text-4xl font-black text-slate-900 dark:text-white leading-none tracking-tight mb-1">
-                {card.value}
-              </div>
-              <div className="text-[8px] sm:text-[10px] lg:text-[11px] font-black text-slate-500/80 uppercase tracking-tighter sm:tracking-widest">
-                {card.label}
-              </div>
-              {card.subValue && (
-                <div className="text-[7px] sm:text-[9px] font-bold text-slate-400 mt-0.5">
-                  {card.subValue}
-                </div>
-              )}
-            </div>
-          </CardContent>
+          </div>
         </Card>
       ))}
     </div>
   );
 };
-

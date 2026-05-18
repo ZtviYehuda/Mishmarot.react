@@ -352,9 +352,12 @@ export default function MainLayout() {
                 >
                   {item.name}
                 </span>
-                {isActive && (
-                  <div className="absolute left-1 w-1 h-5 bg-primary rounded-full transition-opacity" />
-                )}
+                <div
+                  className={cn(
+                    "absolute left-1 w-1 bg-primary rounded-full transition-all duration-300 ease-out origin-center",
+                    isActive ? "h-5 opacity-100 scale-100" : "h-0 opacity-0 scale-50"
+                  )}
+                />
               </Link>
             );
           })}
@@ -454,15 +457,87 @@ export default function MainLayout() {
               />
             </button>
 
-            {/* Mobile page title — sits between logo and status dot */}
-            <h2 className="text-sm font-black text-foreground tracking-tight leading-none whitespace-nowrap lg:hidden flex-1 text-right pr-1">
-              {currentPageName}
-            </h2>
+            {/* Mobile page title & status dot — sits between logo and date/notifications */}
+            <div className="lg:hidden flex-1 flex flex-col items-start pr-1.5 min-w-0">
+              {/* Green status dot above the name */}
+              <div className="mb-0.5 flex items-center gap-1">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      title="סטטוס מערכת"
+                      className="flex items-center shrink-0 focus:outline-none p-0.5"
+                    >
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                      </span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-60 p-4 rounded-2xl border-border shadow-xl backdrop-blur-xl bg-card/95"
+                    align="start"
+                    dir="rtl"
+                  >
+                    <div className="space-y-3 text-right">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <div>
+                          <h4 className="text-xs font-black text-foreground">
+                            המערכת פעילה
+                          </h4>
+                          <p className="text-[10px] font-bold text-muted-foreground">
+                            חיבור מאובטח
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-muted-foreground">
+                            משתמש מחובר:
+                          </span>
+                          <span className="text-[10px] font-black text-foreground">
+                            {user?.first_name} {user?.last_name}
+                          </span>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-muted/30 border border-border/20">
+                          <p className="text-[10px] font-bold text-muted-foreground mb-1 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            כניסה קודמת:
+                          </p>
+                          <p className="text-[11px] font-black text-primary">
+                            {(user as any)?.previous_login
+                              ? new Date(
+                                  (user as any).previous_login,
+                                ).toLocaleString("he-IL", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "2-digit",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "כניסה ראשונה"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <span className="text-[7.5px] font-black text-emerald-500/90 leading-none">פעיל</span>
+              </div>
+              <h2 className="text-sm font-black text-foreground tracking-tight leading-none whitespace-nowrap">
+                {currentPageName}
+              </h2>
+            </div>
 
-            <div className="flex items-center gap-2">
+            {/* Desktop Only Pulsing Status Dot */}
+            <div className="hidden lg:flex items-center gap-2">
               <Popover>
                 <PopoverTrigger asChild>
                   <button
+                    id="system-status-dot"
                     title="סטטוס מערכת"
                     className="flex items-center shrink-0 focus:outline-none p-1"
                   >
@@ -524,7 +599,7 @@ export default function MainLayout() {
                   </div>
                 </PopoverContent>
               </Popover>
-              <h1 className="text-sm font-black text-foreground tracking-tight leading-none whitespace-nowrap hidden sm:inline">
+              <h1 className="text-sm font-black text-foreground tracking-tight leading-none whitespace-nowrap">
                 מערכת במצב פעיל
               </h1>
             </div>
@@ -533,7 +608,7 @@ export default function MainLayout() {
           <div className="flex items-center gap-2 sm:gap-6 shrink-0">
             {/* Global DateHeader */}
             <div className="shrink-0">
-              <DateHeader className="sm:scale-100 scale-90 origin-left" />
+              <DateHeader className="sm:scale-100 scale-100 origin-left" />
             </div>
 
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
@@ -541,6 +616,7 @@ export default function MainLayout() {
             <div className="flex items-center gap-1.5 sm:gap-3">
               {/* Desktop Only: Separate Chat Button */}
               <button
+                id="chat-toggle-btn"
                 onClick={toggleChat}
                 title="צ'אט והודעות"
                 className="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all relative"
@@ -570,7 +646,7 @@ export default function MainLayout() {
                   </button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="w-[95vw] xs:w-[450px] p-0 overflow-hidden rounded-2xl border-border mr-4 sm:mr-0 shadow-2xl"
+                  className="w-[450px] max-w-[95vw] p-0 overflow-hidden rounded-2xl border-border shadow-2xl"
                   align="start"
                 >
                   <div className="p-4 border-b border-border bg-card sticky top-0 z-10">

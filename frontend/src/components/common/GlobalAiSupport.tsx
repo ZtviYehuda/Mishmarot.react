@@ -17,13 +17,14 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { TourGuideOverlay } from "./TourGuideOverlay";
 import type { TourStep } from "./TourGuideOverlay";
+import { useChat } from "@/context/ChatContext";
 
 const TOUR_STEPS: TourStep[] = [
   // --- DASHBOARD PAGE ---
   { id: 'stats', selector: '#stats-grid', path: '/', title: 'לוח בקרה - נתונים מהירים', content: 'כאן מופיע סיכום המצב הנוכחי: כמה שוטרים לא דיווחו, כמה לא זמינים ומה אחוז הזמינות המבצעית שלכם ברגע זה.' },
   { id: 'birthdays', selector: '#birthdays-card', path: '/', title: 'ימי הולדת השבוע', content: 'מרכז החגיגות! כאן תוכלו לראות מי חוגג, לשלוח לו ברכה אישית בוואטסאפ או לראות את הפרופיל שלו.' },
-  { id: 'dashboard_filters', selector: '#dashboard-filter-trigger, #mobile-filter-trigger', path: '/', title: 'סינון מתקדם (חדש!)', content: 'הוספנו מערכת סינון חדשה ומהירה! בלחיצה כאן תוכלו לסנן את כל הנתונים לפי מחלקה, סטטוס, מעמד ואפילו טווח גילאים מדויק באמצעות סליידר חדשני.' },
   { id: 'report_hub', selector: '#report-hub-card, #report-hub-card-mobile', path: '/', title: 'מרכז הפקת דוחות', content: 'החלק האהוב על המפקדים. מכאן מוציאים את כל דוחות ה-PDF והתמונות לווטסאפ של היחידה בלחיצת כפור.' },
+  { id: 'report_hub_inside', selector: '#report-hub-content', path: '/?tutorial=report-hub-inside', title: 'רשימת הדוחות המהירה', content: 'הכל נגיש בצורה מהירה ונוחה. אפשר לשתף ישירות לוואטסאפ או להוריד כקובץ מכל שורה.' },
   
   // --- ATTENDANCE PAGE ---
   { id: 'attendance_header', selector: '#attendance-header', path: '/attendance', title: 'ניהול נוכחות יומי', content: 'כאן מתבצעת העבודה האמיתית. תוכלו לסנן לפי מדור או צוות ולראות בדיוק מי נמצא איפה.' },
@@ -35,6 +36,11 @@ const TOUR_STEPS: TourStep[] = [
   // --- EMPLOYEES PAGE ---
   { id: 'employees_search', selector: '#employees-search-container', path: '/employees', title: 'חיפוש שוטרים', content: 'מחפשים מישהו ספציפי? פשוט תתחילו להקליד שם או מספר אישי.' },
   { id: 'add_employee_btn', selector: '#add-employee-button', path: '/employees', title: 'קליטת עובד חדש', content: 'הצטרף מישהו חדש ליחידה? דרך הכפתור הזה מקימים אותו במערכת תוך שניות.' },
+
+  // --- CHAT & STATUS ---
+  { id: 'system_status', selector: '#system-status-dot', path: '/', title: 'סטטוס פעילות המערכת', content: 'כאן מופיע חיווי ירוק קבוע המציין שהחיבור לשרת פעיל ומאובטח. לחיצה עליו תציג פרטים על זמן הכניסה האחרון שלך.' },
+  { id: 'chat_toggle', selector: '#chat-toggle-btn', path: '/', title: 'צ\'אט פנימי והודעות', content: 'הכלי המושלם לתקשורת פנימית מהירה! לחיצה על כפתור זה תפתח את מרכז ההודעות והצ\'אט עם כל השוטרים והמפקדים ביחידה.' },
+  { id: 'chat_status_step', selector: '#chat-status-avatar-btn', path: '/', title: 'עדכון סטטוס אישי בצ\'אט', content: 'לחיצה על כפתור האווטאר שלך עם ראשי התיבות בתוך הצ\'אט תפתח תפריט מהיר שבו תוכל להגדיר אם אתה מחובר, עסוק, לא נמצא, או לכתוב סטטוס מותאם אישית!' },
 
   // --- SETTINGS PAGES ---
   { id: 'appearance_palette', selector: '#color-palette-container', path: '/settings?tab=appearance', title: 'בחירת צבע אקצנט', content: 'לחצו על כל צבע במניפה כדי לשנות את הצבע המרכזי של המערכת (כפתורים, לינקים וגרפים) באופן מיידי.' },
@@ -136,6 +142,7 @@ const KNOWLEDGE_BASE = [
 export function GlobalAiSupport() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isChatOpen, openChat } = useChat();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -167,6 +174,18 @@ export function GlobalAiSupport() {
     localStorage.removeItem('ai_support_messages');
     toast.info("השיחה אופסה");
   };
+
+  // Auto open/close chat sidebar during guided tour if a step requires it
+  useEffect(() => {
+    if (currentTourIndex >= 0 && !isSingleStep) {
+      const step = TOUR_STEPS[currentTourIndex];
+      if (step?.id === 'chat_status_step') {
+        if (!isChatOpen) {
+          openChat(null as any);
+        }
+      }
+    }
+  }, [currentTourIndex, isSingleStep, isChatOpen, openChat]);
 
   // --- SMART MATCHING ENGINE 2.0 ---
   // Auto-navigate during tour if step is on a different page or tab
@@ -316,7 +335,7 @@ export function GlobalAiSupport() {
         dragConstraints={{ left: 0, right: typeof window !== 'undefined' ? window.innerWidth - 80 : 300, top: typeof window !== 'undefined' ? -window.innerHeight + 80 : -500, bottom: 0 }}
         dragElastic={0.1}
         dragMomentum={false}
-        onDragEnd={(e, info) => {
+        onDragEnd={(_, info) => {
           if (Math.abs(info.offset.x) > 20 || Math.abs(info.offset.y) > 20) {
             setHasMoved(true);
           }

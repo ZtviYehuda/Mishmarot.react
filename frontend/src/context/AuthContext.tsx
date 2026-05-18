@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import type { AuthUser } from "@/types/auth.types";
+import apiClient from "@/config/api.client";
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -21,6 +22,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  // Global chat heartbeat for presence
+  useEffect(() => {
+    if (!user) return;
+
+    const sendHeartbeat = () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      apiClient.post("/employees/chat/heartbeat", {}).catch(() => {});
+    };
+
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 20000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   return (
     <AuthContext.Provider

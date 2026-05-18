@@ -88,8 +88,11 @@ export const ReportHub: React.FC<ReportHubProps> = ({
 
   useEffect(() => {
     const tutorial = searchParams.get("tutorial");
-    if (tutorial === "report-hub") {
+    if (tutorial === "report-hub" || tutorial === "report-hub-inside") {
       setActiveTutorial(tutorial);
+      if (tutorial === "report-hub-inside") {
+        setIsOpen(true);
+      }
       const timer = setTimeout(() => {
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("tutorial");
@@ -99,6 +102,14 @@ export const ReportHub: React.FC<ReportHubProps> = ({
       return () => clearTimeout(timer);
     }
   }, [searchParams, setSearchParams]);
+
+  // When moving past the report-hub-inside step to attendance, ensure Dialog closes
+  useEffect(() => {
+    const isAttendance = location.pathname.includes('attendance');
+    if (isAttendance && isOpen) {
+      setIsOpen(false);
+    }
+  }, [location.pathname]);
 
   const isOldDate = useMemo(() => {
     if (user?.is_admin) return false;
@@ -202,7 +213,8 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     };
 
     fetchData();
-  }, [isOpen, localDate, localViewMode, dateRange, activeDaysRange, filters, getTrendStats, getComparisonStats, getDashboardStats]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, localDate, localViewMode, dateRange, activeDaysRange, JSON.stringify(filters)]);
 
   const downloadCard = async (ref: any) => {
     if (!ref.current) return;
@@ -215,67 +227,48 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     if (ref.current && ref.current.share) await ref.current.share();
   };
 
-  const ReportCard = ({ icon: Icon, title, description, colorClass, onDownload, onWhatsApp, hasDownload = true, onClick }: any) => (
-    <div 
+  // Mobile: slim horizontal row. Desktop: keeps old card style via sm: breakpoints.
+  const ReportCard = ({ icon: Icon, title, onDownload, onWhatsApp, hasDownload = true, onClick }: any) => (
+    <div
       onClick={onClick}
-      className="group relative bg-white/[0.04] dark:bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-primary/40 rounded-[1.25rem] sm:rounded-[2rem] p-2 sm:p-5 transition-all active:scale-[0.98] overflow-hidden flex flex-col h-full cursor-pointer"
+      className="group flex justify-between items-center p-3.5 bg-card/60 hover:bg-accent border border-border/50 rounded-xl transition-all active:scale-[0.98] cursor-pointer sm:bg-card/40 sm:border-border/40 sm:rounded-[2rem] sm:p-5 sm:hover:border-primary/40 shadow-sm hover:shadow-md"
     >
-      <div className="flex flex-col items-center sm:items-start gap-1.5 sm:gap-4 mb-2 sm:mb-4">
-        <div className={cn(
-          "p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
-          colorClass.replace("bg-", "bg-").replace("text-", "text-")
-        )}>
-          <Icon className="w-4 h-4 sm:w-7 sm:h-7" />
+      {/* Right side: icon + title */}
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 transition-colors group-hover:bg-primary/20">
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
         </div>
-        <div className="flex-1 min-w-0 text-center sm:text-right">
-          <h3 className="text-[10px] sm:text-lg font-black text-foreground group-hover:text-primary transition-colors leading-tight mb-0.5 sm:mb-1">{title}</h3>
-          <p className="hidden xs:line-clamp-2 text-[9px] sm:text-xs font-bold text-muted-foreground/60 leading-none">
-            {description}
-          </p>
-        </div>
+        <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{title}</span>
       </div>
 
-      <div className="mt-auto flex flex-col gap-1.5 sm:gap-3 no-export">
-        <div className="w-full h-px bg-white/5" />
-        <div className="flex items-center gap-1 sm:gap-2">
-           {hasDownload ? (
-             <>
-               <Button 
-                variant="ghost" 
-                onClick={(e) => { e.stopPropagation(); onDownload(); }} 
-                className="h-7 sm:h-10 grow rounded-xl bg-primary/10 text-primary hover:bg-primary/20 font-black text-[9px] sm:text-xs border border-primary/10 px-1"
-              >
-                <Download className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">הורדה</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={(e) => { e.stopPropagation(); onWhatsApp(); }} 
-                className="h-7 sm:h-10 grow rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white font-black text-[9px] sm:text-xs px-1"
-              >
-                <FaWhatsapp className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-                <span className="hidden xs:inline">שיתוף</span>
-              </Button>
-             </>
-           ) : (
-             <Button 
-                variant="ghost" 
-                onClick={(e) => { e.stopPropagation(); onWhatsApp(); }} 
-                className="h-7 sm:h-10 w-full rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white font-black text-[9px] sm:text-xs px-2"
-              >
-                <FaWhatsapp className="w-3.5 h-3.5 sm:w-5 sm:h-5 ml-1" />
-                <span className="inline">שיתוף וריכוז</span>
-              </Button>
-           )}
-        </div>
-      </div>
-      
-      {/* Eye Overlay on hover - Hidden on small mobile */}
-      <div className="absolute top-1.5 left-1.5 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
-        <div className="p-1 px-2 rounded-lg bg-primary/20 text-primary text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
-          <Eye className="w-3 h-3" />
-          צפייה
-        </div>
+      {/* Left side: action buttons */}
+      <div className="flex items-center gap-2 no-export" onClick={(e) => e.stopPropagation()}>
+        {hasDownload ? (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); onWhatsApp(); }}
+              className="p-2 rounded-lg text-emerald-600 dark:text-emerald-500 hover:bg-emerald-500/10 transition-colors active:scale-90"
+              aria-label="שיתוף בוואטסאפ"
+            >
+              <FaWhatsapp className="w-5 h-5" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDownload(); }}
+              className="p-2 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors active:scale-90"
+              aria-label="הורדה"
+            >
+              <Download className="w-5 h-5" />
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={(e) => { e.stopPropagation(); onWhatsApp(); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-600 dark:text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors active:scale-90"
+          >
+            <FaWhatsapp className="w-4 h-4" />
+            שיתוף וריכוז
+          </button>
+        )}
       </div>
     </div>
   );
@@ -336,7 +329,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
         </DialogTrigger>
 
         <DialogContent className={cn(
-          "p-0 overflow-hidden border-none bg-background/95 backdrop-blur-3xl sm:rounded-[2rem] flex flex-col transition-all duration-300",
+          "p-0 overflow-hidden border border-border/40 bg-background/95 backdrop-blur-3xl sm:rounded-[2rem] flex flex-col transition-all duration-300 shadow-2xl",
           previewType !== null && "h-full sm:h-auto sm:max-h-[92vh]",
           "sm:max-w-4xl sm:w-full"
         )}>
@@ -383,11 +376,11 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             ) : null}
 
             {previewType === null ? (
-              <div className="grid grid-cols-2 gap-2 sm:gap-6 animate-in fade-in zoom-in-95 duration-300">
-                <ReportCard icon={Users} title="מצבת כוח אדם" description="חלוקה ויזואלית לפי סטטוס נוכחות." colorClass="bg-blue-500/20 text-blue-400" onClick={() => setPreviewType('snapshot')} onDownload={() => downloadCard(snapshotRef)} onWhatsApp={() => shareCard(snapshotRef)} />
-                <ReportCard icon={TrendingUp} title="מגמות וזמינות" description="ניתוח היסטורי של רמת הזמינות." colorClass="bg-amber-500/20 text-amber-500" onClick={() => setPreviewType('trend')} onDownload={() => downloadCard(trendRef)} onWhatsApp={() => shareCard(trendRef)} />
-                <ReportCard icon={BarChart2} title="השוואת תת-יחידות" description="השוואה בין מחלקות ומדורים." colorClass="bg-purple-500/20 text-purple-400" onClick={() => setPreviewType('comparison')} onDownload={() => downloadCard(comparisonRef)} onWhatsApp={() => shareCard(comparisonRef)} />
-                <ReportCard icon={Gift} title="ריכוז ימי הולדת" description="שיגור ברכות וריכוז חוגגים שבועי." colorClass="bg-rose-500/20 text-rose-500" onClick={() => setPreviewType('birthdays')} hasDownload={false} onWhatsApp={() => onShareBirthdays()} />
+              <div id="report-hub-content" className="flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-300">
+                <ReportCard icon={Users} title="מצבת כוח אדם" onClick={() => setPreviewType('snapshot')} onDownload={() => downloadCard(snapshotRef)} onWhatsApp={() => shareCard(snapshotRef)} />
+                <ReportCard icon={TrendingUp} title="מגמות וזמינות" onClick={() => setPreviewType('trend')} onDownload={() => downloadCard(trendRef)} onWhatsApp={() => shareCard(trendRef)} />
+                <ReportCard icon={BarChart2} title="השוואת תת-יחידות" onClick={() => setPreviewType('comparison')} onDownload={() => downloadCard(comparisonRef)} onWhatsApp={() => shareCard(comparisonRef)} />
+                <ReportCard icon={Gift} title="ריכוז ימי הולדת" onClick={() => setPreviewType('birthdays')} hasDownload={false} onWhatsApp={() => onShareBirthdays()} />
               </div>
             ) : (
               <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500">

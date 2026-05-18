@@ -108,7 +108,7 @@ class EmployeeModel:
                        e.security_clearance, e.police_license, e.is_active,
                        e.must_change_password, e.is_admin, e.is_commander,
                        e.last_password_change, e.gender, e.last_login, e.previous_login,
-                       e.theme, e.accent_color, e.font_size,
+                       e.theme, e.accent_color, e.font_size, e.last_seen, e.chat_status, e.chat_status_custom,
                        e.service_type_id, svt.name as service_type_name,
                        COALESCE(d.name, d_s_dir.name, d_dir.name) as department_name, 
                        COALESCE(s.name, s_dir.name) as section_name, 
@@ -277,6 +277,8 @@ class EmployeeModel:
                 SELECT DISTINCT e.id, e.first_name, e.last_name, e.dominant_name, e.username, e.phone_number, e.email,
                        e.birth_date, e.is_commander, e.security_clearance, e.police_license, e.gender,
                        e.is_active, e.department_id, e.section_id, e.team_id,
+                       e.last_seen, e.chat_status, e.chat_status_custom,
+                       (e.last_seen IS NOT NULL AND e.last_seen > NOW() - INTERVAL '30 seconds') as is_online,
                        t.name as team_name, 
                        COALESCE(s.name, s_dir.name) as section_name, 
                        COALESCE(d.name, d_dir.name) as department_name,
@@ -1375,6 +1377,91 @@ class EmployeeModel:
                 "SELECT id, first_name, last_name FROM employees WHERE is_admin = TRUE AND is_active = TRUE ORDER BY id LIMIT 1"
             )
             return cur.fetchone()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def update_chat_status(emp_id, chat_status, chat_status_custom):
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                UPDATE employees 
+                SET chat_status = %s, chat_status_custom = %s 
+                WHERE id = %s
+                """,
+                (chat_status, chat_status_custom, emp_id)
+            )
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error updating chat status: {e}")
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def update_heartbeat(emp_id, recipient_id=None, is_typing=False):
+        conn = get_db_connection()
+        if not conn:
+            return None
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # 1. Update own heartbeat last_seen
+            cur.execute(
+                "UPDATE employees SET last_seen = NOW() WHERE id = %s",
+                (emp_id,)
+            )
+            
+            # 2. Update typing status
+            if recipient_id:
+                if is_typing:
+                    cur.execute(
+                        """
+                        UPDATE employees 
+                        SET typing_to = %s, typing_at = NOW() 
+                        WHERE id = %s
+                        """,
+                        (recipient_id, emp_id)
+                    )
+                else:
+                    cur.execute(
+                        """
+                        UPDATE employees 
+                        SET typing_to = NULL, typing_at = NULL 
+                        WHERE id = %s AND typing_to = %s
+                        """,
+                        (emp_id, recipient_id)
+                    )
+            
+            # 3. If recipient_id is provided, get recipient presence and typing status
+            recipient_info = None
+            if recipient_id:
+                cur.execute(
+                    """
+                    SELECT id, first_name, last_name, chat_status, chat_status_custom,
+                           (last_seen IS NOT NULL AND last_seen > NOW() - INTERVAL '30 seconds') as is_online,
+                           (typing_to = %s AND typing_at IS NOT NULL AND typing_at > NOW() - INTERVAL '6 seconds') as is_typing
+                    FROM employees
+                    WHERE id = %s
+                    """,
+                    (emp_id, recipient_id)
+                )
+                recipient_info = cur.fetchone()
+                if recipient_info:
+                    recipient_info = dict(recipient_info)
+            
+            conn.commit()
+            return recipient_info
+        except Exception as e:
+            print(f"Error updating heartbeat: {e}")
+            conn.rollback()
+            return None
         finally:
             conn.close()
 

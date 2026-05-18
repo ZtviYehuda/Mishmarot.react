@@ -609,7 +609,7 @@ export default function DashboardPage() {
             title="לוח בקרה"
             subtitle={format(selectedDate, "EEEE, d MMMM yyyy", { locale: he })}
             className="mb-4 sm:mb-6"
-            iconClassName="hidden sm:block"
+            iconClassName="hidden sm:flex"
             badge={
               // Desktop only — mobile uses the grid below
               <div className="hidden lg:flex items-center gap-2">

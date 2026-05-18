@@ -267,7 +267,7 @@ const EmployeesChartComponent = (
             </div>
           ) : (
             <div className="flex-1 w-full flex-col min-h-0 relative mt-0" style={{ direction: "ltr" }}>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                 {chartType === "pie" ? (
                   <PieChart margin={{ left: 40, right: 40, top: 10, bottom: 10 }}>
                     <Pie

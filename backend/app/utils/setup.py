@@ -321,6 +321,23 @@ def setup_database():
                 );
             """
             )
+
+            # --- Chat Presence and Custom Status Migrations ---
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP;"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS chat_status VARCHAR(50) DEFAULT 'online';"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS chat_status_custom VARCHAR(255) DEFAULT NULL;"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS typing_to INTEGER;"
+            )
+            cur.execute(
+                "ALTER TABLE employees ADD COLUMN IF NOT EXISTS typing_at TIMESTAMP;"
+            )
         except Exception as e:
             print(f"Migration info: {e}")
             conn.rollback()
