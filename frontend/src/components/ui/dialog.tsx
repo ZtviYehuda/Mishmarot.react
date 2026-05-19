@@ -70,6 +70,36 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
 }) {
+  // Mobile popstate back-button interceptor:
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const stateKey = "modal-" + Math.random().toString(36).substring(2, 11);
+    window.history.pushState({ modalState: stateKey }, "");
+
+    const handlePopState = () => {
+      // Dispatch Escape key down event to trigger Radix UI close handler
+      const escapeEvent = new KeyboardEvent("keydown", {
+        key: "Escape",
+        code: "Escape",
+        keyCode: 27,
+        which: 27,
+        bubbles: true,
+        cancelable: true,
+      });
+      document.dispatchEvent(escapeEvent);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (window.history.state && window.history.state.modalState === stateKey) {
+        window.history.back();
+      }
+    };
+  }, []);
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />

@@ -39,9 +39,9 @@ import {
   X,
   CheckCheck,
   History,
+  RotateCcw,
 } from "lucide-react";
 import { AttendanceCalendarView } from "@/components/attendance/AttendanceCalendarView";
-import { AttendanceStatCards } from "@/components/attendance/AttendanceStatCards";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -103,6 +103,56 @@ export default function AttendancePage() {
   const closeCalendar = () => startTransition(() => setCalendarOpen(false));
 
   // Load filters from localStorage on mount
+  const isFilterActive = useMemo(() => {
+    if (searchTerm !== "") return true;
+    if (selectedStatusId !== "all") return true;
+    if (selectedServiceTypeId !== "all") return true;
+
+    const isDeptFilterable = !(user && !user.is_admin && user.department_id);
+    if (isDeptFilterable && selectedDeptId !== "all") return true;
+
+    const isSectionFilterable = !(user && !user.is_admin && user.section_id);
+    if (isSectionFilterable && selectedSectionId !== "all") return true;
+
+    const isTeamFilterable = !(user && !user.is_admin && user.team_id);
+    if (isTeamFilterable && selectedTeamId !== "all") return true;
+
+    return false;
+  }, [
+    searchTerm,
+    selectedStatusId,
+    selectedServiceTypeId,
+    selectedDeptId,
+    selectedSectionId,
+    selectedTeamId,
+    user
+  ]);
+
+  const handleClearFilters = () => {
+    localStorage.removeItem("attendance_filters");
+    if (!user || user.is_admin) {
+      setSelectedDeptId("all");
+    } else if (!user.department_id) {
+      setSelectedDeptId("all");
+    }
+
+    if (
+      !user ||
+      user.is_admin ||
+      (!user.section_id && !user.team_id)
+    ) {
+      setSelectedSectionId("all");
+    }
+
+    if (!user || user.is_admin || !user.team_id) {
+      setSelectedTeamId("all");
+    }
+
+    setSelectedStatusId("all");
+    setSelectedServiceTypeId("all");
+    setSearchTerm("");
+    setSelectedEmployeeIds([]);
+  };
   useEffect(() => {
     const savedFilters = localStorage.getItem("attendance_filters");
     if (savedFilters) {
@@ -223,7 +273,7 @@ export default function AttendancePage() {
     setSections(newSections);
     
     // Only reset if the current selection is no longer valid
-    if (selectedSectionId !== "all" && !newSections.find(s => s.id.toString() === selectedSectionId)) {
+    if (selectedSectionId !== "all" && !newSections.find((s: any) => s.id.toString() === selectedSectionId)) {
         setSelectedSectionId("all");
     }
   }, [selectedDeptId, departments]);
@@ -236,7 +286,7 @@ export default function AttendancePage() {
     setTeams(newTeams);
     
     // Only reset if the current selection is no longer valid
-    if (selectedTeamId !== "all" && !newTeams.find(t => t.id.toString() === selectedTeamId)) {
+    if (selectedTeamId !== "all" && !newTeams.find((t: any) => t.id.toString() === selectedTeamId)) {
         setSelectedTeamId("all");
     }
   }, [selectedSectionId, sections]);
@@ -417,8 +467,6 @@ export default function AttendancePage() {
     [activeEmployees],
   );
 
-  const updatedTodayCount = activeEmployees.length;
-
   const computedStats = useMemo(() => {
     const statusMap = new Map<
       string,
@@ -474,58 +522,6 @@ export default function AttendancePage() {
     });
   }, [activeEmployees, statusTypes]);
 
-  // Mobile-specific grouped stats for a cleaner gauge
-  const mobileGaugeStats = useMemo(() => {
-    const grouped = new Map<
-      string,
-      { status_id: string; status_name: string; color: string; count: number }
-    >();
-
-    computedStats.forEach((s) => {
-      let groupName = s.status_name;
-      let groupId = s.status_id.toString();
-      let color = s.color;
-
-      if (s.status_name.includes("חופשה")) {
-        groupName = "חופשה";
-        groupId = "GROUP_VACATION";
-        color = "#3b82f6"; // Primary Blue
-      } else if (s.status_name.includes("משרד")) {
-        groupName = "משרד";
-        groupId = "GROUP_OFFICE";
-        color = "#10b981"; // Emerald Green
-      }
-
-      if (grouped.has(groupName)) {
-        grouped.get(groupName)!.count += s.count;
-      } else {
-        grouped.set(groupName, {
-          status_id: groupId,
-          status_name: groupName,
-          color: color,
-          count: s.count,
-        });
-      }
-    });
-
-    return Array.from(grouped.values())
-      .filter((s) => s.count > 0)
-      .sort((a, b) => b.count - a.count);
-  }, [computedStats]);
-
-  const availabilityStats = useMemo(() => {
-    const availableKeywords = ["נוכח", "משרד", "תגבור", "קורס"];
-    const reported = activeEmployees.length;
-    const available = activeEmployees.filter((emp) =>
-      availableKeywords.some((kw) => emp.status_name?.includes(kw))
-    ).length;
-    return {
-      available,
-      unavailable: reported - available,
-      totalReported: reported
-    };
-  }, [activeEmployees]);
-
   const totalCount = scopeEmployees.length;
 
   const missingEmployeeIds = useMemo(() => {
@@ -573,7 +569,7 @@ export default function AttendancePage() {
       className="flex flex-col min-h-full selection:bg-primary/10 selection:text-primary transition-all"
       dir="rtl"
     >
-      <div className="pt-6 pb-4 shrink-0 transition-all px-4 sm:px-6">
+      <div className="pt-4 pb-4 shrink-0 transition-all px-0 sm:px-2">
         {/* Premium Page Header Section */}
         <PageHeader
           icon={CalendarDays}
@@ -597,10 +593,8 @@ export default function AttendancePage() {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all min-w-[64px]",
-                    calendarOpen
-                      ? "text-primary bg-primary/10 border-primary/30"
-                      : "text-primary hover:bg-primary/5",
+                    "h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2 xl:px-4 py-1 justify-center min-w-[64px] border-none bg-transparent text-primary hover:bg-primary/5",
+                    calendarOpen && "bg-primary/10",
                   )}
                   onClick={openCalendar}
                 >
@@ -611,7 +605,7 @@ export default function AttendancePage() {
                 {!user?.is_temp_commander && (
                   <Button
                     variant="ghost"
-                    className="h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all min-w-[64px]"
+                    className="h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2 xl:px-4 py-1 justify-center min-w-[64px] border-none bg-transparent text-primary hover:bg-primary/5"
                     onClick={() => setExportDialogOpen(true)}
                   >
                     <Download className="w-4 h-4" />
@@ -623,10 +617,10 @@ export default function AttendancePage() {
                   id="self-report-button"
                   variant={isReportedToday ? "default" : "ghost"}
                   className={cn(
-                    "h-11 rounded-xl flex-col gap-0.5 font-bold transition-all px-2 xl:px-4 py-1 justify-center backdrop-blur-xl min-w-[64px]",
+                    "h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2 xl:px-4 py-1 justify-center min-w-[64px]",
                     isReportedToday
-                      ? "bg-emerald-500/90 hover:bg-emerald-600 border-white/20 text-white"
-                      : "border border-border/40 bg-card/40 text-primary hover:bg-primary/5",
+                      ? "bg-emerald-500/90 hover:bg-emerald-600 text-white"
+                      : "border-none bg-transparent text-primary hover:bg-primary/5",
                     searchParams.get("tutorial") === "self-report" && "tutorial-highlight"
                   )}
                   onClick={() => {
@@ -652,7 +646,7 @@ export default function AttendancePage() {
                 {unverifiedEmployees.length > 0 && (
                   <Button
                     variant="default"
-                    className="h-11 rounded-xl flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all bg-primary hover:bg-primary/90 text-white min-w-[64px]"
+                    className="h-11 rounded-xl flex-col gap-0.5 font-black px-2 xl:px-4 py-1 justify-center transition-all bg-primary hover:bg-primary/90 text-white min-w-[64px]"
                     onClick={async () => {
                       const success = await verifyRoster(
                         format(selectedDate, "yyyy-MM-dd"),
@@ -676,9 +670,8 @@ export default function AttendancePage() {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all min-w-[64px]",
-                    selectedEmployeeIds.length > 0 &&
-                      "bg-primary/10 border-primary/20",
+                    "h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2 xl:px-4 py-1 justify-center min-w-[64px] border-none bg-transparent text-primary hover:bg-primary/5",
+                    selectedEmployeeIds.length > 0 && "bg-primary/10",
                   )}
                   onClick={() => {
                     setAlertContext(null);
@@ -693,8 +686,10 @@ export default function AttendancePage() {
           }
         />
 
+
+
         {/* Mobile Action Buttons - Full Screen Width */}
-        <div className="lg:hidden w-full px-4 mb-2">
+        <div className="lg:hidden w-full px-0 mb-2">
           <div
             className={cn(
               "grid gap-2",
@@ -707,12 +702,10 @@ export default function AttendancePage() {
           >
             {/* Calendar button mobile */}
             <Button
-              variant="outline"
+              variant="ghost"
               className={cn(
-                "h-11 rounded-xl gap-1 font-bold text-[10px] flex-col py-2 px-1",
-                calendarOpen
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "border-border/40 bg-card/40 text-primary hover:bg-primary/5",
+                "h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1 border-none bg-transparent text-primary hover:bg-primary/5",
+                calendarOpen && "bg-primary/10",
               )}
               onClick={openCalendar}
             >
@@ -721,8 +714,8 @@ export default function AttendancePage() {
             </Button>
             {!user?.is_temp_commander && (
               <Button
-                variant="outline"
-                className="h-11 rounded-xl border-border/40 bg-card/40 text-primary hover:bg-primary/5 gap-1 font-bold text-[10px] flex-col py-2 px-1"
+                variant="ghost"
+                className="h-11 rounded-xl text-primary hover:bg-primary/5 gap-1 font-black text-[10px] flex-col py-2 px-1 border-none bg-transparent"
                 onClick={() => setExportDialogOpen(true)}
               >
                 <Download className="w-4 h-4" />
@@ -731,12 +724,12 @@ export default function AttendancePage() {
             )}
 
             <Button
-              variant={isReportedToday ? "default" : "outline"}
+              variant={isReportedToday ? "default" : "ghost"}
               className={cn(
-                "h-11 rounded-xl gap-1 font-bold text-[10px] flex-col py-2 px-1",
+                "h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1",
                 isReportedToday
-                  ? "bg-emerald-500 hover:bg-emerald-600 border-white/20 text-white"
-                  : "border-border/40 bg-card/40 text-primary hover:bg-primary/5",
+                  ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                  : "border-none bg-transparent text-primary hover:bg-primary/5",
               )}
               onClick={() => {
                 if (currentUserEmp) {
@@ -761,7 +754,7 @@ export default function AttendancePage() {
             {unverifiedEmployees.length > 0 && (
               <Button
                 variant="default"
-                className="h-11 rounded-xl gap-1 font-bold text-[10px] flex-col py-2 px-1 bg-blue-600 hover:bg-blue-700 text-white"
+                className="h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1 bg-blue-600 hover:bg-blue-700 text-white"
                 onClick={async () => {
                   const success = await verifyRoster(
                     format(selectedDate, "yyyy-MM-dd"),
@@ -781,11 +774,10 @@ export default function AttendancePage() {
             )}
 
             <Button
-              variant="outline"
+              variant="ghost"
               className={cn(
-                "h-11 rounded-xl border-border/40 bg-card/40 text-primary hover:bg-primary/5 gap-1 font-bold text-[10px] flex-col py-2 px-1",
-                selectedEmployeeIds.length > 0 &&
-                  "bg-primary/10 border-primary/20",
+                "h-11 text-primary hover:bg-primary/5 gap-1 font-black text-[10px] flex-col py-2 px-1 border-none bg-transparent",
+                selectedEmployeeIds.length > 0 && "bg-primary/10",
               )}
               onClick={() => {
                 setAlertContext(null);
@@ -841,7 +833,7 @@ export default function AttendancePage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.2 }}
-            className="flex-1 px-2 sm:px-4 pb-4"
+            className="flex-1 px-0 sm:px-2 pb-4"
           >
             <div className="bg-card border border-border/50 rounded-2xl p-3 sm:p-4 md:p-5 h-full">
               <AttendanceCalendarView
@@ -865,7 +857,7 @@ export default function AttendancePage() {
             className="pb-4 space-y-4"
           >
             {/* Filters Bar */}
-            <Card id="status-filters" className="p-4 sm:p-6 overflow-hidden">
+            <Card id="status-filters" className="p-4 sm:p-6 overflow-visible">
               {/* Mobile View: Search + Filter Button */}
               <div className="flex md:hidden gap-3 items-center">
                 <div className="relative flex-1">
@@ -877,13 +869,36 @@ export default function AttendancePage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setFilterOpen(true)}
-                  className="h-11 w-11 p-0 rounded-xl border-dashed border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 shrink-0"
-                >
-                  <Filter className="w-5 h-5" />
-                </Button>
+                <div className="relative flex flex-col items-center shrink-0">
+                  <AnimatePresence>
+                    {isFilterActive && (
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                        type="button"
+                        onClick={handleClearFilters}
+                        className="absolute -top-12 w-9 h-9 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all z-20"
+                        title="אפס סינון"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => setFilterOpen(true)}
+                    className={cn(
+                      "h-11 w-11 p-0 rounded-xl border-dashed shrink-0 transition-all",
+                      isFilterActive
+                        ? "border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/10"
+                        : "border-primary/30 text-primary bg-primary/5 hover:bg-primary/10"
+                    )}
+                  >
+                    <Filter className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
 
               {/* Desktop View: Full Filters */}
@@ -1046,31 +1061,7 @@ export default function AttendancePage() {
                   variant="ghost"
                   className="md:col-span-1 h-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2 w-auto min-w-[44px]"
                   title="נקה סינון"
-                  onClick={() => {
-                    localStorage.removeItem("attendance_filters");
-                    if (!user || user.is_admin) {
-                      setSelectedDeptId("all");
-                    } else if (!user.department_id) {
-                      setSelectedDeptId("all");
-                    }
-
-                    if (
-                      !user ||
-                      user.is_admin ||
-                      (!user.section_id && !user.team_id)
-                    ) {
-                      setSelectedSectionId("all");
-                    }
-
-                    if (!user || user.is_admin || !user.team_id) {
-                      setSelectedTeamId("all");
-                    }
-
-                    setSelectedStatusId("all");
-                    setSelectedServiceTypeId("all");
-                    setSearchTerm("");
-                    setSelectedEmployeeIds([]);
-                  }}
+                  onClick={handleClearFilters}
                 >
                   <X className="w-4 h-4" />
                   <span className="hidden lg:inline text-xs font-bold">
@@ -1250,15 +1241,8 @@ export default function AttendancePage() {
                       variant="outline"
                       className="font-bold rounded-xl"
                       onClick={() => {
-                        localStorage.removeItem("attendance_filters");
-                        setSelectedStatusId("all");
-                        setSelectedServiceTypeId("all");
-                        if (!user || user.is_admin || !user.department_id)
-                          setSelectedDeptId("all");
-                        if (!user || user.is_admin || !user.section_id)
-                          setSelectedSectionId("all");
-                        if (!user || user.is_admin || !user.team_id)
-                          setSelectedTeamId("all");
+                        handleClearFilters();
+                        setFilterOpen(false);
                       }}
                     >
                       נקה
@@ -1588,22 +1572,22 @@ export default function AttendancePage() {
               </div>
             </div>
 
-            <div id="attendance-table-mobile" className="lg:hidden space-y-3">
+            <div id="attendance-table-mobile" className="lg:hidden flex flex-col gap-3">
               {loading ? (
-                <div className="bg-card rounded-2xl p-8 text-center border border-border ">
+                <div className="bg-card rounded-xl p-8 text-center border border-border">
                   <p className="text-xs font-bold text-muted-foreground">
                     טוען נתונים...
                   </p>
                 </div>
               ) : filteredEmployees.length === 0 ? (
-                <div className="bg-card rounded-2xl p-8 text-center border border-border ">
+                <div className="bg-card rounded-xl p-8 text-center border border-border">
                   <p className="text-xs font-bold text-muted-foreground">
                     לא נמצאו שוטרים
                   </p>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between px-2 text-xs font-bold text-muted-foreground uppercase">
+                  <div className="flex items-center justify-between px-1 text-xs font-bold text-muted-foreground uppercase">
                     <span>רשימת שוטרים ({filteredEmployees.length})</span>
                     <div className="flex items-center gap-3">
                       <span
@@ -1613,14 +1597,14 @@ export default function AttendancePage() {
                               filteredEmployees.length,
                           )
                         }
-                        className="text-primary cursor-pointer active:opacity-70 select-none"
+                        className="text-primary cursor-pointer active:opacity-70 select-none text-[11px] font-black"
                       >
                         {selectedEmployeeIds.length === filteredEmployees.length
                           ? "בטל בחירה"
                           : "בחר הכל"}
                       </span>
                       <Checkbox
-                        className="w-4 h-4"
+                        className="w-4 h-4 border-2 rounded"
                         checked={
                           filteredEmployees.length > 0 &&
                           selectedEmployeeIds.length ===
@@ -1639,24 +1623,38 @@ export default function AttendancePage() {
                         selectedDate.toDateString();
                     const isSelected = selectedEmployeeIds.includes(emp.id);
 
+                    const isToday = selectedDate.toDateString() === new Date().toDateString();
+                    const rawName = emp.status_name?.trim() || "";
+                    const statusName = (rawName === "חופשה חול" || rawName === "חופשה חו\"ל") ? "חו' חול" : rawName;
+                    const isDefaultStatus = [
+                      "משרד",
+                      "נוכח",
+                      "ביחידה",
+                      "בבסיס",
+                      "רגיל",
+                    ].some((s) => statusName.includes(s));
+
+                    const isAbsent = !isUpdatedToday || (!isToday && isDefaultStatus) || statusName === "לא מדווח" || statusName === "לא דווח";
+
                     return (
                       <div
                         key={emp.id}
                         className={cn(
-                          "group bg-card/60 backdrop-blur-xl rounded-[24px] border  overflow-hidden transition-all active:scale-[0.98]",
+                          "group bg-card/60 dark:bg-card/30 rounded-2xl border border-border/40 p-4 transition-all active:scale-[0.98] cursor-pointer text-right shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] backdrop-blur-xl",
                           isSelected
-                            ? "bg-primary/10 border-primary "
-                            : "border-border/40",
+                            ? "ring-2 ring-primary/80 bg-primary/[0.02] dark:bg-primary/[0.04]"
+                            : "hover:border-primary/40",
                           !emp.is_active && "grayscale opacity-80",
                         )}
                         onClick={() => handleSelectOne(emp.id, !isSelected)}
                       >
-                        <div className="p-4">
-                          <div className="flex items-start gap-4">
-                            {/* Avatar/Initials */}
+                        {/* Upper Section: Avatar + Name on Right, Status Tag on Left */}
+                        <div className="flex justify-between items-center mb-3.5">
+                          <div className="flex items-center gap-3">
+                            {/* Small Avatar */}
                             <div
                               className={cn(
-                                "w-12 h-12 rounded-[18px] flex items-center justify-center font-bold text-xs shrink-0 transition-transform",
+                                "w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-transform",
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
                                   : "bg-muted text-muted-foreground border border-border/50",
@@ -1665,208 +1663,81 @@ export default function AttendancePage() {
                               {emp.first_name[0]}
                               {emp.last_name[0]}
                             </div>
-
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-2 mb-1">
-                                <div className="flex flex-col">
-                                  <EmployeeLink
-                                    employee={emp}
-                                    className="text-[15px] font-bold text-foreground truncate text-right justify-start p-0 h-auto hover:no-underline"
-                                  />
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] text-muted-foreground font-bold tracking-widest">
-                                      {emp.username}
-                                    </span>
-                                    <span className="text-[10px] text-muted-foreground/30">
-                                      •
-                                    </span>
-                                    <span className="text-[10px] text-muted-foreground font-bold">
-                                      {emp.service_type_name}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div
-                                  className={cn(
-                                    "w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ",
-                                    isUpdatedToday
-                                      ? "ring-4 ring-emerald-500/10"
-                                      : "animate-pulse ring-4 ring-rose-500/10",
-                                  )}
-                                  style={{
-                                    backgroundColor: (() => {
-                                      const isToday =
-                                        selectedDate.toDateString() ===
-                                        new Date().toDateString();
-
-                                      const statusName =
-                                        emp.status_name?.trim() || "";
-
-                                      // Allowlist: Only these statuses "stick" without explicit daily update
-                                      const isLongTermStatus = [
-                                        "חופש",
-                                        "מחלה",
-                                        "גימל",
-                                        "קורס",
-                                        "אבטחה",
-                                        "תגבור",
-                                        'חו"ל',
-                                        "סיפוח",
-                                        "הפניה",
-                                        "מיוחדת",
-                                      ].some((s) => statusName.includes(s));
-
-                                      // If not today, and not explicitly updated for this date, and NOT a long-term status -> Show Gray
-                                      if (
-                                        !isToday &&
-                                        !isUpdatedToday &&
-                                        !isLongTermStatus
-                                      ) {
-                                        return "#94a3b8"; // Slate-400
-                                      }
-                                      return emp.status_color || "#cbd5e1";
-                                    })(),
-                                  }}
-                                />
-                              </div>
-
-                              {/* Org Path */}
-                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground/60 font-medium mb-3">
-                                <span className="truncate">
-                                  {emp.department_name}
-                                </span>
-                                {emp.section_name && (
-                                  <>
-                                    <span className="opacity-30">/</span>
-                                    <span className="truncate">
-                                      {emp.section_name}
-                                    </span>
-                                  </>
-                                )}
-                                {emp.team_name && (
-                                  <>
-                                    <span className="opacity-30">/</span>
-                                    <span className="truncate">
-                                      {emp.team_name}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-
-                              {/* Status Capsule */}
-                              <div
-                                className={cn(
-                                  "rounded-2xl p-2.5 flex items-center justify-between border transition-colors",
-                                  isUpdatedToday
-                                    ? "bg-emerald-500/[0.03] border-emerald-500/10"
-                                    : "bg-muted/50 border-border/50",
-                                )}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span
-                                    className={cn(
-                                      "text-xs font-bold",
-                                      isUpdatedToday
-                                        ? "text-emerald-700"
-                                        : (() => {
-                                            const isToday =
-                                              selectedDate.toDateString() ===
-                                              new Date().toDateString();
-                                            const statusName =
-                                              emp.status_name?.trim() || "";
-                                            const isLongTermStatus = [
-                                              "חופש",
-                                              "מחלה",
-                                              "גימל",
-                                              "קורס",
-                                              "אבטחה",
-                                              "תגבור",
-                                              'חו"ל',
-                                              "סיפוח",
-                                              "הפניה",
-                                              "מיוחדת",
-                                            ].some((s) =>
-                                              statusName.includes(s),
-                                            );
-
-                                            if (
-                                              !isToday &&
-                                              !isUpdatedToday &&
-                                              !isLongTermStatus
-                                            ) {
-                                              return "text-muted-foreground";
-                                            }
-                                            return "text-foreground";
-                                          })(),
-                                    )}
-                                  >
-                                    {(() => {
-                                      const isToday =
-                                        selectedDate.toDateString() ===
-                                        new Date().toDateString();
-                                      const rawName = emp.status_name?.trim() || "";
-                                      const statusName = (rawName === "חופשה חול" || rawName === "חופשה חו\"ל") ? "חו' חול" : rawName;
-                                      const isLongTermStatus = [
-                                        "חופש",
-                                        "מחלה",
-                                        "גימל",
-                                        "קורס",
-                                        "אבטחה",
-                                        "תגבור",
-                                        'חו"ל',
-                                        "סיפוח",
-                                        "הפניה",
-                                        "מיוחדת",
-                                      ].some((s) => statusName.includes(s));
-
-                                      if (
-                                        !isToday &&
-                                        !isUpdatedToday &&
-                                        !isLongTermStatus
-                                      ) {
-                                        return "לא דווח";
-                                      }
-                                      return statusName || "טרם דווח";
-                                    })()}
-                                  </span>
-                                </div>
-                                {isUpdatedToday && (
-                                  <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-600/70 bg-emerald-500/5 px-2 py-0.5 rounded-full">
-                                    <Clock className="w-3 h-3" />
-                                    {format(
-                                      new Date(emp.last_status_update!),
-                                      "HH:mm",
-                                    )}
-                                  </div>
-                                )}
-                              </div>
+                            
+                            {/* Employee Link / Name */}
+                            <div className="flex flex-col text-right">
+                              <EmployeeLink
+                                employee={emp}
+                                className="text-sm font-bold text-foreground hover:no-underline p-0 h-auto"
+                              />
+                              <span className="text-[10px] text-gray-500 font-medium leading-none mt-0.5">
+                                #{emp.username}
+                              </span>
                             </div>
+                          </div>
+
+                          {/* Status Tag (נוכח/נעדר) */}
+                          <span
+                            className={cn(
+                              "rounded-full px-2.5 py-0.5 text-[10px] font-black border transition-colors",
+                              !isAbsent
+                                ? "bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                : "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                            )}
+                          >
+                            {isAbsent ? "נעדר" : "נוכח"} ({statusName || "לא דווח"})
+                          </span>
+                        </div>
+
+                        {/* Middle Section: Details (Role, Unit) with theme responsive colors */}
+                        <div className="space-y-1 text-right mb-4 text-[11px] text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-1 font-medium">
+                            <span className="opacity-70">תפקיד:</span>
+                            <span className="text-foreground/90 font-bold">{getProfessionalTitle(emp)}</span>
+                            {emp.service_type_name && (
+                              <>
+                                <span className="opacity-40">•</span>
+                                <span className="text-foreground/90 font-bold">{emp.service_type_name}</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1 font-medium">
+                            <span className="opacity-70">שיוך ארגוני:</span>
+                            <span className="text-foreground/90 font-bold">
+                              {emp.department_name}
+                              {emp.section_name && ` / ${emp.section_name}`}
+                              {emp.team_name && ` / ${emp.team_name}`}
+                            </span>
                           </div>
                         </div>
 
-                        {/* Actions Bar */}
-                        <div className="flex border-t border-border/50 bg-muted/20">
-                          <button
-                            className="flex-1 py-3 text-[11px] font-bold text-primary hover:bg-primary/5 active:bg-primary/10 transition-colors flex items-center justify-center gap-2 border-l border-border/50"
+                        {/* Actions Row at bottom of card */}
+                        <div className="flex gap-2 pt-3 border-t border-border/30 dark:border-border/10 no-export">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 flex-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-bold gap-1 px-2"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenStatusModal(emp);
                             }}
                           >
                             <ClipboardCheck className="w-3.5 h-3.5" />
-                            עדכן נוכחות
-                          </button>
+                            <span>עדכן נוכחות</span>
+                          </Button>
                           {!user?.is_temp_commander && (
-                            <button
-                              className="flex-1 py-3 text-[11px] font-bold text-muted-foreground hover:bg-muted/50 active:bg-muted transition-colors flex items-center justify-center gap-2"
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 flex-1 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 text-xs font-bold gap-1 px-2"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleOpenHistoryModal(emp);
                               }}
                             >
                               <History className="w-3.5 h-3.5" />
-                              היסטוריה
-                            </button>
+                              <span>היסטוריה</span>
+                            </Button>
                           )}
                         </div>
                       </div>

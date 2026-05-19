@@ -44,6 +44,7 @@ interface StatsComparisonCardProps {
   onUnitClick?: (unitId: number, level: string) => void;
   filterTags?: string[];
   hideHeader?: boolean;
+  compact?: boolean;
 }
 
 export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
@@ -60,6 +61,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
       onUnitClick,
       filterTags = [],
       hideHeader = false,
+      compact = false,
     },
     ref,
   ) => {
@@ -235,7 +237,8 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
         className={cn(
           "bg-card/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-primary/10 py-3 flex flex-col overflow-hidden h-full relative transition-all",
           className,
-          hideHeader && "border-none bg-transparent backdrop-blur-none py-0"
+          hideHeader && "border-none bg-transparent backdrop-blur-none py-0",
+          compact && "bg-transparent backdrop-blur-none border-0 shadow-none py-0"
         )}
       >
         {!hideHeader && (
@@ -325,7 +328,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
           </CardHeader>
         )}
 
-        <CardContent className={cn("flex-1 overflow-y-auto no-scrollbar p-0", !hideHeader && "px-4 sm:px-6")}>
+        <CardContent className={cn("flex-1 overflow-y-auto no-scrollbar p-0", !hideHeader && "px-4 sm:px-6", compact && "max-h-[300px]")}>
           {!data || data.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-center bg-muted/20 rounded-xl border border-dashed border-border/50">
               <Info className="w-8 h-8 text-muted-foreground/50 mb-2" />
@@ -337,7 +340,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               </p>
             </div>
           ) : (
-            <div className="space-y-3 py-4">
+            <div className={cn("space-y-3 py-4", compact && "space-y-1.5 py-1.5")}>
               {data.map((item) => {
                 const availability =
                   item.total_count > 0
@@ -365,6 +368,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                     key={item.unit_id}
                     className={cn(
                       "p-3 rounded-2xl transition-all border",
+                      compact && "p-1.5 rounded-xl border-border/10",
                       onUnitClick ? "cursor-pointer" : "",
                       isSelected
                         ? "border-primary/30 bg-primary/5"
@@ -396,19 +400,19 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                     </div>
 
                     {/* Bar with percentage inside */}
-                    <div className={cn("relative w-full h-6 rounded-full overflow-hidden", bgColor)}>
+                    <div className={cn("relative w-full h-6 rounded-full overflow-hidden", compact && "h-4 sm:h-5", bgColor)}>
                       <div
                         className={cn("h-full rounded-full transition-all duration-700 flex items-center justify-end", barColor)}
                         style={{ width: `${Math.max(availability, 8)}%` }}
                       >
                         {availability >= 20 && (
-                          <span className="text-white text-[10px] font-black px-2 leading-none">
+                          <span className={cn("text-white text-[10px] font-black px-2 leading-none", compact && "text-[9px] px-1.5")}>
                             {availability}%
                           </span>
                         )}
                       </div>
                       {availability < 20 && (
-                        <span className={cn("absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black", textColor)}>
+                        <span className={cn("absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black", compact && "text-[9px] right-1.5", textColor)}>
                           {availability}%
                         </span>
                       )}

@@ -7,7 +7,8 @@ import {
   ExternalLink,
   Square,
   Minus,
-  CalendarDays
+  CalendarDays,
+  RotateCcw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { TourGuideOverlay } from "./TourGuideOverlay";
 import type { TourStep } from "./TourGuideOverlay";
+import { useChat } from "@/context/ChatContext";
 
 const TOUR_STEPS: TourStep[] = [
   // --- DASHBOARD PAGE ---
@@ -33,6 +35,11 @@ const TOUR_STEPS: TourStep[] = [
   // --- EMPLOYEES PAGE ---
   { id: 'employees_search', selector: '#employees-search-container', path: '/employees', title: 'חיפוש שוטרים', content: 'מחפשים מישהו ספציפי? פשוט תתחילו להקליד שם או מספר אישי.' },
   { id: 'add_employee_btn', selector: '#add-employee-button', path: '/employees', title: 'קליטת עובד חדש', content: 'הצטרף מישהו חדש ליחידה? דרך הכפתור הזה מקימים אותו במערכת תוך שניות.' },
+
+  // --- CHAT & STATUS ---
+  { id: 'system_status', selector: '#system-status-dot', path: '/', title: 'סטטוס פעילות המערכת', content: 'כאן מופיע חיווי ירוק קבוע המציין שהחיבור לשרת פעיל ומאובטח. לחיצה עליו תציג פרטים על זמן הכניסה האחרון שלך.' },
+  { id: 'chat_toggle', selector: '#chat-toggle-btn', path: '/', title: 'צ\'אט פנימי והודעות', content: 'הכלי המושלם לתקשורת פנימית מהירה! לחיצה על כפתור זה תפתח את מרכז ההודעות והצ\'אט עם כל השוטרים והמפקדים ביחידה.' },
+  { id: 'chat_status_step', selector: '#chat-status-avatar-btn', path: '/', title: 'עדכון סטטוס אישי בצ\'אט', content: 'לחיצה על כפתור האווטאר שלך עם ראשי התיבות בתוך הצ\'אט תפתח תפריט מהיר שבו תוכל להגדיר אם אתה מחובר, עסוק, לא נמצא, או לכתוב סטטוס מותאם אישית!' },
 
   // --- SETTINGS PAGES ---
   { id: 'appearance_palette', selector: '#color-palette-container', path: '/settings?tab=appearance', title: 'בחירת צבע אקצנט', content: 'לחצו על כל צבע במניפה כדי לשנות את הצבע המרכזי של המערכת (כפתורים, לינקים וגרפים) באופן מיידי.' },
@@ -81,13 +88,45 @@ const KNOWLEDGE_BASE = [
     description: 'את כל הדוחות היחידתיים ניתן להפיק מתוך "מרכז הדוחות" בלוח הבקרה הראשי.', 
     stepId: 'report_hub' 
   },
-  { 
+  {
     id: 'appearance', 
     title: 'עיצוב וצבעים', 
     keywords: ['צבע', 'מראה', 'עיצוב', 'Theme', 'אקצנט', 'צבעים', 'לילה', 'יפה', 'גופן', 'פונט', 'אישי', 'התאמה', 'כהה', 'בהיר'], 
     context: ['מערכת', 'שינוי', 'נראות'], 
     description: 'ניתן לשנות את צבעי המערכת ואת ערכת הנושא דרך דף ההגדרות בלשונית "מראה ותצוגה".', 
     stepId: 'appearance_palette' 
+  },
+  { 
+    id: 'filters_modern', 
+    title: 'סינון נתונים מתקדם', 
+    keywords: [
+      'לסנן', 'סינון', 'פילטר', 'חיפוש מתקדם', 'לפי גיל', 'גילאים', 'טווח גיל', 
+      'מעמד', 'קבע', 'שחם', 'מתנדב', 'סטטוסים', 'מחלקה', 'מדור', 'צוות', 
+      'נקה הכל', 'החל סינון', 'איך מסננים', 'איפה הפילטר', 'חיפוש שוטרים', 
+      'רשימה לפי', 'קבוצה', 'סיווג', 'שירות', 'סדיר', 'מילואים', 'אזרחים', 'פנסיונרים'
+    ], 
+    context: ['מערכת', 'נתונים', 'חיפוש', 'מיון'], 
+    description: 'מערכת הסינון החדשה מאפשרת לך לדייק את הנתונים המוצגים לפי מגוון קטגוריות. ניתן לסנן לפי יחידה ארגונית, סטטוס דיווח, מעמד השירות וטווח גילאים. חשוב לזכור ללחוץ על כפתור "החל סינון" בסיום הבחירה.', 
+    stepId: 'dashboard_filters' 
+  },
+  { 
+    id: 'age_slider', 
+    title: 'סינון לפי גיל', 
+    keywords: [
+      'גיל', 'גילאים', 'בן כמה', 'צעירים', 'מבוגרים', 'טווח', 'סליידר', 'גלילה', 
+      'שנים', 'נולדו', 'תאריך לידה', 'ילידי', 'בוגרים', 'נוער', 'מתחת לגיל', 'מעל לגיל'
+    ], 
+    context: ['חיפוש', 'סינון', 'מידע'], 
+    description: 'הוספנו סליידר גילאים חדש בלשונית "גילאים" שבתוך מסך הסינון. ניתן לגרור את שני הקצוות כדי לקבוע טווח גילאים מדויק (למשל: 18 עד 25) ולראות רק את השוטרים המתאימים.', 
+    stepId: 'dashboard_filters' 
+  },
+  { 
+    id: 'apply_logic', 
+    title: 'החלת הסינון', 
+    keywords: ['לא מתעדכן', 'לא עובד', 'לא משתנה', 'איך מאשרים', 'אישור', 'החלה', 'עדכון', 'למה זה לא זז', 'לחצתי וכלום לא קרה'], 
+    context: ['סינון', 'באג', 'שאלה'], 
+    description: 'במערכת החדשה, הנתונים מתעדכנים רק לאחר לחיצה על כפתור "החל סינון" בתחתית מסך הסינון. זה מאפשר לך לבחור כמה קטגוריות יחד בצורה מרוכזת ומהירה.', 
+    stepId: 'dashboard_filters' 
   },
   {
     id: 'full_tour',
@@ -102,6 +141,7 @@ const KNOWLEDGE_BASE = [
 export function GlobalAiSupport() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isChatOpen, openChat } = useChat();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -111,6 +151,8 @@ export function GlobalAiSupport() {
   });
   const [isSingleStep, setIsSingleStep] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [hasMoved, setHasMoved] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
   const [currentTourIndex, setCurrentTourIndex] = useState<number>(() => {
     const saved = localStorage.getItem('active_tour_index');
     return saved ? parseInt(saved, 10) : -1;
@@ -131,6 +173,18 @@ export function GlobalAiSupport() {
     localStorage.removeItem('ai_support_messages');
     toast.info("השיחה אופסה");
   };
+
+  // Auto open/close chat sidebar during guided tour if a step requires it
+  useEffect(() => {
+    if (currentTourIndex >= 0 && !isSingleStep) {
+      const step = TOUR_STEPS[currentTourIndex];
+      if (step?.id === 'chat_status_step') {
+        if (!isChatOpen) {
+          openChat(null as any);
+        }
+      }
+    }
+  }, [currentTourIndex, isSingleStep, isChatOpen, openChat]);
 
   // --- SMART MATCHING ENGINE 2.0 ---
   // Auto-navigate during tour if step is on a different page or tab
@@ -220,7 +274,7 @@ export function GlobalAiSupport() {
           suggestions: matches.slice(0, 4).map(m => ({ label: m.title, stepId: m.stepId }))
         }]);
       } else {
-        setMessages(prev => [...prev, { id: Date.now().toString(), text: "אני לא בטוח שהבנתי... תוכל לשאול על משמרות, הוספת עובד, הפקת דוחות או עיצוב המערכת.", isBot: true }]);
+        setMessages(prev => [...prev, { id: Date.now().toString(), text: "אני לא בטוח שהבנתי... תוכל לשאול על סינון וחיפוש, משמרות, הוספת עובד, הפקת דוחות או עיצוב המערכת.", isBot: true }]);
       }
     }, 600);
   };
@@ -274,13 +328,50 @@ export function GlobalAiSupport() {
         isSingleStep={isSingleStep} onClose={handleCloseSpotlight} 
       />
 
-      <motion.button whileHover={{ scale: 1.1 }} onClick={() => { setIsOpen(true); setIsMinimized(false); }}
+      <motion.div 
+        key={`fab-container-${isOpen}-${isMinimized}-${resetKey}`}
+        drag
+        dragConstraints={{ left: 0, right: typeof window !== 'undefined' ? window.innerWidth - 80 : 300, top: typeof window !== 'undefined' ? -window.innerHeight + 80 : -500, bottom: 0 }}
+        dragElastic={0.1}
+        dragMomentum={false}
+        onDragEnd={(_, info) => {
+          if (Math.abs(info.offset.x) > 20 || Math.abs(info.offset.y) > 20) {
+            setHasMoved(true);
+          }
+        }}
         className={cn(
-          "fixed bottom-6 left-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl z-[100] flex items-center justify-center", 
-          (isOpen || (currentTourIndex >= 0 && TOUR_STEPS[currentTourIndex]?.path === location.pathname)) && "hidden"
-        )}>
-        <Sparkles className="w-6 h-6" />
-      </motion.button>
+          "global-ai-support-btn fixed bottom-6 left-6 z-[100] flex flex-col items-center gap-2", 
+          ((isOpen && !isMinimized) || (currentTourIndex >= 0 && TOUR_STEPS[currentTourIndex]?.path === location.pathname)) && "hidden"
+        )}
+      >
+        <AnimatePresence>
+          {hasMoved && (
+            <motion.button 
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setHasMoved(false);
+                setResetKey(k => k + 1);
+              }}
+              className="w-8 h-8 bg-white dark:bg-slate-800 text-primary rounded-full shadow-lg flex items-center justify-center border border-border/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors pointer-events-auto"
+              title="החזר למקום מקורי"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        <motion.button 
+          whileHover={{ scale: 1.1 }} 
+          whileTap={{ scale: 0.9 }}
+          onClick={() => { setIsOpen(true); setIsMinimized(false); }}
+          className="w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing pointer-events-auto"
+        >
+          <Sparkles className="w-6 h-6" />
+        </motion.button>
+      </motion.div>
 
       <AnimatePresence>
         {isOpen && !isMinimized && (

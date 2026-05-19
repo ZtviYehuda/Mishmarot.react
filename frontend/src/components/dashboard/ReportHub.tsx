@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
+  DialogDragHandle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -214,70 +215,113 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     if (ref.current && ref.current.share) await ref.current.share();
   };
 
-  const ReportCard = ({ icon: Icon, title, description, colorClass, onDownload, onWhatsApp, hasDownload = true, onClick }: any) => (
-    <div 
-      onClick={onClick}
-      className="group relative bg-white/[0.04] dark:bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-primary/40 rounded-[1.25rem] sm:rounded-[2rem] p-2 sm:p-5 transition-all active:scale-[0.98] overflow-hidden flex flex-col h-full cursor-pointer"
-    >
-      <div className="flex flex-col items-center sm:items-start gap-1.5 sm:gap-4 mb-2 sm:mb-4">
-        <div className={cn(
-          "p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
-          colorClass.replace("bg-", "bg-").replace("text-", "text-")
-        )}>
-          <Icon className="w-4 h-4 sm:w-7 sm:h-7" />
-        </div>
-        <div className="flex-1 min-w-0 text-center sm:text-right">
-          <h3 className="text-[10px] sm:text-lg font-black text-foreground group-hover:text-primary transition-colors leading-tight mb-0.5 sm:mb-1">{title}</h3>
-          <p className="hidden xs:line-clamp-2 text-[9px] sm:text-xs font-bold text-muted-foreground/60 leading-none">
-            {description}
-          </p>
-        </div>
-      </div>
+  const ReportCard = ({ icon: Icon, title, description, colorClass, onDownload, onWhatsApp, hasDownload = true, onClick }: any) => {
+    return (
+      <>
+        {/* Mobile View: Horizontal row, RTL, no grid, smooth swipe sheet design */}
+        <div 
+          onClick={onClick}
+          className="sm:hidden flex justify-between items-center p-3.5 bg-neutral-900 border border-neutral-800 rounded-xl cursor-pointer active:scale-[0.98] transition-all"
+        >
+          {/* Right side: Info */}
+          <div className="flex items-center gap-3">
+            <Icon className="w-5 h-5 text-neutral-400" />
+            <span className="text-sm font-medium text-white">{title}</span>
+          </div>
 
-      <div className="mt-auto flex flex-col gap-1.5 sm:gap-3 no-export">
-        <div className="w-full h-px bg-white/5" />
-        <div className="flex items-center gap-1 sm:gap-2">
-           {hasDownload ? (
-             <>
-               <Button 
-                variant="ghost" 
-                onClick={(e) => { e.stopPropagation(); onDownload(); }} 
-                className="h-7 sm:h-10 grow rounded-xl bg-primary/10 text-primary hover:bg-primary/20 font-black text-[9px] sm:text-xs border border-primary/10 px-1"
+          {/* Left side: Actions */}
+          <div className="flex items-center gap-2 no-export" onClick={(e) => e.stopPropagation()}>
+            {hasDownload && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDownload();
+                }}
+                className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+                aria-label="הורדה"
               >
-                <Download className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">הורדה</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={(e) => { e.stopPropagation(); onWhatsApp(); }} 
-                className="h-7 sm:h-10 grow rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white font-black text-[9px] sm:text-xs px-1"
-              >
-                <FaWhatsapp className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-                <span className="hidden xs:inline">שיתוף</span>
-              </Button>
-             </>
-           ) : (
-             <Button 
-                variant="ghost" 
-                onClick={(e) => { e.stopPropagation(); onWhatsApp(); }} 
-                className="h-7 sm:h-10 w-full rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white font-black text-[9px] sm:text-xs px-2"
-              >
-                <FaWhatsapp className="w-3.5 h-3.5 sm:w-5 sm:h-5 ml-1" />
-                <span className="inline">שיתוף וריכוז</span>
-              </Button>
-           )}
+                <Download className="w-5 h-5" />
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onWhatsApp();
+              }}
+              className="p-2 text-emerald-500 hover:bg-emerald-950/30 rounded-lg transition-colors"
+              aria-label="שיתוף וואטסאפ"
+            >
+              <FaWhatsapp className="w-5.5 h-5.5" />
+            </button>
+          </div>
         </div>
-      </div>
-      
-      {/* Eye Overlay on hover - Hidden on small mobile */}
-      <div className="absolute top-1.5 left-1.5 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
-        <div className="p-1 px-2 rounded-lg bg-primary/20 text-primary text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
-          <Eye className="w-3 h-3" />
-          צפייה
+
+        {/* Desktop View: Traditional visual cards with layout */}
+        <div 
+          onClick={onClick}
+          className="hidden sm:flex group relative bg-white/[0.04] dark:bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-primary/40 rounded-[2rem] p-5 transition-all active:scale-[0.98] overflow-hidden flex-col h-full cursor-pointer"
+        >
+          <div className="flex flex-col items-start gap-4 mb-4">
+            <div className={cn(
+              "p-4 rounded-2xl shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
+              colorClass
+            )}>
+              <Icon className="w-7 h-7 text-white" />
+            </div>
+            <div className="flex-1 min-w-0 text-right">
+              <h3 className="text-lg font-black text-foreground group-hover:text-primary transition-colors leading-tight mb-1">{title}</h3>
+              <p className="line-clamp-2 text-xs font-bold text-muted-foreground/60 leading-none">
+                {description}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-auto flex flex-col gap-3 no-export">
+            <div className="w-full h-px bg-white/5" />
+            <div className="flex items-center gap-2">
+              {hasDownload ? (
+                <>
+                  <Button 
+                    variant="ghost" 
+                    onClick={(e) => { e.stopPropagation(); onDownload(); }} 
+                    className="h-10 grow rounded-xl bg-primary/10 text-primary hover:bg-primary/20 font-black text-xs border border-primary/10 px-1 shadow-none"
+                  >
+                    <Download className="w-4 h-4 ml-1" />
+                    <span>הורדה</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    onClick={(e) => { e.stopPropagation(); onWhatsApp(); }} 
+                    className="h-10 grow rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white font-black text-xs px-1 shadow-none"
+                  >
+                    <FaWhatsapp className="w-5 h-5 ml-1" />
+                    <span>שיתוף</span>
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  onClick={(e) => { e.stopPropagation(); onWhatsApp(); }} 
+                  className="h-10 w-full rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white font-black text-xs px-2 shadow-none"
+                >
+                  <FaWhatsapp className="w-5 h-5 ml-1" />
+                  <span>שיתוף וריכוז</span>
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          {/* Eye Overlay on hover */}
+          <div className="absolute top-1.5 left-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="p-1 px-2 rounded-lg bg-primary/20 text-primary text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
+              <Eye className="w-3 h-3" />
+              צפייה
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  );
+      </>
+    );
+  };
 
   const PreviewHeader = ({ title, icon: Icon, colorClass }: any) => (
     <div className="flex items-center justify-between mb-2 sm:mb-4 animate-in slide-in-from-top-4 duration-300">
@@ -311,24 +355,22 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             id={id || "report-hub-card"}
             variant="ghost" 
             className={cn(
-              "rounded-xl font-black transition-all bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 backdrop-blur-xl",
-              className?.includes("h-20") 
-                ? className 
-                : cn("h-9 gap-2 px-4 text-[13px]", className),
+              "h-9 rounded-xl flex-col gap-0.5 font-black transition-all px-2 xl:px-3.5 text-primary hover:bg-primary/5 text-sm min-w-[60px] py-1 border-none bg-transparent",
+              className?.includes("h-20") ? className : "",
               searchParams.get("tutorial") === "report-hub" || activeTutorial === "report-hub" ? "tutorial-highlight" : ""
             )}
           >
             {className?.includes("flex-col") ? (
               <>
-                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <FileText className="w-5 h-5" />
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <FileText className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-[10px]">דוחות</span>
+                <span className="text-[10px] font-black leading-none">דוחות</span>
               </>
             ) : (
               <>
-                <FileText className="w-4 h-4" />
-                <span>מרכז דוחות</span>
+                <FileText className="w-3.5 h-3.5" />
+                <span className="text-[8.5px] xl:text-[9.5px] leading-tight">מרכז דוחות</span>
               </>
             )}
           </Button>
@@ -338,19 +380,21 @@ export const ReportHub: React.FC<ReportHubProps> = ({
           "w-[98vw] max-w-[98vw] sm:max-w-4xl p-0 overflow-hidden border-none bg-background/95 backdrop-blur-3xl rounded-[1.5rem] sm:rounded-[2rem] flex flex-col transition-all duration-300",
           previewType === null ? "h-auto" : "h-[90vh] sm:max-h-[92vh]"
         )}>
+          <DialogDragHandle />
+
           {/* Header - Hides on mobile preview */}
           <div className={cn(
-            "bg-gradient-to-br from-primary/10 via-background to-background p-2.5 pl-16 sm:pl-6 sm:p-6 pb-2 shrink-0 border-b border-white/5 transition-all duration-300",
+            "px-5 pt-3 pb-4 sm:px-8 sm:pt-5 sm:pb-5 border-b border-border/30 text-right shrink-0",
             previewType && "hidden sm:block"
           )}>
             <DialogHeader className="text-right">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="p-1.5 sm:p-4 bg-primary text-white rounded-xl sm:rounded-2xl rotate-3">
-                  <FileText className="w-4 h-4 sm:w-8 sm:h-8" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <FileText className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <DialogTitle className="text-sm sm:text-3xl font-black text-foreground tracking-tighter mb-0.5 leading-none">מרכז הפקת דוחות</DialogTitle>
-                  <DialogDescription className="text-[9px] sm:text-base font-semibold text-muted-foreground/70">ניהול, הפקה ושיתוף נתונים מבצעיים</DialogDescription>
+                <div className="flex-1 min-w-0 text-right">
+                  <DialogTitle className="text-[15px] sm:text-lg font-black text-foreground tracking-tight leading-none mb-1">מרכז הפקת דוחות</DialogTitle>
+                  <DialogDescription className="text-[11px] font-medium text-muted-foreground leading-none">ניהול, הפקה ושיתוף נתונים מבצעיים</DialogDescription>
                 </div>
               </div>
             </DialogHeader>
@@ -383,7 +427,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             ) : null}
 
             {previewType === null ? (
-              <div className="grid grid-cols-2 gap-2 sm:gap-6 animate-in fade-in zoom-in-95 duration-300">
+              <div className="flex flex-col gap-2.5 sm:grid sm:grid-cols-2 sm:gap-6 animate-in fade-in zoom-in-95 duration-300">
                 <ReportCard icon={Users} title="מצבת כוח אדם" description="חלוקה ויזואלית לפי סטטוס נוכחות." colorClass="bg-blue-500/20 text-blue-400" onClick={() => setPreviewType('snapshot')} onDownload={() => downloadCard(snapshotRef)} onWhatsApp={() => shareCard(snapshotRef)} />
                 <ReportCard icon={TrendingUp} title="מגמות וזמינות" description="ניתוח היסטורי של רמת הזמינות." colorClass="bg-amber-500/20 text-amber-500" onClick={() => setPreviewType('trend')} onDownload={() => downloadCard(trendRef)} onWhatsApp={() => shareCard(trendRef)} />
                 <ReportCard icon={BarChart2} title="השוואת תת-יחידות" description="השוואה בין מחלקות ומדורים." colorClass="bg-purple-500/20 text-purple-400" onClick={() => setPreviewType('comparison')} onDownload={() => downloadCard(comparisonRef)} onWhatsApp={() => shareCard(comparisonRef)} />
@@ -405,16 +449,16 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                   previewType === 'comparison' ? "bg-purple-500" : "bg-rose-500"
                 } />
 
-                <div className="flex-1 flex flex-col min-h-0 bg-card/60 rounded-[1.25rem] sm:rounded-[2.5rem] border border-white/10 overflow-hidden backdrop-blur-2xl">
-                  <div className="flex-1 overflow-y-auto no-scrollbar p-0 sm:p-6 flex flex-col h-full">
+                <div className="flex-1 flex flex-col min-h-0 bg-card/60 rounded-[1.25rem] sm:rounded-[2rem] border border-white/10 overflow-hidden backdrop-blur-2xl">
+                  <div className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-4 flex flex-col h-full">
                     {previewType === 'snapshot' && (
-                      <EmployeesChart stats={snapshotStats} total={snapshotTotal} loading={loading} hideHeader={true} unitName={filters.unitName} selectedDate={localDate} />
+                      <EmployeesChart stats={snapshotStats} total={snapshotTotal} loading={loading} hideHeader={true} compact={true} unitName={filters.unitName} selectedDate={localDate} />
                     )}
                     {previewType === 'trend' && (
-                      <AttendanceTrendCard data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} />
+                      <AttendanceTrendCard data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} hideHeader={true} compact={true} selectedDate={localDate} />
                     )}
                     {previewType === 'comparison' && (
-                      <StatsComparisonCard data={comparisonStats} loading={loading} days={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} />
+                      <StatsComparisonCard data={comparisonStats} loading={loading} days={activeDaysRange} unitName={filters.unitName} hideHeader={true} compact={true} selectedDate={localDate} />
                     )}
                     {previewType === 'birthdays' && (
                       <div className="flex-1 overflow-y-auto min-h-[300px] p-2">

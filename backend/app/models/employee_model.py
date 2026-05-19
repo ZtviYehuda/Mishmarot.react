@@ -429,6 +429,12 @@ class EmployeeModel:
                 if filters.get("status_id"):
                     if str(filters["status_id"]) == "missing":
                         query += " AND st.id IS NULL"
+                    elif str(filters["status_id"]) == "unavailable":
+                        query += " AND (st.name ILIKE '%%חופשה%%' OR st.name ILIKE '%%חולה%%' OR st.name ILIKE '%%מושעה%%' OR st.name ILIKE '%%גימל%%' OR st.name ILIKE '%%בלתי מורשה%%' OR st.name ILIKE '%%נפקק%%' OR st.name ILIKE '%%נפקד%%')"
+                    elif str(filters["status_id"]) == "available":
+                        query += " AND (st.name ILIKE '%%נוכח%%' OR st.name ILIKE '%%משרד%%' OR st.name ILIKE '%%תגבור%%' OR st.name ILIKE '%%קורס%%')"
+                    elif str(filters["status_id"]) == "all":
+                        pass
                     else:
                         # Improved: If filtering by parent status, include all sub-statuses
                         query += " AND (st.id = %s OR st.parent_status_id = %s)"

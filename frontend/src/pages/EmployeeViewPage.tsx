@@ -549,17 +549,11 @@ export default function EmployeeViewPage() {
         {/* Top bar with back button */}
         <div className="flex items-center justify-between mb-6">
           <button
-            onClick={() => {
-              if (editMode) {
-                navigate(`/employees/${id}`);
-              } else {
-                navigate(-1);
-              }
-            }}
+            onClick={() => navigate('/employees')}
             className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary transition-colors bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800"
           >
             <ArrowRight className="w-4 h-4" />{" "}
-            <span className="hidden sm:inline">חזרה</span>
+            <span className="hidden sm:inline">חזרה לרשימה</span>
           </button>
 
           {!editMode && isBirthdayToday && (

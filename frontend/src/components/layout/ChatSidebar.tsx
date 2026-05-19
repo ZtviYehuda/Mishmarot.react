@@ -9,7 +9,9 @@ import {
   Phone,
   CheckCheck,
   ChevronLeft,
-  Search
+  Search,
+  Trash2, 
+  UserCircle
 } from "lucide-react";
 import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Trash2, UserCircle } from "lucide-react";
 
 interface Message {
   id: number;
@@ -41,7 +42,7 @@ interface Message {
 
 export const ChatSidebar: React.FC = () => {
   const { isChatOpen, selectedRecipient, closeChat, openChat } = useChat();
-  const { employees, openProfile } = useEmployeeContext();
+  const { employees, openProfile, refreshReferenceData } = useEmployeeContext();
   const { user } = useAuthContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -50,6 +51,48 @@ export const ChatSidebar: React.FC = () => {
   const [contactSearch, setContactSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Real-time Chat States
+  const [recipientPresence, setRecipientPresence] = useState<{
+    is_online: boolean;
+    chat_status: string;
+    chat_status_custom: string | null;
+    is_typing: boolean;
+  } | null>(null);
+
+  const [isMeTyping, setIsMeTyping] = useState(false);
+  const typingTimeoutRef = useRef<any | null>(null);
+
+  // My own Status States
+  const [myStatus, setMyStatus] = useState<string>("online");
+  const [myCustomStatus, setMyCustomStatus] = useState<string>("");
+  const [isEditingCustomStatus, setIsEditingCustomStatus] = useState(false);
+
+  // Sync initial status from user context
+  useEffect(() => {
+    if (user) {
+      setMyStatus((user as any).chat_status || "online");
+      setMyCustomStatus((user as any).chat_status_custom || "");
+    }
+  }, [user]);
+
+  // Handle typing state
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+    
+    if (!isMeTyping) {
+      setIsMeTyping(true);
+    }
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsMeTyping(false);
+    }, 3000);
+  };
+
+  // Poll for messages
   useEffect(() => {
     if (isChatOpen && selectedRecipient) {
       fetchConversation();
@@ -58,6 +101,40 @@ export const ChatSidebar: React.FC = () => {
     }
   }, [isChatOpen, selectedRecipient]);
 
+  // Poll for recipient presence + send my typing state
+  useEffect(() => {
+    if (isChatOpen && selectedRecipient) {
+      const sendChatHeartbeat = async () => {
+        try {
+          const { data } = await apiClient.post("/employees/chat/heartbeat", {
+            recipient_id: selectedRecipient.id,
+            is_typing: isMeTyping && newMessage.trim().length > 0
+          });
+          if (data.success && data.recipient) {
+            setRecipientPresence(data.recipient);
+          }
+        } catch (err) {
+          console.error("Chat heartbeat failed:", err);
+        }
+      };
+
+      sendChatHeartbeat();
+      const heartbeatInterval = setInterval(sendChatHeartbeat, 3000); // Heartbeat every 3s
+      return () => clearInterval(heartbeatInterval);
+    }
+  }, [isChatOpen, selectedRecipient, isMeTyping, newMessage]);
+
+  // Poll for all contacts status updates when viewing contacts list
+  useEffect(() => {
+    if (isChatOpen && !selectedRecipient) {
+      const interval = setInterval(() => {
+        refreshReferenceData();
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [isChatOpen, selectedRecipient, refreshReferenceData]);
+
+  // Scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -81,6 +158,7 @@ export const ChatSidebar: React.FC = () => {
     if (!newMessage.trim() || !selectedRecipient || sending) return;
 
     setSending(true);
+    setIsMeTyping(false);
     try {
       await apiClient.post("/notifications/send", {
         recipient_id: selectedRecipient.id,
@@ -96,6 +174,27 @@ export const ChatSidebar: React.FC = () => {
     }
   };
 
+  const handleUpdateStatus = async (status: string, customText?: string) => {
+    try {
+      setMyStatus(status);
+      const text = status === "custom" ? (customText !== undefined ? customText : myCustomStatus) : null;
+      if (status !== "custom") {
+        setMyCustomStatus("");
+      }
+      await apiClient.put("/employees/chat/status", {
+        chat_status: status,
+        chat_status_custom: text
+      });
+      toast.success("הסטטוס שלך עודכן בהצלחה");
+      if (user) {
+        (user as any).chat_status = status;
+        (user as any).chat_status_custom = text || undefined;
+      }
+    } catch (err) {
+      toast.error("שגיאה בעדכון הסטטוס");
+    }
+  };
+
   const handleClearHistory = async () => {
     if (!selectedRecipient) return;
     if (!confirm("האם אתה בטוח שברצונך למחוק את כל היסטוריית ההתכתבות עם משתמש זה? פעולה זו אינה ניתנת לביטול.")) return;
@@ -106,6 +205,17 @@ export const ChatSidebar: React.FC = () => {
       toast.success("היסטוריית ההתכתבות נמחקה");
     } catch (err) {
       toast.error("שגיאה במחיקת היסטוריית ההתכתבות");
+    }
+  };
+
+  // Helper to determine status dot color for a contact
+  const getStatusDotColor = (emp: any) => {
+    if (!emp.is_online) return "bg-slate-300 dark:bg-slate-600";
+    switch (emp.chat_status) {
+      case "online": return "bg-emerald-500 animate-pulse";
+      case "busy": return "bg-rose-500";
+      case "away": return "bg-amber-500";
+      default: return "bg-emerald-500 animate-pulse";
     }
   };
 
@@ -135,7 +245,7 @@ export const ChatSidebar: React.FC = () => {
                 {/* Header for Conversation */}
                 <div className="p-5 bg-primary text-primary-foreground flex items-center justify-between shadow-lg shrink-0">
                   <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" onClick={() => openChat(null as any)} className="h-8 w-8 rounded-xl text-white/80 hover:bg-white/20 hover:text-white">
+                    <Button variant="ghost" size="icon" onClick={() => { openChat(null as any); setRecipientPresence(null); }} className="h-8 w-8 rounded-xl text-white/80 hover:bg-white/20 hover:text-white">
                       <ChevronLeft className="w-5 h-5 rotate-180" />
                     </Button>
                     <div 
@@ -145,14 +255,30 @@ export const ChatSidebar: React.FC = () => {
                       <div className="w-10 h-10 rounded-2xl bg-white/20 text-white flex items-center justify-center border border-white/30 font-black backdrop-blur-md">
                         {selectedRecipient.name?.[0]}
                       </div>
-                      <div className="absolute -bottom-0.5 -left-0.5 w-3 h-3 bg-emerald-400 border-2 border-primary rounded-full" />
+                      {/* Realtime Status indicator */}
+                      <div className={cn("absolute -bottom-0.5 -left-0.5 w-3 h-3 border-2 border-primary rounded-full",
+                        recipientPresence?.is_online ? (
+                          recipientPresence.chat_status === "busy" ? "bg-rose-400" :
+                          recipientPresence.chat_status === "away" ? "bg-amber-400" : "bg-emerald-400 animate-pulse"
+                        ) : "bg-slate-400"
+                      )} />
                     </div>
                     <div className="flex flex-col">
                       <h3 className="font-black text-xs sm:text-sm text-white leading-tight">
                         {selectedRecipient.name}
                       </h3>
-                      <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest">
-                        {selectedRecipient.role || "פעיל כעת"}
+                      <span className="text-[10px] font-bold text-white/80 leading-none mt-0.5">
+                        {recipientPresence?.is_typing ? (
+                          <span className="animate-pulse text-emerald-200">מקליד/ה...</span>
+                        ) : recipientPresence ? (
+                          recipientPresence.is_online ? (
+                            recipientPresence.chat_status === "busy" ? "🔴 עסוק/ה" :
+                            recipientPresence.chat_status === "away" ? "🟡 לא נמצא/ת" :
+                            recipientPresence.chat_status_custom ? `💬 ${recipientPresence.chat_status_custom}` : "🟢 פעיל/ה כעת"
+                          ) : "⚫ לא פעיל/ה"
+                        ) : (
+                          selectedRecipient.role || "טוען..."
+                        )}
                       </span>
                     </div>
                   </div>
@@ -184,7 +310,7 @@ export const ChatSidebar: React.FC = () => {
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-48 p-1 rounded-2xl shadow-2xl border-border/40 backdrop-blur-xl bg-card/95" align="start">
+                      <PopoverContent className="w-48 p-1 rounded-2xl shadow-2xl border-border/40 backdrop-blur-xl bg-card/95 z-[300]" align="start">
                         <div className="flex flex-col gap-1">
                           <button
                             onClick={() => {
@@ -239,17 +365,17 @@ export const ChatSidebar: React.FC = () => {
                          <span className="text-[10px] font-black text-muted-foreground/60 uppercase bg-muted/30 px-3 py-1 rounded-full border border-border/40">היום</span>
                        </div>
                        {messages.map((msg, idx) => {
-                         const isMe = msg.sender_id === user?.id;
-                         const nextIsMe = messages[idx+1]?.sender_id === msg.sender_id;
-                         return (
-                           <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} key={msg.id} className={cn("flex flex-col max-w-[85%] sm:max-w-[75%]", isMe ? "self-start items-end" : "self-end items-start")}>
-                             {!nextIsMe && <span className="text-[9px] font-bold text-muted-foreground mb-1 mx-1">{format(new Date(msg.created_at), "HH:mm", { locale: he })}</span>}
-                             <div className={cn("p-3 sm:p-4 rounded-3xl text-sm font-bold leading-relaxed shadow-sm", isMe ? "bg-primary text-primary-foreground rounded-tl-lg" : "bg-card border border-border/40 text-foreground rounded-tr-lg")}>
-                               {msg.description}
-                               {isMe && <div className="flex justify-end mt-1 opacity-70"><CheckCheck className="w-3 h-3" /></div>}
-                             </div>
-                           </motion.div>
-                         );
+                          const isMe = msg.sender_id === user?.id;
+                          const nextIsMe = messages[idx+1]?.sender_id === msg.sender_id;
+                          return (
+                            <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} key={msg.id} className={cn("flex flex-col max-w-[85%] sm:max-w-[75%]", isMe ? "self-start items-end" : "self-end items-start")}>
+                              {!nextIsMe && <span className="text-[9px] font-bold text-muted-foreground mb-1 mx-1">{format(new Date(msg.created_at), "HH:mm", { locale: he })}</span>}
+                              <div className={cn("p-3 sm:p-4 rounded-3xl text-sm font-bold leading-relaxed shadow-sm", isMe ? "bg-primary text-primary-foreground rounded-tl-lg" : "bg-card border border-border/40 text-foreground rounded-tr-lg")}>
+                                {msg.description}
+                                {isMe && <div className="flex justify-end mt-1 opacity-70"><CheckCheck className="w-3 h-3" /></div>}
+                              </div>
+                            </motion.div>
+                          );
                        })}
                     </div>
                   )}
@@ -258,7 +384,7 @@ export const ChatSidebar: React.FC = () => {
                 {/* Input Area */}
                 <div className="p-4 sm:p-6 border-t border-border/50 bg-card shrink-0">
                   <form onSubmit={handleSendMessage} className="flex items-end gap-2 bg-muted/30 border border-border/50 rounded-2xl p-2 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
-                    <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="הקלד הודעה..." className="border-none bg-transparent focus-visible:ring-0 shadow-none text-right font-bold text-sm min-h-[44px] h-auto py-2" />
+                    <Input value={newMessage} onChange={handleInputChange} placeholder="הקלד הודעה..." className="border-none bg-transparent focus-visible:ring-0 shadow-none text-right font-bold text-sm min-h-[44px] h-auto py-2" />
                     <Button type="submit" disabled={!newMessage.trim() || sending} size="icon" className={cn("rounded-xl h-10 w-10 shrink-0 shadow-lg transition-all active:scale-95", newMessage.trim() ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "bg-muted text-muted-foreground")}>
                       {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </Button>
@@ -271,9 +397,134 @@ export const ChatSidebar: React.FC = () => {
                 <div className="p-6 bg-primary shadow-lg shrink-0 rounded-t-[2.5rem]">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-black text-xl text-white tracking-tight">הודעות</h3>
-                    <Button variant="ghost" size="icon" onClick={closeChat} className="rounded-xl text-white/80 hover:bg-white/20 hover:text-white">
-                      <X className="w-5 h-5" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {/* Self Status Popover in Header */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button 
+                            id="chat-status-avatar-btn"
+                            variant="ghost" 
+                            className="relative w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center border border-white/20 hover:bg-white/20 hover:text-white p-0 font-black text-xs shrink-0"
+                            title="עדכן סטטוס פרופיל"
+                          >
+                            {user?.first_name?.[0]}{user?.last_name?.[0]}
+                            <div className={cn("absolute -bottom-0.5 -left-0.5 w-3 h-3 border-2 border-primary rounded-full",
+                              myStatus === "online" ? "bg-emerald-500 animate-pulse" :
+                              myStatus === "busy" ? "bg-rose-500" :
+                              myStatus === "away" ? "bg-amber-500" : 
+                              myStatus === "custom" ? "bg-indigo-500" : "bg-slate-400"
+                            )} />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-72 p-4 rounded-3xl shadow-2xl border-border/40 backdrop-blur-xl bg-card/95 z-[300]" align="end">
+                          <div className="flex flex-col gap-3 text-right" dir="rtl">
+                            <div className="flex items-center gap-3 pb-2 border-b border-border/40">
+                              <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 font-black text-sm shrink-0">
+                                {user?.first_name?.[0]}{user?.last_name?.[0]}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <h4 className="font-black text-sm text-foreground truncate">{user?.first_name} {user?.last_name}</h4>
+                                <span className="text-[10px] text-muted-foreground font-bold leading-none mt-0.5">
+                                  {user?.is_admin ? "מנהל מערכת" : user?.is_commander ? "מפקד" : "שוטר"}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-col gap-2">
+                              <span className="text-xs font-black text-foreground flex items-center gap-1.5">
+                                <span className={cn("w-2 h-2 rounded-full",
+                                  myStatus === "online" ? "bg-emerald-500" :
+                                  myStatus === "busy" ? "bg-rose-500" :
+                                  myStatus === "away" ? "bg-amber-500" : "bg-indigo-500"
+                                )} />
+                                סטטוס פעילות: <span className="text-muted-foreground font-bold">{
+                                  myStatus === "online" ? "מחובר/ת" :
+                                  myStatus === "busy" ? "עסוק/ה" :
+                                  myStatus === "away" ? "לא נמצא/ת" :
+                                  myCustomStatus ? `💬 ${myCustomStatus}` : "סטטוס מותאם"
+                                }</span>
+                              </span>
+                              
+                              <div className="grid grid-cols-2 gap-1.5 mt-1">
+                                <Button 
+                                  variant={myStatus === "online" ? "default" : "outline"} 
+                                  size="sm"
+                                  onClick={() => handleUpdateStatus("online")}
+                                  className="h-8 text-[11px] font-black rounded-xl"
+                                >
+                                  🟢 מחובר
+                                </Button>
+                                <Button 
+                                  variant={myStatus === "busy" ? "default" : "outline"} 
+                                  size="sm"
+                                  onClick={() => handleUpdateStatus("busy")}
+                                  className="h-8 text-[11px] font-black rounded-xl"
+                                >
+                                  🔴 עסוק
+                                </Button>
+                                <Button 
+                                  variant={myStatus === "away" ? "default" : "outline"} 
+                                  size="sm"
+                                  onClick={() => handleUpdateStatus("away")}
+                                  className="h-8 text-[11px] font-black rounded-xl"
+                                >
+                                  🟡 לא נמצא
+                                </Button>
+                                <Button 
+                                  variant={myStatus === "custom" ? "default" : "outline"} 
+                                  size="sm"
+                                  onClick={() => setIsEditingCustomStatus(true)}
+                                  className="h-8 text-[11px] font-black rounded-xl"
+                                >
+                                  💬 מותאם...
+                                </Button>
+                              </div>
+                              
+                              {isEditingCustomStatus && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-2 flex flex-col gap-1.5">
+                                  <Input
+                                    placeholder="רשום סטטוס משלך..."
+                                    value={myCustomStatus}
+                                    onChange={(e) => setMyCustomStatus(e.target.value)}
+                                    className="h-9 text-xs font-bold px-2.5 rounded-xl border border-border focus-visible:ring-primary/20"
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        handleUpdateStatus("custom", myCustomStatus);
+                                        setIsEditingCustomStatus(false);
+                                      }
+                                    }}
+                                  />
+                                  <div className="flex gap-1.5">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => {
+                                        handleUpdateStatus("custom", myCustomStatus);
+                                        setIsEditingCustomStatus(false);
+                                      }}
+                                      className="flex-1 h-8 text-xs font-bold rounded-xl"
+                                    >
+                                      עדכן
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setIsEditingCustomStatus(false)}
+                                      className="h-8 text-xs font-bold rounded-xl px-2"
+                                    >
+                                      ביטול
+                                    </Button>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      
+                      <Button variant="ghost" size="icon" onClick={closeChat} className="rounded-xl text-white/80 hover:bg-white/20 hover:text-white">
+                        <X className="w-5 h-5" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="relative">
                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
@@ -296,14 +547,33 @@ export const ChatSidebar: React.FC = () => {
                         onClick={() => openChat({ id: emp.id, name: `${emp.first_name} ${emp.last_name}` })}
                         className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-muted/50 transition-all text-right group"
                       >
-                        <div className="w-12 h-12 rounded-2xl bg-primary/5 text-primary flex items-center justify-center border border-primary/10 font-black group-hover:bg-primary group-hover:text-white transition-all">
-                          {emp.first_name?.[0]}{emp.last_name?.[0]}
+                        {/* Avatar with Status Dot */}
+                        <div className="relative shrink-0">
+                          <div className="w-12 h-12 rounded-2xl bg-primary/5 text-primary flex items-center justify-center border border-primary/10 font-black group-hover:bg-primary group-hover:text-white transition-all">
+                            {emp.first_name?.[0]}{emp.last_name?.[0]}
+                          </div>
+                          {/* Real-time Status Dot Badge */}
+                          <div className={cn("absolute -bottom-1 -left-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 shadow-sm", getStatusDotColor(emp))} />
                         </div>
+                        
                         <div className="flex-grow min-w-0">
-                          <h4 className="font-bold text-sm text-foreground mb-0.5">{emp.first_name} {emp.last_name}</h4>
-                          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">{emp.section_name || emp.department_name || "שוטר"}</p>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <h4 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{emp.first_name} {emp.last_name}</h4>
+                            {emp.is_online && (
+                              <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                 פעיל/ה
+                              </span>
+                            )}
+                          </div>
+                          {emp.chat_status_custom ? (
+                            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-lg truncate max-w-[185px] inline-block mt-0.5">
+                              💬 {emp.chat_status_custom}
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest truncate">{emp.section_name || emp.department_name || "שוטר"}</p>
+                          )}
                         </div>
-                        <ChevronLeft className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-all" />
+                        <ChevronLeft className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-all shrink-0" />
                       </button>
                     ))}
                     {employees.length <= 1 && (

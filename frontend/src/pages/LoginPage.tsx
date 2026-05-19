@@ -13,11 +13,12 @@ import {
   EyeOff,
   Crosshair,
   Fingerprint,
+  ArrowLeft,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PinVerificationModal } from "@/components/auth/PinVerificationModal";
 
@@ -27,7 +28,7 @@ interface LockedUser {
   last_name: string;
 }
 
-const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
+const HexagonPatrolGrid = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -38,23 +39,16 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const isDark = theme === "dark";
-    const colors = isDark
-      ? {
-          bg: "#020617", // slate-950
-          hexOutline: "rgba(30, 58, 138, 0.2)", // dark blue
-          hexActiveBlue: "rgba(59, 130, 246, 0.4)", // blue-500
-          hexActiveRed: "rgba(220, 38, 38, 0.4)", // red-600
-        }
-      : {
-          bg: "#f8fafc", // slate-50
-          hexOutline: "rgba(148, 163, 184, 0.2)", // slate-400
-          hexActiveBlue: "rgba(59, 130, 246, 0.2)", // blue-500
-          hexActiveRed: "rgba(220, 38, 38, 0.2)", // red-600
-        };
+    // Complete premium dark mode operational atmosphere colors
+    const colors = {
+      bg: "#1A1D2D",
+      hexOutline: "rgba(42, 47, 69, 0.45)", // flat hex grid color (#1A1D2D / slate blend)
+      hexActiveBlue: "rgba(0, 116, 255, 0.45)", // glowing cyan/blue
+      hexActiveRed: "rgba(239, 68, 68, 0.45)",
+    };
 
     let animationFrameId: number;
-    const hexSize = 30; // Radius of hexagon
+    const hexSize = 28; // Radius of hexagon
     const hexWidth = Math.sqrt(3) * hexSize;
     const hexHeight = 2 * hexSize;
     const xStep = hexWidth;
@@ -64,10 +58,9 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
     let grid: {
       x: number;
       y: number;
-      active: number; // 0 to 1 opacity
-      targetActive: number;
-      isRed: boolean;
-      delay: number;
+      isGlowingNode: boolean;
+      pulsePhase: number;
+      pulseSpeed: number;
     }[] = [];
 
     const initGrid = () => {
@@ -84,10 +77,9 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
           grid.push({
             x,
             y,
-            active: 0,
-            targetActive: 0,
-            isRed: Math.random() > 0.9, // 10% chance to be red when active
-            delay: Math.random() * 100,
+            isGlowingNode: Math.random() > 0.96, // 4% chance to be an operational glowing node
+            pulsePhase: Math.random() * Math.PI * 2,
+            pulseSpeed: 0.01 + Math.random() * 0.015,
           });
         }
       }
@@ -121,61 +113,39 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
     };
 
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear only, rely on canvas CSS for bg
-
-      ctx.strokeStyle = colors.hexOutline;
-      ctx.lineWidth = 1;
+      // Background base fill
+      ctx.fillStyle = colors.bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       grid.forEach((hex) => {
-        // Update Logic
+        // Draw flat, static hexagon grid line
+        ctx.strokeStyle = colors.hexOutline;
+        ctx.lineWidth = 1;
+        drawHexagon(hex.x, hex.y, hexSize - 2);
 
-        // Random breathing (more subtle)
-        if (Math.random() < 0.003) {
-          hex.targetActive = Math.random() * 0.3 + 0.1;
-          hex.isRed = Math.random() > 0.92; // Less frequent red
+        // If it is a marked operational node, draw a gentle glowing aura and glowing border
+        if (hex.isGlowingNode) {
+          hex.pulsePhase += hex.pulseSpeed;
+          const pulseOpacity = 0.08 + Math.sin(hex.pulsePhase) * 0.08; // dynamic subtle pulsing
+
+          fillHexagon(hex.x, hex.y, hexSize - 3, `rgba(0, 116, 255, ${pulseOpacity})`);
+          
+          ctx.strokeStyle = `rgba(0, 116, 255, ${0.15 + pulseOpacity * 2.5})`;
+          ctx.lineWidth = 1.25;
+          drawHexagon(hex.x, hex.y, hexSize - 2);
         }
 
-        // Decay
-        if (hex.active > 0.005) {
-          hex.active -= 0.008;
-        } else {
-          hex.active = 0;
-        }
-
-        // Rise to target
-        if (hex.targetActive > hex.active) {
-          hex.active += 0.015;
-        } else {
-          hex.targetActive = 0;
-        }
-
-        // Mouse Interaction (flashlight effect)
+        // Mouse hover interaction (flashlight glow)
         const dx = mousePos.x - hex.x;
         const dy = mousePos.y - hex.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Draw Outline
-        drawHexagon(hex.x, hex.y, hexSize - 2);
-
-        // Draw Active Fill
-        let fillOpacity = hex.active;
-
-        // Mouse hover boosts opacity
-        if (dist < 200) {
-          fillOpacity += (200 - dist) / 500;
-        }
-
-        if (fillOpacity > 0.03) {
-          // Cap opacity
-          fillOpacity = Math.min(fillOpacity, 0.5);
-
-          const baseColor = hex.isRed
-            ? colors.hexActiveRed
-            : colors.hexActiveBlue;
-          // Hacky RGBA replace to inject dynamic opacity
-          const finalColor = baseColor.replace(/[\d.]+\)$/, `${fillOpacity})`);
-
-          fillHexagon(hex.x, hex.y, hexSize - 3, finalColor);
+        if (dist < 160) {
+          const hoverOpacity = (160 - dist) / 500; // max 0.32 opacity
+          fillHexagon(hex.x, hex.y, hexSize - 3, `rgba(0, 116, 255, ${hoverOpacity * 0.5})`);
+          ctx.strokeStyle = `rgba(0, 116, 255, ${hoverOpacity})`;
+          ctx.lineWidth = 1;
+          drawHexagon(hex.x, hex.y, hexSize - 2);
         }
       });
 
@@ -194,15 +164,12 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [mousePos, theme]);
+  }, [mousePos]);
 
   return (
     <canvas
       ref={canvasRef}
-      className={cn(
-        "fixed inset-0 pointer-events-none z-0 transition-colors",
-        theme === "dark" ? "bg-slate-950" : "bg-slate-50/80",
-      )}
+      className="fixed inset-0 pointer-events-none z-0 bg-[#1A1D2D]"
     />
   );
 };
@@ -513,379 +480,334 @@ export default function LoginPage() {
     setError("");
   };
 
-  // Dynamic class helpers for Theme
-  const isDark = theme === "dark";
+  // Focus states for floating labels
+  const [focusUsername, setFocusUsername] = useState(false);
+  const [focusPassword, setFocusPassword] = useState(false);
 
-  return (
-    <div
-      className={cn(
-        "h-screen overflow-y-auto bg-background flex flex-col font-sans relative transition-colors custom-scrollbar",
-        isDark ? "text-slate-100" : "text-slate-800",
-      )}
-      dir="rtl"
-    >
-      <HexagonPatrolGrid theme={theme} />
-
-      {/* Decorative Overlays - Theme Adaptive */}
-      <div
-        className={cn(
-          "fixed inset-0 pointer-events-none z-0 transition-colors",
-          isDark
-            ? "bg-gradient-to-b from-transparent via-slate-950/50 to-slate-950"
-            : "bg-gradient-to-b from-transparent via-slate-50/50 to-slate-100",
-        )}
-      />
-      <div
-        className={cn(
-          "fixed top-0 left-0 w-full h-1 bg-gradient-to-r z-50 opacity-50",
-          "from-blue-600 via-cyan-400 to-blue-600",
-        )}
-      />
-
-      {/* Main Content Area */}
-      <main className="flex-grow flex flex-col items-center justify-start py-12 md:py-20 px-4 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="w-full max-w-[440px] px-4"
-        >
-          {/* Logo / Header Section */}
-          <div className="text-center mb-10 md:mb-14 relative">
-            <h1
-              className={cn(
-                "text-3xl md:text-5xl font-black bg-clip-text text-transparent tracking-tight mb-2 md:mb-3 uppercase transition-all",
-                "",
-                isDark
-                  ? "bg-gradient-to-br from-white via-white to-slate-500"
-                  : "bg-gradient-to-br from-slate-950 via-slate-800 to-slate-600",
-              )}
-            >
-              ShiftGuard
-            </h1>
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <div className="h-px w-6 md:w-8 bg-blue-500/50" />
-              <span className="text-[10px] md:text-xs font-bold text-blue-500 tracking-[0.2em] md:tracking-[0.3em] uppercase">
-                Operational Control Center
-              </span>
-              <div className="h-px w-6 md:w-8 bg-blue-500/50" />
-            </div>
+  // Form Content Renderer supporting both Desktop and Mobile layout
+  const renderFormContent = (isMobile: boolean) => {
+    if (lockedUser) {
+      return (
+        <div className="text-center w-full">
+          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center border border-slate-200 bg-slate-50 font-black text-xl text-[#0074ff] relative shadow-sm">
+            {lockedUser.first_name[0]}{lockedUser.last_name[0]}
+            <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" />
           </div>
+          
+          <h2 className="text-lg font-bold text-slate-800 mb-1">ברוך שובך</h2>
+          <p className="text-sm text-slate-500 mb-6">{"המפקד/ת"} {lockedUser.first_name} {lockedUser.last_name}</p>
 
-          {/* Login Card */}
-          <div
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="relative group w-full">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                autoFocus
+                value={password}
+                onFocus={() => setFocusPassword(true)}
+                onBlur={() => setFocusPassword(false)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
+                className="h-10 w-full border border-sky-100 rounded-lg px-3 pl-10 pr-3 text-right font-mono text-sm focus:border-[#0074ff] focus:ring-1 focus:ring-[#0074ff]/20 focus:outline-none transition-all placeholder-transparent"
+                placeholder=" "
+                disabled={isLoading}
+              />
+              <label
+                htmlFor="password"
+                className={cn(
+                  "absolute right-3 transition-all pointer-events-none px-1 text-slate-400 text-sm font-medium origin-top-right",
+                  password.length > 0 || focusPassword 
+                    ? "-top-2.5 text-xs text-[#0074ff] bg-white font-bold" 
+                    : "top-2.5 text-sm"
+                )}
+              >
+                סיסמה
+              </label>
+              
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors z-10"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 text-rose-500 bg-rose-50/80 border border-rose-100 p-2.5 rounded-lg text-xs font-bold text-right">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              {isBiometricAvailable && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBiometricLogin}
+                  className={cn(
+                    "border border-[#0074ff]/20 bg-[#0074ff]/5 hover:bg-[#0074ff]/10 flex items-center justify-center transition-all p-0 shrink-0",
+                    isMobile ? "h-11 w-11 rounded-full" : "h-10 w-10 rounded-lg"
+                  )}
+                  title="כניסה מהירה עם PIN"
+                >
+                  <Fingerprint className="w-5 h-5 text-[#0074ff]" />
+                </Button>
+              )}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className={cn(
+                  "bg-[#0074ff] hover:bg-[#005ecf] text-white font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2",
+                  isMobile ? "flex-1 h-11 rounded-xl" : "h-10 px-6 rounded-lg ml-auto"
+                )}
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <span>כניסה למערכת</span>
+                    <ArrowLeft className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+
+          <button
+            onClick={handleSwitchUser}
+            className="mt-6 text-xs font-bold text-slate-400 hover:text-[#0074ff] transition-colors flex items-center justify-center gap-1.5 mx-auto uppercase tracking-wide group"
+          >
+            <LogOut className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+            החלף משתמש
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-5 w-full">
+        {/* Username */}
+        <div className="relative group w-full">
+          <Input
+            id="username"
+            type="text"
+            autoComplete="username"
+            autoFocus
+            value={username}
+            onFocus={() => setFocusUsername(true)}
+            onBlur={() => setFocusUsername(false)}
+            onChange={(e) => {
+              setUsername(e.target.value.trim());
+              setError("");
+            }}
+            className="peer h-10 w-full border border-sky-100 rounded-lg px-3 pl-10 pr-3 text-right font-sans text-sm focus:border-[#0074ff] focus:ring-1 focus:ring-[#0074ff]/20 focus:outline-none transition-all placeholder-transparent"
+            placeholder=" "
+            disabled={isLoading}
+          />
+          <label
+            htmlFor="username"
             className={cn(
-              "backdrop-blur-xl border rounded-[2rem] md:rounded-[2.5rem] overflow-hidden ring-1 transition-all",
-              isDark
-                ? "bg-slate-900/60 border-white/10  ring-white/5"
-                : "bg-white/70 border-white/50  ring-black/5",
+              "absolute right-3 transition-all pointer-events-none px-1 text-slate-400 text-sm font-medium origin-top-right",
+              username.length > 0 || focusUsername 
+                ? "-top-2.5 text-xs text-[#0074ff] bg-white font-bold" 
+                : "top-2.5 text-sm"
             )}
           >
-            <div className="p-6 md:p-10">
-              {lockedUser ? (
-                /* LOCKED USER VIEW */
-                <div className="text-center">
-                  <div
-                    className={cn(
-                      "w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center border-2  font-black text-2xl relative group",
-                      isDark
-                        ? "bg-slate-800 border-slate-600 text-blue-400"
-                        : "bg-slate-100 border-slate-200 text-blue-600",
-                    )}
-                  >
-                    {lockedUser.first_name[0]}
-                    {lockedUser.last_name[0]}
-                    <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-slate-900 " />
-                  </div>
-                  <div
-                    className={cn(
-                      "text-xl font-bold mb-4",
-                      isDark ? "text-white" : "text-slate-900",
-                    )}
-                  >
-                    <h1 className="text-xl font-black mb-1">ברוך שובך</h1>
-                    <h2 className="text-xl font-black mb-1">
-                      {"המפקד/ת"} {lockedUser.first_name}
-                    </h2>
-                  </div>
+            שם משתמש
+          </label>
+          <ScanEye className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 peer-focus:text-[#0074ff] transition-colors" />
+        </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-2 text-right">
-                      <div className="relative group">
-                        <Lock
-                          className={cn(
-                            "absolute right-4 top-3.5 w-5 h-5 transition-colors z-10",
-                            isDark
-                              ? "text-slate-500 group-focus-within:text-blue-400"
-                              : "text-slate-400 group-focus-within:text-blue-600",
-                          )}
-                        />
-                        <Input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          autoComplete="current-password"
-                          autoFocus
-                          value={password}
-                          onChange={(e) => {
-                            setPassword(e.target.value);
-                            setError("");
-                          }}
-                          className={cn(
-                            "h-12 border rounded-xl pr-12 pl-12 transition-all text-lg tracking-widest font-mono",
-                            isDark
-                              ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
-                              : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
-                          )}
-                          placeholder="••••••••"
-                          disabled={isLoading}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className={cn(
-                            "absolute left-3 top-3.5 transition-colors z-10",
-                            isDark
-                              ? "text-slate-500 hover:text-slate-300"
-                              : "text-slate-400 hover:text-slate-600",
-                          )}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
+        {/* Password */}
+        <div className="relative group w-full">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            value={password}
+            onFocus={() => setFocusPassword(true)}
+            onBlur={() => setFocusPassword(false)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError("");
+            }}
+            className="peer h-10 w-full border border-sky-100 rounded-lg px-3 pl-10 pr-3 text-right font-mono text-sm focus:border-[#0074ff] focus:ring-1 focus:ring-[#0074ff]/20 focus:outline-none transition-all placeholder-transparent"
+            placeholder=" "
+            disabled={isLoading}
+          />
+          <label
+            htmlFor="password"
+            className={cn(
+              "absolute right-3 transition-all pointer-events-none px-1 text-slate-400 text-sm font-medium origin-top-right",
+              password.length > 0 || focusPassword 
+                ? "-top-2.5 text-xs text-[#0074ff] bg-white font-bold" 
+                : "top-2.5 text-sm"
+            )}
+          >
+            סיסמה
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors z-10"
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
 
-                    {error && (
-                      <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-sm font-bold">
-                        <AlertCircle className="w-4 h-4 shrink-0" />
-                        {error}
-                      </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      {isBiometricAvailable && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleBiometricLogin}
-                          className="h-12 w-14 min-w-[56px] rounded-xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
-                          title="כניסה מהירה עם PIN"
-                        >
-                          <Fingerprint className="w-6 h-6 text-blue-500" />
-                        </Button>
-                      )}
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="flex-1 h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all  active:scale-[0.98] relative overflow-hidden group"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform" />
-                        {isLoading ? (
-                          <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-                        ) : (
-                          "אימות וכניסה"
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-
-                  <button
-                    onClick={handleSwitchUser}
-                    className="mt-6 text-xs font-bold text-slate-500 hover:text-foreground transition-colors flex items-center justify-center gap-2 mx-auto uppercase tracking-wide group"
-                  >
-                    <LogOut className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
-                    החלף משתמש
-                  </button>
-                </div>
-              ) : (
-                /* REGULAR LOGIN VIEW */
-                <>
-                  <div className="mb-6 text-center">
-                    <p className="text-muted-foreground text-sm font-medium">
-                      הזדהות מאובטחת לרשת המבצעית
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-4">
-                      {/* Personal Number */}
-                      <div className="space-y-1.5">
-                        <div className="relative group">
-                          <Label
-                            htmlFor="username"
-                            className={cn(
-                              "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border ",
-                              isDark
-                                ? "bg-slate-900/90 text-blue-400 border-slate-700"
-                                : "bg-white text-blue-600 border-slate-200",
-                            )}
-                          >
-                            שם משתמש
-                          </Label>
-                          <ScanEye
-                            className={cn(
-                              "absolute right-4 top-3.5 w-5 h-5 transition-colors z-10",
-                              isDark
-                                ? "text-slate-500 group-focus-within:text-blue-400"
-                                : "text-slate-400 group-focus-within:text-blue-600",
-                            )}
-                          />
-                          <Input
-                            id="username"
-                            type="text"
-                            autoComplete="username"
-                            autoFocus
-                            value={username}
-                            onChange={(e) => {
-                              setUsername(e.target.value.trim());
-                              setError("");
-                            }}
-                            className={cn(
-                              "h-12 border rounded-xl pr-12 transition-all font-mono",
-                              isDark
-                                ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
-                                : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
-                            )}
-                            placeholder="הזן שם משתמש"
-                            disabled={isLoading}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Password */}
-                      <div className="space-y-1.5">
-                        <div className="relative group">
-                          <Label
-                            htmlFor="password"
-                            className={cn(
-                              "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border ",
-                              isDark
-                                ? "bg-slate-900/90 text-blue-400 border-slate-700"
-                                : "bg-white text-blue-600 border-slate-200",
-                            )}
-                          >
-                            סיסמה
-                          </Label>
-                          <Lock
-                            className={cn(
-                              "absolute right-4 top-3.5 w-5 h-5 transition-colors z-10",
-                              isDark
-                                ? "text-slate-500 group-focus-within:text-blue-400"
-                                : "text-slate-400 group-focus-within:text-blue-600",
-                            )}
-                          />
-                          <Input
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => {
-                              setPassword(e.target.value);
-                              setError("");
-                            }}
-                            className={cn(
-                              "h-12 border rounded-xl pr-12 pl-12 transition-all font-mono tracking-widest",
-                              isDark
-                                ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
-                                : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
-                            )}
-                            placeholder="••••••••"
-                            disabled={isLoading}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className={cn(
-                              "absolute left-3 top-3.5 transition-colors z-10",
-                              isDark
-                                ? "text-slate-500 hover:text-slate-300"
-                                : "text-slate-400 hover:text-slate-600",
-                            )}
-                          >
-                            {showPassword ? (
-                              <EyeOff className="w-5 h-5" />
-                            ) : (
-                              <Eye className="w-5 h-5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Forgot Password Link */}
-                    <div className="text-left -mt-2">
-                      <Link
-                        to="/forgot-password"
-                        className="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors uppercase tracking-tight"
-                      >
-                        שכחת סיסמה?
-                      </Link>
-                    </div>
-
-                    {/* Error Message */}
-                    {error && (
-                      <div className="flex items-center gap-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl text-sm text-rose-500 font-medium">
-                        <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
-                          <AlertCircle className="h-5 w-5 text-rose-500" />
-                        </div>
-                        <span className="font-sans">{error}</span>
-                      </div>
-                    )}
-
-                    {/* Submit Button & Biometric */}
-                    <div className="pt-2 flex gap-3">
-                      {isBiometricAvailable && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleBiometricLogin}
-                          className="h-14 w-16 min-w-[64px] rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
-                          title="כניסה מהירה עם PIN"
-                        >
-                          <Fingerprint className="w-7 h-7 text-blue-500" />
-                        </Button>
-                      )}
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="flex-1 h-14 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-black text-lg rounded-2xl transition-all  active:scale-[0.98] border border-white/10 relative overflow-hidden group"
-                      >
-                        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
-                        <div className="relative flex items-center justify-center gap-2">
-                          {isLoading ? (
-                            <>
-                              <Loader2 className="h-5 w-5 animate-spin" />
-                              <span className="text-base">
-                                מבצע אימות נתונים...
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <Crosshair className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-                              כניסה למערכת
-                            </>
-                          )}
-                        </div>
-                      </Button>
-                    </div>
-                  </form>
-                </>
-              )}
-            </div>
-
-            {/* Form Footer - Removed */}
+        {/* Forgot Password Link - Only shown on Desktop inside the form */}
+        {!isMobile && (
+          <div className="text-left -mt-2">
+            <Link
+              to="/forgot-password"
+              className="text-xs font-bold text-slate-400 hover:text-[#0074ff] transition-colors"
+            >
+              שכחת סיסמה?
+            </Link>
           </div>
+        )}
 
-          <div className="mt-8 text-center px-4">
-            <p className="text-[10px] text-muted-foreground font-medium font-mono uppercase tracking-[0.2em] leading-relaxed">
-              © 2026 • CYBER UNIT • v1.0.4
+        {/* Error Message */}
+        {error && (
+          <div className="flex items-center gap-2 text-rose-500 bg-rose-50/80 border border-rose-100 p-2.5 rounded-lg text-xs font-bold text-right animate-in fade-in duration-200">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="pt-1 flex gap-2 w-full">
+          {isBiometricAvailable && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleBiometricLogin}
+              className={cn(
+                "border border-[#0074ff]/20 bg-[#0074ff]/5 hover:bg-[#0074ff]/10 flex items-center justify-center transition-all p-0 shrink-0",
+                isMobile ? "h-11 w-11 rounded-full" : "h-10 w-10 rounded-lg"
+              )}
+              title="כניסה מהירה עם PIN"
+            >
+              <Fingerprint className="w-5 h-5 text-[#0074ff]" />
+            </Button>
+          )}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className={cn(
+              "bg-[#0074ff] hover:bg-[#005ecf] text-white font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2",
+              isMobile ? "flex-1 h-11 rounded-xl" : "h-10 px-6 rounded-lg ml-auto"
+            )}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <span>כניסה למערכת</span>
+                <ArrowLeft className="w-4 h-4" />
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    );
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-[#1A1D2D] relative flex items-center justify-center overflow-hidden font-sans select-none" dir="rtl">
+      {/* Background flat hex grid with neon glows */}
+      <HexagonPatrolGrid />
+
+      {/* Decorative operational glows */}
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+      {/* Primary container */}
+      <div className="relative z-10 w-full h-screen flex flex-col justify-end md:justify-center md:items-center">
+        
+        {/* DESKTOP VIEW */}
+        <div className="hidden md:flex flex-col items-center w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-8 duration-700">
+          {/* Logo & titles block right-aligned above the login box */}
+          <div className="w-full flex items-start justify-start gap-4 mb-4 text-right pr-2">
+            <img src="/logo_unit.png" alt="ShiftGuard Owl Logo" className="w-14 h-14 object-contain order-2" />
+            <div className="flex flex-col justify-center order-1">
+              <h1 className="text-2xl font-black text-white leading-none tracking-wide">SHIFTGUARD</h1>
+              <span className="text-xs text-blue-400 mt-1 font-bold">מרכז שליטה מבצעי</span>
+            </div>
+          </div>
+          
+          {/* The white login card with very soft outline/shadow */}
+          <div className="w-full bg-white border border-blue-900/10 rounded-[16px] shadow-[0_8px_30px_rgb(0,0,0,0.03)] p-8">
+            {renderFormContent(false)}
+          </div>
+          
+          {/* Subtle footer */}
+          <div className="mt-8 text-center">
+            <p className="text-[10px] text-slate-500 font-bold font-mono tracking-[0.2em] uppercase">
+              © 2026 • CYBER UNIT • v2.0.4
             </p>
           </div>
-        </motion.div>
-      </main>
+        </div>
+
+        {/* MOBILE VIEW */}
+        <div className="md:hidden flex flex-col h-full w-full justify-between">
+          {/* Top 2/3: Hexagonal Grid + floating premium logo */}
+          <div className="flex-1 flex flex-col items-center justify-center p-6">
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="flex flex-col items-center gap-3"
+            >
+              <div className="relative flex items-center justify-center">
+                <div className="absolute w-24 h-24 rounded-full bg-blue-500/20 blur-xl animate-pulse" />
+                <img src="/logo_unit.png" alt="ShiftGuard Owl Logo" className="w-24 h-24 object-contain relative z-10" />
+              </div>
+              <div className="text-center">
+                <h1 className="text-3xl font-black text-white tracking-widest leading-none">SHIFTGUARD</h1>
+                <span className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.2em] mt-1 block">Operational Control Center</span>
+              </div>
+            </motion.div>
+          </div>
+          
+          {/* Bottom Sheet */}
+          <div className="bg-white rounded-t-[2.5rem] border-t border-slate-200/60 shadow-[0_-8px_30px_rgb(0,0,0,0.08)] p-6 pb-8 relative flex flex-col max-h-[75vh]">
+            {/* Drag Handle */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-300 rounded-full" />
+            
+            {/* Logo & titles inside the sheet */}
+            <div className="flex items-center gap-3 mb-6 text-right w-full mt-2">
+              <img src="/logo_unit.png" alt="ShiftGuard Owl Logo" className="w-10 h-10 object-contain order-2" />
+              <div className="flex flex-col order-1">
+                <h1 className="text-lg font-black text-blue-950 leading-none">SHIFTGUARD</h1>
+                <span className="text-[10px] text-slate-500 font-medium mt-0.5 block">מרכז שליטה מבצעי</span>
+              </div>
+            </div>
+            
+            {/* Form inputs & buttons */}
+            <div className="w-full flex-grow">
+              {renderFormContent(true)}
+            </div>
+
+            {/* Mobile Forgot Password at the very bottom */}
+            {!lockedUser && (
+              <div className="text-center mt-6">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-bold text-slate-400 hover:text-[#0074ff] transition-colors"
+                >
+                  שכחת סיסמה?
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
 
       {/* PIN Verification Modal */}
       <PinVerificationModal
@@ -893,7 +815,7 @@ export default function LoginPage() {
         onClose={() => setShowPinModal(false)}
         onVerify={handleVerifyPin}
         username={pinUsername}
-        theme={theme}
+        theme="dark" // Always force dark for this premium look
       />
     </div>
   );

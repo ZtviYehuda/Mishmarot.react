@@ -1,0 +1,5 @@
+209 | יוסי פרץ | commander2 | Commander: True | Admin: False
+210 | חיים פרץ | commander3 | Commander: True | Admin: False
+211 | חיים אזולאי | commander4 | Commander: True | Admin: False
+208 | דני וסרמן | commander1 | Commander: True | Admin: False
+227 | Admin System | admin | Commander: True | Admin: True

@@ -62,7 +62,8 @@ function getAlertConfig(alert: {
   const isTransfer = alert.id.includes("transfer") || text.includes("העברה");
   const isSick = alert.id.includes("sick") || text.includes("מחלה");
   const isMessage = alert.id.startsWith("msg-");
-  const isMorningReport = alert.id.includes("missing-reports") || text.includes("דיווח בוקר");
+  const isMorningReport =
+    alert.id.includes("missing-reports") || text.includes("דיווח בוקר");
 
   if (isMorningReport) {
     return {
@@ -154,12 +155,15 @@ export default function MainLayout() {
   const fetchPendingCount = async () => {
     if (!user?.is_admin) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/support/tickets/pending-count`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/support/tickets/pending-count`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      );
       if (!res.ok) return; // Endpoint may not exist — fail silently
-      const contentType = res.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) return;
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) return;
       const data = await res.json();
       setPendingRequestsCount(data.count || 0);
     } catch (err) {
@@ -201,14 +205,15 @@ export default function MainLayout() {
             label: "פתח צ'אט",
             onClick: () => {
               markAsRead(alert.id);
-              navigate('/feedback?tab=messages');
+              navigate("/feedback?tab=messages");
               openChat({
                 id: alert.data?.sender_id || 0,
-                name: alert.data?.sender || alert.title.replace("הודעה מאת ", ""),
-                role: "מפקד"
+                name:
+                  alert.data?.sender || alert.title.replace("הודעה מאת ", ""),
+                role: "מפקד",
               });
-            }
-          }
+            },
+          },
         });
       }
     });
@@ -225,22 +230,30 @@ export default function MainLayout() {
   }, []);
 
   const navItems = [
-    { name: "לוח בקרה ראשי", path: "/", icon: LayoutDashboard },
+    { name: "לוח בקרה", path: "/", icon: LayoutDashboard },
     { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
     { name: "סידור עבודה", path: "/roster", icon: CalendarRange },
     { name: "מרכז משוב", path: "/feedback", icon: MessageSquare },
     // Only show these if NOT a temp commander
     ...(!user?.is_temp_commander
       ? [
-        { name: "ניהול שוטרים", path: "/employees", icon: Users },
-        { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
-      ]
+          { name: "ניהול שוטרים", path: "/employees", icon: Users },
+          { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
+        ]
       : []),
     ...(user?.is_admin
       ? [{ name: "יומן פעילות", path: "/activity-log", icon: Activity }]
       : []),
     { name: "הגדרות", path: "/settings", icon: Settings },
   ];
+
+  // Derive the current page title for the mobile header
+  const currentPageName =
+    navItems.find(
+      (item) =>
+        item.path === location.pathname ||
+        (item.path !== "/" && location.pathname.startsWith(item.path)),
+    )?.name ?? "לוח בקרה";
 
   return (
     <div
@@ -339,9 +352,12 @@ export default function MainLayout() {
                 >
                   {item.name}
                 </span>
-                {isActive && (
-                  <div className="absolute left-1 w-1 h-5 bg-primary rounded-full transition-opacity" />
-                )}
+                <div
+                  className={cn(
+                    "absolute left-1 w-1 bg-primary rounded-full transition-all duration-300 ease-out origin-center",
+                    isActive ? "h-5 opacity-100 scale-100" : "h-0 opacity-0 scale-50"
+                  )}
+                />
               </Link>
             );
           })}
@@ -434,64 +450,157 @@ export default function MainLayout() {
               className="lg:hidden flex items-center justify-center shrink-0 active:scale-90 transition-all"
               aria-label="Open menu"
             >
-              <img src="/logo_unit.png" alt="לוגו" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
+              <img
+                src="/logo_unit.png"
+                alt="לוגו"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+              />
             </button>
 
-            {/* Green pulsing status dot — always visible, clickable for last login info */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <button title="סטטוס מערכת" className="flex items-center shrink-0 focus:outline-none p-1">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                  </span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-60 p-4 rounded-2xl border-border shadow-xl backdrop-blur-xl bg-card/95" align="start" dir="rtl">
-                <div className="space-y-3 text-right">
-                  <div className="flex items-center gap-2 pb-2 border-b border-border/40">
-                    <span className="relative flex h-2.5 w-2.5 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                    </span>
-                    <div>
-                      <h4 className="text-xs font-black text-foreground">המערכת פעילה</h4>
-                      <p className="text-[10px] font-bold text-muted-foreground">חיבור מאובטח</p>
+            {/* Mobile page title & status dot — sits between logo and date/notifications */}
+            <div className="lg:hidden flex-1 flex flex-col items-start pr-1.5 min-w-0">
+              {/* Green status dot above the name */}
+              <div className="mb-0.5 flex items-center gap-1">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      title="סטטוס מערכת"
+                      className="flex items-center shrink-0 focus:outline-none p-0.5"
+                    >
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                      </span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-60 p-4 rounded-2xl border-border shadow-xl backdrop-blur-xl bg-card/95"
+                    align="start"
+                    dir="rtl"
+                  >
+                    <div className="space-y-3 text-right">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <div>
+                          <h4 className="text-xs font-black text-foreground">
+                            המערכת פעילה
+                          </h4>
+                          <p className="text-[10px] font-bold text-muted-foreground">
+                            חיבור מאובטח
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-muted-foreground">
+                            משתמש מחובר:
+                          </span>
+                          <span className="text-[10px] font-black text-foreground">
+                            {user?.first_name} {user?.last_name}
+                          </span>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-muted/30 border border-border/20">
+                          <p className="text-[10px] font-bold text-muted-foreground mb-1 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            כניסה קודמת:
+                          </p>
+                          <p className="text-[11px] font-black text-primary">
+                            {(user as any)?.previous_login
+                              ? new Date(
+                                  (user as any).previous_login,
+                                ).toLocaleString("he-IL", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "2-digit",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "כניסה ראשונה"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-muted-foreground">משתמש מחובר:</span>
-                      <span className="text-[10px] font-black text-foreground">{user?.first_name} {user?.last_name}</span>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-muted/30 border border-border/20">
-                      <p className="text-[10px] font-bold text-muted-foreground mb-1 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        כניסה קודמת:
-                      </p>
-                      <p className="text-[11px] font-black text-primary">
-                        {(user as any)?.previous_login
-                          ? new Date((user as any).previous_login).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
-                          : "כניסה ראשונה"
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            <div className="flex flex-col text-right leading-none min-w-0">
-              <div className="hidden sm:flex items-center gap-1.5 mb-1">
-                <span className="text-[9px] md:text-[11px] font-black text-primary uppercase leading-none truncate opacity-80">
-                  מוקד שליטה
-                </span>
+                  </PopoverContent>
+                </Popover>
+                <span className="text-[7.5px] font-black text-emerald-500/90 leading-none">פעיל</span>
               </div>
-              <h1 className="text-sm xs:text-base md:text-2xl font-black text-foreground tracking-tight leading-none whitespace-nowrap">
-                {location.pathname === "/"
-                  ? "לוח בקרה"
-                  : navItems.find((n) => location.pathname.startsWith(n.path) && n.path !== "/")
-                    ?.name || "ShiftGuard"}
+              <h2 className="text-sm font-black text-foreground tracking-tight leading-none whitespace-nowrap">
+                {currentPageName}
+              </h2>
+            </div>
+
+            {/* Desktop Only Pulsing Status Dot */}
+            <div className="hidden lg:flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    id="system-status-dot"
+                    title="סטטוס מערכת"
+                    className="flex items-center shrink-0 focus:outline-none p-1"
+                  >
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-60 p-4 rounded-2xl border-border shadow-xl backdrop-blur-xl bg-card/95"
+                  align="start"
+                  dir="rtl"
+                >
+                  <div className="space-y-3 text-right">
+                    <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                      <span className="relative flex h-2 w-2 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      <div>
+                        <h4 className="text-xs font-black text-foreground">
+                          המערכת פעילה
+                        </h4>
+                        <p className="text-[10px] font-bold text-muted-foreground">
+                          חיבור מאובטח
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-muted-foreground">
+                          משתמש מחובר:
+                        </span>
+                        <span className="text-[10px] font-black text-foreground">
+                          {user?.first_name} {user?.last_name}
+                        </span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-muted/30 border border-border/20">
+                        <p className="text-[10px] font-bold text-muted-foreground mb-1 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          כניסה קודמת:
+                        </p>
+                        <p className="text-[11px] font-black text-primary">
+                          {(user as any)?.previous_login
+                            ? new Date(
+                                (user as any).previous_login,
+                              ).toLocaleString("he-IL", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "כניסה ראשונה"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <h1 className="text-sm font-black text-foreground tracking-tight leading-none whitespace-nowrap">
+                מערכת במצב פעיל
               </h1>
             </div>
           </div>
@@ -499,7 +608,7 @@ export default function MainLayout() {
           <div className="flex items-center gap-2 sm:gap-6 shrink-0">
             {/* Global DateHeader */}
             <div className="shrink-0">
-              <DateHeader className="sm:scale-100 scale-90 origin-left" />
+              <DateHeader className="sm:scale-100 scale-100 origin-left" />
             </div>
 
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
@@ -507,6 +616,7 @@ export default function MainLayout() {
             <div className="flex items-center gap-1.5 sm:gap-3">
               {/* Desktop Only: Separate Chat Button */}
               <button
+                id="chat-toggle-btn"
                 onClick={toggleChat}
                 title="צ'אט והודעות"
                 className="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all relative"
@@ -519,419 +629,437 @@ export default function MainLayout() {
                 <PopoverTrigger asChild>
                   <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all">
                     <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                    {(unreadCount + (user?.is_admin ? pendingRequestsCount : 0)) > 0 && (
-                      <span className={cn(
-                        "absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card animate-in zoom-in-50",
-                        pendingRequestsCount > 0 && user?.is_admin ? "bg-amber-500 shadow-lg shadow-amber-500/20" : "bg-primary"
-                      )}>
-                        {unreadCount + (user?.is_admin ? pendingRequestsCount : 0)}
+                    {unreadCount + (user?.is_admin ? pendingRequestsCount : 0) >
+                      0 && (
+                      <span
+                        className={cn(
+                          "absolute -top-1.5 -right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[9px] sm:text-[10px] font-black text-primary-foreground ring-2 ring-card animate-in zoom-in-50",
+                          pendingRequestsCount > 0 && user?.is_admin
+                            ? "bg-amber-500 shadow-lg shadow-amber-500/20"
+                            : "bg-primary",
+                        )}
+                      >
+                        {unreadCount +
+                          (user?.is_admin ? pendingRequestsCount : 0)}
                       </span>
                     )}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="w-[95vw] xs:w-[450px] p-0 overflow-hidden rounded-2xl border-border mr-4 sm:mr-0 shadow-2xl"
+                  className="w-[450px] max-w-[95vw] p-0 overflow-hidden rounded-2xl border-border shadow-2xl"
                   align="start"
                 >
-                <div className="p-4 border-b border-border bg-card sticky top-0 z-10">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-black text-foreground text-right">
-                        {notificationTab === "messages" ? "מרכז הודעות" : "מרכז התראות"}
-                      </span>
-                      <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-black">
-                        {notificationTab === "active" ? alerts.length : notificationTab === "history" ? history.length : "צ'אט"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      {notificationTab === "active" && alerts.length > 0 && (
-                        <button
-                          onClick={markAllAsRead}
-                          className="text-[10px] font-black text-primary hover:underline flex items-center gap-1"
-                        >
-                          <CheckCheck className="w-3 h-3" />
-                          סמן הכל כנקרא
-                        </button>
-                      )}
-                      <button
-                        onClick={
-                          notificationTab === "active"
-                            ? refreshAlerts
+                  <div className="p-4 border-b border-border bg-card sticky top-0 z-10">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-foreground text-right">
+                          {notificationTab === "messages"
+                            ? "מרכז הודעות"
+                            : "מרכז התראות"}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-black">
+                          {notificationTab === "active"
+                            ? alerts.length
                             : notificationTab === "history"
-                              ? fetchHistory
-                              : () => {}
-                        }
-                        className="text-[10px] font-black text-muted-foreground hover:text-primary hover:underline"
+                              ? history.length
+                              : "צ'אט"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {notificationTab === "active" && alerts.length > 0 && (
+                          <button
+                            onClick={markAllAsRead}
+                            className="text-[10px] font-black text-primary hover:underline flex items-center gap-1"
+                          >
+                            <CheckCheck className="w-3.5 h-3.5" />
+                            סמן הכל כנקרא
+                          </button>
+                        )}
+                        <button
+                          onClick={
+                            notificationTab === "active"
+                              ? refreshAlerts
+                              : notificationTab === "history"
+                                ? fetchHistory
+                                : () => {}
+                          }
+                          className="text-[10px] font-black text-muted-foreground hover:text-primary hover:underline"
+                        >
+                          {notificationTab === "messages" ? "" : "רענן רשימה"}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 border-b border-border/40 -mb-px">
+                      <button
+                        onClick={() => setNotificationTab("active")}
+                        className={cn(
+                          "flex-1 px-2 py-2 text-[10px] sm:text-[11px] font-black rounded-t-lg transition-all flex items-center justify-center gap-1.5",
+                          notificationTab === "active"
+                            ? "bg-background text-primary border-b-2 border-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                        )}
                       >
-                        {notificationTab === "messages" ? "" : "רענן רשימה"}
+                        <Activity className="w-3 h-3" />
+                        פעילות ({alerts.length})
+                      </button>
+                      <button
+                        onClick={() => setNotificationTab("messages")}
+                        className={cn(
+                          "flex-1 px-2 py-2 text-[10px] sm:text-[11px] font-black rounded-t-lg transition-all flex items-center justify-center gap-1.5",
+                          notificationTab === "messages"
+                            ? "bg-background text-primary border-b-2 border-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                        )}
+                      >
+                        <MessageSquare className="w-3 h-3" />
+                        הודעות
+                      </button>
+                      <button
+                        onClick={() => {
+                          setNotificationTab("history");
+                          fetchHistory();
+                        }}
+                        className={cn(
+                          "flex-1 px-2 py-2 text-[10px] sm:text-[11px] font-black rounded-t-lg transition-all flex items-center justify-center gap-1.5",
+                          notificationTab === "history"
+                            ? "bg-background text-primary border-b-2 border-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                        )}
+                      >
+                        <History className="w-3 h-3" />
+                        היסטוריה ({history.length})
                       </button>
                     </div>
                   </div>
-                  <div className="flex gap-1 border-b border-border/40 -mb-px">
-                    <button
-                      onClick={() => setNotificationTab("active")}
-                      className={cn(
-                        "flex-1 px-2 py-2 text-[10px] sm:text-[11px] font-black rounded-t-lg transition-all flex items-center justify-center gap-1.5",
-                        notificationTab === "active"
-                          ? "bg-background text-primary border-b-2 border-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                      )}
-                    >
-                      <Activity className="w-3 h-3" />
-                      פעילות ({alerts.length})
-                    </button>
-                    <button
-                      onClick={() => setNotificationTab("messages")}
-                      className={cn(
-                        "flex-1 px-2 py-2 text-[10px] sm:text-[11px] font-black rounded-t-lg transition-all flex items-center justify-center gap-1.5",
-                        notificationTab === "messages"
-                          ? "bg-background text-primary border-b-2 border-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                      )}
-                    >
-                      <MessageSquare className="w-3 h-3" />
-                      הודעות
-                    </button>
-                    <button
-                      onClick={() => {
-                        setNotificationTab("history");
-                        fetchHistory();
-                      }}
-                      className={cn(
-                        "flex-1 px-2 py-2 text-[10px] sm:text-[11px] font-black rounded-t-lg transition-all flex items-center justify-center gap-1.5",
-                        notificationTab === "history"
-                          ? "bg-background text-primary border-b-2 border-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                      )}
-                    >
-                      <History className="w-3 h-3" />
-                      היסטוריה ({history.length})
-                    </button>
-                  </div>
-                </div>
-                <div className="max-h-[60vh] sm:max-h-[400px] overflow-y-auto custom-scrollbar bg-muted/50">
-                  {notificationTab === "messages" ? (
-                    <div className="p-8 flex flex-col items-center justify-center gap-4 text-center">
-                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                        <MessageSquare className="w-8 h-8" />
+                  <div className="max-h-[60vh] sm:max-h-[400px] overflow-y-auto custom-scrollbar bg-muted/50">
+                    {notificationTab === "messages" ? (
+                      <div className="p-8 flex flex-col items-center justify-center gap-4 text-center">
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                          <MessageSquare className="w-8 h-8" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-foreground mb-1">
+                            צ'אט והודעות מערכת
+                          </p>
+                          <p className="text-[10px] font-medium text-muted-foreground max-w-[200px]">
+                            נהל שיחות עם מפקדים וקבל הודעות עדכון בזמן אמת
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => {
+                            toggleChat();
+                          }}
+                          className="rounded-xl font-black text-xs gap-2 px-6"
+                        >
+                          פתח את מרכז ההודעות
+                          <ArrowLeft className="w-3 h-3" />
+                        </Button>
                       </div>
-                      <div>
-                        <p className="text-sm font-black text-foreground mb-1">צ'אט והודעות מערכת</p>
-                        <p className="text-[10px] font-medium text-muted-foreground max-w-[200px]">נהל שיחות עם מפקדים וקבל הודעות עדכון בזמן אמת</p>
-                      </div>
-                      <Button 
-                        onClick={() => {
-                          toggleChat();
-                        }}
-                        className="rounded-xl font-black text-xs gap-2 px-6"
-                      >
-                        פתח את מרכז ההודעות
-                        <ArrowLeft className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ) : notificationTab === "active" ? (
-                    loadingNotifs ? (
+                    ) : notificationTab === "active" ? (
+                      loadingNotifs ? (
+                        <div className="p-12 flex flex-col items-center justify-center gap-3 opacity-50">
+                          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                          <span className="text-xs font-bold">
+                            בודק עדכונים...
+                          </span>
+                        </div>
+                      ) : alerts.length === 0 ? (
+                        <div className="p-12 flex flex-col items-center justify-center gap-4 opacity-50">
+                          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                            <CheckCircle2 className="w-8 h-8" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-black text-foreground">
+                              שיגרה מלאה
+                            </p>
+                            <p className="text-[10px] font-bold text-muted-foreground">
+                              אין התראות חדשות המצריכות טיפול
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col">
+                          {alerts.map((alert) => {
+                            const isRead = readIds.includes(alert.id);
+                            const config = getAlertConfig(alert);
+                            const Icon = config.icon;
+                            const isMorningReport =
+                              alert.title?.includes("דיווח בוקר") ||
+                              alert.description?.includes("דיווח בוקר");
+
+                            return (
+                              <div
+                                key={alert.id}
+                                className={cn(
+                                  "p-3 sm:p-4 flex flex-row-reverse gap-3 sm:gap-4 hover:bg-card transition-all border-b border-border last:border-0 group relative cursor-pointer",
+                                  isRead && "opacity-60 grayscale-[0.3]",
+                                )}
+                                dir="rtl"
+                                onClick={(e) => {
+                                  // Default click handler for the whole row
+                                  if (
+                                    (e.target as HTMLElement).closest("button")
+                                  )
+                                    return; // Ignore button clicks
+
+                                  if (isMorningReport) {
+                                    navigate("/attendance", {
+                                      state: {
+                                        openBulkModal: true,
+                                        alertData: (alert as any).data,
+                                      },
+                                    });
+                                  } else if (
+                                    (alert as any).data?.sick_employees
+                                  ) {
+                                    setSickEmployees(
+                                      (alert as any).data.sick_employees,
+                                    );
+                                    setSickModalOpen(true);
+                                    // Do not mark as read - keep active until resolved
+                                  } else {
+                                    navigate(alert.link);
+                                    // Auto-mark as read for navigation alerts
+                                    if (!isRead) toggleRead(alert.id);
+                                  }
+                                }}
+                              >
+                                <div
+                                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0  transition-transform group-hover:scale-105"
+                                  style={{
+                                    backgroundColor: config.bg,
+                                    color: config.color,
+                                  }}
+                                >
+                                  <Icon className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1 min-w-0 text-right">
+                                  <div className="flex items-center justify-start gap-2">
+                                    {!isRead && (
+                                      <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                                    )}
+                                    <p
+                                      className={cn(
+                                        "text-xs font-black transition-colors",
+                                        isRead
+                                          ? "text-muted-foreground"
+                                          : "text-foreground group-hover:text-primary",
+                                      )}
+                                    >
+                                      {alert.title}
+                                    </p>
+                                  </div>
+                                  <p
+                                    className={cn(
+                                      "text-[11px] font-bold leading-tight mt-1",
+                                      isRead
+                                        ? "text-muted-foreground/60"
+                                        : "text-muted-foreground",
+                                    )}
+                                  >
+                                    {alert.description}
+                                  </p>
+                                </div>
+                                {/* Internal Message Button */}
+                                {isMorningReport &&
+                                  (alert as any).data?.commander_id &&
+                                  user?.id !==
+                                    (alert as any).data.commander_id && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setMsgRecipient({
+                                          id: (alert as any).data.commander_id,
+                                          name: (alert as any).data
+                                            .commander_name,
+                                        });
+                                        setMsgDefaults({
+                                          title: "דיווח בוקר טרם הושלם",
+                                          description: `שלום ${(alert as any).data.commander_name}, טרם הושלם דיווח בוקר עבור ${(alert as any).data.missing_count} שוטרים ביחידתך. נא להשלים את הדיווח בהקדם.`,
+                                        });
+                                        setMsgDialogOpen(true);
+                                      }}
+                                      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-blue-600 hover:bg-blue-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0 mr-1"
+                                      title="שלח התראה פנימית"
+                                    >
+                                      <Send className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                {/* WhatsApp Reminder Button */}
+                                {isMorningReport &&
+                                  (alert as any).data?.commander_phone &&
+                                  user?.id !==
+                                    (alert as any).data.commander_id && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const phone = (
+                                          alert as any
+                                        ).data.commander_phone
+                                          .replace(/-/g, "")
+                                          .replace(/^0/, "972");
+                                        const name = (alert as any).data
+                                          .commander_name;
+                                        const count = (alert as any).data
+                                          .missing_count;
+                                        const text = `שלום ${name}, טרם הושלם דיווח בוקר עבור ${count} שוטרים ביחידתך. נא להשלים את הדיווח בהקדם.`;
+                                        window.open(
+                                          `https://wa.me/${phone}?text=${encodeURIComponent(
+                                            text,
+                                          )}`,
+                                          "_blank",
+                                        );
+                                      }}
+                                      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-emerald-600 hover:bg-emerald-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0 mr-1"
+                                      title="שלח תזכורת בווטסאפ"
+                                    >
+                                      <MessageCircle className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if ((alert as any).data?.sick_employees) {
+                                      setSickEmployees(
+                                        (alert as any).data.sick_employees,
+                                      );
+                                      setSickModalOpen(true);
+                                      // Do not mark as read
+                                    } else {
+                                      setSelectedAlert(alert);
+                                      if (!isRead) toggleRead(alert.id);
+                                    }
+                                  }}
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-blue-600 hover:bg-blue-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0 mr-1"
+                                  title="פתח הודעה"
+                                >
+                                  {alert.title.includes("הודעה") ? (
+                                    <Mail className="w-4 h-4" />
+                                  ) : (
+                                    <Eye className="w-4 h-4" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleRead(alert.id);
+                                  }}
+                                  className={cn(
+                                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0",
+                                    isRead
+                                      ? "text-primary bg-primary/10"
+                                      : "text-muted-foreground hover:text-primary hover:bg-muted",
+                                  )}
+                                  title={isRead ? "סמן כלא נקרא" : "סמן כנקרא"}
+                                >
+                                  {isRead ? (
+                                    <CheckCircle2 className="w-4 h-4" />
+                                  ) : (
+                                    <Circle className="w-4 h-4 opacity-30" />
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )
+                    ) : loadingHistory ? (
                       <div className="p-12 flex flex-col items-center justify-center gap-3 opacity-50">
                         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
                         <span className="text-xs font-bold">
-                          בודק עדכונים...
+                          טוען היסטוריה...
                         </span>
                       </div>
-                    ) : alerts.length === 0 ? (
+                    ) : history.length === 0 ? (
                       <div className="p-12 flex flex-col items-center justify-center gap-4 opacity-50">
                         <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                          <CheckCircle2 className="w-8 h-8" />
+                          <History className="w-8 h-8" />
                         </div>
                         <div className="text-center">
                           <p className="text-sm font-black text-foreground">
-                            שיגרה מלאה
+                            אין היסטוריה
                           </p>
                           <p className="text-[10px] font-bold text-muted-foreground">
-                            אין התראות חדשות המצריכות טיפול
+                            לא נמצאו התראות שנקראו
                           </p>
                         </div>
                       </div>
                     ) : (
                       <div className="flex flex-col">
-                        {alerts.map((alert) => {
-                          const isRead = readIds.includes(alert.id);
+                        {history.map((alert) => {
                           const config = getAlertConfig(alert);
                           const Icon = config.icon;
-                          const isMorningReport =
-                            alert.title?.includes("דיווח בוקר") ||
-                            alert.description?.includes("דיווח בוקר");
 
                           return (
                             <div
                               key={alert.id}
-                              className={cn(
-                                "p-3 sm:p-4 flex flex-row-reverse gap-3 sm:gap-4 hover:bg-card transition-all border-b border-border last:border-0 group relative cursor-pointer",
-                                isRead && "opacity-60 grayscale-[0.3]",
-                              )}
-                              dir="rtl"
-                              onClick={(e) => {
-                                // Default click handler for the whole row
-                                if ((e.target as HTMLElement).closest("button"))
-                                  return; // Ignore button clicks
-
-                                if (isMorningReport) {
-                                  navigate("/attendance", {
-                                    state: {
-                                      openBulkModal: true,
-                                      alertData: (alert as any).data,
-                                    },
-                                  });
-                                } else if (
-                                  (alert as any).data?.sick_employees
-                                ) {
-                                  setSickEmployees(
-                                    (alert as any).data.sick_employees,
-                                  );
-                                  setSickModalOpen(true);
-                                  // Do not mark as read - keep active until resolved
-                                } else {
-                                  navigate(alert.link);
-                                  // Auto-mark as read for navigation alerts
-                                  if (!isRead) toggleRead(alert.id);
-                                }
-                              }}
+                              className="p-4 flex flex-row-reverse gap-4 bg-muted/30 border-b border-border last:border-0 opacity-70 hover:opacity-100 transition-opacity group"
                             >
                               <div
-                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0  transition-transform group-hover:scale-105"
+                                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 grayscale opacity-70"
                                 style={{
                                   backgroundColor: config.bg,
                                   color: config.color,
                                 }}
                               >
-                                <Icon className="w-5 h-5" />
+                                <Icon className="w-4 h-4" />
                               </div>
-                              <div className="flex-1 min-w-0 text-right">
-                                <div className="flex items-center justify-start gap-2">
-                                  {!isRead && (
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                                  )}
-                                  <p
-                                    className={cn(
-                                      "text-xs font-black transition-colors",
-                                      isRead
-                                        ? "text-muted-foreground"
-                                        : "text-foreground group-hover:text-primary",
-                                    )}
-                                  >
-                                    {alert.title}
-                                  </p>
-                                </div>
-                                <p
-                                  className={cn(
-                                    "text-[11px] font-bold leading-tight mt-1",
-                                    isRead
-                                      ? "text-muted-foreground/60"
-                                      : "text-muted-foreground",
-                                  )}
-                                >
+                              <div className="flex-1 text-right">
+                                <h4 className="text-xs font-black text-foreground mb-1 leading-tight">
+                                  {alert.title}
+                                </h4>
+                                <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">
                                   {alert.description}
                                 </p>
+                                {alert.read_at && (
+                                  <p className="text-[9px] font-bold text-muted-foreground mt-2 flex items-center gap-1 justify-end">
+                                    <Clock className="w-3 h-3" />
+                                    נקרא:{" "}
+                                    {new Date(
+                                      alert.read_at.endsWith("Z")
+                                        ? alert.read_at
+                                        : alert.read_at + "Z",
+                                    ).toLocaleString("he-IL", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </p>
+                                )}
                               </div>
-                              {/* Internal Message Button */}
-                              {isMorningReport &&
-                                (alert as any).data?.commander_id &&
-                                user?.id !==
-                                (alert as any).data.commander_id && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setMsgRecipient({
-                                        id: (alert as any).data.commander_id,
-                                        name: (alert as any).data
-                                          .commander_name,
-                                      });
-                                      setMsgDefaults({
-                                        title: "דיווח בוקר טרם הושלם",
-                                        description: `שלום ${(alert as any).data.commander_name}, טרם הושלם דיווח בוקר עבור ${(alert as any).data.missing_count} שוטרים ביחידתך. נא להשלים את הדיווח בהקדם.`,
-                                      });
-                                      setMsgDialogOpen(true);
-                                    }}
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-blue-600 hover:bg-blue-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0 mr-1"
-                                    title="שלח התראה פנימית"
-                                  >
-                                    <Send className="w-4 h-4" />
-                                  </button>
-                                )}
-                              {/* WhatsApp Reminder Button */}
-                              {isMorningReport &&
-                                (alert as any).data?.commander_phone &&
-                                user?.id !==
-                                (alert as any).data.commander_id && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      const phone = (
-                                        alert as any
-                                      ).data.commander_phone
-                                        .replace(/-/g, "")
-                                        .replace(/^0/, "972");
-                                      const name = (alert as any).data
-                                        .commander_name;
-                                      const count = (alert as any).data
-                                        .missing_count;
-                                      const text = `שלום ${name}, טרם הושלם דיווח בוקר עבור ${count} שוטרים ביחידתך. נא להשלים את הדיווח בהקדם.`;
-                                      window.open(
-                                        `https://wa.me/${phone}?text=${encodeURIComponent(
-                                          text,
-                                        )}`,
-                                        "_blank",
-                                      );
-                                    }}
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-emerald-600 hover:bg-emerald-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0 mr-1"
-                                    title="שלח תזכורת בווטסאפ"
-                                  >
-                                    <MessageCircle className="w-4 h-4" />
-                                  </button>
-                                )}
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  if ((alert as any).data?.sick_employees) {
-                                    setSickEmployees(
-                                      (alert as any).data.sick_employees,
-                                    );
-                                    setSickModalOpen(true);
-                                    // Do not mark as read
-                                  } else {
-                                    setSelectedAlert(alert);
-                                    if (!isRead) toggleRead(alert.id);
-                                  }
-                                }}
-                                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-blue-600 hover:bg-blue-50 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0 mr-1"
-                                title="פתח הודעה"
-                              >
-                                {alert.title.includes("הודעה") ? (
-                                  <Mail className="w-4 h-4" />
-                                ) : (
-                                  <Eye className="w-4 h-4" />
-                                )}
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleRead(alert.id);
-                                }}
-                                className={cn(
-                                  "w-8 h-8 rounded-lg flex items-center justify-center transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 shrink-0",
-                                  isRead
-                                    ? "text-primary bg-primary/10"
-                                    : "text-muted-foreground hover:text-primary hover:bg-muted",
-                                )}
-                                title={isRead ? "סמן כלא נקרא" : "סמן כנקרא"}
-                              >
-                                {isRead ? (
-                                  <CheckCircle2 className="w-4 h-4" />
-                                ) : (
-                                  <Circle className="w-4 h-4 opacity-30" />
-                                )}
-                              </button>
+                              <div className="flex flex-col items-center gap-2">
+                                <div className="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                </div>
+                                <button
+                                  onClick={() => markAsUnread(alert.id)}
+                                  title="סמן כלא נקרא"
+                                  className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                  <Undo2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
                           );
                         })}
                       </div>
-                    )
-                  ) : loadingHistory ? (
-                    <div className="p-12 flex flex-col items-center justify-center gap-3 opacity-50">
-                      <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                      <span className="text-xs font-bold">
-                        טוען היסטוריה...
+                    )}
+                  </div>
+                  {alerts.length > 0 && notificationTab === "active" && (
+                    <div className="p-3 bg-card border-t border-border text-center">
+                      <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                        נא לטפל בבקשות הממתינות בהקדם
                       </span>
                     </div>
-                  ) : history.length === 0 ? (
-                    <div className="p-12 flex flex-col items-center justify-center gap-4 opacity-50">
-                      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                        <History className="w-8 h-8" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-black text-foreground">
-                          אין היסטוריה
-                        </p>
-                        <p className="text-[10px] font-bold text-muted-foreground">
-                          לא נמצאו התראות שנקראו
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col">
-                      {history.map((alert) => {
-                        const config = getAlertConfig(alert);
-                        const Icon = config.icon;
-
-                        return (
-                          <div
-                            key={alert.id}
-                            className="p-4 flex flex-row-reverse gap-4 bg-muted/30 border-b border-border last:border-0 opacity-70 hover:opacity-100 transition-opacity group"
-                          >
-                            <div
-                              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 grayscale opacity-70"
-                              style={{
-                                backgroundColor: config.bg,
-                                color: config.color,
-                              }}
-                            >
-                              <Icon className="w-4 h-4" />
-                            </div>
-                            <div className="flex-1 text-right">
-                              <h4 className="text-xs font-black text-foreground mb-1 leading-tight">
-                                {alert.title}
-                              </h4>
-                              <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">
-                                {alert.description}
-                              </p>
-                              {alert.read_at && (
-                                <p className="text-[9px] font-bold text-muted-foreground mt-2 flex items-center gap-1 justify-end">
-                                  <Clock className="w-3 h-3" />
-                                  נקרא:{" "}
-                                  {new Date(
-                                    alert.read_at.endsWith("Z")
-                                      ? alert.read_at
-                                      : alert.read_at + "Z",
-                                  ).toLocaleString("he-IL", {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex flex-col items-center gap-2">
-                              <div className="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                              </div>
-                              <button
-                                onClick={() => markAsUnread(alert.id)}
-                                title="סמן כלא נקרא"
-                                className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
-                              >
-                                <Undo2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
                   )}
-                </div>
-                {alerts.length > 0 && notificationTab === "active" && (
-                  <div className="p-3 bg-card border-t border-border text-center">
-                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                      נא לטפל בבקשות הממתינות בהקדם
-                    </span>
-                  </div>
-                )}
-              </PopoverContent>
-            </Popover>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </header>
@@ -971,9 +1099,9 @@ export default function MainLayout() {
                   style={
                     selectedAlert
                       ? {
-                        backgroundColor: getAlertConfig(selectedAlert).bg,
-                        color: getAlertConfig(selectedAlert).color,
-                      }
+                          backgroundColor: getAlertConfig(selectedAlert).bg,
+                          color: getAlertConfig(selectedAlert).color,
+                        }
                       : {}
                   }
                 >
@@ -1008,30 +1136,31 @@ export default function MainLayout() {
               >
                 סגור
               </Button>
-              {selectedAlert?.data?.is_message && selectedAlert?.data?.sender_id && (
-                <Button
-                  className="flex-1 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
-                  onClick={() => {
-                    const alertCopy = selectedAlert;
-                    setSelectedAlert(null);
-                    setMsgRecipient({
-                      id: alertCopy.data.sender_id,
-                      name: alertCopy.data.sender,
-                    });
-                    setMsgDefaults({
-                      title: `תגובה: ${alertCopy.title.replace("הודעה מאת ", "")}`,
-                      description: "",
-                    });
-                    setMsgDialogOpen(true);
-                    if (!readIds.includes(alertCopy.id)) {
-                      toggleRead(alertCopy.id);
-                    }
-                  }}
-                >
-                  <Send className="w-4 h-4 ml-2" />
-                  השב לשולח
-                </Button>
-              )}
+              {selectedAlert?.data?.is_message &&
+                selectedAlert?.data?.sender_id && (
+                  <Button
+                    className="flex-1 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    onClick={() => {
+                      const alertCopy = selectedAlert;
+                      setSelectedAlert(null);
+                      setMsgRecipient({
+                        id: alertCopy.data.sender_id,
+                        name: alertCopy.data.sender,
+                      });
+                      setMsgDefaults({
+                        title: `תגובה: ${alertCopy.title.replace("הודעה מאת ", "")}`,
+                        description: "",
+                      });
+                      setMsgDialogOpen(true);
+                      if (!readIds.includes(alertCopy.id)) {
+                        toggleRead(alertCopy.id);
+                      }
+                    }}
+                  >
+                    <Send className="w-4 h-4 ml-2" />
+                    השב לשולח
+                  </Button>
+                )}
               {selectedAlert?.link && (
                 <Button
                   className="flex-1 rounded-xl font-bold"
@@ -1048,8 +1177,7 @@ export default function MainLayout() {
         </Dialog>
         <GlobalAiSupport />
         <ChatSidebar />
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }
-

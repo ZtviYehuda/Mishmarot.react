@@ -747,7 +747,19 @@ export default function DashboardPage() {
         <div className="space-y-3 sm:space-y-5 transition-all mt-1 relative">
 
           {/* Stat Cards - New Redesigned Component */}
-          <StatCards stats={stats} totalEmployees={totalEmployees} />
+          <StatCards 
+            stats={stats} 
+            totalEmployees={totalEmployees} 
+            selectedStatusId={selectedStatusId}
+            onCardSelect={(statusId) => {
+              if (statusId === null) {
+                setSelectedStatusId(null);
+                setSelectedStatusData(null);
+              } else {
+                handleFilterChange("status", statusId.toString());
+              }
+            }}
+          />
 
           {/* Middle Row - Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 items-stretch">

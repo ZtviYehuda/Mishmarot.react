@@ -203,7 +203,7 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
                 top: elementRect.top - 12,
                 width: elementRect.width + 24,
                 height: elementRect.height + 24,
-                border: '4px solid #3b82f6',
+                border: '4px solid var(--primary)',
                 borderRadius: '16px',
                 pointerEvents: 'none'
               }}
@@ -223,16 +223,16 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               style={getTooltipStyle()}
-              className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-2xl pointer-events-auto border border-blue-100 dark:border-slate-800 text-right cursor-default"
+              className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-2xl pointer-events-auto border border-[color-mix(in_srgb,var(--primary)_15%,transparent)] dark:border-slate-800 text-right cursor-default"
               dir="rtl"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                  <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] flex items-center justify-center text-primary">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   {!isSingleStep && (
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
+                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">
                       שלב {currentStepIndex + 1} מתוך {steps.length}
                     </span>
                   )}
@@ -271,7 +271,8 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
                   <>
                     <Button 
                       onClick={onNext}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[11px] h-10 gap-2 shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
+                      variant="default"
+                      className="flex-1 rounded-xl font-black text-[11px] h-10 gap-2 active:scale-95 transition-all"
                     >
                       הבנתי, המשך
                       <ChevronRight className="w-4 h-4" />

@@ -42,6 +42,7 @@ interface EmployeesChartProps {
   hasArchiveAccess?: boolean;
   onRequestRestore?: () => void;
   hideHeader?: boolean;
+  compact?: boolean;
 }
 
 const OFFICE_GROUP_NAME = "משרד";
@@ -58,6 +59,7 @@ const EmployeesChartComponent = (
     totalInUnit = 0,
     selectedStatusId = null,
     filterTags = [],
+    compact = false,
   }: EmployeesChartProps,
   ref: any,
 ) => {
@@ -185,10 +187,11 @@ const EmployeesChartComponent = (
         ref={cardRef}
         id="attendance-snapshot-card"
         className={cn(
-          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-2xl sm:rounded-[1.5rem] border-0 shadow-sm flex flex-col overflow-hidden h-full relative transition-all"
+          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-2xl sm:rounded-[1.5rem] border-0 shadow-sm flex flex-col overflow-hidden h-full relative transition-all",
+          compact && "bg-transparent backdrop-blur-none border-0 shadow-none"
         )}
       >
-      <div className="p-3 sm:p-4 md:p-6 flex-1 flex flex-col relative">
+      <div className={cn("p-3 sm:p-4 md:p-6 flex-1 flex flex-col relative", compact && "p-2 sm:p-3")}>
         {/* Header */}
         <div className="flex flex-row justify-between items-center gap-2 sm:gap-3 mb-2 relative z-10 min-h-[48px] sm:min-h-[70px]">
           <div className="flex gap-2 sm:gap-3 items-center min-w-0">
@@ -260,14 +263,17 @@ const EmployeesChartComponent = (
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col min-h-[260px] sm:min-h-[360px] relative p-0 mt-0">
+        <div className={cn(
+          "flex-1 flex flex-col relative p-0 mt-0",
+          compact ? "min-h-[160px] sm:min-h-[220px]" : "min-h-[260px] sm:min-h-[360px]"
+        )}>
           {chartData.length === 0 ? (
             <div className="flex-1 flex items-center justify-center py-12 text-center text-muted-foreground font-bold tracking-tight">
               אין נתונים להצגה
             </div>
           ) : (
             <div className="flex-1 w-full flex-col min-h-0 relative mt-0" style={{ direction: "ltr" }}>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minHeight={compact ? 160 : 250}>
                 {chartType === "pie" ? (
                   <PieChart margin={{ left: 40, right: 40, top: 10, bottom: 10 }}>
                     <Pie

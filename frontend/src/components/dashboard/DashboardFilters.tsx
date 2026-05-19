@@ -494,19 +494,14 @@ export const DashboardFilters = ({
                 <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
-                    className={cn(
-                      "h-9 px-3.5 gap-2 rounded-xl border border-border/40 transition-all font-black text-[11px] whitespace-nowrap backdrop-blur-xl",
-                      hasActiveFilters
-                        ? "bg-background text-primary hover:bg-muted/30 border-primary/30"
-                        : "bg-background text-muted-foreground hover:bg-muted/30 hover:text-foreground",
-                    )}
+                    className="h-9 rounded-xl flex-col gap-0.5 font-black transition-all px-2 xl:px-3.5 text-primary hover:bg-primary/5 text-sm min-w-[60px] py-1 relative border-none bg-transparent"
                   >
-                    <Filter className="w-4 h-4" />
-                    <span className="hidden xl:inline">סינון נתונים</span>
+                    <Filter className="w-3.5 h-3.5" />
+                    <span className="text-[8.5px] xl:text-[9.5px] leading-tight">סינון נתונים</span>
                     {hasActiveFilters && (
                       <Badge
                         variant="secondary"
-                        className="ml-1 h-5 rounded-full px-1.5 min-w-5 flex items-center justify-center font-black bg-primary/20 text-primary hover:bg-primary/30 border-none"
+                        className="absolute -top-1.5 right-1 h-3.5 rounded-full px-1 min-w-3.5 flex items-center justify-center font-black bg-primary/20 text-primary text-[8px] border-none"
                       >
                         {activeFilterCountExternal !== undefined 
                           ? activeFilterCountExternal 

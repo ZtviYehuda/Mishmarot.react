@@ -217,7 +217,7 @@ class NotificationModel:
                             "type": "danger",
                             "title": "טרם דיווחת נוכחות להיום",
                             "description": "לא נמצא דיווח נוכחות עבורך להיום. אנא דווח בהקדם.",
-                            "link": "/dashboard",
+                            "link": "/attendance",
                             "data": {"is_self_report": True},
                         }
                     )

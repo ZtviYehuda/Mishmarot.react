@@ -27,7 +27,7 @@ export const DateHeader: React.FC<{ className?: string }> = ({ className }) => {
           >
             <CalendarIcon className="hidden sm:block w-4 h-4 text-slate-400 dark:text-slate-500" />
             
-            <div className="flex items-center text-[10px] sm:text-[13px] tracking-tight">
+            <div className="flex items-center text-[12px] sm:text-[13px] tracking-tight">
               {/* Day name (Hidden on mobile) */}
               <span className="hidden sm:inline font-normal mr-1.5">
                 {format(selectedDate, "EEEE", { locale: he })}
