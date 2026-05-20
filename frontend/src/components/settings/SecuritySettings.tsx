@@ -127,11 +127,11 @@ export function SecuritySettings({
         </div>
       )}
 
-      <div className="grid grid-cols-12 gap-8">
+      <div className="grid grid-cols-12 gap-4 lg:gap-8">
         {/* RIGHT SIDE - Password Change */}
-        <div className="col-span-12 lg:col-span-8 space-y-8">
+        <div className="col-span-12 lg:col-span-8 space-y-4 sm:space-y-8">
           <SectionCard icon={KeyRound} title="שינוי סיסמה">
-            <div className="space-y-8">
+            <div className="space-y-4 sm:space-y-6">
               {/* Old Password */}
               <div className="max-w-md">
                 <InputItem
@@ -157,7 +157,7 @@ export function SecuritySettings({
                           old_password: e.target.value,
                         })
                       }
-                      className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-14 font-bold text-base sm:text-lg focus:bg-background transition-all"
+                      className="h-11 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-14 font-bold text-base sm:text-lg focus:bg-background transition-all"
                       placeholder="••••••••"
                     />
                     <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/30 group-focus-within:text-primary transition-colors" />
@@ -167,7 +167,7 @@ export function SecuritySettings({
 
               <div className="h-px bg-primary/5 w-full" />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                 <InputItem label="סיסמה חדשה" required icon={ShieldCheck}>
                   <div className="relative group">
                     <Input
@@ -179,7 +179,7 @@ export function SecuritySettings({
                           new_password: e.target.value,
                         })
                       }
-                      className="h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-14 font-bold text-base sm:text-lg"
+                      className="h-11 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-14 font-bold text-base sm:text-lg"
                       placeholder="לפחות 6 תווים"
                     />
                     <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground/30" />
@@ -191,7 +191,7 @@ export function SecuritySettings({
                         "flex-1 rounded-full transition-all",
                         passwordData.new_password.length > 0
                           ? passwordData.new_password.length < 6
-                            ? "bg-red-500/60"
+                             ? "bg-red-500/60"
                             : "bg-emerald-500/60"
                           : "bg-muted",
                       )}
@@ -227,7 +227,7 @@ export function SecuritySettings({
                         })
                       }
                       className={cn(
-                        "h-12 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-14 font-bold text-base sm:text-lg",
+                        "h-11 sm:h-14 bg-background/40 rounded-xl sm:rounded-2xl border-primary/5 pl-14 font-bold text-base sm:text-lg",
                         passwordData.confirm_password &&
                           passwordData.new_password !==
                             passwordData.confirm_password &&
@@ -247,44 +247,42 @@ export function SecuritySettings({
                 </InputItem>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 gap-5">
+              <div className="flex flex-row items-center justify-between pt-2 sm:pt-4 gap-3">
                 <button
                   onClick={() => setShowPasswords(!showPasswords)}
-                  className="flex items-center gap-2 text-xs font-black text-muted-foreground hover:text-primary transition-all group"
+                  className="flex items-center gap-1.5 text-xs font-black text-muted-foreground hover:text-primary transition-all group shrink-0"
                 >
-                  <div className="p-2 rounded-lg bg-muted/50 group-hover:bg-primary/10">
+                  <div className="p-1.5 rounded-lg bg-muted/50 group-hover:bg-primary/10">
                     {showPasswords ? (
-                      <EyeOff className="w-4 h-4" />
+                      <EyeOff className="w-3.5 h-3.5" />
                     ) : (
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-3.5 h-3.5" />
                     )}
                   </div>
-                  {showPasswords ? "הסתר תווים" : "הצג תווים"}
+                  {showPasswords ? "הסתר" : "הצג תווים"}
                 </button>
 
                 <Button
                   onClick={handleChangePassword}
                   disabled={isChangingPassword}
-                  className="w-full sm:w-auto h-12 sm:h-14 px-8 sm:px-10 rounded-xl sm:rounded-2xl font-black text-base sm:text-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-auto flex-1 sm:flex-initial h-11 sm:h-14 px-4 sm:px-10 rounded-xl sm:rounded-2xl font-black text-sm sm:text-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {isChangingPassword ? (
-                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 ml-1.5 sm:ml-3 animate-spin" />
                   ) : (
-                    <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3" />
+                    <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 ml-1.5 sm:ml-3" />
                   )}
-                  שמור סיסמה חדשה
+                  שמור סיסמה
                 </Button>
               </div>
             </div>
           </SectionCard>
-
-
         </div>
 
         {/* LEFT SIDE - Security Tips */}
         <div className="col-span-12 lg:col-span-4 space-y-8">
           <SectionCard icon={HelpCircle} title="הנחיות אבטחה">
-            <div className="space-y-8 py-4">
+            <div className="space-y-4 sm:space-y-8 py-2 sm:py-4">
               <SecurityGuideItem
                 icon={CheckCircle2}
                 title="אורך הסיסמה המומלצת"
@@ -304,10 +302,10 @@ export function SecuritySettings({
                 color="text-amber-600"
               />
 
-              <div className="pt-8 border-t border-primary/5">
-                <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-border/40 relative overflow-hidden group">
+              <div className="pt-4 sm:pt-8 border-t border-primary/5">
+                <div className="p-4 sm:p-6 bg-primary/5 rounded-2xl sm:rounded-[2.5rem] border border-border/40 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-primary/20" />
-                  <p className="text-sm font-black text-primary leading-relaxed relative z-10 transition-colors group-hover:text-primary/100">
+                  <p className="text-xs sm:text-sm font-black text-primary leading-relaxed relative z-10 transition-colors group-hover:text-primary/100">
                     שים לב: המערכת מנטרת פעילות חריגה ומדווחת עליה למנהלי המערכת
                     באופן אוטומטי.
                   </p>
@@ -334,7 +332,7 @@ function SectionCard({
   variant = "default",
 }: any) {
   return (
-    <div className="flex flex-col gap-3 sm:gap-4">
+    <div className="flex flex-col gap-2 sm:gap-4">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <Icon className={cn("w-4 h-4", variant === "danger" ? "text-red-500" : "text-primary")} />
@@ -345,7 +343,7 @@ function SectionCard({
         {badge}
       </div>
       <div className={cn(
-        "bg-card/40 backdrop-blur-xl rounded-[2rem] border p-4 sm:p-6 overflow-hidden h-full",
+        "bg-card/40 backdrop-blur-xl rounded-2xl sm:rounded-[2rem] border p-3 sm:p-6 overflow-hidden h-full",
         variant === "danger" ? "border-red-500/20 bg-red-500/5" : "border-border/40"
       )}>
         {children}
@@ -373,18 +371,18 @@ function InputItem({ label, icon: Icon, required, children, extra }: any) {
 
 function SecurityGuideItem({ icon: Icon, title, desc, color }: any) {
   return (
-    <div className="flex gap-4 group">
+    <div className="flex gap-2.5 sm:gap-4 group">
       <div
         className={cn(
-          "p-3 bg-background rounded-2xl border border-border/40  group-hover:scale-110 transition-transform h-fit",
+          "p-2 sm:p-3 bg-background rounded-xl sm:rounded-2xl border border-border/40 group-hover:scale-110 transition-transform h-fit shrink-0",
           color.replace("text", "border"),
         )}
       >
-        <Icon className={cn("w-5 h-5", color)} />
+        <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", color)} />
       </div>
-      <div className="space-y-1">
-        <h4 className="font-black text-sm tracking-tight">{title}</h4>
-        <p className="text-muted-foreground text-[11px] font-medium leading-relaxed">
+      <div className="space-y-0.5">
+        <h4 className="font-black text-xs sm:text-sm tracking-tight">{title}</h4>
+        <p className="text-muted-foreground text-[10px] sm:text-[11px] font-medium leading-relaxed">
           {desc}
         </p>
       </div>

@@ -233,7 +233,6 @@ export default function MainLayout() {
     { name: "לוח בקרה", path: "/", icon: LayoutDashboard },
     { name: "מעקב נוכחות", path: "/attendance", icon: CalendarDays },
     { name: "סידור עבודה", path: "/roster", icon: CalendarRange },
-    { name: "מרכז משוב", path: "/feedback", icon: MessageSquare },
     // Only show these if NOT a temp commander
     ...(!user?.is_temp_commander
       ? [
@@ -241,6 +240,7 @@ export default function MainLayout() {
           { name: "בקשות העברה", path: "/transfers", icon: ArrowLeftRight },
         ]
       : []),
+    { name: "מרכז משוב", path: "/feedback", icon: MessageSquare },
     ...(user?.is_admin
       ? [{ name: "יומן פעילות", path: "/activity-log", icon: Activity }]
       : []),
@@ -464,6 +464,7 @@ export default function MainLayout() {
                 <Popover>
                   <PopoverTrigger asChild>
                     <button
+                      id="mobile-system-status-dot"
                       title="סטטוס מערכת"
                       className="flex items-center shrink-0 focus:outline-none p-0.5"
                     >
@@ -619,7 +620,7 @@ export default function MainLayout() {
                 id="chat-toggle-btn"
                 onClick={toggleChat}
                 title="צ'אט והודעות"
-                className="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all relative"
+                className="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all relative"
               >
                 <MessageSquare className="w-5 h-5" />
               </button>
@@ -627,7 +628,10 @@ export default function MainLayout() {
               {/* Combined Notifications/Messages Popover */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all">
+                  <button 
+                    id="mobile-notifications-btn"
+                    className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
+                  >
                     <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                     {unreadCount + (user?.is_admin ? pendingRequestsCount : 0) >
                       0 && (
@@ -1091,55 +1095,53 @@ export default function MainLayout() {
           open={!!selectedAlert}
           onOpenChange={(open) => !open && setSelectedAlert(null)}
         >
-          <DialogContent className="max-w-[90vw] sm:max-w-md p-4 sm:p-6">
-            <DialogHeader>
-              <div className="flex items-center gap-3 mb-2">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 "
-                  style={
-                    selectedAlert
-                      ? {
-                          backgroundColor: getAlertConfig(selectedAlert).bg,
-                          color: getAlertConfig(selectedAlert).color,
-                        }
-                      : {}
-                  }
-                >
-                  {selectedAlert &&
-                    React.createElement(getAlertConfig(selectedAlert).icon, {
-                      className: "w-5 h-5",
-                    })}
-                </div>
-                <div className="flex-1">
-                  <DialogTitle className="text-lg font-black text-foreground">
-                    {selectedAlert?.title}
-                  </DialogTitle>
-                  <p className="text-xs text-muted-foreground font-bold">
-                    {selectedAlert?.created_at &&
-                      new Date(selectedAlert.created_at).toLocaleString(
-                        "he-IL",
-                      )}
-                  </p>
-                </div>
+          <DialogContent className="w-full sm:max-w-md p-5 sm:p-6 rounded-t-3xl sm:rounded-2xl">
+            <DialogHeader className="flex flex-col items-center text-center gap-3 sm:gap-4 pb-1">
+              <div
+                className="w-16 h-16 rounded-3xl flex items-center justify-center shrink-0 shadow-sm"
+                style={
+                  selectedAlert
+                    ? {
+                        backgroundColor: getAlertConfig(selectedAlert).bg,
+                        color: getAlertConfig(selectedAlert).color,
+                      }
+                    : {}
+                }
+              >
+                {selectedAlert &&
+                  React.createElement(getAlertConfig(selectedAlert).icon, {
+                    className: "w-8 h-8",
+                  })}
+              </div>
+              <div className="space-y-1 w-full px-2">
+                <DialogTitle className="text-xl sm:text-2xl font-black text-foreground">
+                  {selectedAlert?.title}
+                </DialogTitle>
+                <p className="text-xs font-bold text-muted-foreground/80">
+                  {selectedAlert?.created_at &&
+                    new Date(selectedAlert.created_at).toLocaleString("he-IL")}
+                </p>
               </div>
             </DialogHeader>
-            <div className="bg-muted/30 p-4 rounded-xl border border-border mt-2">
-              <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap text-foreground">
+
+            <div className="bg-muted/40 p-4 sm:p-5 rounded-3xl border border-border/50 my-2">
+              <p className="text-sm font-bold leading-relaxed whitespace-pre-wrap text-foreground text-center">
                 {selectedAlert?.description}
               </p>
             </div>
-            <DialogFooter className="gap-2 sm:gap-2">
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-2 w-full">
               <Button
                 variant="outline"
                 onClick={() => setSelectedAlert(null)}
-                className="flex-1 rounded-xl font-bold"
+                className="w-full sm:flex-1 h-12 sm:h-11 rounded-2xl font-black"
               >
                 סגור
               </Button>
               {selectedAlert?.data?.is_message &&
                 selectedAlert?.data?.sender_id && (
                   <Button
-                    className="flex-1 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    className="w-full sm:flex-1 h-12 sm:h-11 rounded-2xl font-black bg-indigo-600 hover:bg-indigo-700 text-white"
                     onClick={() => {
                       const alertCopy = selectedAlert;
                       setSelectedAlert(null);
@@ -1163,10 +1165,22 @@ export default function MainLayout() {
                 )}
               {selectedAlert?.link && (
                 <Button
-                  className="flex-1 rounded-xl font-bold"
+                  className="w-full sm:flex-1 h-12 sm:h-11 rounded-2xl font-black shadow-lg shadow-primary/20"
                   onClick={() => {
                     navigate(selectedAlert.link);
                     setSelectedAlert(null);
+                    if (selectedAlert.link.includes("#")) {
+                      const id = selectedAlert.link.split("#")[1];
+                      setTimeout(() => {
+                        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+                        // Add a highlight effect
+                        const el = document.getElementById(id);
+                        if (el) {
+                          el.classList.add("ring-4", "ring-primary", "ring-offset-4", "transition-all", "duration-1000");
+                          setTimeout(() => el.classList.remove("ring-4", "ring-primary", "ring-offset-4"), 2000);
+                        }
+                      }, 300);
+                    }
                   }}
                 >
                   למעבר לעמוד

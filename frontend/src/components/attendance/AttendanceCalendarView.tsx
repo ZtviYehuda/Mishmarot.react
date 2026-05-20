@@ -32,6 +32,7 @@ interface Props {
   sections?: any[];
   teams?: any[];
   serviceTypes?: any[];
+  onDaySelectedChange?: (selected: boolean) => void;
 }
 
 // ── Weekly Column Cell for Desktop ──────────────────────────────────────────
@@ -516,23 +517,23 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -30 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -30 }}
-      transition={{ duration: 0.15 }}
-      className="flex flex-col gap-3"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 15 }}
+      transition={{ duration: 0.2 }}
+      className="flex flex-col gap-4 w-full"
       dir="rtl"
     >
-      {/* Header row (NOT in export) */}
-      <div className="flex items-center gap-2">
+      {/* Top action header bar (NOT in export) */}
+      <div className="flex items-center justify-between gap-3 px-1">
         <button onClick={onBack}
-          className="flex items-center gap-1.5 text-xs font-black text-primary hover:underline">
+          className="flex items-center gap-1.5 text-xs font-black text-primary hover:underline transition-all">
           <ArrowRight className="w-3.5 h-3.5" />
           חזרה ללוח שנה
         </button>
-        <div className="flex-1" />
+        
         <Button variant="ghost" size="sm" onClick={handleExport} disabled={isExporting}
-          className="h-8 gap-1.5 text-xs font-bold border border-border/40 rounded-xl hover:bg-primary/5 hover:text-primary disabled:opacity-60">
+          className="h-8.5 gap-1.5 text-xs font-bold border border-border/40 rounded-xl hover:bg-primary/5 hover:text-primary disabled:opacity-60 bg-card">
           {isExporting ? (
             <><svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -545,58 +546,53 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
       </div>
 
       {/* ── Export target ── */}
-      <div ref={detailRef} className="flex flex-col gap-4 bg-card/60 rounded-2xl p-4 border border-border/40">
-
-        {/* Statistics Header Section — Clean Minimalist Layout */}
-        <div className="flex flex-col gap-5 py-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <p className={cn("text-2xl font-black leading-tight tracking-tight px-1", today ? "text-primary" : "text-foreground")}>
+      <div ref={detailRef} className="flex flex-col gap-4 w-full bg-transparent">
+        
+        {/* Statistics Header Section — Horizontal layout on desktop, stacked on mobile */}
+        <div className="bg-card/45 backdrop-blur-xl rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">נוכחות יומית</span>
+            <p className={cn("text-xl sm:text-2xl font-black leading-none tracking-tight", today ? "text-primary" : "text-foreground")}>
               {format(stats.date, "EEEE, d MMMM yyyy", { locale: he })}
             </p>
-
-            <div className="flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/10 rounded-3xl px-5 py-3 self-start sm:self-center">
-              <div className="flex items-center justify-center w-11 h-11 rounded-full bg-emerald-500/10 shrink-0">
-                 <span className={cn("text-base font-black tabular-nums", presentPct < 0.5 ? "text-rose-500" : "text-emerald-600")}>
-                   {Math.round(presentPct * 100)}%
-                 </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-emerald-600/40 uppercase tracking-widest leading-none mb-1">נוכחות ביחידה</span>
-                <span className="text-base font-black text-emerald-600/70 tabular-nums">{stats.present}/{stats.total}</span>
-              </div>
-            </div>
           </div>
 
-          {/* Action / Alert Context line — Minimalist Style */}
-          <div className="flex flex-col items-start gap-1 px-1">
-            {stats.reported === stats.total && stats.total > 0 && (
-              <div className="flex items-center gap-2 text-emerald-600 text-[11px] font-black group">
-                <CheckCircle2 className="w-4 h-4 transition-transform group-hover:scale-110" />
-                <span>כל הסגל דיווח במלואו!</span>
-              </div>
-            )}
-            {stats.reported < stats.total && stats.total > 0 && (
-              <button
-                onClick={() => setMissingExpanded((prev) => !prev)}
-                className="flex items-center gap-2 text-rose-500 text-[11px] font-black transition-all hover:text-rose-600 active:scale-95 group"
-              >
-                <div className="w-5 h-5 rounded-full bg-rose-500/10 flex items-center justify-center group-hover:bg-rose-500/20 transition-colors">
-                  <AlertCircle className={cn("w-3.5 h-3.5 transition-transform", missingExpanded && "rotate-12")} />
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {/* Presence metric badge */}
+            <div className="flex items-center gap-2 bg-emerald-500/10 rounded-xl px-3 py-1.5 text-emerald-600 font-bold text-xs">
+              <span className="text-xs font-black">נוכחות ביחידה:</span>
+              <span className="text-sm font-black tabular-nums">{Math.round(presentPct * 100)}% ({stats.present}/{stats.total})</span>
+            </div>
+
+            {/* Reporting status badge */}
+            <div className="bg-muted/50 rounded-xl px-3 py-1.5 text-xs font-bold text-foreground">
+              {stats.reported === stats.total && stats.total > 0 ? (
+                <div className="flex items-center gap-1.5 text-emerald-600">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>כל הסגל דיווח</span>
                 </div>
-                <span className="underline decoration-rose-500/30 underline-offset-4">{stats.total - stats.reported} חברי סגל טרם השלימו דיווח</span>
-                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform opacity-40", missingExpanded && "rotate-180")} />
-              </button>
-            )}
+              ) : (
+                <button
+                  onClick={() => setMissingExpanded((prev) => !prev)}
+                  className="flex items-center gap-1.5 text-rose-500 hover:text-rose-600 transition-all font-black"
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0 animate-pulse" />
+                  <span className="underline decoration-rose-500/20 underline-offset-2">{stats.total - stats.reported} חסרים דיווח</span>
+                  <ChevronDown className={cn("w-3 h-3 transition-transform", missingExpanded && "rotate-180")} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
+        {/* Missing Reporting List */}
         <AnimatePresence>
           {missingExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="mt-2 p-4 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-500/10 rounded-3xl overflow-hidden"
+              className="p-4 bg-rose-500/5 rounded-2xl overflow-hidden"
             >
               <div className="space-y-4">
                  {Object.entries(
@@ -611,10 +607,10 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
                      <h5 className="text-[10px] font-black text-rose-500/60 uppercase tracking-widest px-1">
                        {dept} • ({emps.length})
                      </h5>
-                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
                        {emps.map((m) => (
                          <button key={m.id} onClick={(e) => { e.stopPropagation(); openProfile(m.id); }}
-                           className="flex items-center gap-3 p-3 rounded-2xl text-sm font-black border border-rose-500/10 bg-white/70 dark:bg-rose-900/40 text-rose-600 hover:bg-rose-500 hover:text-white transition-all group">
+                           className="flex items-center gap-2.5 p-2.5 px-3.5 rounded-xl text-xs font-bold bg-white dark:bg-rose-950/60 text-rose-600 hover:bg-rose-500 hover:text-white hover:shadow-sm transition-all text-right group">
                            <div className="w-2 h-2 rounded-full bg-rose-500 group-hover:bg-white shrink-0" />
                            <span className="truncate">{m.name}</span>
                          </button>
@@ -627,66 +623,71 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
           )}
         </AnimatePresence>
 
-        {/* ── Status Detail Grid ── */}
-        {statusGroups.length > 0 && (
-          <div className="space-y-3">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">פירוט סטטוסים</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {statusGroups.map((group) => {
-                const isExpanded = expandedGroups.has(group.name);
-                const groupPct = stats.total > 0 ? group.emps.length / stats.total : 0;
-                return (
-                  <div key={group.name}
-                    className={cn("flex flex-col rounded-3xl border transition-all h-fit",
-                      isExpanded ? "bg-white/90 dark:bg-slate-900/90 border-primary/20" : "bg-card/40 border-border/40")}>
-                    <button onClick={() => toggleGroup(group.name)}
-                      className="flex items-center justify-between p-4 w-full group">
-                      <div className="flex flex-col items-start gap-1 flex-1">
+        {/* ── Status Detail Cards (Full Width Accordions) ── */}
+        {statusGroups.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {statusGroups.map((group) => {
+              const isExpanded = expandedGroups.has(group.name);
+              const groupPct = stats.total > 0 ? group.emps.length / stats.total : 0;
+              return (
+                <div key={group.name}
+                  className={cn("flex flex-col rounded-2xl transition-all h-fit",
+                    isExpanded ? "bg-card shadow-sm" : "bg-card/45 hover:bg-card/65")}>
+                  <button onClick={() => toggleGroup(group.name)}
+                    className="flex items-center justify-between p-4 sm:p-5 w-full group">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: group.color }} />
+                      <div className="flex flex-col items-start gap-1">
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: group.color }} />
-                          <span className="text-sm font-black text-foreground">{group.name}</span>
+                          <span className="text-sm sm:text-base font-black text-foreground">{group.name}</span>
                           <span className="text-xs font-bold text-muted-foreground">({group.emps.length})</span>
                         </div>
-                        <div className="w-full max-w-[100px] h-1 bg-muted/40 rounded-full overflow-hidden">
+                        <div className="w-24 sm:w-32 h-1 bg-muted rounded-full overflow-hidden">
                           <div className="h-full rounded-full transition-all" style={{ width: `${groupPct * 100}%`, backgroundColor: group.color }} />
                         </div>
                       </div>
-                      <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform group-hover:text-primary", isExpanded && "rotate-180")} />
-                    </button>
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden">
-                          <div className="px-4 pb-4 space-y-4">
-                             {Object.entries(
-                               group.emps.reduce((acc, curr) => {
-                                 const dept = (curr as any).deptName || "אחר";
-                                 if (!acc[dept]) acc[dept] = [];
-                                 acc[dept].push(curr);
-                                 return acc;
-                               }, {} as Record<string, typeof group.emps>)
-                             ).map(([dept, emps]) => (
-                               <div key={dept} className="space-y-2.5 pt-3 border-t border-border/10 first:border-0 first:pt-0">
-                                 <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest px-1">{dept}</p>
-                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                   {emps.map((e) => (
-                                     <button key={e.id} onClick={(e_evt) => { e_evt.stopPropagation(); openProfile(e.id); }}
-                                       className="flex items-center gap-3 p-3 rounded-2xl text-sm font-bold border border-border/40 bg-muted/10 hover:bg-white dark:hover:bg-slate-800 transition-all group text-right">
-                                       <div className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform" style={{ backgroundColor: group.color }} />
-                                       <span className="truncate">{e.name}</span>
-                                     </button>
-                                   ))}
-                                 </div>
+                    </div>
+                    <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform group-hover:text-primary", isExpanded && "rotate-180")} />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden">
+                        <div className="px-5 pb-5 space-y-4 border-t border-border/10 pt-4">
+                           {Object.entries(
+                             group.emps.reduce((acc, curr) => {
+                               const dept = (curr as any).deptName || "אחר";
+                               if (!acc[dept]) acc[dept] = [];
+                               acc[dept].push(curr);
+                               return acc;
+                             }, {} as Record<string, typeof group.emps>)
+                           ).map(([dept, emps]) => (
+                             <div key={dept} className="space-y-2.5 pt-3 border-t border-border/5 first:border-0 first:pt-0">
+                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{dept}</p>
+                               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
+                                 {emps.map((e) => (
+                                   <button key={e.id} onClick={(e_evt) => { e_evt.stopPropagation(); openProfile(e.id); }}
+                                     className="flex items-center gap-2.5 p-2.5 px-3.5 rounded-xl text-xs font-bold bg-muted/30 hover:bg-card hover:shadow-sm transition-all text-right group">
+                                     <div className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform" style={{ backgroundColor: group.color }} />
+                                     <span className="truncate text-foreground/80 group-hover:text-primary">{e.name}</span>
+                                   </button>
+                                 ))}
                                </div>
-                             ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </div>
+                             </div>
+                           ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center p-8 rounded-2xl text-center bg-card/30">
+            <AlertCircle className="w-8 h-8 text-muted-foreground/40 mb-2" />
+            <p className="text-sm font-bold text-muted-foreground">אין דיווחים ליום זה</p>
           </div>
         )}
 
@@ -696,12 +697,17 @@ function DayDetailView({ stats, onBack, subToParent, parsedEmps }: {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, departments = [], serviceTypes = [] }: Props) {
+export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, departments = [], serviceTypes = [], onDaySelectedChange }: Props) {
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
+
+  const handleSetSelectedDay = (day: Date | null) => {
+    setSelectedDay(day);
+    onDaySelectedChange?.(day !== null);
+  };
 
   // Filter states (Multi-select)
   const [deptFilters, setDeptFilters] = useState<number[]>([]);
@@ -816,7 +822,7 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
     return (
       <DayDetailView
         stats={selectedDayStats}
-        onBack={() => setSelectedDay(null)}
+        onBack={() => handleSetSelectedDay(null)}
         subToParent={subToParent}
         parsedEmps={parsedEmps}
       />
@@ -867,24 +873,8 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
 
           <div className="h-5 w-px bg-border/40 mx-1" />
 
-          {/* Consolidated Filter Button + Reset Button Above */}
-          <div className="flex items-center gap-2 relative">
-            <AnimatePresence>
-              {(deptFilters.length > 0 || srvFilters.length > 0 || ageFilters.length > 0) && (
-                <motion.button
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 5 }}
-                  onClick={() => { setDeptFilters([]); setSrvFilters([]); setAgeFilters([]); }}
-                  className="absolute -top-6 right-0 left-0 mx-auto w-fit flex items-center gap-1.5 text-[9px] font-black text-muted-foreground hover:text-destructive transition-all whitespace-nowrap bg-background/80 px-2.5 py-0.5 rounded-full border border-border/20 backdrop-blur-md z-20"
-                >
-                  <RotateCcw className="w-2.5 h-2.5" />
-                  <span className="hidden sm:inline">נקה סינון</span>
-                  <span className="sm:hidden">נקה</span>
-                </motion.button>
-              )}
-            </AnimatePresence>
-
+          {/* Consolidated Filter Button + Reset Button */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("h-8 sm:h-9 rounded-xl gap-2 font-black text-xs transition-all border-border/40 px-2 sm:px-4", 
@@ -969,6 +959,26 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
               </PopoverContent>
             </Popover>
 
+            <AnimatePresence>
+              {(deptFilters.length > 0 || srvFilters.length > 0 || ageFilters.length > 0) && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <Button
+                    variant="ghost"
+                    onClick={() => { setDeptFilters([]); setSrvFilters([]); setAgeFilters([]); }}
+                    className="h-8 sm:h-9 px-2.5 rounded-xl text-xs font-black text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all gap-1.5 shrink-0"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>נקה סינון</span>
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Active Filters Display — Desktop only for pills to avoid overflow */}
             <div className="hidden lg:flex items-center gap-1.5 border-r border-border/40 pr-3 mr-1">
                <AnimatePresence>
@@ -1012,7 +1022,7 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
               {dayStats.map((ds) => (
                 <MonthDayCell key={ds.date.toISOString()} stats={ds}
                   isCurrentMonth={isSameMonth(ds.date, currentDate)}
-                  selectedDate={selectedDay} onClick={() => setSelectedDay(ds.date)} />
+                  selectedDate={selectedDay} onClick={() => handleSetSelectedDay(ds.date)} />
               ))}
             </div>
           </div>
@@ -1023,11 +1033,11 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
               <div key={ds.date.toISOString()} className="h-full">
                 {/* Mobile: Row view */}
                 <div className="md:hidden">
-                  <WeekDayRow stats={ds} selectedDate={selectedDay} onClick={() => setSelectedDay(ds.date)} />
+                  <WeekDayRow stats={ds} selectedDate={selectedDay} onClick={() => handleSetSelectedDay(ds.date)} />
                 </div>
                 {/* Desktop: Column view */}
                 <div className="hidden md:block h-full">
-                  <WeekColumnCell stats={ds} selectedDate={selectedDay} onClick={() => setSelectedDay(ds.date)} />
+                  <WeekColumnCell stats={ds} selectedDate={selectedDay} onClick={() => handleSetSelectedDay(ds.date)} />
                 </div>
               </div>
             ))}

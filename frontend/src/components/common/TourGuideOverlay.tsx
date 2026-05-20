@@ -74,13 +74,14 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
         const rect = (visibleElement as Element).getBoundingClientRect();
         setElementRect(rect);
         setIsVisible(true);
-        // Scroll only for elements that are partially or fully outside the viewport
-        const isSmallElement = rect.height < window.innerHeight * 0.8;
+        // Scroll logic: if off-screen, scroll to it.
+        // For large elements (like lists), scroll to the start so the header is visible without scrolling to the middle.
+        // For small elements, center them on screen.
         const isOffScreen = rect.top < 100 || rect.bottom > window.innerHeight - 100;
-        
-        if (isSmallElement && isOffScreen) {
+        if (isOffScreen) {
+          const scrollBlock = rect.height > window.innerHeight * 0.5 ? 'start' : 'center';
           setTimeout(() => {
-            (visibleElement as Element).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (visibleElement as Element).scrollIntoView({ behavior: 'smooth', block: scrollBlock });
           }, 100);
         }
       } else {
@@ -203,7 +204,7 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
                 top: elementRect.top - 12,
                 width: elementRect.width + 24,
                 height: elementRect.height + 24,
-                border: '4px solid #3b82f6',
+                border: '4px solid var(--primary)',
                 borderRadius: '16px',
                 pointerEvents: 'none'
               }}
@@ -223,16 +224,16 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               style={getTooltipStyle()}
-              className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-2xl pointer-events-auto border border-blue-100 dark:border-slate-800 text-right cursor-default"
+              className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] pointer-events-auto border-[3px] border-primary/80 ring-8 ring-primary/20 text-right cursor-default"
               dir="rtl"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                  <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] flex items-center justify-center text-primary">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   {!isSingleStep && (
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
+                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">
                       שלב {currentStepIndex + 1} מתוך {steps.length}
                     </span>
                   )}
@@ -271,7 +272,8 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
                   <>
                     <Button 
                       onClick={onNext}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[11px] h-10 gap-2 shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
+                      variant="default"
+                      className="flex-1 rounded-xl font-black text-[11px] h-10 gap-2 active:scale-95 transition-all"
                     >
                       הבנתי, המשך
                       <ChevronRight className="w-4 h-4" />
@@ -294,14 +296,77 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
       </AnimatePresence>
 
       {!isVisible && isActive && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-auto">
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl flex flex-col items-center text-center max-w-sm" dir="rtl">
-            <RefreshCw className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-            <p className="text-sm font-black text-slate-900 dark:text-white">מחפש את הפיצ'ר...</p>
-            <p className="text-[11px] font-bold text-slate-500 mt-1 mb-6">מיד נגיע למקום הנכון</p>
-            <Button variant="ghost" onClick={onClose} className="text-xs font-bold">בטל</Button>
-          </div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 flex items-center justify-center pointer-events-auto"
+          style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(12px)' }}
+        >
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            className="relative flex flex-col items-center text-center max-w-xs w-full mx-4"
+            dir="rtl"
+          >
+            {/* Pulsing rings */}
+            <div className="relative flex items-center justify-center mb-6">
+              <motion.div
+                animate={{ scale: [1, 1.6, 1], opacity: [0.4, 0, 0.4] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute w-24 h-24 rounded-full"
+                style={{ background: 'radial-gradient(circle, var(--primary) 0%, transparent 70%)', opacity: 0.3 }}
+              />
+              <motion.div
+                animate={{ scale: [1, 1.35, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                className="absolute w-20 h-20 rounded-full border-2 border-primary/40"
+              />
+              <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                >
+                  <Sparkles className="w-7 h-7 text-primary" />
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Text */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <p className="text-base font-black text-white mb-1">
+                {currentStep?.title || 'מחפש את הפיצ\'ר...'}
+              </p>
+              <p className="text-[11px] font-bold text-white/50 mb-6">
+                מנווט למיקום הנכון
+              </p>
+            </motion.div>
+
+            {/* Animated progress bar */}
+            <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mb-6">
+              <motion.div
+                initial={{ x: '-100%' }}
+                animate={{ x: '100%' }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                className="h-full w-1/2 rounded-full"
+                style={{ background: 'linear-gradient(90deg, transparent, var(--primary), transparent)' }}
+              />
+            </div>
+
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              className="text-[11px] font-bold text-white/40 hover:text-white/70 hover:bg-white/10 rounded-xl h-8"
+            >
+              בטל סיור
+            </Button>
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );

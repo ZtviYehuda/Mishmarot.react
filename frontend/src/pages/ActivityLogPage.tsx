@@ -291,12 +291,12 @@ export default function ActivityLogPage() {
 
       <main className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 space-y-8">
         {/* Stats Grid - Compact Grid (No Scroll) */}
-        <div className="grid grid-cols-4 lg:grid-cols-4 gap-1.5 sm:gap-4 mb-4 sm:mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 mb-4 sm:mb-8 pb-2 lg:pb-0">
           <StatItem 
             label={activeTab === "my" ? "פעולות שלי" : "פעולות"} 
             value={activity.length} 
             color="bg-blue-500/10 text-blue-600"
-            className="p-1.5 sm:p-6"
+            className="p-3 sm:p-4"
           />
           {user?.is_admin ? (
             <>
@@ -304,13 +304,13 @@ export default function ActivityLogPage() {
                 label="התראות" 
                 value={suspicious.length} 
                 color="bg-red-500/10 text-red-600"
-                className="p-1.5 sm:p-6"
+                className="p-3 sm:p-4"
               />
               <StatItem 
                 label="ארכיון" 
                 value={archives.length} 
                 color="bg-purple-500/10 text-purple-600"
-                className="p-1.5 sm:p-6"
+                className="p-3 sm:p-4"
               />
             </>
           ) : (
@@ -322,7 +322,7 @@ export default function ActivityLogPage() {
             label="מערכת" 
             value="פעיל" 
             color="bg-emerald-500/10 text-emerald-600"
-            className="p-1.5 sm:p-6"
+            className="p-3 sm:p-4"
           />
         </div>
 
@@ -596,11 +596,21 @@ export default function ActivityLogPage() {
 
 function StatItem({ label, value, sub, color, className }: any) {
   return (
-    <Card className={cn("border-border/40 p-2 sm:p-6 rounded-xl sm:rounded-[2rem] hover: transition-all group hover:-translate-y-1 bg-card/80 flex flex-col items-center sm:items-start text-center sm:text-right", className)}>
-      <div className="space-y-1 sm:space-y-2 w-full">
-        <p className="text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-tighter sm:tracking-widest leading-none">{label}</p>
-        <p className={cn("text-lg sm:text-3xl font-black tracking-tight", color.split(" ")[1])}>{value}</p>
-        <p className="text-[7px] sm:text-[11px] font-bold text-muted-foreground/60">{sub}</p>
+    <Card className={cn("group relative overflow-hidden p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all flex items-center justify-between bg-card/80 border-border/40 hover:bg-accent/30 hover:border-primary/20", className)}>
+      <div className="flex items-center justify-between w-full gap-2">
+        <div className="space-y-0.5 text-right min-w-0 flex-1">
+          <p className="text-[9px] sm:text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wide leading-none truncate">
+            {label}
+          </p>
+          <p className={cn("text-base sm:text-xl font-black tracking-tight leading-none mt-1", color.split(" ")[1])}>
+            {value}
+          </p>
+          {sub && (
+            <p className="text-[8px] sm:text-[9px] font-semibold text-muted-foreground/50 leading-none mt-1">
+              {sub}
+            </p>
+          )}
+        </div>
       </div>
     </Card>
   );

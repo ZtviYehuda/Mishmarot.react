@@ -22,13 +22,17 @@ import { useChat } from "@/context/ChatContext";
 const TOUR_STEPS: TourStep[] = [
   // --- DASHBOARD PAGE ---
   { id: 'stats', selector: '#stats-grid', path: '/', title: 'לוח בקרה - נתונים מהירים', content: 'כאן מופיע סיכום המצב הנוכחי: כמה שוטרים לא דיווחו, כמה לא זמינים ומה אחוז הזמינות המבצעית שלכם ברגע זה.' },
-  { id: 'birthdays', selector: '#birthdays-card', path: '/', title: 'ימי הולדת השבוע', content: 'מרכז החגיגות! כאן תוכלו לראות מי חוגג, לשלוח לו ברכה אישית בוואטסאפ או לראות את הפרופיל שלו.' },
   { id: 'report_hub', selector: '#report-hub-card, #report-hub-card-mobile', path: '/', title: 'מרכז הפקת דוחות', content: 'החלק האהוב על המפקדים. מכאן מוציאים את כל דוחות ה-PDF והתמונות לווטסאפ של היחידה בלחיצת כפור.' },
-  { id: 'report_hub_inside', selector: '#report-hub-content', path: '/?tutorial=report-hub-inside', title: 'רשימת הדוחות המהירה', content: 'הכל נגיש בצורה מהירה ונוחה. אפשר לשתף ישירות לוואטסאפ או להוריד כקובץ מכל שורה.' },
-  
+  { id: 'dashboard_event', selector: '#event-button, #mobile-event-button', path: '/', title: 'אירוע יחידתי', content: 'יצירת אירועים מיוחדים, תדריכים או פעילויות יחידתיות שיקפצו לכולם בלוח השנה ובהתראות.' },
+  { id: 'dashboard_broadcast', selector: '#broadcast-button, #mobile-broadcast-button', path: '/', title: 'רשימת תפוצה', content: 'מכאן ניתן לשלוח הודעות מרוכזות לכל היחידה, לצוות מסוים או רק לאלה שלא דיווחו נוכחות.' },
+  { id: 'birthdays', selector: '#birthdays-card', path: '/', title: 'ימי הולדת השבוע', content: 'מרכז החגיגות! כאן תוכלו לראות מי חוגג, לשלוח לו ברכה אישית בוואטסאפ או לראות את הפרופיל שלו.' },
+
   // --- ATTENDANCE PAGE ---
   { id: 'attendance_header', selector: '#attendance-header', path: '/attendance', title: 'ניהול נוכחות יומי', content: 'כאן מתבצעת העבודה האמיתית. תוכלו לסנן לפי מדור או צוות ולראות בדיוק מי נמצא איפה.' },
-  { id: 'attendance_table', selector: '#attendance-table, #attendance-table-mobile', path: '/attendance', title: 'רשימת השוטרים', content: 'כאן מופיעים כל השוטרים. אפשר לעדכן נוכחות לכל אחד בנפרד או לבחור כמה ביחד לעדכון מרוכז.' },
+  { id: 'bulk_update', selector: '#bulk-update-btn, #mobile-bulk-update-btn', path: '/attendance', title: 'עדכון מרוכז', content: 'כלי מהיר לעדכון סטטוס נוכחות למספר שוטרים בבת אחת. סמן את השוטרים הרלוונטיים ולחץ כאן לעדכון גורף.' },
+  { id: 'self_report', selector: '#self-report-button, #mobile-self-report-btn', path: '/attendance', title: 'דיווח נוכחות עצמי', content: 'בלחיצה אחת תוכל לעדכן את הנוכחות שלך להיום מבלי לחפש את עצמך ברשימה.' },
+  { id: 'attendance_export', selector: '#attendance-export-btn, #mobile-attendance-export-btn', path: '/attendance', title: 'ייצוא נתוני נוכחות', content: 'מכאן תוכל לייצא את דוח הנוכחות היומי לקובץ Excel או PDF, וגם לשתף ישירות לוואטסאפ.' },
+  { id: 'attendance_calendar', selector: '#attendance-calendar-btn, #mobile-attendance-calendar-btn', path: '/attendance', title: 'תצוגת לוח שנה', content: 'לחץ כאן כדי לעבור מתצוגת רשימה לתצוגת לוח שנה חודשית, המאפשרת ראייה רחבה של הנוכחות לאורך זמן.' },
 
   // --- ROSTER / SHIFTS PAGE ---
   { id: 'roster_grid', selector: '#roster-page-container', path: '/roster', title: 'סידור עבודה ומשמרות', content: 'זה הלב של תכנון היחידה. כאן בונים את סידור העבודה לשבוע הקרוב, משבצים משמרות וקובעים תגבורים.' },
@@ -38,13 +42,13 @@ const TOUR_STEPS: TourStep[] = [
   { id: 'add_employee_btn', selector: '#add-employee-button', path: '/employees', title: 'קליטת עובד חדש', content: 'הצטרף מישהו חדש ליחידה? דרך הכפתור הזה מקימים אותו במערכת תוך שניות.' },
 
   // --- CHAT & STATUS ---
-  { id: 'system_status', selector: '#system-status-dot', path: '/', title: 'סטטוס פעילות המערכת', content: 'כאן מופיע חיווי ירוק קבוע המציין שהחיבור לשרת פעיל ומאובטח. לחיצה עליו תציג פרטים על זמן הכניסה האחרון שלך.' },
-  { id: 'chat_toggle', selector: '#chat-toggle-btn', path: '/', title: 'צ\'אט פנימי והודעות', content: 'הכלי המושלם לתקשורת פנימית מהירה! לחיצה על כפתור זה תפתח את מרכז ההודעות והצ\'אט עם כל השוטרים והמפקדים ביחידה.' },
-  { id: 'chat_status_step', selector: '#chat-status-avatar-btn', path: '/', title: 'עדכון סטטוס אישי בצ\'אט', content: 'לחיצה על כפתור האווטאר שלך עם ראשי התיבות בתוך הצ\'אט תפתח תפריט מהיר שבו תוכל להגדיר אם אתה מחובר, עסוק, לא נמצא, או לכתוב סטטוס מותאם אישית!' },
+  { id: 'system_status', selector: '#system-status-dot, #mobile-system-status-dot', path: '/', title: 'סטטוס פעילות המערכת', content: 'כאן מופיע חיווי ירוק קבוע המציין שהחיבור לשרת פעיל ומאובטח. לחיצה עליו תציג פרטים על זמן הכניסה האחרון שלך.' },
+  { id: 'chat_toggle', selector: '#chat-toggle-btn, #mobile-notifications-btn', path: '/', title: 'צ\'אט פנימי והודעות', content: 'הכלי המושלם לתקשורת פנימית מהירה! לחיצה על כפתור זה תפתח את מרכז ההודעות והצ\'אט עם כל השוטרים והמפקדים ביחידה.' },
+
 
   // --- SETTINGS PAGES ---
-  { id: 'appearance_palette', selector: '#color-palette-container', path: '/settings?tab=appearance', title: 'בחירת צבע אקצנט', content: 'לחצו על כל צבע במניפה כדי לשנות את הצבע המרכזי של המערכת (כפתורים, לינקים וגרפים) באופן מיידי.' },
-  { id: 'settings_security', selector: '#security-tab', path: '/settings?tab=security', title: 'אבטחה וסיסמה', content: 'צריכים להחליף סיסמה? זה המקום. מומלץ להחליף סיסמה פעם בכמה חודשים לשמירה על אבטחת החשבון.' }
+  { id: 'appearance_palette', selector: '#color-palette-container', path: '/settings?tab=appearance', title: 'בחירת צבע תצוגה', content: 'לחצו על כל צבע במניפה כדי לשנות את הצבע המרכזי של המערכת (כפתורים, לינקים וגרפים) באופן מיידי.' },
+  { id: 'settings_security', selector: '#security-tab, #mobile-security-tab', path: '/settings?tab=security', title: 'אבטחה וסיסמה', content: 'צריכים להחליף סיסמה? זה המקום. מומלץ להחליף סיסמה פעם בכמה חודשים לשמירה על אבטחת החשבון.' }
 ];
 
 interface Message {
@@ -86,8 +90,48 @@ const KNOWLEDGE_BASE = [
     title: 'הפקת דוחות', 
     keywords: ['דוח', 'דוחות', 'PDF', 'להפיק', 'לשלוח', 'תמונה', 'וואטסאפ', 'ייצוא', 'סטטיסטיקה', 'סיכום', 'נתונים', 'גרפים', 'קובץ'], 
     context: ['נתונים', 'להוציא', 'הדפסה', 'פרסום'], 
-    description: 'את כל הדוחות היחידתיים ניתן להפיק מתוך "מרכז הדוחות" בלוח הבקרה הראשי.', 
+    description: 'את כל הדוחות היחידתיים ניתן להפיק מתוך "מרכז הדוחות" בלוח הבקרה הראשי. במסך הנוכחות ניתן גם לייצא נתונים בעזרת כפתור הייצוא.', 
     stepId: 'report_hub' 
+  },
+  { 
+    id: 'bulk_update_kb', 
+    title: 'עדכון נוכחות מרוכז', 
+    keywords: ['מרוכז', 'גורף', 'כולם', 'עדכון מרוכז', 'לסמן', 'ביחד', 'כמה שוטרים', 'לדווח למספר אנשים'], 
+    context: ['נוכחות', 'דיווח', 'יומן'], 
+    description: 'לעדכון מרוכז, עבור למסך הנוכחות ולחץ על כפתור "עדכון מרוכז" בסרגל העליון (או בחר מספר שוטרים מהרשימה).', 
+    stepId: 'bulk_update' 
+  },
+  { 
+    id: 'self_report_kb', 
+    title: 'דיווח נוכחות אישי', 
+    keywords: ['עצמי', 'אישי', 'לדווח על עצמי', 'שלי', 'הנוכחות שלי', 'איך אני מדווח'], 
+    context: ['דיווח', 'יומן'], 
+    description: 'כדי לדווח נוכחות על עצמך במהירות, לחץ על "דיווח עצמי" בסרגל העליון של דף הנוכחות.', 
+    stepId: 'self_report' 
+  },
+  { 
+    id: 'attendance_calendar_kb', 
+    title: 'תצוגת לוח שנה', 
+    keywords: ['לוח שנה', 'חודש', 'יומן חודשי', 'תצוגה חודשית', 'פריסה חודשית'], 
+    context: ['תצוגה', 'נוכחות', 'זמן'], 
+    description: 'באפשרותך לראות את נתוני הנוכחות בפריסה חודשית מלאה על ידי מעבר ל"לוח שנה" במסך הנוכחות.', 
+    stepId: 'attendance_calendar' 
+  },
+  { 
+    id: 'broadcast_kb', 
+    title: 'רשימת תפוצה (הודעות)', 
+    keywords: ['תפוצה', 'הודעה לכולם', 'לשלוח לכולם', 'וואטסאפ מרוכז', 'הודעה קבוצתית', 'תפוצות'], 
+    context: ['וואטסאפ', 'הודעות', 'שליחה'], 
+    description: 'ניתן לשלוח הודעות מרוכזות לקבוצות או לכל היחידה בעזרת כפתור "רשימת תפוצה" בלוח הבקרה.', 
+    stepId: 'dashboard_broadcast' 
+  },
+  { 
+    id: 'event_kb', 
+    title: 'ניהול אירועים מיוחדים', 
+    keywords: ['אירוע', 'תדריך', 'כנס', 'פעילות', 'מיוחד', 'מבצע', 'לוז יחידתי'], 
+    context: ['לוח שנה', 'פעילות'], 
+    description: 'ניתן ליצור אירועים יחידתיים ותדריכים בעזרת כפתור "אירוע" הממוקם בלוח הבקרה תחת מרכז הדוחות.', 
+    stepId: 'dashboard_event' 
   },
   {
     id: 'appearance', 
@@ -321,6 +365,8 @@ export function GlobalAiSupport() {
     setIsOpen(true);
   };
 
+  const isSettingsPage = location.pathname === "/settings";
+
   return (
     <>
       <TourGuideOverlay steps={TOUR_STEPS} currentStepIndex={currentTourIndex} isActive={currentTourIndex >= 0} 
@@ -341,7 +387,8 @@ export function GlobalAiSupport() {
           }
         }}
         className={cn(
-          "global-ai-support-btn fixed bottom-6 left-6 z-[100] flex flex-col items-center gap-2", 
+          "global-ai-support-btn fixed left-6 z-[100] flex flex-col items-center gap-2", 
+          isSettingsPage ? "bottom-24 sm:bottom-6" : "bottom-6",
           ((isOpen && !isMinimized) || (currentTourIndex >= 0 && TOUR_STEPS[currentTourIndex]?.path === location.pathname)) && "hidden"
         )}
       >

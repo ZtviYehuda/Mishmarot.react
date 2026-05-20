@@ -226,7 +226,7 @@ function SectionCard({
   variant = "default",
 }: any) {
   return (
-    <div className="flex flex-col gap-3 sm:gap-4">
+    <div className="flex flex-col gap-2 sm:gap-4">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <Icon className={cn("w-4 h-4", variant === "danger" ? "text-red-500" : "text-primary")} />
@@ -237,7 +237,7 @@ function SectionCard({
         {badge}
       </div>
       <div className={cn(
-        "bg-card/40 backdrop-blur-xl rounded-[2rem] border p-4 sm:p-6 overflow-hidden h-full",
+        "bg-card/40 backdrop-blur-xl rounded-2xl sm:rounded-[2rem] border p-3 sm:p-6 overflow-hidden h-full",
         variant === "danger" ? "border-red-500/20 bg-red-500/5" : "border-border/40"
       )}>
         {children}

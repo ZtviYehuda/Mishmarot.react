@@ -1423,7 +1423,7 @@ export default function TransfersPage() {
                           נוכחות
                         </span>
                         <span className="text-[11px] font-bold text-foreground truncate">
-                          {viewingEmployee?.status_name || "נוכח"}
+                          {viewingEmployee?.status_name || "משרד"}
                         </span>
                       </div>
                       <div className="flex flex-col border-r border-border/10 pr-2">

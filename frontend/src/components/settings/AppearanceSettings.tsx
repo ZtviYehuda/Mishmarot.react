@@ -59,7 +59,7 @@ export function AppearanceSettings({
                 key={t}
                 onClick={() => setTheme(t as any)}
                 className={cn(
-                  "group relative h-28 sm:h-36 rounded-2xl border transition-all overflow-hidden",
+                  "group relative h-20 sm:h-36 rounded-2xl border transition-all overflow-hidden",
                   theme === t
                     ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                     : "border-border/40 bg-background/50 hover:border-border/60 hover:bg-muted/10",
@@ -105,7 +105,7 @@ export function AppearanceSettings({
                 key={size.id}
                 onClick={() => setFontSize(size.id as any)}
                 className={cn(
-                  "group relative rounded-2xl border flex flex-col items-center justify-center gap-2 p-4 transition-all h-28 sm:h-36",
+                  "group relative rounded-2xl border flex flex-col items-center justify-center gap-2 p-4 transition-all h-20 sm:h-36",
                   fontSize === size.id
                     ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                     : "border-border/40 bg-background/50 hover:border-border/60 hover:bg-muted/10",
@@ -146,7 +146,7 @@ export function AppearanceSettings({
       <div id="color-palette-container">
         <SectionCard icon={Pipette} title="מניפת צבעי מערכת">
         <div className="space-y-6">
-          <div className="flex items-start justify-between gap-1 overflow-x-auto no-scrollbar pb-2">
+          <div className="flex flex-wrap items-start justify-center lg:justify-between gap-y-3.5 gap-x-1.5 sm:gap-2 pb-2">
             {accentColors.map((color, index) => (
               <motion.button
                 key={color.id}
@@ -163,12 +163,12 @@ export function AppearanceSettings({
                   setIsCustomOpen(false);
                 }}
                 className={cn(
-                  "relative flex flex-col items-center gap-1.5 p-1 rounded-xl transition-all min-w-[55px] sm:min-w-[65px] lg:min-w-[0] lg:flex-1",
+                  "relative flex flex-col items-center gap-1.5 p-1 rounded-xl transition-all min-w-[50px] sm:min-w-[60px] lg:min-w-[0] lg:flex-1",
                 )}
               >
                 <div
                   className={cn(
-                    "w-9 h-9 sm:w-11 sm:h-11 lg:w-9 lg:h-9 xl:w-10 xl:h-10 rounded-full transition-all duration-300 relative flex items-center justify-center",
+                    "w-8.5 h-8.5 sm:w-10 sm:h-10 lg:w-8.5 lg:h-8.5 xl:w-9.5 xl:h-9.5 rounded-full transition-all duration-300 relative flex items-center justify-center",
                     color.class,
                     accentColor === color.id && !isCustomOpen
                       ? "scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background"
@@ -176,7 +176,7 @@ export function AppearanceSettings({
                   )}
                 >
                   {accentColor === color.id && !isCustomOpen && (
-                    <Check className="w-5 h-5 text-white" />
+                    <Check className="w-4 h-4 text-white" />
                   )}
                 </div>
                 <span className={cn(
@@ -198,12 +198,12 @@ export function AppearanceSettings({
                 colorInputRef.current?.click();
               }}
               className={cn(
-                "relative flex flex-col items-center gap-1.5 p-1 rounded-xl transition-all min-w-[55px] sm:min-w-[65px] lg:min-w-[0] lg:flex-1",
+                "relative flex flex-col items-center gap-1.5 p-1 rounded-xl transition-all min-w-[50px] sm:min-w-[60px] lg:min-w-[0] lg:flex-1",
               )}
             >
               <div
                 className={cn(
-                  "w-9 h-9 sm:w-11 sm:h-11 lg:w-9 lg:h-9 xl:w-10 xl:h-10 rounded-full transition-all duration-300 relative flex items-center justify-center overflow-hidden",
+                  "w-8.5 h-8.5 sm:w-10 sm:h-10 lg:w-8.5 lg:h-8.5 xl:w-9.5 xl:h-9.5 rounded-full transition-all duration-300 relative flex items-center justify-center overflow-hidden",
                   isCustomOpen
                     ? "scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background"
                     : "bg-linear-to-tr from-red-500 via-green-500 to-blue-500 hover:scale-110",
@@ -211,9 +211,9 @@ export function AppearanceSettings({
                 style={isCustomOpen ? { backgroundColor: accentColor } : {}}
               >
                 {!isCustomOpen ? (
-                  <Pipette className="w-5 h-5 text-white" />
+                  <Pipette className="w-4 h-4 text-white" />
                 ) : (
-                  <Check className="w-5 h-5 text-white" />
+                  <Check className="w-4 h-4 text-white" />
                 )}
                 <input
                   ref={colorInputRef}
@@ -283,14 +283,14 @@ export function AppearanceSettings({
 
 function SectionCard({ icon: Icon, title, children }: any) {
   return (
-    <div className="flex flex-col gap-3 sm:gap-4">
+    <div className="flex flex-col gap-2 sm:gap-4">
       <div className="flex items-center gap-2 px-1">
         <Icon className="w-4 h-4 text-primary" />
         <h3 className="text-sm font-black text-foreground tracking-tight">
           {title}
         </h3>
       </div>
-      <div className="bg-card/40 backdrop-blur-xl rounded-[2rem] border border-border/40 p-4 sm:p-6 overflow-hidden h-full">
+      <div className="bg-card/40 backdrop-blur-xl rounded-2xl sm:rounded-[2rem] border border-border/40 p-3 sm:p-6 overflow-hidden h-full">
         {children}
       </div>
     </div>

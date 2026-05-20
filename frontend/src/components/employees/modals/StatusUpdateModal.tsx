@@ -262,7 +262,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-md p-0 border-none bg-card dark:bg-[#0f172a] overflow-hidden"
+        className="sm:max-w-[440px] p-0 border border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl sm:rounded-[2rem] overflow-hidden"
         dir="rtl"
         showCloseButton={false}
       >
@@ -375,7 +375,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
           // View 1: Status Update Form
           <>
             {/* ── Slim inline header ── */}
-            <div className="px-5 pt-2 pb-3 border-b border-border/30 text-right">
+            <div className="px-5 pt-4 pb-4 sm:px-8 sm:pt-6 sm:pb-5 border-b border-border/30 text-right shrink-0">
               <div className="flex items-center gap-3">
                 <div className="relative shrink-0 w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-xs font-black text-primary">
                   {employee.first_name[0]}
@@ -416,8 +416,8 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
             </div>
 
             {/* ── Scrollable Body ── */}
-            <div className="overflow-y-auto max-h-[62vh] custom-scrollbar">
-              <div className="p-4 space-y-4">
+            <div className="overflow-y-auto max-h-[65vh] custom-scrollbar">
+              <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
                 {/* Unified Status Picker Section */}
                 {fetching ? (
                   <div className="py-12 flex flex-col items-center justify-center gap-3">
@@ -454,10 +454,10 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                               }))
                             }
                             className={cn(
-                              "flex flex-col items-center justify-center gap-2.5 p-3 rounded-[28px] border-2 transition-all text-center h-full min-h-[105px] group relative overflow-visible",
+                              "flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl border transition-all text-center h-full min-h-[82px] sm:min-h-[105px] group relative overflow-visible shadow-[0_2px_8px_rgba(0,0,0,0.02)]",
                               sel
                                 ? "border-transparent text-white scale-[1.02]"
-                                : "bg-background dark:bg-slate-900 border-border/40 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30",
+                                : "bg-background/50 dark:bg-slate-900/40 border-border/40 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30",
                             )}
                             style={
                               sel
@@ -470,7 +470,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                           >
                             <div
                               className={cn(
-                                "w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all",
+                                "w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shrink-0 transition-all",
                                 sel
                                   ? "bg-white/20 rotate-12"
                                   : "bg-muted/70 group-hover:bg-primary/10 group-hover:scale-110",
@@ -478,7 +478,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             >
                               <Icon
                                 className={cn(
-                                  "w-5.5 h-5.5 transition-colors",
+                                  "w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 transition-colors",
                                   sel
                                     ? "text-white"
                                     : "text-muted-foreground group-hover:text-primary",
@@ -488,7 +488,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             <div className="flex flex-col gap-0.5 min-w-0">
                               <span
                                 className={cn(
-                                  "text-[11px] font-black leading-tight tracking-tight px-1",
+                                  "text-[10px] sm:text-[11px] font-black leading-tight tracking-tight px-1",
                                   sel ? "text-white" : "text-foreground/80",
                                 )}
                               >
@@ -519,7 +519,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em] mb-4 px-1 text-center relative z-10">
                               בחר הרחבה לסטטוס
                             </p>
-                            <div className="grid grid-cols-3 gap-3 relative z-10">
+                            <div className="grid grid-cols-3 gap-2 sm:gap-3 relative z-10">
                               {subStatusMap[activeParentId].map(
                                 (sub: any) => {
                                   const SubIcon = getStatusIcon(sub.name);
@@ -537,7 +537,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                         }))
                                       }
                                       className={cn(
-                                        "flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all text-center h-full min-h-[85px] group relative",
+                                        "flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-all text-center h-full min-h-[68px] sm:min-h-[85px] group relative",
                                         isSubSel
                                           ? "bg-white dark:bg-slate-800 border-primary scale-[1.05] z-10"
                                           : "bg-background/50 border-border/40 text-muted-foreground hover:border-primary/40 hover:bg-white dark:hover:bg-slate-800",
@@ -545,17 +545,17 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                     >
                                       <div
                                         className={cn(
-                                          "p-2 rounded-xl transition-all",
+                                          "p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all",
                                           isSubSel
                                             ? "bg-primary/10 text-primary rotate-6"
                                             : "bg-muted/50 text-muted-foreground/60 group-hover:bg-primary/5 group-hover:text-primary group-hover:-rotate-6",
                                         )}
                                       >
-                                        <SubIcon className="w-5 h-5" />
+                                        <SubIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                                       </div>
                                       <span
                                         className={cn(
-                                          "text-[10px] font-black leading-tight tracking-tight px-1 transition-colors",
+                                          "text-[9px] sm:text-[10px] font-black leading-tight tracking-tight px-1 transition-colors",
                                           isSubSel
                                             ? "text-primary"
                                             : "text-foreground/70 group-hover:text-primary",
@@ -583,13 +583,13 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                 <div className="h-px bg-border/40" />
 
                 {/* Date Range */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
                       מתאריך
                     </Label>
-                    <div className="relative">
-                      <CalendarDays className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40 pointer-events-none" />
+                    <div className="relative group">
+                      <CalendarDays className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 pointer-events-none transition-colors group-focus-within:text-primary" />
                       <Input
                         type="date"
                         value={formData.start_date}
@@ -599,16 +599,16 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             start_date: e.target.value,
                           }))
                         }
-                        className="h-9 bg-background dark:bg-slate-900 rounded-xl text-right pr-8 pl-2 text-xs font-bold border-border/60 dark:border-white/20 w-full dark:text-white"
+                        className="h-10 sm:h-11 bg-muted/20 border border-border/40 rounded-xl text-right pr-10 pl-3 text-sm font-bold text-foreground focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/45 outline-none transition-all w-full dark:bg-white/5 dark:border-white/10 dark:text-white"
                       />
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
                       עד תאריך
                     </Label>
-                    <div className="relative">
-                      <CalendarDays className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 pointer-events-none" />
+                    <div className="relative group">
+                      <CalendarDays className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 pointer-events-none transition-colors group-focus-within:text-primary" />
                       <Input
                         type="date"
                         value={formData.end_date}
@@ -618,26 +618,26 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             end_date: e.target.value,
                           }))
                         }
-                        className="h-9 bg-background dark:bg-slate-900 rounded-xl text-right pr-8 pl-2 text-xs font-bold border-border/60 dark:border-white/20 w-full dark:text-white"
+                        className="h-10 sm:h-11 bg-muted/20 border border-border/40 rounded-xl text-right pr-10 pl-3 text-sm font-bold text-foreground focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/45 outline-none transition-all w-full dark:bg-white/5 dark:border-white/10 dark:text-white"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Note */}
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
                     הערה
                   </Label>
-                  <div className="relative">
-                    <Clock className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40 pointer-events-none" />
+                  <div className="relative group">
+                    <Clock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 pointer-events-none transition-colors group-focus-within:text-primary" />
                     <Input
                       value={formData.note}
                       onChange={(e) =>
                         setFormData((p) => ({ ...p, note: e.target.value }))
                       }
                       placeholder="הוסף הערה אופציונלית..."
-                      className="h-9 bg-background dark:bg-slate-900 rounded-xl text-right pr-8 pl-2 text-xs font-bold border-border/60 placeholder:text-muted-foreground/40 w-full dark:text-white"
+                      className="h-10 sm:h-11 bg-muted/20 border border-border/40 rounded-xl text-right pr-10 pl-3 text-sm font-bold text-foreground focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/45 outline-none transition-all placeholder:text-muted-foreground/35 w-full dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/30"
                     />
                   </div>
                 </div>
@@ -754,7 +754,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
             </div>
 
             {/* ── Pinned Footer — safe area ── */}
-            <div className="px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-border/30 shrink-0">
+            <div className="px-5 pb-5 pt-4 sm:px-8 sm:pb-8 sm:pt-5 border-t border-border/30 shrink-0 bg-background/50 backdrop-blur-md">
               <Button
                 onClick={handleSubmit}
                 disabled={loading || !formData.status_type_id}

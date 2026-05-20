@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   Bell,
   Database,
-  Activity,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
@@ -415,7 +414,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col min-h-full pb-20">
-      <div className="pt-6 pb-4 shrink-0 transition-all px-4 sm:px-6">
+      <div className="hidden lg:block pt-6 pb-4 shrink-0 transition-all px-4 sm:px-6">
         <PageHeader
           icon={SettingsIcon}
           title="הגדרות מערכת"
@@ -467,17 +466,10 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("backup")}
             />
           )}
-          {user?.is_admin && (
-            <TabItem
-              label="יומן פעילות"
-              active={false}
-              onClick={() => navigate("/activity-log")}
-            />
-          )}
         </div>
 
         {/* Content Area */}
-        <div className="min-w-0 mt-4 pb-24 lg:pb-8">
+        <div className="min-w-0 mt-8 pb-24 lg:pb-8">
           {activeTab === "profile" && !user?.is_temp_commander && (
             <ProfileSettings
               user={user}
@@ -588,6 +580,7 @@ export default function SettingsPage() {
           />
           {!user?.is_temp_commander && (
             <MobileBottomNavLink
+              id="mobile-security-tab"
               label="אבטחה"
               icon={ShieldCheck}
               active={activeTab === "security"}
@@ -610,14 +603,6 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("backup")}
             />
           )}
-          {user?.is_admin && (
-            <MobileBottomNavLink
-              label="יומן פעילות"
-              icon={Activity}
-              active={false}
-              onClick={() => navigate("/activity-log")}
-            />
-          )}
         </div>
       </div>
     </div>
@@ -625,11 +610,13 @@ export default function SettingsPage() {
 }
 
 function MobileBottomNavLink({
+  id,
   label,
   icon: Icon,
   active,
   onClick,
 }: {
+  id?: string;
   label: string;
   icon: any;
   active: boolean;
@@ -637,6 +624,7 @@ function MobileBottomNavLink({
 }) {
   return (
     <button
+      id={id}
       onClick={onClick}
       className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"
         }`}

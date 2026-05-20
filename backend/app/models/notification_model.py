@@ -414,7 +414,7 @@ class NotificationModel:
                             "type": "info",
                             "title": "🎁 ימי הולדת שפוספסו",
                             "description": desc,
-                            "link": "/",  # Opens dashboard where birthdays card is
+                            "link": "/#birthdays-card",  # Scrolls to the birthdays card on dashboard
                             "data": {
                                 "missed_birthdays": [
                                     dict(row) for row in missed_bdays

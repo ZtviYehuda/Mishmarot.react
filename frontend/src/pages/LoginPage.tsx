@@ -17,7 +17,7 @@ import {
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PinVerificationModal } from "@/components/auth/PinVerificationModal";
 
@@ -213,6 +213,34 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const translateErrorText = (errorText: string): string => {
+    if (!errorText) return "";
+    
+    const translations: Record<string, string> = {
+      "No biometric credentials registered": "לא הוגדר זיהוי ביומטרי עבור משתמש זה במכשיר הנוכחי. אנא הפעל כניסה מהירה בהגדרות הפרופיל תחילה.",
+      "User not found": "שם משתמש אינו קיים במערכת.",
+      "Invalid password": "הסיסמה שהוזנה שגויה.",
+      "Biometric authentication failed": "אימות ביומטרי נכשל.",
+      "Registration failed": "רישום ביומטרי נכשל.",
+      "Device already registered": "מכשיר זה כבר רשום במערכת.",
+      "Invalid challenge": "פג תוקף בקשת האימות.",
+      "User is inactive": "המשתמש מושבת בארגון.",
+      "Failed to parse public key credential": "כשל בפענוח מפתח האימות.",
+      "Crypto key generation failed": "כשל ביצירת מפתח אבטחה.",
+      "Unauthorized delegate access": "אין הרשאה לגישה מיופת כוח.",
+    };
+
+    return translations[errorText] || errorText;
+  };
+
+  const getErrorMessage = (err: any): string => {
+    if (typeof err === "string") {
+      return translateErrorText(err);
+    }
+    const errorStr = err?.response?.data?.error || err?.message || "";
+    return translateErrorText(errorStr);
+  };
   const [lockedUser, setLockedUser] = useState<LockedUser | null>(null);
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -364,7 +392,7 @@ export default function LoginPage() {
           return;
         }
         
-        setError(e.response?.data?.error || "זיהוי ביומטרי נכשל. התחבר ידנית או באמצעות PIN.");
+        setError(getErrorMessage(e) || "זיהוי ביומטרי נכשל. התחבר ידנית או באמצעות PIN.");
       }
       setIsLoading(false);
       return;
@@ -437,7 +465,7 @@ export default function LoginPage() {
         localStorage.removeItem(`biometric_pin_${pinUsername}`);
         localStorage.removeItem(`biometric_registered_${pinUsername}`);
       }
-      setError(err.response?.data?.error || err.message || "שגיאה באימות");
+      setError(getErrorMessage(err) || "שגיאה באימות");
       setIsLoading(false);
       return false;
     }
@@ -498,7 +526,7 @@ export default function LoginPage() {
         setPassword("");
       }
     } catch (err) {
-      setError("שגיאת מערכת. אנא נסה שוב מאוחר יותר.");
+      setError(getErrorMessage(err) || "שגיאת מערכת. אנא נסה שוב מאוחר יותר.");
       setPassword("");
     } finally {
       setIsLoading(false);
@@ -543,7 +571,7 @@ export default function LoginPage() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-grow flex flex-col items-center justify-start py-12 md:py-20 px-4 relative z-10">
+      <main className="flex-grow flex flex-col items-center justify-center pt-24 pb-12 md:py-20 px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -614,7 +642,7 @@ export default function LoginPage() {
                       <div className="relative group">
                         <Lock
                           className={cn(
-                            "absolute right-4 top-3.5 w-5 h-5 transition-colors z-10",
+                            "absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors z-10",
                             isDark
                               ? "text-slate-500 group-focus-within:text-blue-400"
                               : "text-slate-400 group-focus-within:text-blue-600",
@@ -631,7 +659,7 @@ export default function LoginPage() {
                             setError("");
                           }}
                           className={cn(
-                            "h-12 border rounded-xl pr-12 pl-12 transition-all text-lg tracking-widest font-mono",
+                            "h-13 border rounded-2xl pr-12 pl-12 transition-all text-lg tracking-widest font-mono",
                             isDark
                               ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
                               : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
@@ -643,7 +671,7 @@ export default function LoginPage() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className={cn(
-                            "absolute left-3 top-3.5 transition-colors z-10",
+                            "absolute left-3 top-1/2 -translate-y-1/2 transition-colors z-10",
                             isDark
                               ? "text-slate-500 hover:text-slate-300"
                               : "text-slate-400 hover:text-slate-600",
@@ -658,12 +686,30 @@ export default function LoginPage() {
                       </div>
                     </div>
 
-                    {error && (
-                      <div className="flex items-center gap-2 text-rose-500 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-sm font-bold">
-                        <AlertCircle className="w-4 h-4 shrink-0" />
-                        {error}
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1, x: [0, -10, 10, -10, 10, 0] }}
+                          exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                          transition={{ 
+                            duration: 0.4, 
+                            x: { duration: 0.35, ease: "easeInOut" } 
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 p-3.5 rounded-xl border text-sm font-semibold shadow-sm backdrop-blur-md text-right w-full",
+                            isDark
+                              ? "bg-rose-950/20 border-rose-900/30 text-rose-300"
+                              : "bg-rose-50/60 border-rose-100/80 text-rose-600"
+                          )}
+                        >
+                          <div className="w-7 h-7 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0">
+                            <AlertCircle className="h-4.5 w-4.5 text-rose-500" />
+                          </div>
+                          <span className="font-sans leading-snug">{error}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     <div className="flex gap-2">
                       {isBiometricAvailable && (
@@ -671,7 +717,7 @@ export default function LoginPage() {
                           type="button"
                           variant="outline"
                           onClick={handleBiometricLogin}
-                          className="h-12 w-14 min-w-[56px] rounded-xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
+                          className="h-13 w-14 min-w-[56px] rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
                           title="כניסה מהירה עם PIN"
                         >
                           <Fingerprint className="w-6 h-6 text-blue-500" />
@@ -680,7 +726,7 @@ export default function LoginPage() {
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all  active:scale-[0.98] relative overflow-hidden group"
+                        className="flex-1 h-13 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all  active:scale-[0.98] relative overflow-hidden group"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform" />
                         {isLoading ? (
@@ -717,17 +763,17 @@ export default function LoginPage() {
                           <Label
                             htmlFor="username"
                             className={cn(
-                              "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border ",
+                              "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border transition-all",
                               isDark
-                                ? "bg-slate-900/90 text-blue-400 border-slate-700"
-                                : "bg-white text-blue-600 border-slate-200",
+                                ? "bg-slate-900/90 text-slate-400 border-slate-700 group-focus-within:text-blue-400 group-focus-within:border-blue-500"
+                                : "bg-white text-slate-400 border-slate-200 group-focus-within:text-blue-600 group-focus-within:border-blue-600",
                             )}
                           >
                             שם משתמש
                           </Label>
                           <ScanEye
                             className={cn(
-                              "absolute right-4 top-3.5 w-5 h-5 transition-colors z-10",
+                              "absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors z-10",
                               isDark
                                 ? "text-slate-500 group-focus-within:text-blue-400"
                                 : "text-slate-400 group-focus-within:text-blue-600",
@@ -744,7 +790,7 @@ export default function LoginPage() {
                               setError("");
                             }}
                             className={cn(
-                              "h-12 border rounded-xl pr-12 transition-all font-mono",
+                              "h-13 border rounded-2xl pr-12 transition-all font-mono",
                               isDark
                                 ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
                                 : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
@@ -761,17 +807,17 @@ export default function LoginPage() {
                           <Label
                             htmlFor="password"
                             className={cn(
-                              "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border ",
+                              "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border transition-all",
                               isDark
-                                ? "bg-slate-900/90 text-blue-400 border-slate-700"
-                                : "bg-white text-blue-600 border-slate-200",
+                                ? "bg-slate-900/90 text-slate-400 border-slate-700 group-focus-within:text-blue-400 group-focus-within:border-blue-500"
+                                : "bg-white text-slate-400 border-slate-200 group-focus-within:text-blue-600 group-focus-within:border-blue-600",
                             )}
                           >
                             סיסמה
                           </Label>
                           <Lock
                             className={cn(
-                              "absolute right-4 top-3.5 w-5 h-5 transition-colors z-10",
+                              "absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors z-10",
                               isDark
                                 ? "text-slate-500 group-focus-within:text-blue-400"
                                 : "text-slate-400 group-focus-within:text-blue-600",
@@ -787,7 +833,7 @@ export default function LoginPage() {
                               setError("");
                             }}
                             className={cn(
-                              "h-12 border rounded-xl pr-12 pl-12 transition-all font-mono tracking-widest",
+                              "h-13 border rounded-2xl pr-12 pl-12 transition-all font-mono tracking-widest",
                               isDark
                                 ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
                                 : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
@@ -799,7 +845,7 @@ export default function LoginPage() {
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className={cn(
-                              "absolute left-3 top-3.5 transition-colors z-10",
+                              "absolute left-3 top-1/2 -translate-y-1/2 transition-colors z-10",
                               isDark
                                 ? "text-slate-500 hover:text-slate-300"
                                 : "text-slate-400 hover:text-slate-600",
@@ -826,14 +872,30 @@ export default function LoginPage() {
                     </div>
 
                     {/* Error Message */}
-                    {error && (
-                      <div className="flex items-center gap-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl text-sm text-rose-500 font-medium">
-                        <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
-                          <AlertCircle className="h-5 w-5 text-rose-500" />
-                        </div>
-                        <span className="font-sans">{error}</span>
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1, x: [0, -10, 10, -10, 10, 0] }}
+                          exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                          transition={{ 
+                            duration: 0.4, 
+                            x: { duration: 0.35, ease: "easeInOut" } 
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 p-3.5 rounded-xl border text-sm font-semibold shadow-sm backdrop-blur-md text-right w-full",
+                            isDark
+                              ? "bg-rose-950/20 border-rose-900/30 text-rose-300"
+                              : "bg-rose-50/60 border-rose-100/80 text-rose-600"
+                          )}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0">
+                            <AlertCircle className="h-5 w-5 text-rose-500" />
+                          </div>
+                          <span className="font-sans leading-snug">{error}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Submit Button & Biometric */}
                     <div className="pt-2 flex gap-3">
@@ -842,7 +904,7 @@ export default function LoginPage() {
                           type="button"
                           variant="outline"
                           onClick={handleBiometricLogin}
-                          className="h-14 w-16 min-w-[64px] rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
+                          className="h-13 w-14 min-w-[56px] rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
                           title="כניסה מהירה עם PIN"
                         >
                           <Fingerprint className="w-7 h-7 text-blue-500" />
@@ -851,7 +913,7 @@ export default function LoginPage() {
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 h-14 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-black text-lg rounded-2xl transition-all  active:scale-[0.98] border border-white/10 relative overflow-hidden group"
+                        className="flex-1 h-13 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-black text-lg rounded-2xl transition-all  active:scale-[0.98] border border-white/10 relative overflow-hidden group"
                       >
                         <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
                         <div className="relative flex items-center justify-center gap-2">

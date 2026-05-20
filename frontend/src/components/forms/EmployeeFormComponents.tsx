@@ -242,7 +242,7 @@ export function CompactCard({
       {(title || action) && (
         <div
           className={cn(
-            "flex items-center justify-between px-4 py-3 border-b border-border/40 bg-muted/20 min-h-[48px]",
+            "flex items-center justify-between px-3.5 sm:px-5 py-2.5 sm:py-3 border-b border-border/40 bg-muted/20 min-h-[42px] sm:min-h-[48px]",
             headerClassName,
           )}
         >
@@ -256,7 +256,7 @@ export function CompactCard({
           )}
         </div>
       )}
-      <div className="p-4 space-y-4 flex-1">{children}</div>
+      <div className="p-3.5 sm:p-5 space-y-3.5 sm:space-y-4 flex-1">{children}</div>
     </Card>
   );
 }

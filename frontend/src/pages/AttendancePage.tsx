@@ -71,6 +71,24 @@ export default function AttendancePage() {
   } = useEmployees();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [desktopFiltersExpanded, setDesktopFiltersExpanded] = useState(() => {
+    const savedFilters = localStorage.getItem("attendance_filters");
+    if (savedFilters) {
+      try {
+        const filters = JSON.parse(savedFilters);
+        return !!(
+          (filters.deptId && filters.deptId !== "all") ||
+          (filters.sectionId && filters.sectionId !== "all") ||
+          (filters.teamId && filters.teamId !== "all") ||
+          (filters.statusId && filters.statusId !== "all") ||
+          (filters.serviceTypeId && filters.serviceTypeId !== "all")
+        );
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
   const [selectedDeptId, setSelectedDeptId] = useState("all");
   const [selectedSectionId, setSelectedSectionId] = useState("all");
   const [selectedTeamId, setSelectedTeamId] = useState("all");
@@ -97,10 +115,14 @@ export default function AttendancePage() {
     missing_ids: number[];
   } | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [isViewingDayDetails, setIsViewingDayDetails] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   // Wrap in startTransition so the button press is instant
   const openCalendar = () => startTransition(() => setCalendarOpen((v) => !v));
-  const closeCalendar = () => startTransition(() => setCalendarOpen(false));
+  const closeCalendar = () => startTransition(() => {
+    setCalendarOpen(false);
+    setIsViewingDayDetails(false);
+  });
 
   // Load filters from localStorage on mount
   const isFilterActive = useMemo(() => {
@@ -585,42 +607,159 @@ export default function AttendancePage() {
               </div>
 
               {/* Desktop Action Bar */}
-              <div className="hidden lg:flex items-center gap-2 w-full lg:w-auto">
-                {/* Calendar toggle button */}
+              {!isViewingDayDetails && (
+                <div className="hidden lg:flex items-center gap-2 w-full lg:w-auto">
+                  {/* Calendar toggle button */}
+                  <Button
+                    id="attendance-calendar-btn"
+                    variant="ghost"
+                    className={cn(
+                      "h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2 xl:px-4 py-1 justify-center min-w-[64px] border-none bg-transparent text-primary hover:bg-primary/5",
+                      calendarOpen && "bg-primary/10",
+                    )}
+                    onClick={openCalendar}
+                  >
+                    <CalendarRange className="w-4 h-4" />
+                    <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">לוח שנה</span>
+                  </Button>
+
+                  {!user?.is_temp_commander && (
+                    <Button
+                      id="attendance-export-btn"
+                      variant="ghost"
+                      className="h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2 xl:px-4 py-1 justify-center min-w-[64px] border-none bg-transparent text-primary hover:bg-primary/5"
+                      onClick={() => setExportDialogOpen(true)}
+                    >
+                      <Download className="w-4 h-4" />
+                      <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">ייצוא</span>
+                    </Button>
+                  )}
+
+                  <Button
+                    id="self-report-button"
+                    variant={isReportedToday ? "default" : "ghost"}
+                    className={cn(
+                      "h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2 xl:px-4 py-1 justify-center min-w-[64px]",
+                      isReportedToday
+                        ? "bg-emerald-500/90 hover:bg-emerald-600 text-white"
+                        : "border-none bg-transparent text-primary hover:bg-primary/5",
+                      searchParams.get("tutorial") === "self-report" && "tutorial-highlight"
+                    )}
+                    onClick={() => {
+                      if (currentUserEmp) {
+                        setSelectedEmployee(currentUserEmp);
+                        setStatusModalOpen(true);
+                      }
+                    }}
+                  >
+                    {isReportedToday ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">דווח</span>
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardCheck className="w-4 h-4" />
+                        <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">דיווח עצמי</span>
+                      </>
+                    )}
+                  </Button>
+
+                  {unverifiedEmployees.length > 0 && (
+                    <Button
+                      variant="default"
+                      className="h-11 rounded-xl flex-col gap-0.5 font-black px-2 xl:px-4 py-1 justify-center transition-all bg-primary hover:bg-primary/90 text-white min-w-[64px]"
+                      onClick={async () => {
+                        const success = await verifyRoster(
+                          format(selectedDate, "yyyy-MM-dd"),
+                          unverifiedEmployees.map((e) => e.id),
+                        );
+                        if (success) {
+                          toast.success(
+                            `אושר סידור עבור ${unverifiedEmployees.length} שוטרים`,
+                          );
+                          refreshData();
+                        }
+                      }}
+                    >
+                      <CheckCheck className="w-4 h-4" />
+                      <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">
+                        אישור ({unverifiedEmployees.length})
+                      </span>
+                    </Button>
+                  )}
+
+                  <Button
+                    id="bulk-update-btn"
+                    variant="ghost"
+                    className={cn(
+                      "h-11 rounded-xl flex-col gap-0.5 font-black transition-all px-2 xl:px-4 py-1 justify-center min-w-[64px] border-none bg-transparent text-primary hover:bg-primary/5",
+                      selectedEmployeeIds.length > 0 && "bg-primary/10",
+                    )}
+                    onClick={() => {
+                      setAlertContext(null);
+                      setBulkModalOpen(true);
+                    }}
+                  >
+                    <ClipboardCheck className="w-4 h-4" />
+                    <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">עדכון מרוכז</span>
+                  </Button>
+                </div>
+              )}
+            </div>
+          }
+        />
+
+
+
+        {/* Mobile Action Buttons & Reminders */}
+        {!isViewingDayDetails && (
+          <>
+            {/* Mobile Action Buttons - Full Screen Width */}
+            <div className="lg:hidden w-full px-0 mb-2">
+              <div
+                className={cn(
+                  "grid gap-2",
+                  unverifiedEmployees.length > 0 && !user?.is_temp_commander
+                    ? "grid-cols-5"
+                    : !user?.is_temp_commander
+                      ? "grid-cols-4"
+                      : "grid-cols-3",
+                )}
+              >
+                {/* Calendar button mobile */}
                 <Button
+                  id="mobile-attendance-calendar-btn"
                   variant="ghost"
                   className={cn(
-                    "h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all min-w-[64px]",
-                    calendarOpen
-                      ? "text-primary bg-primary/10 border-primary/30"
-                      : "text-primary hover:bg-primary/5",
+                    "h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1 border-none bg-transparent text-primary hover:bg-primary/5",
+                    calendarOpen && "bg-primary/10",
                   )}
                   onClick={openCalendar}
                 >
                   <CalendarRange className="w-4 h-4" />
-                  <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">לוח שנה</span>
+                  <span>לוח שנה</span>
                 </Button>
-
                 {!user?.is_temp_commander && (
                   <Button
+                    id="mobile-attendance-export-btn"
                     variant="ghost"
-                    className="h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all min-w-[64px]"
+                    className="h-11 rounded-xl text-primary hover:bg-primary/5 gap-1 font-black text-[10px] flex-col py-2 px-1 border-none bg-transparent"
                     onClick={() => setExportDialogOpen(true)}
                   >
                     <Download className="w-4 h-4" />
-                    <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">ייצוא</span>
+                    <span>ייצוא</span>
                   </Button>
                 )}
 
                 <Button
-                  id="self-report-button"
+                  id="mobile-self-report-btn"
                   variant={isReportedToday ? "default" : "ghost"}
                   className={cn(
-                    "h-11 rounded-xl flex-col gap-0.5 font-bold transition-all px-2 xl:px-4 py-1 justify-center backdrop-blur-xl min-w-[64px]",
+                    "h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1",
                     isReportedToday
-                      ? "bg-emerald-500/90 hover:bg-emerald-600 border-white/20 text-white"
-                      : "border border-border/40 bg-card/40 text-primary hover:bg-primary/5",
-                    searchParams.get("tutorial") === "self-report" && "tutorial-highlight"
+                      ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                      : "border-none bg-transparent text-primary hover:bg-primary/5",
                   )}
                   onClick={() => {
                     if (currentUserEmp) {
@@ -632,12 +771,12 @@ export default function AttendancePage() {
                   {isReportedToday ? (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">דווח</span>
+                      <span>דווח</span>
                     </>
                   ) : (
                     <>
                       <ClipboardCheck className="w-4 h-4" />
-                      <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">דיווח עצמי</span>
+                      <span>דיווח עצמי</span>
                     </>
                   )}
                 </Button>
@@ -645,7 +784,7 @@ export default function AttendancePage() {
                 {unverifiedEmployees.length > 0 && (
                   <Button
                     variant="default"
-                    className="h-11 rounded-xl flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all bg-primary hover:bg-primary/90 text-white min-w-[64px]"
+                    className="h-11 rounded-xl gap-1 font-black text-[10px] flex-col py-2 px-1 bg-blue-600 hover:bg-blue-700 text-white"
                     onClick={async () => {
                       const success = await verifyRoster(
                         format(selectedDate, "yyyy-MM-dd"),
@@ -660,18 +799,16 @@ export default function AttendancePage() {
                     }}
                   >
                     <CheckCheck className="w-4 h-4" />
-                    <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">
-                      אישור ({unverifiedEmployees.length})
-                    </span>
+                    <span>אישור ({unverifiedEmployees.length})</span>
                   </Button>
                 )}
 
                 <Button
+                  id="mobile-bulk-update-btn"
                   variant="ghost"
                   className={cn(
-                    "h-11 rounded-xl border border-border/40 bg-card/40 backdrop-blur-xl text-primary hover:bg-primary/5 flex-col gap-0.5 font-bold px-2 xl:px-4 py-1 justify-center transition-all min-w-[64px]",
-                    selectedEmployeeIds.length > 0 &&
-                      "bg-primary/10 border-primary/20",
+                    "h-11 text-primary hover:bg-primary/5 gap-1 font-black text-[10px] flex-col py-2 px-1 border-none bg-transparent",
+                    selectedEmployeeIds.length > 0 && "bg-primary/10",
                   )}
                   onClick={() => {
                     setAlertContext(null);
@@ -679,168 +816,45 @@ export default function AttendancePage() {
                   }}
                 >
                   <ClipboardCheck className="w-4 h-4" />
-                  <span className="text-[9px] xl:text-[10px] leading-tight mt-0.5">עדכון מרוכז</span>
+                  <span>עדכון מרוכז</span>
                 </Button>
               </div>
             </div>
-        />
 
-        {/* Premium Horizontal Stats Tag Bar */}
-        <div className="flex flex-wrap gap-2 mt-4 mb-4 px-0 sm:px-0">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/10 dark:bg-black/30 border border-border/40 text-[11px] font-bold text-muted-foreground">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            <span>סה"כ שוטרים:</span>
-            <span className="text-foreground font-black">{totalCount}</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/10 dark:bg-black/30 border border-border/40 text-[11px] font-bold text-muted-foreground">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span>נוכחים:</span>
-            <span className="text-emerald-500 font-black">{activeEmployees.length}</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/10 dark:bg-black/30 border border-border/40 text-[11px] font-bold text-muted-foreground">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-            <span>נעדרים:</span>
-            <span className="text-rose-500 font-black">{totalCount - activeEmployees.length}</span>
-          </div>
-        </div>
-
-        {/* Mobile Action Buttons - Full Screen Width */}
-        <div className="lg:hidden w-full px-0 mb-2">
-          <div
-            className={cn(
-              "grid gap-2",
-              unverifiedEmployees.length > 0 && !user?.is_temp_commander
-                ? "grid-cols-5"
-                : !user?.is_temp_commander
-                  ? "grid-cols-4"
-                  : "grid-cols-3",
-            )}
-          >
-            {/* Calendar button mobile */}
-            <Button
-              variant="outline"
-              className={cn(
-                "h-11 rounded-xl gap-1 font-bold text-[10px] flex-col py-2 px-1",
-                calendarOpen
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "border-border/40 bg-card/40 text-primary hover:bg-primary/5",
-              )}
-              onClick={openCalendar}
-            >
-              <CalendarRange className="w-4 h-4" />
-              <span>לוח שנה</span>
-            </Button>
-            {!user?.is_temp_commander && (
-              <Button
-                variant="outline"
-                className="h-11 rounded-xl border-border/40 bg-card/40 text-primary hover:bg-primary/5 gap-1 font-bold text-[10px] flex-col py-2 px-1"
-                onClick={() => setExportDialogOpen(true)}
-              >
-                <Download className="w-4 h-4" />
-                <span>ייצוא</span>
-              </Button>
-            )}
-
-            <Button
-              variant={isReportedToday ? "default" : "outline"}
-              className={cn(
-                "h-11 rounded-xl gap-1 font-bold text-[10px] flex-col py-2 px-1",
-                isReportedToday
-                  ? "bg-emerald-500 hover:bg-emerald-600 border-white/20 text-white"
-                  : "border-border/40 bg-card/40 text-primary hover:bg-primary/5",
-              )}
-              onClick={() => {
-                if (currentUserEmp) {
-                  setSelectedEmployee(currentUserEmp);
-                  setStatusModalOpen(true);
-                }
-              }}
-            >
-              {isReportedToday ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>דווח</span>
-                </>
-              ) : (
-                <>
-                  <ClipboardCheck className="w-4 h-4" />
-                  <span>דיווח עצמי</span>
-                </>
-              )}
-            </Button>
-
-            {unverifiedEmployees.length > 0 && (
-              <Button
-                variant="default"
-                className="h-11 rounded-xl gap-1 font-bold text-[10px] flex-col py-2 px-1 bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={async () => {
-                  const success = await verifyRoster(
-                    format(selectedDate, "yyyy-MM-dd"),
-                    unverifiedEmployees.map((e) => e.id),
-                  );
-                  if (success) {
-                    toast.success(
-                      `אושר סידור עבור ${unverifiedEmployees.length} שוטרים`,
-                    );
-                    refreshData();
-                  }
-                }}
-              >
-                <CheckCheck className="w-4 h-4" />
-                <span>אישור ({unverifiedEmployees.length})</span>
-              </Button>
-            )}
-
-            <Button
-              variant="outline"
-              className={cn(
-                "h-11 rounded-xl border-border/40 bg-card/40 text-primary hover:bg-primary/5 gap-1 font-bold text-[10px] flex-col py-2 px-1",
-                selectedEmployeeIds.length > 0 &&
-                  "bg-primary/10 border-primary/20",
-              )}
-              onClick={() => {
-                setAlertContext(null);
-                setBulkModalOpen(true);
-              }}
-            >
-              <ClipboardCheck className="w-4 h-4" />
-              <span>עדכון מרוכז</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Reminder Banner */}
-        <div className="lg:hidden w-full mb-4">
-          {!isAllReported && (
-            <div
-              className="w-full bg-amber-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-3 flex items-center justify-between cursor-pointer active:scale-95 transition-all"
-              onClick={() => {
-                setAlertContext({ missing_ids: missingEmployeeIds });
-                setSelectedEmployeeIds(missingEmployeeIds);
-                setBulkModalOpen(true);
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 text-amber-600 rounded-lg">
-                  <Clock className="w-4 h-4" />
+            {/* Mobile Reminder Banner */}
+            <div className="lg:hidden w-full mb-4">
+              {!isAllReported && (
+                <div
+                  className="w-full bg-amber-500/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-3 flex items-center justify-between cursor-pointer active:scale-95 transition-all"
+                  onClick={() => {
+                    setAlertContext({ missing_ids: missingEmployeeIds });
+                    setSelectedEmployeeIds(missingEmployeeIds);
+                    setBulkModalOpen(true);
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-500/10 text-amber-600 rounded-lg">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-px font-bold text-foreground leading-tight">
+                        נשארו דיווחים
+                      </span>
+                      <span className="text-[10px] font-bold text-muted-foreground/60">
+                        יעד יום: 09:00
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                    <span className="text-[10px] font-bold text-amber-700">
+                      נותרו: {totalCount - activeEmployees.length}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-px font-bold text-foreground leading-tight">
-                    נשארו דיווחים
-                  </span>
-                  <span className="text-[10px] font-bold text-muted-foreground/60">
-                    יעד יום: 09:00
-                  </span>
-                </div>
-              </div>
-              <div className="bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-                <span className="text-[10px] font-bold text-amber-700">
-                  נותרו: {totalCount - activeEmployees.length}
-                </span>
-              </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Main content: calendar view OR normal stats+table */}
@@ -854,15 +868,19 @@ export default function AttendancePage() {
             transition={{ duration: 0.2 }}
             className="flex-1 px-0 sm:px-2 pb-4"
           >
-            <div className="bg-card border border-border/50 rounded-2xl p-3 sm:p-4 md:p-5 h-full">
+            <div className={cn(
+              isViewingDayDetails ? "bg-transparent border-none p-0" : "bg-card border border-border/50 rounded-2xl p-3 sm:p-4 md:p-5 h-full",
+              "transition-all"
+            )}>
               <AttendanceCalendarView
                 statusTypes={statusTypes}
                 scopeEmployees={scopeEmployees}
                 onClose={closeCalendar}
                 departments={departments}
-                        sections={sections}
+                sections={sections}
                 teams={teams}
                 serviceTypes={serviceTypes}
+                onDaySelectedChange={setIsViewingDayDetails}
               />
             </div>
           </motion.div>
@@ -876,218 +894,200 @@ export default function AttendancePage() {
             className="pb-4 space-y-4"
           >
             {/* Filters Bar */}
-            <Card id="status-filters" className="p-4 sm:p-6 overflow-visible">
-              {/* Mobile View: Search + Filter Button */}
-              <div className="flex md:hidden gap-3 items-center">
+            <Card id="status-filters" className="p-3 sm:p-4 overflow-visible bg-card/60 backdrop-blur-xl border-border/40 shadow-none rounded-2xl">
+              {/* Responsive Search + Advanced Filters Row */}
+              <div className="flex items-center gap-2.5 sm:gap-3 w-full">
                 <div className="relative flex-1">
                   <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                   <Input
-                    placeholder="חיפוש שם או מ.א..."
-                    className="h-11 pr-10 bg-background border border-border/40 focus:ring-ring/20 focus:border-ring rounded-xl text-sm font-bold w-full transition-all hover:border-border/80"
+                    placeholder="חיפוש שם שוטר או מ.א..."
+                    className="h-10 pr-10 bg-background border border-border/40 focus:ring-ring/20 focus:border-ring rounded-xl text-sm font-bold w-full transition-all hover:border-border/80"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div className="relative flex flex-col items-center shrink-0">
-                  <AnimatePresence>
-                    {isFilterActive && (
-                      <motion.button
-                        initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                        type="button"
-                        onClick={handleClearFilters}
-                        className="absolute -top-12 w-9 h-9 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all z-20"
-                        title="אפס סינון"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
-
-                  <Button
-                    variant="outline"
-                    onClick={() => setFilterOpen(true)}
-                    className={cn(
-                      "h-11 w-11 p-0 rounded-xl border-dashed shrink-0 transition-all",
-                      isFilterActive
-                        ? "border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/10"
-                        : "border-primary/30 text-primary bg-primary/5 hover:bg-primary/10"
-                    )}
-                  >
-                    <Filter className="w-5 h-5" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Desktop View: Full Filters */}
-              <div className="hidden md:flex flex-row gap-4 items-end">
-                <div className="flex-1 space-y-2 text-right">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
-                    חיפוש מהיר
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                    <Input
-                      placeholder="שם שוטר או שם משתמש..."
-                      className="h-11 pr-11 bg-background border border-border/40 focus:ring-ring/20 focus:border-ring rounded-xl text-sm font-bold transition-all hover:border-border/80"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Department Filter - Only for Admins or those without a fixed Dept */}
-                {(user?.is_admin || !user?.department_id) && (
-                  <div className="w-36 lg:w-48 space-y-2 text-right">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
-                      מחלקה
-                    </label>
-                    <Select
-                      value={selectedDeptId}
-                      onValueChange={(val) => {
-                        setSelectedDeptId(val);
-                        setSelectedSectionId("all");
-                        setSelectedTeamId("all");
-                      }}
-                      disabled={
-                        !!(user && !user.is_admin && user.department_id)
-                      }
-                    >
-                      <SelectTrigger className="h-11 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
-                        <SelectValue placeholder="כל המחלקות" />
-                      </SelectTrigger>
-                      <SelectContent dir="rtl">
-                        {user?.is_admin && <SelectItem value="all">כל המחלקות</SelectItem>}
-                        {departments.map((d) => (
-                          <SelectItem key={d.id} value={d.id.toString()}>
-                            {d.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {/* Section Filter - Only for Admins or those without a fixed Section */}
-                {(user?.is_admin || !user?.section_id) && (
-                  <div className="w-36 lg:w-48 space-y-2 text-right">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
-                      מדור
-                    </label>
-                    <Select
-                      value={selectedSectionId}
-                      onValueChange={(val) => {
-                        setSelectedSectionId(val);
-                        setSelectedTeamId("all");
-                      }}
-                      disabled={
-                        !selectedDeptId ||
-                        selectedDeptId === "all" ||
-                        !!(user && !user.is_admin && user.section_id)
-                      }
-                    >
-                      <SelectTrigger className="h-11 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
-                        <SelectValue placeholder="כל המדורים" />
-                      </SelectTrigger>
-                      <SelectContent dir="rtl">
-                        {(user?.is_admin || user?.commands_department_id) && <SelectItem value="all">כל המדורים</SelectItem>}
-                        {sections.map((s: any) => (
-                          <SelectItem key={s.id} value={s.id.toString()}>
-                            {s.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {/* Team Filter - Only for Admins or those without a fixed Team */}
-                {(user?.is_admin || !user?.team_id) && (
-                  <div className="w-36 lg:w-48 space-y-2 text-right">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
-                      חוליה
-                    </label>
-                    <Select
-                      value={selectedTeamId}
-                      onValueChange={(val) => setSelectedTeamId(val)}
-                      disabled={
-                        !selectedSectionId ||
-                        selectedSectionId === "all" ||
-                        !!(user && !user.is_admin && user.team_id)
-                      }
-                    >
-                      <SelectTrigger className="h-11 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
-                        <SelectValue placeholder="כל החוליות" />
-                      </SelectTrigger>
-                      <SelectContent dir="rtl">
-                        {(user?.is_admin || user?.commands_department_id || user?.commands_section_id) && <SelectItem value="all">כל החוליות</SelectItem>}
-                        {teams.map((t: any) => (
-                          <SelectItem key={t.id} value={t.id.toString()}>
-                            {t.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                <div className="w-36 lg:w-48 space-y-2 text-right">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
-                    סטטוס
-                  </label>
-                  <Select
-                    value={selectedStatusId}
-                    onValueChange={(val) => setSelectedStatusId(val)}
-                  >
-                    <SelectTrigger className="h-11 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
-                      <SelectValue placeholder="הכל" />
-                    </SelectTrigger>
-                    <SelectContent dir="rtl">
-                      <SelectItem value="all">הכל</SelectItem>
-                      {statusTypes.map((s: any) => (
-                        <SelectItem key={s.id} value={s.id.toString()}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="w-32 lg:w-36 space-y-2 text-right">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase mr-1">
-                    מעמד
-                  </label>
-                  <Select
-                    value={selectedServiceTypeId}
-                    onValueChange={(val) => setSelectedServiceTypeId(val)}
-                  >
-                    <SelectTrigger className="h-11 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right">
-                      <SelectValue placeholder="הכל" />
-                    </SelectTrigger>
-                    <SelectContent dir="rtl">
-                      <SelectItem value="all">הכל</SelectItem>
-                      {serviceTypes.map((s: any) => (
-                        <SelectItem key={s.id} value={s.id.toString()}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
+                
+                {/* Advanced Filters Button (Mobile trigger opens Dialog, Desktop toggles collapsible) */}
                 <Button
-                  variant="ghost"
-                  className="md:col-span-1 h-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2 w-auto min-w-[44px]"
-                  title="נקה סינון"
-                  onClick={handleClearFilters}
+                  variant="outline"
+                  onClick={() => {
+                    if (window.innerWidth < 768) {
+                      setFilterOpen(true);
+                    } else {
+                      setDesktopFiltersExpanded(prev => !prev);
+                    }
+                  }}
+                  className={cn(
+                    "h-10 rounded-xl px-3.5 sm:px-4 font-bold text-xs sm:text-sm transition-all gap-1.5 sm:gap-2 border-border/60 shrink-0",
+                    (desktopFiltersExpanded || isFilterActive)
+                      ? "border-primary/30 text-primary bg-primary/5 hover:bg-primary/10"
+                      : "text-muted-foreground hover:bg-muted"
+                  )}
                 >
-                  <X className="w-4 h-4" />
-                  <span className="hidden lg:inline text-xs font-bold">
-                    נקה
-                  </span>
+                  <Filter className="w-4 h-4" />
+                  <span className="hidden sm:inline">סינון מתקדם</span>
+                  {isFilterActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  )}
                 </Button>
+
+                {isFilterActive && (
+                  <Button
+                    variant="ghost"
+                    onClick={handleClearFilters}
+                    className="h-10 px-2 sm:px-3 rounded-xl text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all gap-1.5 shrink-0"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">נקה סינון</span>
+                  </Button>
+                )}
               </div>
+
+              {/* Collapsible Area for Advanced Dropdowns (Desktop only) */}
+              <AnimatePresence initial={false}>
+                {desktopFiltersExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                    animate={{ height: "auto", opacity: 1, marginTop: 12 }}
+                    exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className="hidden md:block overflow-hidden w-full"
+                  >
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-3 pt-3 border-t border-border/20">
+                      {/* Department Filter */}
+                      {(user?.is_admin || !user?.department_id) && (
+                        <div className="space-y-1.5 text-right">
+                          <label className="text-[10px] font-black text-slate-400 uppercase mr-1">
+                            מחלקה
+                          </label>
+                          <Select
+                            value={selectedDeptId}
+                            onValueChange={(val) => {
+                              setSelectedDeptId(val);
+                              setSelectedSectionId("all");
+                              setSelectedTeamId("all");
+                            }}
+                            disabled={!!(user && !user.is_admin && user.department_id)}
+                          >
+                            <SelectTrigger className="h-9.5 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right text-xs">
+                              <SelectValue placeholder="כל המחלקות" />
+                            </SelectTrigger>
+                            <SelectContent dir="rtl" className="rounded-xl">
+                              {user?.is_admin && <SelectItem value="all" className="text-xs font-bold">כל המחלקות</SelectItem>}
+                              {departments.map((d) => (
+                                <SelectItem key={d.id} value={d.id.toString()} className="text-xs font-bold">
+                                  {d.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Section Filter */}
+                      {(user?.is_admin || !user?.section_id) && (
+                        <div className="space-y-1.5 text-right">
+                          <label className="text-[10px] font-black text-slate-400 uppercase mr-1">
+                            מדור
+                          </label>
+                          <Select
+                            value={selectedSectionId}
+                            onValueChange={(val) => {
+                              setSelectedSectionId(val);
+                              setSelectedTeamId("all");
+                            }}
+                            disabled={!selectedDeptId || selectedDeptId === "all" || !!(user && !user.is_admin && user.section_id)}
+                          >
+                            <SelectTrigger className="h-9.5 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right text-xs">
+                              <SelectValue placeholder="כל המדורים" />
+                            </SelectTrigger>
+                            <SelectContent dir="rtl" className="rounded-xl">
+                              {(user?.is_admin || user?.commands_department_id) && <SelectItem value="all" className="text-xs font-bold">כל המדורים</SelectItem>}
+                              {sections.map((s: any) => (
+                                <SelectItem key={s.id} value={s.id.toString()} className="text-xs font-bold">
+                                  {s.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Team Filter */}
+                      {(user?.is_admin || !user?.team_id) && (
+                        <div className="space-y-1.5 text-right">
+                          <label className="text-[10px] font-black text-slate-400 uppercase mr-1">
+                            חוליה
+                          </label>
+                          <Select
+                            value={selectedTeamId}
+                            onValueChange={(val) => setSelectedTeamId(val)}
+                            disabled={!selectedSectionId || selectedSectionId === "all" || !!(user && !user.is_admin && user.team_id)}
+                          >
+                            <SelectTrigger className="h-9.5 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right text-xs">
+                              <SelectValue placeholder="כל החוליות" />
+                            </SelectTrigger>
+                            <SelectContent dir="rtl" className="rounded-xl">
+                              {(user?.is_admin || user?.commands_department_id || user?.commands_section_id) && <SelectItem value="all" className="text-xs font-bold">כל החוליות</SelectItem>}
+                              {teams.map((t: any) => (
+                                <SelectItem key={t.id} value={t.id.toString()} className="text-xs font-bold">
+                                  {t.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Status Filter */}
+                      <div className="space-y-1.5 text-right">
+                        <label className="text-[10px] font-black text-slate-400 uppercase mr-1">
+                          סטטוס
+                        </label>
+                        <Select
+                          value={selectedStatusId}
+                          onValueChange={(val) => setSelectedStatusId(val)}
+                        >
+                          <SelectTrigger className="h-9.5 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right text-xs">
+                            <SelectValue placeholder="הכל" />
+                          </SelectTrigger>
+                          <SelectContent dir="rtl" className="rounded-xl">
+                            <SelectItem value="all" className="text-xs font-bold">הכל</SelectItem>
+                            {statusTypes.map((s: any) => (
+                              <SelectItem key={s.id} value={s.id.toString()} className="text-xs font-bold">
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Service Type Filter */}
+                      <div className="space-y-1.5 text-right">
+                        <label className="text-[10px] font-black text-slate-400 uppercase mr-1">
+                          מעמד
+                        </label>
+                        <Select
+                          value={selectedServiceTypeId}
+                          onValueChange={(val) => setSelectedServiceTypeId(val)}
+                        >
+                          <SelectTrigger className="h-9.5 bg-background border border-border/40 hover:border-border/80 focus:ring-ring/20 focus:border-ring rounded-xl font-bold text-right text-xs">
+                            <SelectValue placeholder="הכל" />
+                          </SelectTrigger>
+                          <SelectContent dir="rtl" className="rounded-xl">
+                            <SelectItem value="all" className="text-xs font-bold">הכל</SelectItem>
+                            {serviceTypes.map((s: any) => (
+                              <SelectItem key={s.id} value={s.id.toString()} className="text-xs font-bold">
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Card>
 
             {/* Filter Modal for Mobile */}
@@ -1659,7 +1659,7 @@ export default function AttendancePage() {
                       <div
                         key={emp.id}
                         className={cn(
-                          "group bg-card dark:bg-zinc-900/90 rounded-xl border border-gray-800 p-4 transition-all active:scale-[0.98] cursor-pointer text-right",
+                          "group bg-card/60 dark:bg-card/30 rounded-2xl border border-border/40 p-4 transition-all active:scale-[0.98] cursor-pointer text-right shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] backdrop-blur-xl",
                           isSelected
                             ? "ring-2 ring-primary/80 bg-primary/[0.02] dark:bg-primary/[0.04]"
                             : "hover:border-primary/40",
@@ -1708,21 +1708,21 @@ export default function AttendancePage() {
                           </span>
                         </div>
 
-                        {/* Middle Section: Details (Role, Unit) in Gray-400 */}
-                        <div className="space-y-1 text-right mb-4 text-[11px] text-gray-400">
-                          <div className="flex items-center gap-1.5 font-medium">
-                            <span className="text-muted-foreground/60">תפקיד:</span>
-                            <span className="text-gray-300 font-bold">{getProfessionalTitle(emp)}</span>
+                        {/* Middle Section: Details (Role, Unit) with theme responsive colors */}
+                        <div className="space-y-1 text-right mb-4 text-[11px] text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-1 font-medium">
+                            <span className="opacity-70">תפקיד:</span>
+                            <span className="text-foreground/90 font-bold">{getProfessionalTitle(emp)}</span>
                             {emp.service_type_name && (
                               <>
-                                <span className="text-gray-600">•</span>
-                                <span className="text-gray-300 font-bold">{emp.service_type_name}</span>
+                                <span className="opacity-40">•</span>
+                                <span className="text-foreground/90 font-bold">{emp.service_type_name}</span>
                               </>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5 font-medium">
-                            <span className="text-muted-foreground/60">שיוך ארגוני:</span>
-                            <span className="text-gray-300 font-bold">
+                          <div className="flex flex-wrap items-center gap-1 font-medium">
+                            <span className="opacity-70">שיוך ארגוני:</span>
+                            <span className="text-foreground/90 font-bold">
                               {emp.department_name}
                               {emp.section_name && ` / ${emp.section_name}`}
                               {emp.team_name && ` / ${emp.team_name}`}
@@ -1731,7 +1731,7 @@ export default function AttendancePage() {
                         </div>
 
                         {/* Actions Row at bottom of card */}
-                        <div className="flex gap-2 pt-3 border-t border-gray-800/60 no-export">
+                        <div className="flex gap-2 pt-3 border-t border-border/30 dark:border-border/10 no-export">
                           <Button
                             variant="ghost"
                             size="sm"

@@ -62,7 +62,7 @@ const InputItem = ({
   required,
   className,
 }: any) => (
-  <div className={cn("space-y-1.5 flex flex-col", className)}>
+  <div className={cn("space-y-1 sm:space-y-1.5 flex flex-col", className)}>
     <Label className="text-[12px] font-bold text-slate-400 pr-1 flex items-center gap-2">
       {Icon && <Icon className="w-3.5 h-3.5 opacity-60" />}
       {label} {required && <span className="text-destructive">*</span>}
@@ -183,7 +183,7 @@ const PersonalFormTab = ({
   onNext,
 }: any) => {
   return (
-    <div className="space-y-6 pb-24 sm:pb-0">
+    <div className="space-y-4 sm:space-y-6 pb-24 sm:pb-0">
       <CompactCard
         title={
           <span className="flex items-center gap-2 text-primary font-black text-lg">
@@ -191,7 +191,7 @@ const PersonalFormTab = ({
           </span>
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <InputItem label="שם פרטי" required icon={User}>
             <Input
               value={formData.first_name || ""}
@@ -344,13 +344,13 @@ const PersonalFormTab = ({
           </span>
         }
       >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-10">
           {/* Contact Details Block */}
-          <div className="space-y-5">
+          <div className="space-y-4">
             <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2 pb-2 border-b border-border/40">
               פרטי התקשרות
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
               <InputItem label="טלפון נייד" icon={Phone} className="sm:col-span-2">
                 <Input
                   value={formData.phone_number || ""}
@@ -371,12 +371,12 @@ const PersonalFormTab = ({
           </div>
 
           {/* Emergency Contact Block (Destructive/Red Theme) */}
-          <div className="bg-rose-500/[0.03] rounded-3xl p-5 sm:p-6 border border-rose-500/10 dark:bg-rose-500/[0.02] dark:border-rose-500/10">
-            <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2 pb-2 mb-5 border-b border-rose-500/10">
+          <div className="bg-rose-500/[0.03] rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-rose-500/10 dark:bg-rose-500/[0.02] dark:border-rose-500/10">
+            <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2 pb-2 mb-4 border-b border-rose-500/10">
               <HeartPulse className="w-3.5 h-3.5" /> איש קשר לחירום
             </h4>
-            <div className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5 sm:gap-4 w-full">
                 <InputItem label="שם מלא (פרטי ומשפחה)" className="sm:col-span-3">
                   <Input
                     value={emergencyDetails.name}
@@ -957,7 +957,7 @@ export default function CreateEmployeePage() {
   return (
     <div id="create-page-root" className="flex flex-col pb-10">
       {/* Page Header - matches system layout */}
-      <div className="pt-6 pb-4 px-4 sm:px-6 shrink-0 flex items-center justify-between gap-4 border-b border-border/40 mb-6">
+      <div className="pt-4 pb-3 px-4 sm:px-6 shrink-0 flex items-center justify-between gap-3 sm:gap-4 border-b border-border/40 mb-4 sm:mb-6">
         <PageHeader
           icon={UserPlus}
           title="הוספת שוטר חדש"
@@ -987,13 +987,13 @@ export default function CreateEmployeePage() {
           <Button
             variant="ghost"
             onClick={() => navigate("/employees")}
-            className="h-9 px-3 sm:px-4 rounded-xl font-bold text-muted-foreground hover:text-foreground hover:bg-muted"
+            className="h-8.5 sm:h-9 px-3 sm:px-4 rounded-xl font-bold text-muted-foreground hover:text-foreground hover:bg-muted"
           >
             <X className="w-4 h-4 ml-1" />
             <span className="text-xs sm:text-sm">ביטול</span>
           </Button>
           <Button
-            className="h-9 px-4 sm:px-6 rounded-xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all gap-2"
+            className="h-8.5 sm:h-9 px-3.5 sm:px-6 rounded-xl font-black hover:scale-[1.02] active:scale-[0.98] transition-all gap-1.5 sm:gap-2"
             onClick={handleSubmit}
             disabled={saving}
           >
@@ -1008,19 +1008,21 @@ export default function CreateEmployeePage() {
       </div>
 
       {/* Mobile-only tabs (original style) */}
-      <div className="flex sm:hidden justify-center w-full mb-6 px-4 pt-2">
-        <div className="bg-slate-200/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-1 flex w-full h-10">
+      <div className="flex sm:hidden justify-center w-full mb-4 px-4 pt-0">
+        <div className="bg-slate-200/50 dark:bg-slate-950/50 border border-slate-200/60 dark:border-slate-800/60 rounded-xl p-0.5 flex w-full h-9">
           <TabButton
             active={activeTab === "personal"}
             onClick={() => setActiveTab("personal")}
             icon={User}
             label="פרטים אישיים"
+            small
           />
           <TabButton
             active={activeTab === "professional"}
             onClick={() => setActiveTab("professional")}
             icon={Shield}
             label="מקצועי והרשאות"
+            small
           />
         </div>
       </div>

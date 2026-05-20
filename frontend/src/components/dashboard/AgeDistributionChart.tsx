@@ -80,11 +80,11 @@ export const AgeDistributionChart = ({
       </div>
 
       {/* Chart Container */}
-      <div className="flex-1 min-h-[180px] sm:min-h-[200px] w-full relative z-10">
+      <div className="flex-1 min-h-[160px] sm:min-h-[180px] w-full relative z-10">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
-            margin={{ top: 30, right: 10, left: 10, bottom: 40 }}
+            margin={{ top: 20, right: 10, left: 10, bottom: 5 }}
           >
             <XAxis
               dataKey="range"

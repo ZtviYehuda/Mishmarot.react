@@ -213,22 +213,31 @@ const FeedbackPage = () => {
       return employees.filter(e => e.id !== currentUser.id);
     }
 
-    // If Commander: Message subordinates or other commanders
-    const commanders = employees.filter(e => {
-        if (!e.is_commander || e.id === currentUser.id) return false;
-        
-        // Hierarchy logic
-        if (currentUser.commands_department_id && e.department_id === currentUser.commands_department_id) return true;
-        if (currentUser.commands_section_id && e.section_id === currentUser.commands_section_id) return true;
-        if (currentUser.commands_team_id && e.team_id === currentUser.commands_team_id) return true;
-        
-        return false;
-    });
+    // Include ALL commanders and Admins
+    const allCommandersAndAdmins = employees.filter(e => (e.is_commander || e.is_admin) && e.id !== currentUser.id);
 
-    if (commanders.length > 0) return commanders;
+    // If Commander: Include subordinates
+    let subordinates: any[] = [];
+    if (currentUser.is_commander) {
+      subordinates = employees.filter(e => {
+          if (e.id === currentUser.id) return false;
+          if (currentUser.commands_department_id && e.department_id === currentUser.commands_department_id) return true;
+          if (currentUser.commands_section_id && e.section_id === currentUser.commands_section_id) return true;
+          if (currentUser.commands_team_id && e.team_id === currentUser.commands_team_id) return true;
+          return false;
+      });
+    }
 
-    // Fallback: Show all commanders in the unit if no subordinates found
-    return employees.filter(e => e.is_commander && e.id !== currentUser.id);
+    // Combine and deduplicate
+    const combined = [...allCommandersAndAdmins, ...subordinates];
+    
+    return Array.from(new Set(combined.map(e => e.id)))
+      .map(id => combined.find(e => e.id === id))
+      .sort((a, b) => {
+        if (a.is_admin && !b.is_admin) return -1;
+        if (!a.is_admin && b.is_admin) return 1;
+        return 0;
+      });
   }, [employees, currentUser]);
 
   const filteredItems = useMemo(() => {
@@ -273,7 +282,7 @@ const FeedbackPage = () => {
           icon={MessageSquare}
           title="הודעות וניהול פניות"
           subtitle="ניהול התכתבויות פנימיות ופניות למערכת"
-          className="mb-0"
+          className="mb-6 sm:mb-8"
           hideMobile={true}
         />
 
@@ -326,11 +335,11 @@ const FeedbackPage = () => {
               <motion.div key="admin-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                 
                 {/* Stats Row - Compact Grid (No Scroll) */}
-                <div className="grid grid-cols-4 gap-1.5 sm:gap-4 mb-4 sm:mb-6">
-                  <StatItem label="פתוחות" value={filteredItems.filter(i => ['pending', 'open', 'received'].includes(i.status)).length} icon={AlertCircle} color="text-rose-500" bgColor="bg-rose-500/10" className="p-1.5 sm:p-5" />
-                  <StatItem label="בטיפול" value={filteredItems.filter(i => ['in_progress', 'reviewing'].includes(i.status)).length} icon={Activity} color="text-amber-500" bgColor="bg-amber-500/10" className="p-1.5 sm:p-5" />
-                  <StatItem label="טופלו" value={filteredItems.filter(i => (['done', 'closed', 'approved'].includes(i.status)) && new Date(i.created_at).toDateString() === new Date().toDateString()).length} icon={CheckCircle2} color="text-emerald-500" bgColor="bg-emerald-500/10" className="p-1.5 sm:p-5" />
-                  <StatItem label="סה״כ" value={filteredItems.length} icon={MessageSquare} color="text-primary" bgColor="bg-primary/10" className="p-1.5 sm:p-5" />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                  <StatItem label="פתוחות" value={filteredItems.filter(i => ['pending', 'open', 'received'].includes(i.status)).length} icon={AlertCircle} color="text-rose-500" bgColor="bg-rose-500/10" className="p-3 sm:p-4" />
+                  <StatItem label="בטיפול" value={filteredItems.filter(i => ['in_progress', 'reviewing'].includes(i.status)).length} icon={Activity} color="text-amber-500" bgColor="bg-amber-500/10" className="p-3 sm:p-4" />
+                  <StatItem label="טופלו" value={filteredItems.filter(i => (['done', 'closed', 'approved'].includes(i.status)) && new Date(i.created_at).toDateString() === new Date().toDateString()).length} icon={CheckCircle2} color="text-emerald-500" bgColor="bg-emerald-500/10" className="p-3 sm:p-4" />
+                  <StatItem label="סה״כ" value={filteredItems.length} icon={MessageSquare} color="text-primary" bgColor="bg-primary/10" className="p-3 sm:p-4" />
                 </div>
 
                 {/* Modern Toolbar - Optimized for Mobile */}
@@ -802,7 +811,7 @@ const FeedbackPage = () => {
 
                         <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto p-1">
                           {availableCommanders
-                            .filter(c => !recipientSearch || `${c.first_name} ${c.last_name}`.toLowerCase().includes(recipientSearch.toLowerCase()))
+                            .filter(c => !recipientSearch || `${c.is_admin ? "צוות תמיכה" : c.first_name + " " + c.last_name}`.toLowerCase().includes(recipientSearch.toLowerCase()))
                             .map(c => (
                               <button 
                                 key={c.id}
@@ -816,7 +825,9 @@ const FeedbackPage = () => {
                               >
                                 <div className={cn(
                                   "w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px] shrink-0",
-                                  composeTo === c.id.toString() ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                                  composeTo === c.id.toString() 
+                                    ? "bg-primary text-white" 
+                                    : c.is_admin ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"
                                 )}>
                                   {c.first_name?.[0]}{c.last_name?.[0]}
                                 </div>
@@ -882,21 +893,21 @@ function TabButton({ active, onClick, icon, label, className }: any) {
     <button 
       onClick={onClick} 
       className={cn(
-        "transition-all flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1.5 sm:gap-2.5 border outline-none active:scale-95",
-        "p-3 sm:px-5 sm:py-2.5 rounded-2xl sm:rounded-xl min-h-[70px] sm:min-h-0",
+        "transition-all flex flex-row items-center justify-center sm:justify-start gap-2 border outline-none active:scale-95",
+        "px-4 py-2 sm:px-5 sm:py-2.5 rounded-full min-h-[40px]",
         active 
-          ? "bg-primary/20 text-primary border-primary/50 shadow-md shadow-primary/5 scale-[1.02] z-10" 
+          ? "bg-primary/20 text-primary border-primary/50 shadow-md shadow-primary/5 z-10" 
           : "bg-card/40 text-muted-foreground hover:text-foreground border-border/40 hover:bg-card/60",
         className
       )}
     >
       <div className={cn(
-        "w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center rounded-lg transition-colors",
-        active ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary"
+        "flex items-center justify-center rounded-lg transition-colors",
+        active ? "text-primary" : "text-primary/70"
       )}>
         {icon}
       </div>
-      <span className="text-[10px] sm:text-xs font-black tracking-tight sm:tracking-normal leading-tight">
+      <span className="text-[11px] sm:text-xs font-black leading-none mt-0.5 whitespace-nowrap">
         {label}
       </span>
     </button>
@@ -905,14 +916,27 @@ function TabButton({ active, onClick, icon, label, className }: any) {
 
 function StatItem({ label, value, sub, icon: Icon, color, bgColor, className }: any) {
   return (
-    <Card className={cn("aspect-square border border-border/40 p-2 sm:p-4 rounded-2xl sm:rounded-[2rem] bg-card/40 backdrop-blur-xl shadow-sm hover:bg-card/60 transition-all flex flex-col items-center justify-center text-center group", className)}>
-      <div className={cn("w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center mb-1.5 sm:mb-3 transition-transform group-hover:scale-110 shadow-sm", bgColor)}>
-        <Icon className={cn("w-4 h-4 sm:w-6 sm:h-6", color)} />
-      </div>
-      <div className="flex flex-col items-center w-full min-w-0">
-        <p className={cn("text-lg sm:text-3xl font-black leading-none", color || "text-foreground")}>{value}</p>
-        <p className="text-[7px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-tighter mt-1 sm:mt-2 truncate w-full">{label}</p>
-        {sub && <p className="text-[6px] sm:text-[9px] font-medium text-muted-foreground truncate mt-0.5">{sub}</p>}
+    <Card className={cn("group relative overflow-hidden p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all flex items-center justify-between bg-card/80 border-border/40 hover:bg-accent/30 hover:border-primary/20", className)}>
+      <div className="flex items-center justify-between w-full gap-2">
+        <div className="space-y-0.5 text-right min-w-0 flex-1">
+          <p className="text-[9px] sm:text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wide leading-none truncate">
+            {label}
+          </p>
+          <p className={cn("text-base sm:text-xl font-black tracking-tight leading-none mt-1", color || "text-foreground")}>
+            {value}
+          </p>
+          {sub && (
+            <p className="text-[8px] sm:text-[9px] font-semibold text-muted-foreground/50 leading-none mt-1">
+              {sub}
+            </p>
+          )}
+        </div>
+        <div className={cn(
+          "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 shrink-0 shadow-sm",
+          bgColor
+        )}>
+          <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", color)} />
+        </div>
       </div>
     </Card>
   );

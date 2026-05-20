@@ -437,6 +437,25 @@ export default function DashboardPage() {
         return;
       }
 
+      // Check for special stats-grid status buttons
+      const specialStatuses = [
+        { id: -1, name: "לא דווח", color: "#f43f5e" },
+        { id: -2, name: "לא זמינים", color: "#f59e0b" },
+        { id: -3, name: "זמינות מבצעית", color: "#10b981" },
+        { id: -4, name: "סה\"כ שוטרים", color: "#6366f1" },
+      ];
+
+      const special = specialStatuses.find(s => s.id.toString() === value?.toString());
+      if (special) {
+        setSelectedStatusData({
+          id: special.id,
+          name: special.name,
+          color: special.color,
+        });
+        setSelectedStatusId(special.id);
+        return;
+      }
+
       // Look up status in both active stats and all possible types
       const statusType = allStatusTypes.find((s: any) => s.id.toString() === value?.toString());
       const activeStatus = stats.find(
@@ -681,7 +700,7 @@ export default function DashboardPage() {
             id="mobile-filter-trigger"
             variant="ghost"
             onClick={() => setFilterOpen(true)}
-            className="flex-col gap-1 h-[52px] rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0"
+            className="flex flex-col items-center justify-center gap-1 h-[52px] rounded-xl bg-transparent border-none text-primary hover:bg-primary/5 active:scale-95 transition-all px-0"
           >
             <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <Filter className="w-3.5 h-3.5" />
@@ -701,7 +720,7 @@ export default function DashboardPage() {
               status_id: selectedStatusId?.toString()
             }}
             initialDate={selectedDate}
-            className="flex-col gap-1 h-[52px] rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0"
+            className="flex flex-col items-center justify-center gap-1 h-[52px] rounded-xl bg-transparent border-none text-primary hover:bg-primary/5 active:scale-95 transition-all px-0"
           />
 
           <Button
@@ -709,7 +728,7 @@ export default function DashboardPage() {
             variant="ghost"
             onClick={() => setGlobalEventOpen(true)}
             className={cn(
-              "flex-col gap-1 h-[52px] rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0",
+              "flex flex-col items-center justify-center gap-1 h-[52px] rounded-xl bg-transparent border-none text-primary hover:bg-primary/5 active:scale-95 transition-all px-0",
               activeTutorial === "event" && "tutorial-highlight"
             )}
           >
@@ -724,7 +743,7 @@ export default function DashboardPage() {
             variant="ghost"
             onClick={() => setWhatsappBroadcastOpen(true)}
             className={cn(
-              "flex-col gap-1 h-[52px] rounded-xl bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 transition-all backdrop-blur-xl px-0",
+              "flex flex-col items-center justify-center gap-1 h-[52px] rounded-xl bg-transparent border-none text-primary hover:bg-primary/5 active:scale-95 transition-all px-0",
               activeTutorial === "broadcast" && "tutorial-highlight"
             )}
           >
@@ -739,7 +758,19 @@ export default function DashboardPage() {
         <div className="space-y-3 sm:space-y-5 transition-all mt-1 relative">
 
           {/* Stat Cards - New Redesigned Component */}
-          <StatCards stats={stats} totalEmployees={totalEmployees} />
+          <StatCards 
+            stats={stats} 
+            totalEmployees={totalEmployees} 
+            selectedStatusId={selectedStatusId}
+            onCardSelect={(statusId) => {
+              if (statusId === null) {
+                setSelectedStatusId(null);
+                setSelectedStatusData(null);
+              } else {
+                handleFilterChange("status", statusId.toString());
+              }
+            }}
+          />
 
           {/* Middle Row - Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 items-stretch">

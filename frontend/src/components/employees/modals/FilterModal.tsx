@@ -282,7 +282,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-xl max-h-[90vh] sm:max-h-[85vh] p-0 border-none bg-background flex flex-col overflow-hidden !gap-0 pointer-events-auto rounded-t-[2.5rem] sm:rounded-3xl"
+        className="sm:max-w-md max-h-[88vh] sm:max-h-[80vh] p-0 border-none bg-background flex flex-col overflow-hidden !gap-0 pointer-events-auto rounded-t-[2.5rem] sm:rounded-3xl"
         dir="rtl"
       >
         <DialogDragHandle />
@@ -315,7 +315,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 className={cn(
                   "text-sm font-black whitespace-nowrap pb-2 border-b-2 transition-all relative",
                   activeTab === tab.id
-                    ? "text-foreground border-[#1D45E0]"
+                    ? "text-foreground border-primary"
                     : "text-muted-foreground border-transparent"
                 )}
               >
@@ -343,7 +343,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       className={cn(
                         "h-10 px-4 rounded-xl text-xs font-black transition-all border",
                         filters.departments?.includes(dept)
-                          ? "bg-[#1D45E0] text-white border-[#1D45E0] hover:bg-[#1D45E0]/90"
+                          ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
                           : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted"
                       )}
                     >
@@ -367,7 +367,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       className={cn(
                         "h-10 px-4 rounded-xl text-xs font-black transition-all border",
                         filters.sections?.includes(sect)
-                          ? "bg-[#1D45E0] text-white border-[#1D45E0] hover:bg-[#1D45E0]/90"
+                          ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
                           : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted"
                       )}
                     >
@@ -394,7 +394,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                         className={cn(
                           "h-10 px-4 rounded-xl text-xs font-black transition-all border",
                           filters.teams?.includes(team)
-                            ? "bg-[#1D45E0] text-white border-[#1D45E0] hover:bg-[#1D45E0]/90"
+                            ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
                             : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted"
                         )}
                       >
@@ -421,7 +421,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                     className={cn(
                       "h-10 px-4 rounded-xl text-xs font-black transition-all border",
                       filters.statuses?.includes(status)
-                        ? "bg-[#1D45E0] text-white border-[#1D45E0] hover:bg-[#1D45E0]/90"
+                        ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
                         : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted"
                     )}
                   >
@@ -447,7 +447,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       className={cn(
                         "h-10 px-4 rounded-xl text-xs font-black transition-all border",
                         filters.serviceTypes?.includes(type)
-                          ? "bg-[#1D45E0] text-white border-[#1D45E0] hover:bg-[#1D45E0]/90"
+                          ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
                           : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted"
                       )}
                     >
@@ -474,23 +474,23 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       className={cn(
                         "flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
                         filters[item.id as keyof EmployeeFilters]
-                          ? "border-[#1D45E0] bg-[#1D45E0]/5"
+                          ? "border-primary bg-primary/5"
                           : "border-transparent bg-muted/30"
                       )}
                     >
                       <span className={cn(
                         "text-sm font-black",
-                        filters[item.id as keyof EmployeeFilters] ? "text-[#1D45E0]" : "text-muted-foreground"
+                        filters[item.id as keyof EmployeeFilters] ? "text-primary" : "text-muted-foreground"
                       )}>
                         {item.label}
                       </span>
                       <div className={cn(
                         "w-6 h-6 rounded-md flex items-center justify-center border-2 transition-all",
                         filters[item.id as keyof EmployeeFilters]
-                          ? "bg-[#1D45E0] border-[#1D45E0]"
+                          ? "bg-primary border-primary"
                           : "border-muted-foreground/30"
                       )}>
-                        {filters[item.id as keyof EmployeeFilters] && <Check className="w-3.5 h-3.5 text-white" />}
+                        {filters[item.id as keyof EmployeeFilters] && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
                       </div>
                     </button>
                   ))}
@@ -506,7 +506,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest">
                     טווח גילאים
                   </Label>
-                  <span className="text-lg font-black text-[#1D45E0]">
+                  <span className="text-lg font-black text-primary">
                     {filters.ageRange?.[0] || 18} - {filters.ageRange?.[1] || 67}
                   </span>
                 </div>
@@ -517,7 +517,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   
                   {/* Active Range Highlight */}
                   <div 
-                    className="absolute h-1.5 bg-[#1D45E0] rounded-full transition-all"
+                    className="absolute h-1.5 bg-primary rounded-full transition-all"
                     style={{
                       right: `calc(2px + ${((filters.ageRange?.[0] || 18) - 18) / (67 - 18) * 100}%)`,
                       left: `calc(2px + ${100 - ((filters.ageRange?.[1] || 67) - 18) / (67 - 18) * 100}%)`,
@@ -534,7 +534,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       const val = Math.min(parseInt(e.target.value), (filters.ageRange?.[1] || 67) - 1);
                       setFilters({ ...filters, ageRange: [val, filters.ageRange?.[1] || 67] });
                     }}
-                    className="absolute inset-0 w-full h-1.5 bg-transparent appearance-none pointer-events-none z-20 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#1D45E0] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg"
+                    className="absolute inset-0 w-full h-1.5 bg-transparent appearance-none pointer-events-none z-20 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg"
                   />
                   <input
                     type="range"
@@ -545,7 +545,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       const val = Math.max(parseInt(e.target.value), (filters.ageRange?.[0] || 18) + 1);
                       setFilters({ ...filters, ageRange: [filters.ageRange?.[0] || 18, val] });
                     }}
-                    className="absolute inset-0 w-full h-1.5 bg-transparent appearance-none pointer-events-none z-20 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#1D45E0] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg"
+                    className="absolute inset-0 w-full h-1.5 bg-transparent appearance-none pointer-events-none z-20 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg"
                   />
 
                   <div className="absolute -bottom-6 left-0 right-0 flex justify-between px-2 text-[10px] font-bold text-muted-foreground">
@@ -568,9 +568,15 @@ export const FilterModal: React.FC<FilterModalProps> = ({
         <div className="px-6 py-4 border-t border-border/30 shrink-0">
           <Button
             onClick={handleApply}
-            className="w-full bg-[#1D45E0] hover:bg-[#1D45E0]/90 text-white font-black rounded-xl h-14 transition-all active:scale-[0.98] text-base"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl h-12 transition-all active:scale-[0.98] text-sm gap-2 shadow-none"
           >
+            <Filter className="w-4 h-4 shrink-0" />
             הצג {filteredCount} תוצאות
+            {activeFiltersCount > 0 && (
+              <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-[10px] font-black">
+                {activeFiltersCount}
+              </span>
+            )}
           </Button>
         </div>
       </DialogContent>

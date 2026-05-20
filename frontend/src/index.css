@@ -469,3 +469,52 @@ body[data-scroll-locked] .global-ai-support-btn {
     background-color: color-mix(in srgb, var(--primary) 22%, transparent) !important;
   }
 }
+
+/* 🌟 Delicate Borders & Zero Shadow Overrides */
+.shadow-sm,
+.shadow,
+.shadow-md,
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl,
+.hover\:shadow-md:hover,
+.hover\:shadow-lg:hover,
+.group:hover .shadow-sm,
+.group:hover .shadow-md {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* Make all borders across components extremely delicate and premium */
+.border,
+.border-border,
+.border-border\/40,
+.border-primary\/10 {
+  border-color: rgba(0, 116, 255, 0.08) !important;
+}
+
+.dark .border,
+.dark .border-border,
+.dark .border-border\/40,
+.dark .border-primary\/10 {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Make card borders extremely delicate (almost invisible) and remove shadows */
+[data-slot="card"],
+.bg-white\/70,
+.bg-card\/60,
+.bg-card\/80,
+.bg-card {
+  box-shadow: none !important;
+  border: 1px solid rgba(0, 116, 255, 0.08) !important;
+}
+
+.dark [data-slot="card"],
+.dark .bg-white\/70,
+.dark .bg-card\/60,
+.dark .bg-card\/80,
+.dark .bg-card {
+  box-shadow: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}

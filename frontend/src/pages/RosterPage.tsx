@@ -66,22 +66,22 @@ const StatusCard = ({
   <button
     onClick={onClick}
     className={cn(
-      "flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all text-center h-full group relative bg-background hover:bg-muted/30 border-border/40 hover:border-primary/40",
-      isSub ? "opacity-90 scale-[1.0] min-h-[85px]" : "min-h-[95px]",
+      "flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl border-2 transition-all text-center h-full group relative bg-background hover:bg-muted/30 border-border/40 hover:border-primary/40",
+      isSub ? "opacity-90 scale-[1.0] min-h-[72px] sm:min-h-[85px]" : "min-h-[82px] sm:min-h-[95px]",
       large &&
-        "col-span-3 flex-row gap-6 min-h-[80px] px-8 bg-slate-100/50 dark:bg-slate-800/50 border-primary/20",
+        "col-span-3 flex-row gap-4 min-h-[60px] sm:min-h-[80px] px-4 sm:px-8 bg-slate-100/50 dark:bg-slate-800/50 border-primary/20",
     )}
   >
     <div
       className={cn(
         "rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-110",
         large
-          ? "w-12 h-12 bg-primary/10"
-          : "w-10 h-10 bg-muted/70 group-hover:bg-primary/5",
+          ? "w-10 h-10 sm:w-12 sm:h-12 bg-primary/10"
+          : "w-8 h-8 sm:w-10 sm:h-10 bg-muted/70 group-hover:bg-primary/5",
       )}
     >
       <div
-        className={large ? "w-5 h-5 rounded-full" : "w-4 h-4 rounded-full"}
+        className={large ? "w-4 h-4 sm:w-5 sm:h-5 rounded-full" : "w-3 h-3 sm:w-4 sm:h-4 rounded-full"}
         style={{
           backgroundColor: type.color,
           boxShadow: `0 0 10px ${type.color}40`,
@@ -97,18 +97,18 @@ const StatusCard = ({
       <span
         className={cn(
           "font-black leading-tight tracking-tight px-1",
-          large ? "text-lg" : "text-[11px]",
+          large ? "text-base sm:text-lg" : "text-[10px] sm:text-[11px]",
         )}
         style={{ color: type.color }}
       >
         {type.name}
       </span>
       {isSub ? (
-        <span className="text-[8px] text-muted-foreground/60 font-bold uppercase tracking-tighter">
+        <span className="text-[7.5px] sm:text-[8px] text-muted-foreground/60 font-bold uppercase tracking-tighter">
           (עבודה)
         </span>
       ) : large ? (
-        <span className="text-[10px] text-muted-foreground font-bold opacity-60 uppercase tracking-widest">
+        <span className="text-[9px] sm:text-[10px] text-muted-foreground font-bold opacity-60 uppercase tracking-widest">
           עבודה מהמשרד
         </span>
       ) : null}
@@ -827,9 +827,9 @@ export default function RosterPage() {
           
           
           {/* Mobile Calendar & Stats - Refactored */}
-          <div className="lg:hidden bg-background/95 backdrop-blur-xl sticky top-0 z-40 mb-4 -mx-4 border-b border-border/20 px-4 pt-3 pb-4">
+          <div className="lg:hidden bg-background/95 backdrop-blur-xl sticky top-0 z-40 mb-3 -mx-4 border-b border-border/20 px-4 pt-2 pb-3">
             {/* Month & Year Indicator */}
-            <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center justify-between mb-2 px-1">
                <span className="text-[11px] font-black text-primary/80 uppercase tracking-[0.2em]">
                   {format(selectedDayMobile, "MMMM yyyy", { locale: he })}
                 </span>
@@ -851,7 +851,7 @@ export default function RosterPage() {
                       if (window.navigator.vibrate) window.navigator.vibrate(10);
                     }}
                     className={cn(
-                      "h-16 flex flex-col items-center justify-center rounded-2xl transition-colors relative outline-none",
+                      "h-13 flex flex-col items-center justify-center rounded-xl transition-colors relative outline-none",
                       isSelected
                         ? "text-white z-10"
                         : "bg-muted/30 text-foreground hover:bg-muted/50"
@@ -860,7 +860,7 @@ export default function RosterPage() {
                     {isSelected && (
                       <motion.div
                         layoutId="activeDayMobile"
-                        className="absolute inset-0 bg-primary rounded-2xl shadow-[0_8px_16px_-4px_rgba(59,130,246,0.4)]"
+                        className="absolute inset-0 bg-primary rounded-xl shadow-[0_8px_16px_-4px_rgba(59,130,246,0.4)]"
                         initial={false}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
@@ -872,15 +872,15 @@ export default function RosterPage() {
                     )}>
                       {format(day, "EEE", { locale: he })}
                     </span>
-                    <span className="text-base font-black tabular-nums relative z-10 leading-tight">
+                    <span className="text-sm font-black tabular-nums relative z-10 leading-tight">
                       {format(day, "dd")}
                     </span>
                     
                     {weekend && !isSelected && (
-                      <ShabbatIcon className="w-2.5 h-2.5 mt-0.5 text-amber-500/60 relative z-10" />
+                      <ShabbatIcon className="w-2.5 h-2.5 text-amber-500/60 absolute bottom-0.5 left-1/2 -translate-x-1/2 z-10" />
                     )}
                     {isToday && !isSelected && (
-                      <div className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-primary" />
+                      <div className="absolute bottom-0.5 w-1 h-1 rounded-full bg-primary left-1/2 -translate-x-1/2 z-10" />
                     )}
                   </button>
                 );
@@ -888,11 +888,11 @@ export default function RosterPage() {
             </div>
 
             {/* Interactive Stats Pills */}
-            <div className="flex items-center gap-3 mt-5 px-1">
+            <div className="flex items-center gap-2 mt-2 px-1">
               <button 
                 onClick={() => setStatusFilter("all")}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all font-black text-xs",
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all font-black text-[11px]",
                   "bg-emerald-500/10 text-emerald-600 border border-emerald-500/10 active:scale-95"
                 )}
               >
@@ -903,7 +903,7 @@ export default function RosterPage() {
               <button 
                 onClick={() => setStatusFilter("none")}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all font-black text-xs",
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all font-black text-[11px]",
                   "bg-rose-500/10 text-rose-600 border border-rose-500/10 active:scale-95"
                 )}
               >
@@ -1127,7 +1127,7 @@ export default function RosterPage() {
             </div>
 
             {/* Mobile Employee List (Only visible on small screens) */}
-            <div className="lg:hidden space-y-3 pb-32">
+            <div className="lg:hidden space-y-2 pb-32">
               {loadingMatrix ? (
                 <div className="py-24 flex flex-col items-center justify-center gap-4 opacity-50">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -1167,7 +1167,7 @@ export default function RosterPage() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.03 }}
                       onClick={() => handleCellClick(emp.id, selectedDayMobile)}
-                      className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-2xl p-3.5 shadow-sm active:scale-[0.98] transition-all relative overflow-hidden"
+                      className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-xl p-2.5 shadow-sm active:scale-[0.98] transition-all relative overflow-hidden"
                     >
                       {/* Left status accent line */}
                       {log && (
@@ -1178,19 +1178,19 @@ export default function RosterPage() {
                       )}
                       
                       <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center font-black text-xs shrink-0 text-muted-foreground border border-border/20">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-9.5 h-9.5 rounded-lg bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center font-black text-[11px] shrink-0 text-muted-foreground border border-border/20">
                             {emp.first_name[0]}{emp.last_name[0]}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="text-base font-black text-foreground truncate tracking-tight">
+                            <span className="text-[14px] font-black text-foreground truncate tracking-tight leading-tight">
                               {emp.first_name} {emp.last_name}
                             </span>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-[10px] font-black text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded-md">
+                              <span className="text-[9px] font-black text-primary/80 bg-primary/5 px-1 py-0.5 rounded-md">
                                 {emp.team_name || emp.section_name || "כללי"}
                               </span>
-                              <span className="text-[10px] font-bold text-muted-foreground/50">
+                              <span className="text-[9px] font-bold text-muted-foreground/50">
                                 • {emp.username}
                               </span>
                             </div>
@@ -1200,7 +1200,7 @@ export default function RosterPage() {
                         <div className="shrink-0">
                           {log ? (
                             <div
-                              className="px-4 py-2 rounded-xl text-[11px] font-black tracking-tight text-center min-w-[90px] flex items-center justify-center"
+                              className="px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-tight text-center min-w-[75px] flex items-center justify-center"
                               style={{
                                 backgroundColor: `${log.status_color}1a`,
                                 color: log.status_color,
@@ -1210,12 +1210,12 @@ export default function RosterPage() {
                               {log.status_name}
                             </div>
                           ) : isWeekend ? (
-                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
-                              <ShabbatIcon className="w-5 h-5" />
+                            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                              <ShabbatIcon className="w-4 h-4" />
                             </div>
                           ) : (
-                            <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                              <Plus className="w-5 h-5" />
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                              <Plus className="w-4 h-4" />
                             </div>
                           )}
                         </div>
@@ -1230,20 +1230,20 @@ export default function RosterPage() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-xl p-0 overflow-hidden bg-background border-border rounded-3xl sm:rounded-[2rem]">
-            <DialogHeader className="p-6 pb-4 border-b border-border bg-muted/20">
+            <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border bg-muted/20">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                  <CalendarIcon className="w-6 h-6" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div className="flex flex-col text-right">
-                  <DialogTitle className="text-xl font-bold text-foreground">
+                  <DialogTitle className="text-base sm:text-xl font-bold text-foreground">
                     {selectedCell
                       ? employees.find((e) => e.id === selectedCell.empId)
                         ? `${employees.find((e) => e.id === selectedCell.empId).first_name} ${employees.find((e) => e.id === selectedCell.empId).last_name}`
                         : "עדכון שיבוץ"
                       : "עדכון שיבוץ"}
                   </DialogTitle>
-                  <span className="text-[11px] font-medium text-muted-foreground mt-0.5">
+                  <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground mt-0.5">
                     {selectedCell &&
                       format(selectedCell.date, "EEEE, dd בMMMM yyyy", {
                         locale: he,
@@ -1253,11 +1253,11 @@ export default function RosterPage() {
               </div>
             </DialogHeader>
 
-            <div className="px-6 py-4 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-              <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-white/5 rounded-2xl border border-border/40 dark:border-white/10 transition-all hover:bg-primary/10 dark:hover:bg-white/10">
-                <div className="flex items-center gap-3">
-                  <CalendarRange className="w-5 h-5 text-primary/70" />
-                  <span className="text-sm font-bold text-foreground">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+              <div className="flex items-center justify-between p-3 sm:p-4 bg-primary/5 dark:bg-white/5 rounded-xl sm:rounded-2xl border border-border/40 dark:border-white/10 transition-all hover:bg-primary/10 dark:hover:bg-white/10">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <CalendarRange className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-primary/70" />
+                  <span className="text-xs sm:text-sm font-bold text-foreground">
                     טווח תאריכים
                   </span>
                 </div>
@@ -1332,8 +1332,8 @@ export default function RosterPage() {
                     <>
                       {/* Section 1: Office (Premium Large Style) */}
                       {!isWeekendDay && officeParent && (
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-3 gap-3">
+                        <div className="space-y-2 sm:space-y-3">
+                          <div className="grid grid-cols-3 gap-2 sm:gap-3">
                             <StatusCard
                               type={officeParent}
                               large
@@ -1372,7 +1372,7 @@ export default function RosterPage() {
                       )}
 
                       {/* Section 2: Other Parents (3x3 Grid) */}
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
                         {otherParents
                           .filter((p) => {
                             if (isWeekendDay) {

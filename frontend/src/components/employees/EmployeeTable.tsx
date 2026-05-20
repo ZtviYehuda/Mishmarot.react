@@ -263,7 +263,7 @@ export const EmployeeTable = ({
   return (
     <div className="space-y-3 sm:space-y-5">
       {/* Search & Filter Bar */}
-      <Card id="employees-search-container" className="flex flex-col gap-2 p-3 sm:p-5">
+      <Card id="employees-search-container" className="flex flex-col gap-2 p-2.5 sm:p-5 bg-card/60 backdrop-blur-xl border-border/40 sm:border rounded-2xl sm:rounded-[2rem] shadow-none sm:shadow-sm">
         <div className="relative w-full">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -282,7 +282,7 @@ export const EmployeeTable = ({
             variant="outline"
             size="sm"
             className={cn(
-              "h-9 sm:h-10 text-xs sm:text-sm border-input hover:bg-muted rounded-xl flex-1 sm:flex-none sm:w-auto justify-center relative",
+              "h-9.5 sm:h-10 text-xs sm:text-sm border-border/60 dark:border-slate-800 hover:bg-muted rounded-xl flex-1 sm:flex-none sm:w-auto justify-center relative",
               Object.keys(activeFilters).length > 0
                 ? "text-primary border-primary"
                 : "text-muted-foreground",
@@ -295,7 +295,7 @@ export const EmployeeTable = ({
               const val = activeFilters[k as keyof EmployeeFilters];
               if (Array.isArray(val)) return val.length > 0;
               if (typeof val === 'boolean') return val;
-              if (k === 'ageRange') return val && (val[0] !== 18 || val[1] !== 67);
+              if (k === 'ageRange') return val && ((val as any)[0] !== 18 || (val as any)[1] !== 67);
               return val;
             }).length > 0 && (
               <span className="absolute -top-1 -left-1 w-5 h-5 bg-[#1D45E0] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background">
@@ -303,7 +303,7 @@ export const EmployeeTable = ({
                   const val = activeFilters[k as keyof EmployeeFilters];
                   if (Array.isArray(val)) return val.length > 0;
                   if (typeof val === 'boolean') return val;
-                  if (k === 'ageRange') return val && (val[0] !== 18 || val[1] !== 67);
+                  if (k === 'ageRange') return val && ((val as any)[0] !== 18 || (val as any)[1] !== 67);
                   return val;
                 }).length}
               </span>
@@ -322,7 +322,7 @@ export const EmployeeTable = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 sm:h-10 text-xs sm:text-sm border-input hover:bg-muted rounded-xl flex-1 sm:flex-none sm:w-auto justify-center"
+                className="h-9.5 sm:h-10 text-xs sm:text-sm border-border/60 dark:border-slate-800 hover:bg-muted rounded-xl flex-1 sm:flex-none sm:w-auto justify-center"
                 onClick={() => document.getElementById("import-employees-input")?.click()}
               >
                 <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
@@ -335,7 +335,7 @@ export const EmployeeTable = ({
             <Button
               id="add-employee-button"
               className={cn(
-                "h-9 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl flex-1 sm:flex-none sm:w-auto justify-center sm:mr-auto",
+                "h-9.5 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl flex-1 sm:flex-none sm:w-auto justify-center sm:mr-auto",
                 searchParams.get("tutorial") === "add-employee" && "tutorial-highlight"
               )}
               onClick={() => navigate("/employees/new")}
@@ -694,19 +694,19 @@ export const EmployeeTable = ({
             <div
               key={emp.id}
               className={cn(
-                "bg-white dark:bg-slate-900 rounded-2xl border border-border/60 active:scale-[0.98] transition-all overflow-hidden",
+                "bg-white dark:bg-slate-900 rounded-[1.25rem] border border-border/50 active:scale-[0.99] transition-all overflow-hidden shadow-sm",
                 !emp.is_active && "bg-destructive/[0.02] grayscale-[0.3]",
               )}
               onClick={() => handleViewDetails(emp)}
             >
-              <div className="p-3.5 flex items-center gap-4">
+              <div className="p-2.5 flex items-center gap-3 sm:gap-4">
                 {/* Right Side: Avatar */}
                 <div className="shrink-0 relative">
                   <div
                     className={cn(
-                      "w-12 h-12 rounded-full flex items-center justify-center text-primary-foreground font-black text-sm",
+                      "w-10.5 h-10.5 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-primary-foreground font-black text-xs sm:text-sm",
                       emp.is_active
-                        ? "bg-primary"
+                        ? "bg-primary shadow-[0_4px_10px_rgba(59,130,246,0.25)]"
                         : "bg-muted text-muted-foreground",
                     )}
                   >
@@ -715,7 +715,7 @@ export const EmployeeTable = ({
                   </div>
                   {emp.is_active && (
                     <div
-                      className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900"
+                      className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 border-white dark:border-slate-900 shadow-sm"
                       style={{ backgroundColor: emp.status_color || "#10b981" }}
                     />
                   )}
@@ -723,21 +723,21 @@ export const EmployeeTable = ({
 
                 {/* Center: Info */}
                 <div className="flex-1 min-w-0 text-right">
-                  <div className="flex flex-wrap items-center gap-x-2 mb-0.5">
-                    <h4 className="font-black text-sm text-foreground line-clamp-1 leading-snug">
+                  <div className="flex items-baseline gap-1.5 mb-0.5 min-w-0">
+                    <h4 className="font-black text-[13.5px] sm:text-sm text-foreground truncate max-w-[150px] leading-tight">
                       {emp.dominant_name
                         ? `${emp.dominant_name} ${emp.last_name}`
                         : emp.first_name.split(" ").length > 2
                           ? `${emp.first_name.split(" ")[0]} ${emp.last_name}`
                           : `${emp.first_name} ${emp.last_name}`}
                     </h4>
-                    <span className="text-[10px] font-mono font-bold text-muted-foreground/60 shrink-0">
+                    <span className="text-[9px] sm:text-[10px] font-mono font-bold text-muted-foreground/50 shrink-0">
                       {emp.username}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
-                    <span className="text-[11px] font-bold text-muted-foreground">
+                    <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                    <span className="text-[10px] sm:text-[11px] font-bold text-muted-foreground leading-none">
                       {emp.status_name || "לא הוזן"}
                     </span>
                   </div>
@@ -745,25 +745,25 @@ export const EmployeeTable = ({
 
                 {/* Left Side: Actions */}
                 <div
-                  className="flex items-center gap-3 sm:gap-4 no-export shrink-0"
+                  className="flex items-center gap-2 sm:gap-4 no-export shrink-0"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {emp.phone_number && (
                     <a
                       href={`tel:${emp.phone_number}`}
-                      className="p-1.5 bg-muted/50 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                      className="p-1.5 sm:p-2 bg-muted/40 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                     >
-                      <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </a>
                   )}
                   <button
                     onClick={() => handleViewDetails(emp)}
-                    className="p-1.5 bg-muted/50 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                    className="p-1.5 sm:p-2 bg-muted/40 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                   >
-                    <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
-                  <div className="w-px h-5 bg-border/40 mx-0.5" />
-                  <ChevronLeft className="w-4 h-4 text-muted-foreground/40" />
+                  <div className="w-px h-4.5 sm:h-5 bg-border/40 mx-0.5 sm:mx-1" />
+                  <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground/40" />
                 </div>
               </div>
             </div>
@@ -771,8 +771,8 @@ export const EmployeeTable = ({
         )}
 
         {/* Mobile Pagination */}
-        <div className="bg-card rounded-2xl border border-border p-4">
-          <div className="text-xs font-medium text-muted-foreground uppercase text-center mb-3">
+        <div className="bg-background/50 dark:bg-slate-900/30 backdrop-blur-xl rounded-2xl border border-border/40 p-3 sm:p-4 mt-2 shadow-none sm:shadow-sm">
+          <div className="text-[11px] sm:text-xs font-medium text-muted-foreground uppercase text-center mb-2">
             מציג{" "}
             {filteredEmployees.length > 0
               ? (currentPage - 1) * itemsPerPage + 1
@@ -784,7 +784,7 @@ export const EmployeeTable = ({
             <Button
               variant="outline"
               size="icon"
-              className="w-9 h-9 rounded-lg"
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg"
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
             >
@@ -796,10 +796,10 @@ export const EmployeeTable = ({
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
                   className={cn(
-                    "w-9 h-9 rounded-lg text-xs font-semibold transition-all shrink-0",
+                    "w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg text-xs font-semibold transition-all shrink-0",
                     currentPage === i + 1
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted",
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted/80",
                   )}
                 >
                   {i + 1}
@@ -809,7 +809,7 @@ export const EmployeeTable = ({
             <Button
               variant="outline"
               size="icon"
-              className="w-9 h-9 rounded-lg"
+              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-lg"
               onClick={() =>
                 setCurrentPage((prev) => Math.min(totalPages, prev + 1))
               }

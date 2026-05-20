@@ -305,11 +305,10 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             id={id || "report-hub-card"}
             variant="ghost" 
             className={cn(
-              "rounded-xl font-black transition-all bg-card/40 border border-border/40 text-primary hover:bg-primary/5 active:scale-95 backdrop-blur-xl",
-              className?.includes("h-20") 
-                ? className 
-                : cn("h-9 gap-2 px-4 text-[13px]", className),
-              searchParams.get("tutorial") === "report-hub" || activeTutorial === "report-hub" ? "tutorial-highlight" : ""
+              "rounded-xl font-black transition-all text-primary hover:bg-primary/5 min-w-[60px] border-none bg-transparent",
+              !className && "h-9 flex-col gap-0.5 px-2 xl:px-3.5 text-sm py-1",
+              className,
+              (searchParams.get("tutorial") === "report-hub" || activeTutorial === "report-hub") && "tutorial-highlight"
             )}
           >
             {className?.includes("flex-col") ? (
@@ -321,8 +320,8 @@ export const ReportHub: React.FC<ReportHubProps> = ({
               </>
             ) : (
               <>
-                <FileText className="w-4 h-4" />
-                <span>מרכז דוחות</span>
+                <FileText className="w-3.5 h-3.5" />
+                <span className="text-[8.5px] xl:text-[9.5px] leading-tight">מרכז דוחות</span>
               </>
             )}
           </Button>
@@ -330,23 +329,27 @@ export const ReportHub: React.FC<ReportHubProps> = ({
 
         <DialogContent className={cn(
           "p-0 overflow-hidden border border-border/40 bg-background/95 backdrop-blur-3xl sm:rounded-[2rem] flex flex-col transition-all duration-300 shadow-2xl",
-          previewType !== null && "h-full sm:h-auto sm:max-h-[92vh]",
-          "sm:max-w-4xl sm:w-full"
+          previewType !== null && "h-[96svh] sm:h-auto sm:max-h-[85vh]",
+          "sm:max-w-2xl sm:w-full"
         )}>
           <DialogDragHandle />
 
           {/* Header - Hides on mobile preview */}
           <div className={cn(
-            "px-6 pt-2 pb-4 border-b border-border/30 flex items-center justify-between shrink-0",
-            previewType && "hidden sm:flex"
+            "px-5 pt-3 pb-4 sm:px-8 sm:pt-5 sm:pb-5 border-b border-border/30 text-right shrink-0",
+            previewType && "hidden sm:block"
           )}>
-            <div className="flex-1 text-right">
-              <DialogTitle className="text-xl font-black text-foreground">
-                מרכז הפקת דוחות
-              </DialogTitle>
-              <DialogDescription className="sr-only">ניהול, הפקה ושיתוף נתונים מבצעיים</DialogDescription>
-            </div>
-            {/* We could place a close or action button here if needed */}
+            <DialogHeader className="text-right">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <FileText className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
+                </div>
+                <div className="flex-1 min-w-0 text-right">
+                  <DialogTitle className="text-[15px] sm:text-lg font-black text-foreground tracking-tight leading-none mb-1">מרכז הפקת דוחות</DialogTitle>
+                  <DialogDescription className="text-[11px] font-medium text-muted-foreground leading-none">ניהול, הפקה ושיתוף נתונים מבצעיים</DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
           </div>
 
           {/* Compact Toolbar - Consistent padding */}
@@ -398,8 +401,8 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                   previewType === 'comparison' ? "bg-purple-500" : "bg-rose-500"
                 } />
 
-                <div className="flex-1 flex flex-col min-h-0 bg-card/60 rounded-[1.25rem] sm:rounded-[2.5rem] border border-white/10 overflow-hidden backdrop-blur-2xl">
-                  <div className="flex-1 overflow-y-auto no-scrollbar p-0 sm:p-6 flex flex-col h-full">
+                <div className="flex-1 flex flex-col min-h-0 bg-card/60 rounded-[1.25rem] sm:rounded-[2rem] border border-white/10 overflow-hidden backdrop-blur-2xl">
+                  <div className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-4 flex flex-col h-full">
                     {previewType === 'snapshot' && (
                       <EmployeesChart stats={snapshotStats} total={snapshotTotal} loading={loading} hideHeader={true} unitName={filters.unitName} selectedDate={localDate} />
                     )}
