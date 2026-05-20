@@ -59,40 +59,74 @@ export function AppearanceSettings({
                 key={t}
                 onClick={() => setTheme(t as any)}
                 className={cn(
-                  "group relative h-20 sm:h-36 rounded-2xl border transition-all overflow-hidden",
+                  "group relative p-2 rounded-2xl border transition-all overflow-hidden flex flex-col items-center justify-between h-32 sm:h-44",
                   theme === t
-                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                    ? "border-primary bg-primary/[0.02] ring-1 ring-primary/20"
                     : "border-border/40 bg-background/50 hover:border-border/60 hover:bg-muted/10",
                 )}
               >
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                  <div
-                    className={cn(
-                      "p-3 rounded-full transition-all",
-                      theme === t
-                        ? "bg-primary text-white scale-110"
-                        : "bg-muted text-muted-foreground group-hover:bg-muted/80",
-                    )}
-                  >
-                    {t === "light" ? (
-                      <Sun className="w-5 h-5" />
-                    ) : (
-                      <Moon className="w-5 h-5" />
-                    )}
+                {/* Mockup Preview */}
+                <div className={cn(
+                  "w-full flex-1 rounded-xl overflow-hidden border border-border/10 flex flex-col transition-all duration-300 relative",
+                  t === "light" ? "bg-slate-50" : "bg-slate-950"
+                )}>
+                  {/* Mockup Header */}
+                  <div className={cn(
+                    "h-4 w-full flex items-center px-1.5 gap-1 border-b border-border/5 shrink-0 justify-between",
+                    t === "light" ? "bg-white" : "bg-slate-900"
+                  )}>
+                    <div className="flex gap-0.5">
+                      <div className="w-1 h-1 rounded-full bg-red-400/80" />
+                      <div className="w-1 h-1 rounded-full bg-yellow-400/80" />
+                      <div className="w-1 h-1 rounded-full bg-green-400/80" />
+                    </div>
+                    {/* Tiny representation of user icon or status */}
+                    <div className={cn("w-1.5 h-1.5 rounded-full", t === "light" ? "bg-slate-200" : "bg-slate-800")} />
                   </div>
-                  <span className={cn("font-bold text-sm tracking-wide transition-colors", theme === t ? "text-primary" : "text-muted-foreground")}>
-                    {t === "light" ? "מראה יום" : "מראה לילה"}
-                  </span>
+                  {/* Mockup Content */}
+                  <div className="flex-grow p-1.5 flex gap-1.5">
+                    {/* Mockup Sidebar */}
+                    <div className={cn(
+                      "w-4 shrink-0 rounded-xs flex flex-col gap-0.5 p-0.5 border-e border-border/5",
+                      t === "light" ? "bg-slate-100/50" : "bg-slate-900/50"
+                    )}>
+                      <div className={cn("h-1 w-full rounded-xs", t === "light" ? "bg-slate-200" : "bg-slate-800")} />
+                      <div className={cn("h-1 w-full rounded-xs", t === "light" ? "bg-slate-200" : "bg-slate-800")} />
+                      <div className={cn("h-1 w-2/3 rounded-xs", t === "light" ? "bg-slate-200" : "bg-slate-800")} />
+                    </div>
+                    {/* Mockup Main */}
+                    <div className="flex-1 flex flex-col gap-1.5">
+                      <div className={cn(
+                        "rounded-xs p-1 flex-grow flex flex-col gap-1 border border-border/5",
+                        t === "light" ? "bg-white" : "bg-slate-900"
+                      )}>
+                        <div className={cn("h-1 w-1/2 rounded-xs", t === "light" ? "bg-slate-300" : "bg-slate-700")} />
+                        <div className={cn("h-0.5 w-full rounded-xs", t === "light" ? "bg-slate-200" : "bg-slate-800")} />
+                        <div className={cn("h-0.5 w-3/4 rounded-xs", t === "light" ? "bg-slate-200" : "bg-slate-800")} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {theme === t && (
-                  <motion.div
-                    layoutId="active-theme"
-                    className="absolute top-3 right-3"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                  </motion.div>
-                )}
+                {/* Selection Indicator & Label */}
+                <div className="w-full flex items-center justify-between px-1.5 pt-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className={cn(
+                      "p-1 rounded-lg transition-colors",
+                      theme === t ? "bg-primary/10 text-primary" : "text-muted-foreground bg-muted/40"
+                    )}>
+                      {t === "light" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                    </div>
+                    <span className={cn("font-black text-[11px] sm:text-xs", theme === t ? "text-primary" : "text-muted-foreground")}>
+                      {t === "light" ? "מראה יום" : "מראה לילה"}
+                    </span>
+                  </div>
+                  {theme === t && (
+                    <motion.div layoutId="active-theme-check" className="p-0.5 bg-primary rounded-full text-white shrink-0">
+                      <Check className="w-2.5 h-2.5" />
+                    </motion.div>
+                  )}
+                </div>
               </button>
             ))}
           </div>
@@ -105,37 +139,67 @@ export function AppearanceSettings({
                 key={size.id}
                 onClick={() => setFontSize(size.id as any)}
                 className={cn(
-                  "group relative rounded-2xl border flex flex-col items-center justify-center gap-2 p-4 transition-all h-20 sm:h-36",
+                  "group relative p-2 rounded-2xl border transition-all overflow-hidden flex flex-col items-center justify-between h-32 sm:h-44",
                   fontSize === size.id
-                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                    ? "border-primary bg-primary/[0.02] ring-1 ring-primary/20"
                     : "border-border/40 bg-background/50 hover:border-border/60 hover:bg-muted/10",
                 )}
               >
-                <span
-                  className={cn(
-                    "font-black transition-all",
-                    size.id === "small" && "text-xs",
-                    size.id === "normal" && "text-base",
-                    size.id === "large" && "text-xl",
-                    fontSize === size.id
-                      ? "text-primary scale-110"
-                      : "text-muted-foreground group-hover:text-foreground",
-                  )}
-                >
-                  אבג
-                </span>
-                <span className={cn("font-bold text-[10px] sm:text-xs", fontSize === size.id ? "text-primary" : "text-muted-foreground")}>
-                  {size.label}
-                </span>
+                {/* Visual Scale Indicator */}
+                <div className="w-full flex-grow rounded-xl bg-muted/20 border border-border/5 flex flex-col items-center justify-center relative p-2">
+                  {/* We draw letters with size comparisons */}
+                  <div className="flex items-baseline justify-center gap-1.5">
+                    <span className={cn(
+                      "font-black text-muted-foreground/30 transition-all",
+                      size.id === "small" ? "text-primary scale-110 font-bold" : "text-xs"
+                    )}>
+                      A
+                    </span>
+                    <span className={cn(
+                      "font-black text-muted-foreground/40 transition-all",
+                      size.id === "normal" ? "text-primary scale-110 font-bold" : "text-sm"
+                    )}>
+                      A
+                    </span>
+                    <span className={cn(
+                      "font-black text-muted-foreground/50 transition-all",
+                      size.id === "large" ? "text-primary scale-110 font-bold" : "text-lg"
+                    )}>
+                      A
+                    </span>
+                  </div>
+                  
+                  {/* Sentence representation under the scale */}
+                  <span className={cn(
+                    "font-bold mt-2.5 transition-all text-center tracking-tight truncate w-full",
+                    size.id === "small" && "text-[9px] text-muted-foreground/70",
+                    size.id === "normal" && "text-[11px] text-muted-foreground/80",
+                    size.id === "large" && "text-[13px] text-muted-foreground",
+                    fontSize === size.id && "text-primary font-black"
+                  )}>
+                    גופן {size.label}
+                  </span>
+                </div>
 
-                {fontSize === size.id && (
-                  <motion.div
-                    layoutId="active-font"
-                    className="absolute top-3 right-3"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                  </motion.div>
-                )}
+                {/* Selection indicator & label info */}
+                <div className="w-full flex items-center justify-between px-1.5 pt-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className={cn(
+                      "p-1 rounded-lg transition-colors",
+                      fontSize === size.id ? "bg-primary/10 text-primary" : "text-muted-foreground bg-muted/40"
+                    )}>
+                      <Type className="w-3.5 h-3.5" />
+                    </div>
+                    <span className={cn("font-black text-[11px] sm:text-xs", fontSize === size.id ? "text-primary" : "text-muted-foreground")}>
+                      {size.label}
+                    </span>
+                  </div>
+                  {fontSize === size.id && (
+                    <motion.div layoutId="active-font-check" className="p-0.5 bg-primary rounded-full text-white shrink-0">
+                      <Check className="w-2.5 h-2.5" />
+                    </motion.div>
+                  )}
+                </div>
               </button>
             ))}
           </div>
