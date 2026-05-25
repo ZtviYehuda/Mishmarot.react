@@ -35,7 +35,7 @@ export function ReportToolbar({
   maxDate,
 }: ReportToolbarProps) {
   return (
-    <div className="w-full flex flex-col items-stretch gap-2 sm:gap-3 bg-muted/20 p-1 sm:p-1.5 rounded-2xl border border-border/40 min-w-fit">
+    <div className="w-full flex flex-col items-stretch gap-2 sm:gap-3 bg-transparent p-0 min-w-fit">
       <div className="flex items-center gap-1.5 sm:gap-2 w-full flex-nowrap">
         {/* View Mode Tabs - Flexible & Scrollable */}
         <Tabs
@@ -45,7 +45,7 @@ export function ReportToolbar({
         >
           <TabsList
             dir="rtl"
-            className="flex items-center w-full h-10 p-1 gap-1 bg-background/50 border border-border/60 rounded-xl overflow-x-auto no-scrollbar scroll-smooth"
+            className="flex items-center w-full h-10 p-1 gap-1 bg-slate-100/50 dark:bg-slate-800/40 border border-border/20 rounded-xl overflow-x-auto no-scrollbar scroll-smooth"
           >
             {[
               { id: "daily", label: "יומי" },
@@ -72,7 +72,7 @@ export function ReportToolbar({
                 <Button
                   variant="outline"
                   className={cn(
-                    "h-10 px-2 sm:px-3 bg-background/50 border-border/60 hover:bg-muted/50 rounded-xl transition-all gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold min-w-fit",
+                    "h-10 px-2 sm:px-3 bg-slate-100/50 dark:bg-slate-800/40 border border-border/20 hover:bg-muted/50 rounded-xl transition-all gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold min-w-fit",
                     viewMode === "custom" && "bg-primary/5 border-primary/20"
                   )}
                 >

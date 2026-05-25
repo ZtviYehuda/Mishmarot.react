@@ -22,10 +22,14 @@ import { useChat } from "@/context/ChatContext";
 const TOUR_STEPS: TourStep[] = [
   // --- DASHBOARD PAGE ---
   { id: 'stats', selector: '#stats-grid', path: '/', title: 'לוח בקרה - נתונים מהירים', content: 'כאן מופיע סיכום המצב הנוכחי: כמה שוטרים לא דיווחו, כמה לא זמינים ומה אחוז הזמינות המבצעית שלכם ברגע זה.' },
+  { id: 'attendance_trend', selector: '#attendance-chart', path: '/', title: 'מגמת זמינות', content: 'גרף המציג את מגמת נוכחות וזמינות השוטרים לאורך זמן (שבועי, חודשי או שנתי). עוזר לזהות מגמות ודפוסי התנהגות ביחידה.' },
+  { id: 'status_distribution', selector: '#attendance-snapshot-card', path: '/', title: 'חלוקת סטטוסים', content: 'תרשים עוגה/דונאט שמראה את התפלגות השוטרים לפי הסטטוסים השונים (משרד, חופשה, מחלה וכו\') עבור היום שנבחר.' },
+  { id: 'age_distribution', selector: '#age-distribution-card', path: '/', title: 'חתך גילאים', content: 'גרף עמודות המציג את התפלגות הגילאים של שוטרי היחידה, כולל הצגת הגיל הממוצע של כלל המשרתים.' },
+  { id: 'stats_comparison', selector: '#stats-comparison-card', path: '/', title: 'השוואת כוח אדם', content: 'כלי להשוואת אחוזי נוכחות וזמינות בין המחלקות, המדורים או החוליות השונות. ניתן ללחוץ על יחידה כדי לבצע סינון ולקדוח (Drill-Down) פנימה.' },
+  { id: 'birthdays', selector: '#birthdays-card', path: '/', title: 'ימי הולדת השבוע', content: 'מרכז החגיגות! כאן תוכלו לראות מי חוגג, לשלוח לו ברכה אישית בוואטסאפ או לראות את הפרופיל שלו.' },
   { id: 'report_hub', selector: '#report-hub-card, #report-hub-card-mobile', path: '/', title: 'מרכז הפקת דוחות', content: 'החלק האהוב על המפקדים. מכאן מוציאים את כל דוחות ה-PDF והתמונות לווטסאפ של היחידה בלחיצת כפור.' },
   { id: 'dashboard_event', selector: '#event-button, #mobile-event-button', path: '/', title: 'אירוע יחידתי', content: 'יצירת אירועים מיוחדים, תדריכים או פעילויות יחידתיות שיקפצו לכולם בלוח השנה ובהתראות.' },
   { id: 'dashboard_broadcast', selector: '#broadcast-button, #mobile-broadcast-button', path: '/', title: 'רשימת תפוצה', content: 'מכאן ניתן לשלוח הודעות מרוכזות לכל היחידה, לצוות מסוים או רק לאלה שלא דיווחו נוכחות.' },
-  { id: 'birthdays', selector: '#birthdays-card', path: '/', title: 'ימי הולדת השבוע', content: 'מרכז החגיגות! כאן תוכלו לראות מי חוגג, לשלוח לו ברכה אישית בוואטסאפ או לראות את הפרופיל שלו.' },
 
   // --- ATTENDANCE PAGE ---
   { id: 'attendance_header', selector: '#attendance-header', path: '/attendance', title: 'ניהול נוכחות יומי', content: 'כאן מתבצעת העבודה האמיתית. תוכלו לסנן לפי מדור או צוות ולראות בדיוק מי נמצא איפה.' },
@@ -44,6 +48,8 @@ const TOUR_STEPS: TourStep[] = [
   // --- CHAT & STATUS ---
   { id: 'system_status', selector: '#system-status-dot, #mobile-system-status-dot', path: '/', title: 'סטטוס פעילות המערכת', content: 'כאן מופיע חיווי ירוק קבוע המציין שהחיבור לשרת פעיל ומאובטח. לחיצה עליו תציג פרטים על זמן הכניסה האחרון שלך.' },
   { id: 'chat_toggle', selector: '#chat-toggle-btn, #mobile-notifications-btn', path: '/', title: 'צ\'אט פנימי והודעות', content: 'הכלי המושלם לתקשורת פנימית מהירה! לחיצה על כפתור זה תפתח את מרכז ההודעות והצ\'אט עם כל השוטרים והמפקדים ביחידה.' },
+  { id: 'chat_status_step', selector: '#chat-sidebar-container', path: '/', title: 'הודעות בין מפקדים', content: 'מרכז ההודעות מאפשר לכם לנהל שיחות ישירות ובזמן אמת עם שאר מפקדי היחידה. תוכלו לראות מתי הם זמינים (סטטוס ירוק/אדום) ולעדכן את הסטטוס האישי שלכם.' },
+  { id: 'personal_profile', selector: '#sidebar-profile-container, #sidebar-profile-link-collapsed', path: '/', title: 'עריכת פרופיל אישי', content: 'בכל שלב במערכת, לחיצה על תמונת הפרופיל או השם שלכם בתחתית סרגל הניווט תוביל אתכם ישירות לעדכון הפרטים האישיים, הגדרת PIN, ורישום זיהוי ביומטרי.' },
 
 
   // --- SETTINGS PAGES ---
@@ -92,6 +98,38 @@ const KNOWLEDGE_BASE = [
     context: ['נתונים', 'להוציא', 'הדפסה', 'פרסום'], 
     description: 'את כל הדוחות היחידתיים ניתן להפיק מתוך "מרכז הדוחות" בלוח הבקרה הראשי. במסך הנוכחות ניתן גם לייצא נתונים בעזרת כפתור הייצוא.', 
     stepId: 'report_hub' 
+  },
+  { 
+    id: 'attendance_trend_kb', 
+    title: 'גרף מגמת זמינות', 
+    keywords: ['מגמה', 'מגמת זמינות', 'גרף מגמה', 'גרף נוכחות לאורך זמן', 'מגמות', 'שינוי זמינות'], 
+    context: ['גרפים', 'נתונים', 'סטטיסטיקה'], 
+    description: 'גרף מגמת זמינות מראה את אחוז הנוכחות והזמינות של היחידה לאורך זמן לפי טווח הימים שבחרת.', 
+    stepId: 'attendance_trend' 
+  },
+  { 
+    id: 'status_distribution_kb', 
+    title: 'גרף חלוקת סטטוסים', 
+    keywords: ['חלוקת סטטוסים', 'עוגה', 'דונאט', 'גרף עוגה', 'התפלגות סטטוסים', 'סטטוסים היום'], 
+    context: ['גרפים', 'נתונים', 'סטטיסטיקה'], 
+    description: 'גרף חלוקת סטטוסים מציג את התפלגות השוטרים ביחידה לפי הסטטוסים השונים (משרד, חופשה, מחלה וכו\') להיום.', 
+    stepId: 'status_distribution' 
+  },
+  { 
+    id: 'age_distribution_kb', 
+    title: 'גרף חתך גילאים', 
+    keywords: ['חתך גילאים', 'גילאים', 'גרף גילאים', 'התפלגות גילאים', 'גיל ממוצע'], 
+    context: ['גרפים', 'נתונים', 'סטטיסטיקה'], 
+    description: 'גרף חתך גילאים מציג את התפלגות המשרתים ביחידה לפי קבוצות גיל שונות, ומציג את הגיל הממוצע.', 
+    stepId: 'age_distribution' 
+  },
+  { 
+    id: 'stats_comparison_kb', 
+    title: 'גרף השוואת כוח אדם', 
+    keywords: ['השוואה', 'השוואת כוח אדם', 'השוואת כח אדם', 'קדיחה', 'drill-down', 'מעבר בין רמות', 'מחלקה למדור', 'חוליה'], 
+    context: ['גרפים', 'נתונים', 'סטטיסטיקה'], 
+    description: 'גרף השוואת כוח אדם מאפשר להשוות את אחוזי הנוכחות והזמינות של יחידות משנה. לחיצה על יחידה תרד רמה (מחלקה -> מדור -> חוליה -> שוטר).', 
+    stepId: 'stats_comparison' 
   },
   { 
     id: 'bulk_update_kb', 
@@ -186,7 +224,7 @@ const KNOWLEDGE_BASE = [
 export function GlobalAiSupport() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isChatOpen, openChat } = useChat();
+  const { isChatOpen, openChat, closeChat } = useChat();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -202,6 +240,7 @@ export function GlobalAiSupport() {
     const saved = localStorage.getItem('active_tour_index');
     return saved ? parseInt(saved, 10) : -1;
   });
+  const [showTourCompletion, setShowTourCompletion] = useState(false);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -227,9 +266,13 @@ export function GlobalAiSupport() {
         if (!isChatOpen) {
           openChat(null as any);
         }
+      } else {
+        if (isChatOpen) {
+          closeChat();
+        }
       }
     }
-  }, [currentTourIndex, isSingleStep, isChatOpen, openChat]);
+  }, [currentTourIndex, isSingleStep, isChatOpen, openChat, closeChat]);
 
   // --- SMART MATCHING ENGINE 2.0 ---
   // Auto-navigate during tour if step is on a different page or tab
@@ -363,16 +406,37 @@ export function GlobalAiSupport() {
   const handleCloseSpotlight = () => {
     setCurrentTourIndex(-1);
     setIsOpen(true);
+    if (isChatOpen) {
+      closeChat();
+    }
   };
 
   const isSettingsPage = location.pathname === "/settings";
 
   return (
     <>
-      <TourGuideOverlay steps={TOUR_STEPS} currentStepIndex={currentTourIndex} isActive={currentTourIndex >= 0} 
-        onNext={() => isSingleStep ? handleCloseSpotlight() : setCurrentTourIndex(i => i + 1)} 
+      <TourGuideOverlay 
+        steps={TOUR_STEPS} 
+        currentStepIndex={currentTourIndex} 
+        isActive={currentTourIndex >= 0 || showTourCompletion} 
+        showCompletion={showTourCompletion}
+        onCloseCompletion={() => {
+          setShowTourCompletion(false);
+          setCurrentTourIndex(-1);
+          localStorage.removeItem('active_tour_index');
+        }}
+        onNext={() => {
+          if (isSingleStep) {
+            handleCloseSpotlight();
+          } else if (currentTourIndex === TOUR_STEPS.length - 1) {
+            setShowTourCompletion(true);
+          } else {
+            setCurrentTourIndex(i => i + 1);
+          }
+        }} 
         onPrev={() => setCurrentTourIndex(i => i - 1)} 
-        isSingleStep={isSingleStep} onClose={handleCloseSpotlight} 
+        isSingleStep={isSingleStep} 
+        onClose={handleCloseSpotlight} 
       />
 
       <motion.div 

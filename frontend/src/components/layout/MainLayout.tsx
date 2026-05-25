@@ -364,70 +364,88 @@ export default function MainLayout() {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-3 border-t border-border/40 space-y-3">
+        <div
+          className={cn(
+            "p-3 border-t border-border/40 flex flex-col gap-3",
+            isSidebarOpen ? "" : "items-center"
+          )}
+        >
           {/* User Profile Area */}
-          <Link
-            to={`/settings`}
-            onDoubleClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsSidebarOpen((prev) => !prev);
-            }}
-            onClick={() => {
-              if (window.innerWidth < 1024) setIsSidebarOpen(false);
-            }}
-            className={cn(
-              "flex items-center gap-3 rounded-xl transition-all select-none",
-              isSidebarOpen
-                ? "p-2 bg-muted/30 border border-border/50 hover:bg-muted/50"
-                : "justify-center p-0 border-0 hover:scale-105",
-            )}
-          >
-            <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-primary font-black text-[10px] shrink-0 ">
+          {isSidebarOpen ? (
+            <div id="sidebar-profile-container" className="flex items-center justify-between gap-3 p-2 bg-muted/40 dark:bg-muted/20 border border-border/40 hover:border-border/80 rounded-xl transition-all duration-200 select-none group w-full">
+              <Link
+                to="/settings"
+                onClick={() => {
+                  if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                }}
+                className="flex items-center gap-3 min-w-0 flex-grow"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm shrink-0 shadow-sm transition-all group-hover:scale-105">
+                  {user?.first_name?.[0]}
+                  {user?.last_name?.[0]}
+                </div>
+                <div className="flex flex-col min-w-0 text-right">
+                  <span className="text-xs font-black text-foreground truncate leading-none mb-1 group-hover:text-primary transition-colors">
+                    {user?.first_name} {user?.last_name}
+                  </span>
+                  <span className="text-[9px] font-bold text-muted-foreground truncate uppercase tracking-tighter">
+                    {user?.is_admin
+                      ? "מנהל מערכת"
+                      : user?.commands_department_id
+                        ? "מפקד מחלקה"
+                        : user?.commands_section_id
+                          ? "מפקד מדור"
+                          : user?.commands_team_id
+                            ? "מפקד חוליה"
+                            : "מפקד"}
+                  </span>
+                </div>
+              </Link>
+              
+              {/* Logout Button (Open State) */}
+              <button
+                onClick={() => logout()}
+                title="התנתק"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all border border-transparent shrink-0 active:scale-95"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            /* Collapsed Profile Link */
+            <Link
+              id="sidebar-profile-link-collapsed"
+              to="/settings"
+              title="הגדרות פרופיל"
+              onClick={() => {
+                if (window.innerWidth < 1024) setIsSidebarOpen(false);
+              }}
+              className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm shrink-0 shadow-sm transition-all hover:scale-105 hover:bg-primary/20 active:scale-95"
+            >
               {user?.first_name?.[0]}
               {user?.last_name?.[0]}
-            </div>
-            <div
-              className={cn(
-                "flex flex-col min-w-0 text-right transition-all",
-                isSidebarOpen
-                  ? "opacity-100 w-auto"
-                  : "opacity-0 w-0 overflow-hidden",
-              )}
-            >
-              <span className="text-xs font-black text-foreground truncate leading-none mb-1">
-                {user?.first_name} {user?.last_name}
-              </span>
-              <span className="text-[9px] font-bold text-muted-foreground truncate uppercase tracking-tighter">
-                {user?.is_admin
-                  ? "מנהל מערכת"
-                  : user?.commands_department_id
-                    ? "מפקד מחלקה"
-                    : user?.commands_section_id
-                      ? "מפקד מדור"
-                      : user?.commands_team_id
-                        ? "מפקד חוליה"
-                        : "מפקד"}
-              </span>
-            </div>
-          </Link>
+            </Link>
+          )}
 
-          {/* Quick Actions Row */}
-          <div
-            className={cn(
-              "flex items-center gap-1.5",
-              isSidebarOpen ? "px-0.5" : "flex-col",
-            )}
-          >
-            <ThemeToggle collapsed={!isSidebarOpen} />
-            <button
-              onClick={() => logout()}
-              title="Logout"
-              className="flex-grow w-full h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all border border-transparent hover:border-destructive/20"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+          {/* Action Area below profile */}
+          {isSidebarOpen ? (
+            /* Theme Toggle Full-width when open */
+            <div className="w-full">
+              <ThemeToggle collapsed={false} />
+            </div>
+          ) : (
+            /* Actions stacked when collapsed */
+            <div className="flex flex-col items-center gap-2.5 w-full">
+              <ThemeToggle collapsed={true} />
+              <button
+                onClick={() => logout()}
+                title="התנתק"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all border border-border bg-background shadow-sm active:scale-95"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 

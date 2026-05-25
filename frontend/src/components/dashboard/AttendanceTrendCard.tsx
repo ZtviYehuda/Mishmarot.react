@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
   XAxis,
@@ -57,6 +58,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       onRangeChange,
       hideHeader = false,
       compact = false,
+      filterTags = [],
     },
     ref,
   ) => {
@@ -274,175 +276,191 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
           compact && "bg-transparent backdrop-blur-none border-0 shadow-none"
         )}
       >
-        {!hideHeader && (
-          <CardHeader className="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center justify-between">
-            <div className="flex items-center justify-between w-full sm:w-auto">
-              <CardTitle className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100 uppercase sm:normal-case tracking-widest sm:tracking-normal">
-                מגמת זמינות <span className="hidden sm:inline text-slate-400 font-medium tracking-normal">— {range === 7 ? "שבועי" : "חודשי"}</span>
-              </CardTitle>
-            </div>
-
-            {/* Toggle Row (Full width on mobile, left-aligned on desktop) */}
-            {onRangeChange && (
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-full sm:w-auto mt-1 sm:mt-0 no-export">
-                <button
-                  onClick={() => onRangeChange(7)}
-                  className={cn(
-                    "flex-1 sm:flex-none px-4 py-1.5 text-[11px] sm:text-xs font-bold rounded-md transition-all",
-                    range === 7
-                      ? "bg-white text-primary dark:bg-slate-700 dark:text-white shadow-sm"
-                      : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                  )}
-                >
-                  שבועי
-                </button>
-                <button
-                  onClick={() => onRangeChange(30)}
-                  className={cn(
-                    "flex-1 sm:flex-none px-4 py-1.5 text-[11px] sm:text-xs font-bold rounded-md transition-all",
-                    range === 30
-                      ? "bg-white text-primary dark:bg-slate-700 dark:text-white shadow-sm"
-                      : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                  )}
-                >
-                  חודשי
-                </button>
-              </div>
-            )}
-          </CardHeader>
-        )}
-
-        <CardContent className={cn(
-          "flex-1 flex flex-col p-2 sm:p-6",
-          compact ? "min-h-[160px] sm:min-h-[220px]" : "min-h-[240px] sm:min-h-[350px]",
+        <div className={cn(
+          "pt-1.5 pb-3 px-3 sm:pt-2 sm:pb-4 sm:px-4 md:pt-2.5 md:pb-6 md:px-6 flex-1 flex flex-col",
+          compact && "pt-1 pb-1.5 px-2 sm:pt-1.5 sm:pb-2 sm:px-3",
           hideHeader && "p-0"
         )}>
-          <div className="w-full h-full flex-1" style={{ direction: "ltr", minHeight: compact ? "150px" : "200px" }}>
-            <ResponsiveContainer width="100%" height="100%" minHeight={compact ? 150 : 200}>
-              <AreaChart
-                data={chartData}
-                margin={{ top: 10, right: isMobile ? 5 : 10, left: -25, bottom: isMobile ? 0 : 5 }}
-                style={{ cursor: 'pointer' }}
-                onMouseDown={(state: any) => {
-                  if (state && state.activePayload && state.activePayload.length > 0) {
-                    const dateStr = state.activePayload[0].payload.date;
-                    if (dateStr) {
-                      onDateSelect?.(parseISO(dateStr));
-                    }
-                  } else if (state && state.activeLabel) {
-                    onDateSelect?.(parseISO(state.activeLabel));
-                  }
-                }}
-              >
-                <defs>
-                  <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
-                    <stop offset="60%" stopColor="var(--primary)" stopOpacity={0.08} />
-                    <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="var(--border)"
-                  strokeOpacity={0.4}
-                />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(value) => {
-                    if (!value) return "";
-                    try {
-                      const date = parseISO(value);
-                      if (!isNaN(date.getTime())) {
-                         return isMobile ? format(date, "d/M") : format(date, "dd/MM");
+          {!hideHeader && (
+            <div className="flex flex-row justify-between items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2.5 relative z-10">
+              <div className="flex gap-2 sm:gap-3 items-center">
+                <div className="text-right flex flex-col">
+                  <h3 className="text-sm sm:text-base font-black text-foreground tracking-tight flex items-center flex-wrap gap-2">
+                    <span>מגמת זמינות</span>
+                    <span className="hidden sm:inline text-muted-foreground font-medium text-xs sm:text-sm">— {range === 7 ? "שבועי" : "חודשי"}</span>
+                    {filterTags.length > 0 && (
+                      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar ml-1">
+                        {filterTags.map((tag, idx) => (
+                          <Badge 
+                            key={idx} 
+                            variant="outline" 
+                            className="text-[10px] h-6 px-2.5 font-black bg-primary/10 text-primary border-primary/30 rounded-lg whitespace-nowrap shadow-sm"
+                          >
+                           {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </h3>
+                </div>
+              </div>
+
+              {/* Toggle Row */}
+              {onRangeChange && (
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg no-export shrink-0">
+                  <button
+                    onClick={() => onRangeChange(7)}
+                    className={cn(
+                      "px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-bold rounded-md transition-all",
+                      range === 7
+                        ? "bg-white text-primary dark:bg-slate-700 dark:text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    )}
+                  >
+                    שבועי
+                  </button>
+                  <button
+                    onClick={() => onRangeChange(30)}
+                    className={cn(
+                      "px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-bold rounded-md transition-all",
+                      range === 30
+                        ? "bg-white text-primary dark:bg-slate-700 dark:text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    )}
+                  >
+                    חודשי
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex-1 flex flex-col relative p-0 mt-0 min-h-[240px] sm:min-h-[320px]">
+            <div className="w-full h-full flex-1" style={{ direction: "ltr", minHeight: compact ? "150px" : "200px" }}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={compact ? 150 : 200}>
+                <AreaChart
+                  data={chartData}
+                  margin={{ top: 10, right: isMobile ? 5 : 10, left: -25, bottom: isMobile ? 0 : 5 }}
+                  style={{ cursor: 'pointer' }}
+                  onMouseDown={(state: any) => {
+                    if (state && state.activePayload && state.activePayload.length > 0) {
+                      const dateStr = state.activePayload[0].payload.date;
+                      if (dateStr) {
+                        onDateSelect?.(parseISO(dateStr));
                       }
-                    } catch (e) {
+                    } else if (state && state.activeLabel) {
+                      onDateSelect?.(parseISO(state.activeLabel));
+                    }
+                  }}
+                >
+                  <defs>
+                    <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
+                      <stop offset="60%" stopColor="var(--primary)" stopOpacity={0.08} />
+                      <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="var(--border)"
+                    strokeOpacity={0.4}
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(value) => {
+                      if (!value) return "";
+                      try {
+                        const date = parseISO(value);
+                        if (!isNaN(date.getTime())) {
+                           return isMobile ? format(date, "d/M") : format(date, "dd/MM");
+                        }
+                      } catch (e) {
+                        return value;
+                      }
                       return value;
+                    }}
+                    tick={{
+                      fontSize: isMobile ? 11 : 13,
+                      fill: "var(--foreground)",
+                      fontWeight: 900,
+                    }}
+                    tickLine={false}
+                    axisLine={false}
+                    dy={isMobile ? 8 : 12}
+                    minTickGap={isMobile ? 15 : 20}
+                  />
+                  <YAxis
+                    tick={{
+                      fontSize: 11,
+                      fill: "var(--foreground)",
+                      fontWeight: 900,
+                    }}
+                    tickLine={false}
+                    axisLine={false}
+                    domain={[
+                      0,
+                      (dataMax: number) => Math.floor(Math.max(dataMax, 10) * 1.2),
+                    ]}
+                  />
+                  <Tooltip
+                    cursor={{ stroke: "var(--primary)", strokeWidth: 1, strokeDasharray: "4 4" }}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "rgba(255, 255, 255, 0.95)",
+                      boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                    labelFormatter={(label) =>
+                      format(parseISO(label), "dd/MM/yyyy")
                     }
-                    return value;
-                  }}
-                  tick={{
-                    fontSize: isMobile ? 10 : 11,
-                    fill: "var(--muted-foreground)",
-                    fontWeight: 600,
-                  }}
-                  tickLine={false}
-                  axisLine={false}
-                  dy={isMobile ? 8 : 12}
-                  minTickGap={isMobile ? 15 : 20}
-                />
-                <YAxis
-                  tick={{
-                    fontSize: 10,
-                    fill: "var(--muted-foreground)",
-                    fontWeight: 700,
-                  }}
-                  tickLine={false}
-                  axisLine={false}
-                  domain={[
-                    0,
-                    (dataMax: number) => Math.floor(Math.max(dataMax, 10) * 1.2),
-                  ]}
-                />
-                <Tooltip
-                  cursor={{ stroke: "var(--primary)", strokeWidth: 1, strokeDasharray: "4 4" }}
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "1px solid var(--border)",
-                    backgroundColor: "rgba(255, 255, 255, 0.95)",
-                    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                  }}
-                  labelFormatter={(label) =>
-                    format(parseISO(label), "dd/MM/yyyy")
-                  }
-                  formatter={(value: any, name: any) => [
-                    value,
-                    name === "present_count" ? "נוכחים" : name,
-                  ]}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="present_count"
-                  stroke="var(--primary)"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorPresent)"
-                  animationDuration={1500}
-                  dot={(props: any) => {
-                    const { cx, cy, payload } = props;
-                    if (!payload || !payload.date) return null as any;
-                    const isSelected = isSameDay(parseISO(payload.date), selectedDate);
-                    if (isSelected) {
-                      return (
-                        <circle
-                          key={`dot-${payload.date}`}
-                          cx={cx}
-                          cy={cy}
-                          r={6}
-                          fill="var(--primary)"
-                          stroke="white"
-                          strokeWidth={3}
-                          style={{ filter: "drop-shadow(0 0 4px rgba(var(--primary-rgb), 0.5))" }}
-                        />
-                      );
-                    }
-                    return null as any;
-                  }}
-                  activeDot={{
-                    r: 6,
-                    fill: "var(--primary)",
-                    stroke: "white",
-                    strokeWidth: 2,
-                  }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+                    formatter={(value: any, name: any) => [
+                      value,
+                      name === "present_count" ? "נוכחים" : name,
+                    ]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="present_count"
+                    stroke="var(--primary)"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#colorPresent)"
+                    animationDuration={1500}
+                    dot={(props: any) => {
+                      const { cx, cy, payload } = props;
+                      if (!payload || !payload.date) return null as any;
+                      const isSelected = isSameDay(parseISO(payload.date), selectedDate);
+                      if (isSelected) {
+                        return (
+                          <circle
+                            key={`dot-${payload.date}`}
+                            cx={cx}
+                            cy={cy}
+                            r={6}
+                            fill="var(--primary)"
+                            stroke="white"
+                            strokeWidth={3}
+                            style={{ filter: "drop-shadow(0 0 4px rgba(var(--primary-rgb), 0.5))" }}
+                          />
+                        );
+                      }
+                      return null as any;
+                    }}
+                    activeDot={{
+                      r: 6,
+                      fill: "var(--primary)",
+                      stroke: "white",
+                      strokeWidth: 2,
+                    }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-
-
-        </CardContent>
+        </div>
       </Card>
     );
 },

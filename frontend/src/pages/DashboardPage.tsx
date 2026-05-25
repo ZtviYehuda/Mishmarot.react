@@ -259,13 +259,13 @@ export default function DashboardPage() {
       setLoadingExtras(true);
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
       
-      // We intentionally do NOT pass department_id, section_id, team_id here
-      // so the card always shows the base "peer" list instead of drilling down
-      // and replacing the clicked row with its children.
       const compData = await getComparisonStats(
         formattedDate,
         comparisonRange,
         {
+          department_id: selectedDeptId,
+          section_id: selectedSectionId,
+          team_id: selectedTeamId,
           status_id: selectedStatusData?.id?.toString(),
           serviceTypes: selectedServiceTypes.join(","),
           min_age: selectedAgeRange.min,
@@ -280,6 +280,9 @@ export default function DashboardPage() {
     getComparisonStats,
     selectedDate,
     comparisonRange,
+    selectedDeptId,
+    selectedSectionId,
+    selectedTeamId,
     selectedStatusData?.id,
     selectedServiceTypes,
     selectedAgeRange,
@@ -483,6 +486,22 @@ export default function DashboardPage() {
     }
   };
 
+  const canGoBack = useMemo(() => {
+    if (selectedTeamId) return true;
+    if (selectedSectionId) return true;
+    if (selectedDeptId && user?.is_admin) return true;
+    return false;
+  }, [selectedTeamId, selectedSectionId, selectedDeptId, user]);
+
+  const handleGoBack = () => {
+    if (selectedTeamId) {
+      setSelectedTeamId("");
+    } else if (selectedSectionId) {
+      setSelectedSectionId("");
+    } else if (selectedDeptId && user?.is_admin) {
+      setSelectedDeptId("");
+    }
+  };
 
   const currentDept = structure.find((d) => d.id.toString() === selectedDeptId);
   const currentSection = currentDept?.sections.find(
@@ -606,6 +625,15 @@ export default function DashboardPage() {
     }
   };
 
+  const memoizedFilters = useMemo(() => ({
+    department_id: selectedDeptId,
+    section_id: selectedSectionId,
+    team_id: selectedTeamId,
+    serviceTypes: selectedServiceTypes,
+    unitName: unitName,
+    status_id: selectedStatusId?.toString()
+  }), [selectedDeptId, selectedSectionId, selectedTeamId, selectedServiceTypes, unitName, selectedStatusId]);
+
   const canSelectDept = !!user?.is_admin;
   const canSelectSection = !!user?.is_admin || !!user?.commands_department_id;
   const canSelectTeam =
@@ -653,14 +681,7 @@ export default function DashboardPage() {
                 <ReportHub
                   id="report-hub-card"
                   onShareBirthdays={() => setWhatsAppDialogOpen(true)}
-                  filters={useMemo(() => ({
-                    department_id: selectedDeptId,
-                    section_id: selectedSectionId,
-                    team_id: selectedTeamId,
-                    serviceTypes: selectedServiceTypes,
-                    unitName: unitName,
-                    status_id: selectedStatusId?.toString()
-                  }), [selectedDeptId, selectedSectionId, selectedTeamId, selectedServiceTypes, unitName, selectedStatusId])}
+                  filters={memoizedFilters}
                   initialDate={selectedDate}
                 />
 
@@ -711,14 +732,7 @@ export default function DashboardPage() {
           <ReportHub
             id="report-hub-card-mobile"
             onShareBirthdays={() => setWhatsAppDialogOpen(true)}
-            filters={{
-              department_id: selectedDeptId,
-              section_id: selectedSectionId,
-              team_id: selectedTeamId,
-              serviceTypes: selectedServiceTypes,
-              unitName: unitName,
-              status_id: selectedStatusId?.toString()
-            }}
+            filters={memoizedFilters}
             initialDate={selectedDate}
             className="flex flex-col items-center justify-center gap-1 h-[52px] rounded-xl bg-transparent border-none text-primary hover:bg-primary/5 active:scale-95 transition-all px-0"
           />
@@ -831,6 +845,7 @@ export default function DashboardPage() {
                 birthdays={[]}
                 loading={loadingExtras}
                 unitName={unitName}
+                filterTags={activeFilterTags}
                 className={cn(
                   activeTutorial === "birthdays" && "tutorial-highlight"
                 )}
@@ -843,6 +858,9 @@ export default function DashboardPage() {
                 loading={loadingExtras}
                 days={comparisonRange}
                 unitName={unitName}
+                filterTags={activeFilterTags}
+                canGoBack={canGoBack}
+                onGoBack={handleGoBack}
                 selectedUnitId={
                   selectedTeamId ? parseInt(selectedTeamId) :
                   selectedSectionId ? parseInt(selectedSectionId) :

@@ -564,14 +564,7 @@ export default function SettingsPage() {
 
         {/* Mobile Bottom Navigation Bar - Standard Fixed */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2 safe-area-bottom">
-          {!user?.is_temp_commander && (
-            <MobileBottomNavLink
-              label="פרופיל"
-              icon={User}
-              active={activeTab === "profile"}
-              onClick={() => setActiveTab("profile")}
-            />
-          )}
+
           <MobileBottomNavLink
             label="תצוגה"
             icon={Palette}

@@ -12,6 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Calendar, Gift, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ interface BirthdaysCardProps {
   loading?: boolean;
   unitName?: string;
   className?: string;
+  filterTags?: string[];
 }
 
 const MONTH_LABELS = [
@@ -44,7 +46,7 @@ const MONTH_LABELS = [
 ];
 
 export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
-  ({ id, birthdays, selectedDate, className }, ref) => {
+  ({ id, birthdays, selectedDate, className, filterTags = [] }, ref) => {
     const { openProfile } = useEmployeeContext();
     const [isGreetingsModalOpen, setIsGreetingsModalOpen] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -81,17 +83,27 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
             className
           )}
         >
-          <CardHeader className="px-6 py-4 border-b border-border/40">
-            <div className="flex justify-between items-center gap-4">
+          <CardHeader className="px-4 sm:px-6 py-1.5 sm:py-2 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
+            <div className="flex justify-between items-center gap-4 w-full">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                  <Gift className="w-5 h-5 text-primary" />
-                </div>
                 <div>
-                  <CardTitle className="text-lg font-black text-foreground mb-0.5">
-                    ימי הולדת
+                  <CardTitle className="text-sm sm:text-base font-black text-foreground mb-0.5 flex items-center flex-wrap gap-2">
+                    <span>ימי הולדת</span>
+                    {filterTags.length > 0 && (
+                      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar ml-1">
+                        {filterTags.map((tag, idx) => (
+                          <Badge 
+                            key={idx} 
+                            variant="outline" 
+                            className="text-[10px] h-6 px-2.5 font-black bg-primary/10 text-primary border-primary/30 rounded-lg whitespace-nowrap shadow-sm"
+                          >
+                           {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </CardTitle>
-                  <CardDescription className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                  <CardDescription className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wide">
                     חוגגים השבוע
                   </CardDescription>
                 </div>

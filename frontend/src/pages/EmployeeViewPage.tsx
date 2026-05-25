@@ -269,41 +269,34 @@ const TabButton = ({ active, onClick, icon: Icon, label }: any) => (
     type="button"
     onClick={onClick}
     className={cn(
-      "flex-1 flex items-center justify-center transition-all relative group h-full",
+      "flex-1 flex items-center justify-center transition-all relative group h-full rounded-xl",
       active
-        ? "text-primary"
-        : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
+        ? "text-primary font-black"
+        : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-bold",
     )}
   >
     {active && (
       <motion.div
         layoutId="activeTab"
-        className="absolute inset-1 bg-white dark:bg-slate-800 rounded-xl dark: border border-slate-200/50 dark:border-slate-700/50"
+        className="absolute inset-1 bg-white dark:bg-slate-800 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
         initial={false}
-        transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+        transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
       />
     )}
-    <div className="relative z-10 flex items-center gap-3">
-      <span
-        className={cn(
-          "font-black tracking-tight leading-none whitespace-nowrap transition-all text-sm",
-          active ? "opacity-100" : "opacity-70 group-hover:opacity-100",
-        )}
-      >
+    <div className="relative z-10 flex items-center gap-2">
+      {Icon && (
+        <Icon
+          className={cn(
+            "w-4 h-4 transition-all duration-200",
+            active
+              ? "text-primary scale-110"
+              : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
+          )}
+        />
+      )}
+      <span className="text-xs sm:text-sm tracking-tight leading-none whitespace-nowrap transition-all">
         {label}
       </span>
-      {Icon && (
-        <div
-          className={cn(
-            "w-8 h-8 rounded-xl flex items-center justify-center transition-all shrink-0",
-            active
-              ? "bg-primary text-white scale-105"
-              : "bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 group-hover:scale-110",
-          )}
-        >
-          <Icon className="w-4 h-4" />
-        </div>
-      )}
     </div>
   </button>
 );
@@ -712,9 +705,7 @@ export default function EmployeeViewPage() {
                 )}
               </div>
             </div>
-
-            {/* Desktop Tab buttons */}
-            <div className="mt-4 bg-card/40 backdrop-blur-xl border border-border/40 rounded-2xl p-1.5 flex h-14 items-stretch w-full overflow-hidden">
+            <div className="mt-4 bg-slate-100/50 dark:bg-slate-900/50 rounded-2xl p-1 flex h-12 items-stretch w-full overflow-hidden">
               <TabButton
                 active={activeTab === "personal"}
                 onClick={() => setActiveTab("personal")}
@@ -733,7 +724,7 @@ export default function EmployeeViewPage() {
           {/* ── MAIN CONTENT AREA ── */}
           <div className="flex-1 w-full min-w-0">
             {/* Mobile Tab Control — Visible in both modes on small screens */}
-            <div className="mb-6 lg:hidden bg-white/50 dark:bg-slate-950/50 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1.5 flex h-14 items-stretch overflow-x-auto scrollbar-none">
+            <div className="mb-6 lg:hidden bg-slate-100/50 dark:bg-slate-900/50 rounded-2xl p-1 flex h-12 items-stretch overflow-x-auto scrollbar-none">
               <TabButton
                 active={activeTab === "personal"}
                 onClick={() => setActiveTab("personal")}

@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info, Download, Filter } from "lucide-react";
+import { Info, Download, Filter, ArrowRight } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -45,6 +45,8 @@ interface StatsComparisonCardProps {
   filterTags?: string[];
   hideHeader?: boolean;
   compact?: boolean;
+  onGoBack?: () => void;
+  canGoBack?: boolean;
 }
 
 export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
@@ -62,6 +64,8 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
       filterTags = [],
       hideHeader = false,
       compact = false,
+      onGoBack,
+      canGoBack = false,
     },
     ref,
   ) => {
@@ -234,6 +238,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
     return (
       <Card
         ref={cardRef}
+        id="stats-comparison-card"
         className={cn(
           "bg-card/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-primary/10 py-3 flex flex-col overflow-hidden h-full relative transition-all",
           className,
@@ -242,10 +247,10 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
         )}
       >
         {!hideHeader && (
-          <CardHeader className="px-5 sm:px-6 py-3 flex flex-row items-center justify-between space-y-0">
+          <CardHeader className="px-4 sm:px-6 py-1.5 sm:py-2 flex flex-row items-center justify-between space-y-0">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-lg font-bold flex items-center flex-wrap gap-2 sm:gap-3">
+                <CardTitle className="text-sm sm:text-base font-black text-foreground tracking-tight flex items-center flex-wrap gap-2 sm:gap-3">
                   <span>השוואת כוח אדם</span>
                   {filterTags.length > 0 && (
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar ml-1">
@@ -257,7 +262,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                         <Badge 
                           key={idx} 
                           variant="outline" 
-                          className="text-[10px] h-6 px-2.5 font-bold bg-background/20 text-primary border-primary/20 backdrop-blur-sm whitespace-nowrap rounded-lg hover:bg-primary/5 transition-all"
+                          className="text-[10px] h-6 px-2.5 font-black bg-primary/10 text-primary border-primary/30 shadow-sm whitespace-nowrap rounded-lg hover:bg-primary/15 transition-all"
                         >
                          {tag}
                         </Badge>
@@ -291,15 +296,28 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <CardDescription>
-                <span className="font-bold text-foreground">{unitName}</span>
-                {subtitle && (
-                  <>
-                    {" "}
-                    | <span className="">{subtitle}</span>
-                  </>
-                )}
-                <div className="text-[10px] text-muted-foreground mt-0.5">
+              <CardDescription className="flex flex-col gap-1 w-full">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-foreground">{unitName}</span>
+                  {subtitle && (
+                    <>
+                      {" "}
+                      | <span className="">{subtitle}</span>
+                    </>
+                  )}
+                  {canGoBack && onGoBack && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onGoBack}
+                      className="h-5 px-1.5 py-0 text-[10px] font-black text-primary hover:bg-primary/5 hover:text-primary border-primary/20 dark:border-primary/40 transition-all flex items-center gap-1 no-export rounded-md"
+                    >
+                      <ArrowRight className="w-2.5 h-2.5" />
+                      <span>חזור</span>
+                    </Button>
+                  )}
+                </div>
+                <div className="text-[10px] text-muted-foreground">
                   {days === 1
                     ? `תמונת מצב יומית להיום`
                     : `ממוצע נוכחים - ${days === 7 ? "שבועית" : days === 30 ? "חודשית" : "שנתית"}`} • {format(selectedDate, "dd/MM/yyyy")}
@@ -328,7 +346,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
           </CardHeader>
         )}
 
-        <CardContent className={cn("flex-1 overflow-y-auto no-scrollbar p-0", !hideHeader && "px-4 sm:px-6", compact && "max-h-[300px]")}>
+        <CardContent className={cn("flex-1 overflow-y-auto no-scrollbar p-0", !hideHeader && "px-4 sm:px-6", compact && "max-h-[420px] sm:max-h-none")}>
           {!data || data.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-center bg-muted/20 rounded-xl border border-dashed border-border/50">
               <Info className="w-8 h-8 text-muted-foreground/50 mb-2" />
@@ -340,7 +358,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               </p>
             </div>
           ) : (
-            <div className={cn("space-y-3 py-4", compact && "space-y-1.5 py-1.5")}>
+            <div className={cn("space-y-3 py-4", compact && "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 py-2")}>
               {data.map((item) => {
                 const availability =
                   item.total_count > 0
@@ -367,12 +385,12 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                   <div
                     key={item.unit_id}
                     className={cn(
-                      "p-3 rounded-2xl transition-all border",
-                      compact && "p-1.5 rounded-xl border-border/10",
+                      "p-3 rounded-2xl transition-all border border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/40",
+                      compact && "p-2.5 hover:bg-slate-100/50 dark:hover:bg-slate-800/30",
                       onUnitClick ? "cursor-pointer" : "",
                       isSelected
-                        ? "border-primary/30 bg-primary/5"
-                        : "border-transparent hover:border-border/50 hover:bg-muted/30"
+                        ? "border-primary/20 bg-primary/5 dark:border-primary/30"
+                        : ""
                     )}
                     onClick={() => {
                       if (onUnitClick) onUnitClick(item.unit_id, item.level);

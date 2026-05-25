@@ -81,10 +81,21 @@ export const ReportHub: React.FC<ReportHubProps> = ({
   const [loading, setLoading] = useState(false);
   const [hasArchiveAccess, setHasArchiveAccess] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [renderCharts, setRenderCharts] = useState(false);
 
   const { user } = useAuthContext();
   const [activeTutorial, setActiveTutorial] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Stabilize filters reference to prevent fetch loop when parent re-renders
+  const stableFilters = useMemo(() => filters, [
+    filters.department_id,
+    filters.section_id,
+    filters.team_id,
+    filters.status_id,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    filters.serviceTypes.join(","),
+  ]);
 
   useEffect(() => {
     const tutorial = searchParams.get("tutorial");
@@ -150,12 +161,20 @@ export const ReportHub: React.FC<ReportHubProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      // Only reset date/viewMode when the dialog first opens (not on every previewType change)
       setLocalDate(initialDate);
       setLocalViewMode(initialViewMode);
+      setRenderCharts(false);
+      const timer = setTimeout(() => {
+        setRenderCharts(true);
+      }, 350);
+      return () => clearTimeout(timer);
     } else {
       setPreviewType(null);
+      setRenderCharts(false);
     }
-  }, [isOpen, initialDate, initialViewMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // intentionally excludes initialDate/initialViewMode/previewType to avoid reset loops
 
   useEffect(() => {
     if (!isOpen) return;
@@ -178,26 +197,26 @@ export const ReportHub: React.FC<ReportHubProps> = ({
       try {
         const [tData, cData, dData] = await Promise.all([
           getTrendStats(days, formattedDate, {
-            department_id: filters.department_id,
-            section_id: filters.section_id,
-            team_id: filters.team_id,
-            serviceTypes: filters.serviceTypes.join(","),
-            status_id: filters.status_id,
+            department_id: stableFilters.department_id,
+            section_id: stableFilters.section_id,
+            team_id: stableFilters.team_id,
+            serviceTypes: stableFilters.serviceTypes.join(","),
+            status_id: stableFilters.status_id,
           }),
           getComparisonStats(formattedDate, days, {
-            department_id: filters.department_id,
-            section_id: filters.section_id,
-            team_id: filters.team_id,
-            serviceTypes: filters.serviceTypes.join(","),
-            status_id: filters.status_id,
+            department_id: stableFilters.department_id,
+            section_id: stableFilters.section_id,
+            team_id: stableFilters.team_id,
+            serviceTypes: stableFilters.serviceTypes.join(","),
+            status_id: stableFilters.status_id,
           }),
           getDashboardStats({
-            department_id: filters.department_id,
-            section_id: filters.section_id,
-            team_id: filters.team_id,
+            department_id: stableFilters.department_id,
+            section_id: stableFilters.section_id,
+            team_id: stableFilters.team_id,
             date: formattedDate,
-            serviceTypes: filters.serviceTypes.join(","),
-            status_id: filters.status_id,
+            serviceTypes: stableFilters.serviceTypes.join(","),
+            status_id: stableFilters.status_id,
           })
         ]);
         setTrendStats(tData || []);
@@ -213,8 +232,9 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     };
 
     fetchData();
+  // activeDaysRange already encapsulates localViewMode + dateRange, so we don't list them separately
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, localDate, localViewMode, dateRange, activeDaysRange, JSON.stringify(filters)]);
+  }, [isOpen, localDate, activeDaysRange, stableFilters]);
 
   const downloadCard = async (ref: any) => {
     if (!ref.current) return;
@@ -227,72 +247,71 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     if (ref.current && ref.current.share) await ref.current.share();
   };
 
-  // Mobile: slim horizontal row. Desktop: keeps old card style via sm: breakpoints.
+  // Clean, borderless report card — hover only, no persistent frame
   const ReportCard = ({ icon: Icon, title, onDownload, onWhatsApp, hasDownload = true, onClick }: any) => (
     <div
       onClick={onClick}
-      className="group flex justify-between items-center p-3.5 bg-card/60 hover:bg-accent border border-border/50 rounded-xl transition-all active:scale-[0.98] cursor-pointer sm:bg-card/40 sm:border-border/40 sm:rounded-[2rem] sm:p-5 sm:hover:border-primary/40 shadow-sm hover:shadow-md"
+      className="group flex justify-between items-center px-3 py-3 rounded-2xl transition-all duration-200 active:scale-[0.98] cursor-pointer hover:bg-muted/60"
     >
       {/* Right side: icon + title */}
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 transition-colors group-hover:bg-primary/20">
-          <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="w-9 h-9 rounded-xl bg-primary/8 text-primary shrink-0 transition-all flex items-center justify-center group-hover:bg-primary/15 group-hover:scale-105">
+          <Icon className="w-4.5 h-4.5" />
         </div>
-        <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{title}</span>
+        <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{title}</span>
       </div>
 
       {/* Left side: action buttons */}
-      <div className="flex items-center gap-2 no-export" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-1 no-export" onClick={(e) => e.stopPropagation()}>
         {hasDownload ? (
           <>
             <button
               onClick={(e) => { e.stopPropagation(); onWhatsApp(); }}
-              className="p-2 rounded-lg text-emerald-600 dark:text-emerald-500 hover:bg-emerald-500/10 transition-colors active:scale-90"
+              className="p-2 rounded-xl text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors active:scale-90"
               aria-label="שיתוף בוואטסאפ"
             >
-              <FaWhatsapp className="w-5 h-5" />
+              <FaWhatsapp className="w-4.5 h-4.5" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDownload(); }}
-              className="p-2 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors active:scale-90"
+              className="p-2 rounded-xl text-muted-foreground/60 hover:bg-primary/8 hover:text-primary transition-colors active:scale-90"
               aria-label="הורדה"
             >
-              <Download className="w-5 h-5" />
+              <Download className="w-4.5 h-4.5" />
             </button>
           </>
         ) : (
           <button
             onClick={(e) => { e.stopPropagation(); onWhatsApp(); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-600 dark:text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors active:scale-90"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/15 transition-colors active:scale-90"
           >
             <FaWhatsapp className="w-4 h-4" />
             שיתוף וריכוז
           </button>
         )}
+        <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/30 mr-1 group-hover:text-primary/50 transition-colors" />
       </div>
     </div>
   );
 
   const PreviewHeader = ({ title, icon: Icon, colorClass }: any) => (
-    <div className="flex items-center justify-between mb-2 sm:mb-4 animate-in slide-in-from-top-4 duration-300">
-      <div className="flex items-center gap-2 sm:gap-4">
-        <div className={cn("p-1.5 sm:p-3 rounded-lg sm:rounded-xl", colorClass)}>
-          <Icon className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-white" />
+    <div className="flex items-center justify-between mb-4 pb-3 border-b border-border/10 animate-in slide-in-from-top-4 duration-300">
+      <div className="flex items-center gap-3">
+        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shadow-sm", colorClass)}>
+          <Icon className="w-4.5 h-4.5 text-white" />
         </div>
         <div>
-          <h4 className="text-[13px] sm:text-2xl font-black text-foreground tracking-tight leading-none">{title}</h4>
-          <p className="hidden xs:block text-[9px] sm:text-xs font-bold text-muted-foreground/60 mt-0.5 sm:mt-1 tracking-tight">נתוני מערכת • {filters.unitName}</p>
+          <h4 className="text-sm sm:text-base font-black text-foreground tracking-tight leading-none">{title}</h4>
+          <p className="text-[10px] sm:text-xs font-bold text-muted-foreground/50 mt-1">{filters.unitName}</p>
         </div>
       </div>
-      <Button 
-        variant="outline" 
+      <button
         onClick={() => setPreviewType(null)}
-        className="h-7 sm:h-11 rounded-lg sm:rounded-2xl px-2 sm:px-5 gap-1 sm:gap-2 font-black text-[10px] sm:text-sm bg-muted/40 border-border/40 hover:bg-muted"
+        className="flex items-center gap-1.5 text-xs font-black text-muted-foreground/75 hover:text-foreground transition-all py-1.5 px-3 rounded-xl hover:bg-muted/50 border border-border/20 shadow-sm"
       >
-        <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5" />
-        <span>חזור</span>
-        <span className="hidden sm:inline">לרשימה</span>
-      </Button>
+        <ArrowRight className="w-3.5 h-3.5" />
+        <span>חזור לתפריט</span>
+      </button>
     </div>
   );
 
@@ -328,36 +347,37 @@ export const ReportHub: React.FC<ReportHubProps> = ({
         </DialogTrigger>
 
         <DialogContent className={cn(
-          "p-0 overflow-hidden border border-border/40 bg-background/95 backdrop-blur-3xl sm:rounded-[2rem] flex flex-col transition-all duration-300 shadow-2xl",
-          previewType !== null && "h-[96svh] sm:h-auto sm:max-h-[85vh]",
-          "sm:max-w-2xl sm:w-full"
+          "p-0 overflow-hidden border-0 bg-background/97 backdrop-blur-3xl sm:rounded-[2rem] flex flex-col transition-all duration-500 shadow-2xl",
+          previewType !== null 
+            ? "max-h-[96svh] sm:max-h-[92vh] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl w-[95vw]" 
+            : "max-h-[80svh] sm:max-h-[75vh] sm:max-w-2xl w-[95vw]"
         )}>
           <DialogDragHandle />
 
           {/* Header - Hides on mobile preview */}
           <div className={cn(
-            "px-5 pt-3 pb-4 sm:px-8 sm:pt-5 sm:pb-5 border-b border-border/30 text-right shrink-0",
+            "px-5 pt-3 pb-3 sm:px-7 sm:pt-5 sm:pb-4 text-right shrink-0",
             previewType && "hidden sm:block"
           )}>
             <DialogHeader className="text-right">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <FileText className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <FileText className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0 text-right">
-                  <DialogTitle className="text-[15px] sm:text-lg font-black text-foreground tracking-tight leading-none mb-1">מרכז הפקת דוחות</DialogTitle>
-                  <DialogDescription className="text-[11px] font-medium text-muted-foreground leading-none">ניהול, הפקה ושיתוף נתונים מבצעיים</DialogDescription>
+                  <DialogTitle className="text-base font-black text-foreground tracking-tight leading-none mb-0.5">מרכז הפקת דוחות</DialogTitle>
+                  <DialogDescription className="text-[11px] font-medium text-muted-foreground/70 leading-none">הפקה ושיתוף נתונים מבצעיים</DialogDescription>
                 </div>
               </div>
             </DialogHeader>
           </div>
 
-          {/* Compact Toolbar - Consistent padding */}
-          <div className="px-4 sm:px-8 py-1.5 bg-muted/20 border-b border-white/5 shrink-0 overflow-x-auto no-scrollbar">
+          {/* Compact Toolbar */}
+          <div className="px-4 sm:px-7 pb-2 shrink-0 overflow-x-auto no-scrollbar">
             <ReportToolbar viewMode={localViewMode} onViewModeChange={setLocalViewMode} date={localDate} onDateChange={setLocalDate} dateRange={dateRange} onDateRangeChange={setDateRange} maxDate={maxDate} />
           </div>
 
-          <div className={cn("p-2 sm:p-8 overflow-y-auto custom-scrollbar flex-1 bg-white/5 relative", previewType && "p-2 sm:p-4")}>
+          <div className={cn("px-3 sm:px-5 pb-3 sm:pb-5 overflow-y-auto custom-scrollbar flex-1 min-h-0 relative", previewType && "px-3 sm:px-4 pb-3")}>
             {(isOldDate && !hasArchiveAccess) ? (
               <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md rounded-b-[1.5rem] sm:rounded-b-[2rem]">
                 <div className="bg-card border border-border/50 rounded-[2rem] p-8 max-w-md text-center space-y-4 m-4">
@@ -379,7 +399,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             ) : null}
 
             {previewType === null ? (
-              <div id="report-hub-content" className="flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-300">
+              <div id="report-hub-content" className="flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-300">
                 <ReportCard icon={Users} title="מצבת כוח אדם" onClick={() => setPreviewType('snapshot')} onDownload={() => downloadCard(snapshotRef)} onWhatsApp={() => shareCard(snapshotRef)} />
                 <ReportCard icon={TrendingUp} title="מגמות וזמינות" onClick={() => setPreviewType('trend')} onDownload={() => downloadCard(trendRef)} onWhatsApp={() => shareCard(trendRef)} />
                 <ReportCard icon={BarChart2} title="השוואת תת-יחידות" onClick={() => setPreviewType('comparison')} onDownload={() => downloadCard(comparisonRef)} onWhatsApp={() => shareCard(comparisonRef)} />
@@ -401,55 +421,70 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                   previewType === 'comparison' ? "bg-purple-500" : "bg-rose-500"
                 } />
 
-                <div className="flex-1 flex flex-col min-h-0 bg-card/60 rounded-[1.25rem] sm:rounded-[2rem] border border-white/10 overflow-hidden backdrop-blur-2xl">
-                  <div className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-4 flex flex-col h-full">
-                    {previewType === 'snapshot' && (
-                      <EmployeesChart stats={snapshotStats} total={snapshotTotal} loading={loading} hideHeader={true} unitName={filters.unitName} selectedDate={localDate} />
-                    )}
-                    {previewType === 'trend' && (
-                      <AttendanceTrendCard data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} />
-                    )}
-                    {previewType === 'comparison' && (
-                      <StatsComparisonCard data={comparisonStats} loading={loading} days={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} />
-                    )}
-                    {previewType === 'birthdays' && (
-                      <div className="flex-1 overflow-y-auto min-h-[300px] p-2">
-                        {birthdays.length === 0 ? (
-                          <div className="text-center py-10 sm:py-12"><Gift className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" /><p className="text-xs font-black text-muted-foreground">אין חוגגים בטווח הנבחר</p></div>
-                        ) : (
-                          <div className="grid grid-cols-1 xs:grid-cols-2 gap-2.5">
-                            {birthdays.map((emp, i) => (
-                              <div key={i} className="flex items-center justify-between p-2.5 sm:p-4 bg-white/5 rounded-2xl border border-white/5">
-                                <div className="flex items-center gap-3 sm:gap-4">
-                                  <div className="w-9 h-9 rounded-full bg-rose-500 text-white flex items-center justify-center font-black text-[11px]-500/20">{emp.first_name[0]}{emp.last_name[0]}</div>
-                                  <div><p className="font-black text-xs sm:text-sm text-foreground">{emp.first_name} {emp.last_name}</p><p className="text-[10px] font-bold text-muted-foreground">{emp.sub_unit || filters.unitName}</p></div>
-                                </div>
-                                <div className="text-left"><p className="text-xs font-black text-rose-500">{format(new Date(emp.birth_date), 'dd/MM')}</p></div>
-                              </div>
-                            ))}
+                <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                  <div className="flex-1 overflow-y-auto no-scrollbar p-1 flex flex-col min-h-0">
+                    {previewType !== 'birthdays' && (loading || !renderCharts) ? (
+                      <div className="flex-1 flex flex-col items-center justify-center min-h-[250px] gap-3">
+                        <div className="w-10 h-10 rounded-full border-[3px] border-primary/20 border-t-primary animate-spin" />
+                        <p className="text-xs font-black text-muted-foreground/60">מכין את הגרף...</p>
+                      </div>
+                    ) : (
+                      <>
+                        {previewType === 'snapshot' && (
+                          <div className="w-full h-[320px] sm:h-[450px] md:h-[500px] lg:h-[550px] flex flex-col">
+                            <EmployeesChart stats={snapshotStats} total={snapshotTotal} loading={loading} hideHeader={true} unitName={filters.unitName} selectedDate={localDate} compact={true} />
                           </div>
                         )}
-                      </div>
+                        {previewType === 'trend' && (
+                          <div className="w-full h-[300px] sm:h-[420px] md:h-[480px] lg:h-[530px] flex flex-col">
+                            <AttendanceTrendCard data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} compact={true} />
+                          </div>
+                        )}
+                        {previewType === 'comparison' && (
+                          <div className="w-full h-[320px] sm:h-[450px] md:h-[500px] lg:h-[550px] flex flex-col">
+                            <StatsComparisonCard data={comparisonStats} loading={loading} days={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} compact={true} />
+                          </div>
+                        )}
+                        {previewType === 'birthdays' && (
+                          <div className="flex-1 overflow-y-auto min-h-[300px] p-2">
+                            {birthdays.length === 0 ? (
+                              <div className="text-center py-10 sm:py-12"><Gift className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" /><p className="text-xs font-black text-muted-foreground">אין חוגגים בטווח הנבחר</p></div>
+                            ) : (
+                              <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                                {birthdays.map((emp, i) => (
+                                  <div key={i} className="flex items-center justify-between p-2.5 sm:p-4 bg-white/5 rounded-2xl border border-white/5 shadow-sm">
+                                    <div className="flex items-center gap-3 sm:gap-4">
+                                      <div className="w-9 h-9 rounded-full bg-rose-500 text-white flex items-center justify-center font-black text-[11px] shrink-0">{emp.first_name[0]}{emp.last_name[0]}</div>
+                                      <div><p className="font-black text-xs sm:text-sm text-foreground">{emp.first_name} {emp.last_name}</p><p className="text-[10px] font-bold text-muted-foreground">{emp.sub_unit || filters.unitName}</p></div>
+                                    </div>
+                                    <div className="text-left shrink-0"><p className="text-xs font-black text-rose-500">{format(new Date(emp.birth_date), 'dd/MM')}</p></div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
                 
-                {/* Compact Actions inside Preview */}
-                <div className="mt-3 sm:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 shrink-0 pb-2">
+                {/* Actions */}
+                <div className="mt-4 flex flex-row items-center gap-2 shrink-0 pt-2 border-t border-border/10">
                   {(previewType !== 'birthdays') && (
-                    <Button onClick={() => { if (previewType === 'snapshot') downloadCard(snapshotRef); if (previewType === 'trend') downloadCard(trendRef); if (previewType === 'comparison') downloadCard(comparisonRef); }} disabled={loading} className="h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-primary text-white font-black text-sm sm:text-base flex-1 gap-2 sm:gap-3 active:scale-95 transition-all">
-                      <Download className="w-5 h-5 sm:w-6 sm:h-6" /><span>הורדה למכשיר</span></Button>
+                    <Button onClick={() => { if (previewType === 'snapshot') downloadCard(snapshotRef); if (previewType === 'trend') downloadCard(trendRef); if (previewType === 'comparison') downloadCard(comparisonRef); }} disabled={loading} className="h-10 rounded-xl bg-primary/90 hover:bg-primary text-white font-black text-xs flex-1 gap-2 active:scale-95 transition-all">
+                      <Download className="w-4 h-4" /><span>הורדה</span></Button>
                   )}
-                  <Button onClick={() => { if (previewType === 'birthdays') onShareBirthdays(); else if (previewType === 'snapshot') shareCard(snapshotRef); else if (previewType === 'trend') shareCard(trendRef); else if (previewType === 'comparison') shareCard(comparisonRef); }} disabled={loading} className={cn("h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-emerald-500 text-white font-black text-sm sm:text-base gap-2 sm:gap-3 active:scale-95 transition-all flex-1")}>
-                    <FaWhatsapp className="w-5 h-5 sm:w-7 sm:h-7" /><span>שיתוף מהיר</span></Button>
+                  <Button onClick={() => { if (previewType === 'birthdays') onShareBirthdays(); else if (previewType === 'snapshot') shareCard(snapshotRef); else if (previewType === 'trend') shareCard(trendRef); else if (previewType === 'comparison') shareCard(comparisonRef); }} disabled={loading} className={cn("h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs gap-2 active:scale-95 transition-all flex-1")}>
+                    <FaWhatsapp className="w-4 h-4" /><span>שיתוף בוואטסאפ</span></Button>
                 </div>
               </div>
             )}
           </div>
         </DialogContent>
       </Dialog>
-      {/* Hidden high-res capture divs — only mount when dialog is open to prevent recharts measuring zero-sized containers */}
-      {isOpen && (
+      {/* Hidden high-res capture divs — only mount when dialog is open and rendering is stable to prevent recharts measuring zero-sized containers */}
+      {isOpen && renderCharts && (
         <div className="fixed -left-[9999px] top-0 pointer-events-none text-right" dir="rtl" style={{ visibility: 'hidden' }}>
           <div style={{ width: "800px", height: "600px" }}><EmployeesChart ref={snapshotRef} stats={snapshotStats} total={snapshotTotal} loading={loading} unitName={filters.unitName} selectedDate={localDate} /></div>
           <div style={{ width: "800px", height: "600px" }}><AttendanceTrendCard ref={trendRef} data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>

@@ -3,7 +3,11 @@ import {
   X, 
   Sparkles, 
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  MessageCircle,
+  Heart,
+  PartyPopper,
+  Headphones
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -24,6 +28,8 @@ interface TourGuideOverlayProps {
   onPrev: () => void;
   onClose: () => void;
   isSingleStep?: boolean;
+  showCompletion?: boolean;
+  onCloseCompletion?: () => void;
 }
 
 export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
@@ -33,7 +39,9 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
   onNext,
   onPrev,
   onClose,
-  isSingleStep = false
+  isSingleStep = false,
+  showCompletion = false,
+  onCloseCompletion
 }) => {
   const [elementRect, setElementRect] = useState<DOMRect | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -100,6 +108,190 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
       window.removeEventListener('scroll', updateRect);
     };
   }, [isActive, currentStep]);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        onNext();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isActive, onNext]);
+
+  // Tour completion screen
+  if (showCompletion) {
+    return (
+      <div className="fixed inset-0 z-[9999] pointer-events-auto overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute inset-0"
+          style={{ 
+            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.92) 100%)',
+            backdropFilter: 'blur(20px)'
+          }}
+          onClick={onCloseCompletion}
+        />
+
+        {/* Floating sparkle particles */}
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              opacity: 0,
+              x: `${20 + Math.random() * 60}%`,
+              y: `${20 + Math.random() * 60}%`,
+              scale: 0
+            }}
+            animate={{ 
+              opacity: [0, 0.7, 0],
+              scale: [0, 1, 0],
+              y: [`${30 + Math.random() * 40}%`, `${10 + Math.random() * 20}%`]
+            }}
+            transition={{ 
+              duration: 2.5 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 3,
+              ease: 'easeOut'
+            }}
+            className="absolute pointer-events-none"
+          >
+            <Sparkles className="w-3 h-3 text-primary/60" />
+          </motion.div>
+        ))}
+
+        <div className="absolute inset-0 flex items-center justify-center p-6">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: 40 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.15 }}
+            className="relative w-full max-w-sm"
+            dir="rtl"
+          >
+            {/* Glow behind card */}
+            <div 
+              className="absolute -inset-4 rounded-[3rem] opacity-30 blur-2xl"
+              style={{ background: 'linear-gradient(135deg, var(--primary) 0%, transparent 60%)' }}
+            />
+
+            {/* Main card */}
+            <div className="relative bg-white dark:bg-slate-900 rounded-[2.5rem] border-[3px] border-primary/60 shadow-[0_0_80px_-20px_rgba(0,0,0,0.6)] overflow-hidden">
+              {/* Decorative top gradient strip */}
+              <div 
+                className="h-2"
+                style={{ background: 'linear-gradient(90deg, var(--primary), color-mix(in srgb, var(--primary) 60%, #ec4899), var(--primary))' }}
+              />
+
+              <div className="p-8 text-center">
+                {/* Party icon */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.3 }}
+                  className="relative mx-auto mb-6 w-20 h-20"
+                >
+                  {/* Pulsing ring */}
+                  <motion.div
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: 'radial-gradient(circle, var(--primary) 0%, transparent 70%)' }}
+                  />
+                  <div className="relative w-20 h-20 rounded-full bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] border-2 border-primary/30 flex items-center justify-center">
+                    <PartyPopper className="w-9 h-9 text-primary" />
+                  </div>
+                </motion.div>
+
+                {/* Title */}
+                <motion.h3
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                  className="text-xl font-black text-slate-900 dark:text-white mb-2 leading-tight"
+                >
+                  סיימנו את הסיור! 🎉
+                </motion.h3>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.55 }}
+                  className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-6 leading-relaxed"
+                >
+                  תודה רבה שהקדשת מזמנך לצפות בסיור.
+                  <br />
+                  אני זמין לכל שאלה!
+                </motion.p>
+
+                {/* Divider */}
+                <motion.div
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.6, duration: 0.4 }}
+                  className="h-px bg-gradient-to-l from-transparent via-primary/30 to-transparent mb-6"
+                />
+
+                {/* Quote card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-5 mb-6 border border-border/50 text-right"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <MessageCircle className="w-4 h-4 text-primary" />
+                    </div>
+                    <p className="text-[12px] font-bold text-slate-600 dark:text-slate-300 leading-[1.8]">
+                      אמנם אני לא AI, אבל יש לי תשובות לרוב השאלות 😉
+                      <br />
+                      ואם בכל זאת אתקע — אני מעביר ישר לצוות התמיכה שלנו
+                      <span className="inline-flex mr-1">
+                        <Headphones className="w-3.5 h-3.5 text-primary inline" />
+                      </span>
+                    </p>
+                  </div>
+                </motion.div>
+
+                {/* CTA buttons */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.85 }}
+                  className="flex flex-col gap-3"
+                >
+                  <Button
+                    onClick={onCloseCompletion}
+                    className="w-full rounded-2xl font-black text-[12px] h-12 gap-2 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all"
+                  >
+                    <Heart className="w-4 h-4" />
+                    מעולה, בואו נתחיל!
+                  </Button>
+                </motion.div>
+
+                {/* Steps completed badge */}
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-4 uppercase tracking-wider"
+                >
+                  ✓ {steps.length} שלבים הושלמו בהצלחה
+                </motion.p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isActive || !currentStep) return null;
 

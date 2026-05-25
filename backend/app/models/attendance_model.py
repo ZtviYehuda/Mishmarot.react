@@ -772,10 +772,10 @@ class AttendanceModel:
                 if filters.get("team_id"):
                     scoping_clause += " AND t.id = %s"
                     scoping_params.append(filters["team_id"])
-                    # Keep at team level or show individuals? Let's stay at team for now.
-                    grouping_col = "t.name"
-                    grouping_id = "t.id"
-                    grouping_label = "team"
+                    # Drill down to employee level
+                    grouping_col = "e.first_name || ' ' || e.last_name"
+                    grouping_id = "e.id"
+                    grouping_label = "employee"
 
                 if filters.get("serviceTypes"):
                     srv_list = (

@@ -234,6 +234,7 @@ export const ChatSidebar: React.FC = () => {
 
           {/* Window Panel */}
           <motion.div
+            id="chat-sidebar-container"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}

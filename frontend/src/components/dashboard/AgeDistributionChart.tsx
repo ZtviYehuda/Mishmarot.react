@@ -33,17 +33,14 @@ export const AgeDistributionChart = ({
   }, [data]);
 
   return (
-    <Card className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-2xl sm:rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all">
-      <div className="p-3 sm:p-4 md:p-6 flex-1 flex flex-col">
+    <Card id="age-distribution-card" className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-2xl sm:rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all">
+      <div className="pt-1.5 pb-3 px-3 sm:pt-2 sm:pb-4 sm:px-4 md:pt-2.5 md:pb-6 md:px-6 flex-1 flex flex-col">
       
       {/* Header */}
-      <div className="flex flex-row justify-between items-center gap-2 sm:gap-3 mb-3 sm:mb-6 relative z-10 min-h-[48px] sm:min-h-[70px]">
+      <div className="flex flex-row justify-between items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2.5 relative z-10">
         <div className="flex gap-2 sm:gap-3 items-center">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-muted/50 flex items-center justify-center shrink-0 border border-border/40">
-            <Timer className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-          </div>
           <div className="text-right flex flex-col">
-            <h3 className="text-sm sm:text-lg font-black text-foreground tracking-tight flex items-center flex-wrap gap-2">
+            <h3 className="text-sm sm:text-base font-black text-foreground tracking-tight flex items-center flex-wrap gap-2">
               <span>חתך גילאים</span>
               {filterTags.length > 0 && (
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
@@ -80,22 +77,22 @@ export const AgeDistributionChart = ({
       </div>
 
       {/* Chart Container */}
-      <div className="flex-1 min-h-[160px] sm:min-h-[180px] w-full relative z-10">
+      <div className="flex-1 min-h-[240px] sm:min-h-[320px] w-full relative z-10">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
-            margin={{ top: 20, right: 10, left: 10, bottom: 5 }}
+            margin={{ top: 20, right: 10, left: 10, bottom: 15 }}
           >
             <XAxis
               dataKey="range"
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11, fontWeight: 900, fill: "#94a3b8" }}
+              tick={{ fontSize: 13, fontWeight: 900, fill: "var(--foreground)" }}
               dy={5}
             />
             <YAxis hide domain={[0, 'dataMax + 10']} />
             <Tooltip
-              cursor={{ fill: 'rgba(0,0,0,0.03)', radius: 8 }}
+              cursor={false}
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   return (

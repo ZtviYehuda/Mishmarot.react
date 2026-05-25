@@ -60,6 +60,7 @@ const EmployeesChartComponent = (
     selectedStatusId = null,
     filterTags = [],
     compact = false,
+    hideHeader = false,
   }: EmployeesChartProps,
   ref: any,
 ) => {
@@ -208,34 +209,38 @@ const EmployeesChartComponent = (
           compact && "bg-transparent backdrop-blur-none border-0 shadow-none"
         )}
       >
-      <div className={cn("p-3 sm:p-4 md:p-6 px-0 sm:px-0 md:px-0 flex-1 flex flex-col relative overflow-visible", compact && "p-2 sm:p-3 px-0 sm:px-0")}>
+      <div className={cn("pt-1.5 pb-3 px-0 sm:pt-2 sm:pb-4 sm:px-0 md:pt-2.5 md:pb-6 md:px-0 flex-1 flex flex-col relative overflow-visible", compact && "pt-1 pb-1.5 sm:pt-1.5 sm:pb-2 px-0 sm:px-0")}>
         {/* Header */}
-        <div className="flex flex-row justify-between items-center gap-2 sm:gap-3 mb-2 relative z-10 min-h-[48px] sm:min-h-[70px] px-3 sm:px-4 md:px-6">
-          <div className="flex gap-2 sm:gap-3 items-center min-w-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/10">
-              <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+        {!hideHeader ? (
+          <div className="flex flex-row justify-between items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2.5 relative z-10 px-3 sm:px-4 md:px-6">
+            <div className="flex gap-2 sm:gap-3 items-center min-w-0">
+              <div className="text-right flex flex-col min-w-0">
+                <h3 className="text-sm sm:text-base font-black text-foreground tracking-tight flex items-center flex-wrap gap-2 truncate">
+                  <span>{title}</span>
+                  {filterTags.length > 0 && (
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                      {filterTags.map((tag, idx) => (
+                        <Badge key={idx} variant="outline" className="text-[10px] h-6 px-2.5 font-black bg-primary/10 text-primary border-primary/30 rounded-lg shadow-sm">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </h3>
+              </div>
             </div>
-            <div className="text-right flex flex-col min-w-0">
-              <h3 className="text-sm sm:text-lg font-black text-foreground tracking-tight flex items-center flex-wrap gap-2 truncate">
-                <span>{title}</span>
-                {filterTags.length > 0 && (
-                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                    {filterTags.map((tag, idx) => (
-                      <Badge key={idx} variant="outline" className="text-[10px] h-6 px-2.5 font-bold bg-primary/5 text-primary border-primary/20 rounded-lg">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </h3>
+
+            <div className="bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-lg flex border border-border/50 backdrop-blur-md shrink-0">
+              <button onClick={() => setChartType("pie")} className={cn("p-1.5 rounded-md transition-all", chartType === "pie" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-400")}><PieChartIcon className="w-3.5 h-3.5" /></button>
+              <button onClick={() => setChartType("bar")} className={cn("p-1.5 rounded-md transition-all", chartType === "bar" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-400")}><BarChart2 className="w-3.5 h-3.5" /></button>
             </div>
           </div>
-
-          <div className="bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-lg flex border border-border/50 backdrop-blur-md shrink-0">
+        ) : (
+          <div className="absolute left-2 sm:left-4 top-2 sm:top-3 z-20 bg-slate-100/80 dark:bg-slate-800/80 p-0.5 rounded-lg flex border border-border/40 backdrop-blur-md shrink-0 no-export">
             <button onClick={() => setChartType("pie")} className={cn("p-1.5 rounded-md transition-all", chartType === "pie" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-400")}><PieChartIcon className="w-3.5 h-3.5" /></button>
             <button onClick={() => setChartType("bar")} className={cn("p-1.5 rounded-md transition-all", chartType === "bar" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-400")}><BarChart2 className="w-3.5 h-3.5" /></button>
           </div>
-        </div>
+        )}
 
         {/* Premium Pills Filter for Office - Contextual */}
         <div className={cn(
@@ -292,7 +297,7 @@ const EmployeesChartComponent = (
             <div className="flex-1 w-full flex-col min-h-0 relative mt-0 overflow-visible" style={{ direction: "ltr" }}>
               <ResponsiveContainer className="overflow-visible" width="100%" height="100%" minHeight={compact ? 200 : 230}>
                 {chartType === "pie" ? (
-                  <PieChart className="overflow-visible" margin={{ left: isMobile ? 35 : 60, right: isMobile ? 35 : 60, top: isMobile ? 35 : 15, bottom: isMobile ? 35 : 15 }}>
+                  <PieChart className="overflow-visible" margin={{ left: isMobile ? 10 : 60, right: isMobile ? 10 : 60, top: isMobile ? 10 : 15, bottom: isMobile ? 10 : 15 }}>
                     <Pie
                       data={chartData}
                       cx="50%" cy="50%"
@@ -365,8 +370,8 @@ const EmployeesChartComponent = (
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
                 ) : (
-                  <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} interval={0} tick={{ fontSize: 9, fontWeight: 900, fill: '#94a3b8' }} />
+                  <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 15 }}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} interval={0} tick={{ fontSize: isMobile ? 11 : 13, fontWeight: 900, fill: 'var(--foreground)' }} />
                     <YAxis hide={true} />
                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
                     <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={isMobile ? 16 : 24}>
@@ -392,6 +397,7 @@ const EmployeesChartComponent = (
             </div>
           )}
         </div>
+
       </div>
     </Card>
     );
