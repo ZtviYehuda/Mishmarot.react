@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useAuthContext } from "@/context/AuthContext";
@@ -133,6 +133,7 @@ export default function RosterPage() {
   const [loadingMatrix, setLoadingMatrix] = useState(false);
   const [saving, setSaving] = useState(false);
 
+
   // Filters
   const [selectedDept, setSelectedDept] = useState<string>("all");
   const [selectedSection, setSelectedSection] = useState<string>("all");
@@ -191,6 +192,54 @@ export default function RosterPage() {
     }
     return days;
   }, [weekStart]);
+
+  // Tour Guide State Integration
+  const [currentTourStepId, setCurrentTourStepId] = useState<string | null>(() =>
+    localStorage.getItem("active_tour_step_id")
+  );
+  const openedByTour = useRef(false);
+
+  useEffect(() => {
+    const handleTourStep = (e: any) => {
+      setCurrentTourStepId(e.detail.stepId);
+    };
+    window.addEventListener("tour-step-changed", handleTourStep);
+    return () => {
+      window.removeEventListener("tour-step-changed", handleTourStep);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (currentTourStepId === "roster_status_change") {
+      setSelectedDayMobile(weekDays[0]);
+      if (employees.length > 0 && (!isDialogOpen || !selectedCell || selectedCell.date !== weekDays[0])) {
+        setSelectedCell({
+          empId: employees[0].id,
+          date: weekDays[0],
+        });
+        setIsDialogOpen(true);
+        openedByTour.current = true;
+      }
+    } else if (currentTourStepId === "roster_weekend_holidays") {
+      setSelectedDayMobile(weekDays[5]);
+      if (employees.length > 0 && (!isDialogOpen || !selectedCell || selectedCell.date !== weekDays[5])) {
+        setSelectedCell({
+          empId: employees[0].id,
+          date: weekDays[5],
+        });
+        setIsDialogOpen(true);
+        openedByTour.current = true;
+      }
+    } else {
+      if (openedByTour.current) {
+        if (isDialogOpen) {
+          setIsDialogOpen(false);
+        }
+        openedByTour.current = false;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTourStepId, employees, weekDays]);
 
   // Initial Data
   useEffect(() => {
@@ -1063,10 +1112,16 @@ export default function RosterPage() {
                           const weekend =
                             getDay(day) === 5 || getDay(day) === 6;
                           const isPending = log?.is_pending;
+                          const isSundayTourCell = empIdx === 0 && getDay(day) === 0;
+                          const isFridayTourCell = empIdx === 0 && getDay(day) === 5;
+                          const forceShowPlus = 
+                            (isSundayTourCell && currentTourStepId === "roster_status_change") ||
+                            (isFridayTourCell && currentTourStepId === "roster_weekend_holidays");
 
                           return (
                             <div
                               key={i}
+                              id={isSundayTourCell ? "tour-roster-cell" : isFridayTourCell ? "tour-roster-weekend-cell" : undefined}
                               onClick={() => handleCellClick(emp.id, day)}
                               className={cn(
                                 "p-2 border-l border-border/30 flex items-center justify-center cursor-pointer transition-all relative group/cell min-h-[72px]",
@@ -1074,8 +1129,11 @@ export default function RosterPage() {
                                 "hover:bg-muted/30",
                               )}
                             >
-                              {!log ? (
-                                <div className="opacity-0 group-hover/cell:opacity-100 transition-all transform scale-75 group-hover/cell:scale-100 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/40 hover:bg-primary/10 hover:text-primary">
+                              {!log || forceShowPlus ? (
+                                <div className={cn(
+                                  "group-hover/cell:opacity-100 transition-all transform scale-75 group-hover/cell:scale-100 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/40 hover:bg-primary/10 hover:text-primary",
+                                  forceShowPlus ? "opacity-100 scale-100 bg-primary/10 text-primary border border-primary/20" : "opacity-0"
+                                )}>
                                   <Plus className="w-4 h-4" />
                                 </div>
                               ) : (
@@ -1160,6 +1218,10 @@ export default function RosterPage() {
                 filteredEmployees.map((emp, idx) => {
                   const log = getLogForCell(emp.id, selectedDayMobile);
                   const isWeekend = getDay(selectedDayMobile) === 5 || getDay(selectedDayMobile) === 6;
+                  const mobileForceShowPlus =
+                    idx === 0 &&
+                    (currentTourStepId === "roster_status_change" ||
+                      currentTourStepId === "roster_weekend_holidays");
                   return (
                     <motion.div
                       key={emp.id}
@@ -1197,8 +1259,17 @@ export default function RosterPage() {
                           </div>
                         </div>
 
-                        <div className="shrink-0">
-                          {log ? (
+                        <div
+                          className="shrink-0"
+                          id={
+                            idx === 0
+                              ? (currentTourStepId === "roster_weekend_holidays"
+                                ? "mobile-tour-roster-weekend-cell"
+                                : "mobile-tour-roster-cell")
+                              : undefined
+                          }
+                        >
+                          {log && !mobileForceShowPlus ? (
                             <div
                               className="px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-tight text-center min-w-[75px] flex items-center justify-center"
                               style={{
@@ -1209,7 +1280,7 @@ export default function RosterPage() {
                             >
                               {log.status_name}
                             </div>
-                          ) : isWeekend ? (
+                          ) : isWeekend && !mobileForceShowPlus ? (
                             <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
                               <ShabbatIcon className="w-4 h-4" />
                             </div>
@@ -1229,7 +1300,7 @@ export default function RosterPage() {
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-xl p-0 overflow-hidden bg-background border-border rounded-3xl sm:rounded-[2rem]">
+          <DialogContent id="tour-roster-dialog" className="max-w-xl p-0 overflow-hidden bg-background border-border rounded-3xl sm:rounded-[2rem]">
             <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-border bg-muted/20">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center text-primary">

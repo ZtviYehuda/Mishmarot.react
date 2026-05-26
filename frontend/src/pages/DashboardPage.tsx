@@ -660,6 +660,7 @@ export default function DashboardPage() {
             badge={
               // Desktop only — mobile uses the grid below
               <div className="hidden lg:flex items-center gap-2">
+                <div id="dashboard-filter-btn">
                 <DashboardFilters
                   structure={structure}
                   statuses={allStatusTypes.map((s: any) => ({ status_id: s.id, status_name: s.name, color: s.color }))}
@@ -677,6 +678,7 @@ export default function DashboardPage() {
                   canSelectTeam={canSelectTeam}
                   user={user}
                 />
+                </div>
 
                 <ReportHub
                   id="report-hub-card"

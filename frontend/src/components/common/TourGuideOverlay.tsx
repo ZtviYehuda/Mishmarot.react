@@ -9,7 +9,7 @@ import {
   PartyPopper,
   Headphones
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 export interface TourStep {
@@ -43,56 +43,68 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
   showCompletion = false,
   onCloseCompletion
 }) => {
-  const [elementRect, setElementRect] = useState<DOMRect | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [hasDragged, setHasDragged] = useState(false);
+  const [elementRects, setElementRects] = useState<DOMRect[]>([]);
+  const dragX = useMotionValue(0);
+  const dragY = useMotionValue(0);
   const [isVisible, setIsVisible] = useState(false);
   const currentStep = steps[currentStepIndex];
+  const primaryRect = elementRects[0] || null;
 
   useEffect(() => {
     // Reset drag when step changes
-    setDragOffset({ x: 0, y: 0 });
-    setHasDragged(false);
-  }, [currentStepIndex]);
+    dragX.set(0);
+    dragY.set(0);
+  }, [currentStepIndex, dragX, dragY]);
+
+  useEffect(() => {
+    if (isActive && !showCompletion) {
+      document.body.classList.add("tour-active");
+    } else {
+      document.body.classList.remove("tour-active");
+    }
+    return () => {
+      document.body.classList.remove("tour-active");
+    };
+  }, [isActive, showCompletion]);
 
   useEffect(() => {
     if (!isActive || !currentStep) {
-      setElementRect(null);
+      setElementRects([]);
       setIsVisible(false);
       return;
     }
 
     const updateRect = () => {
-      // Use querySelectorAll to find ALL matching elements (e.g. desktop + mobile versions)
-      // then pick the first one that is actually visible on screen
+      // Find all visible elements matching the selector
       const allElements = document.querySelectorAll(currentStep.selector);
-      let visibleElement: Element | null = null;
+      const visibleRects: DOMRect[] = [];
+      let firstVisibleEl: Element | null = null;
 
       allElements.forEach(el => {
-        if (!visibleElement) {
-          const rect = el.getBoundingClientRect();
-          // Check element is rendered and not hidden (display:none gives 0x0)
-          if (rect.width > 0 && rect.height > 0) {
-            visibleElement = el;
+        const rect = el.getBoundingClientRect();
+        // Check element is rendered and not hidden (display:none gives 0x0)
+        if (rect.width > 0 && rect.height > 0) {
+          visibleRects.push(rect);
+          if (!firstVisibleEl) {
+            firstVisibleEl = el;
           }
         }
       });
 
-      if (visibleElement) {
-        const rect = (visibleElement as Element).getBoundingClientRect();
-        setElementRect(rect);
+      if (visibleRects.length > 0) {
+        setElementRects(visibleRects);
         setIsVisible(true);
-        // Scroll logic: if off-screen, scroll to it.
-        // For large elements (like lists), scroll to the start so the header is visible without scrolling to the middle.
-        // For small elements, center them on screen.
-        const isOffScreen = rect.top < 100 || rect.bottom > window.innerHeight - 100;
-        if (isOffScreen) {
-          const scrollBlock = rect.height > window.innerHeight * 0.5 ? 'start' : 'center';
+        // Scroll logic: if the first highlighted element is off-screen, scroll to it.
+        const firstRect = visibleRects[0];
+        const isOffScreen = firstRect.top < 100 || firstRect.bottom > window.innerHeight - 100;
+        if (isOffScreen && firstVisibleEl) {
+          const scrollBlock = firstRect.height > window.innerHeight * 0.5 ? 'start' : 'center';
           setTimeout(() => {
-            (visibleElement as Element).scrollIntoView({ behavior: 'smooth', block: scrollBlock });
+            (firstVisibleEl as Element).scrollIntoView({ behavior: 'smooth', block: scrollBlock });
           }, 100);
         }
       } else {
+        setElementRects([]);
         setIsVisible(false);
       }
     };
@@ -113,9 +125,42 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
     if (!isActive) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Enter") {
+      const activeEl = document.activeElement;
+      const isTyping = activeEl && (
+        activeEl.tagName === "INPUT" || 
+        activeEl.tagName === "TEXTAREA" || 
+        activeEl.getAttribute("contenteditable") === "true"
+      );
+
+      // Escape key should always close the tour/completion
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (showCompletion) {
+          onCloseCompletion?.();
+        } else {
+          onClose();
+        }
+        return;
+      }
+
+      if (isTyping) return;
+
+      if (showCompletion) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          onCloseCompletion?.();
+        }
+        return;
+      }
+
+      if (event.key === "ArrowRight" || event.key === "ArrowDown" || event.key === "Enter") {
         event.preventDefault();
         onNext();
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        event.preventDefault();
+        if (!isSingleStep && currentStepIndex > 0) {
+          onPrev();
+        }
       }
     };
 
@@ -123,7 +168,7 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isActive, onNext]);
+  }, [isActive, showCompletion, currentStepIndex, isSingleStep, onNext, onPrev, onClose, onCloseCompletion]);
 
   // Tour completion screen
   if (showCompletion) {
@@ -295,61 +340,60 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
 
   if (!isActive || !currentStep) return null;
 
-  const getTooltipStyle = (): React.CSSProperties => {
-    if (!elementRect) return {};
+  // Tooltip geometry calculations
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
+  const isMobile = vw < 640;
+  const tooltipH = 240;  // conservative tooltip height estimate
+  const tooltipW = isMobile ? vw - 40 : 320;
+  const pad = 20;        // minimum gap from screen edge
 
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const isMobile = vw < 640;
-    const tooltipH = 240;  // conservative tooltip height estimate
-    const tooltipW = isMobile ? vw - 40 : 320;
-    const pad = 20;        // minimum gap from screen edge
+  const getTooltipPositions = () => {
+    if (!primaryRect) return { topVal: 0, leftVal: 0 };
 
-    const spaceBelow = vh - elementRect.bottom;
-    const spaceAbove = elementRect.top;
-    const elementIsLarge = elementRect.height > vh - 200;
+    const spaceBelow = vh - primaryRect.bottom;
+    const spaceAbove = primaryRect.top;
+    const elementIsLarge = primaryRect.height > vh - 200;
 
     let topVal: number;
 
     if (elementIsLarge) {
-      // Element fills most of the screen — pin tooltip to bottom of viewport
       topVal = vh - tooltipH - pad;
     } else if (spaceBelow >= tooltipH + pad) {
-      // Enough room below
-      topVal = elementRect.bottom + pad;
+      topVal = primaryRect.bottom + pad;
     } else if (spaceAbove >= tooltipH + pad) {
-      // Enough room above
-      topVal = elementRect.top - tooltipH - pad;
+      topVal = primaryRect.top - tooltipH - pad;
     } else {
-      // Not enough room either side — centre vertically in viewport
       topVal = Math.max(pad, (vh - tooltipH) / 2);
     }
 
-    // Clamp: never let it go off the top or bottom
     topVal = Math.max(pad, Math.min(topVal, vh - tooltipH - pad));
 
     let leftVal: number;
     if (isMobile) {
       leftVal = pad;
     } else {
-      // Align with element left, but clamp so it never goes off the right edge
-      leftVal = Math.max(pad, Math.min(elementRect.left, vw - tooltipW - pad));
+      leftVal = Math.max(pad, Math.min(primaryRect.left, vw - tooltipW - pad));
     }
 
-    return {
-      position: 'fixed',
-      top: topVal + (hasDragged ? dragOffset.y : 0),
-      left: leftVal + (hasDragged ? dragOffset.x : 0),
-      width: tooltipW,
-      maxWidth: vw - 2 * pad,
-      zIndex: 10000,
-    };
+    return { topVal, leftVal };
   };
+
+  const { topVal, leftVal } = getTooltipPositions();
+
+  const tooltipStyle: React.CSSProperties = primaryRect ? {
+    position: 'fixed',
+    top: topVal,
+    left: leftVal,
+    width: tooltipW,
+    maxWidth: vw - 2 * pad,
+    zIndex: 10000,
+  } : {};
 
   return (
     <div className="fixed inset-0 z-[9999] pointer-events-none overflow-hidden">
       <AnimatePresence>
-        {isVisible && elementRect && (
+        {isVisible && primaryRect && (
           <>
             {/* SVG Mask for Spotlight */}
             <motion.svg
@@ -361,14 +405,17 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
               <defs>
                 <mask id="spotlight-mask">
                   <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                  <rect
-                    x={elementRect.left - 8}
-                    y={elementRect.top - 8}
-                    width={elementRect.width + 16}
-                    height={elementRect.height + 16}
-                    rx="12"
-                    fill="black"
-                  />
+                  {elementRects.map((rect, idx) => (
+                    <rect
+                      key={idx}
+                      x={rect.left - 8}
+                      y={rect.top - 8}
+                      width={rect.width + 16}
+                      height={rect.height + 16}
+                      rx="12"
+                      fill="black"
+                    />
+                  ))}
                 </mask>
               </defs>
               <rect
@@ -383,39 +430,47 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
             </motion.svg>
 
             {/* Pulse Effect */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ 
-                opacity: [0.3, 0.6, 0.3], 
-                scale: [1, 1.05, 1],
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-              style={{
-                position: 'absolute',
-                left: elementRect.left - 12,
-                top: elementRect.top - 12,
-                width: elementRect.width + 24,
-                height: elementRect.height + 24,
-                border: '4px solid var(--primary)',
-                borderRadius: '16px',
-                pointerEvents: 'none'
-              }}
-            />
+            {elementRects.map((rect, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ 
+                  opacity: [0.3, 0.6, 0.3], 
+                  scale: [1, 1.05, 1],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                style={{
+                  position: 'absolute',
+                  left: rect.left - 12,
+                  top: rect.top - 12,
+                  width: rect.width + 24,
+                  height: rect.height + 24,
+                  border: '4px solid var(--primary)',
+                  borderRadius: '16px',
+                  pointerEvents: 'none',
+                  zIndex: 9998
+                }}
+              />
+            ))}
 
             {/* Content Tooltip */}
             <motion.div
               drag
               dragMomentum={false}
-              onDragStart={() => setHasDragged(true)}
-              onDragEnd={(_, info) => {
-                setDragOffset(prev => ({
-                  x: prev.x + info.offset.x,
-                  y: prev.y + info.offset.y
-                }));
+              dragElastic={0.1}
+              dragConstraints={{
+                left: -leftVal + pad,
+                right: vw - leftVal - tooltipW - pad,
+                top: -topVal + pad,
+                bottom: vh - topVal - tooltipH - pad
               }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              style={getTooltipStyle()}
+              style={{
+                ...tooltipStyle,
+                x: dragX,
+                y: dragY
+              }}
               className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] pointer-events-auto border-[3px] border-primary/80 ring-8 ring-primary/20 text-right cursor-default"
               dir="rtl"
             >

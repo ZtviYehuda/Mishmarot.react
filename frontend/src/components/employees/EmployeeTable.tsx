@@ -23,7 +23,6 @@ import {
   Pencil,
   LogIn,
   Phone,
-  Upload,
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn, cleanUnitName, calculateAge } from "@/lib/utils";
@@ -233,32 +232,7 @@ export const EmployeeTable = ({
     }
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const toastId = toast.loading("מייבא שוטרים...");
-    try {
-      const { data } = await apiClient.post("/employees/import", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      if (data.success) {
-        toast.success(data.message, { id: toastId });
-        if (fetchEmployees) fetchEmployees();
-      } else {
-        toast.error(data.error || "הייבוא נכשל", { id: toastId });
-      }
-    } catch (err) {
-      toast.error("שגיאה בחיבור לשרת", { id: toastId });
-      console.error(err);
-    } finally {
-      // Clear input
-      e.target.value = "";
-    }
-  };
 
   return (
     <div className="space-y-3 sm:space-y-5">
@@ -310,26 +284,7 @@ export const EmployeeTable = ({
             )}
           </Button>
 
-          {user?.is_admin && (
-            <>
-              <input
-                type="file"
-                id="import-employees-input"
-                className="hidden"
-                accept=".csv, .xlsx, .xls"
-                onChange={handleImport}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9.5 sm:h-10 text-xs sm:text-sm border-border/60 dark:border-slate-800 hover:bg-muted rounded-xl flex-1 sm:flex-none sm:w-auto justify-center"
-                onClick={() => document.getElementById("import-employees-input")?.click()}
-              >
-                <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
-                ייבוא
-              </Button>
-            </>
-          )}
+
 
           {!user?.is_temp_commander && (
             <Button

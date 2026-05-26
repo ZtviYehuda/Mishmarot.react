@@ -20,40 +20,41 @@ import type { TourStep } from "./TourGuideOverlay";
 import { useChat } from "@/context/ChatContext";
 
 const TOUR_STEPS: TourStep[] = [
+  // --- CHAT & STATUS (first in tour) ---
+  { id: 'system_status', selector: '#system-status-dot, #mobile-system-status-dot', path: '/', title: 'סטטוס פעילות המערכת', content: 'כאן מופיע חיווי ירוק קבוע המציין שהחיבור לשרת פעיל ומאובטח. לחיצה עליו תציג פרטים על זמן הכניסה האחרון שלך.' },
+  { id: 'chat_status_step', selector: '#chat-toggle-btn', path: '/', title: 'צ׳אט ישיר בין מפקדים', content: 'בסרגל העליון, ליד הפעמון, ישנו אייקון הודעות (בועת שיחה 💬) — לחיצה עליו פותחת את הצ׳אט הצידי לתקשורת ישירה עם שאר המפקדים ביחידה. שם תוכלו לנהל שיחות פרטיות, לראות מי מחובר כעת (נקודה ירוקה/אדומה), ולעדכן את הסטטוס האישי שלכם (זמין/לא זמין). כפתור זה מופיע רק במחשב.' },
+  { id: 'notifications_bell', selector: '#mobile-notifications-btn', path: '/', title: 'פעמון ההתראות', content: 'בסרגל העליון תמצאו את אייקון הפעמון (🔔). לחיצה עליו פותחת חלון עם 3 לשוניות: פעילות — התראות מהמערכת (שוטרים שלא דיווחו, בקשות ממתינות וכו׳), הודעות — מעבר לצ׳אט הפנימי עם המפקדים, והיסטוריה — התראות שכבר קראתם. מספר אדום/כתום על הפעמון מציין כמה התראות ממתינות לטיפולכם.' },
+
   // --- DASHBOARD PAGE ---
-  { id: 'stats', selector: '#stats-grid', path: '/', title: 'לוח בקרה - נתונים מהירים', content: 'כאן מופיע סיכום המצב הנוכחי: כמה שוטרים לא דיווחו, כמה לא זמינים ומה אחוז הזמינות המבצעית שלכם ברגע זה.' },
-  { id: 'attendance_trend', selector: '#attendance-chart', path: '/', title: 'מגמת זמינות', content: 'גרף המציג את מגמת נוכחות וזמינות השוטרים לאורך זמן (שבועי, חודשי או שנתי). עוזר לזהות מגמות ודפוסי התנהגות ביחידה.' },
-  { id: 'status_distribution', selector: '#attendance-snapshot-card', path: '/', title: 'חלוקת סטטוסים', content: 'תרשים עוגה/דונאט שמראה את התפלגות השוטרים לפי הסטטוסים השונים (משרד, חופשה, מחלה וכו\') עבור היום שנבחר.' },
-  { id: 'age_distribution', selector: '#age-distribution-card', path: '/', title: 'חתך גילאים', content: 'גרף עמודות המציג את התפלגות הגילאים של שוטרי היחידה, כולל הצגת הגיל הממוצע של כלל המשרתים.' },
-  { id: 'stats_comparison', selector: '#stats-comparison-card', path: '/', title: 'השוואת כוח אדם', content: 'כלי להשוואת אחוזי נוכחות וזמינות בין המחלקות, המדורים או החוליות השונות. ניתן ללחוץ על יחידה כדי לבצע סינון ולקדוח (Drill-Down) פנימה.' },
-  { id: 'birthdays', selector: '#birthdays-card', path: '/', title: 'ימי הולדת השבוע', content: 'מרכז החגיגות! כאן תוכלו לראות מי חוגג, לשלוח לו ברכה אישית בוואטסאפ או לראות את הפרופיל שלו.' },
+  { id: 'dashboard_filter', selector: '#dashboard-filter-btn, #mobile-filter-trigger', path: '/', title: 'סינון נתונים', content: 'כפתור הסינון מאפשר לכם לסנן את כל הנתונים בלוח הבקרה לפי יחידה ארגונית (מחלקה/מדור/חוליה), סטטוס, מעמד שירות וטווח גילאים. כך תוכלו לראות נתונים ממוקדים של הצוות שלכם בלבד. ניתן לשלב כמה מסננים יחד, ולנקות הכל בלחיצה אחת.' },
   { id: 'report_hub', selector: '#report-hub-card, #report-hub-card-mobile', path: '/', title: 'מרכז הפקת דוחות', content: 'החלק האהוב על המפקדים. מכאן מוציאים את כל דוחות ה-PDF והתמונות לווטסאפ של היחידה בלחיצת כפור.' },
   { id: 'dashboard_event', selector: '#event-button, #mobile-event-button', path: '/', title: 'אירוע יחידתי', content: 'יצירת אירועים מיוחדים, תדריכים או פעילויות יחידתיות שיקפצו לכולם בלוח השנה ובהתראות.' },
   { id: 'dashboard_broadcast', selector: '#broadcast-button, #mobile-broadcast-button', path: '/', title: 'רשימת תפוצה', content: 'מכאן ניתן לשלוח הודעות מרוכזות לכל היחידה, לצוות מסוים או רק לאלה שלא דיווחו נוכחות.' },
+  { id: 'attendance_trend', selector: '#attendance-chart', path: '/', title: 'מגמת זמינות', content: 'גרף המציג את מגמת נוכחות וזמינות השוטרים לאורך זמן (שבועי, חודשי או שנתי). עוזר לזהות מגמות ודפוסי התנהגות ביחידה.' },
+  { id: 'status_distribution', selector: '#attendance-snapshot-card', path: '/', title: 'חלוקת סטטוסים', content: "תרשים עוגה/דונאט שמראה את התפלגות השוטרים לפי הסטטוסים השונים (משרד, חופשה, מחלה וכו') עבור היום שנבחר." },
+  { id: 'age_distribution', selector: '#age-distribution-card', path: '/', title: 'חתך גילאים', content: 'גרף עמודות המציג את התפלגות הגילאים של שוטרי היחידה, כולל הצגת הגיל הממוצע של כלל המשרתים.' },
+  { id: 'birthdays', selector: '#birthdays-card', path: '/', title: 'ימי הולדת השבוע', content: 'מרכז החגיגות! כאן תוכלו לראות מי חוגג, לשלוח לו ברכה אישית בוואטסאפ או לראות את הפרופיל שלו.' },
+  { id: 'stats_comparison', selector: '#stats-comparison-card', path: '/', title: 'השוואת כוח אדם', content: 'כלי להשוואת אחוזי נוכחות וזמינות בין המחלקות, המדורים או החוליות השונות. ניתן ללחוץ על יחידה כדי לבצע סינון ולקדוח (Drill-Down) פנימה.' },
 
   // --- ATTENDANCE PAGE ---
-  { id: 'attendance_header', selector: '#attendance-header', path: '/attendance', title: 'ניהול נוכחות יומי', content: 'כאן מתבצעת העבודה האמיתית. תוכלו לסנן לפי מדור או צוות ולראות בדיוק מי נמצא איפה.' },
-  { id: 'bulk_update', selector: '#bulk-update-btn, #mobile-bulk-update-btn', path: '/attendance', title: 'עדכון מרוכז', content: 'כלי מהיר לעדכון סטטוס נוכחות למספר שוטרים בבת אחת. סמן את השוטרים הרלוונטיים ולחץ כאן לעדכון גורף.' },
-  { id: 'self_report', selector: '#self-report-button, #mobile-self-report-btn', path: '/attendance', title: 'דיווח נוכחות עצמי', content: 'בלחיצה אחת תוכל לעדכן את הנוכחות שלך להיום מבלי לחפש את עצמך ברשימה.' },
-  { id: 'attendance_export', selector: '#attendance-export-btn, #mobile-attendance-export-btn', path: '/attendance', title: 'ייצוא נתוני נוכחות', content: 'מכאן תוכל לייצא את דוח הנוכחות היומי לקובץ Excel או PDF, וגם לשתף ישירות לוואטסאפ.' },
   { id: 'attendance_calendar', selector: '#attendance-calendar-btn, #mobile-attendance-calendar-btn', path: '/attendance', title: 'תצוגת לוח שנה', content: 'לחץ כאן כדי לעבור מתצוגת רשימה לתצוגת לוח שנה חודשית, המאפשרת ראייה רחבה של הנוכחות לאורך זמן.' },
+  { id: 'attendance_export', selector: '#attendance-export-btn, #mobile-attendance-export-btn', path: '/attendance', title: 'ייצוא נתוני נוכחות', content: 'מכאן תוכל לייצא את דוח הנוכחות היומי לקובץ Excel או PDF, וגם לשתף ישירות לוואטסאפ.' },
+  { id: 'self_report', selector: '#self-report-button, #mobile-self-report-btn', path: '/attendance', title: 'דיווח נוכחות עצמי', content: 'בלחיצה אחת תוכל לעדכן את הנוכחות שלך להיום מבלי לחפש את עצמך ברשימה.' },
+  { id: 'bulk_update', selector: '#bulk-update-btn, #mobile-bulk-update-btn', path: '/attendance', title: 'עדכון מרוכז', content: 'כלי מהיר לעדכון סטטוס נוכחות למספר שוטרים בבת אחת. סמן את השוטרים הרלוונטיים ולחץ כאן לעדכון גורף.' },
+  { id: 'attendance_header', selector: '#attendance-header', path: '/attendance', title: 'ניהול נוכחות יומי', content: 'כאן מתבצעת העבודה האמיתית. תוכלו לסנן לפי מדור או צוות ולראות בדיוק מי נמצא איפה.' },
 
   // --- ROSTER / SHIFTS PAGE ---
   { id: 'roster_grid', selector: '#roster-page-container', path: '/roster', title: 'סידור עבודה ומשמרות', content: 'זה הלב של תכנון היחידה. כאן בונים את סידור העבודה לשבוע הקרוב, משבצים משמרות וקובעים תגבורים.' },
+  { id: 'roster_status_change', selector: '#tour-roster-cell, #mobile-tour-roster-cell, #tour-roster-dialog', path: '/roster', title: 'שיבוץ עובד בסידור', content: 'במחשב: העבירו את העכבר מעל התא ולחצו על כפתור הפלוס הכחול (+). בנייד: לחצו ישירות על שורת העובד. ייפתח חלון עם כרטיסי סטטוס לבחירה (משרד, חופשה, מחלה ועוד).' },
+  { id: 'roster_weekend_holidays', selector: '#tour-roster-weekend-cell, #mobile-tour-roster-weekend-cell, #tour-roster-dialog', path: '/roster', title: 'שיבוץ בסופי שבוע וחגים', content: 'בימי שישי, שבת וחגים לא ניתן לבצע שיבוץ עבודה רגיל. המערכת תציג לכם אוטומטית רק אפשרויות לשיבוץ "תגבור" או סטטוס "אחר" עם שדה טקסט חופשי.' },
 
   // --- EMPLOYEES PAGE ---
   { id: 'employees_search', selector: '#employees-search-container', path: '/employees', title: 'חיפוש שוטרים', content: 'מחפשים מישהו ספציפי? פשוט תתחילו להקליד שם או מספר אישי.' },
   { id: 'add_employee_btn', selector: '#add-employee-button', path: '/employees', title: 'קליטת עובד חדש', content: 'הצטרף מישהו חדש ליחידה? דרך הכפתור הזה מקימים אותו במערכת תוך שניות.' },
 
-  // --- CHAT & STATUS ---
-  { id: 'system_status', selector: '#system-status-dot, #mobile-system-status-dot', path: '/', title: 'סטטוס פעילות המערכת', content: 'כאן מופיע חיווי ירוק קבוע המציין שהחיבור לשרת פעיל ומאובטח. לחיצה עליו תציג פרטים על זמן הכניסה האחרון שלך.' },
-  { id: 'chat_toggle', selector: '#chat-toggle-btn, #mobile-notifications-btn', path: '/', title: 'צ\'אט פנימי והודעות', content: 'הכלי המושלם לתקשורת פנימית מהירה! לחיצה על כפתור זה תפתח את מרכז ההודעות והצ\'אט עם כל השוטרים והמפקדים ביחידה.' },
-  { id: 'chat_status_step', selector: '#chat-sidebar-container', path: '/', title: 'הודעות בין מפקדים', content: 'מרכז ההודעות מאפשר לכם לנהל שיחות ישירות ובזמן אמת עם שאר מפקדי היחידה. תוכלו לראות מתי הם זמינים (סטטוס ירוק/אדום) ולעדכן את הסטטוס האישי שלכם.' },
-  { id: 'personal_profile', selector: '#sidebar-profile-container, #sidebar-profile-link-collapsed', path: '/', title: 'עריכת פרופיל אישי', content: 'בכל שלב במערכת, לחיצה על תמונת הפרופיל או השם שלכם בתחתית סרגל הניווט תוביל אתכם ישירות לעדכון הפרטים האישיים, הגדרת PIN, ורישום זיהוי ביומטרי.' },
-
-
   // --- SETTINGS PAGES ---
-  { id: 'appearance_palette', selector: '#color-palette-container', path: '/settings?tab=appearance', title: 'בחירת צבע תצוגה', content: 'לחצו על כל צבע במניפה כדי לשנות את הצבע המרכזי של המערכת (כפתורים, לינקים וגרפים) באופן מיידי.' },
+  { id: 'personal_profile', selector: '#sidebar-profile-container, #sidebar-profile-link-collapsed', path: '/', title: 'עריכת פרופיל אישי', content: 'בכל שלב במערכת, לחיצה על תמונת הפרופיל או השם שלכם בתחתית סרגל הניווט תוביל אתכם ישירות לעדכון הפרטים האישיים, הגדרת PIN, ורישום זיהוי ביומטרי.' },
+  { id: 'appearance_palette', selector: '#appearance-settings-page', path: '/settings?tab=appearance', title: 'נראות ועיצוב המערכת', content: 'מכאן תוכלו להתאים את המערכת בדיוק להעדפות שלכם: לבחור מראה יום/לילה, לשנות את גודל הגופן לתצוגה נוחה, ולבחור את צבע התצוגה המרכזי של המערכת.' },
   { id: 'settings_security', selector: '#security-tab, #mobile-security-tab', path: '/settings?tab=security', title: 'אבטחה וסיסמה', content: 'צריכים להחליף סיסמה? זה המקום. מומלץ להחליף סיסמה פעם בכמה חודשים לשמירה על אבטחת החשבון.' }
 ];
 
@@ -241,6 +242,25 @@ export function GlobalAiSupport() {
     return saved ? parseInt(saved, 10) : -1;
   });
   const [showTourCompletion, setShowTourCompletion] = useState(false);
+
+  useEffect(() => {
+    if (currentTourIndex >= 0) {
+      const step = TOUR_STEPS[currentTourIndex];
+      if (step) {
+        localStorage.setItem('active_tour_index', currentTourIndex.toString());
+        localStorage.setItem('active_tour_step_id', step.id);
+        window.dispatchEvent(new CustomEvent('tour-step-changed', {
+          detail: { index: currentTourIndex, stepId: step.id }
+        }));
+      }
+    } else {
+      localStorage.removeItem('active_tour_index');
+      localStorage.removeItem('active_tour_step_id');
+      window.dispatchEvent(new CustomEvent('tour-step-changed', {
+        detail: { index: -1, stepId: null }
+      }));
+    }
+  }, [currentTourIndex]);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
 
