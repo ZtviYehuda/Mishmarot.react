@@ -358,7 +358,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               </p>
             </div>
           ) : (
-            <div className={cn("space-y-3 py-4", compact && "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 py-2")}>
+            <div className={cn("space-y-3 py-4", compact && "grid grid-cols-1 sm:grid-cols-2 gap-3.5 py-2")}>
               {data.map((item) => {
                 const availability =
                   item.total_count > 0

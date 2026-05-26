@@ -35,7 +35,7 @@ export function ReportToolbar({
   maxDate,
 }: ReportToolbarProps) {
   return (
-    <div className="w-full flex flex-col items-stretch gap-2 sm:gap-3 bg-transparent p-0 min-w-fit">
+    <div className="w-full flex flex-col items-stretch gap-2 sm:gap-3 p-0.5 sm:p-1 rounded-xl min-w-fit">
       <div className="flex items-center gap-1.5 sm:gap-2 w-full flex-nowrap">
         {/* View Mode Tabs - Flexible & Scrollable */}
         <Tabs
