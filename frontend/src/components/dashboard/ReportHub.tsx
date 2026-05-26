@@ -315,7 +315,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
         <DialogContent className={cn(
           "p-0 overflow-hidden border-0 bg-background/97 backdrop-blur-3xl sm:rounded-[2rem] flex flex-col transition-all duration-300 shadow-2xl",
           "max-h-[92svh] sm:max-h-[88vh]",
-          "sm:max-w-3xl w-[95vw]"
+          "sm:max-w-3xl w-[95vw] mx-auto left-0 right-0"
         )}>
           <DialogDragHandle />
 
