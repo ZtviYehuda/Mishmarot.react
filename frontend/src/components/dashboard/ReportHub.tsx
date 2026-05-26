@@ -337,7 +337,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
               </div>
 
               {/* Menu Toolbar */}
-              <div className="px-4 sm:px-7 pb-3 shrink-0 overflow-x-auto no-scrollbar border-b border-border/10">
+              <div className="px-4 sm:px-7 pb-3 shrink-0 overflow-x-auto no-scrollbar border-b border-border/10 pl-10 sm:pl-12">
                 <ReportToolbar viewMode={localViewMode} onViewModeChange={setLocalViewMode} date={localDate} onDateChange={setLocalDate} dateRange={dateRange} onDateRangeChange={setDateRange} maxDate={maxDate} />
               </div>
             </>
@@ -374,7 +374,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
               </div>
 
               {/* Toolbar */}
-              <div className="w-full md:w-auto overflow-x-auto no-scrollbar scroll-smooth">
+              <div className="w-full md:w-auto overflow-x-auto no-scrollbar scroll-smooth pl-10 sm:pl-12">
                 <ReportToolbar viewMode={localViewMode} onViewModeChange={setLocalViewMode} date={localDate} onDateChange={setLocalDate} dateRange={dateRange} onDateRangeChange={setDateRange} maxDate={maxDate} />
               </div>
             </div>

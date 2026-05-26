@@ -45,7 +45,7 @@ export function ReportToolbar({
         >
           <TabsList
             dir="rtl"
-            className="flex items-center w-full h-10 p-1 gap-1 bg-slate-100/50 dark:bg-slate-800/40 border border-border/20 rounded-xl overflow-x-auto no-scrollbar scroll-smooth"
+            className="flex items-center w-full h-10 p-1 gap-1 bg-slate-100/40 dark:bg-slate-800/25 border-0 shadow-none rounded-xl overflow-x-auto no-scrollbar scroll-smooth"
           >
             {[
               { id: "daily", label: "יומי" },
@@ -70,10 +70,10 @@ export function ReportToolbar({
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   className={cn(
-                    "h-10 px-2 sm:px-3 bg-slate-100/50 dark:bg-slate-800/40 border border-border/20 hover:bg-muted/50 rounded-xl transition-all gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold min-w-fit",
-                    viewMode === "custom" && "bg-primary/5 border-primary/20"
+                    "h-10 px-2 sm:px-3 bg-slate-100/40 dark:bg-slate-800/25 border-0 hover:bg-slate-100/70 dark:hover:bg-slate-800/50 rounded-xl transition-all gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold min-w-fit shadow-none",
+                    viewMode === "custom" && "bg-primary/10 text-primary"
                   )}
                 >
                   <CalendarIcon className="h-3.5 w-3.5 text-primary shrink-0" />
