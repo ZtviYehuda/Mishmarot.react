@@ -282,28 +282,6 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     </div>
   );
 
-  const PreviewHeader = ({ title, icon: Icon, colorClass }: any) => (
-    <div className="flex items-center justify-between mb-3 sm:mb-4 animate-in fade-in duration-300">
-      <div className="flex items-center gap-2.5">
-        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", colorClass)}>
-          <Icon className="w-[18px] h-[18px] text-white" />
-        </div>
-        <div>
-          <h4 className="text-sm sm:text-base font-black text-foreground tracking-tight leading-none">{title}</h4>
-          <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground/50 mt-0.5 leading-none">{filters.unitName}</p>
-        </div>
-      </div>
-      <button
-        onClick={() => setPreviewType(null)}
-        className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-muted-foreground/60 hover:text-foreground transition-all py-1.5 px-3 rounded-xl hover:bg-muted/40"
-      >
-        <ArrowRight className="w-3.5 h-3.5" />
-        <span>חזור לרשימה</span>
-      </button>
-    </div>
-  );
-
-
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -341,30 +319,68 @@ export const ReportHub: React.FC<ReportHubProps> = ({
         )}>
           <DialogDragHandle />
 
-          {/* Header - Hides on mobile preview */}
-          <div className={cn(
-            "px-5 pt-3 pb-3 sm:px-7 sm:pt-5 sm:pb-4 text-right shrink-0",
-            previewType && "hidden sm:block"
-          )}>
-            <DialogHeader className="text-right">
+          {previewType === null ? (
+            <>
+              {/* Menu Header */}
+              <div className="px-5 pt-4 pb-3 sm:px-7 sm:pt-6 sm:pb-4 text-right shrink-0">
+                <DialogHeader className="text-right">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-right">
+                      <DialogTitle className="text-base font-black text-foreground tracking-tight leading-none mb-0.5">מרכז הפקת דוחות</DialogTitle>
+                      <DialogDescription className="text-[11px] font-medium text-muted-foreground/70 leading-none">הפקה ושיתוף נתונים מבצעיים</DialogDescription>
+                    </div>
+                  </div>
+                </DialogHeader>
+              </div>
+
+              {/* Menu Toolbar */}
+              <div className="px-4 sm:px-7 pb-3 shrink-0 overflow-x-auto no-scrollbar border-b border-border/10">
+                <ReportToolbar viewMode={localViewMode} onViewModeChange={setLocalViewMode} date={localDate} onDateChange={setLocalDate} dateRange={dateRange} onDateRangeChange={setDateRange} maxDate={maxDate} />
+              </div>
+            </>
+          ) : (
+            <div className="px-5 pt-4 pb-3 sm:px-7 sm:pt-5 sm:pb-4 border-b border-border/10 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-3 text-right">
+              {/* Title & Back Button */}
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <FileText className="w-4 h-4" />
+                <button
+                  onClick={() => setPreviewType(null)}
+                  className="flex items-center justify-center w-8 h-8 rounded-xl text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 transition-all border border-border/20 shadow-sm active:scale-95 shrink-0"
+                  title="חזור לתפריט"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <div className="w-[1px] h-6 bg-border/20 mx-1 shrink-0" />
+                <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shadow-sm shrink-0", 
+                  previewType === 'snapshot' ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" :
+                  previewType === 'trend' ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
+                  previewType === 'comparison' ? "bg-purple-500/10 text-purple-600 dark:text-purple-400" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                )}>
+                  {previewType === 'snapshot' && <Users className="w-[18px] h-[18px]" />}
+                  {previewType === 'trend' && <TrendingUp className="w-[18px] h-[18px]" />}
+                  {previewType === 'comparison' && <BarChart2 className="w-[18px] h-[18px]" />}
+                  {previewType === 'birthdays' && <Gift className="w-[18px] h-[18px]" />}
                 </div>
-                <div className="flex-1 min-w-0 text-right">
-                  <DialogTitle className="text-base font-black text-foreground tracking-tight leading-none mb-0.5">מרכז הפקת דוחות</DialogTitle>
-                  <DialogDescription className="text-[11px] font-medium text-muted-foreground/70 leading-none">הפקה ושיתוף נתונים מבצעיים</DialogDescription>
+                <div className="text-right">
+                  <h4 className="text-sm sm:text-base font-black text-foreground tracking-tight leading-none mb-1">
+                    {previewType === 'snapshot' ? "מצבת כוח אדם" :
+                     previewType === 'trend' ? "מגמות וזמינות" :
+                     previewType === 'comparison' ? "השוואת תת-יחידות" : "חוגגי ימי הולדת"}
+                  </h4>
+                  <p className="text-[10px] sm:text-[11px] font-bold text-muted-foreground/50 leading-none">{filters.unitName}</p>
                 </div>
               </div>
-            </DialogHeader>
-          </div>
 
-          {/* Compact Toolbar */}
-          <div className="px-4 sm:px-7 pb-2 shrink-0 overflow-x-auto no-scrollbar">
-            <ReportToolbar viewMode={localViewMode} onViewModeChange={setLocalViewMode} date={localDate} onDateChange={setLocalDate} dateRange={dateRange} onDateRangeChange={setDateRange} maxDate={maxDate} />
-          </div>
+              {/* Toolbar */}
+              <div className="w-full md:w-auto overflow-x-auto no-scrollbar scroll-smooth">
+                <ReportToolbar viewMode={localViewMode} onViewModeChange={setLocalViewMode} date={localDate} onDateChange={setLocalDate} dateRange={dateRange} onDateRangeChange={setDateRange} maxDate={maxDate} />
+              </div>
+            </div>
+          )}
 
-          <div className={cn("px-3 sm:px-5 pb-3 sm:pb-5 overflow-y-auto custom-scrollbar flex-1 min-h-0 relative", previewType && "px-3 sm:px-4 pb-3")}>
+          <div className="px-3 sm:px-5 py-4 overflow-y-auto custom-scrollbar flex-1 min-h-0 relative">
             {(isOldDate && !hasArchiveAccess) ? (
               <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md rounded-b-[1.5rem] sm:rounded-b-[2rem]">
                 <div className="bg-card border border-border/50 rounded-[2rem] p-8 max-w-md text-center space-y-4 m-4">
@@ -393,21 +409,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                 <ReportCard icon={Gift} title="ריכוז ימי הולדת" subtitle="חוגגים בתקופה הנבחרת" colorClass="bg-rose-500/10 text-rose-600 dark:text-rose-400" onClick={() => setPreviewType('birthdays')} hasDownload={false} onWhatsApp={() => onShareBirthdays()} />
               </div>
             ) : (
-              <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <PreviewHeader title={
-                  previewType === 'snapshot' ? "מצבת כוח אדם" :
-                  previewType === 'trend' ? "מגמות וזמינות" :
-                  previewType === 'comparison' ? "השוואת תת-יחידות" : "חוגגי ימי הולדת"
-                } icon={
-                  previewType === 'snapshot' ? Users :
-                  previewType === 'trend' ? TrendingUp :
-                  previewType === 'comparison' ? BarChart2 : Gift
-                } colorClass={
-                  previewType === 'snapshot' ? "bg-blue-500" :
-                  previewType === 'trend' ? "bg-amber-500" :
-                  previewType === 'comparison' ? "bg-purple-500" : "bg-rose-500"
-                } />
-
+              <div className="flex flex-col h-full animate-in fade-in duration-500">
                 <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                   <div className="flex-1 overflow-y-auto no-scrollbar p-1 flex flex-col min-h-0">
                     {previewType !== 'birthdays' && (loading || !renderCharts) ? (
