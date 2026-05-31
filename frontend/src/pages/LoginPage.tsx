@@ -13,6 +13,8 @@ import {
   EyeOff,
   Crosshair,
   Fingerprint,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -20,6 +22,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PinVerificationModal } from "@/components/auth/PinVerificationModal";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 interface LockedUser {
   username: string;
@@ -243,7 +246,7 @@ export default function LoginPage() {
   };
   const [lockedUser, setLockedUser] = useState<LockedUser | null>(null);
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinUsername, setPinUsername] = useState("");
@@ -553,6 +556,57 @@ export default function LoginPage() {
       dir="rtl"
     >
       <HexagonPatrolGrid theme={theme} />
+
+      {/* Cybernetic Theme Toggle Panel */}
+      <div className="fixed top-4 left-4 md:top-6 md:left-6 z-50">
+        <button
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          className={cn(
+            "group relative flex items-center gap-3.5 px-4 py-2 rounded-2xl border transition-all duration-300 shadow-xl backdrop-blur-xl select-none active:scale-[0.97] overflow-hidden cursor-pointer",
+            isDark
+              ? "bg-slate-900/80 border-slate-800 text-blue-400 hover:border-blue-500/40 hover:shadow-blue-500/5"
+              : "bg-white/80 border-slate-200 text-amber-600 hover:border-amber-400/40 hover:shadow-amber-500/5"
+          )}
+        >
+          {/* Neon Scanner Line / Shimmer Effect */}
+          <div className={cn(
+            "absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r opacity-25 pointer-events-none",
+            isDark ? "from-transparent via-blue-400 to-transparent" : "from-transparent via-amber-400 to-transparent"
+          )} />
+
+          {/* Icon with Hover Rotation */}
+          <div className="relative w-5 h-5 flex items-center justify-center shrink-0">
+            {isDark ? (
+              <Moon className="w-5 h-5 text-blue-400 fill-blue-400/20 group-hover:rotate-12 transition-transform duration-300" />
+            ) : (
+              <Sun className="w-5 h-5 text-amber-500 fill-amber-500/20 group-hover:rotate-45 transition-transform duration-500" />
+            )}
+          </div>
+
+          {/* Bilingual Cyber Labels */}
+          <div className="flex flex-col items-start text-right">
+            <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
+              THEME CONTROL
+            </span>
+            <span className={cn(
+              "text-xs font-black transition-colors leading-none mt-1",
+              isDark ? "text-slate-200 group-hover:text-blue-400" : "text-slate-800 group-hover:text-amber-600"
+            )}>
+              {isDark ? "מצב כהה" : "מצב בהיר"}
+            </span>
+          </div>
+
+          {/* Pulsing Status Dot */}
+          <div className="flex items-center justify-center shrink-0 pl-0.5">
+            <div className={cn(
+              "w-2.5 h-2.5 rounded-full animate-pulse transition-all duration-300",
+              isDark 
+                ? "bg-blue-400 shadow-[0_0_8px_#60a5fa]" 
+                : "bg-amber-500 shadow-[0_0_8px_#f59e0b]"
+            )} />
+          </div>
+        </button>
+      </div>
 
       {/* Decorative Overlays - Theme Adaptive */}
       <div

@@ -237,7 +237,7 @@ export const EmployeeTable = ({
   return (
     <div className="space-y-3 sm:space-y-5">
       {/* Search & Filter Bar */}
-      <Card id="employees-search-container" className="flex flex-col gap-2 p-2.5 sm:p-5 bg-card/60 backdrop-blur-xl border-border/40 sm:border rounded-2xl sm:rounded-[2rem] shadow-none sm:shadow-sm">
+      <div id="employees-search-container" className="flex flex-col gap-3 p-0 bg-transparent w-full">
         <div className="relative w-full">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -300,7 +300,7 @@ export const EmployeeTable = ({
             </Button>
           )}
         </div>
-      </Card>
+      </div>
 
       {/* Main Table - Desktop View */}
       <Card className="hidden lg:block overflow-hidden">

@@ -272,7 +272,7 @@ def setup_database():
             cur.execute(
                 "ALTER TABLE status_types ADD COLUMN IF NOT EXISTS parent_status_id INTEGER REFERENCES status_types(id);"
             )
-            
+
             # Support Tickets Migrations
             cur.execute(
                 "ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES employees(id);"
@@ -380,7 +380,7 @@ def setup_database():
             sub_statuses = [
                 ("מהבית", "#16a34a", True, False),
                 ("מתקן חיצוני", "#15803d", True, False),
-                ("בשטח", "#166534", True, False),
+                ("שטח", "#166534", True, False),
             ]
             for name, color, is_presence, is_persistent in sub_statuses:
                 cur.execute(
@@ -406,9 +406,7 @@ def setup_database():
 
         # 3. יצירת Admin דיפולטיבי (אם לא קיים)
         # 3. יצירת/תיקון Admin דיפולטיבי
-        cur.execute(
-            "SELECT id, password_hash FROM employees WHERE username = 'admin'"
-        )
+        cur.execute("SELECT id, password_hash FROM employees WHERE username = 'admin'")
         admin_row = cur.fetchone()
 
         admin_pw_hash = generate_password_hash("123456")
@@ -434,7 +432,9 @@ def setup_database():
         else:
             current_hash = admin_row[1]
             if not current_hash or not str(current_hash).startswith("scrypt"):
-                print("[WARNING]  Admin user found with invalid data. Resetting admin...")
+                print(
+                    "[WARNING]  Admin user found with invalid data. Resetting admin..."
+                )
                 cur.execute(
                     """
                     UPDATE employees 

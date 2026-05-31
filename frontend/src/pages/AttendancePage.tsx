@@ -894,7 +894,7 @@ export default function AttendancePage() {
             className="pb-4 space-y-4"
           >
             {/* Filters Bar */}
-            <Card id="status-filters" className="p-3 sm:p-4 overflow-visible bg-card/60 backdrop-blur-xl border-border/40 shadow-none rounded-2xl">
+            <div id="status-filters" className="overflow-visible bg-transparent w-full">
               {/* Responsive Search + Advanced Filters Row */}
               <div className="flex items-center gap-2.5 sm:gap-3 w-full">
                 <div className="relative flex-1">
@@ -1088,7 +1088,7 @@ export default function AttendancePage() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </Card>
+            </div>
 
             {/* Filter Modal for Mobile */}
             <Dialog open={filterOpen} onOpenChange={setFilterOpen}>

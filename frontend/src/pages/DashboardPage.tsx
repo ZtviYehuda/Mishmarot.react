@@ -801,6 +801,7 @@ export default function DashboardPage() {
                 selectedDate={selectedDate}
                 onDateSelect={setSelectedDate}
                 onRangeChange={setTrendRange}
+                totalEmployees={totalEmployees}
               />
             </div>
 
@@ -810,6 +811,7 @@ export default function DashboardPage() {
                 ref={snapshotRef}
                 stats={chartStats}
                 total={totalEmployees}
+                totalEmployeesInScope={totalEmployees}
                 onStatusClick={handleStatusClick}
                 hasArchiveAccess={true}
                 onRequestRestore={() => setRestoreDialogOpen(true)}

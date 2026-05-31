@@ -294,7 +294,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           </DialogTitle>
           <button
             onClick={handleReset}
-            className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
+            className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors sm:pl-12"
           >
             אפס הכל
           </button>

@@ -412,26 +412,28 @@ export const ReportHub: React.FC<ReportHubProps> = ({
               <div className="flex flex-col h-full animate-in fade-in duration-500">
                 <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                   <div className="flex-1 overflow-y-auto no-scrollbar p-1 flex flex-col min-h-0">
-                    {previewType !== 'birthdays' && (loading || !renderCharts) ? (
+                    {/* Initial load — no charts yet, show full spinner */}
+                    {!renderCharts && previewType !== 'birthdays' ? (
                       <div className="flex-1 flex flex-col items-center justify-center min-h-[250px] gap-3">
                         <div className="w-10 h-10 rounded-full border-[3px] border-primary/20 border-t-primary animate-spin" />
                         <p className="text-xs font-black text-muted-foreground/60">מכין את הגרף...</p>
                       </div>
                     ) : (
-                      <>
+                      /* Charts always rendered — overlay spinner on reload (no layout jump) */
+                      <div className="relative flex-1 flex flex-col min-h-0">
                         {previewType === 'snapshot' && (
                           <div className="w-full h-[320px] sm:h-[450px] flex flex-col mt-2">
-                            <EmployeesChart stats={snapshotStats} total={snapshotTotal} loading={loading} hideHeader={true} unitName={filters.unitName} selectedDate={localDate} compact={true} />
+                            <EmployeesChart stats={snapshotStats} total={snapshotTotal} hideHeader={true} unitName={filters.unitName} selectedDate={localDate} compact={true} />
                           </div>
                         )}
                         {previewType === 'trend' && (
                           <div className="w-full h-[300px] sm:h-[420px] flex flex-col mt-2">
-                            <AttendanceTrendCard data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} compact={true} />
+                            <AttendanceTrendCard data={trendStats} range={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} compact={true} />
                           </div>
                         )}
                         {previewType === 'comparison' && (
                           <div className="w-full h-[320px] sm:h-[450px] flex flex-col mt-2">
-                            <StatsComparisonCard data={comparisonStats} loading={loading} days={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} compact={true} />
+                            <StatsComparisonCard data={comparisonStats} days={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} compact={true} />
                           </div>
                         )}
                         {previewType === 'birthdays' && (
@@ -453,7 +455,17 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                             )}
                           </div>
                         )}
-                      </>
+
+                        {/* Non-jumping loading overlay — shows on date/mode change without re-mounting chart */}
+                        {loading && previewType !== 'birthdays' && (
+                          <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/65 backdrop-blur-[2px] rounded-2xl">
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="w-10 h-10 rounded-full border-[3px] border-primary/20 border-t-primary animate-spin" />
+                              <p className="text-[11px] font-black text-muted-foreground/60">טוען נתונים...</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

@@ -52,7 +52,7 @@ const getStatusIcon = (name: string) => {
   if (n === "מהבית" || n.includes("בית")) return Home;
   if (n === "מתקן חיצוני" || n.includes("מתקן") || n.includes("חיצוני"))
     return Building2;
-  if (n === "בשטח" || n.includes("שטח")) return MapPin;
+  if (n === "שטח" || n.includes("שטח")) return MapPin;
   if (n.includes("נוכח") || n.includes("משרד") || n.includes("ביחידה"))
     return UserCheck;
   if (n.includes("חופשה") || n.includes("חופש")) return Sun;
@@ -158,6 +158,8 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
       : selectedType.id.toString();
   }, [selectedType]);
 
+  const requiresDelegation = false;
+
   const [delegationResult, setDelegationResult] = useState<{
     delegateName: string;
     personalNumber: string;
@@ -262,14 +264,14 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-[440px] p-0 border border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl sm:rounded-[2rem] overflow-hidden"
+        className="w-full h-auto max-h-[92svh] sm:h-auto sm:max-h-[85vh] sm:w-[95vw] sm:max-w-[760px] p-0 border-none sm:border border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl rounded-none rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden flex flex-col"
         dir="rtl"
         showCloseButton={false}
       >
         <DialogDragHandle />
         {delegationResult ? (
           // View 2: Delegation Result
-          <div className="p-8 space-y-8 text-center relative">
+          <div className="p-8 space-y-8 text-center relative max-w-[480px] mx-auto">
             <div className="flex flex-col items-center gap-4">
               <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-500/10 flex items-center justify-center text-emerald-600 border-2 border-emerald-500/20">
                 <Shield className="w-10 h-10" />
@@ -375,7 +377,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
           // View 1: Status Update Form
           <>
             {/* ── Slim inline header ── */}
-            <div className="px-5 pt-4 pb-4 sm:px-8 sm:pt-6 sm:pb-5 border-b border-border/30 text-right shrink-0">
+            <div className="px-4 pt-3 pb-3 sm:px-5 sm:pt-4 sm:pb-3 border-b border-border/30 text-right shrink-0">
               <div className="flex items-center gap-3">
                 <div className="relative shrink-0 w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-xs font-black text-primary">
                   {employee.first_name[0]}
@@ -416,8 +418,8 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
             </div>
 
             {/* ── Scrollable Body ── */}
-            <div className="overflow-y-auto max-h-[65vh] custom-scrollbar">
-              <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+              <div className="p-3.5 sm:p-6 space-y-4 sm:space-y-5">
                 {/* Unified Status Picker Section */}
                 {fetching ? (
                   <div className="py-12 flex flex-col items-center justify-center gap-3">
@@ -427,7 +429,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                     </span>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3.5">
                     <div className="flex items-center justify-between px-1">
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                         {isWeekend ? 'אפשרויות לסופ"ש' : "בחירת סטטוס דיווח"}
@@ -439,7 +441,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                       )}
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                       {visibleParents.map((type: any) => {
                         const Icon = getStatusIcon(type.name);
                         const sel = activeParentId === type.id.toString();
@@ -454,9 +456,9 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                               }))
                             }
                             className={cn(
-                              "flex flex-col items-center justify-center gap-1.5 p-2 rounded-2xl border transition-all text-center h-full min-h-[82px] sm:min-h-[105px] group relative overflow-visible shadow-[0_2px_8px_rgba(0,0,0,0.02)]",
+                              "flex flex-col items-center justify-center gap-0.5 sm:gap-1.5 p-1 sm:p-2 rounded-xl sm:rounded-2xl border transition-all text-center h-full min-h-[50px] sm:min-h-[80px] group relative overflow-visible shadow-[0_2px_8px_rgba(0,0,0,0.02)]",
                               sel
-                                ? "border-transparent text-white scale-[1.02]"
+                                ? "border-transparent text-white scale-[1.01]"
                                 : "bg-background/50 dark:bg-slate-900/40 border-border/40 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30",
                             )}
                             style={
@@ -470,7 +472,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                           >
                             <div
                               className={cn(
-                                "w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shrink-0 transition-all",
+                                "w-6.5 h-6.5 sm:w-9.5 sm:h-9.5 rounded-full flex items-center justify-center shrink-0 transition-all",
                                 sel
                                   ? "bg-white/20 rotate-12"
                                   : "bg-muted/70 group-hover:bg-primary/10 group-hover:scale-110",
@@ -478,7 +480,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             >
                               <Icon
                                 className={cn(
-                                  "w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 transition-colors",
+                                  "w-3 h-3 sm:w-4.5 sm:h-4.5 transition-colors",
                                   sel
                                     ? "text-white"
                                     : "text-muted-foreground group-hover:text-primary",
@@ -488,18 +490,21 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                             <div className="flex flex-col gap-0.5 min-w-0">
                               <span
                                 className={cn(
-                                  "text-[10px] sm:text-[11px] font-black leading-tight tracking-tight px-1",
+                                  "text-[9.5px] sm:text-[11px] font-black leading-tight tracking-tight px-0.5",
                                   sel ? "text-white" : "text-foreground/80",
                                 )}
                               >
-                                {(type.name === "חופשה חול" || type.name === "חופשה חו\"ל") ? "חו' חול" : type.name}
+                                {type.name === "חופשה חול" ||
+                                type.name === 'חופשה חו"ל'
+                                  ? "חו' חול"
+                                  : type.name}
                               </span>
                             </div>
                             {sel &&
                               formData.status_type_id ===
                                 type.id.toString() && (
-                                <div className="absolute top-2 left-2 w-4 h-4 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                                  <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+                                <div className="absolute top-1 left-1 w-3.5 h-3.5 sm:top-2 sm:left-2 sm:w-4 sm:h-4 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                                  <CheckCircle2 className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" />
                                 </div>
                               )}
                           </button>
@@ -507,262 +512,268 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                       })}
                     </div>
 
-                    {/* Sub Statuses Grid - Cool Popping Submenu */}
+                    {/* Sub Statuses - Minimalist Pills */}
                     {activeParentId &&
-                        subStatusMap[activeParentId] &&
-                        subStatusMap[activeParentId].length > 0 && (
-                          <div
-                            key={`sub-${activeParentId}`}
-                            className="mt-6 p-4 bg-primary/[0.03] dark:bg-primary/[0.02] border border-primary/20 rounded-[2rem] backdrop-blur-md relative overflow-visible"
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.05] to-transparent pointer-events-none" />
-                            <p className="text-[9px] font-black text-primary/60 uppercase tracking-[0.2em] mb-4 px-1 text-center relative z-10">
-                              בחר הרחבה לסטטוס
-                            </p>
-                            <div className="grid grid-cols-3 gap-2 sm:gap-3 relative z-10">
-                              {subStatusMap[activeParentId].map(
-                                (sub: any) => {
-                                  const SubIcon = getStatusIcon(sub.name);
-                                  const isSubSel =
-                                    formData.status_type_id ===
-                                    sub.id.toString();
-                                  return (
-                                    <button
-                                      key={sub.id}
-                                      type="button"
-                                      onClick={() =>
-                                        setFormData((p) => ({
-                                          ...p,
-                                          status_type_id: sub.id.toString(),
-                                        }))
+                      subStatusMap[activeParentId] &&
+                      subStatusMap[activeParentId].length > 0 && (
+                        <div
+                          key={`sub-${activeParentId}`}
+                          className="mt-2 flex flex-wrap items-center justify-center gap-1.5 py-1 px-1 bg-muted/20 dark:bg-slate-900/30 rounded-2xl border border-border/20"
+                        >
+                          {subStatusMap[activeParentId].map((sub: any) => {
+                            const SubIcon = getStatusIcon(sub.name);
+                            const isSubSel =
+                              formData.status_type_id === sub.id.toString();
+                            const activeParent = parentStatuses.find(
+                              (p: any) => p.id.toString() === activeParentId,
+                            );
+                            const parentColor = activeParent?.color || "#3b82f6";
+                            return (
+                              <button
+                                key={sub.id}
+                                type="button"
+                                onClick={() =>
+                                  setFormData((p) => ({
+                                    ...p,
+                                    status_type_id: sub.id.toString(),
+                                  }))
+                                }
+                                className={cn(
+                                  "flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all text-[10px] font-bold",
+                                  isSubSel
+                                    ? "shadow-sm border-transparent"
+                                    : "bg-background/60 border-border/40 text-muted-foreground hover:text-foreground hover:border-muted-foreground/30",
+                                )}
+                                style={
+                                  isSubSel
+                                    ? {
+                                        backgroundColor: parentColor + "1a", // 10% opacity
+                                        borderColor: parentColor,
+                                        color: parentColor,
                                       }
-                                      className={cn(
-                                        "flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-all text-center h-full min-h-[68px] sm:min-h-[85px] group relative",
-                                        isSubSel
-                                          ? "bg-white dark:bg-slate-800 border-primary scale-[1.05] z-10"
-                                          : "bg-background/50 border-border/40 text-muted-foreground hover:border-primary/40 hover:bg-white dark:hover:bg-slate-800",
-                                      )}
-                                    >
-                                      <div
-                                        className={cn(
-                                          "p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all",
-                                          isSubSel
-                                            ? "bg-primary/10 text-primary rotate-6"
-                                            : "bg-muted/50 text-muted-foreground/60 group-hover:bg-primary/5 group-hover:text-primary group-hover:-rotate-6",
-                                        )}
-                                      >
-                                        <SubIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                                      </div>
-                                      <span
-                                        className={cn(
-                                          "text-[9px] sm:text-[10px] font-black leading-tight tracking-tight px-1 transition-colors",
-                                          isSubSel
-                                            ? "text-primary"
-                                            : "text-foreground/70 group-hover:text-primary",
-                                        )}
-                                      >
-                                        {(sub.name === "חופשה חול" || sub.name === "חופשה חו\"ל") ? "חו' חול" : sub.name}
-                                      </span>
-                                      {isSubSel && (
-                                        <div
-                                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center border-2 border-white dark:border-slate-800"
-                                        >
-                                          <CheckCircle2 className="w-2.5 h-2.5 text-white" />
-                                        </div>
-                                      )}
-                                    </button>
-                                  );
-                                },
-                              )}
-                            </div>
-                          </div>
-                        )}
+                                    : {}
+                                }
+                              >
+                                <SubIcon className="w-3 h-3" />
+                                <span>
+                                  {sub.name === "חופשה חול" ||
+                                  sub.name === 'חופשה חו"ל'
+                                    ? "חו' חול"
+                                    : sub.name}
+                                </span>
+                                {isSubSel && (
+                                  <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                   </div>
                 )}
 
                 <div className="h-px bg-border/40" />
 
-                {/* Date Range */}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
-                      מתאריך
-                    </Label>
-                    <div className="relative group">
-                      <CalendarDays className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 pointer-events-none transition-colors group-focus-within:text-primary" />
-                      <Input
-                        type="date"
-                        value={formData.start_date}
-                        onChange={(e) =>
-                          setFormData((p) => ({
-                            ...p,
-                            start_date: e.target.value,
-                          }))
-                        }
-                        className="h-10 sm:h-11 bg-muted/20 border border-border/40 rounded-xl text-right pr-10 pl-3 text-sm font-bold text-foreground focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/45 outline-none transition-all w-full dark:bg-white/5 dark:border-white/10 dark:text-white"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
-                      עד תאריך
-                    </Label>
-                    <div className="relative group">
-                      <CalendarDays className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 pointer-events-none transition-colors group-focus-within:text-primary" />
-                      <Input
-                        type="date"
-                        value={formData.end_date}
-                        onChange={(e) =>
-                          setFormData((p) => ({
-                            ...p,
-                            end_date: e.target.value,
-                          }))
-                        }
-                        className="h-10 sm:h-11 bg-muted/20 border border-border/40 rounded-xl text-right pr-10 pl-3 text-sm font-bold text-foreground focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/45 outline-none transition-all w-full dark:bg-white/5 dark:border-white/10 dark:text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Note */}
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mr-1">
-                    הערה
-                  </Label>
-                  <div className="relative group">
-                    <Clock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 pointer-events-none transition-colors group-focus-within:text-primary" />
-                    <Input
-                      value={formData.note}
-                      onChange={(e) =>
-                        setFormData((p) => ({ ...p, note: e.target.value }))
-                      }
-                      placeholder="הוסף הערה אופציונלית..."
-                      className="h-10 sm:h-11 bg-muted/20 border border-border/40 rounded-xl text-right pr-10 pl-3 text-sm font-bold text-foreground focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/45 outline-none transition-all placeholder:text-muted-foreground/35 w-full dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/30"
-                    />
-                  </div>
-                </div>
-
-                {/* Delegation Section */}
-                {user?.is_commander &&
-                  !user?.is_temp_commander &&
-                  employee?.id === user.id && (
-                    <div className="pt-1 border-t border-border/40">
-                      <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent rounded-2xl p-4 border border-primary/10 space-y-4">
-                        {employee.active_delegate_id ? (
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="space-y-0.5">
-                              <Label className="text-sm font-bold text-amber-600 flex items-center gap-2">
-                                <div className="p-1.5 bg-amber-100 rounded-lg">
-                                  <UserPlus className="w-4 h-4" />
-                                </div>
-                                פיקוד מואצל פעיל
-                              </Label>
-                              <p className="text-[11px] text-muted-foreground font-medium">
-                                האצלת ל:{" "}
-                                <span className="font-black text-foreground">
-                                  {candidates.find(
-                                    (c) => c.id === employee.active_delegate_id,
-                                  )?.first_name || "ממלא מקום"}
-                                </span>
-                              </p>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-9 px-4 rounded-xl border-amber-600/20 bg-amber-600/10 text-amber-700 hover:bg-amber-600 hover:text-white transition-all text-[11px] font-black whitespace-nowrap"
-                              onClick={handleRevokeDelegation}
-                              disabled={loading}
-                            >
-                              ביטול
-                            </Button>
-                          </div>
-                        ) : (
-                          (() => {
-                            const status = statusTypes.find(
-                              (s) =>
-                                s.id.toString() === formData.status_type_id,
-                            );
-                            if (!status) return null;
-                            const n = status.name.toLowerCase();
-                            const isPresent =
-                              n.includes("משרד") ||
-                              n.includes("נוכח") ||
-                              n.includes("ביחידה");
-                            if (isPresent || candidates.length === 0)
-                              return null;
-                            return (
-                              <>
-                                <div className="flex items-center justify-between gap-4">
-                                  <div className="space-y-0.5">
-                                    <Label className="text-sm font-black text-primary flex items-center gap-2 tracking-tight">
-                                      <div className="p-1.5 bg-primary/10 rounded-lg">
-                                        <UserPlus className="w-4 h-4" />
-                                      </div>
-                                      מינוי מפקד מחליף
-                                    </Label>
-                                    <p className="text-[11px] text-muted-foreground font-medium">
-                                      מינוי נציג מהחוליה שיחליף אותך?
-                                    </p>
-                                  </div>
-                                  <Switch
-                                    checked={isDelegating}
-                                    onCheckedChange={setIsDelegating}
-                                    className="scale-90 data-[state=checked]:bg-primary shrink-0"
-                                  />
-                                </div>
-                                {isDelegating && candidates.length > 0 && (
-                                  <div className="space-y-1.5">
-                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                                      בחר מחליף
-                                    </Label>
-                                    <Select
-                                      value={delegateId}
-                                      onValueChange={setDelegateId}
-                                      dir="rtl"
-                                    >
-                                      <SelectTrigger className="h-10 rounded-xl bg-background border-primary/20 text-right dark:bg-slate-900 dark:text-white">
-                                        <SelectValue placeholder="בחר חבר צוות..." />
-                                      </SelectTrigger>
-                                      <SelectContent dir="rtl">
-                                        {candidates.map((c) => (
-                                          <SelectItem
-                                            key={c.id}
-                                            value={c.id.toString()}
-                                          >
-                                            <div className="flex items-center gap-2">
-                                              <span className="font-bold">
-                                                {c.first_name} {c.last_name}
-                                              </span>
-                                              <span className="text-xs text-muted-foreground font-mono">
-                                                ({c.username})
-                                              </span>
-                                            </div>
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                )}
-                              </>
-                            );
-                          })()
-                        )}
+                {/* ── Details & Delegation Section (Balanced Two Columns) ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-start">
+                  {/* Column 1: Date Range */}
+                  <div className="space-y-3.5">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <Label className="text-[9px] font-bold text-muted-foreground/80 mr-0.5 uppercase tracking-widest">
+                          מתאריך
+                        </Label>
+                        <div className="relative group">
+                          <CalendarDays className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40 pointer-events-none transition-colors group-focus-within:text-primary" />
+                          <Input
+                            type="date"
+                            value={formData.start_date}
+                            onChange={(e) =>
+                              setFormData((p) => ({
+                                ...p,
+                                start_date: e.target.value,
+                              }))
+                            }
+                            className="h-8 sm:h-9.5 bg-muted/20 border border-border/40 rounded-lg text-right pr-8 pl-2.5 text-[11px] sm:text-xs font-bold text-foreground focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/45 outline-none transition-all w-full dark:bg-white/5 dark:border-white/10 dark:text-white"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[9px] font-bold text-muted-foreground/80 mr-0.5 uppercase tracking-widest">
+                          עד תאריך
+                        </Label>
+                        <div className="relative group">
+                          <CalendarDays className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 pointer-events-none transition-colors group-focus-within:text-primary" />
+                          <Input
+                            type="date"
+                            value={formData.end_date}
+                            onChange={(e) =>
+                              setFormData((p) => ({
+                                ...p,
+                                end_date: e.target.value,
+                              }))
+                            }
+                            className="h-8 sm:h-9.5 bg-muted/20 border border-border/40 rounded-lg text-right pr-8 pl-2.5 text-[11px] sm:text-xs font-bold text-foreground focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/45 outline-none transition-all w-full dark:bg-white/5 dark:border-white/10 dark:text-white"
+                          />
+                        </div>
                       </div>
                     </div>
-                  )}
+                  </div> {/* end Column 1 */}
+
+                  {/* Column 2: Note & Delegation */}
+                  <div className="space-y-3.5">
+                    {/* Note */}
+                    <div className="space-y-1">
+                      <Label className="text-[9px] font-bold text-muted-foreground/80 mr-0.5 uppercase tracking-widest">
+                        הערה
+                      </Label>
+                      <div className="relative group">
+                        <Clock className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40 pointer-events-none transition-colors group-focus-within:text-primary" />
+                        <Input
+                          value={formData.note}
+                          onChange={(e) =>
+                            setFormData((p) => ({ ...p, note: e.target.value }))
+                          }
+                          placeholder="הוסף הערה אופציונלית..."
+                          className="h-8 sm:h-9.5 bg-muted/20 border border-border/40 rounded-lg text-right pr-8 pl-2.5 text-[11px] sm:text-xs font-bold text-foreground focus:bg-background focus:ring-4 focus:ring-primary/5 focus:border-primary/45 outline-none transition-all placeholder:text-muted-foreground/35 w-full dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder:text-white/30"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Delegation Section */}
+                    {user?.is_commander &&
+                      !user?.is_temp_commander &&
+                      employee?.id === user.id && (
+                        <div className="pt-1.5 border-t border-border/40">
+                          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent rounded-xl p-2.5 border border-primary/10 space-y-2.5">
+                            {employee.active_delegate_id ? (
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="space-y-0.5">
+                                  <Label className="text-[11px] font-bold text-amber-600 flex items-center gap-1.5">
+                                    <div className="p-1 bg-amber-100 rounded-lg">
+                                      <UserPlus className="w-3 h-3" />
+                                    </div>
+                                    פיקוד מואצל פעיל
+                                  </Label>
+                                  <p className="text-[9px] text-muted-foreground font-medium">
+                                    האצלת ל:{" "}
+                                    <span className="font-black text-foreground">
+                                      {candidates.find(
+                                        (c) =>
+                                          c.id === employee.active_delegate_id,
+                                      )?.first_name || "ממלא מקום"}
+                                    </span>
+                                  </p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 px-3 rounded-lg border-amber-600/20 bg-amber-600/10 text-amber-700 hover:bg-amber-600 hover:text-white transition-all text-[10px] font-black whitespace-nowrap"
+                                  onClick={handleRevokeDelegation}
+                                  disabled={loading}
+                                >
+                                  ביטול
+                                </Button>
+                              </div>
+                            ) : (
+                              (() => {
+                                if (candidates.length === 0) return null;
+
+                                // If they select an absent status, requiresDelegation will be true, forcing isDelegating to true.
+                                return (
+                                  <>
+                                    <div className="flex items-center justify-between gap-4">
+                                      <div className="space-y-0.5">
+                                        <Label className="text-[11px] font-black text-primary flex items-center gap-1.5 tracking-tight">
+                                          <div className="p-1 bg-primary/10 rounded-lg">
+                                            <UserPlus className="w-3 h-3" />
+                                          </div>
+                                          מינוי מפקד מחליף
+                                        </Label>
+                                        <p className="text-[9px] text-muted-foreground font-medium">
+                                          {requiresDelegation
+                                            ? "חובה למנות מחליף לסטטוס שאינו נוכח"
+                                            : "מינוי נציג מהחוליה שיחליף אותך?"}
+                                        </p>
+                                      </div>
+                                      <Switch
+                                        checked={isDelegating}
+                                        onCheckedChange={setIsDelegating}
+                                        disabled={requiresDelegation}
+                                        className="scale-75 data-[state=checked]:bg-primary shrink-0"
+                                      />
+                                    </div>
+                                    {isDelegating && (
+                                      <div className="space-y-1">
+                                        <div className="flex items-center justify-between">
+                                          <Label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                                            בחר מחליף
+                                          </Label>
+                                          {requiresDelegation && !delegateId && (
+                                            <span className="text-[9px] font-black text-destructive animate-pulse">
+                                              * חובה לבחור מחליף
+                                            </span>
+                                          )}
+                                        </div>
+                                        <Select
+                                          value={delegateId}
+                                          onValueChange={setDelegateId}
+                                          dir="rtl"
+                                        >
+                                          <SelectTrigger className="h-8 rounded-lg bg-background border-primary/20 text-right dark:bg-slate-900 dark:text-white text-[11px]">
+                                            <SelectValue placeholder="בחר חבר צוות..." />
+                                          </SelectTrigger>
+                                          <SelectContent dir="rtl">
+                                            {candidates.map((c) => (
+                                              <SelectItem
+                                                key={c.id}
+                                                value={c.id.toString()}
+                                              >
+                                                <div className="flex items-center gap-2 text-xs">
+                                                  <span className="font-bold">
+                                                    {c.first_name} {c.last_name}
+                                                  </span>
+                                                  <span className="text-[10px] text-muted-foreground font-mono">
+                                                    ({c.username})
+                                                  </span>
+                                                </div>
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    )}
+                                  </>
+                                );
+                              })()
+                            )}
+                          </div>
+                        </div>
+                      )}
+                  </div> {/* end Column 2 */}
+                </div> {/* end grid */}
               </div>
             </div>
 
             {/* ── Pinned Footer — safe area ── */}
-            <div className="px-5 pb-5 pt-4 sm:px-8 sm:pb-8 sm:pt-5 border-t border-border/30 shrink-0 bg-background/50 backdrop-blur-md">
+            <div className="px-4 pb-4 pt-3 sm:px-5 sm:pb-4 sm:pt-3 border-t border-border/30 shrink-0 bg-background/50 backdrop-blur-md">
               <Button
                 onClick={handleSubmit}
-                disabled={loading || !formData.status_type_id}
-                className="w-full h-12 rounded-xl font-black text-sm gap-2 transition-all active:scale-[0.98] disabled:opacity-30 text-white shadow-none"
+                disabled={
+                  loading ||
+                  !formData.status_type_id ||
+                  (isDelegating && !delegateId)
+                }
+                className={cn(
+                  "w-full h-10 sm:h-11 rounded-xl font-black text-xs sm:text-sm gap-2 transition-all active:scale-[0.98] disabled:opacity-30 shadow-none",
+                  selectedStatus
+                    ? "text-white"
+                    : "bg-primary text-primary-foreground",
+                )}
                 style={
                   selectedStatus
                     ? { backgroundColor: selectedStatus.color }
-                    : { backgroundColor: "hsl(var(--primary))" }
+                    : {}
                 }
               >
                 {loading ? (
@@ -777,7 +788,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="w-full text-[11px] font-bold text-muted-foreground/50 hover:text-muted-foreground transition-colors py-2 text-center"
+                className="w-full text-[10px] font-bold text-muted-foreground/50 hover:text-muted-foreground transition-colors py-1.5 text-center"
               >
                 ביטול
               </button>

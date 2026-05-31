@@ -106,8 +106,8 @@
             },
             {
                 "id": 11,
-                "code": "בשטח",
-                "name": "בשטח",
+                "code": "שטח",
+                "name": "שטח",
                 "color": "#166534",
                 "is_presence": true,
                 "is_persistent": false,

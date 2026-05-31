@@ -42,6 +42,7 @@ interface AttendanceTrendCardProps {
   filterTags?: string[];
   hideHeader?: boolean;
   compact?: boolean;
+  totalEmployees?: number;
 }
 
 export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
@@ -59,6 +60,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
       hideHeader = false,
       compact = false,
       filterTags = [],
+      totalEmployees = 0,
     },
     ref,
   ) => {
@@ -400,7 +402,9 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
                     axisLine={false}
                     domain={[
                       0,
-                      (dataMax: number) => Math.floor(Math.max(dataMax, 10) * 1.2),
+                      totalEmployees > 0
+                        ? totalEmployees
+                        : (dataMax: number) => Math.floor(Math.max(dataMax, 10) * 1.2),
                     ]}
                   />
                   <Tooltip
