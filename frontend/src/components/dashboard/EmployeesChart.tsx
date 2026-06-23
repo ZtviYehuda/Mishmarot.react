@@ -74,6 +74,7 @@ const EmployeesChartComponent = (
   const cardRef = useRef<HTMLDivElement>(null);
   const [chartType, setChartType] = useState<"pie" | "bar">("pie");
   const [isOfficeSelected, setIsOfficeSelected] = useState(false);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
 
   useImperativeHandle(ref, () => ({
     download: handleDownload,
@@ -227,12 +228,28 @@ const EmployeesChartComponent = (
     if (active && payload && payload.length) {
       const d = payload[0].payload;
       return (
-        <div className="bg-popover text-popover-foreground px-4 py-2.5 rounded-2xl text-sm border border-border shadow-2xl backdrop-blur-md">
-          <p className="font-black text-[13px] mb-1">{d.name}</p>
-          <p className="font-bold text-primary">{d.value} שוטרים</p>
-          <p className="text-[10px] text-muted-foreground mt-1">
+        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-xl flex flex-col gap-1 min-w-[145px] pointer-events-none transition-all duration-200">
+          <div className="flex items-center gap-2">
+            <div
+              className="w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-sm shrink-0"
+              style={{ backgroundColor: d.fill || d.color || "#94a3b8" }}
+            />
+            <span className="font-black text-slate-800 dark:text-slate-100 text-[13px] tracking-tight leading-none">
+              {d.name}
+            </span>
+          </div>
+          <div className="h-[1px] bg-slate-100 dark:bg-slate-800/80 my-1 w-full" />
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
+              נוכחות
+            </span>
+            <span className="font-extrabold text-primary dark:text-blue-400 text-base leading-none">
+              {d.value} שוטרים
+            </span>
+          </div>
+          <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 leading-none mt-0.5">
             {d.percentage}% מכלל היחידה
-          </p>
+          </span>
         </div>
       );
     }
@@ -414,6 +431,16 @@ const EmployeesChartComponent = (
                       top: isMobile ? 10 : 15,
                       bottom: isMobile ? 10 : 15,
                     }}
+                    onMouseMove={(e: any) => {
+                      if (e && e.chartX !== undefined && e.chartY !== undefined) {
+                        const isRight = e.chartX > (isMobile ? 120 : 160);
+                        setTooltipPos({
+                          x: isRight ? e.chartX - 160 : e.chartX + 15,
+                          y: e.chartY - 85,
+                        });
+                      }
+                    }}
+                    onMouseLeave={() => setTooltipPos(null)}
                   >
                     <Pie
                       data={chartData}
@@ -503,7 +530,10 @@ const EmployeesChartComponent = (
                         );
                       })}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip
+                      content={<CustomTooltip />}
+                      position={tooltipPos || undefined}
+                    />
                   </PieChart>
                 ) : (
                   <BarChart

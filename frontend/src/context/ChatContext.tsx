@@ -12,6 +12,9 @@ interface ChatContextType {
   openChat: (recipient: ChatRecipient) => void;
   closeChat: () => void;
   toggleChat: () => void;
+  isGroupModalOpen: boolean;
+  openGroupModal: () => void;
+  closeGroupModal: () => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -19,6 +22,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<ChatRecipient | null>(null);
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
 
   const openChat = useCallback((recipient: ChatRecipient) => {
     setSelectedRecipient(recipient);
@@ -33,8 +37,25 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsChatOpen(prev => !prev);
   }, []);
 
+  const openGroupModal = useCallback(() => {
+    setIsGroupModalOpen(true);
+  }, []);
+
+  const closeGroupModal = useCallback(() => {
+    setIsGroupModalOpen(false);
+  }, []);
+
   return (
-    <ChatContext.Provider value={{ isChatOpen, selectedRecipient, openChat, closeChat, toggleChat }}>
+    <ChatContext.Provider value={{ 
+      isChatOpen, 
+      selectedRecipient, 
+      openChat, 
+      closeChat, 
+      toggleChat,
+      isGroupModalOpen,
+      openGroupModal,
+      closeGroupModal
+    }}>
       {children}
     </ChatContext.Provider>
   );

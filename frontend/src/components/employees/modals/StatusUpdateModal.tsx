@@ -642,7 +642,9 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                     {/* Delegation Section */}
                     {user?.is_commander &&
                       !user?.is_temp_commander &&
-                      employee?.id === user.id && (
+                      employee?.id === user.id &&
+                      selectedType &&
+                      !selectedType.is_presence && (
                         <div className="pt-1.5 border-t border-border/40">
                           <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent rounded-xl p-2.5 border border-primary/10 space-y-2.5">
                             {employee.active_delegate_id ? (
@@ -678,7 +680,6 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                               (() => {
                                 if (candidates.length === 0) return null;
 
-                                // If they select an absent status, requiresDelegation will be true, forcing isDelegating to true.
                                 return (
                                   <>
                                     <div className="flex items-center justify-between gap-4">
@@ -692,7 +693,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                         <p className="text-[9px] text-muted-foreground font-medium">
                                           {requiresDelegation
                                             ? "חובה למנות מחליף לסטטוס שאינו נוכח"
-                                            : "מינוי נציג מהחוליה שיחליף אותך?"}
+                                            : "מינוי נציג שיחליף אותך?"}
                                         </p>
                                       </div>
                                       <Switch
@@ -720,7 +721,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                           dir="rtl"
                                         >
                                           <SelectTrigger className="h-8 rounded-lg bg-background border-primary/20 text-right dark:bg-slate-900 dark:text-white text-[11px]">
-                                            <SelectValue placeholder="בחר חבר צוות..." />
+                                            <SelectValue placeholder="בחר ממלא מקום..." />
                                           </SelectTrigger>
                                           <SelectContent dir="rtl">
                                             {candidates.map((c) => (
@@ -728,12 +729,22 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                                                 key={c.id}
                                                 value={c.id.toString()}
                                               >
-                                                <div className="flex items-center gap-2 text-xs">
-                                                  <span className="font-bold">
-                                                    {c.first_name} {c.last_name}
-                                                  </span>
-                                                  <span className="text-[10px] text-muted-foreground font-mono">
-                                                    ({c.username})
+                                                <div className="flex items-center justify-between w-[250px] sm:w-[320px] text-xs">
+                                                  <div className="flex items-center gap-1">
+                                                    <span className="font-bold">
+                                                      {c.first_name} {c.last_name}
+                                                    </span>
+                                                    <span className="text-[10px] text-muted-foreground font-mono">
+                                                      ({c.username})
+                                                    </span>
+                                                  </div>
+                                                  <span className={cn(
+                                                    "text-[9px] px-1.5 py-0.5 rounded-full font-black ml-6",
+                                                    c.is_other_commander 
+                                                      ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                                                      : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                                  )}>
+                                                    {c.is_other_commander ? "מפקד" : "חייל"}
                                                   </span>
                                                 </div>
                                               </SelectItem>

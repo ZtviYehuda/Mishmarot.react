@@ -16,10 +16,12 @@ interface ThemeContextType {
   theme: Theme;
   accentColor: AccentColor;
   fontSize: FontSize;
+  showAiSupport: boolean;
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
   setAccentColor: (color: AccentColor) => void;
   setFontSize: (size: FontSize) => void;
+  setShowAiSupport: (show: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -46,6 +48,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("fontSize");
     return (saved as FontSize) || "normal";
   });
+
+  const [showAiSupport, setShowAiSupport] = useState<boolean>(() => {
+    const saved = localStorage.getItem("showAiSupport");
+    return saved === null ? true : saved === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("showAiSupport", String(showAiSupport));
+  }, [showAiSupport]);
 
   // 1. Initial Load from User Object when user profile is loaded or changed
   useEffect(() => {
@@ -156,10 +167,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         theme,
         accentColor,
         fontSize,
+        showAiSupport,
         toggleTheme,
         setTheme,
         setAccentColor,
         setFontSize,
+        setShowAiSupport,
       }}
     >
       {children}

@@ -293,7 +293,7 @@ class NotificationModel:
                 FROM user_messages um
                 LEFT JOIN employees s ON um.sender_id = s.id
                 WHERE um.recipient_id = %s
-                AND um.sender_id != um.recipient_id
+                AND (um.sender_id IS NULL OR um.sender_id != um.recipient_id)
                 ORDER BY um.created_at DESC
             """
             cur.execute(query_msgs, (requesting_user["id"],))

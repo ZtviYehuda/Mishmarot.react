@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   Search,
   Trash2, 
-  UserCircle
+  UserCircle,
+  Users
 } from "lucide-react";
 import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ interface Message {
 }
 
 export const ChatSidebar: React.FC = () => {
-  const { isChatOpen, selectedRecipient, closeChat, openChat } = useChat();
+  const { isChatOpen, selectedRecipient, closeChat, openChat, openGroupModal } = useChat();
   const { employees, chatContacts, openProfile, refreshReferenceData } = useEmployeeContext();
   const { user } = useAuthContext();
   const { alerts, markAsRead, refreshAlerts } = useNotifications();
@@ -446,11 +447,24 @@ export const ChatSidebar: React.FC = () => {
               </>
             ) : (
               <>
+
                 {/* Header for Contacts List */}
                 <div className="p-6 bg-primary shadow-lg shrink-0 rounded-t-[2.5rem]">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-black text-xl text-white tracking-tight">הודעות</h3>
                     <div className="flex items-center gap-2">
+                      {/* Group Message Button */}
+                      <Button
+                        id="group-message-btn"
+                        variant="ghost"
+                        size="icon"
+                        onClick={openGroupModal}
+                        title="שלח הודעה קבוצתית"
+                        className="relative w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center border border-white/20 hover:bg-white/20 hover:text-white p-0 shrink-0"
+                      >
+                        <Users className="w-4 h-4" />
+                      </Button>
+
                       {/* Self Status Popover in Header */}
                       <Popover>
                         <PopoverTrigger asChild>

@@ -1,8 +1,12 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_from_directory
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.feedback_model import FeedbackModel
+import os
+import uuid
+import json
 
 feedback_bp = Blueprint('feedback', __name__)
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads', 'screenshots')
 
 @feedback_bp.route('/', methods=['POST'])
 @feedback_bp.route('/create', methods=['POST'])
@@ -55,6 +59,36 @@ def submit_feedback():
         if new_id:
             with open('debug.log', 'a', encoding='utf-8') as f:
                 f.write(f"SUCCESS: ID {new_id}\n")
+                
+            from app.models.notification_model import NotificationModel
+            category = data.get('category', 'improvement')
+            msg_title = "פנייתך התקבלה בהצלחה"
+            if category in ['bug', 'באג']:
+                msg_desc = "תודה על הדיווח! צוות התמיכה שלנו קיבל את דיווח התקלה ויטפל בה בהקדם. נעדכן אותך מיד כשהתקלה תתוקן."
+            elif category in ['improvement', 'הצעה לשיפור']:
+                msg_desc = "תודה רבה על הצעת הייעול! אנו מעריכים מאוד את הרצון לשפר את המערכת. ההצעה הועברה לצוות לבחינה."
+            elif category in ['feature', "פיצ'ר חדש"]:
+                msg_desc = "תודה על הרעיון! הבקשה לפיתוח תכונה חדשה הועברה לצוות המערכת ותיבחן בהתאם לתעדוף הפיתוח."
+            else:
+                msg_desc = "פנייתך התקבלה במערכת ותועבר לטיפול צוות התמיכה בהקדם."
+
+            if user_id:
+                admin_user = None
+                try:
+                    from app.models.employee_model import EmployeeModel
+                    admin_user = EmployeeModel.get_admin()
+                except Exception as e:
+                    pass
+                
+                admin_id = admin_user['id'] if admin_user else None
+
+                NotificationModel.send_message(
+                    sender_id=admin_id,
+                    recipient_id=user_id,
+                    title=msg_title,
+                    description=msg_desc
+                )
+
             return jsonify({"message": "Feedback submitted successfully", "id": new_id}), 201
         else:
             with open('debug.log', 'a', encoding='utf-8') as f:
@@ -225,3 +259,34 @@ def delete_system_update(update_id):
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+
+@feedback_bp.route('/upload-screenshot', methods=['POST'])
+@jwt_required()
+def upload_screenshot():
+    if 'screenshot' not in request.files:
+        return jsonify({"error": "No screenshot file provided"}), 400
+        
+    file = request.files['screenshot']
+    if file.filename == '':
+        return jsonify({"error": "No filename"}), 400
+        
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else 'png'
+    if ext not in ['png', 'jpg', 'jpeg', 'webp', 'gif']:
+        return jsonify({"error": "Invalid file type. Only images are allowed."}), 400
+        
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+        
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(filepath)
+    
+    # Return path relative to server root
+    url = f"/api/feedback/screenshots/{filename}"
+    
+    return jsonify({"success": True, "screenshot_url": url}), 200
+
+@feedback_bp.route('/screenshots/<filename>', methods=['GET'])
+def serve_screenshot(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)

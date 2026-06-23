@@ -1,4 +1,6 @@
-import { Palette, Moon, Sun, Type, Monitor, Pipette, Check } from "lucide-react";
+import { Palette, Moon, Sun, Type, Monitor, Pipette, Check, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
@@ -10,6 +12,8 @@ interface AppearanceSettingsProps {
   setAccentColor: (color: any) => void;
   fontSize: string;
   setFontSize: (size: any) => void;
+  showAiSupport: boolean;
+  setShowAiSupport: (show: boolean) => void;
 }
 
 export function AppearanceSettings({
@@ -19,6 +23,8 @@ export function AppearanceSettings({
   setAccentColor,
   fontSize,
   setFontSize,
+  showAiSupport,
+  setShowAiSupport,
 }: AppearanceSettingsProps) {
   const [isCustomOpen, setIsCustomOpen] = useState(accentColor.startsWith("#"));
   const colorInputRef = useRef<HTMLInputElement>(null);
@@ -331,6 +337,40 @@ export function AppearanceSettings({
             )}
           </AnimatePresence>
         </div>
+        </SectionCard>
+      </div>
+
+      {/* AI Support Toggle Section */}
+      <div id="ai-support-setting-container">
+        <SectionCard icon={Sparkles} title="עוזר תמיכה AI">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-border/40 backdrop-blur-md">
+            <div className="space-y-1 pr-1">
+              <h4 className="text-sm font-black text-foreground">
+                הצגת כפתור התמיכה והמדריך הצף
+              </h4>
+              <p className="text-xs text-muted-foreground font-bold leading-relaxed">
+                כאשר הגדרה זו פעילה, יופיע כפתור צף בפינת המסך המאפשר להפעיל את עוזר ה-AI או לצפות במדריך המודרך של המערכת.
+              </p>
+            </div>
+            <Switch
+              checked={showAiSupport}
+              onCheckedChange={setShowAiSupport}
+              className="data-[state=checked]:bg-primary"
+            />
+          </div>
+
+          {/* Button to open AI support directly from settings */}
+          <div className="flex justify-end mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.dispatchEvent(new Event('open-ai-support'))}
+              className="rounded-xl border-primary/20 text-primary font-black text-xs gap-2 hover:bg-primary/10 transition-all h-10 px-5"
+            >
+              <Sparkles className="w-4 h-4" />
+              פתח עוזר AI כעת
+            </Button>
+          </div>
         </SectionCard>
       </div>
 

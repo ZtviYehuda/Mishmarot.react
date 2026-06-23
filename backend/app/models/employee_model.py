@@ -95,6 +95,99 @@ class EmployeeModel:
             conn.close()
 
     @staticmethod
+    def safe_int_eq(a, b):
+        if a is None or b is None:
+            return False
+        try:
+            return int(a) == int(b)
+        except (ValueError, TypeError):
+            return False
+
+    @staticmethod
+    def check_scope_match(commander, target_employee):
+        if not commander or not target_employee:
+            return False
+        if commander.get("is_admin"):
+            return True
+        if EmployeeModel.safe_int_eq(commander.get("id"), target_employee.get("id")):
+            return True
+            
+        cmd_dept = commander.get("commands_department_id")
+        cmd_sec = commander.get("commands_section_id")
+        cmd_team = commander.get("commands_team_id")
+        
+        # Check matching department
+        if cmd_dept:
+            if (EmployeeModel.safe_int_eq(target_employee.get("department_id"), cmd_dept) or 
+                EmployeeModel.safe_int_eq(target_employee.get("assigned_department_id"), cmd_dept)):
+                return True
+                
+        # Check matching section
+        if cmd_sec:
+            if (EmployeeModel.safe_int_eq(target_employee.get("section_id"), cmd_sec) or 
+                EmployeeModel.safe_int_eq(target_employee.get("assigned_section_id"), cmd_sec)):
+                return True
+                
+        # Check matching team
+        if cmd_team:
+            if (EmployeeModel.safe_int_eq(target_employee.get("team_id"), cmd_team) or 
+                EmployeeModel.safe_int_eq(target_employee.get("assigned_team_id"), cmd_team)):
+                return True
+                
+        return False
+
+    @staticmethod
+    def is_scope_authorized(commander, scope_type, scope_id):
+        if not commander:
+            return False
+        if commander.get("is_admin"):
+            return True
+            
+        cmd_dept = commander.get("commands_department_id")
+        cmd_sec = commander.get("commands_section_id")
+        cmd_team = commander.get("commands_team_id")
+        
+        conn = get_db_connection()
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+            if scope_type == "team":
+                cur.execute("""
+                    SELECT t.id, t.section_id, s.department_id
+                    FROM teams t
+                    JOIN sections s ON t.section_id = s.id
+                    WHERE t.id = %s
+                """, (scope_id,))
+                row = cur.fetchone()
+                if not row:
+                    return False
+                t_id, s_id, d_id = row
+                return (EmployeeModel.safe_int_eq(cmd_team, t_id) or 
+                        EmployeeModel.safe_int_eq(cmd_sec, s_id) or 
+                        EmployeeModel.safe_int_eq(cmd_dept, d_id))
+                
+            elif scope_type == "section":
+                cur.execute("""
+                    SELECT s.id, s.department_id
+                    FROM sections s
+                    WHERE s.id = %s
+                """, (scope_id,))
+                row = cur.fetchone()
+                if not row:
+                    return False
+                s_id, d_id = row
+                return (EmployeeModel.safe_int_eq(cmd_sec, s_id) or 
+                        EmployeeModel.safe_int_eq(cmd_dept, d_id))
+                
+            elif scope_type == "department":
+                return EmployeeModel.safe_int_eq(cmd_dept, scope_id)
+                
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
     def get_employee_by_id(emp_id):
         conn = get_db_connection()
         if not conn:
@@ -201,9 +294,10 @@ class EmployeeModel:
                 cur.execute(
                     """
                     SELECT d.commander_id, d.start_date, d.end_date,
-                           e.team_id as commander_team_id
+                           (SELECT id FROM departments WHERE commander_id = d.commander_id LIMIT 1) as commander_dept_id,
+                           (SELECT id FROM sections WHERE commander_id = d.commander_id LIMIT 1) as commander_sec_id,
+                           (SELECT id FROM teams WHERE commander_id = d.commander_id LIMIT 1) as commander_team_id
                     FROM delegations d
-                    JOIN employees e ON d.commander_id = e.id
                     WHERE d.delegate_id = %s 
                       AND d.start_date <= CURRENT_DATE 
                       AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
@@ -217,21 +311,19 @@ class EmployeeModel:
                 if delegation:
                     # User is a temporary commander!
                     user["is_temp_commander"] = True
-                    user["is_commander"] = (
-                        True  # CRITICAL: Allow login/access check in auth_routes
-                    )
+                    user["is_commander"] = True  # CRITICAL: Allow login/access check in auth_routes
                     user["delegated_from_commander_id"] = delegation["commander_id"]
 
-                    # Grant them the commander's team scope (read-only command)
-                    # We override commands_team_id to allow them to see the team in stats/tables
-                    # But we add is_temp_commander flag so frontend/backend knows to limit permissions
-                    user["commands_team_id"] = delegation["commander_team_id"]
-
-                    # Ensure they don't get other command scopes unless they already had them (unlikely for a temp)
-                    # If they are just a regular soldier, these should be None anyway.
+                    # Grant them the commander's scopes (read-only command)
+                    if delegation["commander_dept_id"]:
+                        user["commands_department_id"] = delegation["commander_dept_id"]
+                    if delegation["commander_sec_id"]:
+                        user["commands_section_id"] = delegation["commander_sec_id"]
+                    if delegation["commander_team_id"]:
+                        user["commands_team_id"] = delegation["commander_team_id"]
 
                     print(
-                        f"[DEBUG] User {emp_id} is TEMP COMMANDER for team {delegation['commander_team_id']}"
+                        f"[DEBUG] User {emp_id} is TEMP COMMANDER: dept={delegation['commander_dept_id']}, sec={delegation['commander_sec_id']}, team={delegation['commander_team_id']}"
                     )
 
                 # --- CHECK IF USER IS A COMMANDER WITH ACTIVE DELEGATE ---
@@ -302,74 +394,43 @@ class EmployeeModel:
                 LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                 -- Service Type
                 LEFT JOIN service_types srv ON e.service_type_id = srv.id
-                -- Status Joins
                 -- Status Joins (Smart Continuity: Persistent stays, Daily resets)
                 LEFT JOIN LATERAL (
-                    SELECT al.status_type_id, al.start_datetime, al.end_datetime, al.is_verified, al.note
+                    SELECT al.status_type_id, al.start_datetime, al.end_datetime, al.is_verified, al.note, sti.is_persistent
                     FROM attendance_logs al
                     JOIN status_types sti ON al.status_type_id = sti.id
                     WHERE al.employee_id = e.id 
-                    {status_condition}
+                    AND DATE(al.start_datetime) <= {check_date}
                     ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
                 ) last_log ON true
-                LEFT JOIN status_types st ON last_log.status_type_id = st.id
+                LEFT JOIN status_types st ON (
+                    CASE 
+                        WHEN last_log.status_type_id IS NOT NULL 
+                             AND (
+                                 (last_log.end_datetime IS NOT NULL AND DATE(last_log.end_datetime) >= {check_date})
+                                 OR 
+                                 (last_log.end_datetime IS NULL AND (last_log.is_persistent = TRUE OR DATE(last_log.start_datetime) = {check_date}))
+                             ) 
+                        THEN last_log.status_type_id 
+                        ELSE NULL 
+                    END
+                ) = st.id
                 WHERE e.username != 'admin'
             """
 
-            # Prepare status condition
-            # Robust continuity: Persistent stays until changed. Daily resets unless they are part of a date range.
-            status_sql = """AND (
-                sti.is_persistent = TRUE 
-                OR (
-                    DATE(al.start_datetime) <= CURRENT_DATE 
-                    AND (
-                        (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= CURRENT_DATE)
-                        OR (al.end_datetime IS NULL AND DATE(al.start_datetime) = CURRENT_DATE)
-                    )
-                )
-            )"""
+            # Prepare check date parameter for lateral status joins
+            check_date_sql = "CURRENT_DATE"
             status_params = []
 
             if filters and (filters.get("date") or filters.get("end_date")):
                 check_date_str = filters.get("date") or filters.get("end_date")
-                try:
-                    from datetime import datetime, date
-
-                    check_date_obj = datetime.strptime(
-                        check_date_str, "%Y-%m-%d"
-                    ).date()
-                    today = date.today()
-
-                    # Unified Smart Continuity logic for any date (Past/Present/Future)
-                    status_sql = """AND (
-                        sti.is_persistent = TRUE 
-                        OR (
-                            DATE(al.start_datetime) <= %s 
-                            AND (
-                                (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s)
-                                OR (al.end_datetime IS NULL AND DATE(al.start_datetime) = %s)
-                            )
-                        )
-                    )"""
-                    status_params = [check_date_str, check_date_str, check_date_str]
-                except ValueError:
-                    # Fallback
-                    status_sql = """AND (
-                        sti.is_persistent = TRUE 
-                        OR (
-                            DATE(al.start_datetime) <= %s 
-                            AND (
-                                (al.end_datetime IS NOT NULL AND DATE(al.end_datetime) >= %s)
-                                OR (al.end_datetime IS NULL AND DATE(al.start_datetime) = %s)
-                            )
-                        )
-                    )"""
-                    status_params = [check_date_str, check_date_str, check_date_str]
+                check_date_sql = "%s"
+                status_params = [check_date_str, check_date_str, check_date_str]
 
             # Initialize query parameters list if not already present
             params = []
 
-            query = query.format(status_condition=status_sql)
+            query = query.format(check_date=check_date_sql)
             params = status_params + params
 
             # Scoping and Exclusions
@@ -1029,14 +1090,19 @@ class EmployeeModel:
         try:
             cur = conn.cursor()
 
-            # Verify commander has a team
+            # Verify commander commands something (team, section, or department)
             cur.execute(
-                "SELECT team_id FROM employees WHERE id = %s AND is_commander = TRUE",
-                (commander_id,),
+                """
+                SELECT 
+                    (SELECT id FROM departments WHERE commander_id = %s LIMIT 1) as commands_department_id,
+                    (SELECT id FROM sections WHERE commander_id = %s LIMIT 1) as commands_section_id,
+                    (SELECT id FROM teams WHERE commander_id = %s LIMIT 1) as commands_team_id
+                """,
+                (commander_id, commander_id, commander_id),
             )
             res = cur.fetchone()
-            if not res or not res[0]:
-                return False, "Commander does not command a valid team"
+            if not res or not (res[0] or res[1] or res[2]):
+                return False, "המפקד אינו מוגדר כמנהל יחידה, מדור או צוות כלשהו"
 
             # Generate random 6-digit password
             import random
@@ -1077,27 +1143,80 @@ class EmployeeModel:
     @staticmethod
     def get_team_members_for_commander(commander_id):
         conn = get_db_connection()
+        if not conn:
+            return []
         try:
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            # Find the team this commander commands
-            cur.execute("SELECT team_id FROM employees WHERE id = %s", (commander_id,))
-            res = cur.fetchone()
-            if not res or not res["team_id"]:
-                return []
-
-            team_id = res["team_id"]
-
-            # Fetch candidates (active, not the commander themselves)
+            
+            # Determine commander's commanded scopes
             cur.execute(
                 """
-                SELECT id, first_name, last_name, username, phone_number
-                FROM employees 
-                WHERE team_id = %s AND is_active = TRUE AND id != %s
-                ORDER BY first_name ASC
-            """,
-                (team_id, commander_id),
+                SELECT 
+                    (SELECT id FROM departments WHERE commander_id = %s LIMIT 1) as commands_department_id,
+                    (SELECT id FROM sections WHERE commander_id = %s LIMIT 1) as commands_section_id,
+                    (SELECT id FROM teams WHERE commander_id = %s LIMIT 1) as commands_team_id
+                """,
+                (commander_id, commander_id, commander_id),
             )
-            return cur.fetchall()
+            scope = cur.fetchone()
+            
+            subordinate_conds = []
+            subordinate_params = []
+            
+            if scope:
+                dept_id = scope["commands_department_id"]
+                sec_id = scope["commands_section_id"]
+                team_id = scope["commands_team_id"]
+                
+                if dept_id:
+                    subordinate_conds.append("(d.id = %s OR d_dir.id = %s)")
+                    subordinate_params.extend([dept_id, dept_id])
+                elif sec_id:
+                    subordinate_conds.append("(s.id = %s OR s_dir.id = %s)")
+                    subordinate_params.extend([sec_id, sec_id])
+                elif team_id:
+                    subordinate_conds.append("e.team_id = %s")
+                    subordinate_params.append(team_id)
+            
+            all_candidates = []
+            seen_ids = set()
+            
+            # Subordinates Query (if commander has a scope)
+            if subordinate_conds:
+                where_clause = " AND ".join(subordinate_conds)
+                sub_query = f"""
+                    SELECT DISTINCT e.id, e.first_name, e.last_name, e.username, e.phone_number, FALSE as is_other_commander
+                    FROM employees e
+                    LEFT JOIN teams t ON e.team_id = t.id
+                    LEFT JOIN sections s ON t.section_id = s.id
+                    LEFT JOIN departments d ON s.department_id = d.id
+                    LEFT JOIN sections s_dir ON e.section_id = s_dir.id
+                    LEFT JOIN departments d_dir ON e.department_id = d_dir.id
+                    WHERE e.is_active = TRUE AND e.id != %s AND {where_clause}
+                """
+                cur.execute(sub_query, [commander_id] + subordinate_params)
+                for row in cur.fetchall():
+                    r_dict = dict(row)
+                    if r_dict["id"] not in seen_ids:
+                        all_candidates.append(r_dict)
+                        seen_ids.add(r_dict["id"])
+            
+            # Other Commanders Query
+            cmd_query = """
+                SELECT id, first_name, last_name, username, phone_number, TRUE as is_other_commander
+                FROM employees
+                WHERE is_commander = TRUE AND is_active = TRUE AND id != %s
+            """
+            cur.execute(cmd_query, (commander_id,))
+            for row in cur.fetchall():
+                r_dict = dict(row)
+                if r_dict["id"] not in seen_ids:
+                    all_candidates.append(r_dict)
+                    seen_ids.add(r_dict["id"])
+                    
+            # Sort final merged candidates alphabetically
+            all_candidates.sort(key=lambda x: x.get("first_name", ""))
+            return all_candidates
         finally:
             conn.close()
 

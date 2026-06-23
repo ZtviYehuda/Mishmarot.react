@@ -14,7 +14,8 @@ import { toast } from "sonner";
 import {
   Send,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Eye
 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
@@ -51,6 +52,17 @@ const STATUS_LABELS: Record<string, string> = {
   "reviewing": "בבחינה",
   "developing": "בפיתוח",
   "done": "בוצע",
+};
+
+const getScreenshotUrl = (url?: string) => {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  const baseURL = apiClient.defaults.baseURL || "";
+  if (baseURL.startsWith("http://") || baseURL.startsWith("https://")) {
+    const origin = baseURL.replace(/\/api$/, "");
+    return `${origin}${url}`;
+  }
+  return url;
 };
 
 interface FeedbackCenterProps {
@@ -254,6 +266,29 @@ export function FeedbackCenter({ isOpen, onClose, contextPage = "" }: FeedbackCe
                       <span>•</span>
                       <span>{ticket.category}</span>
                     </div>
+                    {ticket.screenshot_url && (
+                      <div className="mt-3 flex items-center gap-3 justify-end">
+                        <span className="text-[10px] font-bold text-slate-400">
+                          צילום מסך מצורף (לחץ להגדלה)
+                        </span>
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(getScreenshotUrl(ticket.screenshot_url), "_blank");
+                          }}
+                          className="relative w-16 h-12 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 cursor-pointer hover:border-blue-300 transition-all group shrink-0"
+                        >
+                          <img
+                            src={getScreenshotUrl(ticket.screenshot_url)}
+                            alt="צילום מסך פנייה"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Eye className="w-3.5 h-3.5 text-white" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     
                     {ticket.admin_reply && (
                       <div className="mt-4 p-4 bg-blue-50/30 rounded-2xl border-r-4 border-blue-500 text-sm font-bold text-slate-700">

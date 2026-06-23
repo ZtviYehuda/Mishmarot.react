@@ -51,6 +51,9 @@ import { Button } from "@/components/ui/button";
 import { GlobalAiSupport } from "@/components/common/GlobalAiSupport";
 import { ChatSidebar } from "./ChatSidebar";
 import { useChat } from "@/context/ChatContext";
+import { GroupMessageModal } from "@/components/chat/GroupMessageModal";
+import { useTheme } from "@/context/ThemeContext";
+import apiClient from "@/config/api.client";
 
 function getAlertConfig(alert: {
   id: string;
@@ -118,6 +121,7 @@ function getAlertConfig(alert: {
 
 export default function MainLayout() {
   const { user, logout } = useAuthContext();
+  const { showAiSupport } = useTheme();
 
   const {
     alerts,
@@ -133,7 +137,7 @@ export default function MainLayout() {
     markAsRead,
     markAsUnread,
   } = useNotifications();
-  const { openChat, toggleChat } = useChat();
+  const { openChat, toggleChat, isGroupModalOpen, closeGroupModal } = useChat();
   const unreadMessagesCount = React.useMemo(() => alerts.filter(a => a.id.startsWith("msg-")).length, [alerts]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -156,16 +160,8 @@ export default function MainLayout() {
   const fetchPendingCount = async () => {
     if (!user?.is_admin) return;
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/support/tickets/pending-count`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
-      );
-      if (!res.ok) return; // Endpoint may not exist — fail silently
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) return;
-      const data = await res.json();
+      const { data } = await apiClient.get("/support/tickets/pending-count");
+      if (!data) return; // Endpoint may not exist — fail silently
       setPendingRequestsCount(data.count || 0);
     } catch (err) {
       // Silently ignore — endpoint may not be deployed
@@ -1224,6 +1220,7 @@ export default function MainLayout() {
         </Dialog>
         <GlobalAiSupport />
         <ChatSidebar />
+        <GroupMessageModal open={isGroupModalOpen} onClose={closeGroupModal} />
       </div>
     </div>
   );

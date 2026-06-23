@@ -59,10 +59,30 @@ def get_employees():
 @emp_bp.route("/<int:emp_id>", methods=["GET"])
 @jwt_required()
 def get_employee(emp_id):
+    identity_str = get_jwt_identity()
+    try:
+        identity = (
+            json.loads(identity_str)
+            if isinstance(identity_str, str)
+            else identity_str
+        )
+        user_id = identity.get("id") if isinstance(identity, dict) else identity
+    except (json.JSONDecodeError, AttributeError):
+        user_id = identity_str
+
+    requester = EmployeeModel.get_employee_by_id(user_id)
+    if not requester:
+        return jsonify({"error": "Requester not found"}), 404
+
     employee = EmployeeModel.get_employee_by_id(emp_id)
-    if employee:
-        return jsonify(employee)
-    return jsonify({"error": "Not found"}), 404
+    if not employee:
+        return jsonify({"error": "Not found"}), 404
+
+    # Scoping Check
+    if not requester.get("is_admin") and not EmployeeModel.check_scope_match(requester, employee):
+        return jsonify({"error": "Unauthorized: Access outside of command scope is forbidden"}), 403
+
+    return jsonify(employee)
 
 
 @emp_bp.route("/", methods=["POST"])
@@ -155,6 +175,14 @@ def update_employee(emp_id):
         is_commander = claims.get("is_commander", False)
         if not (is_admin or is_commander):
             return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+        # Scoping Check
+        target_employee = EmployeeModel.get_employee_by_id(emp_id)
+        if not target_employee:
+            return jsonify({"success": False, "error": "Target employee not found"}), 404
+
+        if not is_admin and not EmployeeModel.check_scope_match(current_user, target_employee):
+            return jsonify({"success": False, "error": "Unauthorized: Cannot edit employee outside command scope"}), 403
 
         data = request.get_json()
         if not data:

@@ -35,7 +35,15 @@ export const DashboardStatusTable = ({
           ? parseInt(departmentId)
           : undefined, // deptId
         undefined, // include_inactive
-        statusId === -1 ? "missing" : statusId, // statusId
+        statusId === -1
+          ? "missing"
+          : statusId === -2
+          ? "unavailable"
+          : statusId === -3
+          ? "available"
+          : statusId === -4
+          ? "all"
+          : statusId, // statusId
         sectionId && sectionId !== "" ? parseInt(sectionId) : undefined, // sectionId
         teamId && teamId !== "" ? parseInt(teamId) : undefined, // teamId
         date, // date
@@ -43,7 +51,7 @@ export const DashboardStatusTable = ({
         undefined, // status_id_param
         undefined, // min_age
         undefined, // max_age
-        statusName, // status_name
+        statusId < 0 ? undefined : statusName, // status_name
       );
     }
   }, [

@@ -586,10 +586,27 @@ export default function DashboardPage() {
     }
     
     // For admin, add org filters if selected
-    if (user?.is_admin || user?.is_commander) {
+    if (user?.is_admin) {
         if (selectedTeamId && currentTeam) tags.push(currentTeam.name);
         else if (selectedSectionId && currentSection) tags.push(currentSection.name);
         else if (selectedDeptId && currentDept) tags.push(currentDept.name);
+    } else if (user?.is_commander) {
+        // Only show org tags if they are a filter beyond their default commander scope
+        if (user.commands_department_id) {
+            // Department commander default is dept, so section or team is a filter
+            if (selectedTeamId && currentTeam) tags.push(currentTeam.name);
+            else if (selectedSectionId && currentSection) tags.push(currentSection.name);
+        } else if (user.commands_section_id) {
+            // Section commander default is section, so team is a filter
+            if (selectedTeamId && currentTeam) tags.push(currentTeam.name);
+        } else if (user.commands_team_id) {
+            // Team commander is already scoped to team, so no org tags can be filters
+        } else {
+            // Fallback for commanders with no specific unit command yet
+            if (selectedTeamId && currentTeam) tags.push(currentTeam.name);
+            else if (selectedSectionId && currentSection) tags.push(currentSection.name);
+            else if (selectedDeptId && currentDept) tags.push(currentDept.name);
+        }
     }
 
     return tags;

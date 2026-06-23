@@ -591,7 +591,7 @@ export default function AttendancePage() {
       className="flex flex-col min-h-full selection:bg-primary/10 selection:text-primary transition-all"
       dir="rtl"
     >
-      <div className="pt-4 pb-4 shrink-0 transition-all px-0 sm:px-2">
+      <div className="pt-6 pb-4 px-4 sm:px-6 shrink-0 transition-all">
         {/* Premium Page Header Section */}
         <PageHeader
           icon={CalendarDays}

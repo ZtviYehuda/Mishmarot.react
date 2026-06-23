@@ -31,6 +31,8 @@ export default function SettingsPage() {
     setAccentColor,
     fontSize,
     setFontSize,
+    showAiSupport,
+    setShowAiSupport,
   } = useTheme();
 
   const navigate = useNavigate();
@@ -492,6 +494,8 @@ export default function SettingsPage() {
               setAccentColor={setAccentColor}
               fontSize={fontSize}
               setFontSize={setFontSize}
+              showAiSupport={showAiSupport}
+              setShowAiSupport={setShowAiSupport}
             />
           )}
 

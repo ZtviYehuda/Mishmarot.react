@@ -23,6 +23,7 @@ import {
   Pencil,
   LogIn,
   Phone,
+  Upload,
 } from "lucide-react";
 import type { Employee } from "@/types/employee.types";
 import { cn, cleanUnitName, calculateAge } from "@/lib/utils";
@@ -232,7 +233,31 @@ export const EmployeeTable = ({
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const loadingToastId = toast.loading("מייבא עובדים מקובץ, אנא המתן...");
+    try {
+      const { data } = await apiClient.post("/employees/import", formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (data.success) {
+        toast.success(data.message || "יובאו בהצלחה", { id: loadingToastId });
+        if (fetchEmployees) fetchEmployees();
+      } else {
+        toast.error(data.error || "שגיאה בייבוא", { id: loadingToastId });
+      }
+    } catch (e: any) {
+      toast.error(e.response?.data?.error || "שגיאה בייבוא קובץ. אנא ודא שהפורמט תקין.", { id: loadingToastId });
+      console.error(e);
+    }
+    // reset input
+    event.target.value = '';
+  };
 
   return (
     <div className="space-y-3 sm:space-y-5">
@@ -287,17 +312,40 @@ export const EmployeeTable = ({
 
 
           {!user?.is_temp_commander && (
-            <Button
-              id="add-employee-button"
-              className={cn(
-                "h-9.5 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl flex-1 sm:flex-none sm:w-auto justify-center sm:mr-auto",
-                searchParams.get("tutorial") === "add-employee" && "tutorial-highlight"
+            <>
+              {user?.is_admin && (
+                <>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "h-9.5 sm:h-10 text-xs sm:text-sm bg-background border-border/60 hover:bg-muted text-foreground rounded-xl flex-1 sm:flex-none sm:w-auto justify-center sm:mr-auto"
+                    )}
+                    onClick={() => document.getElementById('employee-upload-input')?.click()}
+                  >
+                    <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2 text-primary" />
+                    ייבוא מקובץ
+                  </Button>
+                  <input 
+                    type="file" 
+                    id="employee-upload-input" 
+                    className="hidden" 
+                    accept=".csv, .xlsx, .xls"
+                    onChange={handleFileUpload}
+                  />
+                </>
               )}
-              onClick={() => navigate("/employees/new")}
-            >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
-              הוספה
-            </Button>
+              <Button
+                id="add-employee-button"
+                className={cn(
+                  "h-9.5 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl flex-1 sm:flex-none sm:w-auto justify-center",
+                  searchParams.get("tutorial") === "add-employee" && "tutorial-highlight"
+                )}
+                onClick={() => navigate("/employees/new")}
+              >
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
+                הוספה
+              </Button>
+            </>
           )}
         </div>
       </div>

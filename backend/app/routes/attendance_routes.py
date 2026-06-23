@@ -289,6 +289,18 @@ def log_status():
     if not target_id:
         target_id = current_user_id
 
+    from app.models.employee_model import EmployeeModel
+    requester = EmployeeModel.get_employee_by_id(current_user_id)
+    if not requester:
+        return jsonify({"error": "Requester not found"}), 404
+
+    target = EmployeeModel.get_employee_by_id(target_id)
+    if not target:
+        return jsonify({"error": "Target employee not found"}), 404
+
+    if not requester.get("is_admin") and not EmployeeModel.check_scope_match(requester, target):
+        return jsonify({"error": "Unauthorized: Cannot update status for user outside command scope"}), 403
+
     status_id = data.get("status_type_id")
     note = data.get("note")
     start_date = data.get("start_date")
@@ -371,7 +383,24 @@ def bulk_log_status():
     if not updates:
         return jsonify({"error": "No updates provided"}), 400
 
-    success = AttendanceModel.log_bulk_status(updates, reported_by=current_user_id)
+    from app.models.employee_model import EmployeeModel
+    requester = EmployeeModel.get_employee_by_id(current_user_id)
+    if not requester:
+        return jsonify({"error": "Requester not found"}), 404
+
+    filtered_updates = []
+    for update in updates:
+        emp_id = update.get("employee_id")
+        if not emp_id:
+            continue
+        if requester.get("is_admin"):
+            filtered_updates.append(update)
+        else:
+            target = EmployeeModel.get_employee_by_id(emp_id)
+            if target and EmployeeModel.check_scope_match(requester, target):
+                filtered_updates.append(update)
+
+    success = AttendanceModel.log_bulk_status(filtered_updates, reported_by=current_user_id)
 
     if success:
         AuditLogModel.log_action(
@@ -408,6 +437,14 @@ def bulk_scope_status():
 
     if not all([scope_type, scope_id, status_id, start_date]):
         return jsonify({"error": "Missing required fields"}), 400
+
+    from app.models.employee_model import EmployeeModel
+    requester = EmployeeModel.get_employee_by_id(current_user_id)
+    if not requester:
+        return jsonify({"error": "Requester not found"}), 404
+
+    if not requester.get("is_admin") and not EmployeeModel.is_scope_authorized(requester, scope_type, scope_id):
+        return jsonify({"error": "Unauthorized: Cannot update scope outside command scope"}), 403
 
     success = AttendanceModel.log_scope_status(
         scope_type=scope_type,
@@ -459,6 +496,29 @@ def get_calendar_stats():
 @jwt_required()
 def get_employee_history(emp_id):
     try:
+        identity_str = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_str)
+                if isinstance(identity_str, str)
+                else identity_str
+            )
+            user_id = identity.get("id") if isinstance(identity, dict) else identity
+        except (json.JSONDecodeError, AttributeError):
+            user_id = identity_str
+
+        from app.models.employee_model import EmployeeModel
+        requester = EmployeeModel.get_employee_by_id(user_id)
+        if not requester:
+            return jsonify({"error": "Requester not found"}), 404
+
+        target = EmployeeModel.get_employee_by_id(emp_id)
+        if not target:
+            return jsonify({"error": "Employee not found"}), 404
+
+        if not requester.get("is_admin") and not EmployeeModel.check_scope_match(requester, target):
+            return jsonify({"error": "Unauthorized: Access outside of command scope is forbidden"}), 403
+
         history = AttendanceModel.get_employee_history(emp_id)
         return jsonify(history)
     except Exception as e:
@@ -470,6 +530,29 @@ def get_employee_history(emp_id):
 @jwt_required()
 def export_employee_history(emp_id):
     try:
+        identity_str = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_str)
+                if isinstance(identity_str, str)
+                else identity_str
+            )
+            user_id = identity.get("id") if isinstance(identity, dict) else identity
+        except (json.JSONDecodeError, AttributeError):
+            user_id = identity_str
+
+        from app.models.employee_model import EmployeeModel
+        requester = EmployeeModel.get_employee_by_id(user_id)
+        if not requester:
+            return jsonify({"error": "Requester not found"}), 404
+
+        target = EmployeeModel.get_employee_by_id(emp_id)
+        if not target:
+            return jsonify({"error": "Employee not found"}), 404
+
+        if not requester.get("is_admin") and not EmployeeModel.check_scope_match(requester, target):
+            return jsonify({"error": "Unauthorized: Access outside of command scope is forbidden"}), 403
+
         start_date = request.args.get("start_date")
         end_date = request.args.get("end_date")
 

@@ -8,6 +8,7 @@ export interface Ticket {
   status: 'received' | 'reviewing' | 'in_progress' | 'done' | 'dismissed' | 'irrelevant' | 'open' | 'closed';
   admin_reply: string | null;
   created_at: string;
+  screenshot_url?: string;
 }
 
 export interface SupportTicket {

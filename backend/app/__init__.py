@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from flask import Flask, request, jsonify, make_response
 
 from flask_jwt_extended import JWTManager
@@ -108,5 +110,35 @@ def create_app():
     app.register_blueprint(archive_bp, url_prefix="/api/archive", strict_slashes=False)
     app.register_blueprint(feedback_bp, url_prefix="/api/feedback", strict_slashes=False)
     # app.register_blueprint(webauthn_bp)
+
+    @app.get("/api/health")
+    def health_check():
+        from app.utils.db import get_db_connection
+
+        db_status = "ok"
+        db_error = None
+
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+                cur.fetchone()
+            conn.close()
+        except Exception as exc:
+            db_status = "error"
+            db_error = str(exc)
+
+        status_code = 200 if db_status == "ok" else 503
+        payload = {
+            "service": "mishmarot-api",
+            "status": "ok" if db_status == "ok" else "degraded",
+            "database": db_status,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+        if db_error:
+            payload["database_error"] = db_error
+
+        return jsonify(payload), status_code
 
     return app

@@ -8,11 +8,13 @@ import {
   Square,
   Minus,
   CalendarDays,
-  RotateCcw
+  RotateCcw,
+  Trash2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/context/ThemeContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { TourGuideOverlay } from "./TourGuideOverlay";
@@ -23,6 +25,7 @@ const TOUR_STEPS: TourStep[] = [
   // --- CHAT & STATUS (first in tour) ---
   { id: 'system_status', selector: '#system-status-dot, #mobile-system-status-dot', path: '/', title: 'סטטוס פעילות המערכת', content: 'כאן מופיע חיווי ירוק קבוע המציין שהחיבור לשרת פעיל ומאובטח. לחיצה עליו תציג פרטים על זמן הכניסה האחרון שלך.' },
   { id: 'chat_status_step', selector: '#chat-toggle-btn', path: '/', title: 'צ׳אט ישיר בין מפקדים', content: 'בסרגל העליון, ליד הפעמון, ישנו אייקון הודעות (בועת שיחה 💬) — לחיצה עליו פותחת את הצ׳אט הצידי לתקשורת ישירה עם שאר המפקדים ביחידה. שם תוכלו לנהל שיחות פרטיות, לראות מי מחובר כעת (נקודה ירוקה/אדומה), ולעדכן את הסטטוס האישי שלכם (זמין/לא זמין). כפתור זה מופיע רק במחשב.' },
+  { id: 'group_message_step', selector: '#group-message-btn', path: '/', title: 'שליחת הודעה קבוצתית', content: 'בלחיצה על כפתור הקבוצה (👥), ייפתח חלון לשליחת הודעה מרוכזת. תוכלו לבחור מחלקות, מדורים או חוליות שלמות ולשלוח להם הודעה אחת שתגיע לכל החברים ביחידה שבחרתם ללא צורך לשלוח לכל אחד בנפרד.' },
   { id: 'notifications_bell', selector: '#mobile-notifications-btn', path: '/', title: 'פעמון ההתראות', content: 'בסרגל העליון תמצאו את אייקון הפעמון (🔔). לחיצה עליו פותחת חלון עם 3 לשוניות: פעילות — התראות מהמערכת (שוטרים שלא דיווחו, בקשות ממתינות וכו׳), הודעות — מעבר לצ׳אט הפנימי עם המפקדים, והיסטוריה — התראות שכבר קראתם. מספר אדום/כתום על הפעמון מציין כמה התראות ממתינות לטיפולכם.' },
 
   // --- DASHBOARD PAGE ---
@@ -226,9 +229,12 @@ export function GlobalAiSupport() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isChatOpen, openChat, closeChat } = useChat();
+  const { showAiSupport, setShowAiSupport } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [chatInput, setChatInput] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [isNearDrop, setIsNearDrop] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => {
     const saved = localStorage.getItem('ai_support_messages');
     return saved ? JSON.parse(saved) : [];
@@ -242,6 +248,15 @@ export function GlobalAiSupport() {
     return saved ? parseInt(saved, 10) : -1;
   });
   const [showTourCompletion, setShowTourCompletion] = useState(false);
+
+  useEffect(() => {
+    const handleOpenSupport = () => {
+      setIsOpen(true);
+      setIsMinimized(false);
+    };
+    window.addEventListener('open-ai-support', handleOpenSupport);
+    return () => window.removeEventListener('open-ai-support', handleOpenSupport);
+  }, []);
 
   useEffect(() => {
     if (currentTourIndex >= 0) {
@@ -282,7 +297,7 @@ export function GlobalAiSupport() {
   useEffect(() => {
     if (currentTourIndex >= 0 && !isSingleStep) {
       const step = TOUR_STEPS[currentTourIndex];
-      if (step?.id === 'chat_status_step') {
+      if (step?.id === 'chat_status_step' || step?.id === 'group_message_step') {
         if (!isChatOpen) {
           openChat(null as any);
         }
@@ -460,15 +475,37 @@ export function GlobalAiSupport() {
         onClose={handleCloseSpotlight} 
       />
 
-      <motion.div 
-        key={`fab-container-${isOpen}-${isMinimized}-${resetKey}`}
+      {showAiSupport && (
+        <motion.div 
+          key={`fab-container-${isOpen}-${isMinimized}-${resetKey}`}
         drag
         dragConstraints={{ left: 0, right: typeof window !== 'undefined' ? window.innerWidth - 80 : 300, top: typeof window !== 'undefined' ? -window.innerHeight + 80 : -500, bottom: 0 }}
         dragElastic={0.1}
         dragMomentum={false}
+        onDragStart={() => setIsDragging(true)}
+        onDrag={(_, info) => {
+          const dropX = window.innerWidth / 2;
+          const dropY = window.innerHeight - 80;
+          const dist = Math.sqrt(Math.pow(info.point.x - dropX, 2) + Math.pow(info.point.y - dropY, 2));
+          setIsNearDrop(dist < 100);
+        }}
         onDragEnd={(_, info) => {
-          if (Math.abs(info.offset.x) > 20 || Math.abs(info.offset.y) > 20) {
-            setHasMoved(true);
+          setIsDragging(false);
+          setIsNearDrop(false);
+          
+          const dropX = window.innerWidth / 2;
+          const dropY = window.innerHeight - 80;
+          const dist = Math.sqrt(Math.pow(info.point.x - dropX, 2) + Math.pow(info.point.y - dropY, 2));
+          
+          if (dist < 100) {
+            setShowAiSupport(false);
+            toast.success("כפתור התמיכה הוסתר. ניתן להחזירו מההגדרות בכל עת.", {
+              position: "top-center"
+            });
+          } else {
+            if (Math.abs(info.offset.x) > 20 || Math.abs(info.offset.y) > 20) {
+              setHasMoved(true);
+            }
           }
         }}
         className={cn(
@@ -505,6 +542,7 @@ export function GlobalAiSupport() {
           <Sparkles className="w-6 h-6" />
         </motion.button>
       </motion.div>
+      )}
 
       <AnimatePresence>
         {isOpen && !isMinimized && (
@@ -607,6 +645,27 @@ export function GlobalAiSupport() {
             </div>
           </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.8, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
+            exit={{ opacity: 0, y: 50, scale: 0.8, x: "-50%" }}
+            className={cn(
+              "fixed bottom-8 left-1/2 z-[200] flex flex-col items-center gap-1.5 px-6 py-3 rounded-full border backdrop-blur-lg shadow-lg transition-all duration-200 pointer-events-none",
+              isNearDrop 
+                ? "bg-red-500/20 border-red-500/50 shadow-red-500/10 scale-110" 
+                : "bg-background/80 border-border/60 shadow-black/5"
+            )}
+          >
+            <Trash2 className={cn("w-5 h-5 transition-transform duration-200", isNearDrop ? "text-red-500 scale-120 rotate-12" : "text-muted-foreground")} />
+            <span className={cn("text-[10px] font-black tracking-wider transition-colors duration-200", isNearDrop ? "text-red-500" : "text-muted-foreground")}>
+              גרור לכאן להסתרה
+            </span>
+          </motion.div>
         )}
       </AnimatePresence>
     </>
