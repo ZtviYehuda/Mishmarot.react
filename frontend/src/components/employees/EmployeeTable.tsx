@@ -376,8 +376,7 @@ export const EmployeeTable = ({
                                 : "bg-muted text-muted-foreground ",
                             )}
                           >
-                            {emp.first_name[0]}
-                            {emp.last_name[0]}
+                            {emp.is_admin ? "💬" : `${emp.first_name[0]}${emp.last_name[0]}`}
                           </div>
                           {emp.is_active && (
                             <div
@@ -665,8 +664,7 @@ export const EmployeeTable = ({
                         : "bg-muted text-muted-foreground",
                     )}
                   >
-                    {emp.first_name[0]}
-                    {emp.last_name[0]}
+                    {emp.is_admin ? "💬" : `${emp.first_name[0]}${emp.last_name[0]}`}
                   </div>
                   {emp.is_active && (
                     <div

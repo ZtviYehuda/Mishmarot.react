@@ -380,8 +380,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
             <div className="px-4 pt-3 pb-3 sm:px-5 sm:pt-4 sm:pb-3 border-b border-border/30 text-right shrink-0">
               <div className="flex items-center gap-3">
                 <div className="relative shrink-0 w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-xs font-black text-primary">
-                  {employee.first_name[0]}
-                  {employee.last_name[0]}
+                  {employee.is_admin ? "💬" : `${employee.first_name[0]}${employee.last_name[0]}`}
                   {employee.status_color && (
                     <span
                       className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full border-2 border-card"

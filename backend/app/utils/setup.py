@@ -205,6 +205,14 @@ def setup_database():
                 user_agent TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );""",
+            """CREATE TABLE IF NOT EXISTS system_updates (
+                id SERIAL PRIMARY KEY,
+                version VARCHAR(50) NOT NULL,
+                release_date DATE DEFAULT CURRENT_DATE,
+                features JSONB NOT NULL DEFAULT '[]',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_by INTEGER REFERENCES employees(id)
+            );""",
         ]
 
         for table in tables:
@@ -419,8 +427,8 @@ def setup_database():
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
                 (
-                    "Admin",
-                    "System",
+                    "צוות",
+                    "תמיכה",
                     "admin",
                     admin_pw_hash,
                     True,
@@ -439,8 +447,8 @@ def setup_database():
                     """
                     UPDATE employees 
                     SET password_hash = %s,
-                        first_name = 'Admin',
-                        last_name = 'System',
+                        first_name = 'צוות',
+                        last_name = 'תמיכה',
                         is_admin = TRUE,
                         is_commander = TRUE,
                         must_change_password = FALSE,

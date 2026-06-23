@@ -281,6 +281,7 @@ def get_user_messages():
             cur.execute("""
                 SELECT um.id, um.title, um.description, um.created_at, 
                        s.first_name as other_first, s.last_name as other_last,
+                       s.is_admin as other_is_admin,
                        um.sender_id as other_id, 'received' as direction
                 FROM user_messages um
                 LEFT JOIN employees s ON um.sender_id = s.id
@@ -293,6 +294,7 @@ def get_user_messages():
             cur.execute("""
                 SELECT um.id, um.title, um.description, um.created_at, 
                        r.first_name as other_first, r.last_name as other_last,
+                       r.is_admin as other_is_admin,
                        um.recipient_id as other_id, 'sent' as direction
                 FROM user_messages um
                 LEFT JOIN employees r ON um.recipient_id = r.id
@@ -522,7 +524,7 @@ def admin_get_all_conversations():
 
                 # Get user names
                 cur.execute(
-                    "SELECT id, first_name, last_name FROM employees WHERE id IN (%s, %s)",
+                    "SELECT id, first_name, last_name, is_admin FROM employees WHERE id IN (%s, %s)",
                     (p["user1_id"], p["user2_id"])
                 )
                 users = {row["id"]: row for row in cur.fetchall()}
@@ -533,8 +535,10 @@ def admin_get_all_conversations():
                 result.append({
                     "user1_id": p["user1_id"],
                     "user1_name": f"{u1.get('first_name','')} {u1.get('last_name','')}".strip(),
+                    "user1_is_admin": u1.get('is_admin', False),
                     "user2_id": p["user2_id"],
                     "user2_name": f"{u2.get('first_name','')} {u2.get('last_name','')}".strip(),
+                    "user2_is_admin": u2.get('is_admin', False),
                     "total_messages": p["total_messages"],
                     "last_message_at": p["last_message_at"].isoformat() if p["last_message_at"] else None,
                     "first_message_at": p["first_message_at"].isoformat() if p["first_message_at"] else None,

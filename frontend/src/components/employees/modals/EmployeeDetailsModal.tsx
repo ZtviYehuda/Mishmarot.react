@@ -153,7 +153,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
   const hasOrg = employee.department_name || employee.section_name || employee.team_name;
   const isCommanderOrAdmin = user?.is_commander || user?.is_admin;
-  const initials = `${employee.first_name?.[0] ?? ""}${employee.last_name?.[0] ?? ""}`;
+  const initials = employee.is_admin ? "💬" : `${employee.first_name?.[0] ?? ""}${employee.last_name?.[0] ?? ""}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

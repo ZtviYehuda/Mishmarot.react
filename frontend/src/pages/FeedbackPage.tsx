@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   MessageSquare, 
   Send, 
@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   Download,
   Eye,
-  Filter
+  Filter,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
@@ -30,13 +31,34 @@ import { Card } from "../components/ui/card";
 import { useAuthContext } from "../context/AuthContext";
 import { useChat } from "@/context/ChatContext";
 import { Dialog, DialogContent } from "../components/ui/dialog";
+import { useNotifications } from "../hooks/useNotifications";
 
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { SupportTicket, Ticket } from "@/types/feedback.types";
 
+const parseDateSafe = (dateStr: any) => {
+  if (!dateStr) return new Date(0);
+  if (dateStr instanceof Date) return dateStr;
+  
+  if (typeof dateStr === 'string' && !dateStr.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(dateStr)) {
+    const parts = dateStr.split(/[-T:]/);
+    if (parts.length >= 5) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const hour = parseInt(parts[3], 10);
+      const minute = parseInt(parts[4], 10);
+      const second = parts[5] ? parseFloat(parts[5]) : 0;
+      return new Date(year, month, day, hour, minute, second);
+    }
+  }
+  return new Date(dateStr);
+};
+
 const FeedbackPage = () => {
   const { user: currentUser } = useAuthContext();
   const { openChat } = useChat();
+  const { alerts, markAsRead } = useNotifications();
   const isAdmin = currentUser?.is_admin;
   
   const [searchParams, setSearchParams] = useSearchParams();
@@ -65,6 +87,83 @@ const FeedbackPage = () => {
   const [composeTitle, setComposeTitle] = useState("");
   const [composeDesc, setComposeDesc] = useState("");
   const [recipientSearch, setRecipientSearch] = useState("");
+
+  // Chat UI State
+  const [selectedChatContact, setSelectedChatContact] = useState<any | null>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [sendingChat, setSendingChat] = useState(false);
+  const [loadingChat, setLoadingChat] = useState(false);
+  const [contactSearch, setContactSearch] = useState("");
+  const chatEndRef = React.useRef<HTMLDivElement>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(300);
+  const isResizingRef = React.useRef(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const startResizing = React.useCallback((mouseDownEvent: React.MouseEvent) => {
+    isResizingRef.current = true;
+    const startX = mouseDownEvent.clientX;
+    const startWidth = sidebarWidth;
+
+    const doDrag = (mouseMoveEvent: MouseEvent) => {
+      if (!isResizingRef.current) return;
+      // RTL dragging: divider moves left -> sidebar (on the right) becomes wider
+      const newWidth = startWidth + (startX - mouseMoveEvent.clientX);
+      if (newWidth >= 180 && newWidth <= 500) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const stopDrag = () => {
+      isResizingRef.current = false;
+      document.removeEventListener("mousemove", doDrag);
+      document.removeEventListener("mouseup", stopDrag);
+    };
+
+    document.addEventListener("mousemove", doDrag);
+    document.addEventListener("mouseup", stopDrag);
+  }, [sidebarWidth]);
+
+  // Track read contacts: { [contactId]: ISO timestamp of last read }
+  const [readTimestamps, setReadTimestamps] = useState<Record<number, string>>(() => {
+    try {
+      const saved = localStorage.getItem('chat_read_timestamps');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
+  const markContactAsRead = (contactId: number, timestamp?: string) => {
+    const timeToSave = timestamp || new Date().toISOString();
+    setReadTimestamps(prev => {
+      const next = { ...prev, [contactId]: timeToSave };
+      localStorage.setItem('chat_read_timestamps', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const getUnreadCount = (contactId: number) => {
+    const lastReadStr = readTimestamps[contactId];
+    if (!lastReadStr) {
+      return internalMessages.filter((m: any) => 
+        Number(m.other_id) === Number(contactId) && m.direction === 'received'
+      ).length;
+    }
+    const lastReadTime = new Date(lastReadStr).getTime();
+    return internalMessages.filter((m: any) => {
+      if (Number(m.other_id) !== Number(contactId) || m.direction !== 'received') return false;
+      const msgTime = parseDateSafe(m.created_at).getTime();
+      return msgTime > lastReadTime;
+    }).length;
+  };
   
   // SaaS Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -108,9 +207,57 @@ const FeedbackPage = () => {
   
   const fetchEmployeesForMessages = async () => {
     try {
-      const response = await apiClient.get("/employees");
+      const response = await apiClient.get("/employees/chat-contacts");
       setEmployees(response.data.filter((e: any) => e.is_active));
     } catch (error) { console.error(error); }
+  };
+
+  const fetchChatMessages = async (otherId: number) => {
+    setLoadingChat(true);
+    try {
+      const { data } = await apiClient.get(`/notifications/messages/conversation/${otherId}`);
+      setChatMessages(data);
+      
+      // Update read status locally with timezone-safe logic
+      if (data && data.length > 0) {
+        const receivedMsgs = data.filter((m: any) => Number(m.sender_id) === Number(otherId));
+        if (receivedMsgs.length > 0) {
+          const latestMsg = receivedMsgs[receivedMsgs.length - 1];
+          markContactAsRead(otherId, latestMsg.created_at);
+        } else {
+          markContactAsRead(otherId);
+        }
+      } else {
+        markContactAsRead(otherId);
+      }
+
+      // Automatically mark backend message alerts for this user as read
+      alerts.forEach(alert => {
+        if (alert.id.startsWith("msg-") && Number(alert.data?.sender_id) === Number(otherId)) {
+          markAsRead(alert.id);
+        }
+      });
+
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch (e) { console.error(e); }
+    finally { setLoadingChat(false); }
+  };
+
+  const handleSendChat = async () => {
+    if (!chatInput.trim() || !selectedChatContact || sendingChat) return;
+    setSendingChat(true);
+    try {
+      await apiClient.post("/notifications/send", {
+        recipient_id: selectedChatContact.id,
+        title: `הודעה מ${currentUser?.first_name} ${currentUser?.last_name}`,
+        description: chatInput.trim()
+      });
+      setChatInput("");
+      fetchChatMessages(selectedChatContact.id);
+      fetchInternalMessages();
+    } catch (e) {
+      toast.error("שגיאה בשליחת ההודעה");
+    } finally { setSendingChat(false); }
   };
 
   const fetchAllConversations = async () => {
@@ -168,6 +315,30 @@ const FeedbackPage = () => {
     } else if (activeTab === 'chat-admin' && isAdmin) fetchAllConversations();
   }, [activeTab, isAdmin]);
 
+  // Real-time message polling
+  useEffect(() => {
+    if (activeTab !== 'messages') return;
+    const interval = setInterval(() => {
+      fetchInternalMessages();
+      if (selectedChatContact) {
+        apiClient.get(`/notifications/messages/conversation/${selectedChatContact.id}`)
+          .then(({ data }) => {
+            setChatMessages(data);
+            if (data && data.length > 0) {
+              const receivedMsgs = data.filter((m: any) => Number(m.sender_id) === Number(selectedChatContact.id));
+              if (receivedMsgs.length > 0) {
+                const latestMsg = receivedMsgs[receivedMsgs.length - 1];
+                markContactAsRead(selectedChatContact.id, latestMsg.created_at);
+              }
+            }
+          })
+          .catch(err => console.error(err));
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [activeTab, selectedChatContact]);
+
+
   const handleSendInternalMessage = async () => {
     if ((!isBroadcast && !composeTo) || (isBroadcast && composeToList.length === 0) || !composeTitle) return;
     try {
@@ -210,17 +381,17 @@ const FeedbackPage = () => {
     
     // If Admin: Can message ANYONE
     if (currentUser.is_admin) {
-      return employees.filter(e => e.id !== currentUser.id);
+      return employees.filter(e => Number(e.id) !== Number(currentUser.id));
     }
 
     // Include ALL commanders and Admins
-    const allCommandersAndAdmins = employees.filter(e => (e.is_commander || e.is_admin) && e.id !== currentUser.id);
+    const allCommandersAndAdmins = employees.filter(e => (e.is_commander || e.is_admin) && Number(e.id) !== Number(currentUser.id));
 
     // If Commander: Include subordinates
     let subordinates: any[] = [];
     if (currentUser.is_commander) {
       subordinates = employees.filter(e => {
-          if (e.id === currentUser.id) return false;
+          if (Number(e.id) === Number(currentUser.id)) return false;
           if (currentUser.commands_department_id && e.department_id === currentUser.commands_department_id) return true;
           if (currentUser.commands_section_id && e.section_id === currentUser.commands_section_id) return true;
           if (currentUser.commands_team_id && e.team_id === currentUser.commands_team_id) return true;
@@ -239,6 +410,24 @@ const FeedbackPage = () => {
         return 0;
       });
   }, [employees, currentUser]);
+
+  const totalUnreadCount = useMemo(() => {
+    return availableCommanders.reduce((acc, contact) => {
+      const lastReadStr = readTimestamps[contact.id];
+      if (!lastReadStr) {
+        return acc + internalMessages.filter((m: any) => 
+          Number(m.other_id) === Number(contact.id) && m.direction === 'received'
+        ).length;
+      }
+      const lastReadTime = new Date(lastReadStr).getTime();
+      const unreadMsgs = internalMessages.filter((m: any) => {
+        if (Number(m.other_id) !== Number(contact.id) || m.direction !== 'received') return false;
+        const msgTime = parseDateSafe(m.created_at).getTime();
+        return msgTime > lastReadTime;
+      });
+      return acc + unreadMsgs.length;
+    }, 0);
+  }, [availableCommanders, readTimestamps, internalMessages]);
 
   const filteredItems = useMemo(() => {
     if (!isAdmin) return [];
@@ -275,163 +464,147 @@ const FeedbackPage = () => {
   };
 
   return (
-    <div className="w-full relative min-h-screen pb-10 bg-background font-assistant" dir="rtl">
+    <div className={cn(
+      "w-full relative bg-background font-assistant",
+      activeTab === 'messages' ? "h-[calc(100dvh-64px)] overflow-hidden" : "min-h-screen pb-10"
+    )} dir="rtl">
       {/* Page Header - Consistent with other pages */}
-      <div className="relative z-10 pt-6 pb-4 px-4 sm:px-6 max-w-full mx-auto transition-all">
+      <div className={cn(
+        "relative z-10 max-w-full mx-auto transition-all flex flex-col h-full",
+        activeTab === 'messages' ? "pt-3 pb-1 px-1 sm:px-3" : "pt-6 pb-4 px-4 sm:px-6"
+      )}>
         <PageHeader 
           icon={MessageSquare}
           title="הודעות וניהול פניות"
           subtitle="ניהול התכתבויות פנימיות ופניות למערכת"
-          className="mb-6 sm:mb-8"
+          className={cn(activeTab === 'messages' ? "mb-3" : "mb-6 sm:mb-8")}
           hideMobile={true}
         />
 
-        {/* Tab Pills - Optimized Grid for Mobile, Flex for Desktop */}
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 mb-6 transition-all">
-          {isAdmin && (
-            <TabButton 
-              active={activeTab === 'admin-view'} 
-              onClick={() => {setActiveTab('admin-view'); setSearchParams({tab: 'admin-view'})}} 
-              icon={<Settings className="w-4 h-4" />} 
-              label="ניהול משימות" 
-              className="col-span-1"
-            />
-          )}
-          {isAdmin && (
-            <TabButton 
-              active={activeTab === 'chat-admin'} 
-              onClick={() => {setActiveTab('chat-admin'); setSearchParams({tab: 'chat-admin'})}} 
-              icon={<ShieldCheck className="w-4 h-4" />} 
-              label="גיבוי צ'אטים" 
-              className="col-span-1"
-            />
-          )}
-          <TabButton 
-            active={activeTab === 'messages'} 
-            onClick={() => {setActiveTab('messages'); setSearchParams({tab: 'messages'})}} 
-            icon={<MessageSquare className="w-4 h-4" />} 
-            label="הודעות מפקדים" 
-            className="col-span-1"
-          />
-          <TabButton 
-            active={activeTab === 'my-tickets'} 
-            onClick={() => { setActiveTab('my-tickets'); setSearchParams({tab: 'my-tickets'}); fetchMyTickets(); }} 
-            icon={<History className="w-4 h-4" />} 
-            label={isAdmin ? "ארכיון שלי" : "הפניות שלי"} 
-            className="col-span-1"
-          />
-          <TabButton 
-            active={activeTab === 'whats-new'} 
-            onClick={() => {setActiveTab('whats-new'); setSearchParams({tab: 'whats-new'})}} 
-            icon={<Sparkles className="w-4 h-4" />} 
-            label="מה חדש?" 
-            className="col-span-2 sm:col-span-1"
-          />
-        </div>
+        {/* Dashboard Split Container */}
+        <div className={cn(
+          "flex flex-col md:flex-row gap-6 w-full items-stretch",
+          activeTab === 'messages' ? "flex-grow min-h-0" : ""
+        )}>
+          {/* Page sub-navigation - Desktop Sidebar / Mobile Horizontal Scroll */}
+          <aside className={cn(
+            "w-full shrink-0 flex flex-col transition-all",
+            "md:w-64 lg:w-72 bg-card/30 border border-border/40 backdrop-blur-xl rounded-[2rem] p-4 space-y-5 shadow-sm",
+            "border-none bg-transparent backdrop-blur-none p-0 space-y-0 rounded-none md:border md:bg-card/30 md:backdrop-blur-xl md:p-5 md:space-y-5 md:rounded-[2rem] shadow-none md:shadow-sm"
+          )}>
+            
+            {/* Sidebar Title - Only on Desktop */}
+            <div className="hidden md:flex flex-col gap-1 pr-1 pb-2 border-b border-border/20">
+              <h3 className="font-black text-sm text-foreground">מרכז ניווט</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold">ניהול שיחות פנימיות ופניות מערכת</p>
+            </div>
 
-        <main className="space-y-6 relative z-10">
-          <AnimatePresence mode="wait">
-            {activeTab === 'admin-view' && isAdmin && (
-              <motion.div key="admin-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                
-                {/* Stats Row - Compact Grid (No Scroll) */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
-                  <StatItem label="פתוחות" value={filteredItems.filter(i => ['pending', 'open', 'received'].includes(i.status)).length} icon={AlertCircle} color="text-rose-500" bgColor="bg-rose-500/10" className="p-3 sm:p-4" />
-                  <StatItem label="בטיפול" value={filteredItems.filter(i => ['in_progress', 'reviewing'].includes(i.status)).length} icon={Activity} color="text-amber-500" bgColor="bg-amber-500/10" className="p-3 sm:p-4" />
-                  <StatItem label="טופלו" value={filteredItems.filter(i => (['done', 'closed', 'approved'].includes(i.status)) && new Date(i.created_at).toDateString() === new Date().toDateString()).length} icon={CheckCircle2} color="text-emerald-500" bgColor="bg-emerald-500/10" className="p-3 sm:p-4" />
-                  <StatItem label="סה״כ" value={filteredItems.length} icon={MessageSquare} color="text-primary" bgColor="bg-primary/10" className="p-3 sm:p-4" />
+            {/* Navigation Tabs - Vertical on Desktop, Horizontal Scroll on Mobile */}
+            <div className={cn(
+              "w-full flex gap-2 overflow-x-auto pb-2 md:pb-0 md:overflow-visible scrollbar-none",
+              "flex-row md:flex-col"
+            )}>
+              {isAdmin && (
+                <TabButton 
+                  active={activeTab === 'admin-view'} 
+                  onClick={() => {setActiveTab('admin-view'); setSearchParams({tab: 'admin-view'})}} 
+                  icon={<Settings className="w-4 h-4" />} 
+                  label="ניהול משימות" 
+                />
+              )}
+              {isAdmin && (
+                <TabButton 
+                  active={activeTab === 'chat-admin'} 
+                  onClick={() => {setActiveTab('chat-admin'); setSearchParams({tab: 'chat-admin'})}} 
+                  icon={<ShieldCheck className="w-4 h-4" />} 
+                  label="גיבוי צ'אטים" 
+                />
+              )}
+              <TabButton 
+                active={activeTab === 'messages'} 
+                onClick={() => {setActiveTab('messages'); setSearchParams({tab: 'messages'})}} 
+                icon={<MessageSquare className="w-4 h-4" />} 
+                label="הודעות מפקדים" 
+                badge={totalUnreadCount}
+              />
+              <TabButton 
+                active={activeTab === 'my-tickets'} 
+                onClick={() => { setActiveTab('my-tickets'); setSearchParams({tab: 'my-tickets'}); fetchMyTickets(); }} 
+                icon={<History className="w-4 h-4" />} 
+                label={isAdmin ? "ארכיון שלי" : "הפניות שלי"} 
+              />
+              <TabButton 
+                active={activeTab === 'whats-new'} 
+                onClick={() => {setActiveTab('whats-new'); setSearchParams({tab: 'whats-new'})}} 
+                icon={<Sparkles className="w-4 h-4" />} 
+                label="מה חדש?" 
+              />
+            </div>
+
+            {/* Decorative Quick Stats Widget inside Sidebar - Only Desktop */}
+            <div className="hidden md:flex flex-col gap-3 p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <Activity className="w-3.5 h-3.5" />
                 </div>
+                <span className="text-[10px] font-black text-primary uppercase tracking-widest">מצב המערכת</span>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[11px] font-bold text-foreground">
+                  <span>פניות פעילות:</span>
+                  <span className="text-primary font-black">{filteredItems.filter(i => ['pending', 'open', 'received'].includes(i.status)).length}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-bold text-foreground">
+                  <span>הודעות שלא נקראו:</span>
+                  <span className={cn("font-black", totalUnreadCount > 0 ? "text-rose-500 animate-pulse" : "text-emerald-500")}>
+                    {totalUnreadCount}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </aside>
 
-                {/* Modern Toolbar - Optimized for Mobile */}
-                <Card className="bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-2 sm:p-4 flex items-center justify-between gap-2 sm:gap-4 shadow-sm">
-                  <div className="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
-                    <div className="relative flex-1 max-w-sm">
-                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 h-4 text-muted-foreground" />
-                      <input 
-                        type="text"
-                        placeholder="חיפוש פנייה..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-9 sm:h-10 pr-9 sm:pr-10 pl-4 bg-background/50 border border-border/50 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-1.5 lg:gap-2">
-                      {/* Filter Trigger (Mobile) / Selects (Desktop) */}
-                      <div className="hidden lg:flex items-center gap-2">
-                        <select value={adminFilter} onChange={(e) => setAdminFilter(e.target.value as any)} className="h-10 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] cursor-pointer shadow-sm">
-                          <option value="pending">ממתין לטיפול</option>
-                          <option value="done">טופל בהצלחה</option>
-                          <option value="dismissed">ארכיון</option>
-                          <option value="all">כל הסטטוסים</option>
-                        </select>
-                        <select value={adminCategoryFilter} onChange={(e) => setAdminCategoryFilter(e.target.value as any)} className="h-10 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] cursor-pointer shadow-sm">
-                          <option value="all">כל הסוגים</option>
-                          <option value="bug">באג במערכת</option>
-                          <option value="improvement">הצעה לשיפור</option>
-                          <option value="feature">פיצ'ר חדש</option>
-                          <option value="support">קריאת תמיכה</option>
-                        </select>
-                      </div>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setIsFilterOpen(true)}
-                        className="lg:hidden h-9 w-9 rounded-xl border-border/40 bg-card/40 backdrop-blur-xl text-primary"
-                      >
-                        <Filter className="w-4 h-4" />
-                      </Button>
-
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl border-border/40 bg-card/40 backdrop-blur-xl text-primary shadow-sm hover:bg-primary/5 active:scale-95 transition-all" 
-                        onClick={isAdmin ? fetchAdminTickets : fetchMyTickets} 
-                        disabled={isLoadingTickets}
-                      >
-                        <RefreshCw className={cn("w-3.5 h-3.5 sm:w-4 h-4", isLoadingTickets && "animate-spin")} />
-                      </Button>
-                    </div>
+          {/* Main workspace container (Left column) */}
+          <main className={cn(
+            "flex-grow w-full relative z-10 min-w-0 flex flex-col",
+            activeTab === 'messages' ? "h-[calc(100dvh-180px)] md:h-[calc(100dvh-150px)]" : "space-y-6"
+          )}>
+            <AnimatePresence mode="wait">
+              {activeTab === 'admin-view' && isAdmin && (
+                <motion.div key="admin-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                  
+                  {/* Stats Row - Compact Grid (No Scroll) */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                    <StatItem label="פתוחות" value={filteredItems.filter(i => ['pending', 'open', 'received'].includes(i.status)).length} icon={AlertCircle} color="text-rose-500" bgColor="bg-rose-500/10" className="p-3 sm:p-4" />
+                    <StatItem label="בטיפול" value={filteredItems.filter(i => ['in_progress', 'reviewing'].includes(i.status)).length} icon={Activity} color="text-amber-500" bgColor="bg-amber-500/10" className="p-3 sm:p-4" />
+                    <StatItem label="טופלו" value={filteredItems.filter(i => (['done', 'closed', 'approved'].includes(i.status)) && new Date(i.created_at).toDateString() === new Date().toDateString()).length} icon={CheckCircle2} color="text-emerald-500" bgColor="bg-emerald-500/10" className="p-3 sm:p-4" />
+                    <StatItem label="סה״כ" value={filteredItems.length} icon={MessageSquare} color="text-primary" bgColor="bg-primary/10" className="p-3 sm:p-4" />
                   </div>
-                </Card>
 
-                {/* Mobile Filter Dialog */}
-                <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                  <DialogContent className="p-0 border-none sm:max-w-lg overflow-hidden rounded-t-[2rem] sm:rounded-[2rem] bottom-0 sm:bottom-auto fixed sm:relative translate-y-0 sm:-translate-y-1/2">
-                    <div className="p-6 space-y-6 bg-card/95 backdrop-blur-xl">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-base font-black text-foreground flex items-center gap-2">
-                          <Filter className="w-5 h-5 text-primary" />
-                          סינון פניות
-                        </h3>
-                        <Button variant="ghost" size="icon" onClick={() => setIsFilterOpen(false)} className="rounded-full">
-                          <X className="w-5 h-5" />
-                        </Button>
+                  {/* Modern Toolbar - Optimized for Mobile */}
+                  <Card className="bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-2 sm:p-4 flex items-center justify-between gap-2 sm:gap-4 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
+                      <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 h-4 text-muted-foreground" />
+                        <input 
+                          type="text"
+                          placeholder="חיפוש פנייה..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full h-9 sm:h-10 pr-9 sm:pr-10 pl-4 bg-background/50 border border-border/50 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
+                        />
                       </div>
 
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">סטטוס פנייה</label>
-                          <select 
-                            value={adminFilter} 
-                            onChange={(e) => setAdminFilter(e.target.value as any)}
-                            className="w-full h-12 px-4 bg-background/50 border border-border/50 rounded-2xl text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
-                          >
+                      <div className="flex items-center gap-1.5 lg:gap-2">
+                        {/* Filter Trigger (Mobile) / Selects (Desktop) */}
+                        <div className="hidden lg:flex items-center gap-2">
+                          <select value={adminFilter} onChange={(e) => setAdminFilter(e.target.value as any)} className="h-10 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] cursor-pointer shadow-sm">
                             <option value="pending">ממתין לטיפול</option>
                             <option value="done">טופל בהצלחה</option>
                             <option value="dismissed">ארכיון</option>
                             <option value="all">כל הסטטוסים</option>
                           </select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">סוג פנייה</label>
-                          <select 
-                            value={adminCategoryFilter} 
-                            onChange={(e) => setAdminCategoryFilter(e.target.value as any)}
-                            className="w-full h-12 px-4 bg-background/50 border border-border/50 rounded-2xl text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
-                          >
+                          <select value={adminCategoryFilter} onChange={(e) => setAdminCategoryFilter(e.target.value as any)} className="h-10 px-4 bg-background/50 border border-border/50 rounded-xl text-xs font-black text-foreground outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] cursor-pointer shadow-sm">
                             <option value="all">כל הסוגים</option>
                             <option value="bug">באג במערכת</option>
                             <option value="improvement">הצעה לשיפור</option>
@@ -439,177 +612,480 @@ const FeedbackPage = () => {
                             <option value="support">קריאת תמיכה</option>
                           </select>
                         </div>
+
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setIsFilterOpen(true)}
+                          className="lg:hidden h-9 w-9 rounded-xl border-border/40 bg-card/40 backdrop-blur-xl text-primary"
+                        >
+                          <Filter className="w-4 h-4" />
+                        </Button>
+
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl border-border/40 bg-card/40 backdrop-blur-xl text-primary shadow-sm hover:bg-primary/5 active:scale-95 transition-all" 
+                          onClick={isAdmin ? fetchAdminTickets : fetchMyTickets} 
+                          disabled={isLoadingTickets}
+                        >
+                          <RefreshCw className={cn("w-3.5 h-3.5 sm:w-4 h-4", isLoadingTickets && "animate-spin")} />
+                        </Button>
                       </div>
-
-                      <Button 
-                        onClick={() => setIsFilterOpen(false)}
-                        className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20"
-                      >
-                        החל סינון
-                      </Button>
                     </div>
-                  </DialogContent>
-                </Dialog>
+                  </Card>
 
-                {/* Stylized Cards List */}
-                <div className="space-y-3">
-                  {filteredItems.length === 0 ? (
-                    <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
-                       <Sparkles className="w-12 h-12 text-muted-foreground/30 mb-3" />
-                       <h3 className="text-sm font-black text-foreground">אין פניות תואמות</h3>
-                       <p className="text-xs text-muted-foreground mt-1">לא נמצאו פניות שעונות לסינון שהגדרת.</p>
-                    </div>
-                  ) : filteredItems.map(item => (
-                    <Card key={`${item.type}-${item.id}`} onClick={() => setSelectedItem({data: item, type: item.type})} className="group bg-card/40 border border-border/40 backdrop-blur-xl rounded-3xl p-4 sm:p-5 hover:bg-card/60 hover:border-primary/30 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-sm active:scale-[0.98]">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm sm:text-base shrink-0 border border-primary/20">
-                          {(item.type === 'feedback' ? item.first_name?.[0] : item.full_name?.[0]) || 'U'}
+                  {/* Mobile Filter Dialog */}
+                  <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                    <DialogContent className="p-0 border-none sm:max-w-lg overflow-hidden rounded-t-[2rem] sm:rounded-[2rem] bottom-0 sm:bottom-auto fixed sm:relative translate-y-0 sm:-translate-y-1/2">
+                      <div className="p-6 space-y-6 bg-card/95 backdrop-blur-xl">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-base font-black text-foreground flex items-center gap-2">
+                            <Filter className="w-5 h-5 text-primary" />
+                            סינון פניות
+                          </h3>
+                          <Button variant="ghost" size="icon" onClick={() => setIsFilterOpen(false)} className="rounded-full">
+                            <X className="w-5 h-5" />
+                          </Button>
                         </div>
-                        <div className="space-y-1 flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-sm text-foreground truncate">{item.type === 'feedback' ? `${item.first_name} ${item.last_name}` : item.full_name}</span>
-                            <span className="text-[10px] font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full shrink-0">{new Date(item.created_at).toLocaleDateString('he-IL')}</span>
+
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">סטטוס פנייה</label>
+                            <select 
+                              value={adminFilter} 
+                              onChange={(e) => setAdminFilter(e.target.value as any)}
+                              className="w-full h-12 px-4 bg-background/50 border border-border/50 rounded-2xl text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                            >
+                              <option value="pending">ממתין לטיפול</option>
+                              <option value="done">טופל בהצלחה</option>
+                              <option value="dismissed">ארכיון</option>
+                              <option value="all">כל הסטטוסים</option>
+                            </select>
                           </div>
-                          <p className="text-xs font-medium text-muted-foreground line-clamp-1 opacity-70">{item.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-4 mt-1 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/10">
-                        {getStatusBadge(item.status)}
-                        <ChevronLeft className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all translate-x-1 group-hover:translate-x-0" />
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </motion.div>
-            )}
 
-            {activeTab === 'messages' && (
-              <motion.div key="messages-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                <Card className="bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-                  <div>
-                    <h2 className="text-lg font-black text-foreground tracking-tight">לוח הודעות פנימי</h2>
-                    <p className="text-xs text-muted-foreground">התכתבויות מאובטחות עם מפקדים אחרים ביחידה.</p>
-                  </div>
-                  <Button onClick={() => setComposeOpen(true)} className="h-10 rounded-xl font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20">
-                    <Send className="w-4 h-4 ml-2" />
-                    הודעה חדשה
-                  </Button>
-                </Card>
-                
-                <div className="space-y-3">
-                  {internalMessages.length === 0 ? (
-                    <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
-                       <MessageSquare className="w-12 h-12 text-muted-foreground/30 mb-3" />
-                       <h3 className="text-sm font-black text-foreground">אין הודעות פנימיות</h3>
-                       <p className="text-xs text-muted-foreground mt-1">לחץ על הודעה חדשה כדי להתחיל התכתבות.</p>
-                    </div>
-                  ) : internalMessages.map(msg => (
-                    <Card key={msg.id} onClick={() => {
-                        openChat({
-                          id: msg.other_id,
-                          name: `${msg.other_first} ${msg.other_last}`,
-                          role: "מפקד"
-                        });
-                    }} className="group bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-4 hover:bg-card/60 hover:border-primary/30 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 border", msg.direction === 'received' ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" : "bg-muted text-muted-foreground border-border")}>
-                          {msg.direction === 'received' ? 'נכנס' : 'יוצא'}
-                        </div>
-                        <div className="space-y-1 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-sm text-foreground">{msg.other_first} {msg.other_last}</span>
-                            <span className="text-[10px] font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">{new Date(msg.created_at).toLocaleString('he-IL', {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'})}</span>
+                          <div className="space-y-2">
+                            <label className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">סוג פנייה</label>
+                            <select 
+                              value={adminCategoryFilter} 
+                              onChange={(e) => setAdminCategoryFilter(e.target.value as any)}
+                              className="w-full h-12 px-4 bg-background/50 border border-border/50 rounded-2xl text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                            >
+                              <option value="all">כל הסוגים</option>
+                              <option value="bug">באג במערכת</option>
+                              <option value="improvement">הצעה לשיפור</option>
+                              <option value="feature">פיצ'ר חדש</option>
+                              <option value="support">קריאת תמיכה</option>
+                            </select>
                           </div>
-                          <p className="text-sm font-black text-foreground leading-tight">{msg.title}</p>
-                          <p className="text-xs font-medium text-muted-foreground line-clamp-1 max-w-xl">{msg.description}</p>
                         </div>
-                      </div>
-                      <ChevronLeft className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 hidden sm:block" />
-                    </Card>
-                  ))}
-                </div>
-              </motion.div>
-            )}
 
-            {activeTab === 'my-tickets' && (
-              <motion.div key="history-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                <div className="space-y-3">
-                  {myTickets.length === 0 ? (
-                    <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
-                       <Archive className="w-12 h-12 text-muted-foreground/30 mb-3" />
-                       <h3 className="text-sm font-black text-foreground">אין פניות היסטוריות</h3>
-                    </div>
-                  ) : myTickets.map(ticket => (
-                    <Card key={ticket.id} className="group bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-4 hover:bg-card/60 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-sm text-foreground">{ticket.category}</span>
-                          <span className="text-[10px] font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">{new Date(ticket.created_at).toLocaleDateString('he-IL')}</span>
-                        </div>
-                        <p className="text-xs font-medium text-muted-foreground line-clamp-1 max-w-xl">{ticket.description}</p>
-                        {ticket.admin_reply && (
-                           <div className="mt-2 p-3 bg-primary/5 border border-primary/10 rounded-xl">
-                             <p className="text-[10px] font-black uppercase text-primary/70 mb-1">תשובת צוות ניהול</p>
-                             <p className="text-xs font-bold text-foreground">{ticket.admin_reply}</p>
-                           </div>
-                        )}
+                        <Button 
+                          onClick={() => setIsFilterOpen(false)}
+                          className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20"
+                        >
+                          החל סינון
+                        </Button>
                       </div>
-                      <div className="self-start sm:self-center">
-                        {getStatusBadge(ticket.status)}
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-            
-            {activeTab === 'chat-admin' && isAdmin && (
-              <motion.div key="chat-admin-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                <Card className="bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-4 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-base font-black text-foreground">גיבוי התכתבויות</h2>
-                    <p className="text-xs text-muted-foreground">כל השיחות הפנימיות — לחץ לצפייה וייצוא</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="rounded-xl text-xs font-black" onClick={fetchAllConversations}>
-                    <RefreshCw className="w-3.5 h-3.5 ml-1.5" />רענן
-                  </Button>
-                </Card>
+                    </DialogContent>
+                  </Dialog>
 
-                {selectedConvExport ? (
+                  {/* Stylized Cards List */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Button variant="ghost" size="sm" className="rounded-xl text-xs font-black" onClick={() => { setSelectedConvExport(null); setConvMessages([]); }}>
-                        <ChevronLeft className="w-4 h-4 ml-1" />חזרה לרשימה
-                      </Button>
-                      <span className="text-sm font-black text-foreground">{selectedConvExport.user1_name} ↔ {selectedConvExport.user2_name}</span>
-                      <Button size="sm" className="mr-auto rounded-xl text-xs font-black bg-primary hover:bg-primary/90" onClick={() => handleExportJson(selectedConvExport)}>
-                        <Download className="w-3.5 h-3.5 ml-1.5" />ייצוא JSON
-                      </Button>
-                    </div>
-                    <Card className="bg-card/40 border border-border/40 rounded-2xl overflow-hidden">
-                      {loadingConv ? (
-                        <div className="p-10 text-center text-xs text-muted-foreground">טוען...</div>
-                      ) : convMessages.length === 0 ? (
-                        <div className="p-10 text-center text-xs text-muted-foreground">אין הודעות</div>
-                      ) : (
-                        <div className="divide-y divide-border/30 max-h-[60vh] overflow-y-auto">
-                          {convMessages.map((msg: any) => (
-                            <div key={msg.id} className="p-4 flex gap-3">
-                              <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xs font-black shrink-0">
-                                {msg.sender_first?.[0]}{msg.sender_last?.[0]}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-xs font-black text-foreground">{msg.sender_first} {msg.sender_last}</span>
-                                  <span className="text-[10px] text-muted-foreground">{new Date(msg.created_at).toLocaleString('he-IL')}</span>
-                                  {(msg.is_deleted_by_sender || msg.is_deleted_by_recipient) && (
-                                    <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full font-bold">נמחק מהתצוגה</span>
+                    {filteredItems.length === 0 ? (
+                      <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
+                         <Sparkles className="w-12 h-12 text-muted-foreground/30 mb-3" />
+                         <h3 className="text-sm font-black text-foreground">אין פניות תואמות</h3>
+                         <p className="text-xs text-muted-foreground mt-1">לא נמצאו פניות שעונות לסינון שהגדרת.</p>
+                      </div>
+                    ) : filteredItems.map(item => (
+                      <Card key={`${item.type}-${item.id}`} onClick={() => setSelectedItem({data: item, type: item.type})} className="group bg-card/40 border border-border/40 backdrop-blur-xl rounded-3xl p-4 sm:p-5 hover:bg-card/60 hover:border-primary/30 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-sm active:scale-[0.98]">
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm sm:text-base shrink-0 border border-primary/20">
+                            {(item.type === 'feedback' ? item.first_name?.[0] : item.full_name?.[0]) || 'U'}
+                          </div>
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-sm text-foreground truncate">{item.type === 'feedback' ? `${item.first_name} ${item.last_name}` : item.full_name}</span>
+                              <span className="text-[10px] font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full shrink-0">{new Date(item.created_at).toLocaleDateString('he-IL')}</span>
+                            </div>
+                            <p className="text-xs font-medium text-muted-foreground line-clamp-1 opacity-70">{item.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between sm:justify-end gap-4 mt-1 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/10">
+                          {getStatusBadge(item.status)}
+                          <ChevronLeft className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all translate-x-1 group-hover:translate-x-0" />
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'messages' && (
+                <motion.div key="messages-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex-grow min-h-0 flex flex-col overflow-hidden rounded-[2rem]">
+                  <div className="flex flex-1 min-h-0 rounded-[2rem] overflow-hidden border border-border/20 bg-card/30">
+                    {/* ── Contacts Sidebar ── */}
+                    <div 
+                      className={cn(
+                        "flex flex-col border-l border-border/10 bg-background/50 shrink-0",
+                        selectedChatContact ? "hidden md:flex" : "flex w-full md:flex"
+                      )}
+                      style={!isMobile ? { width: `${sidebarWidth}px`, minWidth: '180px', maxWidth: '500px' } : undefined}
+                    >
+                      {/* Sidebar Header */}
+                      <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border/10">
+                        <span className="text-sm font-black text-foreground">הודעות</span>
+                        <button
+                          onClick={() => setComposeOpen(true)}
+                          className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all active:scale-90"
+                          title="הודעה חדשה"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Search */}
+                      <div className="px-4 py-3">
+                        <div className="relative">
+                          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
+                          <input
+                            type="text"
+                            placeholder="חיפוש..."
+                            value={contactSearch}
+                            onChange={e => setContactSearch(e.target.value)}
+                            className="w-full h-8 pr-9 pl-3 bg-muted/30 rounded-xl text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all border-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Contacts List */}
+                      <div className="flex-1 overflow-y-auto divide-y divide-border/5 p-2 space-y-1 custom-scrollbar">
+                        {availableCommanders
+                          .filter((contact: any) => {
+                            const name = contact.is_admin ? "צוות תמיכה" : `${contact.first_name} ${contact.last_name}`;
+                            return !contactSearch || name.toLowerCase().includes(contactSearch.toLowerCase());
+                          })
+                          .map((contact: any) => {
+                            const isSelected = selectedChatContact?.id === contact.id;
+                            const displayName = contact.is_admin ? "צוות תמיכה" : `${contact.first_name} ${contact.last_name}`;
+                            const lastMsg = internalMessages.find((m: any) => Number(m.other_id) === Number(contact.id));
+                            const unreadCount = getUnreadCount(contact.id);
+                            
+                            return (
+                              <button
+                                key={contact.id}
+                                onClick={() => {
+                                  setSelectedChatContact(contact);
+                                  fetchChatMessages(contact.id);
+                                }}
+                                className={cn(
+                                  "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-right group border border-transparent",
+                                  isSelected 
+                                    ? "bg-primary/10 text-foreground border-primary/20 shadow-sm" 
+                                    : "hover:bg-muted/40 text-foreground/85"
+                                )}
+                              >
+                                {/* Avatar */}
+                                <div className="relative shrink-0">
+                                  <div className={cn(
+                                    "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs transition-all",
+                                    isSelected 
+                                      ? "bg-primary text-primary-foreground" 
+                                      : contact.is_admin 
+                                        ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" 
+                                        : "bg-muted text-muted-foreground"
+                                  )}>
+                                    {contact.is_admin ? "💬" : `${contact.first_name?.[0] ?? ""}${contact.last_name?.[0] ?? ""}`}
+                                  </div>
+                                  {contact.is_online && (
+                                    <div className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background" />
                                   )}
                                 </div>
-                                <p className="text-xs text-foreground">{msg.description}</p>
+                                
+                                {/* Details */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between mb-0.5">
+                                    <h4 className={cn(
+                                      "font-black text-xs sm:text-sm transition-colors truncate",
+                                      isSelected ? "text-primary" : "text-foreground group-hover:text-primary"
+                                    )}>
+                                      {displayName}
+                                    </h4>
+                                    {lastMsg && (
+                                      <span className="text-[9px] text-muted-foreground/60 font-bold shrink-0">
+                                        {new Date(lastMsg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between gap-2">
+                                    <p className="text-[11px] text-muted-foreground/75 truncate flex-1 min-w-0 font-medium leading-none text-right">
+                                      {lastMsg ? lastMsg.description : (contact.is_admin ? "ניהול מערכת" : (contact.department_name || "מפקד"))}
+                                    </p>
+                                    {unreadCount > 0 && (
+                                      <span className="bg-destructive text-destructive-foreground text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0">
+                                        {unreadCount}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        {availableCommanders.length === 0 && (
+                          <div className="p-8 text-center text-xs text-muted-foreground font-bold">
+                            לא נמצאו אנשי קשר זמינים.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Drag Handle Divider - only visible on desktop (md and up) */}
+                    {!isMobile && (
+                      <div
+                        onMouseDown={startResizing}
+                        className="hidden md:block w-1 hover:w-1.5 active:w-1.5 bg-border/40 hover:bg-primary/50 active:bg-primary transition-all cursor-col-resize self-stretch shrink-0 z-20 relative"
+                        title="גרור לשינוי גודל"
+                      />
+                    )}
+
+                    {/* Right: Chat Panel */}
+                    <div className={cn(
+                      "flex-grow flex flex-col bg-background/20 relative min-w-0",
+                      !selectedChatContact ? "hidden md:flex items-center justify-center" : "flex h-full min-h-0"
+                    )}>
+                      {selectedChatContact ? (
+                        <div className="flex flex-col h-full min-h-0 w-full">
+                          {/* Chat Header */}
+                          <div className="flex items-center justify-between px-4 py-3 border-b border-border/10 bg-background/30 backdrop-blur-md z-10 shrink-0">
+                            <div className="flex items-center gap-3 min-w-0">
+                              {/* Mobile Back Arrow */}
+                              <button
+                                onClick={() => setSelectedChatContact(null)}
+                                className="md:hidden p-1.5 hover:bg-muted/50 rounded-xl transition-all"
+                              >
+                                <ChevronLeft className="w-5 h-5 rotate-180 text-foreground" />
+                              </button>
+                              
+                              {/* Avatar */}
+                              <div className="relative shrink-0">
+                                <div className={cn(
+                                  "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs bg-primary text-primary-foreground"
+                                )}>
+                                  {selectedChatContact.is_admin ? "💬" : `${selectedChatContact.first_name?.[0] ?? ""}${selectedChatContact.last_name?.[0] ?? ""}`}
+                                </div>
+                                {selectedChatContact.is_online && (
+                                  <div className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background" />
+                                )}
+                              </div>
+                              
+                              {/* Name & Subtitle */}
+                              <div className="min-w-0 text-right">
+                                <h4 className="font-black text-sm text-foreground truncate">
+                                  {selectedChatContact.is_admin ? "צוות תמיכה" : `${selectedChatContact.first_name} ${selectedChatContact.last_name}`}
+                                </h4>
+                                <p className="text-[10px] text-muted-foreground truncate font-semibold">
+                                  {selectedChatContact.is_admin ? "צוות תמיכה וניהול פניות" : (selectedChatContact.department_name || "מפקד")}
+                                </p>
                               </div>
                             </div>
-                          ))}
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => fetchChatMessages(selectedChatContact.id)}
+                                disabled={loadingChat}
+                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all"
+                                title="רענן שיחה"
+                              >
+                                <RefreshCw className={cn("w-4 h-4", loadingChat && "animate-spin")} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Messages Area */}
+                          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar flex flex-col min-h-0 bg-background/5">
+                            {loadingChat && chatMessages.length === 0 ? (
+                              <div className="flex-1 flex items-center justify-center">
+                                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                              </div>
+                            ) : chatMessages.length === 0 ? (
+                              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 gap-2">
+                                <MessageSquare className="w-8 h-8 text-muted-foreground" />
+                                <p className="text-xs font-bold">אין הודעות בשיחה זו עדיין.</p>
+                                <p className="text-[10px]">שלח הודעה כדי להתחיל את השיחה!</p>
+                              </div>
+                            ) : (
+                              chatMessages.map((msg: any) => {
+                                const isOwn = Number(msg.sender_id) === Number(currentUser?.id);
+                                return (
+                                  <div
+                                    key={msg.id}
+                                    className={cn(
+                                      "flex flex-col max-w-[75%] sm:max-w-[65%]",
+                                      isOwn ? "self-start align-left" : "self-end align-right"
+                                    )}
+                                  >
+                                    {/* Bubble */}
+                                    <div className={cn(
+                                      "p-3 rounded-2xl text-xs font-medium leading-relaxed break-words shadow-sm text-right",
+                                      isOwn 
+                                        ? "bg-primary text-primary-foreground rounded-tl-none" 
+                                        : "bg-card border border-border/20 text-foreground rounded-tr-none"
+                                    )}>
+                                      {msg.description}
+                                    </div>
+                                    {/* Time */}
+                                    <span className={cn(
+                                      "text-[9px] text-muted-foreground/60 font-semibold mt-1 px-1",
+                                      isOwn ? "text-left self-start" : "text-right self-end"
+                                    )}>
+                                      {new Date(msg.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                );
+                              })
+                            )}
+                            <div ref={chatEndRef} />
+                          </div>
+
+                          {/* Chat Input Bar */}
+                          <div className="p-3 border-t border-border/10 bg-background/30 backdrop-blur-md shrink-0">
+                            <form 
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleSendChat();
+                              }}
+                              className="flex items-end gap-2"
+                            >
+                              <textarea
+                                id="chat-textarea"
+                                value={chatInput}
+                                onChange={e => setChatInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSendChat();
+                                  }
+                                }}
+                                placeholder="הקלד הודעה... (Enter לשליחה, Shift+Enter לשורה חדשה)"
+                                disabled={sendingChat}
+                                className="flex-1 min-h-[40px] h-11 max-h-[200px] py-2.5 px-4 bg-muted/40 border border-border/20 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all text-foreground placeholder:text-muted-foreground/50 resize-y custom-scrollbar"
+                              />
+                              <button
+                                type="submit"
+                                disabled={!chatInput.trim() || sendingChat}
+                                className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/95 transition-all active:scale-95 disabled:opacity-40 disabled:scale-100 shrink-0 mb-[2px]"
+                              >
+                                {sendingChat ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Send className="w-4 h-4 transform rotate-180" />
+                                )}
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center gap-3 opacity-30 text-center p-6">
+                          <div className="w-16 h-16 rounded-3xl bg-muted/50 flex items-center justify-center">
+                            <MessageSquare className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-black text-foreground">התכתבות פנימית</h4>
+                            <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">בחר איש קשר מהרשימה כדי להתחיל בשיחה</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'my-tickets' && (
+                <motion.div key="history-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                  <div className="space-y-3">
+                    {myTickets.length === 0 ? (
+                      <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
+                         <Archive className="w-12 h-12 text-muted-foreground/30 mb-3" />
+                         <h3 className="text-sm font-black text-foreground">אין פניות היסטוריות</h3>
+                      </div>
+                    ) : myTickets.map(ticket => (
+                      <Card key={ticket.id} className="group bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-4 hover:bg-card/60 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="space-y-1 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-sm text-foreground">{ticket.category}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">{new Date(ticket.created_at).toLocaleDateString('he-IL')}</span>
+                          </div>
+                          <p className="text-xs font-medium text-muted-foreground line-clamp-1 max-w-xl">{ticket.description}</p>
+                          {ticket.admin_reply && (
+                             <div className="mt-2 p-3 bg-primary/5 border border-primary/10 rounded-xl">
+                               <p className="text-[10px] font-black uppercase text-primary/70 mb-1">תשובת צוות ניהול</p>
+                               <p className="text-xs font-bold text-foreground">{ticket.admin_reply}</p>
+                             </div>
+                          )}
+                        </div>
+                        <div className="self-start sm:self-center">
+                          {getStatusBadge(ticket.status)}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+              
+              {activeTab === 'chat-admin' && isAdmin && (
+                <motion.div key="chat-admin-tab" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  <Card className="bg-card/40 border border-border/40 backdrop-blur-xl rounded-2xl p-4 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-base font-black text-foreground">גיבוי התכתבויות</h2>
+                      <p className="text-xs text-muted-foreground">כל השיחות הפנימיות — לחץ לצפייה וייצוא</p>
+                    </div>
+                    <Button variant="outline" size="sm" className="rounded-xl text-xs font-black" onClick={fetchAllConversations}>
+                      <RefreshCw className="w-3.5 h-3.5 ml-1.5" />רענן
+                    </Button>
+                  </Card>
+
+                  {selectedConvExport ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Button variant="ghost" size="sm" className="rounded-xl text-xs font-black" onClick={() => { setSelectedConvExport(null); setConvMessages([]); }}>
+                          <ChevronLeft className="w-4 h-4 ml-1" />חזרה לרשימה
+                        </Button>
+                        <span className="text-sm font-black text-foreground">{selectedConvExport.user1_name} ↔ {selectedConvExport.user2_name}</span>
+                        <Button size="sm" className="mr-auto rounded-xl text-xs font-black bg-primary hover:bg-primary/90" onClick={() => handleExportJson(selectedConvExport)}>
+                          <Download className="w-3.5 h-3.5 ml-1.5" />ייצוא JSON
+                        </Button>
+                      </div>
+                      <Card className="bg-card/40 border border-border/40 rounded-2xl overflow-hidden">
+                        {loadingConv ? (
+                          <div className="p-10 text-center text-xs text-muted-foreground">טוען...</div>
+                        ) : convMessages.length === 0 ? (
+                          <div className="p-10 text-center text-xs text-muted-foreground">אין הודעות</div>
+                        ) : (
+                          <div className="divide-y divide-border/30 max-h-[60vh] overflow-y-auto">
+                            {convMessages.map((msg: any) => (
+                              <div key={msg.id} className="p-4 flex gap-3">
+                                <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xs font-black shrink-0">
+                                  {msg.sender_first?.[0]}{msg.sender_last?.[0]}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-xs font-black text-foreground">{msg.sender_first} {msg.sender_last}</span>
+                                    <span className="text-[10px] text-muted-foreground">{new Date(msg.created_at).toLocaleString('he-IL')}</span>
+                                    {(msg.is_deleted_by_sender || msg.is_deleted_by_recipient) && (
+                                      <span className="text-[9px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full font-bold">נמחק מהתצוגה</span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-foreground">{msg.description}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </Card>
+                    </div>
+                  ) : (
                         </div>
                       )}
                     </Card>
@@ -888,28 +1364,38 @@ const FeedbackPage = () => {
   );
 };
 
-function TabButton({ active, onClick, icon, label, className }: any) {
+function TabButton({ active, onClick, icon, label, badge, className }: any) {
   return (
     <button 
       onClick={onClick} 
       className={cn(
-        "transition-all flex flex-row items-center justify-center sm:justify-start gap-2 border outline-none active:scale-95",
-        "px-4 py-2 sm:px-5 sm:py-2.5 rounded-full min-h-[40px]",
+        "transition-all flex flex-row items-center gap-3 border outline-none active:scale-95 relative w-auto justify-center text-right",
+        "px-4 py-2 rounded-full min-h-[36px]",
+        // Desktop styles (Vertical layout):
+        "md:w-full md:justify-start md:px-4 md:py-3 md:rounded-2xl md:min-h-[44px]",
         active 
-          ? "bg-primary/20 text-primary border-primary/50 shadow-md shadow-primary/5 z-10" 
-          : "bg-card/40 text-muted-foreground hover:text-foreground border-border/40 hover:bg-card/60",
+          ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 z-10 font-black" 
+          : "bg-card/45 text-muted-foreground hover:text-foreground border-border/20 hover:bg-card/70",
         className
       )}
     >
       <div className={cn(
-        "flex items-center justify-center rounded-lg transition-colors",
-        active ? "text-primary" : "text-primary/70"
+        "flex items-center justify-center rounded-lg transition-colors shrink-0",
+        active ? "text-primary-foreground" : "text-primary/70"
       )}>
         {icon}
       </div>
-      <span className="text-[11px] sm:text-xs font-black leading-none mt-0.5 whitespace-nowrap">
+      <span className="text-[11px] sm:text-xs font-black leading-none whitespace-nowrap">
         {label}
       </span>
+      {badge !== undefined && badge > 0 && (
+        <span className={cn(
+          "bg-destructive text-destructive-foreground text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm animate-pulse shrink-0",
+          "absolute -top-1 -left-1 md:relative md:top-auto md:left-auto md:mr-auto"
+        )}>
+          {badge}
+        </span>
+      )}
     </button>
   );
 }

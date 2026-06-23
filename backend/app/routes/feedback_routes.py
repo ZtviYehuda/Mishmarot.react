@@ -111,3 +111,117 @@ def update_feedback(feedback_id):
     if success:
         return jsonify({"message": "Feedback updated successfully"}), 200
     return jsonify({"error": "Failed to update feedback"}), 500
+
+@feedback_bp.route('/updates', methods=['GET'])
+@jwt_required()
+def get_system_updates():
+    from app.utils.db import get_db_connection
+    from psycopg2.extras import RealDictCursor
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "DB connection failed"}), 500
+    try:
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("""
+            SELECT id, version, release_date, features, created_at, created_by
+            FROM system_updates
+            ORDER BY release_date DESC, id DESC
+        """)
+        rows = cur.fetchall()
+        
+        result = []
+        for r in rows:
+            r_dict = dict(r)
+            if r_dict['release_date']:
+                r_dict['release_date'] = r_dict['release_date'].isoformat()
+            if r_dict['created_at']:
+                r_dict['created_at'] = r_dict['created_at'].isoformat()
+            result.append(r_dict)
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"Error fetching system updates: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+@feedback_bp.route('/updates', methods=['POST'])
+@jwt_required()
+def add_system_update():
+    import json
+    from datetime import datetime
+    identity_raw = get_jwt_identity()
+    try:
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+    except:
+        identity = identity_raw
+        
+    # Check admin privileges
+    if not (isinstance(identity, dict) and identity.get('is_admin')):
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    user_id = identity.get('id')
+    data = request.get_json() or {}
+    version = data.get('version')
+    release_date = data.get('release_date')
+    features = data.get('features') # list of strings
+    
+    if not version or not features:
+        return jsonify({"error": "Version and features are required"}), 400
+        
+    if not isinstance(features, list):
+        return jsonify({"error": "Features must be a list of strings"}), 400
+        
+    # Default release_date to today if not provided
+    if not release_date:
+        release_date = datetime.now().date().isoformat()
+        
+    from app.utils.db import get_db_connection
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "DB connection failed"}), 500
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO system_updates (version, release_date, features, created_by)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        """, (version, release_date, json.dumps(features), user_id))
+        new_id = cur.fetchone()[0]
+        conn.commit()
+        return jsonify({"message": "System update created", "id": new_id}), 201
+    except Exception as e:
+        conn.rollback()
+        print(f"Error creating system update: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+@feedback_bp.route('/updates/<int:update_id>', methods=['DELETE'])
+@jwt_required()
+def delete_system_update(update_id):
+    import json
+    identity_raw = get_jwt_identity()
+    try:
+        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+    except:
+        identity = identity_raw
+        
+    # Check admin privileges
+    if not (isinstance(identity, dict) and identity.get('is_admin')):
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    from app.utils.db import get_db_connection
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "DB connection failed"}), 500
+    try:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM system_updates WHERE id = %s", (update_id,))
+        conn.commit()
+        return jsonify({"message": "System update deleted"}), 200
+    except Exception as e:
+        conn.rollback()
+        print(f"Error deleting system update: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()

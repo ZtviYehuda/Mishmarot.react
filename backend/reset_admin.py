@@ -17,7 +17,7 @@ with app.app_context():
         pw_hash = generate_password_hash("admin123")
         cur.execute("""
             INSERT INTO employees (username, first_name, last_name, is_admin, is_commander, password_hash)
-            VALUES ('admin', 'Admin', 'System', TRUE, TRUE, %s)
+            VALUES ('admin', 'צוות', 'תמיכה', TRUE, TRUE, %s)
         """, (pw_hash,))
         print("✅ User 'admin' created with password: 'admin123'")
     else:

@@ -11,8 +11,23 @@ import type { CreateEmployeePayload, Employee } from "@/types/employee.types";
 
 export const useEmployees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [chatContacts, setChatContacts] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch chat contacts
+  const fetchChatContacts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await apiClient.get<Employee[]>("/employees/chat-contacts");
+      setChatContacts(data);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch chat contacts");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
   const [isUpdatingScope, setIsUpdatingScope] = useState<boolean>(false);
 
   // Log status for a scope (Team/Section/Department)
@@ -539,5 +554,7 @@ export const useEmployees = () => {
     },
     logScopeStatus,
     isUpdatingScope,
+    chatContacts,
+    fetchChatContacts,
   };
 };

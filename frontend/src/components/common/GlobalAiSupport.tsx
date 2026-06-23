@@ -432,6 +432,7 @@ export function GlobalAiSupport() {
   };
 
   const isSettingsPage = location.pathname === "/settings";
+  const isMessagesTab = location.pathname === "/feedback" && new URLSearchParams(location.search).get("tab") === "messages";
 
   return (
     <>
@@ -473,7 +474,7 @@ export function GlobalAiSupport() {
         className={cn(
           "global-ai-support-btn fixed left-6 z-[100] flex flex-col items-center gap-2", 
           isSettingsPage ? "bottom-24 sm:bottom-6" : "bottom-6",
-          ((isOpen && !isMinimized) || (currentTourIndex >= 0 && TOUR_STEPS[currentTourIndex]?.path === location.pathname)) && "hidden"
+          (isMessagesTab || (isOpen && !isMinimized) || (currentTourIndex >= 0 && TOUR_STEPS[currentTourIndex]?.path === location.pathname)) && "hidden"
         )}
       >
         <AnimatePresence>

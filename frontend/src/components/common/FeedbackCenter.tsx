@@ -69,6 +69,27 @@ export function FeedbackCenter({ isOpen, onClose, contextPage = "" }: FeedbackCe
   const [description, setDescription] = useState("");
   const [pageContext, setPageContext] = useState(contextPage);
 
+  const [systemUpdates, setSystemUpdates] = useState<any[]>([]);
+  const [isLoadingUpdates, setIsLoadingUpdates] = useState(false);
+
+  const fetchSystemUpdates = async () => {
+    setIsLoadingUpdates(true);
+    try {
+      const response = await apiClient.get("/feedback/updates");
+      setSystemUpdates(response.data);
+    } catch (error) {
+      console.error("Error fetching updates:", error);
+    } finally {
+      setIsLoadingUpdates(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && activeTab === "whats-new") {
+      fetchSystemUpdates();
+    }
+  }, [isOpen, activeTab]);
+
   useEffect(() => {
     if (contextPage) {
       setPageContext(contextPage);
@@ -249,21 +270,43 @@ export function FeedbackCenter({ isOpen, onClose, contextPage = "" }: FeedbackCe
 
             {/* TAB: WHATS NEW */}
             <TabsContent value="whats-new" className="mt-0 space-y-6 animate-in fade-in duration-400">
-              {CHANGELOG.map((log, idx) => (
-                <div key={idx} className="bg-slate-50/30 p-6 rounded-[2rem] border border-slate-50 text-right space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-300">{log.date}</span>
-                    <h3 className="text-xl font-black text-blue-600 tracking-tight">{log.version}</h3>
-                  </div>
-                  <ul className="space-y-3">
-                    {log.features.map((f, i) => (
-                      <li key={i} className="text-sm font-bold text-slate-600 flex items-start gap-3 justify-end leading-relaxed">
-                        {f} <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-                      </li>
-                    ))}
-                  </ul>
+              {isLoadingUpdates ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-500 opacity-20" />
                 </div>
-              ))}
+              ) : systemUpdates.length === 0 ? (
+                <div className="text-center py-20 text-slate-300 text-sm font-bold bg-slate-50/50 rounded-3xl">
+                  אין עדכונים חדשים
+                </div>
+              ) : (
+                systemUpdates.map((log: any, idx: number) => {
+                  let parsedFeatures: string[] = [];
+                  try {
+                    parsedFeatures = typeof log.features === "string" ? JSON.parse(log.features) : log.features;
+                  } catch (e) {
+                    parsedFeatures = Array.isArray(log.features) ? log.features : [];
+                  }
+
+                  return (
+                    <div key={idx} className="bg-slate-50/30 p-6 rounded-[2rem] border border-slate-50 text-right space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black text-slate-300">
+                          {new Date(log.release_date).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </span>
+                        <h3 className="text-xl font-black text-blue-600 tracking-tight">{log.version}</h3>
+                      </div>
+                      <ul className="space-y-3">
+                        {parsedFeatures.map((f, i) => (
+                          <li key={i} className="text-sm font-bold text-slate-600 flex items-start gap-3 justify-end leading-relaxed">
+                            <span className="flex-1">{f}</span>
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })
+              )}
             </TabsContent>
           </div>
         </Tabs>

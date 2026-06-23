@@ -767,8 +767,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                       : "bg-primary/5 text-primary border border-primary/10 group-hover:border-primary/40 group-hover:bg-primary/10 dark:bg-primary/10 dark:text-primary-foreground dark:border-primary/20",
                                   )}
                                 >
-                                  {emp.first_name[0]}
-                                  {emp.last_name[0]}
+                                  {emp.is_admin ? "💬" : `${emp.first_name[0]}${emp.last_name[0]}`}
                                 </div>
                                 <div className="flex flex-col justify-center">
                                   <span
@@ -1061,8 +1060,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                   : "bg-muted text-muted-foreground",
                               )}
                             >
-                              {emp.first_name[0]}
-                              {emp.last_name[0]}
+                              {emp.is_admin ? "💬" : `${emp.first_name[0]}${emp.last_name[0]}`}
                             </div>
                             <div className="flex flex-col min-w-0">
                               <h4

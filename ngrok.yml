@@ -1,0 +1,26 @@
+# =============================================================
+# ngrok.yml — הגדרת טונל למערכת משמרות
+# =============================================================
+# 📌 נוצר על-ידי הסוכן. עדכן את DOMAIN לפי ה-domain שקיבלת מ-ngrok.com
+#
+# auth token נשמר בקובץ הגלובלי של ngrok (לא כאן).
+# להוספת token: ngrok config add-authtoken TOKEN
+# =============================================================
+
+version: "3"
+
+tunnels:
+  mishmarot-frontend:
+    addr: 5173          # Vite dev server (proxies /api → backend:5000)
+    proto: http
+    # domain: your-name.ngrok-free.app   ← פרק את ה-# ועדכן את הדומיין שלך
+    inspect: false       # מנע popup ה"browser warning" של ngrok
+
+# הוראות:
+# 1. קבל authtoken מ: https://dashboard.ngrok.com/get-started/your-authtoken
+#    הרץ: ngrok config add-authtoken <token>
+#
+# 2. קבל דומיין חינם מ: https://dashboard.ngrok.com/domains → New Domain
+#    עדכן את שורת `domain:` למעלה
+#
+# 3. הרץ: .\start-tunnel.ps1

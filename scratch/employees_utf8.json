@@ -1,0 +1,182 @@
+[
+    {
+        "id": 208,
+        "first_name": "דני",
+        "last_name": "וסרמן",
+        "username": "commander1",
+        "is_commander": true,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 209,
+        "first_name": "יוסי",
+        "last_name": "פרץ",
+        "username": "commander2",
+        "is_commander": true,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 210,
+        "first_name": "חיים",
+        "last_name": "פרץ",
+        "username": "commander3",
+        "is_commander": true,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 211,
+        "first_name": "חיים",
+        "last_name": "אזולאי",
+        "username": "commander4",
+        "is_commander": true,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 212,
+        "first_name": "דני",
+        "last_name": "פרץ",
+        "username": "soldier1",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 213,
+        "first_name": "דוד",
+        "last_name": "מזרחי",
+        "username": "soldier2",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 214,
+        "first_name": "רוני",
+        "last_name": "דנינו",
+        "username": "soldier3",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 215,
+        "first_name": "דני",
+        "last_name": "אזולאי",
+        "username": "soldier4",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 216,
+        "first_name": "רוני",
+        "last_name": "אזולאי",
+        "username": "soldier5",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 217,
+        "first_name": "משה",
+        "last_name": "מזרחי",
+        "username": "soldier6",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 218,
+        "first_name": "שרה",
+        "last_name": "ביטון",
+        "username": "soldier7",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 219,
+        "first_name": "חיים",
+        "last_name": "אזולאי",
+        "username": "soldier8",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 220,
+        "first_name": "יוסי",
+        "last_name": "מזרחי",
+        "username": "soldier9",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 221,
+        "first_name": "דני",
+        "last_name": "פרידמן",
+        "username": "soldier10",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 222,
+        "first_name": "דני",
+        "last_name": "וסרמן",
+        "username": "soldier11",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 223,
+        "first_name": "משה",
+        "last_name": "וסרמן",
+        "username": "soldier12",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 224,
+        "first_name": "רוני",
+        "last_name": "וסרמן",
+        "username": "soldier13",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 225,
+        "first_name": "רוני",
+        "last_name": "פרידמן",
+        "username": "soldier14",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 226,
+        "first_name": "מיכל",
+        "last_name": "דנינו",
+        "username": "soldier15",
+        "is_commander": false,
+        "is_admin": false,
+        "is_active": true
+    },
+    {
+        "id": 227,
+        "first_name": "Admin",
+        "last_name": "System",
+        "username": "admin",
+        "is_commander": true,
+        "is_admin": true,
+        "is_active": true
+    }
+]

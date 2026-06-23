@@ -391,14 +391,13 @@ const EmployeesChartComponent = (
             </div>
           ) : (
             <div
-              className="flex flex-col flex-1 w-full min-h-0 relative mt-0 overflow-visible"
+              className="flex flex-col flex-1 w-full min-h-[240px] sm:min-h-[320px] relative mt-0 overflow-visible"
               style={{ direction: "ltr" }}
             >
               <ResponsiveContainer
                 className="overflow-visible"
                 width="100%"
-                height="100%"
-                minHeight={
+                height={
                   compact
                     ? (isMobile ? 220 : 300)
                     : chartType === "bar"

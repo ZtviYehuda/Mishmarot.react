@@ -134,6 +134,7 @@ export default function MainLayout() {
     markAsUnread,
   } = useNotifications();
   const { openChat, toggleChat } = useChat();
+  const unreadMessagesCount = React.useMemo(() => alerts.filter(a => a.id.startsWith("msg-")).length, [alerts]);
   const location = useLocation();
   const navigate = useNavigate();
   // Sidebar closed by default on mobile and desktop
@@ -381,8 +382,7 @@ export default function MainLayout() {
                 className="flex items-center gap-3 min-w-0 flex-grow"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm shrink-0 shadow-sm transition-all group-hover:scale-105">
-                  {user?.first_name?.[0]}
-                  {user?.last_name?.[0]}
+                  {user?.is_admin ? "💬" : `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`}
                 </div>
                 <div className="flex flex-col min-w-0 text-right">
                   <span className="text-xs font-black text-foreground truncate leading-none mb-1 group-hover:text-primary transition-colors">
@@ -390,7 +390,7 @@ export default function MainLayout() {
                   </span>
                   <span className="text-[9px] font-bold text-muted-foreground truncate uppercase tracking-tighter">
                     {user?.is_admin
-                      ? "מנהל מערכת"
+                      ? "ניהול מערכת"
                       : user?.commands_department_id
                         ? "מפקד מחלקה"
                         : user?.commands_section_id
@@ -422,8 +422,7 @@ export default function MainLayout() {
               }}
               className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm shrink-0 shadow-sm transition-all hover:scale-105 hover:bg-primary/20 active:scale-95"
             >
-              {user?.first_name?.[0]}
-              {user?.last_name?.[0]}
+              {user?.is_admin ? "💬" : `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`}
             </Link>
           )}
 
@@ -633,14 +632,22 @@ export default function MainLayout() {
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
 
             <div className="flex items-center gap-1.5 sm:gap-3">
-              {/* Desktop Only: Separate Chat Button */}
+              {/* Chat Button with Unread Badge - Visible on all screens */}
               <button
                 id="chat-toggle-btn"
                 onClick={toggleChat}
                 title="צ'אט והודעות"
-                className="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all relative"
+                className="flex w-8 h-8 sm:w-10 sm:h-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all relative"
               >
-                <MessageSquare className="w-5 h-5" />
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                {unreadMessagesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-50"></span>
+                    <span className="relative flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-black text-primary-foreground ring-2 ring-card">
+                      {unreadMessagesCount}
+                    </span>
+                  </span>
+                )}
               </button>
 
               {/* Combined Notifications/Messages Popover */}
@@ -734,7 +741,7 @@ export default function MainLayout() {
                         )}
                       >
                         <MessageSquare className="w-3 h-3" />
-                        הודעות
+                        הודעות {unreadMessagesCount > 0 && `(${unreadMessagesCount})`}
                       </button>
                       <button
                         onClick={() => {
@@ -1087,8 +1094,16 @@ export default function MainLayout() {
         </header>
 
         {/* Content Page */}
-        <main className="flex-grow overflow-y-auto bg-background custom-scrollbar px-2 lg:px-6">
-          <div className="w-full max-w-full mx-auto">
+        <main className={cn(
+          "flex-grow bg-background custom-scrollbar px-2 lg:px-6",
+          location.pathname === "/feedback" && new URLSearchParams(location.search).get("tab") === "messages"
+            ? "overflow-hidden flex flex-col"
+            : "overflow-y-auto"
+        )}>
+          <div className={cn(
+            "w-full max-w-full mx-auto",
+            location.pathname === "/feedback" && new URLSearchParams(location.search).get("tab") === "messages" && "h-full flex flex-col"
+          )}>
             <Outlet context={{ isSidebarOpen }} />
           </div>
         </main>

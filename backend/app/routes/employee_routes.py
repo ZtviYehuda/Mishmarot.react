@@ -604,6 +604,56 @@ def import_employees_route():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@emp_bp.route("/chat-contacts", methods=["GET"])
+@jwt_required()
+def get_chat_contacts():
+    try:
+        import json
+        identity_str = get_jwt_identity()
+        try:
+            identity = (
+                json.loads(identity_str)
+                if isinstance(identity_str, str)
+                else identity_str
+            )
+            user_id = identity.get("id") if isinstance(identity, dict) else identity
+        except (json.JSONDecodeError, AttributeError):
+            user_id = identity_str
+
+        from app.utils.db import get_db_connection
+        from psycopg2.extras import RealDictCursor
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
+
+        try:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute("""
+                SELECT id, first_name, last_name, username, phone_number, email,
+                       is_commander, is_admin, is_active, last_seen, chat_status, chat_status_custom,
+                       (last_seen IS NOT NULL AND last_seen > NOW() - INTERVAL '30 seconds') as is_online
+                FROM employees
+                WHERE is_active = TRUE 
+                  AND (is_commander = TRUE OR is_admin = TRUE)
+                  AND id != %s
+                ORDER BY first_name ASC
+            """, (user_id,))
+            rows = cur.fetchall()
+            
+            result = []
+            for r in rows:
+                r_dict = dict(r)
+                if r_dict['last_seen']:
+                    r_dict['last_seen'] = r_dict['last_seen'].isoformat()
+                result.append(r_dict)
+            return jsonify(result), 200
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f"[ERROR] Error in GET /employees/chat-contacts: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @emp_bp.route("/chat/status", methods=["PUT", "OPTIONS"])
 @jwt_required(optional=True)
 def update_chat_status_route():

@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { useEmployeeContext } from "@/context/EmployeeContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import {
   Popover,
   PopoverContent,
@@ -42,14 +43,16 @@ interface Message {
 
 export const ChatSidebar: React.FC = () => {
   const { isChatOpen, selectedRecipient, closeChat, openChat } = useChat();
-  const { employees, openProfile, refreshReferenceData } = useEmployeeContext();
+  const { employees, chatContacts, openProfile, refreshReferenceData } = useEmployeeContext();
   const { user } = useAuthContext();
+  const { alerts, markAsRead, refreshAlerts } = useNotifications();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [contactSearch, setContactSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const autoOpenAttemptedRef = useRef(false);
 
   // Real-time Chat States
   const [recipientPresence, setRecipientPresence] = useState<{
@@ -91,6 +94,55 @@ export const ChatSidebar: React.FC = () => {
       setIsMeTyping(false);
     }, 3000);
   };
+
+  // Reset the auto-open tracker when the chat sidebar is closed
+  useEffect(() => {
+    if (!isChatOpen) {
+      autoOpenAttemptedRef.current = false;
+    }
+  }, [isChatOpen]);
+
+  // Refresh alerts when chat sidebar is opened
+  useEffect(() => {
+    if (isChatOpen) {
+      refreshAlerts();
+    }
+  }, [isChatOpen]);
+
+  // Mark alerts as read when a conversation is opened or when alerts update while chat is open
+  useEffect(() => {
+    if (isChatOpen && selectedRecipient && alerts.length > 0) {
+      alerts.forEach(alert => {
+        if (alert.id.startsWith("msg-") && Number(alert.data?.sender_id) === Number(selectedRecipient.id)) {
+          markAsRead(alert.id);
+        }
+      });
+    }
+  }, [isChatOpen, selectedRecipient, alerts, markAsRead]);
+
+  // Auto-open conversation if there is an unread message from a contact and we just opened the chat
+  useEffect(() => {
+    if (isChatOpen && !selectedRecipient && !autoOpenAttemptedRef.current && alerts.length > 0 && chatContacts.length > 0) {
+      const msgAlerts = alerts.filter(a => a.id.startsWith("msg-"));
+      if (msgAlerts.length > 0) {
+        // Find the sender_id of the most recent message alert
+        const firstAlert = msgAlerts[0];
+        const senderId = Number(firstAlert.data?.sender_id);
+        if (senderId) {
+          const contact = chatContacts.find((c: any) => Number(c.id) === senderId) || 
+                          employees.find((e: any) => Number(e.id) === senderId);
+          if (contact) {
+            autoOpenAttemptedRef.current = true;
+            openChat({
+              id: contact.id,
+              name: contact.is_admin ? "צוות תמיכה" : `${contact.first_name} ${contact.last_name}`,
+              role: contact.is_admin ? "ניהול מערכת" : "מפקד"
+            });
+          }
+        }
+      }
+    }
+  }, [isChatOpen, selectedRecipient, alerts, chatContacts, employees, openChat]);
 
   // Poll for messages
   useEffect(() => {
@@ -287,7 +339,7 @@ export const ChatSidebar: React.FC = () => {
                     {selectedRecipient && (
                       <>
                         {(() => {
-                          const emp = employees.find(e => e.id === selectedRecipient.id);
+                          const emp = employees?.find(e => e.id === selectedRecipient.id) || chatContacts?.find(e => e.id === selectedRecipient.id);
                           if (emp?.phone_number) {
                             return (
                               <Button 
@@ -366,8 +418,8 @@ export const ChatSidebar: React.FC = () => {
                          <span className="text-[10px] font-black text-muted-foreground/60 uppercase bg-muted/30 px-3 py-1 rounded-full border border-border/40">היום</span>
                        </div>
                        {messages.map((msg, idx) => {
-                          const isMe = msg.sender_id === user?.id;
-                          const nextIsMe = messages[idx+1]?.sender_id === msg.sender_id;
+                          const isMe = Number(msg.sender_id) === Number(user?.id);
+                          const nextIsMe = Number(messages[idx+1]?.sender_id) === Number(msg.sender_id);
                           return (
                             <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} key={msg.id} className={cn("flex flex-col max-w-[85%] sm:max-w-[75%]", isMe ? "self-start items-end" : "self-end items-start")}>
                               {!nextIsMe && <span className="text-[9px] font-bold text-muted-foreground mb-1 mx-1">{format(new Date(msg.created_at), "HH:mm", { locale: he })}</span>}
@@ -408,7 +460,7 @@ export const ChatSidebar: React.FC = () => {
                             className="relative w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center border border-white/20 hover:bg-white/20 hover:text-white p-0 font-black text-xs shrink-0"
                             title="עדכן סטטוס פרופיל"
                           >
-                            {user?.first_name?.[0]}{user?.last_name?.[0]}
+                            {user?.is_admin ? "💬" : `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`}
                             <div className={cn("absolute -bottom-0.5 -left-0.5 w-3 h-3 border-2 border-primary rounded-full",
                               myStatus === "online" ? "bg-emerald-500 animate-pulse" :
                               myStatus === "busy" ? "bg-rose-500" :
@@ -421,12 +473,12 @@ export const ChatSidebar: React.FC = () => {
                           <div className="flex flex-col gap-3 text-right" dir="rtl">
                             <div className="flex items-center gap-3 pb-2 border-b border-border/40">
                               <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 font-black text-sm shrink-0">
-                                {user?.first_name?.[0]}{user?.last_name?.[0]}
+                                {user?.is_admin ? "💬" : `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`}
                               </div>
                               <div className="flex flex-col min-w-0">
                                 <h4 className="font-black text-sm text-foreground truncate">{user?.first_name} {user?.last_name}</h4>
                                 <span className="text-[10px] text-muted-foreground font-bold leading-none mt-0.5">
-                                  {user?.is_admin ? "מנהל מערכת" : user?.is_commander ? "מפקד" : "שוטר"}
+                                  {user?.is_admin ? "ניהול מערכת" : user?.is_commander ? "מפקד" : "שוטר"}
                                 </span>
                               </div>
                             </div>
@@ -540,44 +592,94 @@ export const ChatSidebar: React.FC = () => {
 
                 {/* Contacts List */}
                 <div className="flex-grow overflow-y-auto p-3 space-y-1 custom-scrollbar">
-                   {employees
-                    .filter((emp: any) => emp.id !== user?.id && (!contactSearch || `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(contactSearch.toLowerCase())))
-                    .map((emp: any) => (
-                      <button
-                        key={emp.id}
-                        onClick={() => openChat({ id: emp.id, name: `${emp.first_name} ${emp.last_name}` })}
-                        className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-muted/50 transition-all text-right group"
-                      >
-                        {/* Avatar with Status Dot */}
-                        <div className="relative shrink-0">
-                          <div className="w-12 h-12 rounded-2xl bg-primary/5 text-primary flex items-center justify-center border border-primary/10 font-black group-hover:bg-primary group-hover:text-white transition-all">
-                            {emp.first_name?.[0]}{emp.last_name?.[0]}
-                          </div>
-                          {/* Real-time Status Dot Badge */}
-                          <div className={cn("absolute -bottom-1 -left-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 shadow-sm", getStatusDotColor(emp))} />
-                        </div>
-                        
-                        <div className="flex-grow min-w-0">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <h4 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{emp.first_name} {emp.last_name}</h4>
-                            {emp.is_online && (
-                              <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                                פעיל/ה
-                              </span>
-                            )}
-                          </div>
-                          {emp.chat_status_custom ? (
-                            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-lg truncate max-w-[185px] inline-block mt-0.5">
-                              💬 {emp.chat_status_custom}
-                            </p>
-                          ) : (
-                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest truncate">{emp.section_name || emp.department_name || "שוטר"}</p>
-                          )}
-                        </div>
-                        <ChevronLeft className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-all shrink-0" />
-                      </button>
-                    ))}
-                    {employees.length <= 1 && (
+                    {chatContacts
+                     .filter((emp: any) => {
+                       const displayName = emp.is_admin ? "צוות תמיכה" : `${emp.first_name} ${emp.last_name}`;
+                       return Number(emp.id) !== Number(user?.id) && 
+                         (!contactSearch || displayName.toLowerCase().includes(contactSearch.toLowerCase()));
+                     })
+                     .sort((a: any, b: any) => {
+                       // 1. Contacts with unread messages first
+                       const aAlerts = alerts.filter(al => al.id.startsWith("msg-") && Number(al.data?.sender_id) === Number(a.id));
+                       const bAlerts = alerts.filter(al => al.id.startsWith("msg-") && Number(al.data?.sender_id) === Number(b.id));
+                       if (aAlerts.length > 0 && bAlerts.length === 0) return -1;
+                       if (aAlerts.length === 0 && bAlerts.length > 0) return 1;
+
+                       if (a.is_admin && !b.is_admin) return -1;
+                       if (!a.is_admin && b.is_admin) return 1;
+                       // Keep alphabetical order for others
+                       const displayNameA = a.is_admin ? "צוות תמיכה" : `${a.first_name} ${a.last_name}`;
+                       const displayNameB = b.is_admin ? "צוות תמיכה" : `${b.first_name} ${b.last_name}`;
+                       return displayNameA.localeCompare(displayNameB, 'he');
+                     })
+                     .map((emp: any) => {
+                      const contactAlerts = alerts.filter(a => a.id.startsWith("msg-") && Number(a.data?.sender_id) === Number(emp.id));
+                      const unreadCount = contactAlerts.length;
+                      const hasUnread = unreadCount > 0;
+
+                      return (
+                       <button
+                         key={emp.id}
+                         onClick={() => openChat({ id: emp.id, name: emp.is_admin ? "צוות תמיכה" : `${emp.first_name} ${emp.last_name}` })}
+                         className={cn(
+                           "w-full flex items-center gap-4 p-3 rounded-2xl transition-all text-right group border border-transparent",
+                           hasUnread 
+                             ? "bg-primary/5 dark:bg-primary/10 border-primary/15 hover:bg-primary/10 shadow-sm" 
+                             : "hover:bg-muted/50"
+                         )}
+                       >
+                         {/* Avatar with Status Dot */}
+                         <div className="relative shrink-0">
+                           <div className={cn(
+                             "w-12 h-12 rounded-2xl flex items-center justify-center font-black transition-all",
+                             hasUnread 
+                               ? "bg-primary text-primary-foreground" 
+                               : "bg-primary/5 text-primary border border-primary/10 group-hover:bg-primary group-hover:text-white"
+                           )}>
+                             {emp.is_admin ? "💬" : `${emp.first_name?.[0] ?? ""}${emp.last_name?.[0] ?? ""}`}
+                           </div>
+                           {/* Real-time Status Dot Badge */}
+                           <div className={cn("absolute -bottom-1 -left-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 shadow-sm", getStatusDotColor(emp))} />
+                         </div>
+                         
+                         <div className="flex-grow min-w-0">
+                           <div className="flex items-center justify-between mb-0.5">
+                             <h4 className={cn(
+                               "font-bold text-sm text-foreground transition-colors",
+                               hasUnread ? "text-primary font-black" : "group-hover:text-primary"
+                             )}>
+                               {emp.is_admin ? "צוות תמיכה" : `${emp.first_name} ${emp.last_name}`}
+                             </h4>
+                             <div className="flex items-center gap-1.5">
+                               {unreadCount > 0 && (
+                                 <span className="bg-primary text-primary-foreground text-[10px] font-black h-5 w-5 rounded-full flex items-center justify-center animate-pulse shadow-sm">
+                                   {unreadCount}
+                                 </span>
+                               )}
+                               {emp.is_online && (
+                                 <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                     פעיל/ה
+                                 </span>
+                               )}
+                             </div>
+                           </div>
+                           {hasUnread ? (
+                             <p className="text-xs text-primary font-semibold truncate max-w-[200px] leading-relaxed mt-0.5">
+                               {contactAlerts[contactAlerts.length - 1].description}
+                             </p>
+                           ) : emp.chat_status_custom ? (
+                             <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-lg truncate max-w-[185px] inline-block mt-0.5">
+                               💬 {emp.chat_status_custom}
+                             </p>
+                           ) : (
+                             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest truncate">{emp.is_admin ? "ניהול מערכת" : (emp.section_name || emp.department_name || "מפקד")}</p>
+                           )}
+                         </div>
+                         <ChevronLeft className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-all shrink-0" />
+                       </button>
+                      );
+                    })}
+                     {chatContacts.filter((emp: any) => Number(emp.id) !== Number(user?.id)).length === 0 && (
                       <div className="p-8 text-center opacity-40">
                         <p className="text-xs font-bold">לא נמצאו אנשי קשר זמינים.</p>
                       </div>
