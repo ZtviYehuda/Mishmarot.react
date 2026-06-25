@@ -223,6 +223,7 @@ export const EmployeeTable = ({
         }
 
         localStorage.setItem("token", data.token);
+        localStorage.removeItem("dashboard_filters"); // Ensure fresh dashboard state for impersonated user
         toast.success(`התחברת בהצלחה כ-${name}`);
         // Force full reload to update Context and Reset App State
         window.location.href = "/";

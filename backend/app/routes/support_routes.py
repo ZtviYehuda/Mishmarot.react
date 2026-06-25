@@ -36,6 +36,29 @@ def create_ticket():
     
     ticket_id = SupportModel.create_ticket(ticket_data)
     if ticket_id:
+        # Get admin ID for auto-reply
+        from app.utils.db import get_db_connection
+        admin_id = None
+        conn = get_db_connection()
+        if conn:
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT id FROM employees WHERE is_admin = TRUE ORDER BY id ASC LIMIT 1")
+                res = cur.fetchone()
+                if res:
+                    admin_id = res[0]
+            finally:
+                conn.close()
+                
+        # Send automated response
+        from app.models.notification_model import NotificationModel
+        NotificationModel.send_message(
+            sender_id=admin_id,
+            recipient_id=target_user_id,
+            title="פנייתך התקבלה",
+            description="שלום רב, קיבלנו את פנייתך והיא הועברה לטיפול צוות התמיכה. נחזור אליך בהקדם האפשרי."
+        )
+
         return jsonify({"message": "Ticket created successfully", "id": ticket_id}), 201
     return jsonify({"error": "Failed to create ticket"}), 500
 

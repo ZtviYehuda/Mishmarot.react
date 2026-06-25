@@ -533,6 +533,7 @@ const EmployeesChartComponent = (
                     <Tooltip
                       content={<CustomTooltip />}
                       position={tooltipPos || undefined}
+                      wrapperStyle={{ zIndex: 100 }}
                     />
                   </PieChart>
                 ) : (
@@ -567,6 +568,7 @@ const EmployeesChartComponent = (
                     <Tooltip
                       content={<CustomTooltip />}
                       cursor={{ fill: "transparent" }}
+                      wrapperStyle={{ zIndex: 100 }}
                     />
                     <Bar
                       dataKey="value"
@@ -616,7 +618,7 @@ const EmployeesChartComponent = (
               </ResponsiveContainer>
 
               {chartType === "pie" && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-0">
                   <div className="flex flex-col items-center justify-center">
                     <p
                       className={cn(

@@ -750,6 +750,12 @@ class AttendanceModel:
                     grouping_label = "employee"
                     scoping_clause = " AND t.id = %s"
                     scoping_params.append(requesting_user["commands_team_id"])
+                else:
+                    grouping_col = "e.first_name || ' ' || e.last_name"
+                    grouping_id = "e.id"
+                    grouping_label = "employee"
+                    scoping_clause = " AND e.id = %s"
+                    scoping_params.append(requesting_user["id"])
 
             # 3. Dynamic Filtering & Drill-down Adjustment
             if filters:
@@ -854,6 +860,7 @@ class AttendanceModel:
                 userId = requesting_user["id"] if requesting_user else None
                 final_params = [base_date, base_date, days] + scoping_params + [userId]
 
+                print("DEBUG QUERY DAYS>1:", query, final_params)
                 cur.execute(query, tuple(final_params))
             else:
                 # Standardized Snapshot logic for single day
@@ -911,6 +918,7 @@ class AttendanceModel:
                 """
                 userId = requesting_user["id"] if requesting_user else None
                 final_params = status_params + [userId] + scoping_params
+                print("DEBUG QUERY DAYS=1:", query, final_params)
                 cur.execute(query, tuple(final_params))
 
             results = cur.fetchall()

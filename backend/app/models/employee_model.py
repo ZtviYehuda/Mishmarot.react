@@ -1433,33 +1433,142 @@ class EmployeeModel:
             cur.execute("SELECT id, name FROM service_types")
             service_types = {row["name"]: row["id"] for row in cur.fetchall()}
             
+            # Reset sequences to avoid ID collision
+            cur.execute("SELECT pg_get_serial_sequence('service_types', 'id')")
+            seq_row = cur.fetchone()
+            if seq_row:
+                seq_name = list(seq_row.values())[0]
+                if seq_name:
+                    cur.execute("SELECT setval(%s, COALESCE((SELECT MAX(id) FROM service_types), 0) + 1, false)", (seq_name,))
+                    
+            cur.execute("SELECT pg_get_serial_sequence('employees', 'id')")
+            seq_row_emp = cur.fetchone()
+            if seq_row_emp:
+                seq_name_emp = list(seq_row_emp.values())[0]
+                if seq_name_emp:
+                    cur.execute("SELECT setval(%s, COALESCE((SELECT MAX(id) FROM employees), 0) + 1, false)", (seq_name_emp,))
+            
             count = 0
             for row in data_list:
-                # Basic validation
-                username = str(row.get("שם משתמש") or row.get("מספר אישי") or "").strip()
+                # Name processing
+                full_name = str(row.get("שם") or "").strip()
                 first_name = str(row.get("שם פרטי") or "").strip()
                 last_name = str(row.get("שם משפחה") or "").strip()
                 
-                if not username or not first_name:
+                if full_name and not first_name:
+                    parts = full_name.split(None, 1)
+                    first_name = parts[0]
+                    if len(parts) > 1:
+                        last_name = parts[1]
+                
+                if not first_name:
                     continue
                 
+                # Phone processing
+                phone_val = row.get("טלפון נייד") or row.get("טלפון") or row.get("נייד")
+                cleaned_phone = "".join(c for c in str(phone_val) if c.isdigit()) if phone_val else None
+                
+                # Gender processing
+                gender_he = str(row.get("מין") or "").strip().lower()
+                gender = "female" if "נקב" in gender_he or "fem" in gender_he else "male"
+                
+                # Birth date processing
+                birth_date = None
+                birth_date_raw = row.get("תאריך לידה") or row.get("יום הולדת")
+                if birth_date_raw:
+                    if hasattr(birth_date_raw, "date"):
+                        birth_date = birth_date_raw.date()
+                    elif isinstance(birth_date_raw, str):
+                        for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y"):
+                            try:
+                                birth_date = datetime.strptime(birth_date_raw.strip(), fmt).date()
+                                break
+                            except ValueError:
+                                continue
+                
+                # City processing
+                city = row.get("עיר מגורים") or row.get("עיר") or row.get("כתובת")
+                if city:
+                    city = str(city).strip()
+                
                 # Mapping units
-                dept_id = depts.get(row.get("מחלקה"))
-                sec_name = row.get("מדור")
+                dept_name = row.get("מחלקה") or row.get("אגף")
+                dept_id = depts.get(dept_name) if dept_name else None
+                sec_name = row.get("מדור") or row.get("שלוחה")
                 sec_id = sections.get(sec_name, {}).get("id") if sec_name else None
                 team_name = row.get("צוות") or row.get("חוליה")
                 team_id = teams.get(team_name, {}).get("id") if team_name else None
                 
-                # Service type mapping
-                srv_type_id = service_types.get(row.get("סוג שירות")) or service_types.get("חובה")
+                # Service type mapping & dynamic insertion
+                srv_type_name = row.get("מעמד") or row.get("סוג שירות") or row.get("סטטוס")
+                srv_type_id = None
+                if srv_type_name:
+                    srv_type_name = str(srv_type_name).strip()
+                    srv_type_id = service_types.get(srv_type_name)
+                    # Substring match if exact match fails
+                    if not srv_type_id:
+                        for name, st_id in service_types.items():
+                            if srv_type_name in name or name in srv_type_name:
+                                srv_type_id = st_id
+                                break
+                    # Dynamic creation
+                    if not srv_type_id:
+                        try:
+                            cur.execute("INSERT INTO service_types (name) VALUES (%s) RETURNING id", (srv_type_name,))
+                            srv_type_id = cur.fetchone()["id"]
+                            service_types[srv_type_name] = srv_type_id
+                        except Exception as insert_e:
+                            print(f"Error creating service type {srv_type_name}: {insert_e}")
+                            srv_type_id = None
                 
-                # Password logic (default to username if not provided)
+                # Matching existing record
+                existing = None
+                explicit_username = str(row.get("שם משתמש") or row.get("מספר אישי") or "").strip()
+                
+                # A. By username/personal_number
+                if explicit_username:
+                    cur.execute("SELECT id, username FROM employees WHERE username = %s", (explicit_username,))
+                    existing = cur.fetchone()
+                
+                # B. By phone number
+                if not existing and cleaned_phone:
+                    cur.execute(
+                        "SELECT id, username FROM employees WHERE phone_number = %s OR REPLACE(REPLACE(phone_number, '-', ''), ' ', '') = %s",
+                        (str(phone_val), cleaned_phone)
+                    )
+                    existing = cur.fetchone()
+                
+                # C. By name
+                if not existing and first_name and last_name:
+                    cur.execute("SELECT id, username FROM employees WHERE first_name = %s AND last_name = %s", (first_name, last_name))
+                    existing = cur.fetchone()
+                
+                # Username generation
+                if existing:
+                    username = existing["username"]
+                else:
+                    if explicit_username:
+                        username = explicit_username
+                    elif cleaned_phone:
+                        username = cleaned_phone
+                    else:
+                        username = f"{first_name}.{last_name}"
+                    
+                    # Ensure username is unique
+                    base_uname = username.replace(" ", "_")
+                    final_uname = base_uname
+                    counter = 1
+                    while True:
+                        cur.execute("SELECT id FROM employees WHERE username = %s", (final_uname,))
+                        if not cur.fetchone():
+                            username = final_uname
+                            break
+                        final_uname = f"{base_uname}{counter}"
+                        counter += 1
+                
+                # Password logic
                 raw_password = str(row.get("סיסמה") or username)
                 pw_hash = generate_password_hash(raw_password)
-                
-                # Check if exists
-                cur.execute("SELECT id FROM employees WHERE username = %s", (username,))
-                existing = cur.fetchone()
                 
                 if existing:
                     # Update
@@ -1467,18 +1576,25 @@ class EmployeeModel:
                         UPDATE employees SET 
                             first_name = %s, last_name = %s, department_id = %s, 
                             section_id = %s, team_id = %s, service_type_id = %s,
-                            phone_number = %s, is_active = TRUE
+                            phone_number = %s, gender = %s, birth_date = %s, city = %s,
+                            is_active = TRUE
                         WHERE id = %s
-                    """, (first_name, last_name, dept_id, sec_id, team_id, srv_type_id, row.get("טלפון"), existing["id"]))
+                    """, (
+                        first_name, last_name, dept_id, sec_id, team_id, srv_type_id, 
+                        phone_val, gender, birth_date, city, existing["id"]
+                    ))
                 else:
                     # Insert
                     cur.execute("""
                         INSERT INTO employees (
                             username, first_name, last_name, password_hash, 
                             department_id, section_id, team_id, service_type_id,
-                            phone_number, must_change_password, is_active
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, TRUE)
-                    """, (username, first_name, last_name, pw_hash, dept_id, sec_id, team_id, srv_type_id, row.get("טלפון")))
+                            phone_number, gender, birth_date, city, must_change_password, is_active
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, TRUE)
+                    """, (
+                        username, first_name, last_name, pw_hash, dept_id, sec_id, team_id, 
+                        srv_type_id, phone_val, gender, birth_date, city
+                    ))
                 
                 count += 1
             

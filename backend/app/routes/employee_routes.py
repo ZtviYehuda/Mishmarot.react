@@ -616,11 +616,24 @@ def import_employees_route():
 
     try:
         if file.filename.endswith(".csv"):
-            df = pd.read_csv(io.StringIO(file.stream.read().decode("utf-8")))
+            content = file.stream.read().decode("utf-8-sig")
+            df = pd.read_csv(io.StringIO(content), sep=None, engine='python')
         else:
             df = pd.read_excel(file)
         
-        data_list = df.to_dict(orient="records")
+        # Clean headers and rows
+        df.columns = df.columns.str.strip()
+        data_list = []
+        for row in df.to_dict(orient="records"):
+            cleaned_row = {}
+            for k, v in row.items():
+                k_clean = str(k).strip()
+                v_clean = v.strip() if isinstance(v, str) else v
+                if pd.isna(v_clean) or v_clean == "":
+                    v_clean = None
+                cleaned_row[k_clean] = v_clean
+            data_list.append(cleaned_row)
+        
         count, error = EmployeeModel.import_employees(data_list)
         
         if error:

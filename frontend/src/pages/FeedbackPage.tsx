@@ -81,7 +81,7 @@ const getScreenshotUrl = (url?: string) => {
 const FeedbackPage = () => {
   const { user: currentUser } = useAuthContext();
   const { openChat, openGroupModal } = useChat();
-  const { alerts, markAsRead } = useNotifications();
+  const { alerts, markAsRead, refreshAlerts } = useNotifications();
   const isAdmin = currentUser?.is_admin;
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -196,6 +196,7 @@ const FeedbackPage = () => {
       setScreenshotPreview(null);
       setActiveTab("my-tickets");
       fetchMyTickets();
+      refreshAlerts(); // Force refresh to show the auto-reply in global alerts instantly
     } catch (error) {
       toast.error("שגיאה בשליחת הפנייה");
     } finally {
@@ -252,6 +253,11 @@ const FeedbackPage = () => {
   );
 
   const markContactAsRead = (contactId: number, timestamp?: string) => {
+    // Clear global alerts for this contact
+    alerts
+      .filter((a) => a.id.startsWith("msg-") && Number(a.data?.sender_id) === Number(contactId))
+      .forEach((a) => markAsRead(a.id));
+
     const timeToSave = timestamp || new Date().toISOString();
     setReadTimestamps((prev) => {
       const next = { ...prev, [contactId]: timeToSave };
@@ -261,24 +267,9 @@ const FeedbackPage = () => {
   };
 
   const getUnreadCount = (contactId: number) => {
-    const lastReadStr = readTimestamps[contactId];
-    if (!lastReadStr) {
-      return internalMessages.filter(
-        (m: any) =>
-          Number(m.other_id) === Number(contactId) &&
-          m.direction === "received",
-      ).length;
-    }
-    const lastReadTime = new Date(lastReadStr).getTime();
-    return internalMessages.filter((m: any) => {
-      if (
-        Number(m.other_id) !== Number(contactId) ||
-        m.direction !== "received"
-      )
-        return false;
-      const msgTime = parseDateSafe(m.created_at).getTime();
-      return msgTime > lastReadTime;
-    }).length;
+    return alerts.filter(
+      (a) => a.id.startsWith("msg-") && Number(a.data?.sender_id) === Number(contactId)
+    ).length;
   };
 
   // SaaS Filters
@@ -670,31 +661,8 @@ const FeedbackPage = () => {
   }, [employees, currentUser]);
 
   const totalUnreadCount = useMemo(() => {
-    return availableCommanders.reduce((acc, contact) => {
-      const lastReadStr = readTimestamps[contact.id];
-      if (!lastReadStr) {
-        return (
-          acc +
-          internalMessages.filter(
-            (m: any) =>
-              Number(m.other_id) === Number(contact.id) &&
-              m.direction === "received",
-          ).length
-        );
-      }
-      const lastReadTime = new Date(lastReadStr).getTime();
-      const unreadMsgs = internalMessages.filter((m: any) => {
-        if (
-          Number(m.other_id) !== Number(contact.id) ||
-          m.direction !== "received"
-        )
-          return false;
-        const msgTime = parseDateSafe(m.created_at).getTime();
-        return msgTime > lastReadTime;
-      });
-      return acc + unreadMsgs.length;
-    }, 0);
-  }, [availableCommanders, readTimestamps, internalMessages]);
+    return alerts.filter((a) => a.id.startsWith("msg-")).length;
+  }, [alerts]);
 
   const filteredItems = useMemo(() => {
     if (!isAdmin) return [];
