@@ -508,24 +508,6 @@ export const DashboardFilters = ({
                   >
                     <Filter className="w-3.5 h-3.5" />
                     <span className="text-[8.5px] xl:text-[9.5px] leading-tight">סינון נתונים</span>
-                    {hasActiveFilters && (
-                      <Badge
-                        variant="secondary"
-                        className="absolute -top-1.5 right-1 h-3.5 rounded-full px-1 min-w-3.5 flex items-center justify-center font-black bg-primary/20 text-primary text-[8px] border-none"
-                      >
-                        {activeFilterCountExternal !== undefined 
-                          ? activeFilterCountExternal 
-                          : [
-                            isDeptActive,
-                            isSectionActive,
-                            isTeamActive,
-                            !!selectedStatusId,
-                            selectedServiceTypes.length > 0,
-                            !!selectedAgeRange?.min || !!selectedAgeRange?.max,
-                          ].filter(Boolean).length
-                        }
-                      </Badge>
-                    )}
                   </Button>
                 </PopoverTrigger>
 
