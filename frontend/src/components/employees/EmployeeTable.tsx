@@ -317,6 +317,7 @@ export const EmployeeTable = ({
               {user?.is_admin && (
                 <>
                   <Button
+                    id="import-employees-button"
                     variant="outline"
                     className={cn(
                       "h-9.5 sm:h-10 text-xs sm:text-sm bg-background border-border/60 hover:bg-muted text-foreground rounded-xl flex-1 sm:flex-none sm:w-auto justify-center sm:mr-auto"

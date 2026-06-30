@@ -219,9 +219,10 @@ export default function LoginPage() {
 
   const translateErrorText = (errorText: string): string => {
     if (!errorText) return "";
-    
+
     const translations: Record<string, string> = {
-      "No biometric credentials registered": "לא הוגדר זיהוי ביומטרי עבור משתמש זה במכשיר הנוכחי. אנא הפעל כניסה מהירה בהגדרות הפרופיל תחילה.",
+      "No biometric credentials registered":
+        "לא הוגדר זיהוי ביומטרי עבור משתמש זה במכשיר הנוכחי. אנא הפעל כניסה מהירה בהגדרות הפרופיל תחילה.",
       "User not found": "שם משתמש אינו קיים במערכת.",
       "Invalid password": "הסיסמה שהוזנה שגויה.",
       "Biometric authentication failed": "אימות ביומטרי נכשל.",
@@ -271,28 +272,27 @@ export default function LoginPage() {
     for (let i = 0; i < bytes.byteLength; i++) {
       binary += String.fromCharCode(bytes[i]);
     }
-    return window.btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    return window
+      .btoa(binary)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
   };
 
   // Check if WebAuthn is supported
-  const isWebAuthnSupported = typeof window !== "undefined" && !!window.PublicKeyCredential;
-  const isCredentialManagerSupported = typeof window !== "undefined" && !!(window as any).PasswordCredential;
+  const isWebAuthnSupported =
+    typeof window !== "undefined" && !!window.PublicKeyCredential;
+  const isCredentialManagerSupported =
+    typeof window !== "undefined" && !!(window as any).PasswordCredential;
 
   useEffect(() => {
     // Check if quick login is available
     const lastUser = localStorage.getItem("biometric_last_user");
-    const hasRegistration = lastUser && localStorage.getItem(`biometric_registered_${lastUser}`);
-    
+    const hasRegistration =
+      lastUser && localStorage.getItem(`biometric_registered_${lastUser}`);
+
     if (isWebAuthnSupported) {
       setIsBiometricAvailable(true);
-      // Auto-trigger biometric on mount if supported, a user is remembered, and not already loading
-      if (lastUser && !isLoading) {
-        // We delay slightly to let the UI settle
-        const timer = setTimeout(() => {
-          handleBiometricLogin();
-        }, 800);
-        return () => clearTimeout(timer);
-      }
     } else {
       setIsBiometricAvailable(!!hasRegistration);
     }
@@ -302,16 +302,17 @@ export default function LoginPage() {
   const hashPin = async (pin: string, username: string): Promise<string> => {
     const encoder = new TextEncoder();
     const data = encoder.encode(pin + username);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   };
 
   const handleBiometricLogin = async () => {
     setError("");
-    let targetUsername = lockedUser?.username 
-      || username.trim() 
-      || localStorage.getItem("biometric_last_user");
+    let targetUsername =
+      lockedUser?.username ||
+      username.trim() ||
+      localStorage.getItem("biometric_last_user");
 
     if (!targetUsername) {
       setError("יש להזין שם משתמש כדי להשתמש בכניסה ביומטרית");
@@ -321,11 +322,14 @@ export default function LoginPage() {
     if (isWebAuthnSupported) {
       try {
         setIsLoading(true);
-        
+
         // Step 1: Get authentication options from server
-        const optionsResp = await apiClient.post("/auth/webauthn/login/options", {
-          username: targetUsername
-        });
+        const optionsResp = await apiClient.post(
+          "/auth/webauthn/login/options",
+          {
+            username: targetUsername,
+          },
+        );
         const options = optionsResp.data;
 
         // Transform options for the browser
@@ -341,7 +345,9 @@ export default function LoginPage() {
         };
 
         // Step 2: Trigger the OS biometric prompt
-        const assertion = await navigator.credentials.get(assertionOptions) as any;
+        const assertion = (await navigator.credentials.get(
+          assertionOptions,
+        )) as any;
 
         if (!assertion) {
           throw new Error("לא התקבלו נתוני אימות מהמכשיר");
@@ -353,19 +359,28 @@ export default function LoginPage() {
           rawId: bufferToBase64url(assertion.rawId),
           type: assertion.type,
           response: {
-            authenticatorData: bufferToBase64url(assertion.response.authenticatorData),
-            clientDataJSON: bufferToBase64url(assertion.response.clientDataJSON),
+            authenticatorData: bufferToBase64url(
+              assertion.response.authenticatorData,
+            ),
+            clientDataJSON: bufferToBase64url(
+              assertion.response.clientDataJSON,
+            ),
             signature: bufferToBase64url(assertion.response.signature),
-            userHandle: assertion.response.userHandle ? bufferToBase64url(assertion.response.userHandle) : undefined,
+            userHandle: assertion.response.userHandle
+              ? bufferToBase64url(assertion.response.userHandle)
+              : undefined,
           },
         };
 
         // Step 4: Finalize login with server
-        const response = await apiClient.post("/auth/webauthn/login/verify", verifyData);
-        
+        const response = await apiClient.post(
+          "/auth/webauthn/login/verify",
+          verifyData,
+        );
+
         if (response.data?.success) {
           const { token, user: loggedUser } = response.data;
-          
+
           // Use the login function from AuthContext to set state
           // We might need to handle the state manually if context login expects username/pass
           // Actually, our verify endpoint returns the token and user, same as login.
@@ -373,15 +388,14 @@ export default function LoginPage() {
           localStorage.setItem("token", token);
           localStorage.setItem("user", JSON.stringify(loggedUser));
           localStorage.setItem("biometric_last_user", targetUsername);
-          
+
           await refreshUser(); // Essential to update context state
           navigate("/", { replace: true });
           return;
         }
-
       } catch (e: any) {
         console.error("WebAuthn login failed:", e);
-        
+
         if (e.name === "NotAllowedError") {
           setIsLoading(false); // Silent fail on user cancel
           return;
@@ -394,24 +408,31 @@ export default function LoginPage() {
           setIsLoading(false);
           return;
         }
-        
-        setError(getErrorMessage(e) || "זיהוי ביומטרי נכשל. התחבר ידנית או באמצעות PIN.");
+
+        setError(
+          getErrorMessage(e) ||
+            "זיהוי ביומטרי נכשל. התחבר ידנית או באמצעות PIN.",
+        );
       }
       setIsLoading(false);
       return;
     }
 
     // Fallback: PIN-based quick login
-    targetUsername = lockedUser?.username
-      || (username.trim() || null)
-      || localStorage.getItem("biometric_last_user");
+    targetUsername =
+      lockedUser?.username ||
+      username.trim() ||
+      null ||
+      localStorage.getItem("biometric_last_user");
 
     if (!targetUsername) {
       setError("הזן שם משתמש כדי להשתמש בכניסה מהירה");
       return;
     }
 
-    const hasRegistration = localStorage.getItem(`biometric_registered_${targetUsername}`);
+    const hasRegistration = localStorage.getItem(
+      `biometric_registered_${targetUsername}`,
+    );
     if (!hasRegistration) {
       setError("יש להפעיל כניסה מהירה בהגדרות המשתמש תחילה");
       return;
@@ -428,13 +449,17 @@ export default function LoginPage() {
       const enteredPinHash = await hashPin(enteredPin, pinUsername);
 
       // Get stored PIN hash
-      const storedPinHash = localStorage.getItem(`biometric_pin_${pinUsername}`);
+      const storedPinHash = localStorage.getItem(
+        `biometric_pin_${pinUsername}`,
+      );
 
       if (!storedPinHash || enteredPinHash !== storedPinHash) {
         return false;
       }
 
-      const refreshToken = localStorage.getItem(`biometric_refresh_${pinUsername}`);
+      const refreshToken = localStorage.getItem(
+        `biometric_refresh_${pinUsername}`,
+      );
       if (!refreshToken) {
         throw new Error("לכדי כניסה מהירה יש להגדיר PIN מחדש בהגדרות הפרופיל");
       }
@@ -447,12 +472,17 @@ export default function LoginPage() {
       });
 
       if (!data?.success || !data?.accessToken) {
-        throw new Error("כשל ניסיון רענון אימות. אנא התחבר באמצעות שם משתמש וסיסמה.");
+        throw new Error(
+          "כשל ניסיון רענון אימות. אנא התחבר באמצעות שם משתמש וסיסמה.",
+        );
       }
 
       localStorage.setItem("token", data.accessToken);
       if (data.refreshToken) {
-        localStorage.setItem(`biometric_refresh_${pinUsername}`, data.refreshToken);
+        localStorage.setItem(
+          `biometric_refresh_${pinUsername}`,
+          data.refreshToken,
+        );
       }
       localStorage.setItem("biometric_last_user", pinUsername);
 
@@ -499,7 +529,6 @@ export default function LoginPage() {
       });
       await navigator.credentials.store(cred);
       localStorage.setItem("biometric_last_user", uname);
-      localStorage.setItem(`biometric_registered_${uname}`, "1");
     } catch (e) {
       console.log("Credential Manager save skipped:", e);
     }
@@ -565,14 +594,18 @@ export default function LoginPage() {
             "group relative flex items-center gap-3.5 px-4 py-2 rounded-2xl border transition-all duration-300 shadow-xl backdrop-blur-xl select-none active:scale-[0.97] overflow-hidden cursor-pointer",
             isDark
               ? "bg-slate-900/80 border-slate-800 text-blue-400 hover:border-blue-500/40 hover:shadow-blue-500/5"
-              : "bg-white/80 border-slate-200 text-amber-600 hover:border-amber-400/40 hover:shadow-amber-500/5"
+              : "bg-white/80 border-slate-200 text-amber-600 hover:border-amber-400/40 hover:shadow-amber-500/5",
           )}
         >
           {/* Neon Scanner Line / Shimmer Effect */}
-          <div className={cn(
-            "absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r opacity-25 pointer-events-none",
-            isDark ? "from-transparent via-blue-400 to-transparent" : "from-transparent via-amber-400 to-transparent"
-          )} />
+          <div
+            className={cn(
+              "absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r opacity-25 pointer-events-none",
+              isDark
+                ? "from-transparent via-blue-400 to-transparent"
+                : "from-transparent via-amber-400 to-transparent",
+            )}
+          />
 
           {/* Icon with Hover Rotation */}
           <div className="relative w-5 h-5 flex items-center justify-center shrink-0">
@@ -588,22 +621,28 @@ export default function LoginPage() {
             <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
               THEME CONTROL
             </span>
-            <span className={cn(
-              "text-xs font-black transition-colors leading-none mt-1",
-              isDark ? "text-slate-200 group-hover:text-blue-400" : "text-slate-800 group-hover:text-amber-600"
-            )}>
+            <span
+              className={cn(
+                "text-xs font-black transition-colors leading-none mt-1",
+                isDark
+                  ? "text-slate-200 group-hover:text-blue-400"
+                  : "text-slate-800 group-hover:text-amber-600",
+              )}
+            >
               {isDark ? "מצב כהה" : "מצב בהיר"}
             </span>
           </div>
 
           {/* Pulsing Status Dot */}
           <div className="flex items-center justify-center shrink-0 pl-0.5">
-            <div className={cn(
-              "w-2.5 h-2.5 rounded-full animate-pulse transition-all duration-300",
-              isDark 
-                ? "bg-blue-400 shadow-[0_0_8px_#60a5fa]" 
-                : "bg-amber-500 shadow-[0_0_8px_#f59e0b]"
-            )} />
+            <div
+              className={cn(
+                "w-2.5 h-2.5 rounded-full animate-pulse transition-all duration-300",
+                isDark
+                  ? "bg-blue-400 shadow-[0_0_8px_#60a5fa]"
+                  : "bg-amber-500 shadow-[0_0_8px_#f59e0b]",
+              )}
+            />
           </div>
         </button>
       </div>
@@ -625,7 +664,7 @@ export default function LoginPage() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-grow flex flex-col items-center justify-center pt-24 pb-12 md:py-20 px-4 relative z-10">
+      <main className="flex-grow flex flex-col items-center justify-center pt-10 pb-6 md:pt-12 md:pb-8 px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -633,18 +672,17 @@ export default function LoginPage() {
           className="w-full max-w-[440px] px-4"
         >
           {/* Logo / Header Section */}
-          <div className="text-center mb-10 md:mb-14 relative">
-            <h1
-              className={cn(
-                "text-3xl md:text-5xl font-black bg-clip-text text-transparent tracking-tight mb-2 md:mb-3 uppercase transition-all",
-                "",
-                isDark
-                  ? "bg-gradient-to-br from-white via-white to-slate-500"
-                  : "bg-gradient-to-br from-slate-950 via-slate-800 to-slate-600",
-              )}
-            >
-              ShiftGuard
-            </h1>
+          <div className="text-center mb-4 md:mb-6 relative flex flex-col items-center">
+            {/* User's provided TOREN logo */}
+            <div className="flex justify-center mb-2">
+              <img 
+                src="/toren_logo.png" 
+                alt="Toren Logo" 
+                className="w-28 h-auto md:w-32 object-contain" 
+              />
+            </div>
+            
+            {/* Subtitle */}
             <div className="flex items-center justify-center gap-2 mb-1">
               <div className="h-px w-6 md:w-8 bg-blue-500/50" />
               <span className="text-[10px] md:text-xs font-bold text-blue-500 tracking-[0.2em] md:tracking-[0.3em] uppercase">
@@ -744,23 +782,30 @@ export default function LoginPage() {
                       {error && (
                         <motion.div
                           initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                          animate={{ opacity: 1, y: 0, scale: 1, x: [0, -10, 10, -10, 10, 0] }}
+                          animate={{
+                            opacity: 1,
+                            y: 0,
+                            scale: 1,
+                            x: [0, -10, 10, -10, 10, 0],
+                          }}
                           exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                          transition={{ 
-                            duration: 0.4, 
-                            x: { duration: 0.35, ease: "easeInOut" } 
+                          transition={{
+                            duration: 0.4,
+                            x: { duration: 0.35, ease: "easeInOut" },
                           }}
                           className={cn(
                             "flex items-center gap-3 p-3.5 rounded-xl border text-sm font-semibold shadow-sm backdrop-blur-md text-right w-full",
                             isDark
                               ? "bg-rose-950/20 border-rose-900/30 text-rose-300"
-                              : "bg-rose-50/60 border-rose-100/80 text-rose-600"
+                              : "bg-rose-50/60 border-rose-100/80 text-rose-600",
                           )}
                         >
                           <div className="w-7 h-7 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0">
                             <AlertCircle className="h-4.5 w-4.5 text-rose-500" />
                           </div>
-                          <span className="font-sans leading-snug">{error}</span>
+                          <span className="font-sans leading-snug">
+                            {error}
+                          </span>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -930,23 +975,30 @@ export default function LoginPage() {
                       {error && (
                         <motion.div
                           initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                          animate={{ opacity: 1, y: 0, scale: 1, x: [0, -10, 10, -10, 10, 0] }}
+                          animate={{
+                            opacity: 1,
+                            y: 0,
+                            scale: 1,
+                            x: [0, -10, 10, -10, 10, 0],
+                          }}
                           exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                          transition={{ 
-                            duration: 0.4, 
-                            x: { duration: 0.35, ease: "easeInOut" } 
+                          transition={{
+                            duration: 0.4,
+                            x: { duration: 0.35, ease: "easeInOut" },
                           }}
                           className={cn(
                             "flex items-center gap-3 p-3.5 rounded-xl border text-sm font-semibold shadow-sm backdrop-blur-md text-right w-full",
                             isDark
                               ? "bg-rose-950/20 border-rose-900/30 text-rose-300"
-                              : "bg-rose-50/60 border-rose-100/80 text-rose-600"
+                              : "bg-rose-50/60 border-rose-100/80 text-rose-600",
                           )}
                         >
                           <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0">
                             <AlertCircle className="h-5 w-5 text-rose-500" />
                           </div>
-                          <span className="font-sans leading-snug">{error}</span>
+                          <span className="font-sans leading-snug">
+                            {error}
+                          </span>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -995,7 +1047,12 @@ export default function LoginPage() {
             {/* Form Footer - Removed */}
           </div>
 
-          <div className="mt-8 text-center px-4">
+          <div className="mt-4 text-center px-4 flex flex-col items-center gap-2.5">
+            <img 
+              src="/logo_unit.png" 
+              alt="Cyber Unit Logo" 
+              className="w-10 h-10 object-contain opacity-40 hover:opacity-80 transition-opacity duration-300 select-none pointer-events-none"
+            />
             <p className="text-[10px] text-muted-foreground font-medium font-mono uppercase tracking-[0.2em] leading-relaxed">
               © 2026 • CYBER UNIT • v1.0.4
             </p>
@@ -1014,4 +1071,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

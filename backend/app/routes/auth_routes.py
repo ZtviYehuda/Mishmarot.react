@@ -33,7 +33,7 @@ auth_bp = Blueprint("auth", __name__)
 def refresh_token():
     """
     Issue or refresh a token pair for biometric/quick login.
-    
+
     Two flows:
     1. Initial registration: { username, password } → returns { refreshToken, accessToken }
     2. Token refresh: { refresh_token } → returns { refreshToken, accessToken }
@@ -57,8 +57,15 @@ def refresh_token():
             if username and password:
                 # Flow 1: Initial registration — validate credentials
                 user_basic = EmployeeModel.login_check(username, password)
-                if not user_basic or (isinstance(user_basic, dict) and "error" in user_basic):
-                    return jsonify({"success": False, "error": "שם משתמש או סיסמה שגויים"}), 401
+                if not user_basic or (
+                    isinstance(user_basic, dict) and "error" in user_basic
+                ):
+                    return (
+                        jsonify(
+                            {"success": False, "error": "שם משתמש או סיסמה שגויים"}
+                        ),
+                        401,
+                    )
 
                 user = EmployeeModel.get_employee_by_id(user_basic["id"])
                 if not user:
@@ -77,23 +84,43 @@ def refresh_token():
                 )
                 user = cur.fetchone()
                 if not user:
-                    return jsonify({"success": False, "error": "Refresh token expired or invalid"}), 401
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "Refresh token expired or invalid",
+                            }
+                        ),
+                        401,
+                    )
 
                 # Delete the used token (rotation)
-                cur.execute("DELETE FROM employee_refresh_tokens WHERE token_hash = %s", (token_hash,))
+                cur.execute(
+                    "DELETE FROM employee_refresh_tokens WHERE token_hash = %s",
+                    (token_hash,),
+                )
             else:
                 return jsonify({"error": "Missing credentials or refresh_token"}), 400
 
             # Check access level
             if not user.get("is_admin") and not user.get("is_commander"):
-                return jsonify({"success": False, "error": "גישה למערכת מורשית למפקדים ומנהלים בלבד"}), 403
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "גישה למערכת מורשית למפקדים ומנהלים בלבד",
+                        }
+                    ),
+                    403,
+                )
 
             # Generate new refresh token
             new_refresh_token = secrets.token_urlsafe(48)
             new_token_hash = hashlib.sha256(new_refresh_token.encode()).hexdigest()
 
             # Ensure table exists
-            cur.execute("""
+            cur.execute(
+                """
                 CREATE TABLE IF NOT EXISTS employee_refresh_tokens (
                     id SERIAL PRIMARY KEY,
                     employee_id INTEGER NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
@@ -102,7 +129,8 @@ def refresh_token():
                     created_at TIMESTAMP DEFAULT NOW(),
                     expires_at TIMESTAMP NOT NULL
                 )
-            """)
+            """
+            )
 
             # Clean up old tokens for this user (max 5 devices)
             cur.execute(
@@ -116,34 +144,43 @@ def refresh_token():
                 INSERT INTO employee_refresh_tokens (employee_id, token_hash, device_name, expires_at)
                 VALUES (%s, %s, %s, NOW() + INTERVAL '30 days')
                 """,
-                (user["id"], new_token_hash, request.headers.get("User-Agent", "unknown")[:200]),
+                (
+                    user["id"],
+                    new_token_hash,
+                    request.headers.get("User-Agent", "unknown")[:200],
+                ),
             )
             conn.commit()
 
             # Generate access token
             access_token = create_access_token(
-                identity=json.dumps({
-                    "id": user["id"],
-                    "is_admin": user.get("is_admin", False),
-                    "is_commander": user.get("is_commander", False),
-                })
+                identity=json.dumps(
+                    {
+                        "id": user["id"],
+                        "is_admin": user.get("is_admin", False),
+                        "is_commander": user.get("is_commander", False),
+                    }
+                )
             )
 
-            return jsonify({
-                "success": True,
-                "accessToken": access_token,
-                "refreshToken": new_refresh_token,
-                "user": {
-                    "id": user["id"],
-                    "first_name": user.get("first_name"),
-                    "last_name": user.get("last_name"),
-                    "username": user.get("username"),
-                },
-            })
+            return jsonify(
+                {
+                    "success": True,
+                    "accessToken": access_token,
+                    "refreshToken": new_refresh_token,
+                    "user": {
+                        "id": user["id"],
+                        "first_name": user.get("first_name"),
+                        "last_name": user.get("last_name"),
+                        "username": user.get("username"),
+                    },
+                }
+            )
 
     except Exception as e:
         conn.rollback()
         import traceback
+
         print(f"[ERROR] Refresh token error: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
     finally:
@@ -166,13 +203,13 @@ def login():
 
         user_agent = request.headers.get("User-Agent")
         forwarded = request.headers.get("X-Forwarded-For")
-        real_ip = forwarded.split(',')[0].strip() if forwarded else request.remote_addr
+        real_ip = forwarded.split(",")[0].strip() if forwarded else request.remote_addr
 
         meta = {
             "username_attempt": p_num,
             "browser": user_agent,
             "forwarded_for": forwarded,
-            "real_ip": real_ip
+            "real_ip": real_ip,
         }
 
         print(f"DEBUG LOGIN: Checking credentials for {p_num}")
@@ -270,11 +307,14 @@ def login():
         conn = get_db_connection()
         if conn:
             with conn.cursor() as cur:
-                cur.execute("""
+                cur.execute(
+                    """
                     UPDATE employees 
                     SET previous_login = last_login, last_login = NOW() 
                     WHERE id = %s
-                """, (user["id"],))
+                """,
+                    (user["id"],),
+                )
                 conn.commit()
             conn.close()
 
@@ -401,6 +441,8 @@ def get_current_user():
                 "security_clearance": user.get("security_clearance"),
                 "is_temp_commander": user.get("is_temp_commander", False),
                 "active_delegate_id": user.get("active_delegate_id"),
+                "theme": user.get("theme"),
+                "accent_color": user.get("accent_color"),
                 "font_size": user.get("font_size"),
                 "last_login": user.get("last_login"),
                 "previous_login": user.get("previous_login"),
@@ -524,7 +566,10 @@ def reset_impersonated_password():
             ip_address=request.remote_addr,
         )
         return jsonify(
-            {"success": True, "message": "הסיסמא אופסה בהצלחה (סיסמא ברירת מחדל: 123456)"}
+            {
+                "success": True,
+                "message": "הסיסמא אופסה בהצלחה (סיסמא ברירת מחדל: 123456)",
+            }
         )
     else:
         return (
@@ -870,8 +915,12 @@ def impersonate_user():
         # 3. Authorization check for commanders
         # Commanders can only impersonate members of their commanded unit
         if is_commander and not is_admin:
-            target_dept = target_user.get("assigned_department_id") or target_user.get("department_id")
-            target_section = target_user.get("assigned_section_id") or target_user.get("section_id")
+            target_dept = target_user.get("assigned_department_id") or target_user.get(
+                "department_id"
+            )
+            target_section = target_user.get("assigned_section_id") or target_user.get(
+                "section_id"
+            )
             target_team = target_user.get("team_id")
 
             commander_dept = requesting_user.get("commands_department_id")
@@ -963,6 +1012,7 @@ def impersonate_user():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+
 @auth_bp.route("/profile/activity", methods=["GET"])
 @jwt_required()
 def get_my_activity():
@@ -978,22 +1028,21 @@ def get_my_activity():
         identity = identity_raw
 
     user_id = identity["id"] if isinstance(identity, dict) else identity
-    
+
     limit = request.args.get("limit", 20, type=int)
     logs = AuditLogModel.get_user_activity(user_id, limit=limit)
-    
-    return jsonify({
-        "success": True,
-        "logs": logs
-    })
+
+    return jsonify({"success": True, "logs": logs})
 
 
 # --- WEBAUTHN (PASSKEYS) ROUTES ---
+
 
 def get_rp_id():
     # Extract RP ID from Host header (e.g., localhost or domain.trycloudflare.com)
     host = request.headers.get("Host", "localhost")
     return host.split(":")[0]
+
 
 def get_origin():
     # Detect origin (http for localhost, https for tunnel)
@@ -1001,12 +1050,15 @@ def get_origin():
     scheme = "https" if "trycloudflare" in host or request.is_secure else "http"
     return f"{scheme}://{host}"
 
+
 @auth_bp.route("/webauthn/register/options", methods=["GET"])
 @jwt_required()
 def webauthn_register_options():
     identity_raw = get_jwt_identity()
     try:
-        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
         user_id = identity["id"]
     except:
         return jsonify({"error": "Invalid token"}), 401
@@ -1020,15 +1072,20 @@ def webauthn_register_options():
     exclude_credentials = []
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("SELECT credential_id FROM webauthn_credentials WHERE user_id = %s", (user_id,))
+            cur.execute(
+                "SELECT credential_id FROM webauthn_credentials WHERE user_id = %s",
+                (user_id,),
+            )
             for row in cur.fetchall():
-                exclude_credentials.append(RegistrationCredential(id=row["credential_id"]))
+                exclude_credentials.append(
+                    RegistrationCredential(id=row["credential_id"])
+                )
     finally:
         conn.close()
 
     options = generate_registration_options(
         rp_id=get_rp_id(),
-        rp_name="Mishmarot Dashboard",
+        rp_name="Toren",
         user_id=str(user_id).encode(),
         user_name=user["username"],
         user_display_name=f"{user['first_name']} {user['last_name']}",
@@ -1046,7 +1103,15 @@ def webauthn_register_options():
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO webauthn_challenges (challenge, user_id, expires_at) VALUES (%s, %s, %s)",
-                (options.challenge.decode() if isinstance(options.challenge, bytes) else options.challenge, user_id, datetime.now() + timedelta(minutes=5))
+                (
+                    (
+                        options.challenge.decode()
+                        if isinstance(options.challenge, bytes)
+                        else options.challenge
+                    ),
+                    user_id,
+                    datetime.now() + timedelta(minutes=5),
+                ),
             )
             conn.commit()
     finally:
@@ -1054,18 +1119,21 @@ def webauthn_register_options():
 
     return options_to_json(options)
 
+
 @auth_bp.route("/webauthn/register/verify", methods=["POST"])
 @jwt_required()
 def webauthn_register_verify():
     identity_raw = get_jwt_identity()
     try:
-        identity = json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        identity = (
+            json.loads(identity_raw) if isinstance(identity_raw, str) else identity_raw
+        )
         user_id = identity["id"]
     except:
         return jsonify({"error": "Invalid token"}), 401
 
     data = request.get_json()
-    
+
     # Retrieve challenge from DB
     conn = get_db_connection()
     try:
@@ -1073,16 +1141,16 @@ def webauthn_register_verify():
             # Look for challenge and ensure it belongs to this user
             # Challenge comes in as base64 in the response usually or we extract from client side
             # But the 'webauthn' lib verify needs the original challenge bytes.
-            
+
             # The client sends the full credential object
             cur.execute(
                 "SELECT challenge FROM webauthn_challenges WHERE user_id = %s AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1",
-                (user_id,)
+                (user_id,),
             )
             row = cur.fetchone()
             if not row:
                 return jsonify({"error": "Challenge expired or not found"}), 400
-            
+
             expected_challenge = row["challenge"].encode()
 
             try:
@@ -1106,24 +1174,28 @@ def webauthn_register_verify():
                     verification.credential_id,
                     verification.public_key,
                     verification.sign_count,
-                    None # transports could be saved if present in data
-                )
+                    None,  # transports could be saved if present in data
+                ),
             )
-            
+
             # Clean up challenge
-            cur.execute("DELETE FROM webauthn_challenges WHERE challenge = %s", (row["challenge"],))
+            cur.execute(
+                "DELETE FROM webauthn_challenges WHERE challenge = %s",
+                (row["challenge"],),
+            )
             conn.commit()
-            
+
             AuditLogModel.log_action(
                 user_id=user_id,
                 action_type="WEBAUTHN_REGISTER",
                 description="User registered a new biometric passkey",
-                ip_address=request.remote_addr
+                ip_address=request.remote_addr,
             )
-            
+
             return jsonify({"success": True})
     finally:
         conn.close()
+
 
 @auth_bp.route("/webauthn/login/options", methods=["POST"])
 def webauthn_login_options():
@@ -1135,20 +1207,28 @@ def webauthn_login_options():
     conn = get_db_connection()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("SELECT id FROM employees WHERE username = %s AND is_active = TRUE", (username,))
+            cur.execute(
+                "SELECT id FROM employees WHERE username = %s AND is_active = TRUE",
+                (username,),
+            )
             user = cur.fetchone()
             if not user:
                 return jsonify({"error": "User not found"}), 404
-            
+
             user_id = user["id"]
-            
-            cur.execute("SELECT credential_id FROM webauthn_credentials WHERE user_id = %s", (user_id,))
+
+            cur.execute(
+                "SELECT credential_id FROM webauthn_credentials WHERE user_id = %s",
+                (user_id,),
+            )
             credentials = cur.fetchall()
             if not credentials:
                 return jsonify({"error": "No biometric credentials registered"}), 404
 
-            allow_credentials = [AuthenticationCredential(id=row["credential_id"]) for row in credentials]
-            
+            allow_credentials = [
+                AuthenticationCredential(id=row["credential_id"]) for row in credentials
+            ]
+
             options = generate_authentication_options(
                 rp_id=get_rp_id(),
                 allow_credentials=allow_credentials,
@@ -1158,13 +1238,22 @@ def webauthn_login_options():
             # Store challenge
             cur.execute(
                 "INSERT INTO webauthn_challenges (challenge, user_id, expires_at) VALUES (%s, %s, %s)",
-                (options.challenge.decode() if isinstance(options.challenge, bytes) else options.challenge, user_id, datetime.now() + timedelta(minutes=5))
+                (
+                    (
+                        options.challenge.decode()
+                        if isinstance(options.challenge, bytes)
+                        else options.challenge
+                    ),
+                    user_id,
+                    datetime.now() + timedelta(minutes=5),
+                ),
             )
             conn.commit()
-            
+
             return options_to_json(options)
     finally:
         conn.close()
+
 
 @auth_bp.route("/webauthn/login/verify", methods=["POST"])
 def webauthn_login_verify():
@@ -1172,37 +1261,37 @@ def webauthn_login_verify():
     # verify needs original challenge.
     # We can get the user_id from the challenge table if we find the matching challenge.
     # But often the client sends the credential which has an ID.
-    
+
     # Extract credential ID from response to find the user
     raw_id = data.get("id")
     if not raw_id:
         return jsonify({"error": "Credential ID missing"}), 400
-    
+
     cred_id_bytes = base64url_to_bytes(raw_id)
-    
+
     conn = get_db_connection()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             # Find the credential and user
             cur.execute(
                 "SELECT c.*, e.username, e.is_admin, e.is_commander FROM webauthn_credentials c JOIN employees e ON c.user_id = e.id WHERE c.credential_id = %s",
-                (cred_id_bytes,)
+                (cred_id_bytes,),
             )
             cred = cur.fetchone()
             if not cred:
                 return jsonify({"error": "Credential not found"}), 401
-            
+
             user_id = cred["user_id"]
-            
+
             # Find matching active challenge for this user
             cur.execute(
                 "SELECT challenge FROM webauthn_challenges WHERE user_id = %s AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1",
-                (user_id,)
+                (user_id,),
             )
             row = cur.fetchone()
             if not row:
                 return jsonify({"error": "Challenge expired or not found"}), 400
-            
+
             expected_challenge = row["challenge"].encode()
 
             try:
@@ -1220,36 +1309,37 @@ def webauthn_login_verify():
             # Update sign count
             cur.execute(
                 "UPDATE webauthn_credentials SET sign_count = %s WHERE id = %s",
-                (verification.new_sign_count, cred["id"])
+                (verification.new_sign_count, cred["id"]),
             )
-            
+
             # Clean up challenge
-            cur.execute("DELETE FROM webauthn_challenges WHERE challenge = %s", (row["challenge"],))
+            cur.execute(
+                "DELETE FROM webauthn_challenges WHERE challenge = %s",
+                (row["challenge"],),
+            )
             conn.commit()
-            
+
             # Issue JWT
             token = create_access_token(
-                identity=json.dumps({
-                    "id": user_id,
-                    "is_admin": cred["is_admin"],
-                    "is_commander": cred["is_commander"],
-                })
+                identity=json.dumps(
+                    {
+                        "id": user_id,
+                        "is_admin": cred["is_admin"],
+                        "is_commander": cred["is_commander"],
+                    }
+                )
             )
-            
+
             AuditLogModel.log_action(
                 user_id=user_id,
                 action_type="WEBAUTHN_LOGIN",
                 description="Successful biometric login",
-                ip_address=request.remote_addr
+                ip_address=request.remote_addr,
             )
-            
+
             # Fetch full user profile for consistency with regular login
             user_full = EmployeeModel.get_employee_by_id(user_id)
-            
-            return jsonify({
-                "success": True,
-                "token": token,
-                "user": user_full
-            })
+
+            return jsonify({"success": True, "token": token, "user": user_full})
     finally:
         conn.close()

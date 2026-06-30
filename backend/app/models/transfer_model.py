@@ -1,3 +1,4 @@
+import os
 from app.utils.db import get_db_connection
 from psycopg2.extras import RealDictCursor
 
@@ -142,6 +143,7 @@ class TransferModel:
                 # Notify Target Commander
                 if req["target_commander_email"]:
                     subject = f"בקשת ניוד חדשה: {req['employee_name']} ליחידתך"
+                    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
                     body = f"""
                     <div dir="rtl" style="font-family: Arial, sans-serif;">
                         <h2>שלום {req['target_commander_name']},</h2>
@@ -149,7 +151,7 @@ class TransferModel:
                         <p><strong>הוגש ע"י:</strong> {req['requester_name']}</p>
                         <p><strong>נימוק:</strong> {req['reason'] or 'לא צוין'}</p>
                         <br>
-                        <a href="http://localhost:5173/transfers" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">לצפייה בבקשה ואישור</a>
+                        <a href="{frontend_url}/transfers" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">לצפייה בבקשה ואישור</a>
                     </div>
                     """
                     send_email(req["target_commander_email"], subject, body)
@@ -167,13 +169,14 @@ class TransferModel:
                     )
 
                     subject = f"עדכון בקשת ניוד: {req['employee_name']} - {status_text}"
+                    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
                     body = f"""
                     <div dir="rtl" style="font-family: Arial, sans-serif;">
                         <h2>שלום {req['requester_name']},</h2>
                         <p>בקשת הניוד שהגשת עבור <strong>{req['employee_name']}</strong> ליחידת <strong>{req['target_name']}</strong> <span style="color: {color}; font-weight: bold;">{status_text}</span>.</p>
                         {rejection_html}
                         <br>
-                        <a href="http://localhost:5173/transfers" style="background-color: #475569; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">לצפייה בהיסטוריית בקשות</a>
+                        <a href="{frontend_url}/transfers" style="background-color: #475569; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">לצפייה בהיסטוריית בקשות</a>
                     </div>
                     """
                     send_email(req["requester_email"], subject, body)

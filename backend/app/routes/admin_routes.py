@@ -247,9 +247,7 @@ def backup_database():
         )
         mem_file.seek(0)
 
-        filename = (
-            f"shiftguard_backup_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        )
+        filename = f"toren_backup_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
         # Log Backup
         AuditLogModel.log_action(
@@ -418,6 +416,7 @@ def trigger_morning_reminders():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @admin_bp.route("/archive/trigger", methods=["POST"])
 @jwt_required()
 def trigger_archive_cycle():
@@ -427,11 +426,10 @@ def trigger_archive_cycle():
 
     try:
         from app.utils.archive_service import run_archive_cycle
+
         result = run_archive_cycle()
-        return jsonify({
-            "success": True, 
-            "message": "Archive cycle completed",
-            "details": result
-        })
+        return jsonify(
+            {"success": True, "message": "Archive cycle completed", "details": result}
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500

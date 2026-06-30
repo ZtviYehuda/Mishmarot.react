@@ -8,8 +8,19 @@ from app.utils.json_provider import CustomJSONProvider
 from app.utils.setup import setup_database
 
 
+import os
+
+
 def create_app():
-    app = Flask(__name__)
+    dist_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist")
+    )
+    app = Flask(
+        __name__,
+        static_folder=os.path.join(dist_dir, "assets"),
+        static_url_path="/assets",
+        template_folder=dist_dir,
+    )
     app.config.from_object(Config)
 
     # Disable redirect on trailing slash for CORS preflight
@@ -21,24 +32,32 @@ def create_app():
     # --- Manual CORS Handling (The "Iron" Solution) ---
     @app.before_request
     def handle_options_preflight():
-        if request.method == 'OPTIONS':
+        if request.method == "OPTIONS":
             response = make_response()
-            origin = request.headers.get('Origin')
+            origin = request.headers.get("Origin")
             if origin:
                 response.headers["Access-Control-Allow-Origin"] = origin
-                response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-                response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Access-Control-Allow-Private-Network, bypass-tunnel-reminder"
+                response.headers["Access-Control-Allow-Methods"] = (
+                    "GET, POST, PUT, DELETE, OPTIONS"
+                )
+                response.headers["Access-Control-Allow-Headers"] = (
+                    "Content-Type, Authorization, Access-Control-Allow-Private-Network, bypass-tunnel-reminder"
+                )
                 response.headers["Access-Control-Allow-Credentials"] = "true"
                 response.headers["Access-Control-Allow-Private-Network"] = "true"
             return response
 
     @app.after_request
     def add_cors_headers(response):
-        origin = request.headers.get('Origin')
+        origin = request.headers.get("Origin")
         if origin:
             response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Access-Control-Allow-Private-Network, bypass-tunnel-reminder"
+            response.headers["Access-Control-Allow-Methods"] = (
+                "GET, POST, PUT, DELETE, OPTIONS"
+            )
+            response.headers["Access-Control-Allow-Headers"] = (
+                "Content-Type, Authorization, Access-Control-Allow-Private-Network, bypass-tunnel-reminder"
+            )
             response.headers["Access-Control-Allow-Credentials"] = "true"
             response.headers["Access-Control-Allow-Private-Network"] = "true"
         return response
@@ -76,6 +95,7 @@ def create_app():
         # Automatic audit log rotation (archives logs older than 7 days)
         try:
             from app.utils.audit_rotation import rotate_audit_logs
+
             rotate_audit_logs()
         except Exception as e:
             print(f"Audit rotation warning: {e}")
@@ -93,6 +113,7 @@ def create_app():
     from app.routes.audit_routes import audit_bp
     from app.routes.archive_routes import archive_bp
     from app.routes.feedback_routes import feedback_bp
+
     # from app.routes.webauthn_routes import webauthn_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
@@ -108,7 +129,9 @@ def create_app():
     app.register_blueprint(support_bp, url_prefix="/api/support", strict_slashes=False)
     app.register_blueprint(audit_bp, url_prefix="/api/audit", strict_slashes=False)
     app.register_blueprint(archive_bp, url_prefix="/api/archive", strict_slashes=False)
-    app.register_blueprint(feedback_bp, url_prefix="/api/feedback", strict_slashes=False)
+    app.register_blueprint(
+        feedback_bp, url_prefix="/api/feedback", strict_slashes=False
+    )
     # app.register_blueprint(webauthn_bp)
 
     @app.get("/api/health")
@@ -140,5 +163,20 @@ def create_app():
             payload["database_error"] = db_error
 
         return jsonify(payload), status_code
+
+    # Serve static frontend files
+    @app.route("/", defaults={"path": ""})
+    @app.route("/<path:path>")
+    def serve_frontend(path):
+        from flask import send_from_directory
+
+        if path.startswith("api/"):
+            return jsonify({"error": "Not Found"}), 404
+
+        file_path = os.path.join(dist_dir, path)
+        if path and os.path.exists(file_path):
+            return send_from_directory(dist_dir, path)
+
+        return send_from_directory(dist_dir, "index.html")
 
     return app

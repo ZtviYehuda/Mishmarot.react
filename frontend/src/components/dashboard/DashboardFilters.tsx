@@ -535,10 +535,10 @@ export const DashboardFilters = ({
                       e.stopPropagation();
                       onFilterChange("reset");
                     }}
-                    className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center border-2 border-background transition-all hover:scale-110 active:scale-90 z-20 group-hover:-translate-y-1"
+                    className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center transition-all hover:scale-125 active:scale-90 z-20 text-primary/70 hover:text-destructive"
                     title="נקה הכל"
                   >
-                    <RotateCcw className="w-3 h-3" />
+                    <RotateCcw className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>

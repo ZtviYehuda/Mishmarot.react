@@ -17,13 +17,15 @@ def favicon():
     return "", 204
 
 
-# Reload trigger
-if __name__ == '__main__':
-    # Start Scheduler only in the main worker process (to avoid duplicates with reloader)
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+# Start Scheduler in production (WSGI server import) or in the main Werkzeug dev process
+if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or __name__ != '__main__':
+    try:
         from app.utils.scheduler import start_scheduler
         start_scheduler()
-        
+    except Exception as e:
+        print(f"Error starting scheduler: {e}")
+
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
 
 # Trigger reload (Updated Scheduler)

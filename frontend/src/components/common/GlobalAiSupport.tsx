@@ -53,7 +53,7 @@ const TOUR_STEPS: TourStep[] = [
 
   // --- EMPLOYEES PAGE ---
   { id: 'employees_search', selector: '#employees-search-container', path: '/employees', title: 'חיפוש שוטרים', content: 'מחפשים מישהו ספציפי? פשוט תתחילו להקליד שם או מספר אישי.' },
-  { id: 'add_employee_btn', selector: '#add-employee-button', path: '/employees', title: 'קליטת עובד חדש', content: 'הצטרף מישהו חדש ליחידה? דרך הכפתור הזה מקימים אותו במערכת תוך שניות.' },
+  { id: 'add_employee_btn', selector: '#add-employee-button, #import-employees-button', path: '/employees', title: 'קליטת עובדים חדשים', content: 'הצטרף מישהו חדש ליחידה? דרך כפתור "הוספה" מקימים אותו במערכת תוך שניות. ואם יש לכם כמות גדולה של עובדים להזין בבת אחת, תוכלו ללחוץ על "ייבוא מקובץ" ולהעלות קובץ אקסל (Excel/CSV) כדי להכניס את כל הנתונים במהירות מבלי להוסיף אחד-אחד.' },
 
   // --- SETTINGS PAGES ---
   { id: 'personal_profile', selector: '#sidebar-profile-container, #sidebar-profile-link-collapsed', path: '/', title: 'עריכת פרופיל אישי', content: 'בכל שלב במערכת, לחיצה על תמונת הפרופיל או השם שלכם בתחתית סרגל הניווט תוביל אתכם ישירות לעדכון הפרטים האישיים, הגדרת PIN, ורישום זיהוי ביומטרי.' },
@@ -218,7 +218,7 @@ const KNOWLEDGE_BASE = [
   {
     id: 'full_tour',
     title: 'סיור מודרך במערכת',
-    keywords: ['סיור', 'הדרכה', 'מה יש', 'איך עובד', 'להכיר', 'סיבוב', 'הסבר', 'תראה לי', 'מה עושים', 'מה האתר', 'מה המערכת', 'איך משתמשים', 'חדש', 'עזרה', 'Help', 'מדריך', 'הסברים', 'איפה מה'],
+    keywords: ['tour', 'TOUR', 'סיור', 'הדרכה', 'מה יש', 'איך עובד', 'להכיר', 'סיבוב', 'הסבר', 'תראה לי', 'מה עושים', 'מה האתר', 'מה המערכת', 'איך משתמשים', 'חדש', 'עזרה', 'Help', 'מדריך', 'הסברים', 'איפה מה'],
     context: ['מערכת', 'התחלה', 'כללי', 'הבנה'],
     description: 'אשמח לעשות לך סיור מודרך! נראה את לוח הבקרה, ניהול הנוכחות, סידור העבודה וניהול העובדים.',
     stepId: 'full_tour' // Managed by handleAction
@@ -254,9 +254,16 @@ export function GlobalAiSupport() {
       setIsOpen(true);
       setIsMinimized(false);
     };
+    const handleNavigateToSettings = () => {
+      navigate('/settings?tab=appearance');
+    };
     window.addEventListener('open-ai-support', handleOpenSupport);
-    return () => window.removeEventListener('open-ai-support', handleOpenSupport);
-  }, []);
+    window.addEventListener('navigate-to-settings', handleNavigateToSettings);
+    return () => {
+      window.removeEventListener('open-ai-support', handleOpenSupport);
+      window.removeEventListener('navigate-to-settings', handleNavigateToSettings);
+    };
+  }, [navigate]);
 
   useEffect(() => {
     if (currentTourIndex >= 0) {
@@ -476,73 +483,118 @@ export function GlobalAiSupport() {
       />
 
       {showAiSupport && (
-        <motion.div 
-          key={`fab-container-${isOpen}-${isMinimized}-${resetKey}`}
-        drag
-        dragConstraints={{ left: 0, right: typeof window !== 'undefined' ? window.innerWidth - 80 : 300, top: typeof window !== 'undefined' ? -window.innerHeight + 80 : -500, bottom: 0 }}
-        dragElastic={0.1}
-        dragMomentum={false}
-        onDragStart={() => setIsDragging(true)}
-        onDrag={(_, info) => {
-          const dropX = window.innerWidth / 2;
-          const dropY = window.innerHeight - 80;
-          const dist = Math.sqrt(Math.pow(info.point.x - dropX, 2) + Math.pow(info.point.y - dropY, 2));
-          setIsNearDrop(dist < 100);
-        }}
-        onDragEnd={(_, info) => {
-          setIsDragging(false);
-          setIsNearDrop(false);
-          
-          const dropX = window.innerWidth / 2;
-          const dropY = window.innerHeight - 80;
-          const dist = Math.sqrt(Math.pow(info.point.x - dropX, 2) + Math.pow(info.point.y - dropY, 2));
-          
-          if (dist < 100) {
-            setShowAiSupport(false);
-            toast.success("כפתור התמיכה הוסתר. ניתן להחזירו מההגדרות בכל עת.", {
-              position: "top-center"
-            });
-          } else {
-            if (Math.abs(info.offset.x) > 20 || Math.abs(info.offset.y) > 20) {
-              setHasMoved(true);
-            }
-          }
-        }}
-        className={cn(
-          "global-ai-support-btn fixed left-6 z-[100] flex flex-col items-center gap-2", 
-          isSettingsPage ? "bottom-24 sm:bottom-6" : "bottom-6",
-          (isMessagesTab || (isOpen && !isMinimized) || (currentTourIndex >= 0 && TOUR_STEPS[currentTourIndex]?.path === location.pathname)) && "hidden"
-        )}
-      >
-        <AnimatePresence>
-          {hasMoved && (
-            <motion.button 
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setHasMoved(false);
-                setResetKey(k => k + 1);
-              }}
-              className="w-8 h-8 bg-white dark:bg-slate-800 text-primary rounded-full shadow-lg flex items-center justify-center border border-border/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors pointer-events-auto"
-              title="החזר למקום מקורי"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </motion.button>
+        <>
+          {/* Drag-off hint overlay - only shown while dragging */}
+          {isDragging && (
+            <div className="fixed inset-0 z-[99] pointer-events-none">
+              {/* Edge "trash" zone indicators */}
+              <div className={cn(
+                "absolute top-0 left-0 right-0 h-16 flex items-center justify-center text-xs font-bold tracking-widest transition-all duration-200",
+                isNearDrop ? "bg-red-500/20 text-red-500" : "bg-muted/10 text-muted-foreground/40"
+              )}>
+                {isNearDrop ? "🗑️ שחרר כדי להסתיר" : "גרור לקצה המסך להסתרה"}
+              </div>
+              <div className={cn(
+                "absolute bottom-0 left-0 right-0 h-16 flex items-center justify-center text-xs font-bold tracking-widest transition-all duration-200",
+                isNearDrop ? "bg-red-500/20 text-red-500" : "bg-muted/10 text-muted-foreground/40"
+              )}>
+                {isNearDrop ? "🗑️ שחרר כדי להסתיר" : "גרור לקצה המסך להסתרה"}
+              </div>
+            </div>
           )}
-        </AnimatePresence>
 
-        <motion.button 
-          whileHover={{ scale: 1.1 }} 
-          whileTap={{ scale: 0.9 }}
-          onClick={() => { setIsOpen(true); setIsMinimized(false); }}
-          className="w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing pointer-events-auto"
-        >
-          <Sparkles className="w-6 h-6" />
-        </motion.button>
-      </motion.div>
+          <motion.div 
+            key={`fab-container-${isOpen}-${isMinimized}-${resetKey}`}
+            drag
+            dragConstraints={false}
+            dragElastic={0.15}
+            dragMomentum={false}
+            onDragStart={() => setIsDragging(true)}
+            onDrag={(_, info) => {
+              // Check if near any screen edge (within 60px)
+              const nearLeft = info.point.x < 60;
+              const nearRight = info.point.x > window.innerWidth - 60;
+              const nearTop = info.point.y < 60;
+              const nearBottom = info.point.y > window.innerHeight - 60;
+              setIsNearDrop(nearLeft || nearRight || nearTop || nearBottom);
+            }}
+            onDragEnd={(_, info) => {
+              setIsDragging(false);
+              setIsNearDrop(false);
+
+              // Check if dragged off any screen edge
+              const offLeft = info.point.x < 0;
+              const offRight = info.point.x > window.innerWidth;
+              const offTop = info.point.y < 0;
+              const offBottom = info.point.y > window.innerHeight;
+              const isOffScreen = offLeft || offRight || offTop || offBottom;
+
+              // Also check if near any edge (within 40px) for a generous feel
+              const nearLeft = info.point.x < 40;
+              const nearRight = info.point.x > window.innerWidth - 40;
+              const nearTop = info.point.y < 40;
+              const nearBottom = info.point.y > window.innerHeight - 40;
+              const isNearEdge = nearLeft || nearRight || nearTop || nearBottom;
+
+              if (isOffScreen || isNearEdge) {
+                setShowAiSupport(false);
+                toast.info("כפתור הסיוע הוסתר", {
+                  description: "כדי להחזיר אותו, עבור להגדרות → נראות → כפתור סיוע AI",
+                  position: "top-center",
+                  duration: 8000,
+                  action: {
+                    label: "פתח הגדרות",
+                    onClick: () => {
+                      window.dispatchEvent(new CustomEvent('navigate-to-settings'));
+                    }
+                  }
+                });
+              } else {
+                if (Math.abs(info.offset.x) > 20 || Math.abs(info.offset.y) > 20) {
+                  setHasMoved(true);
+                }
+              }
+            }}
+            className={cn(
+              "global-ai-support-btn fixed left-6 z-[100] flex flex-col items-center gap-2", 
+              isSettingsPage ? "bottom-24 sm:bottom-6" : "bottom-6",
+              (isMessagesTab || (isOpen && !isMinimized) || (currentTourIndex >= 0 && TOUR_STEPS[currentTourIndex]?.path === location.pathname)) && "hidden"
+            )}
+          >
+            <AnimatePresence>
+              {hasMoved && (
+                <motion.button 
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setHasMoved(false);
+                    setResetKey(k => k + 1);
+                  }}
+                  className="w-8 h-8 bg-white dark:bg-slate-800 text-primary rounded-full shadow-lg flex items-center justify-center border border-border/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors pointer-events-auto"
+                  title="החזר למקום מקורי"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            <motion.button 
+              whileHover={{ scale: isDragging ? 1 : 1.1 }} 
+              whileTap={{ scale: 0.9 }}
+              animate={isNearDrop ? { scale: 0.7, opacity: 0.5 } : { scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              onClick={() => { if (!isDragging) { setIsOpen(true); setIsMinimized(false); } }}
+              className="w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing pointer-events-auto"
+              title="גרור לקצה המסך כדי להסתיר"
+            >
+              <Sparkles className="w-6 h-6" />
+            </motion.button>
+          </motion.div>
+        </>
       )}
+
 
       <AnimatePresence>
         {isOpen && !isMinimized && (

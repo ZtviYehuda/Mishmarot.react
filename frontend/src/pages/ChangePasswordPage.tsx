@@ -72,7 +72,7 @@ export default function ChangePasswordPage() {
               מדינת ישראל
             </div>
             <div className="text-xs font-black text-foreground tracking-tight">
-              ShiftGuard
+              Toren
             </div>
           </div>
         </div>
@@ -225,7 +225,7 @@ export default function ChangePasswordPage() {
       <footer className="py-3 px-6 border-t border-border bg-card">
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground/40">
-            © {new Date().getFullYear()} ShiftGuard
+            © {new Date().getFullYear()} Toren
           </div>
           <p className="text-[10px] text-muted-foreground/30 font-medium">
             גרסה 2.4.1
@@ -235,4 +235,3 @@ export default function ChangePasswordPage() {
     </div>
   );
 }
-

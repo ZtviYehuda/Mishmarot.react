@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from app.models.employee_model import EmployeeModel
 from app.utils.db import get_db_connection
@@ -61,7 +62,7 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
 
         now = datetime.now()
         is_sunday = now.weekday() == 6  # 6 is Sunday in Python
-        is_thursday = now.weekday() == 3 # 3 is Thursday
+        is_thursday = now.weekday() == 3  # 3 is Thursday
 
         # --- PREVENTION OF MULTIPLE RUNS PER DAY ---
         today_str = now.strftime("%Y-%m-%d")
@@ -283,7 +284,8 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
                 </div>"""
 
             if not self_reported or sub_reports_found or bday_html or is_thursday:
-                subject = "תזכורת בוקר - ShiftGuard"
+                frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+                subject = "תזכורת בוקר - Toren"
                 body = f"""
                 <div dir="rtl" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 40px auto; background-color: #ffffff; color: #334155;">
                     <div style="padding: 0 20px;">
@@ -297,7 +299,7 @@ def check_and_send_morning_reminders(force_now=False, force_time=None):
                         {bday_html}
 
                         <div style="margin-top: 40px; text-align: center;">
-                            <a href="https://mishmarot.naftaly.co.il" style="display: inline-block; background-color: #1e293b; color: #ffffff; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px;">לכניסה למערכת</a>
+                            <a href="{frontend_url}" style="display: inline-block; background-color: #1e293b; color: #ffffff; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px;">לכניסה למערכת</a>
                             <p style="margin-top: 16px; color: #94a3b8; font-size: 12px;">יעד לדיווח: {deadline_str}</p>
                         </div>
                     </div>

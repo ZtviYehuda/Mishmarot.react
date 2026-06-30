@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 
 console.log("Starting cloudflared tunnel...");
-const child = spawn('npx.cmd', ['-y', 'cloudflared', 'tunnel', '--url', 'http://localhost:5173'], { shell: true });
+const child = spawn('npx.cmd', ['-y', 'cloudflared', 'tunnel', '--url', 'http://127.0.0.1:5000'], { shell: true });
 
 let found = false;
 child.stderr.on('data', data => {

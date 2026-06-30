@@ -128,7 +128,7 @@ export default function SettingsPage() {
       const link = document.createElement("a");
       link.href = url;
       const date = new Date().toISOString().split("T")[0];
-      link.setAttribute("download", `shiftguard_backup_${date}.json`);
+      link.setAttribute("download", `toren_backup_${date}.json`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -379,10 +379,8 @@ export default function SettingsPage() {
   };
 
   const handleResetImpersonatedPassword = async () => {
-      !confirm(
-        "האם אתה בטוח שברצונך לאפס את הסיסמה של המשתמש לשם המשתמש שלו?",
-      )
-      return;
+    !confirm("האם אתה בטוח שברצונך לאפס את הסיסמה של המשתמש לשם המשתמש שלו?");
+    return;
 
     try {
       setIsResetting(true);
@@ -434,7 +432,10 @@ export default function SettingsPage() {
               label="פרופיל אישי"
               active={activeTab === "profile"}
               onClick={() => setActiveTab("profile")}
-              className={cn(searchParams.get("tutorial") === "profile" && "tutorial-highlight")}
+              className={cn(
+                searchParams.get("tutorial") === "profile" &&
+                  "tutorial-highlight",
+              )}
             />
           )}
           <TabItem
@@ -442,7 +443,10 @@ export default function SettingsPage() {
             label="מראה ותצוגה"
             active={activeTab === "appearance"}
             onClick={() => setActiveTab("appearance")}
-            className={cn(searchParams.get("tutorial") === "settings" && "tutorial-highlight")}
+            className={cn(
+              searchParams.get("tutorial") === "settings" &&
+                "tutorial-highlight",
+            )}
           />
           {!user?.is_temp_commander && (
             <TabItem
@@ -516,16 +520,22 @@ export default function SettingsPage() {
                 handleConfirmCurrentPassword={handleConfirmCurrentPassword}
                 onForgotPassword={async () => {
                   if (!user?.email) {
-                    toast.error("לא מוגדרת כתובת אימייל בפרופיל שלך. פנה למנהל המערכת.", {
-                      description: "ניתן לעדכן אימייל בלשונית 'פרופיל אישי'",
-                    });
+                    toast.error(
+                      "לא מוגדרת כתובת אימייל בפרופיל שלך. פנה למנהל המערכת.",
+                      {
+                        description: "ניתן לעדכן אימייל בלשונית 'פרופיל אישי'",
+                      },
+                    );
                     return;
                   }
 
                   try {
-                    const { data } = await apiClient.post("/auth/forgot-password", {
-                      email: user.email,
-                    });
+                    const { data } = await apiClient.post(
+                      "/auth/forgot-password",
+                      {
+                        email: user.email,
+                      },
+                    );
                     if (data.success) {
                       toast.success("קוד אימות נשלח למייל שלך", {
                         description: `נשלח לכתובת: ${user.email}`,
@@ -563,12 +573,10 @@ export default function SettingsPage() {
               handleRestore={handleRestore}
             />
           )}
-
         </div>
 
         {/* Mobile Bottom Navigation Bar - Standard Fixed */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2 safe-area-bottom">
-
           <MobileBottomNavLink
             label="תצוגה"
             icon={Palette}
@@ -623,8 +631,9 @@ function MobileBottomNavLink({
     <button
       id={id}
       onClick={onClick}
-      className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-        }`}
+      className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+      }`}
     >
       <div
         className={`p-1.5 rounded-xl transition-all ${active ? "bg-primary/10" : "bg-transparent"}`}
@@ -661,7 +670,7 @@ function TabItem({
         active
           ? "text-primary bg-primary/10"
           : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
-        className
+        className,
       )}
     >
       {label}
@@ -671,4 +680,3 @@ function TabItem({
     </button>
   );
 }
-

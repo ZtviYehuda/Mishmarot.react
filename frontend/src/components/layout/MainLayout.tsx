@@ -54,6 +54,7 @@ import { useChat } from "@/context/ChatContext";
 import { GroupMessageModal } from "@/components/chat/GroupMessageModal";
 import { useTheme } from "@/context/ThemeContext";
 import apiClient from "@/config/api.client";
+import { PwaInstallPrompt } from "./PwaInstallPrompt";
 
 function getAlertConfig(alert: {
   id: string;
@@ -138,7 +139,10 @@ export default function MainLayout() {
     markAsUnread,
   } = useNotifications();
   const { openChat, toggleChat, isGroupModalOpen, closeGroupModal } = useChat();
-  const unreadMessagesCount = React.useMemo(() => alerts.filter(a => a.id.startsWith("msg-")).length, [alerts]);
+  const unreadMessagesCount = React.useMemo(
+    () => alerts.filter((a) => a.id.startsWith("msg-")).length,
+    [alerts],
+  );
   const location = useLocation();
   const navigate = useNavigate();
   // Sidebar closed by default on mobile and desktop
@@ -285,8 +289,8 @@ export default function MainLayout() {
             aria-label="תפריט ניווט"
           >
             <img
-              src="/logo_unit.png"
-              alt="לוגו"
+              src="/toren_logo.png"
+              alt="לוגו Toren"
               className={cn(
                 "object-contain transition-all",
                 // Collapsed sidebar: larger floating logo; open: slightly smaller
@@ -352,7 +356,9 @@ export default function MainLayout() {
                 <div
                   className={cn(
                     "absolute left-1 w-1 bg-primary rounded-full transition-all duration-300 ease-out origin-center",
-                    isActive ? "h-5 opacity-100 scale-100" : "h-0 opacity-0 scale-50"
+                    isActive
+                      ? "h-5 opacity-100 scale-100"
+                      : "h-0 opacity-0 scale-50",
                   )}
                 />
               </Link>
@@ -364,12 +370,15 @@ export default function MainLayout() {
         <div
           className={cn(
             "p-3 border-t border-border/40 flex flex-col gap-3",
-            isSidebarOpen ? "" : "items-center"
+            isSidebarOpen ? "" : "items-center",
           )}
         >
           {/* User Profile Area */}
           {isSidebarOpen ? (
-            <div id="sidebar-profile-container" className="flex items-center justify-between gap-3 p-2 bg-muted/40 dark:bg-muted/20 border border-border/40 hover:border-border/80 rounded-xl transition-all duration-200 select-none group w-full">
+            <div
+              id="sidebar-profile-container"
+              className="flex items-center justify-between gap-3 p-2 bg-muted/40 dark:bg-muted/20 border border-border/40 hover:border-border/80 rounded-xl transition-all duration-200 select-none group w-full"
+            >
               <Link
                 to="/settings"
                 onClick={() => {
@@ -378,7 +387,9 @@ export default function MainLayout() {
                 className="flex items-center gap-3 min-w-0 flex-grow"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm shrink-0 shadow-sm transition-all group-hover:scale-105">
-                  {user?.is_admin ? "💬" : `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`}
+                  {user?.is_admin
+                    ? "💬"
+                    : `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`}
                 </div>
                 <div className="flex flex-col min-w-0 text-right">
                   <span className="text-xs font-black text-foreground truncate leading-none mb-1 group-hover:text-primary transition-colors">
@@ -397,7 +408,7 @@ export default function MainLayout() {
                   </span>
                 </div>
               </Link>
-              
+
               {/* Logout Button (Open State) */}
               <button
                 onClick={() => logout()}
@@ -418,7 +429,9 @@ export default function MainLayout() {
               }}
               className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm shrink-0 shadow-sm transition-all hover:scale-105 hover:bg-primary/20 active:scale-95"
             >
-              {user?.is_admin ? "💬" : `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`}
+              {user?.is_admin
+                ? "💬"
+                : `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`}
             </Link>
           )}
 
@@ -464,8 +477,8 @@ export default function MainLayout() {
               aria-label="Open menu"
             >
               <img
-                src="/logo_unit.png"
-                alt="לוגו"
+                src="/toren_logo.png"
+                alt="לוגו Toren"
                 className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
               />
             </button>
@@ -539,7 +552,9 @@ export default function MainLayout() {
                     </div>
                   </PopoverContent>
                 </Popover>
-                <span className="text-[7.5px] font-black text-emerald-500/90 leading-none">פעיל</span>
+                <span className="text-[7.5px] font-black text-emerald-500/90 leading-none">
+                  פעיל
+                </span>
               </div>
               <h2 className="text-sm font-black text-foreground tracking-tight leading-none whitespace-nowrap">
                 {currentPageName}
@@ -649,7 +664,7 @@ export default function MainLayout() {
               {/* Combined Notifications/Messages Popover */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <button 
+                  <button
                     id="mobile-notifications-btn"
                     className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
                   >
@@ -737,7 +752,8 @@ export default function MainLayout() {
                         )}
                       >
                         <MessageSquare className="w-3 h-3" />
-                        הודעות {unreadMessagesCount > 0 && `(${unreadMessagesCount})`}
+                        הודעות{" "}
+                        {unreadMessagesCount > 0 && `(${unreadMessagesCount})`}
                       </button>
                       <button
                         onClick={() => {
@@ -1090,16 +1106,24 @@ export default function MainLayout() {
         </header>
 
         {/* Content Page */}
-        <main className={cn(
-          "flex-grow bg-background custom-scrollbar px-2 lg:px-6",
-          location.pathname === "/feedback" && new URLSearchParams(location.search).get("tab") === "messages"
-            ? "overflow-hidden flex flex-col"
-            : "overflow-y-auto"
-        )}>
-          <div className={cn(
-            "w-full max-w-full mx-auto",
-            location.pathname === "/feedback" && new URLSearchParams(location.search).get("tab") === "messages" && "h-full flex flex-col"
-          )}>
+        <main
+          className={cn(
+            "flex-grow bg-background custom-scrollbar px-2 lg:px-6",
+            location.pathname === "/feedback" &&
+              new URLSearchParams(location.search).get("tab") === "messages"
+              ? "overflow-hidden flex flex-col"
+              : "overflow-y-auto",
+          )}
+        >
+          <div
+            className={cn(
+              "w-full max-w-full mx-auto",
+              location.pathname === "/feedback" &&
+                new URLSearchParams(location.search).get("tab") ===
+                  "messages" &&
+                "h-full flex flex-col",
+            )}
+          >
             <Outlet context={{ isSidebarOpen }} />
           </div>
         </main>
@@ -1201,12 +1225,28 @@ export default function MainLayout() {
                     if (selectedAlert.link.includes("#")) {
                       const id = selectedAlert.link.split("#")[1];
                       setTimeout(() => {
-                        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+                        document
+                          .getElementById(id)
+                          ?.scrollIntoView({ behavior: "smooth" });
                         // Add a highlight effect
                         const el = document.getElementById(id);
                         if (el) {
-                          el.classList.add("ring-4", "ring-primary", "ring-offset-4", "transition-all", "duration-1000");
-                          setTimeout(() => el.classList.remove("ring-4", "ring-primary", "ring-offset-4"), 2000);
+                          el.classList.add(
+                            "ring-4",
+                            "ring-primary",
+                            "ring-offset-4",
+                            "transition-all",
+                            "duration-1000",
+                          );
+                          setTimeout(
+                            () =>
+                              el.classList.remove(
+                                "ring-4",
+                                "ring-primary",
+                                "ring-offset-4",
+                              ),
+                            2000,
+                          );
                         }
                       }, 300);
                     }
@@ -1220,6 +1260,7 @@ export default function MainLayout() {
         </Dialog>
         <GlobalAiSupport />
         <ChatSidebar />
+        <PwaInstallPrompt />
         <GroupMessageModal open={isGroupModalOpen} onClose={closeGroupModal} />
       </div>
     </div>
