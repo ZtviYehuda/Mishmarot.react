@@ -292,7 +292,7 @@ export default function MainLayout() {
               src="/toren_logo.png"
               alt="לוגו Toren"
               className={cn(
-                "object-contain transition-all",
+                "object-contain transition-all toren-logo-img",
                 // Collapsed sidebar: larger floating logo; open: slightly smaller
                 isSidebarOpen ? "w-12 h-12" : "w-14 h-14",
               )}
@@ -479,7 +479,7 @@ export default function MainLayout() {
               <img
                 src="/toren_logo.png"
                 alt="לוגו Toren"
-                className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain toren-logo-img"
               />
             </button>
 

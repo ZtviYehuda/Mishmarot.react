@@ -678,7 +678,7 @@ export default function LoginPage() {
               <img 
                 src="/toren_logo.png" 
                 alt="Toren Logo" 
-                className="w-28 h-auto md:w-32 object-contain" 
+                className="w-28 h-auto md:w-32 object-contain toren-logo-img" 
               />
             </div>
             

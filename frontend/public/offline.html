@@ -100,12 +100,19 @@
       object-fit: contain;
       position: relative;
       z-index: 5;
-      filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.05));
+    }
+
+    .toren-spin-logo,
+    img[src*="/toren_logo_base.png"],
+    img[src*="/toren_logo.png"] {
+      filter: drop-shadow(0 4px 12px rgba(15, 23, 42, 0.06));
     }
     
     @media (prefers-color-scheme: dark) {
-      .toren-spin-logo {
-        filter: invert(0.93) brightness(1.6) drop-shadow(0 0 15px rgba(255, 255, 255, 0.25));
+      .toren-spin-logo,
+      img[src*="/toren_logo_base.png"],
+      img[src*="/toren_logo.png"] {
+        filter: invert(0.86) brightness(1.18) sepia(0.08) saturate(1.4) hue-rotate(192deg) drop-shadow(0 0 10px rgba(59, 130, 246, 0.16));
       }
     }
 
