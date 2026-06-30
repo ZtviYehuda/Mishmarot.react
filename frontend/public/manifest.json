@@ -3,12 +3,12 @@
   "name": "מערכת ניהול משמרות - Toren",
   "icons": [
     {
-      "src": "/logo_unit.png",
+      "src": "/toren_logo.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/logo_unit.png",
+      "src": "/toren_logo.png",
       "type": "image/png",
       "sizes": "512x512"
     }
