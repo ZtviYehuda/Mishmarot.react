@@ -546,7 +546,11 @@ body.tour-active [data-radix-portal] > [class*="bg-black/50"] {
   object-fit: contain;
   position: relative;
   z-index: 5;
-  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.15));
+  filter: drop-shadow(0 4px 12px rgba(15, 23, 42, 0.06));
+}
+
+.dark .toren-spin-logo {
+  filter: invert(0.93) brightness(1.6) drop-shadow(0 0 15px rgba(255, 255, 255, 0.25));
 }
 
 .toren-spin-beam-original {
