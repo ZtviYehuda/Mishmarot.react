@@ -461,24 +461,34 @@ const EmployeesChartComponent = (
                         name,
                         percentage,
                       }: any) => {
+                        const isSingle = chartData.length === 1;
                         const RADIAN = Math.PI / 180;
-                        const cos = Math.cos(-midAngle * RADIAN);
-                        const sin = Math.sin(-midAngle * RADIAN);
+                        const angle = isSingle ? 270 : midAngle;
+                        const cos = Math.cos(-angle * RADIAN);
+                        const sin = Math.sin(-angle * RADIAN);
 
                         const offset = isMobile ? 12 : 24;
                         const sx = cx + outerR * cos;
                         const sy = cy + outerR * sin;
                         const mx = cx + (outerR + offset) * cos;
                         const my = cy + (outerR + offset) * sin;
-                        const tx =
-                          mx + (cos >= 0 ? 1 : -1) * (isMobile ? 8 : 16);
+                        const tx = isSingle
+                          ? mx
+                          : mx + (cos >= 0 ? 1 : -1) * (isMobile ? 8 : 16);
 
-                        const textAnchor = cos >= 0 ? "start" : "end";
+                        const textAnchor = isSingle
+                          ? "middle"
+                          : cos >= 0
+                            ? "start"
+                            : "end";
+
+                        const textX = isSingle ? tx : tx + (cos >= 0 ? 4 : -4);
+                        const textY = isSingle ? my + 14 : my;
 
                         return (
                           <g>
                             <path
-                              d={`M${sx},${sy}L${mx},${my}L${tx},${my}`}
+                              d={isSingle ? `M${sx},${sy}L${mx},${my}` : `M${sx},${sy}L${mx},${my}L${tx},${my}`}
                               stroke="rgba(148, 163, 184, 0.45)"
                               strokeWidth={1}
                               fill="none"
@@ -491,8 +501,8 @@ const EmployeesChartComponent = (
                             />
 
                             <text
-                              x={tx + (cos >= 0 ? 4 : -4)}
-                              y={my}
+                              x={textX}
+                              y={textY}
                               fill="currentColor"
                               textAnchor={textAnchor}
                               dominantBaseline="central"
