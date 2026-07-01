@@ -54,6 +54,29 @@ export const ChatSidebar: React.FC = () => {
   const [contactSearch, setContactSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoOpenAttemptedRef = useRef(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Click outside detection to close the sidebar on desktop
+  useEffect(() => {
+    if (!isChatOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Don't close if clicking inside the sidebar, or on chat trigger buttons
+      const isTriggerClick = target.closest("#chat-button") || target.closest("#mobile-broadcast-button") || target.closest("#broadcast-button");
+      
+      if (
+        sidebarRef.current &&
+        !sidebarRef.current.contains(target) &&
+        !isTriggerClick
+      ) {
+        closeChat();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isChatOpen, closeChat]);
 
   // Real-time Chat States
   const [recipientPresence, setRecipientPresence] = useState<{
@@ -288,6 +311,7 @@ export const ChatSidebar: React.FC = () => {
           {/* Window Panel */}
           <motion.div
             id="chat-sidebar-container"
+            ref={sidebarRef}
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -297,20 +321,20 @@ export const ChatSidebar: React.FC = () => {
             {selectedRecipient ? (
               <>
                 {/* Header for Conversation */}
-                <div className="p-5 bg-primary text-primary-foreground flex items-center justify-between shadow-lg shrink-0">
+                <div className="p-4 sm:p-5 bg-card border-b border-border/40 text-foreground flex items-center justify-between shadow-sm shrink-0">
                   <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" onClick={() => { openChat(null as any); setRecipientPresence(null); }} className="h-8 w-8 rounded-xl text-white/80 hover:bg-white/20 hover:text-white">
+                    <Button variant="ghost" size="icon" onClick={() => { openChat(null as any); setRecipientPresence(null); }} className="h-8 w-8 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground">
                       <ChevronLeft className="w-5 h-5 rotate-180" />
                     </Button>
                     <div 
                       className="relative cursor-pointer hover:scale-105 transition-transform"
                       onClick={() => selectedRecipient && openProfile(selectedRecipient.id)}
                     >
-                      <div className="w-10 h-10 rounded-2xl bg-white/20 text-white flex items-center justify-center border border-white/30 font-black backdrop-blur-md">
+                      <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 font-black">
                         {selectedRecipient.name?.[0]}
                       </div>
                       {/* Realtime Status indicator */}
-                      <div className={cn("absolute -bottom-0.5 -left-0.5 w-3 h-3 border-2 border-primary rounded-full",
+                      <div className={cn("absolute -bottom-0.5 -left-0.5 w-3 h-3 border-2 border-card rounded-full",
                         recipientPresence?.is_online ? (
                           recipientPresence.chat_status === "busy" ? "bg-rose-400" :
                           recipientPresence.chat_status === "away" ? "bg-amber-400" : "bg-emerald-400 animate-pulse"
@@ -318,12 +342,12 @@ export const ChatSidebar: React.FC = () => {
                       )} />
                     </div>
                     <div className="flex flex-col">
-                      <h3 className="font-black text-xs sm:text-sm text-white leading-tight">
+                      <h3 className="font-black text-xs sm:text-sm text-foreground leading-tight">
                         {selectedRecipient.name}
                       </h3>
-                      <span className="text-[10px] font-bold text-white/80 leading-none mt-0.5">
+                      <span className="text-[10px] font-bold text-muted-foreground/80 leading-none mt-0.5">
                         {recipientPresence?.is_typing ? (
-                          <span className="animate-pulse text-emerald-200">מקליד/ה...</span>
+                          <span className="animate-pulse text-emerald-500 font-black">מקליד/ה...</span>
                         ) : recipientPresence ? (
                           recipientPresence.is_online ? (
                             recipientPresence.chat_status === "busy" ? "🔴 עסוק/ה" :
@@ -346,7 +370,7 @@ export const ChatSidebar: React.FC = () => {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-9 w-9 rounded-xl text-white/80 hover:bg-white/20 hover:text-white transition-colors"
+                                className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
                                 onClick={() => window.location.href = `tel:${emp.phone_number}`}
                                 title={`חיוג ל-${emp.phone_number}`}
                               >
@@ -424,9 +448,9 @@ export const ChatSidebar: React.FC = () => {
                           return (
                             <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} key={msg.id} className={cn("flex flex-col max-w-[85%] sm:max-w-[75%]", isMe ? "self-start items-end" : "self-end items-start")}>
                               {!nextIsMe && <span className="text-[9px] font-bold text-muted-foreground mb-1 mx-1">{format(new Date(msg.created_at), "HH:mm", { locale: he })}</span>}
-                              <div className={cn("p-3 sm:p-4 rounded-3xl text-sm font-bold leading-relaxed shadow-sm", isMe ? "bg-primary text-primary-foreground rounded-tl-lg" : "bg-card border border-border/40 text-foreground rounded-tr-lg")}>
+                              <div className={cn("p-3 sm:p-4 rounded-3xl text-sm font-bold leading-relaxed shadow-sm", isMe ? "bg-primary/10 text-primary border border-primary/20 rounded-tl-lg" : "bg-card border border-border/40 text-foreground rounded-tr-lg")}>
                                 {msg.description}
-                                {isMe && <div className="flex justify-end mt-1 opacity-70"><CheckCheck className="w-3 h-3" /></div>}
+                                {isMe && <div className="flex justify-end mt-1 opacity-70"><CheckCheck className="w-3.5 h-3.5" /></div>}
                               </div>
                             </motion.div>
                           );
@@ -449,9 +473,9 @@ export const ChatSidebar: React.FC = () => {
               <>
 
                 {/* Header for Contacts List */}
-                <div className="p-6 bg-primary shadow-lg shrink-0 rounded-t-[2.5rem]">
+                <div className="p-6 bg-card border-b border-border/40 shadow-sm shrink-0 rounded-t-[2.5rem]">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-black text-xl text-white tracking-tight">הודעות</h3>
+                    <h3 className="font-black text-xl text-foreground tracking-tight">הודעות</h3>
                     <div className="flex items-center gap-2">
                       {/* Group Message Button */}
                       <Button
@@ -460,7 +484,7 @@ export const ChatSidebar: React.FC = () => {
                         size="icon"
                         onClick={openGroupModal}
                         title="שלח הודעה קבוצתית"
-                        className="relative w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center border border-white/20 hover:bg-white/20 hover:text-white p-0 shrink-0"
+                        className="relative w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 hover:bg-primary/20 p-0 shrink-0"
                       >
                         <Users className="w-4 h-4" />
                       </Button>
@@ -471,7 +495,7 @@ export const ChatSidebar: React.FC = () => {
                           <Button 
                             id="chat-status-avatar-btn"
                             variant="ghost" 
-                            className="relative w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center border border-white/20 hover:bg-white/20 hover:text-white p-0 font-black text-xs shrink-0"
+                            className="relative w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 hover:bg-primary/20 p-0 font-black text-xs shrink-0"
                             title="עדכן סטטוס פרופיל"
                           >
                             {user?.is_admin ? "💬" : `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`}
@@ -588,18 +612,18 @@ export const ChatSidebar: React.FC = () => {
                         </PopoverContent>
                       </Popover>
                       
-                      <Button variant="ghost" size="icon" onClick={closeChat} className="rounded-xl text-white/80 hover:bg-white/20 hover:text-white">
+                      <Button variant="ghost" size="icon" onClick={closeChat} className="rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground">
                         <X className="w-5 h-5" />
                       </Button>
                     </div>
                   </div>
                   <div className="relative">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="חיפוש איש קשר..."
                       value={contactSearch}
                       onChange={(e) => setContactSearch(e.target.value)}
-                      className="pr-10 h-11 bg-white/10 border-white/20 rounded-2xl text-xs font-bold text-white placeholder:text-white/60 focus-visible:ring-white/30"
+                      className="pr-10 h-11 bg-muted/50 border-border/50 rounded-2xl text-xs font-bold text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-primary/20"
                     />
                   </div>
                 </div>

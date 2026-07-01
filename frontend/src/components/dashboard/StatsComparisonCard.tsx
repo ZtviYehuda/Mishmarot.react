@@ -240,21 +240,21 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
         ref={cardRef}
         id="stats-comparison-card"
         className={cn(
-          "bg-card/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-primary/10 py-3 flex flex-col overflow-hidden h-full relative transition-all",
+          "bg-card/60 dark:bg-slate-900/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border-0 shadow-sm py-3 flex flex-col overflow-hidden h-full relative transition-all",
           className,
           hideHeader && "border-none bg-transparent backdrop-blur-none py-0",
           compact && "bg-transparent backdrop-blur-none border-0 shadow-none py-0"
         )}
       >
         {!hideHeader && (
-          <CardHeader className="px-4 sm:px-6 py-1.5 sm:py-2 flex flex-row items-center justify-between space-y-0">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-sm sm:text-base font-black text-foreground tracking-tight flex items-center flex-wrap gap-2 sm:gap-3">
+          <CardHeader className="px-3 sm:px-6 py-1.5 sm:py-2 flex flex-row items-center justify-between space-y-0 min-w-0 gap-2">
+            <div className="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <CardTitle className="text-[11px] sm:text-base font-black text-foreground tracking-tight flex items-center flex-wrap gap-1.5 sm:gap-3 truncate">
                   <span>השוואת כוח אדם</span>
                   {filterTags.length > 0 && (
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar ml-1">
-                      <div className="flex items-center gap-1.5 text-[10px] text-primary/60 font-black uppercase tracking-tight ml-1">
+                      <div className="flex items-center gap-1.5 text-[9px] text-primary/60 font-black uppercase tracking-tight ml-1 hidden sm:flex">
                         <Filter className="w-3 h-3" />
                         <span>סינון פעיל:</span>
                       </div>
@@ -262,7 +262,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                         <Badge 
                           key={idx} 
                           variant="outline" 
-                          className="text-[10px] h-6 px-2.5 font-black bg-primary/10 text-primary border-primary/30 shadow-sm whitespace-nowrap rounded-lg hover:bg-primary/15 transition-all"
+                          className="text-[9px] h-5 px-2 font-black bg-primary/10 text-primary border-primary/30 shadow-sm whitespace-nowrap rounded-md hover:bg-primary/15 transition-all"
                         >
                          {tag}
                         </Badge>
@@ -273,7 +273,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                 <TooltipProvider>
                   <Tooltip delayDuration={300}>
                     <TooltipTrigger asChild>
-                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                      <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground cursor-help shrink-0" />
                     </TooltipTrigger>
                     <TooltipContent
                       className="max-w-[250px] text-right"
@@ -296,28 +296,28 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <CardDescription className="flex flex-col gap-1 w-full">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-foreground">{unitName}</span>
+              <CardDescription className="flex flex-col gap-0.5 w-full">
+                <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                  <span className="font-bold text-[10px] sm:text-xs text-foreground truncate">{unitName}</span>
                   {subtitle && (
-                    <>
+                    <span className="hidden sm:inline text-xs text-muted-foreground">
                       {" "}
                       | <span className="">{subtitle}</span>
-                    </>
+                    </span>
                   )}
                   {canGoBack && onGoBack && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={onGoBack}
-                      className="h-5 px-1.5 py-0 text-[10px] font-black text-primary hover:bg-primary/5 hover:text-primary border-primary/20 dark:border-primary/40 transition-all flex items-center gap-1 no-export rounded-md"
+                      className="h-4 sm:h-5 px-1.5 py-0 text-[9px] sm:text-[10px] font-black text-primary hover:bg-primary/5 hover:text-primary border-primary/20 dark:border-primary/40 transition-all flex items-center gap-1 no-export rounded-md"
                     >
                       <ArrowRight className="w-2.5 h-2.5" />
                       <span>חזור</span>
                     </Button>
                   )}
                 </div>
-                <div className="text-[10px] text-muted-foreground">
+                <div className="text-[9px] sm:text-[10px] text-muted-foreground hidden sm:block">
                   {days === 1
                     ? `תמונת מצב יומית להיום`
                     : `ממוצע נוכחים - ${days === 7 ? "שבועית" : days === 30 ? "חודשית" : "שנתית"}`} • {format(selectedDate, "dd/MM/yyyy")}
@@ -325,7 +325,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               </CardDescription>
             </div>
 
-            <div className="flex items-center gap-1.5 no-export">
+            <div className="flex items-center gap-1 sm:gap-1.5 no-export hidden sm:flex shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
@@ -399,7 +399,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                     {/* Header row: name + count */}
                     <div className="flex justify-between items-center mb-2">
                       <span
-                        className="text-[13px] font-bold text-foreground truncate flex-1 min-w-0 ml-2"
+                        className="text-[10.5px] sm:text-[13px] font-bold text-foreground truncate flex-1 min-w-0 ml-2"
                         title={item.unit_name}
                       >
                         {item.unit_name}

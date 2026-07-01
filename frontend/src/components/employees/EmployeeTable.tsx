@@ -298,7 +298,7 @@ export const EmployeeTable = ({
               if (k === 'ageRange') return val && ((val as any)[0] !== 18 || (val as any)[1] !== 67);
               return val;
             }).length > 0 && (
-              <span className="absolute -top-1 -left-1 w-5 h-5 bg-[#1D45E0] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background">
+              <span className="absolute -top-1 -left-1 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background">
                 {Object.keys(activeFilters).filter(k => {
                   const val = activeFilters[k as keyof EmployeeFilters];
                   if (Array.isArray(val)) return val.length > 0;

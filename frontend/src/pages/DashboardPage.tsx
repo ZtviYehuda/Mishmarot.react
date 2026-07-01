@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { EmployeesChart } from "@/components/dashboard/EmployeesChart";
+import { BirthdayBanner } from "@/components/dashboard/BirthdayBanner";
 import { BirthdaysCard } from "@/components/dashboard/BirthdaysCard";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { WhatsAppReportDialog } from "@/components/dashboard/WhatsAppReportDialog";
@@ -93,6 +94,7 @@ export default function DashboardPage() {
   const [loadingExtras, setLoadingExtras] = useState(true);
   const [ageDistribution, setAgeDistribution] = useState<any[]>([]);
   const [averageAge, setAverageAge] = useState(0);
+  const [birthdays, setBirthdays] = useState<any[]>([]);
 
   const [viewMode] = useState<"daily" | "weekly" | "monthly" | "yearly">(
     "weekly",
@@ -338,7 +340,7 @@ export default function DashboardPage() {
         if (data) {
           setStats(data.stats || []);
           setTotalEmployees(data.total_employees || 0);
-          // setBirthdays(data.birthdays || []);
+          setBirthdays(data.birthdays || []);
           setAgeDistribution(data.age_distribution || []);
           setAverageAge(data.average_age || 0);
           // setHasArchiveAccess(data.has_archive_access || false);
@@ -805,10 +807,19 @@ export default function DashboardPage() {
             }}
           />
 
-          {/* Middle Row - Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 items-stretch">
-            {/* Left/Main Area Chart - Trend */}
-            <div className="md:col-span-2 xl:col-span-2">
+          {/* Birthday Banner — appears above charts only when there are birthdays this week */}
+          <BirthdayBanner
+            birthdays={birthdays.length > 0 ? birthdays : [
+              { id: -999, first_name: "ישראל (תצוגה מקדימה)", last_name: "ישראלי", day: new Date().getDate(), month: new Date().getMonth() + 1 }
+            ]}
+            selectedDate={selectedDate}
+            className="sm:hidden"
+          />
+
+          {/* Middle Row - Charts & Lists (2x2 Grid on mobile, fluid on desktop) */}
+          <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-6 items-stretch">
+            {/* Left/Main Area Chart - Trend (מגמת זמינות) */}
+            <div className="col-span-2 md:col-span-2 xl:col-span-2 order-3 md:order-1 xl:order-1">
               <AttendanceTrendCard 
                 data={trendStats}
                 loading={loadingExtras}
@@ -822,8 +833,8 @@ export default function DashboardPage() {
               />
             </div>
 
-            {/* Middle/Secondary Donut Chart - Status Distribution */}
-            <div className="md:col-span-1 xl:col-span-1">
+            {/* Middle/Secondary Donut Chart - Status Distribution (חלוקת סטטוסים) */}
+            <div className="col-span-2 sm:col-span-1 md:col-span-1 xl:col-span-1 order-1 md:order-2 xl:order-2">
               <EmployeesChart
                 ref={snapshotRef}
                 stats={chartStats}
@@ -840,11 +851,12 @@ export default function DashboardPage() {
               />
             </div>
 
-            {/* Right/Third Chart - Age Distribution */}
-            <div className="md:col-span-1 xl:col-span-1">
+            {/* Right/Third Chart - Age Distribution (חתך גילאים) */}
+            <div className="col-span-2 sm:col-span-1 md:col-span-1 xl:col-span-1 order-2 md:order-3 xl:order-3">
               <AgeDistributionChart
                 data={ageDistribution}
                 averageAge={averageAge}
+                totalEmployees={totalEmployees}
                 filterTags={activeFilterTags}
                 onRangeSelect={(range) => handleFilterChange("ageRange", range)}
                 selectedRange={
@@ -858,22 +870,24 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Bottom Row - Lists */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
-             {/* Birthdays */}
-             <BirthdaysCard 
+          {/* Bottom Row - Lists (Renders side-by-side on desktop, stacked on mobile) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 items-stretch">
+            {/* BirthdaysCard (Shown on desktop/tablet only) */}
+            <div className="hidden sm:block">
+              <BirthdaysCard 
                 id="birthdays-card"
-                birthdays={[]}
+                birthdays={birthdays}
                 loading={loadingExtras}
                 unitName={unitName}
-                filterTags={activeFilterTags}
                 className={cn(
                   activeTutorial === "birthdays" && "tutorial-highlight"
                 )}
-             />
+              />
+            </div>
 
-             {/* Team Comparison */}
-             <StatsComparisonCard
+            {/* Team Comparison (השוואת כוח אדם) (Shown on both mobile and desktop) */}
+            <div className="col-span-1">
+              <StatsComparisonCard
                 ref={comparisonRef}
                 data={comparisonStats}
                 loading={loadingExtras}
@@ -899,7 +913,8 @@ export default function DashboardPage() {
                     handleFilterChange(level as any, unitId.toString());
                   }
                 }}
-             />
+              />
+            </div>
           </div>
 
           {/* Status Details Table (Full Width) */}

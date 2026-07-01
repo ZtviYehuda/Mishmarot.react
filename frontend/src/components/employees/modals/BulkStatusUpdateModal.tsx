@@ -44,6 +44,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useAuthContext } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface BulkStatusUpdateModalProps {
   open: boolean;
@@ -78,6 +79,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
   isReportedCheck,
 }) => {
   const { user } = useAuthContext();
+  const navigate = useNavigate();
   const { getStatusTypes, logBulkStatus, getServiceTypes } = useEmployees();
   const [statusTypes, setStatusTypes] = useState<any[]>([]);
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
@@ -697,20 +699,20 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                   <Table className="table-fixed w-full">
                     <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-md">
                       <TableRow className="hover:bg-transparent border-b border-border/50">
-                        <TableHead className="w-[50px] text-center px-4">
-                          <Checkbox
-                            className="w-5 h-5 rounded-[6px] border-muted-foreground/40"
-                            checked={
-                              filteredList.length > 0 &&
-                              selectedIds.length === filteredList.length
-                            }
-                            onCheckedChange={(checked) =>
-                              handleSelectAll(checked as boolean)
-                            }
-                          />
-                        </TableHead>
                         <TableHead className="w-[25%] text-right font-black text-[11px] text-muted-foreground uppercase tracking-wider px-4">
-                          שוטר
+                          <div className="flex items-center gap-3">
+                            <Checkbox
+                              className="w-5 h-5 rounded-[6px] border-muted-foreground/40"
+                              checked={
+                                filteredList.length > 0 &&
+                                selectedIds.length === filteredList.length
+                              }
+                              onCheckedChange={(checked) =>
+                                handleSelectAll(checked as boolean)
+                              }
+                            />
+                            <span>שוטר</span>
+                          </div>
                         </TableHead>
                         <TableHead className="w-[30%] text-right font-black text-[11px] text-muted-foreground uppercase tracking-wider px-4">
                           סטטוס
@@ -741,45 +743,43 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                               !hasStatus && !isSelected && "bg-amber-[50]/10",
                             )}
                           >
-                            <TableCell className="text-center px-4 py-3 align-middle relative overflow-hidden">
-                              {isSelected && (
-                                <div className="absolute top-0 right-0 w-1 h-full bg-primary" />
-                              )}
-                              <Checkbox
-                                checked={isSelected}
-                                onCheckedChange={(checked) =>
-                                  handleSelectOne(emp.id, checked as boolean)
-                                }
-                                className={cn(
-                                  "w-5 h-5 rounded-lg border-muted-foreground/30 transition-all scale-110",
-                                  isSelected &&
-                                    "data-[state=checked]:bg-primary data-[state=checked]:border-primary  ",
-                                )}
-                              />
-                            </TableCell>
                             <TableCell className="py-3 px-4 align-middle">
                               <div className="flex items-center gap-3">
                                 <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelectOne(emp.id, !isSelected);
+                                  }}
                                   className={cn(
-                                    "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-[11px] shrink-0 transition-all group-hover:scale-105 group-hover:rotate-3",
-                                    current?.isChanged
-                                      ? "bg-primary text-primary-foreground scale-110"
-                                      : "bg-primary/5 text-primary border border-primary/10 group-hover:border-primary/40 group-hover:bg-primary/10 dark:bg-primary/10 dark:text-primary-foreground dark:border-primary/20",
+                                    "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-[11px] shrink-0 transition-all cursor-pointer hover:scale-110 active:scale-95 shadow-sm",
+                                    isSelected
+                                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                                      : "bg-primary/5 text-primary border border-primary/10 hover:border-primary/40 hover:bg-primary/10 dark:bg-primary/10 dark:text-primary-foreground dark:border-primary/20",
                                   )}
                                 >
-                                  {emp.is_admin ? "💬" : `${emp.first_name[0]}${emp.last_name[0]}`}
+                                  {isSelected ? (
+                                    <CheckCircle2 className="w-4 h-4" />
+                                  ) : (
+                                    emp.is_admin ? "💬" : `${emp.first_name[0]}${emp.last_name[0]}`
+                                  )}
                                 </div>
                                 <div className="flex flex-col justify-center">
-                                  <span
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/employees/${emp.id}`);
+                                    }}
                                     className={cn(
-                                      "font-bold text-sm leading-tight transition-colors",
+                                      "font-bold text-sm leading-tight transition-colors hover:underline text-right hover:text-primary",
                                       isSelected
                                         ? "text-primary"
                                         : "text-foreground",
                                     )}
                                   >
-                                    {emp.first_name} {emp.last_name}
-                                  </span>
+                                    {emp.dominant_name
+                                      ? `${emp.dominant_name} ${emp.last_name}`
+                                      : `${emp.first_name} ${emp.last_name}`}
+                                  </button>
                                   <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
                                     <span className="bg-muted/50 px-1.5 py-0.5 rounded-md tracking-wider font-mono">
                                       {emp.username}
@@ -1053,26 +1053,40 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                         <div className="p-4 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectOne(emp.id, !isSelected);
+                              }}
                               className={cn(
-                                "w-11 h-11 rounded-2xl flex items-center justify-center font-black text-xs transition-transform",
+                                "w-11 h-11 rounded-2xl flex items-center justify-center font-black text-xs transition-all cursor-pointer hover:scale-110 active:scale-95 shadow-sm",
                                 isSelected
-                                  ? "bg-primary text-primary-foreground rotate-3"
-                                  : "bg-muted text-muted-foreground",
+                                  ? "bg-primary text-primary-foreground rotate-3 shadow-md shadow-primary/20"
+                                  : "bg-muted text-muted-foreground hover:bg-muted/80",
                               )}
                             >
-                              {emp.is_admin ? "💬" : `${emp.first_name[0]}${emp.last_name[0]}`}
+                              {isSelected ? (
+                                <CheckCircle2 className="w-4 h-4" />
+                              ) : (
+                                emp.is_admin ? "💬" : `${emp.first_name[0]}${emp.last_name[0]}`
+                              )}
                             </div>
                             <div className="flex flex-col min-w-0">
-                              <h4
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/employees/${emp.id}`);
+                                }}
                                 className={cn(
-                                  "font-black text-[15px] leading-tight truncate px-0.5",
+                                  "font-black text-[15px] leading-tight truncate px-0.5 hover:underline text-right hover:text-primary",
                                   isSelected
                                     ? "text-primary"
                                     : "text-foreground",
                                 )}
                               >
-                                {emp.first_name} {emp.last_name}
-                              </h4>
+                                {emp.dominant_name
+                                  ? `${emp.dominant_name} ${emp.last_name}`
+                                  : `${emp.first_name} ${emp.last_name}`}
+                              </button>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-[10px] font-bold text-muted-foreground/60 tracking-tighter">
                                   {emp.username}
@@ -1093,13 +1107,7 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                             </div>
                           </div>
 
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={(c) =>
-                              handleSelectOne(emp.id, !!c)
-                            }
-                            className="w-6 h-6 rounded-xl border-muted-foreground/20 data-[state=checked]:bg-primary transition-all scale-110 "
-                          />
+
                         </div>
 
                         {/* Editor Content */}

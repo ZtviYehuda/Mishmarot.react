@@ -314,8 +314,8 @@ export const ReportHub: React.FC<ReportHubProps> = ({
 
         <DialogContent className={cn(
           "p-0 overflow-hidden border-0 bg-background/97 backdrop-blur-3xl sm:rounded-[2rem] flex flex-col transition-all duration-300 shadow-2xl",
-          "max-h-[92svh] sm:max-h-[88vh]",
-          "sm:max-w-3xl w-[95vw] mx-auto left-0 right-0"
+          "h-auto max-h-[92svh] sm:max-h-[88vh]",
+          "sm:max-w-3xl w-full sm:w-[95vw] sm:mx-auto"
         )}>
           <DialogDragHandle />
 
@@ -422,17 +422,17 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                       /* Charts always rendered — overlay spinner on reload (no layout jump) */
                       <div className="relative flex-1 flex flex-col min-h-0">
                         {previewType === 'snapshot' && (
-                          <div className="w-full h-[320px] sm:h-[450px] flex flex-col mt-2">
+                          <div className="w-full h-[380px] sm:h-[450px] flex flex-col mt-2">
                             <EmployeesChart stats={snapshotStats} total={snapshotTotal} hideHeader={true} unitName={filters.unitName} selectedDate={localDate} compact={true} />
                           </div>
                         )}
                         {previewType === 'trend' && (
-                          <div className="w-full h-[300px] sm:h-[420px] flex flex-col mt-2">
+                          <div className="w-full h-[350px] sm:h-[420px] flex flex-col mt-2">
                             <AttendanceTrendCard data={trendStats} range={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} compact={true} />
                           </div>
                         )}
                         {previewType === 'comparison' && (
-                          <div className="w-full h-[320px] sm:h-[450px] flex flex-col mt-2">
+                          <div className="w-full h-[380px] sm:h-[450px] flex flex-col mt-2">
                             <StatsComparisonCard data={comparisonStats} days={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} compact={true} />
                           </div>
                         )}
@@ -507,10 +507,10 @@ export const ReportHub: React.FC<ReportHubProps> = ({
       </Dialog>
       {/* Hidden high-res capture divs — only mount when dialog is open and rendering is stable to prevent recharts measuring zero-sized containers */}
       {isOpen && renderCharts && (
-        <div className="fixed -left-[9999px] top-0 pointer-events-none text-right" dir="rtl" style={{ visibility: 'hidden' }}>
-          <div style={{ width: "800px", height: "600px" }}><EmployeesChart ref={snapshotRef} stats={snapshotStats} total={snapshotTotal} loading={loading} unitName={filters.unitName} selectedDate={localDate} /></div>
-          <div style={{ width: "800px", height: "600px" }}><AttendanceTrendCard ref={trendRef} data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>
-          <div style={{ width: "800px", height: "600px" }}><StatsComparisonCard ref={comparisonRef} data={comparisonStats} loading={loading} days={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>
+        <div className="fixed -left-[9999px] top-0 pointer-events-none text-right" dir="rtl">
+          <div style={{ width: "650px", height: "460px" }}><EmployeesChart ref={snapshotRef} stats={snapshotStats} total={snapshotTotal} loading={loading} unitName={filters.unitName} selectedDate={localDate} /></div>
+          <div style={{ width: "650px", height: "460px" }}><AttendanceTrendCard ref={trendRef} data={trendStats} loading={loading} range={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>
+          <div style={{ width: "650px", height: "460px" }}><StatsComparisonCard ref={comparisonRef} data={comparisonStats} loading={loading} days={activeDaysRange} unitName={filters.unitName} selectedDate={localDate} /></div>
         </div>
       )}
 

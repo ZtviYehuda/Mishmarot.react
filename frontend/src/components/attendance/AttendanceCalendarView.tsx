@@ -837,6 +837,24 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
       className="flex flex-col gap-3"
       dir="rtl"
     >
+      {/* Prominent Back/Close Button Header */}
+      <div className="flex items-center justify-between border-b border-border/20 pb-3 mb-1 shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <CalendarDays className="w-4 h-4" />
+          </div>
+          <span className="text-xs font-black text-foreground">לוח שנה נוכחות</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onClose}
+          className="h-8 rounded-xl font-bold text-xs bg-card hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30 border border-border/50 text-muted-foreground gap-1.5 shadow-sm"
+        >
+          <X className="w-3.5 h-3.5" />
+          <span>סגור וחזור לרשימה</span>
+        </Button>
+      </div>
       {/* ══ ROW 1: Navigation ══ */}
       <div className="flex items-center gap-2">
         <button onClick={() => navigate(-1)}

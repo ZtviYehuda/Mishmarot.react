@@ -1,0 +1,12 @@
+5 | חופשה | None | False
+2 | חולה | None | False
+6 | חופשה חו"ל | None | False
+12 | אחר | None | False
+4 | קורס | None | True
+3 | תגבור | None | True
+1 | משרד | None | True
+9 | מהבית | 1 | True
+10 | מתקן חיצוני | 1 | True
+15 | יום יחידה | 12 | False
+11 | שטח | 1 | True
+17 | בשטח | 1 | True

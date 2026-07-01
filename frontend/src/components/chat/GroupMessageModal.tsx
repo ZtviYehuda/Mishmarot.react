@@ -229,24 +229,24 @@ export const GroupMessageModal: React.FC<GroupMessageModalProps> = ({ open, onCl
             dir="rtl"
           >
             {/* Header */}
-            <div className="relative p-6 sm:p-8 pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                <div className="w-16 h-16 rounded-[24px] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 shrink-0 rotate-3">
-                  <Users className="w-8 h-8" />
+            <div className="relative p-4 sm:p-8 pb-3 sm:pb-6 border-b border-border/50 bg-muted/20 text-right shrink-0">
+              <div className="flex flex-row items-center gap-3 sm:gap-6">
+                <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-[24px] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 shrink-0 rotate-3">
+                  <Users className="w-5 h-5 sm:w-8 sm:h-8" />
                 </div>
-                <div className="flex-1 min-w-0 pt-1 text-center sm:text-right">
-                  <h3 className="text-2xl font-black text-foreground tracking-tight mb-1">
+                <div className="flex-1 min-w-0 pt-0.5 text-right">
+                  <h3 className="text-lg sm:text-2xl font-black text-foreground tracking-tight mb-0.5 sm:mb-1">
                     שליחת הודעה קבוצתית
                   </h3>
-                  <p className="text-sm font-bold text-muted-foreground italic">
+                  <p className="text-[10px] sm:text-sm font-bold text-muted-foreground italic leading-tight">
                     בחר יחידות או אנשים ספציפיים לשליחה מרוכזת בזמן אמת בלוח הבקרה
                   </p>
                 </div>
                 <button
                   onClick={handleClose}
-                  className="absolute top-6 left-6 p-2 text-muted-foreground hover:bg-muted rounded-xl transition-all"
+                  className="absolute top-4 left-4 p-1.5 text-muted-foreground hover:bg-muted rounded-lg transition-all"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4.5 h-4.5" />
                 </button>
               </div>
             </div>
@@ -254,7 +254,7 @@ export const GroupMessageModal: React.FC<GroupMessageModalProps> = ({ open, onCl
             {/* Body */}
             <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0 bg-background/50">
               {/* Left: Org Tree Picker */}
-              <div className="flex flex-col w-full md:w-1/2 border-b md:border-b-0 md:border-l border-border/50 overflow-hidden bg-muted/10">
+              <div className="flex flex-col w-full md:w-1/2 h-[42vh] md:h-auto border-b md:border-b-0 md:border-l border-border/50 overflow-hidden bg-muted/10 shrink-0">
                 {/* Search + hint */}
                 <div className="p-3 border-b border-border/40 shrink-0 space-y-2">
                   <div className="relative">
@@ -300,7 +300,7 @@ export const GroupMessageModal: React.FC<GroupMessageModalProps> = ({ open, onCl
               </div>
 
               {/* Right: Selected Targets & Message */}
-              <div className="flex flex-col w-full md:w-1/2 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+              <div className="flex flex-col w-full md:w-1/2 p-4 sm:p-6 md:p-8 space-y-4 md:space-y-6 overflow-y-auto flex-1 min-h-0 custom-scrollbar">
                 {/* Recipients Preview */}
                 <div className="flex-1 overflow-y-auto min-h-0 pr-1 custom-scrollbar">
                   <div className="flex items-center justify-between mb-4">
@@ -365,13 +365,13 @@ export const GroupMessageModal: React.FC<GroupMessageModalProps> = ({ open, onCl
                     placeholder="כתוב כאן את ההודעה הקבוצתית..."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    rows={4}
-                    className="w-full min-h-[120px] resize-none bg-muted/30 border-border/50 rounded-2xl p-5 text-sm font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/30 transition-all custom-scrollbar leading-relaxed"
+                    rows={2}
+                    className="w-full min-h-[70px] md:min-h-[120px] resize-none bg-muted/30 border-border/50 rounded-2xl p-3.5 sm:p-5 text-xs sm:text-sm font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/30 transition-all custom-scrollbar leading-relaxed"
                     dir="rtl"
                   />
 
                   {/* Security Warning */}
-                  <div className="flex items-start gap-4 bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50 mt-4">
+                  <div className="hidden md:flex items-start gap-4 bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50 mt-4">
                     <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 shrink-0">
                       <ShieldAlert className="w-5 h-5" />
                     </div>

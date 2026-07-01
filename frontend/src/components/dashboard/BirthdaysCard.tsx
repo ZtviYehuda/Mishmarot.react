@@ -79,11 +79,11 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
         <Card
           id={id || "birthdays-card"}
           className={cn(
-            "bg-card/60 backdrop-blur-2xl text-card-foreground rounded-[1.5rem] border border-primary/10 flex flex-col overflow-hidden h-full relative",
+            "bg-card/60 dark:bg-slate-900/60 backdrop-blur-2xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm flex flex-col overflow-hidden h-full relative",
             className
           )}
         >
-          <CardHeader className="px-4 sm:px-6 py-1.5 sm:py-2 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
+          <CardHeader className="px-4 sm:px-6 py-3 flex flex-row items-center justify-between space-y-0">
             <div className="flex justify-between items-center gap-4 w-full">
               <div className="flex items-center gap-3">
                 <div>

@@ -444,29 +444,64 @@ export default function TransfersPage() {
         </div>
 
         {/* Main Toolbar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-card/40 backdrop-blur-2xl p-2 sm:px-4 rounded-3xl border border-primary/5 overflow-hidden min-h-[64px]">
-          {/* Right Side: Primary Action (RTL: Right) */}
-          <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-4 bg-card/40 backdrop-blur-2xl p-2 sm:px-4 rounded-3xl border border-primary/5 overflow-hidden min-h-[64px]">
+          {/* Top Line on Mobile: Primary Action + Search + History Toggle side-by-side */}
+          <div className="flex flex-row items-center justify-between gap-2 w-full md:w-auto">
             <Button
               onClick={() => setActiveTab("new")}
               className={cn(
-                "h-11 px-6 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-[0.98] shadow-sm",
+                "h-11 px-4 sm:px-6 rounded-xl font-bold flex items-center gap-1.5 sm:gap-2 transition-all active:scale-[0.98] shadow-sm shrink-0 text-xs sm:text-sm",
                 activeTab === "new"
                   ? "bg-primary text-primary-foreground shadow-primary/20"
                   : "bg-primary/10 text-primary hover:bg-primary/20"
               )}
             >
-              <Plus className="w-4.5 h-4.5" strokeWidth={2.5} />
+              <Plus className="w-4 h-4 sm:w-4.5 sm:h-4.5" strokeWidth={2.5} />
               <span>בקשה חדשה</span>
             </Button>
+
+            {/* Mobile-only Search (embedded inside the top line next to button) */}
+            {activeTab !== "new" && (
+              <div className="relative flex-1 md:hidden max-w-[220px]">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
+                <Input
+                  placeholder="חיפוש מהיר..."
+                  className="pr-9 h-11 bg-muted/40 border-none hover:bg-muted/60 font-medium text-[11px] rounded-xl focus:bg-background focus:ring-2 focus:ring-primary/10 transition-all text-right w-full"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* Mobile-only History Toggle Button (Icon only) */}
+            {activeTab !== "new" && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  if (activeTab === "history") {
+                    setActiveTab("pending");
+                    setHistoryFilter(null);
+                  } else {
+                    setActiveTab("history");
+                  }
+                }}
+                className={cn(
+                  "md:hidden w-11 h-11 rounded-xl flex items-center justify-center p-0 shrink-0",
+                  activeTab === "history"
+                    ? "bg-primary/15 text-primary border border-primary/25"
+                    : "bg-muted/40 text-muted-foreground/75 hover:bg-muted/60"
+                )}
+              >
+                <History className="w-4 h-4" />
+              </Button>
+            )}
             
             {/* Vertical Divider */}
             <div className="hidden md:block w-px h-6 bg-border/60 mx-1" />
           </div>
 
-          {/* Left Side: Navigation & Filter (RTL: Left) */}
-          <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-            {/* Search Input */}
+          {/* Left Side: Navigation & Desktop Filter (RTL: Left - Hidden on Mobile) */}
+          <div className="hidden md:flex flex-col sm:flex-row md:flex-row items-stretch sm:items-center gap-2 md:gap-4 w-full md:w-auto">
+            {/* Desktop Search Input */}
             {activeTab !== "new" && (
               <div className="relative w-full md:w-64 lg:w-72">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
@@ -492,7 +527,7 @@ export default function TransfersPage() {
                     setHistoryFilter(null);
                   }}
                   className={cn(
-                    "flex-1 sm:flex-none h-9 px-5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+                    "flex-1 sm:flex-none h-9 px-4 sm:px-5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
                     activeTab === "pending"
                       ? "bg-background text-primary shadow-sm border border-border/50"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -506,7 +541,7 @@ export default function TransfersPage() {
                     setActiveTab("history");
                   }}
                   className={cn(
-                    "flex-1 sm:flex-none h-9 px-5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
+                    "flex-1 sm:flex-none h-9 px-4 sm:px-5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2",
                     activeTab === "history"
                       ? "bg-background text-primary shadow-sm border border-border/50"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"

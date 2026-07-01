@@ -91,7 +91,10 @@ const ProtectedRoute = () => {
   const { user, loading } = useAuthContext();
   const location = useLocation();
 
-  if (loading) return <LoadingScreen />;
+  // If loading AND there's a token, show the loading screen while validating
+  // If no token at all, skip loading screen and go straight to login
+  const hasToken = !!localStorage.getItem("token");
+  if (loading && hasToken) return <LoadingScreen />;
   if (!user) return <Navigate to="/login" replace />;
 
   if (user.must_change_password && location.pathname !== "/change-password") {

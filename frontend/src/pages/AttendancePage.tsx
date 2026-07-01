@@ -42,7 +42,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { AttendanceCalendarView } from "@/components/attendance/AttendanceCalendarView";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn, cleanUnitName } from "@/lib/utils";
@@ -59,6 +59,7 @@ export default function AttendancePage() {
   const { selectedDate } = useDateContext();
 
   const location = useLocation();
+  const navigate = useNavigate();
   const {
     employees,
     loading,
@@ -1277,10 +1278,10 @@ export default function AttendancePage() {
                 <Table className="min-w-[800px]">
                   <TableHeader className="bg-background/20 backdrop-blur-sm">
                     <TableRow className="border-b border-border/60 hover:bg-transparent">
-                      <TableHead className="w-[60px] text-center px-4 h-16">
-                        <div className="flex items-center justify-center">
+                      <TableHead className="text-right px-6 font-bold text-muted-foreground uppercase text-[10px] tracking-widest h-16">
+                        <div className="flex items-center gap-3">
                           <Checkbox
-                            className="w-5 h-5 border-2 border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-lg transition-all "
+                            className="w-5 h-5 border-2 border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary rounded-lg transition-all"
                             checked={
                               filteredEmployees.length > 0 &&
                               selectedEmployeeIds.length ===
@@ -1290,10 +1291,8 @@ export default function AttendancePage() {
                               handleSelectAll(checked as boolean)
                             }
                           />
+                          <span>שוטר</span>
                         </div>
-                      </TableHead>
-                      <TableHead className="text-right px-6 font-bold text-muted-foreground uppercase text-[10px] tracking-widest h-16">
-                        שוטר
                       </TableHead>
                       <TableHead className="text-right font-bold text-muted-foreground uppercase text-[10px] tracking-widest h-16">
                         תפקיד/סמכות
@@ -1316,7 +1315,7 @@ export default function AttendancePage() {
                     {loading ? (
                       <TableRow>
                         <TableCell
-                          colSpan={7}
+                          colSpan={6}
                           className="h-32 text-center text-muted-foreground"
                         >
                           טוען נתונים...
@@ -1325,7 +1324,7 @@ export default function AttendancePage() {
                     ) : filteredEmployees.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={7}
+                          colSpan={6}
                           className="h-32 text-center text-muted-foreground font-medium"
                         >
                           לא נמצאו שוטרים התואמים את הסינון
@@ -1354,31 +1353,19 @@ export default function AttendancePage() {
                                 "bg-emerald-500/[0.02] border-r-4 border-r-emerald-500",
                             )}
                           >
-                            <TableCell className="text-center px-4 py-5 align-middle">
-                              <div className="flex items-center justify-center">
-                                <Checkbox
-                                  className={cn(
-                                    "w-5 h-5 border-2 rounded-lg transition-all",
-                                    isSelected
-                                      ? "bg-primary border-primary text-primary-foreground"
-                                      : "border-muted-foreground/30 bg-background hover:border-primary/50",
-                                  )}
-                                  checked={isSelected}
-                                  onCheckedChange={(checked) =>
-                                    handleSelectOne(emp.id, checked as boolean)
-                                  }
-                                />
-                              </div>
-                            </TableCell>
                             <TableCell className="py-5 px-6 text-right align-middle">
                               <div className="flex items-center gap-4">
                                 <div className="relative">
                                   <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSelectOne(emp.id, !isSelected);
+                                    }}
                                     className={cn(
-                                      "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm group-hover/row:scale-110 transition-all shrink-0",
+                                      "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm hover:scale-110 active:scale-95 transition-all shrink-0 cursor-pointer shadow-sm",
                                       isSelected
-                                        ? "bg-primary text-primary-foreground"
-                                        : "bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 text-slate-600 dark:text-slate-400 border border-border/50",
+                                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                                        : "bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 text-slate-600 dark:text-slate-400 border border-border/50 hover:border-primary/40",
                                     )}
                                   >
                                     {isSelected ? (
@@ -1395,15 +1382,22 @@ export default function AttendancePage() {
                                   )}
                                 </div>
                                 <div className="flex flex-col text-right min-w-0">
-                                  <EmployeeLink
-                                    employee={emp}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/employees/${emp.id}`);
+                                    }}
                                     className={cn(
-                                      "text-base font-bold truncate tracking-tight transition-colors",
+                                      "text-base font-bold truncate tracking-tight transition-colors hover:underline text-right hover:text-primary w-fit",
                                       isSelected
                                         ? "text-primary"
                                         : "text-foreground group-hover/row:text-primary",
                                     )}
-                                  />
+                                  >
+                                    {emp.dominant_name
+                                      ? `${emp.dominant_name} ${emp.last_name}`
+                                      : `${emp.first_name} ${emp.last_name}`}
+                                  </button>
                                   <span className="text-[10px] text-muted-foreground/50 font-bold tracking-[0.1em]">
                                     #{emp.username}
                                   </span>
@@ -1659,36 +1653,52 @@ export default function AttendancePage() {
                       <div
                         key={emp.id}
                         className={cn(
-                          "group bg-card/60 dark:bg-card/30 rounded-2xl border border-border/40 p-4 transition-all active:scale-[0.98] cursor-pointer text-right shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] backdrop-blur-xl",
+                          "group bg-card/60 dark:bg-card/30 rounded-2xl border border-border/40 p-4 transition-all text-right shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] backdrop-blur-xl",
                           isSelected
                             ? "ring-2 ring-primary/80 bg-primary/[0.02] dark:bg-primary/[0.04]"
                             : "hover:border-primary/40",
                           !emp.is_active && "grayscale opacity-80",
                         )}
-                        onClick={() => handleSelectOne(emp.id, !isSelected)}
                       >
                         {/* Upper Section: Avatar + Name on Right, Status Tag on Left */}
                         <div className="flex justify-between items-center mb-3.5">
                           <div className="flex items-center gap-3">
                             {/* Small Avatar */}
                             <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectOne(emp.id, !isSelected);
+                              }}
                               className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-transform",
+                                "w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-transform cursor-pointer hover:scale-110 active:scale-95 shadow-sm",
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
                                   : "bg-muted text-muted-foreground border border-border/50",
                               )}
                             >
-                              {emp.first_name[0]}
-                              {emp.last_name[0]}
+                              {isSelected ? (
+                                <CheckCircle2 className="w-4 h-4" />
+                              ) : (
+                                <span>
+                                  {emp.first_name[0]}
+                                  {emp.last_name[0]}
+                                </span>
+                              )}
                             </div>
                             
-                            {/* Employee Link / Name */}
+                            {/* Employee Name */}
                             <div className="flex flex-col text-right">
-                              <EmployeeLink
-                                employee={emp}
-                                className="text-sm font-bold text-foreground hover:no-underline p-0 h-auto"
-                              />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/employees/${emp.id}`);
+                                }}
+                                className="text-sm font-bold text-foreground hover:underline p-0 h-auto text-right hover:text-primary"
+                              >
+                                {emp.dominant_name
+                                  ? `${emp.dominant_name} ${emp.last_name}`
+                                  : `${emp.first_name} ${emp.last_name}`}
+                              </button>
                               <span className="text-[10px] text-gray-500 font-medium leading-none mt-0.5">
                                 #{emp.username}
                               </span>

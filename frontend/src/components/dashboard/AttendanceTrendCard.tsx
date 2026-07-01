@@ -272,7 +272,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
         id="attendance-chart"
         ref={cardRef}
         className={cn(
-          "bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl text-card-foreground rounded-2xl sm:rounded-[1.5rem] border-0 shadow-sm hover:shadow-md flex flex-col overflow-hidden h-full relative transition-all",
+          "bg-card/60 dark:bg-slate-900/60 backdrop-blur-2xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm flex flex-col overflow-hidden h-full relative transition-all",
           className,
           hideHeader && "border-none bg-transparent backdrop-blur-none py-0",
           compact && "bg-transparent backdrop-blur-none border-0 shadow-none"
@@ -337,7 +337,7 @@ export const AttendanceTrendCard = forwardRef<any, AttendanceTrendCardProps>(
             </div>
           )}
 
-          <div className="flex-1 flex flex-col relative p-0 mt-0 min-h-[240px] sm:min-h-[320px]">
+          <div className="flex-1 flex flex-col relative p-0 mt-0 min-h-[170px] sm:min-h-[240px] md:min-h-[320px]">
             <div className="w-full h-full flex-1" style={{ direction: "ltr", minHeight: compact ? "150px" : "200px" }}>
               <ResponsiveContainer width="100%" height="100%" minHeight={compact ? 150 : 200}>
                 <AreaChart

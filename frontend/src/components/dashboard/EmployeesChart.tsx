@@ -132,6 +132,10 @@ const EmployeesChartComponent = (
 
   // Sync isOfficeSelected with global selection
   useEffect(() => {
+    if (selectedStatusId === null) {
+      // Keep drill-down state on filter clear so it does not close suddenly
+      return;
+    }
     const selectedStatus = stats.find((s) => s.status_id === selectedStatusId);
     if (
       selectedStatus &&
@@ -143,10 +147,10 @@ const EmployeesChartComponent = (
     }
   }, [selectedStatusId, stats]);
 
-  const { chartData, officeSubItems } = useMemo(() => {
+  const { chartData, officeSubItems, displayTotal } = useMemo(() => {
     let activeStats = stats || [];
 
-    if (activeStats.length === 0) return { chartData: [], officeSubItems: [] };
+    if (activeStats.length === 0) return { chartData: [], officeSubItems: [], displayTotal: 0 };
 
     const priorityMap: Record<string, number> = {
       משרד: 1,
@@ -171,6 +175,27 @@ const EmployeesChartComponent = (
     );
     const mainOfficeColor =
       officeItems.find((s) => s.status_name === "משרד")?.color || "#22c55e";
+
+    if (isOfficeSelected) {
+      const data = officeItems.map((item) => {
+        const rawName = item.status_name?.trim() || "";
+        const name = rawName || "לא דווח";
+        return {
+          id: item.status_id === null ? -1 : item.status_id,
+          name,
+          value: item.count,
+          fill: item.color || "#94a3b8",
+          percentage:
+            totalOfficeCount > 0 ? Math.round((item.count / totalOfficeCount) * 100) : 0,
+          isGroup: false,
+        };
+      });
+      const sortedData = data.sort(
+        (a, b) =>
+          (priorityMap[a.name] || 99) - (priorityMap[b.name] || 99),
+      );
+      return { chartData: sortedData, officeSubItems: officeItems, displayTotal: totalOfficeCount };
+    }
 
     const processedStats = [
       ...nonOfficeItems,
@@ -210,17 +235,15 @@ const EmployeesChartComponent = (
       };
     });
 
-    return { chartData: data, officeSubItems: officeItems };
-  }, [stats]);
+    return { chartData: data, officeSubItems: officeItems, displayTotal: total };
+  }, [stats, isOfficeSelected, total]);
 
   const handleStatusInteraction = (entry: any) => {
     if (entry.isGroup) {
       setIsOfficeSelected(true);
-      // We can also trigger a generic office filter if desired
       onStatusClick?.(entry.id, entry.name, entry.fill);
     } else {
       onStatusClick?.(entry.id, entry.name, entry.fill);
-      setIsOfficeSelected(false);
     }
   };
 
@@ -248,7 +271,7 @@ const EmployeesChartComponent = (
             </span>
           </div>
           <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 leading-none mt-0.5">
-            {d.percentage}% מכלל היחידה
+            {d.percentage}% {isOfficeSelected ? "מפירוט משרד" : "מכלל היחידה"}
           </span>
         </div>
       );
@@ -256,20 +279,18 @@ const EmployeesChartComponent = (
     return null;
   };
 
-  const displayTotal = total;
-
   return (
     <Card
       ref={cardRef}
       id="attendance-snapshot-card"
       className={cn(
-        "bg-white dark:bg-slate-900 text-card-foreground rounded-2xl sm:rounded-[1.5rem] border-0 shadow-sm flex flex-col overflow-visible h-full relative transition-all",
+        "bg-card/60 dark:bg-slate-900/60 backdrop-blur-2xl text-card-foreground rounded-[1.5rem] border-0 shadow-sm flex flex-col overflow-visible h-full relative transition-all",
         compact && "bg-transparent border-0 shadow-none",
       )}
     >
       <div
         className={cn(
-          "pt-1.5 pb-0 px-0 sm:pt-2 sm:pb-4 sm:px-0 md:pt-2.5 md:pb-6 md:px-0 flex-1 flex flex-col relative overflow-visible",
+          "pt-1.5 pb-0 px-0 sm:pt-2 sm:pb-3 sm:px-0 md:pt-2.5 md:pb-3 md:px-0 flex-1 flex flex-col relative overflow-visible",
           compact && "pt-1 pb-1.5 sm:pt-1.5 sm:pb-2 px-0 sm:px-0",
         )}
       >
@@ -277,16 +298,34 @@ const EmployeesChartComponent = (
         {!hideHeader ? (
           <div className="flex flex-row justify-between items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2.5 relative z-10 px-3 sm:px-4 md:px-6">
             <div className="flex gap-2 sm:gap-3 items-center min-w-0">
+              {isOfficeSelected && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    onStatusClick?.(null as any, "", "");
+                    setIsOfficeSelected(false);
+                  }}
+                  className="h-7 px-2.5 rounded-xl text-[10px] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all gap-1.5 border border-border/40 shrink-0 ml-1.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>חזרה</span>
+                </Button>
+              )}
               <div className="text-right flex flex-col min-w-0">
-                <h3 className="text-sm sm:text-base font-black text-foreground tracking-tight flex items-center flex-wrap gap-2 truncate">
-                  <span>{title}</span>
+                <h3 className="text-[11.5px] sm:text-base font-black text-foreground tracking-tight flex items-center flex-wrap gap-1 sm:gap-2 truncate">
+                  {isOfficeSelected ? (
+                    <span className="text-primary font-black">פירוט משרד</span>
+                  ) : (
+                    <span>{title}</span>
+                  )}
                   {filterTags.length > 0 && (
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                       {filterTags.map((tag, idx) => (
                         <Badge
                           key={idx}
                           variant="outline"
-                          className="text-[10px] h-6 px-2.5 font-black bg-primary/10 text-primary border-primary/30 rounded-lg shadow-sm"
+                          className="text-[9px] h-5 px-2 font-black bg-primary/10 text-primary border-primary/30 rounded-md shadow-sm"
                         >
                           {tag}
                         </Badge>
@@ -297,7 +336,7 @@ const EmployeesChartComponent = (
               </div>
             </div>
 
-            <div className="bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-lg flex border border-border/50 backdrop-blur-md shrink-0">
+            <div className="bg-slate-100/80 dark:bg-slate-800/80 p-0.5 rounded-lg flex border border-border/50 backdrop-blur-md shrink-0 hidden sm:flex">
               <button
                 onClick={() => setChartType("pie")}
                 className={cn(
@@ -324,6 +363,20 @@ const EmployeesChartComponent = (
           </div>
         ) : (
           <div className="absolute left-2 sm:left-4 top-2 sm:top-3 z-20 bg-slate-100/80 dark:bg-slate-800/80 p-0.5 rounded-lg flex border border-border/40 backdrop-blur-md shrink-0 no-export">
+            {isOfficeSelected && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  onStatusClick?.(null as any, "", "");
+                  setIsOfficeSelected(false);
+                }}
+                className="h-7 px-2.5 rounded-xl text-[10px] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all gap-1.5 border border-border/40 shrink-0 ml-1.5"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>חזרה</span>
+              </Button>
+            )}
             <button
               onClick={() => setChartType("pie")}
               className={cn(
@@ -349,58 +402,6 @@ const EmployeesChartComponent = (
           </div>
         )}
 
-        {/* Premium Pills Filter for Office - Contextual */}
-        <div
-          className={cn(
-            "flex flex-col items-center gap-2 transition-all duration-500 overflow-hidden px-3 sm:px-4 md:px-6",
-            isOfficeSelected
-              ? "max-h-20 opacity-100 mb-4"
-              : "max-h-0 opacity-0 mb-0",
-          )}
-        >
-          <div className="flex items-center gap-1.5 p-1.5 bg-muted/30 dark:bg-slate-800/30 rounded-2xl border border-border/20 shadow-inner">
-            {OFFICE_SUB_STATUSES.map((name) => {
-              const item = stats.find((s) => s.status_name === name);
-              const id = item?.status_id || -1;
-              const color = item?.color || "#22c55e";
-              const isSelected = selectedStatusId === id;
-
-              return (
-                <button
-                  key={name}
-                  onClick={() => onStatusClick?.(id, name, color)}
-                  className={cn(
-                    "px-4 py-2 rounded-xl text-[10px] font-black transition-all whitespace-nowrap flex items-center gap-2",
-                    isSelected
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                      : "text-muted-foreground hover:bg-white/50 dark:hover:bg-slate-800/50 hover:text-foreground",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "w-1.5 h-1.5 rounded-full",
-                      isSelected ? "bg-white" : "bg-emerald-500",
-                    )}
-                  />
-                  {name}
-                </button>
-              );
-            })}
-            <div className="w-[1px] h-4 bg-border/40 mx-1" />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                onStatusClick?.(-999, OFFICE_GROUP_NAME, "#22c55e");
-                setIsOfficeSelected(false);
-              }}
-              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-rose-500"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
         <div className="flex-1 flex flex-col relative p-0 mt-0 overflow-visible min-h-0">
           {chartData.length === 0 ? (
             <div className="flex-1 flex items-center justify-center py-12 text-center text-muted-foreground font-bold tracking-tight">
@@ -408,28 +409,41 @@ const EmployeesChartComponent = (
             </div>
           ) : (
             <div
-              className="flex flex-col flex-1 w-full min-h-[240px] sm:min-h-[320px] relative mt-0 overflow-visible"
+              className="flex flex-col flex-1 w-full min-h-[220px] sm:min-h-[240px] md:min-h-[320px] relative mt-0 overflow-visible cursor-pointer select-none"
               style={{ direction: "ltr" }}
+              onDoubleClick={() => {
+                if (isMobile) {
+                  setChartType((prev) => (prev === "pie" ? "bar" : "pie"));
+                }
+              }}
+              onClick={(e) => {
+                if (isMobile) {
+                  const isSvgBackground = 
+                    e.target instanceof SVGElement && 
+                    (e.target.classList.contains("recharts-surface") || e.target.tagName === "svg");
+                  const isDivBackground = 
+                    e.target instanceof HTMLDivElement && 
+                    (e.target.classList.contains("recharts-wrapper") || e.target.classList.contains("flex-col"));
+
+                  if (isSvgBackground || isDivBackground) {
+                    setChartType((prev) => (prev === "pie" ? "bar" : "pie"));
+                  }
+                }
+              }}
             >
               <ResponsiveContainer
                 className="overflow-visible"
                 width="100%"
-                height={
-                  compact
-                    ? (isMobile ? 220 : 300)
-                    : chartType === "bar"
-                      ? (isMobile ? 180 : 280)
-                      : (isMobile ? 240 : 320)
-                }
+                height="100%"
               >
                 {chartType === "pie" ? (
                   <PieChart
                     className="overflow-visible"
                     margin={{
-                      left: isMobile ? 10 : 60,
-                      right: isMobile ? 10 : 60,
-                      top: isMobile ? 10 : 15,
-                      bottom: isMobile ? 10 : 15,
+                      left: isMobile ? 42 : 60,
+                      right: isMobile ? 42 : 60,
+                      top: isMobile ? 12 : 15,
+                      bottom: isMobile ? 12 : 15,
                     }}
                     onMouseMove={(e: any) => {
                       if (e && e.chartX !== undefined && e.chartY !== undefined) {
@@ -447,7 +461,7 @@ const EmployeesChartComponent = (
                       cx="50%"
                       cy="50%"
                       innerRadius={isMobile ? "38%" : "36%"}
-                      outerRadius={isMobile ? "55%" : "53%"}
+                      outerRadius={isMobile ? "54%" : "53%"}
                       paddingAngle={4}
                       minAngle={15}
                       dataKey="value"
@@ -467,7 +481,12 @@ const EmployeesChartComponent = (
                         const cos = Math.cos(-angle * RADIAN);
                         const sin = Math.sin(-angle * RADIAN);
 
-                        const offset = isMobile ? 12 : 24;
+                        // Shorten long names slightly on mobile (more space now)
+                        const displayName = isMobile && name.length > 7
+                          ? name.slice(0, 6) + "…"
+                          : name;
+
+                        const offset = isMobile ? 10 : 24;
                         const sx = cx + outerR * cos;
                         const sy = cy + outerR * sin;
                         const mx = cx + (outerR + offset) * cos;
@@ -508,10 +527,10 @@ const EmployeesChartComponent = (
                               dominantBaseline="central"
                               className={cn(
                                 "font-black fill-slate-700 dark:fill-slate-300",
-                                isMobile ? "text-[9px]" : "text-[12px]",
+                                isMobile ? "text-[9.5px]" : "text-[12px]",
                               )}
                             >
-                              {`${name} (${percentage}%)`}
+                              {`${displayName} (${percentage}%)`}
                             </text>
                           </g>
                         );
@@ -525,7 +544,7 @@ const EmployeesChartComponent = (
                             officeSubItems.some(
                               (s) => s.status_id === selectedStatusId,
                             ));
-                        const hasSelection = selectedStatusId !== null;
+                        const hasSelection = selectedStatusId !== null && selectedStatusId !== -999;
                         return (
                           <Cell
                             key={`cell-${index}`}
@@ -545,6 +564,34 @@ const EmployeesChartComponent = (
                       position={tooltipPos || undefined}
                       wrapperStyle={{ zIndex: 100 }}
                     />
+                    <text
+                      x="50%"
+                      y="50%"
+                      dy={-3}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="font-black fill-slate-900 dark:fill-white"
+                      style={{
+                        fontSize: isMobile ? "20px" : "28px",
+                        fontWeight: 900,
+                      }}
+                    >
+                      {displayTotal}
+                    </text>
+                    <text
+                      x="50%"
+                      y="50%"
+                      dy={14}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="font-black fill-slate-400 dark:fill-slate-500"
+                      style={{
+                        fontSize: "9px",
+                        fontWeight: 900,
+                      }}
+                    >
+                      סה"כ
+                    </text>
                   </PieChart>
                 ) : (
                   <BarChart
@@ -565,15 +612,7 @@ const EmployeesChartComponent = (
                     />
                     <YAxis
                       hide={true}
-                      domain={[
-                        0,
-                        (max: number) => {
-                          const scopeMax = totalEmployeesInScope || 0;
-                          if (scopeMax > 0 && scopeMax >= max) return scopeMax;
-                          if (!max || isNaN(max)) return 5;
-                          return max + Math.max(2, Math.ceil(max * 0.15));
-                        },
-                      ]}
+                      domain={[0, totalEmployeesInScope || 10]}
                     />
                     <Tooltip
                       content={<CustomTooltip />}
@@ -611,7 +650,7 @@ const EmployeesChartComponent = (
                             officeSubItems.some(
                               (s) => s.status_id === selectedStatusId,
                             ));
-                        const hasSelection = selectedStatusId !== null;
+                        const hasSelection = selectedStatusId !== null && selectedStatusId !== -999;
                         return (
                           <Cell
                             key={`cell-${index}`}
@@ -627,23 +666,6 @@ const EmployeesChartComponent = (
                 )}
               </ResponsiveContainer>
 
-              {chartType === "pie" && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-0">
-                  <div className="flex flex-col items-center justify-center">
-                    <p
-                      className={cn(
-                        "font-black text-slate-900 dark:text-white leading-none",
-                        isMobile ? "text-2xl" : "text-4xl",
-                      )}
-                    >
-                      {displayTotal}
-                    </p>
-                    <p className="text-[9px] font-black text-slate-400 uppercase mt-1">
-                      סה"כ
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
