@@ -324,13 +324,6 @@ const MobileProfileHeader = ({
       {formData.first_name?.[0]}
       {formData.last_name?.[0]}
       
-      <div className="absolute -bottom-1 -right-1">
-        <ActiveStatusPopover 
-          isActive={formData.is_active} 
-          onChange={(val: boolean) => handleFieldChange("is_active", val)}
-          disabled={!editMode}
-        />
-      </div>
     </div>
 
     <h1 className="text-xl font-black text-slate-900 dark:text-white mb-2">
@@ -357,7 +350,7 @@ const MobileProfileHeader = ({
 );
 
 // ── Action Footer (Sticky for Mobile) ────────────────────────────────────────
-const ActionFooter = ({ editMode, onEdit, onSave, onCancel, saving }: any) => (
+const ActionFooter = ({ editMode, onEdit, onSave, onCancel, saving, isActive, onToggleActive }: any) => (
   <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-50 flex gap-3">
     {editMode ? (
       <>
@@ -382,12 +375,26 @@ const ActionFooter = ({ editMode, onEdit, onSave, onCancel, saving }: any) => (
         </Button>
       </>
     ) : (
-      <Button
-        onClick={onEdit}
-        className="w-full rounded-xl h-12 font-black"
-      >
-        <Settings className="w-4 h-4 ml-2" /> עריכת פרופיל
-      </Button>
+      <div className="flex gap-2 w-full">
+        <Button
+          onClick={onEdit}
+          className="flex-1 rounded-xl h-12 font-black"
+        >
+          <Settings className="w-4 h-4 ml-2" /> עריכת פרופיל
+        </Button>
+        <Button
+          variant="outline"
+          onClick={onToggleActive}
+          className={cn(
+            "flex-1 rounded-xl h-12 font-black border transition-all active:scale-[0.98]",
+            isActive
+              ? "bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/50 dark:text-rose-400"
+              : "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
+          )}
+        >
+          {isActive ? "העבר ללא פעיל" : "החזר לפעיל"}
+        </Button>
+      </div>
     )}
   </div>
 );
@@ -484,6 +491,20 @@ export default function EmployeeViewPage() {
       toast.error("שגיאה בעדכון כרטיס שוטר");
     } finally {
       setSaving(false);
+    }
+  const toggleActiveStatus = async () => {
+    if (!employee) return;
+    const nextActive = !employee.is_active;
+    const loadingToast = toast.loading(nextActive ? "מחזיר שוטר למצב פעיל..." : "מעביר שוטר למצב לא פעיל...");
+    try {
+      await apiClient.put(
+        endpoints.updateEmployeeEndpoint(employee.id),
+        { ...employee, is_active: nextActive }
+      );
+      toast.success(nextActive ? "השוטר הוחזר למצב פעיל בהצלחה" : "השוטר הועבר למצב לא פעיל", { id: loadingToast });
+      await fetchData();
+    } catch {
+      toast.error("שגיאה בעדכון סטטוס השוטר", { id: loadingToast });
     }
   };
 
@@ -590,13 +611,6 @@ export default function EmployeeViewPage() {
                   {formData.first_name?.[0]}
                   {formData.last_name?.[0]}
 
-                  <div className="absolute -bottom-1 -right-1 scale-125">
-                    <ActiveStatusPopover 
-                      isActive={formData.is_active} 
-                      onChange={(val: boolean) => handleFieldChange("is_active", val)}
-                      disabled={!editMode}
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -666,7 +680,7 @@ export default function EmployeeViewPage() {
                 </div>
               </div>
 
-              <div className="w-full mt-8">
+              <div className="w-full mt-8 space-y-2">
                 {editMode ? (
                   <div className="flex flex-col gap-2">
                     <Button
@@ -693,14 +707,28 @@ export default function EmployeeViewPage() {
                   </div>
                 ) : (
                   !user?.is_temp_commander && (
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate(`/employees/edit/${id}`)}
-                      className="w-full h-12 rounded-xl font-black text-sm bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-primary transition-all"
-                    >
-                      <Settings className="w-4 h-4 ml-2" />
-                      עריכת פרופיל
-                    </Button>
+                    <div className="flex flex-col gap-2 w-full">
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate(`/employees/edit/${id}`)}
+                        className="w-full h-12 rounded-xl font-black text-sm bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-primary transition-all"
+                      >
+                        <Settings className="w-4 h-4 ml-2" />
+                        עריכת פרופיל
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={toggleActiveStatus}
+                        className={cn(
+                          "w-full h-12 rounded-xl font-black text-sm transition-all border",
+                          employee.is_active
+                            ? "bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:hover:bg-rose-950/30 dark:border-rose-900/50 dark:text-rose-400"
+                            : "bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30 dark:border-emerald-900/50 dark:text-emerald-400"
+                        )}
+                      >
+                        {employee.is_active ? "העבר ללא פעיל" : "החזר לפעיל"}
+                      </Button>
+                    </div>
                   )
                 )}
               </div>
@@ -1305,6 +1333,8 @@ export default function EmployeeViewPage() {
         onSave={handleSubmit}
         onCancel={() => navigate(`/employees/${id}`)}
         saving={saving}
+        isActive={employee.is_active}
+        onToggleActive={toggleActiveStatus}
       />
     </div>
   );

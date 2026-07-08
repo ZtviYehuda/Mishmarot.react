@@ -263,33 +263,34 @@ export const EmployeeTable = ({
   return (
     <div className="space-y-3 sm:space-y-5">
       {/* Search & Filter Bar */}
-      <div id="employees-search-container" className="flex flex-col gap-3 p-0 bg-transparent w-full">
-        <div className="relative w-full">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="חיפוש שם או שם משתמש..."
-            className="pr-10 h-10 sm:h-11 text-right border-input focus:ring-ring/20 focus:border-ring rounded-xl text-sm"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
-        </div>
+      <div id="employees-search-container" className="flex flex-col sm:flex-row items-center justify-between gap-3 p-0 bg-transparent w-full">
+        {/* Right side: Search & Filter */}
+        <div className="flex flex-row items-center gap-2 w-full sm:w-auto sm:flex-1 max-w-md md:max-w-xl">
+          <div className="relative flex-1">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="חיפוש שם או שם משתמש..."
+              className="pr-10 h-10 text-right border-input focus:ring-ring/20 focus:border-ring rounded-xl text-sm w-full"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
 
-        <div className="flex flex-row items-center gap-2 w-full">
           <Button
             variant="outline"
             size="sm"
             className={cn(
-              "h-9.5 sm:h-10 text-xs sm:text-sm border-border/60 dark:border-slate-800 hover:bg-muted rounded-xl flex-1 sm:flex-none sm:w-auto justify-center relative",
+              "h-10 text-xs sm:text-sm border-border/60 dark:border-slate-800 hover:bg-muted rounded-xl px-4 flex items-center justify-center shrink-0 relative",
               Object.keys(activeFilters).length > 0
                 ? "text-primary border-primary"
                 : "text-muted-foreground",
             )}
             onClick={() => setFilterModalOpen(true)}
           >
-            <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
+            <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5" />
             <span>סינון</span>
             {Object.keys(activeFilters).filter(k => {
               const val = activeFilters[k as keyof EmployeeFilters];
@@ -309,9 +310,10 @@ export const EmployeeTable = ({
               </span>
             )}
           </Button>
+        </div>
 
-
-
+        {/* Left side: Import & Add */}
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-start sm:mr-auto">
           {!user?.is_temp_commander && (
             <>
               {user?.is_admin && (
@@ -319,12 +321,10 @@ export const EmployeeTable = ({
                   <Button
                     id="import-employees-button"
                     variant="outline"
-                    className={cn(
-                      "h-9.5 sm:h-10 text-xs sm:text-sm bg-background border-border/60 hover:bg-muted text-foreground rounded-xl flex-1 sm:flex-none sm:w-auto justify-center sm:mr-auto"
-                    )}
+                    className="h-10 text-xs sm:text-sm bg-background border-border/60 hover:bg-muted text-foreground rounded-xl flex items-center justify-center"
                     onClick={() => document.getElementById('employee-upload-input')?.click()}
                   >
-                    <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2 text-primary" />
+                    <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 text-primary" />
                     ייבוא מקובץ
                   </Button>
                   <input 
@@ -339,12 +339,12 @@ export const EmployeeTable = ({
               <Button
                 id="add-employee-button"
                 className={cn(
-                  "h-9.5 sm:h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl flex-1 sm:flex-none sm:w-auto justify-center",
+                  "h-10 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl flex items-center justify-center",
                   searchParams.get("tutorial") === "add-employee" && "tutorial-highlight"
                 )}
                 onClick={() => navigate("/employees/new")}
               >
-                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5" />
                 הוספה
               </Button>
             </>
@@ -428,14 +428,6 @@ export const EmployeeTable = ({
                           >
                             {emp.is_admin ? "💬" : `${emp.first_name[0]}${emp.last_name[0]}`}
                           </div>
-                          {emp.is_active && (
-                            <div
-                              className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900"
-                              style={{
-                                backgroundColor: emp.status_color || "#10b981",
-                              }}
-                            />
-                          )}
                         </div>
                         <div className="flex flex-col text-right min-w-0">
                           <EmployeeLink
@@ -716,12 +708,6 @@ export const EmployeeTable = ({
                   >
                     {emp.is_admin ? "💬" : `${emp.first_name[0]}${emp.last_name[0]}`}
                   </div>
-                  {emp.is_active && (
-                    <div
-                      className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 border-white dark:border-slate-900 shadow-sm"
-                      style={{ backgroundColor: emp.status_color || "#10b981" }}
-                    />
-                  )}
                 </div>
 
                 {/* Center: Info */}

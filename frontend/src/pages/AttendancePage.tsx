@@ -1377,10 +1377,7 @@ export default function AttendancePage() {
                                       </span>
                                     )}
                                   </div>
-                                  {!isSelected && (
-                                    <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 bg-emerald-500" />
-                                  )}
-                                </div>
+                                  </div>
                                 <div className="flex flex-col text-right min-w-0">
                                   <button
                                     onClick={(e) => {

@@ -56,7 +56,6 @@ class AttendanceModel:
                 current_date = start_date_obj
                 while current_date <= end_date_obj:
                     # Skip weekends (Friday=4, Saturday=5 in Python's weekday() if we use 0-6 index?)
-                    # Wait, datetime.weekday(): 0=Monday... 4=Friday, 5=Saturday, 6=Sunday
                     # In Israel: 4=Friday, 5=Saturday (Wait, 0=Mon, 4=Fri, 5=Sat)
                     wd = current_date.weekday()
                     if (wd == 4 or wd == 5) and not is_weekend_allowed:
@@ -67,10 +66,34 @@ class AttendanceModel:
                     day_start = datetime.combine(current_date, datetime.min.time())
                     day_end = datetime.combine(current_date, datetime.max.time())
 
-                    # Close previous
+                    # Surgical removal/truncation of existing logs for this day
+                    # 1. Delete logs fully contained within this day
                     cur.execute(
-                        "UPDATE attendance_logs SET end_datetime = %s WHERE employee_id = %s AND end_datetime IS NULL AND start_datetime < %s",
-                        (day_start, employee_id, day_start),
+                        "DELETE FROM attendance_logs WHERE employee_id = %s AND start_datetime >= %s AND end_datetime <= %s",
+                        (employee_id, day_start, day_end),
+                    )
+
+                    # 2. Truncate logs that start before but end DURING or after the day
+                    cur.execute(
+                        "UPDATE attendance_logs SET end_datetime = %s WHERE employee_id = %s AND start_datetime < %s AND (end_datetime IS NULL OR end_datetime >= %s)",
+                        (
+                            day_start - timedelta(seconds=1),
+                            employee_id,
+                            day_start,
+                            day_start,
+                        ),
+                    )
+
+                    # 3. Truncate logs that start DURING the day but end after
+                    cur.execute(
+                        "UPDATE attendance_logs SET start_datetime = %s WHERE employee_id = %s AND start_datetime >= %s AND start_datetime <= %s AND (end_datetime IS NULL OR end_datetime > %s)",
+                        (
+                            day_end + timedelta(seconds=1),
+                            employee_id,
+                            day_start,
+                            day_end,
+                            day_end,
+                        ),
                     )
 
                     # Insert
@@ -91,23 +114,41 @@ class AttendanceModel:
                     )
                     current_date += timedelta(days=1)
             else:
-                # Single day or open-ended
-                calculated_end = end_date
-                if not calculated_end:
-                    start_date_val = start_date_obj if start_date_obj else now.date()
-                    calculated_end = datetime.combine(start_date_val, datetime.max.time())
+                # Single day surgical update
+                day_start = datetime.combine(start_date_obj, datetime.min.time())
+                day_end = datetime.combine(start_date_obj, datetime.max.time())
 
-                # Close previous status at the new status start time
+                # Surgical removal/truncation of existing logs for this day
+                # 1. Delete logs fully contained within this day
                 cur.execute(
-                    """
-                    UPDATE attendance_logs 
-                    SET end_datetime = %s 
-                    WHERE employee_id = %s AND end_datetime IS NULL
-                """,
-                    (start, employee_id),
+                    "DELETE FROM attendance_logs WHERE employee_id = %s AND start_datetime >= %s AND end_datetime <= %s",
+                    (employee_id, day_start, day_end),
                 )
 
-                # Insert new status
+                # 2. Truncate logs that start before but end DURING or after the day
+                cur.execute(
+                    "UPDATE attendance_logs SET end_datetime = %s WHERE employee_id = %s AND start_datetime < %s AND (end_datetime IS NULL OR end_datetime >= %s)",
+                    (
+                        day_start - timedelta(seconds=1),
+                        employee_id,
+                        day_start,
+                        day_start,
+                    ),
+                )
+
+                # 3. Truncate logs that start DURING the day but end after
+                cur.execute(
+                    "UPDATE attendance_logs SET start_datetime = %s WHERE employee_id = %s AND start_datetime >= %s AND start_datetime <= %s AND (end_datetime IS NULL OR end_datetime > %s)",
+                    (
+                        day_end + timedelta(seconds=1),
+                        employee_id,
+                        day_start,
+                        day_end,
+                        day_end,
+                    ),
+                )
+
+                # Insert new status for this single day
                 cur.execute(
                     """
                     INSERT INTO attendance_logs (employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, is_verified)
@@ -116,8 +157,8 @@ class AttendanceModel:
                     (
                         employee_id,
                         status_type_id,
-                        start,
-                        calculated_end,
+                        day_start,
+                        day_end,
                         note,
                         reported_by,
                         True,

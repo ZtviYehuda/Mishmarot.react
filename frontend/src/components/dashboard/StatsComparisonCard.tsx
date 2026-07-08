@@ -360,7 +360,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               </p>
             </div>
           ) : (
-            <div className={cn("space-y-1.5 py-3", compact && "grid grid-cols-1 sm:grid-cols-2 gap-2 py-2")}>
+            <div className={cn("space-y-3.5 py-4", compact && "grid grid-cols-1 sm:grid-cols-2 gap-3.5 py-2")}>
               {data.map((item) => {
                 const availability =
                   item.total_count > 0
@@ -401,12 +401,12 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                   <div
                     key={item.unit_id}
                     className={cn(
-                      "px-3 py-2.5 rounded-xl transition-all border",
-                      compact && "px-2.5 py-2",
+                      "px-5 py-4 sm:py-5 rounded-2xl transition-all duration-300 border shadow-sm",
+                      compact && "px-3.5 py-3",
                       onUnitClick ? "cursor-pointer" : "",
                       isSelected
                         ? "border-primary/30 bg-primary/5 dark:border-primary/30 dark:bg-primary/10"
-                        : "border-transparent hover:border-slate-200/80 hover:bg-slate-50/70 dark:hover:border-slate-700/60 dark:hover:bg-slate-800/40"
+                        : "border-border/40 bg-card hover:border-slate-200 hover:shadow-md hover:scale-[1.01] dark:hover:border-slate-700/60 dark:hover:bg-slate-800/40"
                     )}
                     onClick={() => {
                       if (item.level === "employee") {
@@ -417,18 +417,18 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                     }}
                   >
                     {/* Row: name / count / percentage */}
-                    <div className="flex items-center justify-between mb-1.5 gap-2">
+                    <div className="flex items-center justify-between mb-2.5 gap-3">
                       <span
-                        className="text-[11px] sm:text-[12.5px] font-bold text-foreground truncate flex-1 min-w-0"
+                        className="text-xs sm:text-[14.5px] font-black text-foreground truncate flex-1 min-w-0"
                         title={item.unit_name}
                         dir="rtl"
                       >
                         {item.unit_name}
                       </span>
 
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-3 shrink-0">
                         {item.level !== "employee" && (
-                          <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">
+                          <span className="text-[11px] sm:text-xs font-bold text-muted-foreground tabular-nums">
                             <span className="font-black" style={{ color: barColor }}>
                               {Math.round(item.present_count)}
                             </span>
@@ -436,7 +436,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                             <span>{Math.round(item.total_count)}</span>
                           </span>
                         )}
-                        <span className={cn("text-[11px] font-black tabular-nums w-9 text-left", pctTextColor)}>
+                        <span className={cn("text-xs sm:text-[14px] font-black tabular-nums min-w-9 text-left", pctTextColor)}>
                           {item.level === "employee"
                             ? (item.present_count > 0 ? "נוכח/ת" : "חסר/ת")
                             : `${availability}%`}
@@ -449,7 +449,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                       <div
                         className="w-full rounded-full overflow-hidden"
                         style={{
-                          height: compact ? "5px" : "6px",
+                          height: compact ? "6px" : "9px",
                           backgroundColor: trackBg,
                         }}
                       >

@@ -45,6 +45,7 @@ interface StatusUpdateModalProps {
   onOpenChange: (open: boolean) => void;
   employee: Employee | null;
   onSuccess?: () => void;
+  selectedDate?: Date;
 }
 
 const getStatusIcon = (name: string) => {
@@ -72,6 +73,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
   onOpenChange,
   employee,
   onSuccess,
+  selectedDate,
 }) => {
   const { user, refreshUser } = useAuthContext();
   const {
@@ -177,10 +179,15 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
       };
       fetchTypes();
 
-      const today = new Date().toISOString().split("T")[0];
+      const defaultDateObj = selectedDate || new Date();
+      const localYear = defaultDateObj.getFullYear();
+      const localMonth = String(defaultDateObj.getMonth() + 1).padStart(2, '0');
+      const localDay = String(defaultDateObj.getDate()).padStart(2, '0');
+      const defaultDateStr = `${localYear}-${localMonth}-${localDay}`;
+
       setFormData({
         status_type_id: "",
-        start_date: today,
+        start_date: defaultDateStr,
         end_date: "",
         note: "",
       });
@@ -191,7 +198,7 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
         getDelegationCandidates().then(setCandidates);
       }
     }
-  }, [open, user?.id, employee?.id]);
+  }, [open, user?.id, employee?.id, selectedDate]);
 
   useEffect(() => {
     if (!open) {
