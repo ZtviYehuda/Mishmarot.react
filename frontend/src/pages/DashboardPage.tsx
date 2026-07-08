@@ -25,6 +25,7 @@ import { WhatsAppBroadcastModal } from "@/components/employees/modals/WhatsAppBr
 import { MessageSquare, Filter, Calendar } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { GlobalEventModal } from "@/components/employees/modals/GlobalEventModal";
+import { getJewishHoliday } from "@/lib/hebrewDate";
 
 // Helper types for structure
 interface Team {
@@ -48,6 +49,7 @@ export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuthContext();
   const { selectedDate, setSelectedDate } = useDateContext();
+  const holiday = useMemo(() => getJewishHoliday(selectedDate), [selectedDate]);
 
   const [activeTutorial, setActiveTutorial] = useState<string | null>(null);
 
@@ -326,7 +328,6 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchStatsData = async () => {
       try {
-        // We don't pass status_id here so we always have the full context for percentages
         const data = await getDashboardStats({
           department_id: selectedDeptId,
           section_id: selectedSectionId,
@@ -335,6 +336,7 @@ export default function DashboardPage() {
           serviceTypes: selectedServiceTypes.join(","),
           min_age: selectedAgeRange.min,
           max_age: selectedAgeRange.max,
+          status_id: selectedStatusId !== null ? selectedStatusId.toString() : undefined,
         });
 
         if (data) {
@@ -359,6 +361,7 @@ export default function DashboardPage() {
     selectedAgeRange,
     getDashboardStats,
     selectedDate,
+    selectedStatusId,
   ]);
 
   // Derived stats for the chart (Client-side drilling)
@@ -489,9 +492,24 @@ export default function DashboardPage() {
   };
 
   const canGoBack = useMemo(() => {
+    // Team commanders are locked to their team and cannot go back
+    if (user && !user.is_admin && user.commands_team_id) {
+      return false;
+    }
+    
+    // Section commanders can only go back if they drilled down to a team
+    if (user && !user.is_admin && user.commands_section_id) {
+      return !!selectedTeamId;
+    }
+    
+    // Department commanders can go back if they drilled down to section or team
+    if (user && !user.is_admin && user.commands_department_id) {
+      return !!selectedTeamId || !!selectedSectionId;
+    }
+
     if (selectedTeamId) return true;
     if (selectedSectionId) return true;
-    if (selectedDeptId && user?.is_admin) return true;
+    if (selectedDeptId && (user?.is_admin || !user)) return true;
     return false;
   }, [selectedTeamId, selectedSectionId, selectedDeptId, user]);
 
@@ -500,7 +518,7 @@ export default function DashboardPage() {
       setSelectedTeamId("");
     } else if (selectedSectionId) {
       setSelectedSectionId("");
-    } else if (selectedDeptId && user?.is_admin) {
+    } else if (selectedDeptId && (user?.is_admin || !user)) {
       setSelectedDeptId("");
     }
   };
@@ -673,7 +691,7 @@ export default function DashboardPage() {
           <PageHeader
             icon={LayoutDashboard}
             title="לוח בקרה"
-            subtitle={format(selectedDate, "EEEE, d MMMM yyyy", { locale: he })}
+            subtitle={holiday || undefined}
             className="mb-4 sm:mb-6"
             iconClassName="hidden sm:flex"
             badge={
@@ -856,7 +874,7 @@ export default function DashboardPage() {
               <AgeDistributionChart
                 data={ageDistribution}
                 averageAge={averageAge}
-                totalEmployees={totalEmployees}
+                totalEmployees={selectedStatusId !== null ? ageDistribution.reduce((acc, curr) => acc + curr.count, 0) : totalEmployees}
                 filterTags={activeFilterTags}
                 onRangeSelect={(range) => handleFilterChange("ageRange", range)}
                 selectedRange={

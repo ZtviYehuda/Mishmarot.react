@@ -76,8 +76,11 @@ def get_stats():
             filters["section_id"] = int(request.args.get("section_id"))
         if request.args.get("team_id") and request.args.get("team_id").isdigit():
             filters["team_id"] = int(request.args.get("team_id"))
-        if request.args.get("status_id") and request.args.get("status_id").isdigit():
-            filters["status_id"] = int(request.args.get("status_id"))
+        if request.args.get("status_id"):
+            try:
+                filters["status_id"] = int(request.args.get("status_id"))
+            except ValueError:
+                pass
         if request.args.get("date"):
             filters["date"] = request.args.get("date")
         if request.args.get("serviceTypes"):

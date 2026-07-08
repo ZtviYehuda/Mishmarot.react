@@ -1,121 +1,124 @@
 import { useTheme } from "@/context/ThemeContext";
 import { Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ThemeToggleProps {
   collapsed?: boolean;
-  className?: string; // Standardize prop name for external styling
+  className?: string;
   theme?: string;
   setTheme?: (theme: any) => void;
-  showLabels?: boolean;
 }
 
 export function ThemeToggle({
-  collapsed = false,
   className,
   theme: propTheme,
   setTheme: propSetTheme,
-  showLabels = false,
 }: ThemeToggleProps) {
   const context = useTheme();
   const theme = propTheme || context.theme;
   const setTheme = propSetTheme || context.setTheme;
 
-  if (collapsed) {
-    // Elegant mini-toggle for collapsed state
-    return (
-      <button
-        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-        className={cn(
-          "w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-sm active:scale-95",
-          theme === "dark"
-            ? "bg-secondary text-primary hover:bg-accent border-border"
-            : "bg-amber-50 text-amber-600 hover:bg-amber-100 border-amber-200",
-          className,
-        )}
-        title={
-          theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"
-        }
-      >
-        {theme === "dark" ? (
-          <Moon className="w-5 h-5 fill-current opacity-90" />
-        ) : (
-          <Sun className="w-5 h-5 fill-current opacity-90" />
-        )}
-      </button>
-    );
-  }
+  const isDark = theme === "dark";
 
   return (
     <div
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "relative flex items-center w-full p-1 rounded-full cursor-pointer select-none border transition-colors",
-        "bg-secondary/50 border-border dark:bg-background/50",
-        showLabels ? "h-12" : "h-10",
-        className,
+        "relative w-14 h-8 rounded-full p-1 cursor-pointer select-none transition-colors duration-500 overflow-hidden shadow-inner flex items-center active:scale-95 active:duration-100",
+        isDark 
+          ? "bg-slate-950 border border-blue-500/25 shadow-blue-950/50" 
+          : "bg-gradient-to-b from-sky-300 to-sky-200 border border-sky-400/20 shadow-sky-100",
+        className
       )}
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
       dir="ltr"
     >
-      {/* Sliding Background Indicator */}
-      <div
+      {/* Decorative background elements (stars for dark, clouds/rays for light) */}
+      <AnimatePresence mode="wait">
+        {isDark ? (
+          <motion.div
+            key="stars"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 0.8, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 pointer-events-none"
+          >
+            {/* Tiny stars */}
+            <div className="absolute top-2 left-3 w-0.5 h-0.5 bg-white rounded-full animate-pulse" />
+            <div className="absolute top-5 left-5 w-0.5 h-0.5 bg-white rounded-full opacity-60" />
+            <div className="absolute top-2.5 left-7 w-0.5 h-0.5 bg-white rounded-full animate-ping" />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="clouds"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 0.9, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 pointer-events-none"
+          >
+            {/* Subtle solar flare/glow */}
+            <div className="absolute -right-1 -bottom-1 w-7 h-7 bg-amber-400/30 rounded-full blur-md" />
+            <div className="absolute left-2.5 top-3.5 w-4 h-1.5 bg-white/70 rounded-full blur-[0.5px]" />
+            <div className="absolute left-4 top-2.5 w-3 h-1.5 bg-white/80 rounded-full blur-[0.5px]" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Glowing active light halo in the background */}
+      <div 
         className={cn(
-          "absolute inset-y-1 w-[calc(50%-4px)] rounded-full transition-all ease-spring",
-          theme === "dark"
-            ? "translate-x-[calc(100%+4px)] bg-primary/20 border border-primary/30"
-            : "translate-x-0 ml-1 bg-white",
+          "absolute w-6 h-6 rounded-full transition-all duration-500 blur-sm pointer-events-none",
+          isDark 
+            ? "left-[26px] bg-blue-500/35" 
+            : "left-1 bg-amber-400/40"
         )}
       />
 
-      {/* Light Option */}
-      <div
+      {/* Toggle Knob (slides smoothly) */}
+      <motion.div
         className={cn(
-          "flex-1 flex items-center justify-center gap-2 z-10 transition-colors",
-          theme === "light"
-            ? "text-slate-800"
-            : "text-slate-400 dark:text-slate-500",
+          "w-6 h-6 rounded-full flex items-center justify-center shadow-md relative z-10 transition-colors duration-500",
+          isDark 
+            ? "bg-slate-900 border border-blue-400/30" 
+            : "bg-white border border-amber-200"
         )}
-        onClick={(e) => {
-          e.stopPropagation();
-          setTheme("light");
+        animate={{
+          x: isDark ? 24 : 0,
         }}
-        title="Light Mode"
-      >
-        <Sun
-          className={cn(
-            "w-5 h-5 transition-all",
-            theme === "light" && "fill-amber-500 text-amber-500 scale-110",
-          )}
-        />
-        {showLabels && (
-          <span className="text-sm font-bold tracking-wide">Light</span>
-        )}
-      </div>
-
-      {/* Dark Option */}
-      <div
-        className={cn(
-          "flex-1 flex items-center justify-center gap-2 z-10 transition-colors",
-          theme === "dark"
-            ? "text-slate-100"
-            : "text-slate-400 dark:text-slate-500",
-        )}
-        onClick={(e) => {
-          e.stopPropagation();
-          setTheme("dark");
+        transition={{
+          type: "spring",
+          stiffness: 450,
+          damping: 28,
         }}
-        title="Dark Mode"
       >
-        <Moon
-          className={cn(
-            "w-5 h-5 transition-all",
-            theme === "dark" && "fill-blue-400 text-blue-400 scale-110",
+        <AnimatePresence mode="wait" initial={false}>
+          {isDark ? (
+            <motion.div
+              key="moon"
+              initial={{ rotate: -90, scale: 0.5, opacity: 0 }}
+              animate={{ rotate: 0, scale: 1, opacity: 1 }}
+              exit={{ rotate: 90, scale: 0.5, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="flex items-center justify-center"
+            >
+              <Moon className="w-3.5 h-3.5 text-blue-400 fill-blue-400/10" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="sun"
+              initial={{ rotate: 90, scale: 0.5, opacity: 0 }}
+              animate={{ rotate: 0, scale: 1, opacity: 1 }}
+              exit={{ rotate: -90, scale: 0.5, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="flex items-center justify-center"
+            >
+              <Sun className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
+            </motion.div>
           )}
-        />
-        {showLabels && (
-          <span className="text-sm font-bold tracking-wide">Dark</span>
-        )}
-      </div>
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

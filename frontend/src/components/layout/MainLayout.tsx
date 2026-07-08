@@ -160,6 +160,13 @@ export default function MainLayout() {
   const [sickModalOpen, setSickModalOpen] = React.useState(false);
   const [sickEmployees, setSickEmployees] = React.useState<any[]>([]);
   const [pendingRequestsCount, setPendingRequestsCount] = React.useState(0);
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 640);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const fetchPendingCount = async () => {
     if (!user?.is_admin) return;
@@ -643,12 +650,12 @@ export default function MainLayout() {
             <div className="h-4 sm:h-5 w-px bg-border hidden sm:block" />
 
             <div className="flex items-center gap-1.5 sm:gap-3">
-              {/* Chat Button with Unread Badge - Visible on all screens */}
+              {/* Chat Button with Unread Badge - Hidden on mobile, visible on desktop */}
               <button
                 id="chat-toggle-btn"
                 onClick={toggleChat}
                 title="צ'אט והודעות"
-                className="flex w-8 h-8 sm:w-10 sm:h-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all relative"
+                className="hidden sm:flex w-8 h-8 sm:w-10 sm:h-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all relative"
               >
                 <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
                 {unreadMessagesCount > 0 && (
@@ -669,7 +676,7 @@ export default function MainLayout() {
                     className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
                   >
                     <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                    {unreadCount + (user?.is_admin ? pendingRequestsCount : 0) >
+                    {unreadCount + (user?.is_admin ? pendingRequestsCount : 0) + (isMobile ? unreadMessagesCount : 0) >
                       0 && (
                       <span
                         className={cn(
@@ -680,7 +687,8 @@ export default function MainLayout() {
                         )}
                       >
                         {unreadCount +
-                          (user?.is_admin ? pendingRequestsCount : 0)}
+                          (user?.is_admin ? pendingRequestsCount : 0) +
+                          (isMobile ? unreadMessagesCount : 0)}
                       </span>
                     )}
                   </button>

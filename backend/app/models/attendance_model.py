@@ -796,9 +796,14 @@ class AttendanceModel:
             count_condition = "st.is_presence = TRUE"
             if filters and filters.get("status_id"):
                 status_id = int(filters["status_id"])
-                count_condition = (
-                    f"(st.id = {status_id} OR st.parent_status_id = {status_id})"
-                )
+                if status_id == -999: # Office group
+                    count_condition = "(st.id = 1 OR st.parent_status_id = 1 OR st.name IN ('משרד', 'מהבית', 'מתקן חיצוני', 'שטח', 'בשטח'))"
+                elif status_id == -1: # Unreported
+                    count_condition = "st.id IS NULL"
+                else:
+                    count_condition = (
+                        f"(st.id = {status_id} OR st.parent_status_id = {status_id})"
+                    )
 
             # 4. Execute Query
             # If days > 1, we calculate average over requested range
@@ -980,9 +985,14 @@ class AttendanceModel:
             count_condition = "st.is_presence = TRUE"
             if filters and filters.get("status_id"):
                 status_id = int(filters["status_id"])
-                count_condition = (
-                    f"(st.id = {status_id} OR st.parent_status_id = {status_id})"
-                )
+                if status_id == -999: # Office group
+                    count_condition = "(st.id = 1 OR st.parent_status_id = 1 OR st.status_name IN ('משרד', 'מהבית', 'מתקן חיצוני', 'שטח', 'בשטח'))"
+                elif status_id == -1: # Unreported
+                    count_condition = "st.id IS NULL"
+                else:
+                    count_condition = (
+                        f"(st.id = {status_id} OR st.parent_status_id = {status_id})"
+                    )
 
             date_anchor = "CURRENT_DATE"
             date_params = []
@@ -1012,7 +1022,7 @@ class AttendanceModel:
                         SELECT COUNT(*)
                         FROM scoped_employees se
                         LEFT JOIN LATERAL (
-                            SELECT st.is_presence, st.id
+                            SELECT st.is_presence, st.id, st.parent_status_id, st.name as status_name
                             FROM (
                                 SELECT id, employee_id, status_type_id, start_datetime, end_datetime, note, reported_by, created_at, is_verified, verified_at FROM attendance_logs
                                 UNION ALL
@@ -1180,10 +1190,19 @@ class AttendanceModel:
             age_scope_conditions = [c for c in scope_conditions if "AGE(" not in c]
             age_scope_where = " AND ".join(age_scope_conditions)
 
+            status_filter_clause = ""
+            if filters and filters.get("status_id"):
+                status_id = int(filters["status_id"])
+                if status_id == -999: # Office group
+                    status_filter_clause = "AND (es.status_type_id = 1 OR es.status_type_id IN (SELECT id FROM status_types WHERE parent_status_id = 1 OR name IN ('משרד', 'מהבית', 'מתקן חיצוני', 'שטח', 'בשטח')))"
+                elif status_id == -1: # Unreported
+                    status_filter_clause = "AND es.status_type_id IS NULL"
+                else:
+                    status_filter_clause = f"AND (es.status_type_id = {status_id} OR es.status_type_id IN (SELECT id FROM status_types WHERE parent_status_id = {status_id}))"
+
             age_query = f"""
-                WITH scoped_ages AS (
-                    SELECT 
-                        EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.birth_date)) as age
+                WITH scoped_employees AS (
+                    SELECT e.id, e.birth_date
                     FROM employees e
                     LEFT JOIN teams t ON e.team_id = t.id
                     LEFT JOIN sections s ON t.section_id = s.id
@@ -1192,6 +1211,36 @@ class AttendanceModel:
                     LEFT JOIN departments d_dir ON e.department_id = d_dir.id
                     LEFT JOIN service_types srv ON e.service_type_id = srv.id
                     WHERE {age_scope_where} AND e.birth_date IS NOT NULL
+                ),
+                employee_status AS (
+                    SELECT
+                        se.id as emp_id,
+                        (CASE 
+                            WHEN last_log.status_type_id IS NOT NULL 
+                                 AND (
+                                     (last_log.end_datetime IS NOT NULL AND DATE(last_log.end_datetime) >= %(target_date)s)
+                                     OR 
+                                     (last_log.end_datetime IS NULL AND (last_log.is_persistent = TRUE OR DATE(last_log.start_datetime) = %(target_date)s))
+                                 ) 
+                            THEN last_log.status_type_id 
+                            ELSE NULL 
+                        END) as status_type_id
+                    FROM scoped_employees se
+                    LEFT JOIN LATERAL (
+                        SELECT al.status_type_id, al.start_datetime, al.end_datetime, sti.is_persistent
+                        FROM {table_source} al
+                        JOIN status_types sti ON al.status_type_id = sti.id
+                        WHERE al.employee_id = se.id
+                        AND DATE(al.start_datetime) <= %(target_date)s
+                        ORDER BY al.start_datetime DESC, al.id DESC LIMIT 1
+                    ) last_log ON true
+                ),
+                scoped_ages AS (
+                    SELECT 
+                        EXTRACT(YEAR FROM AGE(CURRENT_DATE, se.birth_date)) as age
+                    FROM scoped_employees se
+                    JOIN employee_status es ON se.id = es.emp_id
+                    WHERE 1=1 {status_filter_clause}
                 ),
                 age_ranges AS (
                     SELECT 

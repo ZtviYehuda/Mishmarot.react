@@ -6,6 +6,7 @@ import { useDateContext } from "@/context/DateContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { getJewishHoliday } from "@/lib/hebrewDate";
 
 export const DateHeader: React.FC<{ className?: string }> = ({ className }) => {
   const { selectedDate, setSelectedDate } = useDateContext();
@@ -13,6 +14,7 @@ export const DateHeader: React.FC<{ className?: string }> = ({ className }) => {
 
   const handleToday = () => startTransition(() => setSelectedDate(new Date()));
   const isToday = useMemo(() => isSameDay(selectedDate, new Date()), [selectedDate]);
+  const holiday = useMemo(() => getJewishHoliday(selectedDate), [selectedDate]);
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
@@ -39,8 +41,15 @@ export const DateHeader: React.FC<{ className?: string }> = ({ className }) => {
               </span>
             </div>
 
+            {holiday && (
+              <span className="flex items-center gap-1.5 mr-2 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 text-[10px] font-black border border-amber-500/20 shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                {holiday}
+              </span>
+            )}
+
             {/* "Today" badge - shown optionally if needed, but let's keep it very minimal */}
-            {isToday && (
+            {isToday && !holiday && (
               <div className="hidden sm:flex items-center gap-1 mr-2 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
                 <div className="w-1 h-1 rounded-full bg-emerald-500" />
                 <span className="text-[9px] font-bold">היום</span>

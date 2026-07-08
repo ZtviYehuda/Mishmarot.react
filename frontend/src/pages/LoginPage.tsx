@@ -30,7 +30,7 @@ interface LockedUser {
   last_name: string;
 }
 
-const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
+const HexagonPatrolGrid = ({ theme, accentColor }: { theme: string; accentColor: string }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -42,18 +42,23 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
     if (!ctx) return;
 
     const isDark = theme === "dark";
+    
+    // Retrieve computed custom primary/accent color variables from the DOM
+    const computedStyle = getComputedStyle(document.documentElement);
+    const primaryRgb = computedStyle.getPropertyValue("--primary-rgb").trim() || "59, 130, 246";
+
     const colors = isDark
       ? {
           bg: "#020617", // slate-950
-          hexOutline: "rgba(30, 58, 138, 0.2)", // dark blue
-          hexActiveBlue: "rgba(59, 130, 246, 0.4)", // blue-500
-          hexActiveRed: "rgba(220, 38, 38, 0.4)", // red-600
+          hexOutline: `rgba(${primaryRgb}, 0.12)`, 
+          hexActiveBlue: `rgba(${primaryRgb}, 0.4)`, 
+          hexActiveRed: "rgba(220, 38, 38, 0.4)", 
         }
       : {
           bg: "#f8fafc", // slate-50
-          hexOutline: "rgba(148, 163, 184, 0.2)", // slate-400
-          hexActiveBlue: "rgba(59, 130, 246, 0.2)", // blue-500
-          hexActiveRed: "rgba(220, 38, 38, 0.2)", // red-600
+          hexOutline: `rgba(${primaryRgb}, 0.08)`, 
+          hexActiveBlue: `rgba(${primaryRgb}, 0.2)`, 
+          hexActiveRed: "rgba(220, 38, 38, 0.2)", 
         };
 
     let animationFrameId: number;
@@ -197,7 +202,7 @@ const HexagonPatrolGrid = ({ theme }: { theme: string }) => {
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [mousePos, theme]);
+  }, [mousePos, theme, accentColor]);
 
   return (
     <canvas
@@ -247,7 +252,7 @@ export default function LoginPage() {
   };
   const [lockedUser, setLockedUser] = useState<LockedUser | null>(null);
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, accentColor } = useTheme();
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinUsername, setPinUsername] = useState("");
@@ -584,67 +589,11 @@ export default function LoginPage() {
       )}
       dir="rtl"
     >
-      <HexagonPatrolGrid theme={theme} />
+      <HexagonPatrolGrid theme={theme} accentColor={accentColor} />
 
       {/* Cybernetic Theme Toggle Panel */}
       <div className="fixed top-4 left-4 md:top-6 md:left-6 z-50">
-        <button
-          onClick={() => setTheme(isDark ? "light" : "dark")}
-          className={cn(
-            "group relative flex items-center gap-3.5 px-4 py-2 rounded-2xl border transition-all duration-300 shadow-xl backdrop-blur-xl select-none active:scale-[0.97] overflow-hidden cursor-pointer",
-            isDark
-              ? "bg-slate-900/80 border-slate-800 text-blue-400 hover:border-blue-500/40 hover:shadow-blue-500/5"
-              : "bg-white/80 border-slate-200 text-amber-600 hover:border-amber-400/40 hover:shadow-amber-500/5",
-          )}
-        >
-          {/* Neon Scanner Line / Shimmer Effect */}
-          <div
-            className={cn(
-              "absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r opacity-25 pointer-events-none",
-              isDark
-                ? "from-transparent via-blue-400 to-transparent"
-                : "from-transparent via-amber-400 to-transparent",
-            )}
-          />
-
-          {/* Icon with Hover Rotation */}
-          <div className="relative w-5 h-5 flex items-center justify-center shrink-0">
-            {isDark ? (
-              <Moon className="w-5 h-5 text-blue-400 fill-blue-400/20 group-hover:rotate-12 transition-transform duration-300" />
-            ) : (
-              <Sun className="w-5 h-5 text-amber-500 fill-amber-500/20 group-hover:rotate-45 transition-transform duration-500" />
-            )}
-          </div>
-
-          {/* Bilingual Cyber Labels */}
-          <div className="flex flex-col items-start text-right">
-            <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
-              THEME CONTROL
-            </span>
-            <span
-              className={cn(
-                "text-xs font-black transition-colors leading-none mt-1",
-                isDark
-                  ? "text-slate-200 group-hover:text-blue-400"
-                  : "text-slate-800 group-hover:text-amber-600",
-              )}
-            >
-              {isDark ? "מצב כהה" : "מצב בהיר"}
-            </span>
-          </div>
-
-          {/* Pulsing Status Dot */}
-          <div className="flex items-center justify-center shrink-0 pl-0.5">
-            <div
-              className={cn(
-                "w-2.5 h-2.5 rounded-full animate-pulse transition-all duration-300",
-                isDark
-                  ? "bg-blue-400 shadow-[0_0_8px_#60a5fa]"
-                  : "bg-amber-500 shadow-[0_0_8px_#f59e0b]",
-              )}
-            />
-          </div>
-        </button>
+        <ThemeToggle />
       </div>
 
       {/* Decorative Overlays - Theme Adaptive */}
@@ -657,10 +606,10 @@ export default function LoginPage() {
         )}
       />
       <div
-        className={cn(
-          "fixed top-0 left-0 w-full h-1 bg-gradient-to-r z-50 opacity-50",
-          "from-blue-600 via-cyan-400 to-blue-600",
-        )}
+        className="fixed top-0 left-0 w-full h-1 z-50 opacity-50"
+        style={{
+          background: "linear-gradient(90deg, var(--primary) 0%, #22d3ee 50%, var(--primary) 100%)"
+        }}
       />
 
       {/* Main Content Area */}
@@ -684,11 +633,11 @@ export default function LoginPage() {
             
             {/* Subtitle */}
             <div className="flex items-center justify-center gap-2 mb-1">
-              <div className="h-px w-6 md:w-8 bg-blue-500/50" />
-              <span className="text-[10px] md:text-xs font-bold text-blue-500 tracking-[0.2em] md:tracking-[0.3em] uppercase">
+              <div className="h-px w-6 md:w-8 bg-[var(--primary)]/50" />
+              <span className="text-[10px] md:text-xs font-bold text-[var(--primary)] tracking-[0.2em] md:tracking-[0.3em] uppercase">
                 Operational Control Center
               </span>
-              <div className="h-px w-6 md:w-8 bg-blue-500/50" />
+              <div className="h-px w-6 md:w-8 bg-[var(--primary)]/50" />
             </div>
           </div>
 
@@ -709,8 +658,8 @@ export default function LoginPage() {
                     className={cn(
                       "w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center border-2  font-black text-2xl relative group",
                       isDark
-                        ? "bg-slate-800 border-slate-600 text-blue-400"
-                        : "bg-slate-100 border-slate-200 text-blue-600",
+                        ? "bg-slate-800 border-slate-600 text-[var(--primary)]"
+                        : "bg-slate-100 border-slate-200 text-[var(--primary)]",
                     )}
                   >
                     {lockedUser.first_name[0]}
@@ -736,8 +685,8 @@ export default function LoginPage() {
                           className={cn(
                             "absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors z-10",
                             isDark
-                              ? "text-slate-500 group-focus-within:text-blue-400"
-                              : "text-slate-400 group-focus-within:text-blue-600",
+                              ? "text-slate-500 group-focus-within:text-[var(--primary)]"
+                              : "text-slate-400 group-focus-within:text-[var(--primary)]",
                           )}
                         />
                         <Input
@@ -753,8 +702,8 @@ export default function LoginPage() {
                           className={cn(
                             "h-13 border rounded-2xl pr-12 pl-12 transition-all text-lg tracking-widest font-mono",
                             isDark
-                              ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
-                              : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
+                              ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-[var(--primary)] focus:ring-[var(--primary)]/50"
+                              : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-[var(--primary)] focus:ring-[var(--primary)]/20",
                           )}
                           placeholder="••••••••"
                           disabled={isLoading}
@@ -764,6 +713,19 @@ export default function LoginPage() {
                           onClick={() => setShowPassword(!showPassword)}
                           className={cn(
                             "absolute left-3 top-1/2 -translate-y-1/2 transition-colors z-10",
+                            isDark
+                              ? "text-slate-500 hover:text-slate-300"
+                              : "text-slate-400 hover:text-slate-600",
+                          )}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>             "absolute left-3 top-1/2 -translate-y-1/2 transition-colors z-10",
                             isDark
                               ? "text-slate-500 hover:text-slate-300"
                               : "text-slate-400 hover:text-slate-600",
@@ -816,16 +778,16 @@ export default function LoginPage() {
                           type="button"
                           variant="outline"
                           onClick={handleBiometricLogin}
-                          className="h-13 w-14 min-w-[56px] rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
+                          className="h-13 w-14 min-w-[56px] rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 hover:bg-[var(--primary)]/10 shrink-0 flex items-center justify-center transition-all"
                           title="כניסה מהירה עם PIN"
                         >
-                          <Fingerprint className="w-6 h-6 text-blue-500" />
+                          <Fingerprint className="w-6 h-6 text-[var(--primary)]" />
                         </Button>
                       )}
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 h-13 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all  active:scale-[0.98] relative overflow-hidden group"
+                        className="flex-1 h-13 bg-[var(--primary)] hover:opacity-90 text-white font-bold rounded-2xl transition-all active:scale-[0.98] relative overflow-hidden group"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform" />
                         {isLoading ? (
@@ -864,8 +826,8 @@ export default function LoginPage() {
                             className={cn(
                               "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border transition-all",
                               isDark
-                                ? "bg-slate-900/90 text-slate-400 border-slate-700 group-focus-within:text-blue-400 group-focus-within:border-blue-500"
-                                : "bg-white text-slate-400 border-slate-200 group-focus-within:text-blue-600 group-focus-within:border-blue-600",
+                                ? "bg-slate-900/90 text-slate-400 border-slate-700 group-focus-within:text-[var(--primary)] group-focus-within:border-[var(--primary)]"
+                                : "bg-white text-slate-400 border-slate-200 group-focus-within:text-[var(--primary)] group-focus-within:border-[var(--primary)]",
                             )}
                           >
                             שם משתמש
@@ -874,10 +836,11 @@ export default function LoginPage() {
                             className={cn(
                               "absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors z-10",
                               isDark
-                                ? "text-slate-500 group-focus-within:text-blue-400"
-                                : "text-slate-400 group-focus-within:text-blue-600",
+                                ? "text-slate-500 group-focus-within:text-[var(--primary)]"
+                                : "text-slate-400 group-focus-within:text-[var(--primary)]",
                             )}
-                          />
+                          >
+                          </ScanEye>
                           <Input
                             id="username"
                             type="text"
@@ -891,8 +854,8 @@ export default function LoginPage() {
                             className={cn(
                               "h-13 border rounded-2xl pr-12 transition-all font-mono",
                               isDark
-                                ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
-                                : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
+                                ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-[var(--primary)] focus:ring-[var(--primary)]/50"
+                                : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-[var(--primary)] focus:ring-[var(--primary)]/20",
                             )}
                             placeholder="הזן שם משתמש"
                             disabled={isLoading}
@@ -908,8 +871,8 @@ export default function LoginPage() {
                             className={cn(
                               "absolute -top-2.5 right-3 px-2 text-[10px] font-bold uppercase tracking-widest z-10 rounded-full border transition-all",
                               isDark
-                                ? "bg-slate-900/90 text-slate-400 border-slate-700 group-focus-within:text-blue-400 group-focus-within:border-blue-500"
-                                : "bg-white text-slate-400 border-slate-200 group-focus-within:text-blue-600 group-focus-within:border-blue-600",
+                                ? "bg-slate-900/90 text-slate-400 border-slate-700 group-focus-within:text-[var(--primary)] group-focus-within:border-[var(--primary)]"
+                                : "bg-white text-slate-400 border-slate-200 group-focus-within:text-[var(--primary)] group-focus-within:border-[var(--primary)]",
                             )}
                           >
                             סיסמה
@@ -918,8 +881,8 @@ export default function LoginPage() {
                             className={cn(
                               "absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors z-10",
                               isDark
-                                ? "text-slate-500 group-focus-within:text-blue-400"
-                                : "text-slate-400 group-focus-within:text-blue-600",
+                                ? "text-slate-500 group-focus-within:text-[var(--primary)]"
+                                : "text-slate-400 group-focus-within:text-[var(--primary)]",
                             )}
                           />
                           <Input
@@ -934,8 +897,8 @@ export default function LoginPage() {
                             className={cn(
                               "h-13 border rounded-2xl pr-12 pl-12 transition-all font-mono tracking-widest",
                               isDark
-                                ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:ring-blue-500/50"
-                                : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-blue-600/20",
+                                ? "border-slate-700 bg-slate-950/50 focus:bg-slate-900 text-slate-100 placeholder:text-slate-600 focus:border-[var(--primary)] focus:ring-[var(--primary)]/50"
+                                : "border-slate-200 bg-white/50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:border-[var(--primary)] focus:ring-[var(--primary)]/20",
                             )}
                             placeholder="••••••••"
                             disabled={isLoading}
@@ -964,7 +927,7 @@ export default function LoginPage() {
                     <div className="text-left -mt-2">
                       <Link
                         to="/forgot-password"
-                        className="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors uppercase tracking-tight"
+                        className="text-xs font-bold text-[var(--primary)] hover:opacity-80 transition-colors uppercase tracking-tight"
                       >
                         שכחת סיסמה?
                       </Link>
@@ -1010,16 +973,16 @@ export default function LoginPage() {
                           type="button"
                           variant="outline"
                           onClick={handleBiometricLogin}
-                          className="h-13 w-14 min-w-[56px] rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 shrink-0 flex items-center justify-center transition-all"
+                          className="h-13 w-14 min-w-[56px] rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 hover:bg-[var(--primary)]/10 shrink-0 flex items-center justify-center transition-all"
                           title="כניסה מהירה עם PIN"
                         >
-                          <Fingerprint className="w-7 h-7 text-blue-500" />
+                          <Fingerprint className="w-7 h-7 text-[var(--primary)]" />
                         </Button>
                       )}
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 h-13 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-black text-lg rounded-2xl transition-all  active:scale-[0.98] border border-white/10 relative overflow-hidden group"
+                        className="flex-1 h-13 bg-[var(--primary)] hover:opacity-95 text-white font-black text-lg rounded-2xl transition-all active:scale-[0.98] border border-white/10 relative overflow-hidden group"
                       >
                         <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
                         <div className="relative flex items-center justify-center gap-2">

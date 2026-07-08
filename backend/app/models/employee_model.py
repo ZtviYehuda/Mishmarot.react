@@ -368,7 +368,10 @@ class EmployeeModel:
             query = """
                 SELECT DISTINCT e.id, e.first_name, e.last_name, e.dominant_name, e.username, e.phone_number, e.email,
                        e.birth_date, e.is_commander, e.security_clearance, e.police_license, e.gender,
-                       e.is_active, e.department_id, e.section_id, e.team_id,
+                       e.is_active, 
+                       COALESCE(d.id, d_dir.id, e.department_id) as department_id,
+                       COALESCE(s.id, s_dir.id, e.section_id) as section_id,
+                       e.team_id,
                        e.last_seen, e.chat_status, e.chat_status_custom,
                        (e.last_seen IS NOT NULL AND e.last_seen > NOW() - INTERVAL '30 seconds') as is_online,
                        t.name as team_name, 

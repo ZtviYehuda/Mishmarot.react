@@ -8,7 +8,49 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
-  
+  <script>
+    (function() {
+      try {
+        // Theme synchronization
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          // Fallback to system OS preferences
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+          }
+        }
+
+        // Accent color synchronization
+        const accent = localStorage.getItem('accentColor');
+        if (accent) {
+          const root = document.documentElement;
+          if (accent.startsWith('#')) {
+            root.style.setProperty('--primary', accent);
+            
+            // Hex to RGB for glow effect
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(accent);
+            if (result) {
+              const rgb = `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
+              root.style.setProperty('--accent-glow', `rgba(${rgb}, 0.15)`);
+            }
+          } else if (accent === 'emerald') {
+            root.style.setProperty('--primary', '#10b981');
+            root.style.setProperty('--accent-glow', 'rgba(16, 185, 129, 0.15)');
+          } else if (accent === 'blue') {
+            root.style.setProperty('--primary', '#3b82f6');
+            root.style.setProperty('--accent-glow', 'rgba(59, 130, 246, 0.15)');
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  </script>
+
   <style>
     :root {
       /* Default: Light Mode */
@@ -26,17 +68,15 @@
       --beam-shadow: drop-shadow(0 0 5px var(--primary));
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg-color: #090d16;
-        --text-primary: #f8fafc;
-        --text-secondary: #94a3b8;
-        --accent-glow: rgba(59, 130, 246, 0.35);
-        --flash-mix: 22%;
-        --beam-bg: #ffffff;
-        --beam-opacity: 0.8;
-        --beam-shadow: drop-shadow(0 0 8px rgba(255, 255, 255, 0.45));
-      }
+    html.dark {
+      --bg-color: #090d16;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --accent-glow: rgba(59, 130, 246, 0.35);
+      --flash-mix: 22%;
+      --beam-bg: #ffffff;
+      --beam-opacity: 0.8;
+      --beam-shadow: drop-shadow(0 0 8px rgba(255, 255, 255, 0.45));
     }
 
     * {

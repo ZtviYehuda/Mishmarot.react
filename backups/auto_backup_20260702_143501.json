@@ -1,0 +1,459 @@
+{
+    "metadata": {
+        "version": "2.0",
+        "date": "2026-07-02T14:35:01.441886",
+        "type": "automatic"
+    },
+    "data": {
+        "roles": [
+            {
+                "id": 1,
+                "name": "Admin",
+                "description": null
+            },
+            {
+                "id": 2,
+                "name": "Commander",
+                "description": null
+            },
+            {
+                "id": 3,
+                "name": "Soldier",
+                "description": null
+            }
+        ],
+        "status_types": [
+            {
+                "id": 5,
+                "code": "VACATION",
+                "name": "חופשה",
+                "color": "#3b82f6",
+                "is_presence": false,
+                "is_persistent": true,
+                "parent_status_id": null
+            },
+            {
+                "id": 2,
+                "code": "SICK",
+                "name": "חולה",
+                "color": "#ef4444",
+                "is_presence": false,
+                "is_persistent": true,
+                "parent_status_id": null
+            },
+            {
+                "id": 6,
+                "code": "ABROAD",
+                "name": "חופשה חו\"ל",
+                "color": "#0ea5e9",
+                "is_presence": false,
+                "is_persistent": true,
+                "parent_status_id": null
+            },
+            {
+                "id": 12,
+                "code": "כוננות",
+                "name": "אחר",
+                "color": "#d946ef",
+                "is_presence": false,
+                "is_persistent": true,
+                "parent_status_id": null
+            },
+            {
+                "id": 4,
+                "code": "COURSE",
+                "name": "קורס",
+                "color": "#8b5cf6",
+                "is_presence": true,
+                "is_persistent": true,
+                "parent_status_id": null
+            },
+            {
+                "id": 3,
+                "code": "REINFORCEMENT",
+                "name": "תגבור",
+                "color": "#f59e0b",
+                "is_presence": true,
+                "is_persistent": true,
+                "parent_status_id": null
+            },
+            {
+                "id": 1,
+                "code": "OFFICE",
+                "name": "משרד",
+                "color": "#22c55e",
+                "is_presence": true,
+                "is_persistent": true,
+                "parent_status_id": null
+            },
+            {
+                "id": 9,
+                "code": "מהבית",
+                "name": "מהבית",
+                "color": "#16a34a",
+                "is_presence": true,
+                "is_persistent": false,
+                "parent_status_id": 1
+            },
+            {
+                "id": 10,
+                "code": "מתקן חיצוני",
+                "name": "מתקן חיצוני",
+                "color": "#15803d",
+                "is_presence": true,
+                "is_persistent": false,
+                "parent_status_id": 1
+            },
+            {
+                "id": 15,
+                "code": "UNIT_DAY",
+                "name": "יום יחידה",
+                "color": "#0d9488",
+                "is_presence": false,
+                "is_persistent": false,
+                "parent_status_id": 12
+            },
+            {
+                "id": 11,
+                "code": "שטח",
+                "name": "שטח",
+                "color": "#166534",
+                "is_presence": true,
+                "is_persistent": false,
+                "parent_status_id": 1
+            },
+            {
+                "id": 17,
+                "code": "בשטח",
+                "name": "בשטח",
+                "color": "#166534",
+                "is_presence": true,
+                "is_persistent": false,
+                "parent_status_id": 1
+            }
+        ],
+        "service_types": [
+            {
+                "id": 1,
+                "name": "שמ״ז"
+            },
+            {
+                "id": 2,
+                "name": "קבע"
+            },
+            {
+                "id": 3,
+                "name": "קצין"
+            },
+            {
+                "id": 4,
+                "name": "שירות לאומי"
+            },
+            {
+                "id": 5,
+                "name": "שירות אזרחי ביטחוני"
+            },
+            {
+                "id": 6,
+                "name": "שח״מ"
+            },
+            {
+                "id": 7,
+                "name": "שח״מ חרדי"
+            },
+            {
+                "id": 8,
+                "name": "מתנדב"
+            },
+            {
+                "id": 11,
+                "name": "סטודנט"
+            }
+        ],
+        "departments": [
+            {
+                "id": 1,
+                "name": "מחלקת טכנולוגיות",
+                "commander_id": null
+            },
+            {
+                "id": 2,
+                "name": "מחלקת התעצמות",
+                "commander_id": null
+            },
+            {
+                "id": 3,
+                "name": "מחלקת מענה מבצעי",
+                "commander_id": null
+            }
+        ],
+        "sections": [
+            {
+                "id": 1,
+                "department_id": 1,
+                "name": "מדור הסייבר המבצעי",
+                "commander_id": null
+            },
+            {
+                "id": 2,
+                "department_id": 1,
+                "name": "מדור סיגמ\"ה",
+                "commander_id": null
+            },
+            {
+                "id": 3,
+                "department_id": 1,
+                "name": "מדור מערכות הסייבר",
+                "commander_id": null
+            },
+            {
+                "id": 4,
+                "department_id": 2,
+                "name": "מדור תכנון ועד\"י אסטרטגיה",
+                "commander_id": null
+            },
+            {
+                "id": 5,
+                "department_id": 2,
+                "name": "מדור הכוונה מקצועית",
+                "commander_id": null
+            },
+            {
+                "id": 6,
+                "department_id": 3,
+                "name": "מדור שט\"ח",
+                "commander_id": null
+            },
+            {
+                "id": 7,
+                "department_id": 3,
+                "name": "מדור יחידות ארציות",
+                "commander_id": null
+            },
+            {
+                "id": 8,
+                "department_id": 3,
+                "name": "מדור שליטה מבצעית",
+                "commander_id": null
+            },
+            {
+                "id": 9,
+                "department_id": 3,
+                "name": "מדור סייבר ארצי",
+                "commander_id": null
+            }
+        ],
+        "teams": [
+            {
+                "id": 1,
+                "section_id": 1,
+                "name": "חוליית מו\"פ",
+                "commander_id": null
+            },
+            {
+                "id": 2,
+                "section_id": 1,
+                "name": "חוליית סייבר מבצעי",
+                "commander_id": null
+            },
+            {
+                "id": 3,
+                "section_id": 1,
+                "name": "חוליית נגישות בסייבר",
+                "commander_id": null
+            },
+            {
+                "id": 4,
+                "section_id": 2,
+                "name": "חוליית אמצעי קצה",
+                "commander_id": null
+            },
+            {
+                "id": 5,
+                "section_id": 2,
+                "name": "חוליית סיוע מבצעי",
+                "commander_id": null
+            },
+            {
+                "id": 6,
+                "section_id": 2,
+                "name": "חוליית מענים מהירים",
+                "commander_id": null
+            },
+            {
+                "id": 7,
+                "section_id": 3,
+                "name": "חוליית פרויקטים ואמצעים",
+                "commander_id": null
+            },
+            {
+                "id": 8,
+                "section_id": 3,
+                "name": "חוליית תחבורת תקשורת",
+                "commander_id": null
+            },
+            {
+                "id": 9,
+                "section_id": 4,
+                "name": "חוליית תקציב",
+                "commander_id": null
+            },
+            {
+                "id": 10,
+                "section_id": 4,
+                "name": "חוליית מערכה (אורית)",
+                "commander_id": null
+            },
+            {
+                "id": 11,
+                "section_id": 4,
+                "name": "חוליית מערכה (רפאל)",
+                "commander_id": null
+            },
+            {
+                "id": 12,
+                "section_id": 4,
+                "name": "חוליית נ\"מ",
+                "commander_id": null
+            },
+            {
+                "id": 13,
+                "section_id": 4,
+                "name": "חוליית קש\"ח ושותפויות",
+                "commander_id": null
+            },
+            {
+                "id": 14,
+                "section_id": 5,
+                "name": "חוליית הפקה ארצית",
+                "commander_id": null
+            },
+            {
+                "id": 15,
+                "section_id": 5,
+                "name": "חוליית ב\"ר",
+                "commander_id": null
+            },
+            {
+                "id": 16,
+                "section_id": 5,
+                "name": "חוליית סייבר",
+                "commander_id": null
+            },
+            {
+                "id": 17,
+                "section_id": 5,
+                "name": "חוליית מחת\"ק",
+                "commander_id": null
+            },
+            {
+                "id": 18,
+                "section_id": 5,
+                "name": "חוליית בקרות",
+                "commander_id": null
+            },
+            {
+                "id": 19,
+                "section_id": 6,
+                "name": "חות\"ם",
+                "commander_id": null
+            },
+            {
+                "id": 20,
+                "section_id": 6,
+                "name": "חוס\"ם",
+                "commander_id": null
+            },
+            {
+                "id": 21,
+                "section_id": 6,
+                "name": "מ\"מ",
+                "commander_id": null
+            },
+            {
+                "id": 22,
+                "section_id": 6,
+                "name": "חוליית בטחון מידע וחסיונות",
+                "commander_id": null
+            },
+            {
+                "id": 23,
+                "section_id": 7,
+                "name": "סלע",
+                "commander_id": null
+            },
+            {
+                "id": 24,
+                "section_id": 7,
+                "name": "שהם",
+                "commander_id": null
+            },
+            {
+                "id": 25,
+                "section_id": 7,
+                "name": "רשויות",
+                "commander_id": null
+            },
+            {
+                "id": 26,
+                "section_id": 7,
+                "name": "קיסר",
+                "commander_id": null
+            },
+            {
+                "id": 27,
+                "section_id": 8,
+                "name": "7100",
+                "commander_id": null
+            },
+            {
+                "id": 28,
+                "section_id": 8,
+                "name": "7103",
+                "commander_id": null
+            },
+            {
+                "id": 29,
+                "section_id": 8,
+                "name": "משל\"ט טכנו סיגינטי",
+                "commander_id": null
+            },
+            {
+                "id": 30,
+                "section_id": 9,
+                "name": "מס\"א",
+                "commander_id": null
+            },
+            {
+                "id": 31,
+                "section_id": 9,
+                "name": "קריפטו",
+                "commander_id": null
+            }
+        ],
+        "employees": [],
+        "attendance_logs": [],
+        "attendance_logs_archive": [],
+        "transfer_requests": [],
+        "system_settings": [
+            {
+                "key": "alerts_weekend_enabled",
+                "value": "false",
+                "description": "האם לאפשר שליחת התראות דיווח בימי שישי ושבת",
+                "updated_at": "2026-02-09T10:51:46.044643"
+            },
+            {
+                "key": "morning_report_deadline",
+                "value": "09:00",
+                "description": null,
+                "updated_at": "2026-03-05T12:31:50.361137"
+            },
+            {
+                "key": "last_morning_reminder_run",
+                "value": "2026-06-29",
+                "description": null,
+                "updated_at": "2026-02-15T09:34:00.034563"
+            }
+        ]
+    }
+}

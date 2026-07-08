@@ -41,7 +41,7 @@ def create_app():
                     "GET, POST, PUT, DELETE, OPTIONS"
                 )
                 response.headers["Access-Control-Allow-Headers"] = (
-                    "Content-Type, Authorization, Access-Control-Allow-Private-Network, bypass-tunnel-reminder"
+                    "Content-Type, Authorization, Access-Control-Allow-Private-Network"
                 )
                 response.headers["Access-Control-Allow-Credentials"] = "true"
                 response.headers["Access-Control-Allow-Private-Network"] = "true"
@@ -56,7 +56,7 @@ def create_app():
                 "GET, POST, PUT, DELETE, OPTIONS"
             )
             response.headers["Access-Control-Allow-Headers"] = (
-                "Content-Type, Authorization, Access-Control-Allow-Private-Network, bypass-tunnel-reminder"
+                "Content-Type, Authorization, Access-Control-Allow-Private-Network"
             )
             response.headers["Access-Control-Allow-Credentials"] = "true"
             response.headers["Access-Control-Allow-Private-Network"] = "true"
