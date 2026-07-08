@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   X, 
-  Sparkles, 
+  HelpCircle, 
   ChevronRight,
   RefreshCw,
   MessageCircle,
@@ -208,7 +208,7 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
             }}
             className="absolute pointer-events-none"
           >
-            <Sparkles className="w-3 h-3 text-primary/60" />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
           </motion.div>
         ))}
 
@@ -477,7 +477,7 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] flex items-center justify-center text-primary">
-                    <Sparkles className="w-4 h-4" />
+                    <HelpCircle className="w-4 h-4" />
                   </div>
                   {!isSingleStep && (
                     <span className="text-[10px] font-black text-primary uppercase tracking-widest">
@@ -575,7 +575,7 @@ export const TourGuideOverlay: React.FC<TourGuideOverlayProps> = ({
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
                 >
-                  <Sparkles className="w-7 h-7 text-primary" />
+                  <RefreshCw className="w-7 h-7 text-primary" />
                 </motion.div>
               </div>
             </div>

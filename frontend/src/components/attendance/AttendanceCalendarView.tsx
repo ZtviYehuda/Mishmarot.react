@@ -106,8 +106,8 @@ function WeekColumnCell({ stats, selectedDate, onClick }: {
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center opacity-40">
-           <ShabbatIcon width={32} height={32} />
-           <span className="text-xs font-bold mt-2">סופ"ש</span>
+          <ShabbatIcon width={32} height={32} />
+          <span className="text-xs font-bold mt-2">סופ"ש</span>
         </div>
       )}
 
@@ -837,55 +837,41 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
       className="flex flex-col gap-3"
       dir="rtl"
     >
-      {/* Prominent Back/Close Button Header */}
-      <div className="flex items-center justify-between border-b border-border/20 pb-3 mb-1 shrink-0">
+      {/* ══ ROW 1: Navigation, Filter & View toggle (Minimalist Unified Toolbar) ══ */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-card/40 p-3 rounded-2xl border border-border/40 sticky top-0 md:static z-30 backdrop-blur-md md:backdrop-blur-none">
+        
+        {/* Navigation and Period title */}
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-            <CalendarDays className="w-4 h-4" />
+          <button onClick={() => navigate(-1)}
+            className="w-8 h-8 rounded-xl border border-border/40 flex items-center justify-center hover:bg-muted active:scale-95 transition-all shrink-0">
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-xs sm:text-sm font-black text-foreground tracking-tight">{periodLabel}</span>
+            <button onClick={goToday} className="text-[10px] font-black text-primary hover:underline bg-primary/10 px-2 py-0.5 rounded-lg transition-all">
+              היום
+            </button>
           </div>
-          <span className="text-xs font-black text-foreground">לוח שנה נוכחות</span>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onClose}
-          className="h-8 rounded-xl font-bold text-xs bg-card hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30 border border-border/50 text-muted-foreground gap-1.5 shadow-sm"
-        >
-          <X className="w-3.5 h-3.5" />
-          <span>סגור וחזור לרשימה</span>
-        </Button>
-      </div>
-      {/* ══ ROW 1: Navigation ══ */}
-      <div className="flex items-center gap-2">
-        <button onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl border border-border/50 flex items-center justify-center hover:bg-muted active:scale-95 transition-all shrink-0">
-          <ChevronRight className="w-4 h-4" />
-        </button>
-        <div className="flex-1 flex flex-col items-center">
-          <span className="text-sm font-black text-foreground tracking-tight">{periodLabel}</span>
-          <button onClick={goToday} className="text-[9px] font-bold text-primary hover:underline mt-0.5 leading-none">
-            היום
+
+          <button onClick={() => navigate(1)}
+            className="w-8 h-8 rounded-xl border border-border/40 flex items-center justify-center hover:bg-muted active:scale-95 transition-all shrink-0">
+            <ChevronLeft className="w-4 h-4" />
           </button>
         </div>
-        <button onClick={() => navigate(1)}
-          className="w-9 h-9 rounded-xl border border-border/50 flex items-center justify-center hover:bg-muted active:scale-95 transition-all shrink-0">
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-      </div>
 
-      {/* ══ ROW 2: View toggle + actions ══ */}
-      <div className="flex items-center justify-between gap-2 bg-card/40 p-2 sm:p-3 rounded-2xl border border-border/40 sticky top-0 md:static z-30 backdrop-blur-md md:backdrop-blur-none">
-        <div className="flex items-center gap-2 min-w-0">
+        {/* View toggle + filters */}
+        <div className="flex items-center justify-between sm:justify-end gap-2">
           <div className="flex items-center gap-0.5 bg-muted/50 rounded-xl p-1 border border-border/40 shrink-0">
             <button onClick={() => setViewMode("week")}
               className={cn("flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all",
-                viewMode === "week" ? "bg-card text-primary border border-border/40" : "text-muted-foreground hover:text-foreground")}>
-              <CalendarDays className="w-3.5 h-3.5" /><span className="hidden sm:inline">שבועי</span>
+                viewMode === "week" ? "bg-card text-primary border border-border/40 shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+              <CalendarDays className="w-3.5 h-3.5" /><span>שבועי</span>
             </button>
             <button onClick={() => setViewMode("month")}
               className={cn("flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all",
-                viewMode === "month" ? "bg-card text-primary border border-border/40" : "text-muted-foreground hover:text-foreground")}>
-              <CalendarRange className="w-3.5 h-3.5" /><span className="hidden sm:inline">חודשי</span>
+                viewMode === "month" ? "bg-card text-primary border border-border/40 shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+              <CalendarRange className="w-3.5 h-3.5" /><span>חודשי</span>
             </button>
           </div>
 

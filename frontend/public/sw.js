@@ -5,7 +5,6 @@ const OFFLINE_URL = '/offline.html';
 const PRECACHE_ASSETS = [
   OFFLINE_URL,
   '/logo_unit.png',
-  '/favicon.ico',
   '/',
 ];
 

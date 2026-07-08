@@ -3,7 +3,6 @@ import {
   MessageSquare,
   Send,
   History,
-  Sparkles,
   AlertCircle,
   CheckCircle2,
   X,
@@ -22,6 +21,7 @@ import {
   Trash2,
   Plus,
   Users,
+  GitPullRequest
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
@@ -932,7 +932,7 @@ const FeedbackPage = () => {
                               onClick={() => setAddUpdateOpen(true)}
                               className="h-11 px-5 rounded-2xl bg-gradient-to-l from-violet-600 to-primary text-white font-black text-xs shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all flex items-center gap-2 shrink-0"
                             >
-                              <Sparkles className="w-3.5 h-3.5" />
+                              <GitPullRequest className="w-3.5 h-3.5" />
                               עדכון גרסה
                             </Button>
                           )}
@@ -988,10 +988,10 @@ const FeedbackPage = () => {
                             {(
                               [
                                 { value: "all", label: "כל הסוגים" },
-                                { value: "bug", label: "🐛 באג" },
-                                { value: "improvement", label: "💡 שיפור" },
-                                { value: "feature", label: "✨ פיצ'ר" },
-                                { value: "support", label: "🛎 תמיכה" },
+                                { value: "bug", label: "באג" },
+                                { value: "improvement", label: "שיפור" },
+                                { value: "feature", label: "פיצ'ר" },
+                                { value: "support", label: "תמיכה" },
                               ] as const
                             ).map(({ value, label }) => (
                               <button
@@ -1035,13 +1035,21 @@ const FeedbackPage = () => {
                       {/* Stylized Cards List */}
                       <div className="space-y-3">
                         {filteredItems.length === 0 ? (
-                          <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
-                            <Sparkles className="w-12 h-12 text-muted-foreground/30 mb-3" />
-                            <h3 className="text-sm font-black text-foreground">
+                          <div className="py-16 flex flex-col items-center justify-center text-center bg-card/10 rounded-[2rem] border border-border/30 backdrop-blur-sm relative overflow-hidden">
+                            {/* Graphic visual: modern minimalist envelope ticket */}
+                            <div className="relative w-16 h-12 mb-4 flex items-center justify-center">
+                              <div className="absolute inset-0 bg-primary/5 rounded-xl border border-primary/20 transform rotate-3" />
+                              <div className="absolute inset-0 bg-card rounded-xl border border-border/50 shadow-sm flex flex-col justify-between p-2 transform -rotate-2">
+                                <div className="w-8 h-1 bg-primary/20 rounded" />
+                                <div className="w-12 h-1 bg-muted-foreground/10 rounded" />
+                                <div className="w-6 h-1 bg-muted-foreground/10 rounded" />
+                              </div>
+                            </div>
+                            <h3 className="text-xs font-black text-foreground">
                               אין פניות תואמות
                             </h3>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              לא נמצאו פניות שעונות לסינון שהגדרת.
+                            <p className="text-[10px] text-muted-foreground mt-1 max-w-[200px] leading-relaxed">
+                              לא נמצאו פניות העונות לסינון שהגדרת.
                             </p>
                           </div>
                         ) : (
@@ -1801,7 +1809,7 @@ const FeedbackPage = () => {
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/10">
-                            <Sparkles className="w-4 h-4" />
+                            <Activity className="w-4 h-4" />
                           </div>
                           <div>
                             <h3 className="font-black text-sm text-foreground">
@@ -1844,7 +1852,7 @@ const FeedbackPage = () => {
                         </div>
                       ) : systemUpdates.length === 0 ? (
                         <div className="py-12 flex flex-col items-center justify-center text-center bg-card/20 rounded-3xl border border-dashed border-border/50">
-                          <Sparkles className="w-10 h-10 text-primary/40 mb-3" />
+                          <Activity className="w-10 h-10 text-primary/40 mb-3" />
                           <h3 className="text-base font-black text-foreground">
                             אין עדכונים עדיין
                           </h3>
@@ -2128,7 +2136,7 @@ const FeedbackPage = () => {
                           <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 mt-6 lg:mt-0">
                             <p className="text-[11px] font-black text-primary mb-1 flex items-center gap-1.5 justify-end">
                               <span>טיפ מועיל</span>
-                              <Sparkles className="w-3.5 h-3.5" />
+                              <AlertCircle className="w-3.5 h-3.5" />
                             </p>
                             <p className="text-[10px] font-bold text-muted-foreground leading-relaxed">
                               תוכלו לעקוב אחר סטטוס הטיפול בפנייתכם תחת הלשונית "הפניות שלי" בכל עת.
@@ -2435,7 +2443,7 @@ const FeedbackPage = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                        <Sparkles className="w-4.5 h-4.5 text-white" />
+                        <Activity className="w-4.5 h-4.5 text-white" />
                       </div>
                       <div>
                         <h2 className="font-black text-base text-foreground">
@@ -2543,7 +2551,7 @@ const FeedbackPage = () => {
                       <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4 ml-2" />
+                        <CheckCircle2 className="w-4 h-4 ml-2" />
                         פרסם עדכון
                       </>
                     )}
@@ -2610,7 +2618,7 @@ const FeedbackPage = () => {
           )}
           <MobileBottomNavLink
             label="מה חדש?"
-            icon={Sparkles}
+            icon={Activity}
             active={activeTab === "whats-new"}
             onClick={() => {
               setActiveTab("whats-new");

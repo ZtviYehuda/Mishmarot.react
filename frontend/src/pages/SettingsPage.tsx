@@ -60,6 +60,13 @@ export default function SettingsPage() {
       setActiveTab(urlTab);
     }
   }, [urlTab]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", tab);
+    setSearchParams(newParams, { replace: true });
+  };
   // const [mobileNavOpen, setMobileNavOpen] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
@@ -69,7 +76,8 @@ export default function SettingsPage() {
   // Backup Config State
   const [backupConfig, setBackupConfig] = useState({
     enabled: false,
-    interval_hours: 24,
+    interval_days: 1,
+    max_backups: 15,
     last_backup: null,
   });
 
@@ -96,12 +104,30 @@ export default function SettingsPage() {
     }
   };
 
+  const [backups, setBackups] = useState<any[]>([]);
+  const [isLoadingBackups, setIsLoadingBackups] = useState(false);
+
+  const fetchBackups = async () => {
+    if (!user?.is_admin) return;
+    setIsLoadingBackups(true);
+    try {
+      const res = await apiClient.get("/admin/backup/list");
+      setBackups(res.data);
+    } catch (err) {
+      console.error("Failed to load backups list", err);
+    } finally {
+      setIsLoadingBackups(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "backup" && user?.is_admin) {
       apiClient
         .get("/admin/backup/config")
         .then((res) => setBackupConfig(res.data))
         .catch((err) => console.error("Failed to load backup config", err));
+      
+      fetchBackups();
     }
   }, [activeTab, user]);
 
@@ -128,12 +154,13 @@ export default function SettingsPage() {
       const link = document.createElement("a");
       link.href = url;
       const date = new Date().toISOString().split("T")[0];
-      link.setAttribute("download", `toren_backup_${date}.json`);
+      link.setAttribute("download", `toren_backup_${date}.sql`);
       document.body.appendChild(link);
       link.click();
       link.remove();
 
       toast.success("הגיבוי הושלם בהצלחה");
+      fetchBackups(); // Refresh list
     } catch (err) {
       toast.error("שגיאה בביצוע הגיבוי");
       console.error(err);
@@ -154,11 +181,52 @@ export default function SettingsPage() {
           ...prev,
           last_backup: data.last_backup,
         }));
+        fetchBackups(); // Refresh list
       }
     } catch (e) {
       toast.error("שגיאה בביצוע הגיבוי");
     } finally {
       setIsServerBackingUp(false);
+    }
+  };
+
+  const handleDownloadBackupFile = async (filename: string) => {
+    try {
+      const response = await apiClient.get(`/admin/backup/download/${filename}`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("הקובץ הורד בהצלחה");
+    } catch (err) {
+      toast.error("שגיאה בהורדת הקובץ");
+    }
+  };
+
+  const handleToggleLockBackup = async (filename: string) => {
+    try {
+      const { data } = await apiClient.post(`/admin/backup/lock/${filename}`);
+      toast.success(data.action === "locked" ? "הקובץ ננעל בהצלחה" : "נעילת הקובץ שוחררה");
+      fetchBackups();
+    } catch (err) {
+      toast.error("שגיאה בעדכון נעילת הקובץ");
+    }
+  };
+
+  const handleDeleteBackupFile = async (filename: string) => {
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את קובץ הגיבוי ${filename}?`)) return;
+    try {
+      await apiClient.delete(`/admin/backup/delete/${filename}`);
+      toast.success("קובץ הגיבוי נמחק בהצלחה");
+      fetchBackups();
+    } catch (err) {
+      const errorMsg = (err as any).response?.data?.error || "שגיאה במחיקת הקובץ";
+      toast.error(errorMsg);
     }
   };
 
@@ -431,7 +499,7 @@ export default function SettingsPage() {
               id="profile-tab"
               label="פרופיל אישי"
               active={activeTab === "profile"}
-              onClick={() => setActiveTab("profile")}
+              onClick={() => handleTabChange("profile")}
               className={cn(
                 searchParams.get("tutorial") === "profile" &&
                   "tutorial-highlight",
@@ -442,7 +510,7 @@ export default function SettingsPage() {
             id="appearance-tab"
             label="מראה ותצוגה"
             active={activeTab === "appearance"}
-            onClick={() => setActiveTab("appearance")}
+            onClick={() => handleTabChange("appearance")}
             className={cn(
               searchParams.get("tutorial") === "settings" &&
                 "tutorial-highlight",
@@ -453,7 +521,7 @@ export default function SettingsPage() {
               id="security-tab"
               label="אבטחה"
               active={activeTab === "security"}
-              onClick={() => setActiveTab("security")}
+              onClick={() => handleTabChange("security")}
             />
           )}
           {!user?.is_temp_commander && (
@@ -461,7 +529,7 @@ export default function SettingsPage() {
               id="notifications-tab"
               label="התראות"
               active={activeTab === "notifications"}
-              onClick={() => setActiveTab("notifications")}
+              onClick={() => handleTabChange("notifications")}
             />
           )}
           {user?.is_admin && (
@@ -469,7 +537,7 @@ export default function SettingsPage() {
               id="backup-tab"
               label="גיבוי ושחזור"
               active={activeTab === "backup"}
-              onClick={() => setActiveTab("backup")}
+              onClick={() => handleTabChange("backup")}
             />
           )}
         </div>
@@ -571,6 +639,11 @@ export default function SettingsPage() {
               handleBackup={handleBackup}
               isRestoring={isRestoring}
               handleRestore={handleRestore}
+              backups={backups}
+              isLoadingBackups={isLoadingBackups}
+              handleDownloadBackupFile={handleDownloadBackupFile}
+              handleDeleteBackupFile={handleDeleteBackupFile}
+              handleToggleLockBackup={handleToggleLockBackup}
             />
           )}
         </div>
@@ -581,7 +654,7 @@ export default function SettingsPage() {
             label="תצוגה"
             icon={Palette}
             active={activeTab === "appearance"}
-            onClick={() => setActiveTab("appearance")}
+            onClick={() => handleTabChange("appearance")}
           />
           {!user?.is_temp_commander && (
             <MobileBottomNavLink
@@ -589,7 +662,7 @@ export default function SettingsPage() {
               label="אבטחה"
               icon={ShieldCheck}
               active={activeTab === "security"}
-              onClick={() => setActiveTab("security")}
+              onClick={() => handleTabChange("security")}
             />
           )}
           {!user?.is_temp_commander && (
@@ -597,7 +670,7 @@ export default function SettingsPage() {
               label="התראות"
               icon={Bell}
               active={activeTab === "notifications"}
-              onClick={() => setActiveTab("notifications")}
+              onClick={() => handleTabChange("notifications")}
             />
           )}
           {user?.is_admin && (
@@ -605,7 +678,7 @@ export default function SettingsPage() {
               label="גיבוי"
               icon={Database}
               active={activeTab === "backup"}
-              onClick={() => setActiveTab("backup")}
+              onClick={() => handleTabChange("backup")}
             />
           )}
         </div>

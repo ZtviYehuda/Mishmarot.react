@@ -17,7 +17,7 @@ def seed():
         cur = conn.cursor()
         
         try:
-            print("🌱 Seeding data...")
+            print("[INFO] Seeding data...")
             
             # 1. Clear existing data (optional, but good for "reset")
             # We must be careful with foreign keys.
@@ -154,11 +154,11 @@ def seed():
                         """, (emp_id, sid, start_dt, end_dt, 5))
             
             conn.commit()
-            print("✅ Seeding completed successfully!")
+            print("[SUCCESS] Seeding completed successfully!")
             
         except Exception as e:
             conn.rollback()
-            print(f"❌ Seeding failed: {e}")
+            print(f"[ERROR] Seeding failed: {e}")
             import traceback
             traceback.print_exc()
         finally:

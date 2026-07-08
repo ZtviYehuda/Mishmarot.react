@@ -7,6 +7,7 @@ export function PwaInstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isIOS, setIsIOS] = useState(false);
+  const [isHttpRemote, setIsHttpRemote] = useState(false);
 
   useEffect(() => {
     // 1. Check if already running in standalone (installed)
@@ -18,9 +19,9 @@ export function PwaInstallPrompt() {
       return;
     }
 
-    // 2. Check if dismissed recently
-    const isDismissed = localStorage.getItem("pwa_prompt_dismissed") === "true";
-    if (isDismissed) {
+    // 2. Check if already shown once to the user to avoid bugging them
+    const isShownAlready = localStorage.getItem("pwa_prompt_shown_v2") === "true";
+    if (isShownAlready) {
       return;
     }
 
@@ -29,19 +30,28 @@ export function PwaInstallPrompt() {
     const ios = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
     setIsIOS(ios);
 
-    if (ios) {
-      // For iOS, show the prompt after a short delay (e.g. 3 seconds after page load)
+    // Check if we are on a remote HTTP connection (e.g. Tailscale HTTP IP)
+    const isRemoteHttp =
+      window.location.protocol === "http:" &&
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1";
+    setIsHttpRemote(isRemoteHttp);
+
+    if (ios || isRemoteHttp) {
+      // Show manual install helper after a short delay on remote HTTP or iOS
       const timer = setTimeout(() => {
         setShowPrompt(true);
+        localStorage.setItem("pwa_prompt_shown_v2", "true");
       }, 3000);
       return () => clearTimeout(timer);
     }
 
-    // 4. Capture native beforeinstallprompt event for Android/Chrome/Windows
+    // 4. Capture native beforeinstallprompt event for Android/Chrome/Windows (HTTPS/localhost)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowPrompt(true);
+      localStorage.setItem("pwa_prompt_shown_v2", "true");
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -69,7 +79,7 @@ export function PwaInstallPrompt() {
   };
 
   const handleDismiss = () => {
-    localStorage.setItem("pwa_prompt_dismissed", "true");
+    localStorage.setItem("pwa_prompt_shown_v2", "true");
     setShowPrompt(false);
   };
 
@@ -115,6 +125,11 @@ export function PwaInstallPrompt() {
                       בדפדפן Safari, ולאחר מכן בחר ב-
                       <strong>'הוסף למסך הבית'</strong>.
                     </span>
+                  ) : isHttpRemote ? (
+                    <span>
+                      רוצה להוסיף את המערכת למסך הבית? לחץ על לחצן האפשרויות בדפדפן (3 נקודות בפינת המסך) ולאחר מכן בחר ב-
+                      <strong>'הוסף למסך הבית'</strong> או <strong>'התקן אפליקציה'</strong>.
+                    </span>
                   ) : (
                     "התקן את המערכת בטלפון הנייד או במחשב לגישה מהירה ונוחה, קבלת התראות ושיפור הביצועים."
                   )}
@@ -122,7 +137,7 @@ export function PwaInstallPrompt() {
               </div>
             </div>
 
-            {!isIOS && (
+            {!isIOS && !isHttpRemote ? (
               <div className="flex gap-2.5 mt-4 justify-end">
                 <Button
                   variant="ghost"
@@ -137,6 +152,15 @@ export function PwaInstallPrompt() {
                 >
                   <Download className="w-4 h-4" />
                   התקן עכשיו
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2.5 mt-4 justify-end">
+                <Button
+                  onClick={handleDismiss}
+                  className="h-10 text-[13px] font-bold bg-primary hover:bg-primary/95 text-white rounded-xl px-5 shadow-lg shadow-primary/20 cursor-pointer"
+                >
+                  הבנתי, תודה
                 </Button>
               </div>
             )}

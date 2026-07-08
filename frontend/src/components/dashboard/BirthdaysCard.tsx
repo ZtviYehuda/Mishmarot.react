@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Gift, Sparkles } from "lucide-react";
+import { Calendar, Gift } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { BirthdayGreetingsModal } from "./BirthdayGreetingsModal";
@@ -118,7 +118,7 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                       size="sm"
                       className="hidden sm:flex h-9 rounded-xl gap-2 font-black text-xs border-primary/20 hover:bg-primary/5 text-primary"
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Gift className="w-3.5 h-3.5" />
                       <span>שליחת ברכה</span>
                     </Button>
                     <WhatsAppButton
@@ -194,11 +194,6 @@ export const BirthdaysCard = forwardRef<any, BirthdaysCardProps>(
                             >
                               {initials}
                             </div>
-                            {isToday && (
-                              <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-primary text-white p-1 sm:p-2 rounded-full shadow-lg animate-bounce">
-                                <Sparkles className="w-3 h-3 sm:w-5 sm:h-5" />
-                              </div>
-                            )}
                           </div>
 
                           {/* Info */}

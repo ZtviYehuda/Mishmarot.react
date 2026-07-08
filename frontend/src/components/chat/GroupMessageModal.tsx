@@ -114,11 +114,133 @@ export const GroupMessageModal: React.FC<GroupMessageModalProps> = ({ open, onCl
 
   const isIndividualSelected = (id: number) => selectedIndividuals.has(id);
 
+  const findParentSectionOfTeam = (teamId: number) => {
+    for (const dept of structure) {
+      for (const sec of dept.sections) {
+        if (sec.teams.some((team) => team.id === teamId)) {
+          return { dept, sec };
+        }
+      }
+    }
+    return null;
+  };
+
   const toggleTarget = (target: OrgTarget) => {
     setSelectedTargets((prev) => {
       const exists = prev.some((t) => t.level === target.level && t.id === target.id);
-      if (exists) return prev.filter((t) => !(t.level === target.level && t.id === target.id));
-      return [...prev, target];
+
+      if (exists) {
+        // --- DESELECT CASCADE ---
+        let toRemove: { level: OrgLevel; id: number }[] = [target];
+
+        if (target.level === "department") {
+          const dept = structure.find((d) => d.id === target.id);
+          if (dept) {
+            dept.sections.forEach((sec) => {
+              toRemove.push({ level: "section", id: sec.id });
+              sec.teams.forEach((team) => {
+                toRemove.push({ level: "team", id: team.id });
+              });
+            });
+          }
+        } else if (target.level === "section") {
+          let foundSec: SectionNode | undefined;
+          let parentDept: DepartmentNode | undefined;
+          for (const d of structure) {
+            const s = d.sections.find((s) => s.id === target.id);
+            if (s) {
+              foundSec = s;
+              parentDept = d;
+              break;
+            }
+          }
+          if (foundSec) {
+            foundSec.teams.forEach((team) => {
+              toRemove.push({ level: "team", id: team.id });
+            });
+          }
+          if (parentDept) {
+            toRemove.push({ level: "department", id: parentDept.id });
+          }
+        } else if (target.level === "team") {
+          const parents = findParentSectionOfTeam(target.id);
+          if (parents) {
+            toRemove.push({ level: "section", id: parents.sec.id });
+            toRemove.push({ level: "department", id: parents.dept.id });
+          }
+        }
+
+        return prev.filter(
+          (t) => !toRemove.some((r) => r.level === t.level && r.id === t.id)
+        );
+      } else {
+        // --- SELECT CASCADE ---
+        let toAdd: OrgTarget[] = [target];
+
+        if (target.level === "department") {
+          const dept = structure.find((d) => d.id === target.id);
+          if (dept) {
+            dept.sections.forEach((sec) => {
+              toAdd.push({ level: "section", id: sec.id, name: sec.name });
+              sec.teams.forEach((team) => {
+                toAdd.push({ level: "team", id: team.id, name: team.name });
+              });
+            });
+          }
+        } else if (target.level === "section") {
+          let foundSec: SectionNode | undefined;
+          let parentDept: DepartmentNode | undefined;
+          for (const d of structure) {
+            const s = d.sections.find((s) => s.id === target.id);
+            if (s) {
+              foundSec = s;
+              parentDept = d;
+              break;
+            }
+          }
+          if (foundSec) {
+            foundSec.teams.forEach((team) => {
+              toAdd.push({ level: "team", id: team.id, name: team.name });
+            });
+          }
+          if (parentDept && foundSec) {
+            const siblingSections = parentDept.sections.filter((s) => s.id !== target.id);
+            const allSiblingsSelected = siblingSections.every((s) =>
+              prev.some((t) => t.level === "section" && t.id === s.id)
+            );
+            if (allSiblingsSelected) {
+              toAdd.push({ level: "department", id: parentDept.id, name: parentDept.name });
+            }
+          }
+        } else if (target.level === "team") {
+          const parents = findParentSectionOfTeam(target.id);
+          if (parents) {
+            const siblingTeams = parents.sec.teams.filter((t) => t.id !== target.id);
+            const allSiblingTeamsSelected = siblingTeams.every((t) =>
+              prev.some((target) => target.level === "team" && target.id === t.id)
+            );
+            if (allSiblingTeamsSelected) {
+              toAdd.push({ level: "section", id: parents.sec.id, name: parents.sec.name });
+              
+              const siblingSections = parents.dept.sections.filter((s) => s.id !== parents.sec.id);
+              const allSiblingSectionsSelected = siblingSections.every((s) =>
+                prev.some((t) => t.level === "section" && t.id === s.id)
+              );
+              if (allSiblingSectionsSelected) {
+                toAdd.push({ level: "department", id: parents.dept.id, name: parents.dept.name });
+              }
+            }
+          }
+        }
+
+        const updated = [...prev];
+        toAdd.forEach((item) => {
+          if (!updated.some((t) => t.level === item.level && t.id === item.id)) {
+            updated.push(item);
+          }
+        });
+        return updated;
+      }
     });
   };
 
@@ -131,23 +253,39 @@ export const GroupMessageModal: React.FC<GroupMessageModalProps> = ({ open, onCl
   };
 
   const removeRecipient = (empId: number) => {
-    // Remove from individual selections
     setSelectedIndividuals((prev) => {
       const next = new Set(prev);
       next.delete(empId);
       return next;
     });
-    // Also remove from org targets that include this employee
     const emp = employees.find((e) => e.id === empId);
     if (emp) {
-      setSelectedTargets((prev) =>
-        prev.filter((t) => {
-          if (t.level === "department" && emp.department_id === t.id) return false;
-          if (t.level === "section" && emp.section_id === t.id) return false;
-          if (t.level === "team" && emp.team_id === t.id) return false;
-          return true;
-        })
-      );
+      setSelectedTargets((prev) => {
+        let toRemove: { level: OrgLevel; id: number }[] = [];
+        
+        if (emp.team_id) {
+          toRemove.push({ level: "team", id: emp.team_id });
+          const parents = findParentSectionOfTeam(emp.team_id);
+          if (parents) {
+            toRemove.push({ level: "section", id: parents.sec.id });
+            toRemove.push({ level: "department", id: parents.dept.id });
+          }
+        }
+        if (emp.section_id) {
+          toRemove.push({ level: "section", id: emp.section_id });
+          const parentDept = structure.find((d) => d.sections.some((s) => s.id === emp.section_id));
+          if (parentDept) {
+            toRemove.push({ level: "department", id: parentDept.id });
+          }
+        }
+        if (emp.department_id) {
+          toRemove.push({ level: "department", id: emp.department_id });
+        }
+        
+        return prev.filter(
+          (t) => !toRemove.some((r) => r.level === t.level && r.id === t.id)
+        );
+      });
     }
   };
 

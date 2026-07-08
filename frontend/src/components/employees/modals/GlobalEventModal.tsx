@@ -246,7 +246,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                   <span className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest pr-0.5">
                     בחר יחידה
                   </span>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-3 gap-2.5">
                     {/* Department */}
                     <Select
                       value={scope === "department" && targetId ? targetId : undefined}
@@ -260,15 +260,16 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                     >
                       <SelectTrigger
                         className={cn(
-                          "h-11 rounded-xl border text-right font-bold text-[13px] transition-all",
+                          "h-24 flex flex-col items-center justify-center gap-2 rounded-2xl border text-center font-bold text-xs transition-all duration-300",
+                          "hover:scale-[1.02] hover:shadow-md cursor-pointer",
                           scope === "department" && targetId
-                            ? "border-primary/40 bg-primary/5 text-primary"
-                            : "border-border/50 bg-background",
-                          (isScopeDisabled("department") || departments.length === 0) && "opacity-40",
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border/50 bg-background/50 hover:bg-background hover:border-border",
+                          (isScopeDisabled("department") || departments.length === 0) && "opacity-40 pointer-events-none",
                         )}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <Building2 className="w-4 h-4 shrink-0 text-muted-foreground" />
+                        <Building2 className={cn("w-6 h-6", scope === "department" && targetId ? "text-primary" : "text-muted-foreground")} />
+                        <div className="truncate max-w-full text-center px-1 font-black">
                           <SelectValue placeholder="מחלקה" />
                         </div>
                       </SelectTrigger>
@@ -295,15 +296,16 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                     >
                       <SelectTrigger
                         className={cn(
-                          "h-11 rounded-xl border text-right font-bold text-[13px] transition-all",
+                          "h-24 flex flex-col items-center justify-center gap-2 rounded-2xl border text-center font-bold text-xs transition-all duration-300",
+                          "hover:scale-[1.02] hover:shadow-md cursor-pointer",
                           scope === "section" && targetId
-                            ? "border-primary/40 bg-primary/5 text-primary"
-                            : "border-border/50 bg-background",
-                          (isScopeDisabled("section") || availableSections.length === 0) && "opacity-40",
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border/50 bg-background/50 hover:bg-background hover:border-border",
+                          (isScopeDisabled("section") || availableSections.length === 0) && "opacity-40 pointer-events-none",
                         )}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <LayoutPanelLeft className="w-4 h-4 shrink-0 text-muted-foreground" />
+                        <LayoutPanelLeft className={cn("w-6 h-6", scope === "section" && targetId ? "text-primary" : "text-muted-foreground")} />
+                        <div className="truncate max-w-full text-center px-1 font-black">
                           <SelectValue placeholder="מדור" />
                         </div>
                       </SelectTrigger>
@@ -333,15 +335,16 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                     >
                       <SelectTrigger
                         className={cn(
-                          "h-11 rounded-xl border text-right font-bold text-[13px] transition-all",
+                          "h-24 flex flex-col items-center justify-center gap-2 rounded-2xl border text-center font-bold text-xs transition-all duration-300",
+                          "hover:scale-[1.02] hover:shadow-md cursor-pointer",
                           scope === "team" && targetId
-                            ? "border-primary/40 bg-primary/5 text-primary"
-                            : "border-border/50 bg-background",
-                          (isScopeDisabled("team") || availableTeams.length === 0) && "opacity-40",
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border/50 bg-background/50 hover:bg-background hover:border-border",
+                          (isScopeDisabled("team") || availableTeams.length === 0) && "opacity-40 pointer-events-none",
                         )}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <Users className="w-4 h-4 shrink-0 text-muted-foreground" />
+                        <Users className={cn("w-6 h-6", scope === "team" && targetId ? "text-primary" : "text-muted-foreground")} />
+                        <div className="truncate max-w-full text-center px-1 font-black">
                           <SelectValue placeholder="חוליה" />
                         </div>
                       </SelectTrigger>
@@ -397,7 +400,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
               </span>
             </Label>
             <Textarea
-              placeholder="לדוגמה: יום מחלקה בירושלים..."
+              placeholder="לדוגמה: יום מחלקה..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="resize-none min-h-[80px] bg-background border-border/50 rounded-xl p-3 text-sm leading-relaxed"

@@ -725,19 +725,6 @@ export default function LoginPage() {
                           )}
                         </button>
                       </div>
-                    </div>             "absolute left-3 top-1/2 -translate-y-1/2 transition-colors z-10",
-                            isDark
-                              ? "text-slate-500 hover:text-slate-300"
-                              : "text-slate-400 hover:text-slate-600",
-                          )}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
                     </div>
 
                     <AnimatePresence>
@@ -839,8 +826,7 @@ export default function LoginPage() {
                                 ? "text-slate-500 group-focus-within:text-[var(--primary)]"
                                 : "text-slate-400 group-focus-within:text-[var(--primary)]",
                             )}
-                          >
-                          </ScanEye>
+                          />
                           <Input
                             id="username"
                             type="text"

@@ -74,7 +74,7 @@ const EmployeesChartComponent = (
   const cardRef = useRef<HTMLDivElement>(null);
   const [chartType, setChartType] = useState<"pie" | "bar">("pie");
   const [isOfficeSelected, setIsOfficeSelected] = useState(false);
-  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const [hoveredEntry, setHoveredEntry] = useState<any | null>(null);
 
   useImperativeHandle(ref, () => ({
     download: handleDownload,
@@ -247,37 +247,7 @@ const EmployeesChartComponent = (
     }
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const d = payload[0].payload;
-      return (
-        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-xl flex flex-col gap-1 min-w-[145px] pointer-events-none transition-all duration-200">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-sm shrink-0"
-              style={{ backgroundColor: d.fill || d.color || "#94a3b8" }}
-            />
-            <span className="font-black text-slate-800 dark:text-slate-100 text-[13px] tracking-tight leading-none">
-              {d.name}
-            </span>
-          </div>
-          <div className="h-[1px] bg-slate-100 dark:bg-slate-800/80 my-1 w-full" />
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
-              נוכחות
-            </span>
-            <span className="font-extrabold text-primary dark:text-blue-400 text-base leading-none">
-              {d.value} שוטרים
-            </span>
-          </div>
-          <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 leading-none mt-0.5">
-            {d.percentage}% {isOfficeSelected ? "מפירוט משרד" : "מכלל היחידה"}
-          </span>
-        </div>
-      );
-    }
-    return null;
-  };
+  // Fixed floating info card — shown below the chart when a segment is hovered
 
   return (
     <Card
@@ -435,6 +405,7 @@ const EmployeesChartComponent = (
                 className="overflow-visible"
                 width="100%"
                 height="100%"
+                minHeight={220}
               >
                 {chartType === "pie" ? (
                   <PieChart
@@ -445,16 +416,6 @@ const EmployeesChartComponent = (
                       top: isMobile ? 12 : 15,
                       bottom: isMobile ? 12 : 15,
                     }}
-                    onMouseMove={(e: any) => {
-                      if (e && e.chartX !== undefined && e.chartY !== undefined) {
-                        const isRight = e.chartX > (isMobile ? 120 : 160);
-                        setTooltipPos({
-                          x: isRight ? e.chartX - 160 : e.chartX + 15,
-                          y: e.chartY - 85,
-                        });
-                      }
-                    }}
-                    onMouseLeave={() => setTooltipPos(null)}
                   >
                     <Pie
                       data={chartData}
@@ -555,15 +516,12 @@ const EmployeesChartComponent = (
                             strokeOpacity={0.8}
                             className="cursor-pointer transition-all duration-500 outline-none hover:brightness-110"
                             onClick={() => handleStatusInteraction(entry)}
+                            onMouseEnter={() => setHoveredEntry(entry)}
+                            onMouseLeave={() => setHoveredEntry(null)}
                           />
                         );
                       })}
                     </Pie>
-                    <Tooltip
-                      content={<CustomTooltip />}
-                      position={tooltipPos || undefined}
-                      wrapperStyle={{ zIndex: 100 }}
-                    />
                     <text
                       x="50%"
                       y="50%"
@@ -615,9 +573,30 @@ const EmployeesChartComponent = (
                       domain={[0, totalEmployeesInScope || 10]}
                     />
                     <Tooltip
-                      content={<CustomTooltip />}
                       cursor={{ fill: "transparent" }}
-                      wrapperStyle={{ zIndex: 100 }}
+                      wrapperStyle={{ zIndex: 100, transition: "none" }}
+                      isAnimationActive={false}
+                      content={({ active, payload }: any) => {
+                        if (!active || !payload?.length) return null;
+                        const d = payload[0].payload;
+                        return (
+                          <div
+                            dir="rtl"
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm pointer-events-none min-w-[160px]"
+                          >
+                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.fill }} />
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight">{d.name}</span>
+                              <span className="text-[10px] text-slate-400 font-medium mt-0.5">{isOfficeSelected ? "מפירוט משרד" : "מכלל היחידה"}</span>
+                            </div>
+                            <div className="mr-auto flex items-baseline gap-1">
+                              <span className="font-extrabold text-primary dark:text-blue-400 text-base tabular-nums">{d.value}</span>
+                              <span className="text-[10px] text-slate-400 font-bold">שוטרים</span>
+                              <span className="text-[10px] font-black text-slate-500 mr-1">{d.percentage}%</span>
+                            </div>
+                          </div>
+                        );
+                      }}
                     />
                     <Bar
                       dataKey="value"
@@ -666,6 +645,49 @@ const EmployeesChartComponent = (
                 )}
               </ResponsiveContainer>
 
+            </div>
+          )}
+
+          {/* Fixed Hover Info Card — stays in place, only content updates */}
+          {chartType === "pie" && (
+            <div
+              className="mx-3 sm:mx-4 md:mx-6 mb-3"
+              style={{
+                opacity: hoveredEntry ? 1 : 0,
+                transform: hoveredEntry ? 'scale(1)' : 'scale(0.98)',
+                transition: 'opacity 120ms ease, transform 120ms ease',
+                pointerEvents: 'none',
+                minHeight: '56px',
+              }}
+            >
+              {hoveredEntry && (
+                <div
+                  dir="rtl"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+                >
+                  <div
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: hoveredEntry.fill }}
+                  />
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight">
+                      {hoveredEntry.name}
+                    </span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">
+                      {isOfficeSelected ? 'מפירוט משרד' : 'מכלל היחידה'}
+                    </span>
+                  </div>
+                  <div className="mr-auto flex items-baseline gap-1">
+                    <span className="font-extrabold text-primary dark:text-blue-400 text-base tabular-nums leading-none">
+                      {hoveredEntry.value}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-bold">שוטרים</span>
+                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 mr-1">
+                      {hoveredEntry.percentage}%
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

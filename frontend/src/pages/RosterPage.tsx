@@ -27,7 +27,6 @@ import {
   AlertCircle,
   Filter,
   X,
-  Sparkles,
   RotateCcw,
 } from "lucide-react";
 

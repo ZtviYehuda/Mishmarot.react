@@ -1,4 +1,5 @@
 import { useRef, forwardRef, useImperativeHandle } from "react";
+import { useEmployeeContext } from "@/context/EmployeeContext";
 import {
   Tooltip,
   TooltipContent,
@@ -70,6 +71,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
     ref,
   ) => {
     const cardRef = useRef<HTMLDivElement>(null);
+    const { openProfile } = useEmployeeContext();
 
     useImperativeHandle(ref, () => ({
       download: handleDownload,
@@ -358,26 +360,40 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               </p>
             </div>
           ) : (
-            <div className={cn("space-y-3 py-4", compact && "grid grid-cols-1 sm:grid-cols-2 gap-3.5 py-2")}>
+            <div className={cn("space-y-1.5 py-3", compact && "grid grid-cols-1 sm:grid-cols-2 gap-2 py-2")}>
               {data.map((item) => {
                 const availability =
                   item.total_count > 0
                     ? Math.round((item.present_count / item.total_count) * 100)
                     : 0;
 
-                let barColor = "bg-emerald-500";
-                let textColor = "text-emerald-600 dark:text-emerald-400";
-                let bgColor = "bg-emerald-50 dark:bg-emerald-900/10";
+                // Color thresholds aligned with system palette
+                const barColor =
+                  availability >= 70
+                    ? "#22c55e"   // green-500
+                    : availability >= 50
+                    ? "#f59e0b"   // amber-500
+                    : availability >= 30
+                    ? "#f97316"   // orange-500
+                    : "#ef4444";  // red-500
 
-                if (availability < 50) {
-                  barColor = "bg-red-500";
-                  textColor = "text-red-500 dark:text-red-400";
-                  bgColor = "bg-red-50 dark:bg-red-900/10";
-                } else if (availability < 70) {
-                  barColor = "bg-orange-500";
-                  textColor = "text-orange-500 dark:text-orange-400";
-                  bgColor = "bg-orange-50 dark:bg-orange-900/10";
-                }
+                const trackBg =
+                  availability >= 70
+                    ? "#dcfce7"   // green-100
+                    : availability >= 50
+                    ? "#fef9c3"   // yellow-100
+                    : availability >= 30
+                    ? "#ffedd5"   // orange-100
+                    : "#fee2e2";  // red-100
+
+                const pctTextColor =
+                  availability >= 70
+                    ? "text-emerald-700 dark:text-emerald-400"
+                    : availability >= 50
+                    ? "text-amber-600 dark:text-amber-400"
+                    : availability >= 30
+                    ? "text-orange-600 dark:text-orange-400"
+                    : "text-red-600 dark:text-red-400";
 
                 const isSelected = item.unit_id === selectedUnitId;
 
@@ -385,56 +401,67 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                   <div
                     key={item.unit_id}
                     className={cn(
-                      "p-3 rounded-2xl transition-all border border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/40",
-                      compact && "p-2.5 hover:bg-slate-100/50 dark:hover:bg-slate-800/30",
+                      "px-3 py-2.5 rounded-xl transition-all border",
+                      compact && "px-2.5 py-2",
                       onUnitClick ? "cursor-pointer" : "",
                       isSelected
-                        ? "border-primary/20 bg-primary/5 dark:border-primary/30"
-                        : ""
+                        ? "border-primary/30 bg-primary/5 dark:border-primary/30 dark:bg-primary/10"
+                        : "border-transparent hover:border-slate-200/80 hover:bg-slate-50/70 dark:hover:border-slate-700/60 dark:hover:bg-slate-800/40"
                     )}
                     onClick={() => {
-                      if (onUnitClick) onUnitClick(item.unit_id, item.level);
+                      if (item.level === "employee") {
+                        openProfile(item.unit_id);
+                      } else if (onUnitClick) {
+                        onUnitClick(item.unit_id, item.level);
+                      }
                     }}
                   >
-                    {/* Header row: name + count */}
-                    <div className="flex justify-between items-center mb-2">
+                    {/* Row: name / count / percentage */}
+                    <div className="flex items-center justify-between mb-1.5 gap-2">
                       <span
-                        className="text-[10.5px] sm:text-[13px] font-bold text-foreground truncate flex-1 min-w-0 ml-2"
+                        className="text-[11px] sm:text-[12.5px] font-bold text-foreground truncate flex-1 min-w-0"
                         title={item.unit_name}
+                        dir="rtl"
                       >
                         {item.unit_name}
                       </span>
-                      <span className="text-xs font-bold text-muted-foreground shrink-0">
-                        {item.level === 'employee' ? (
-                          item.present_count > 0 ? "נוכח/ת" : "חסר/ת"
-                        ) : (
-                          <span>
-                            <span className="text-emerald-600 dark:text-emerald-400">{Math.round(item.present_count)}</span>
-                            <span className="text-muted-foreground/60 mx-1">/</span>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {item.level !== "employee" && (
+                          <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">
+                            <span className="font-black" style={{ color: barColor }}>
+                              {Math.round(item.present_count)}
+                            </span>
+                            <span className="text-muted-foreground/50 mx-0.5">/</span>
                             <span>{Math.round(item.total_count)}</span>
                           </span>
                         )}
-                      </span>
+                        <span className={cn("text-[11px] font-black tabular-nums w-9 text-left", pctTextColor)}>
+                          {item.level === "employee"
+                            ? (item.present_count > 0 ? "נוכח/ת" : "חסר/ת")
+                            : `${availability}%`}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Bar with percentage inside */}
-                    <div className={cn("relative w-full h-6 rounded-full overflow-hidden", compact && "h-4 sm:h-5", bgColor)}>
+                    {/* Progress bar — clean, no floating badge */}
+                    {item.level !== "employee" && (
                       <div
-                        className={cn("h-full rounded-full transition-all duration-700 flex items-center justify-end", barColor)}
-                        style={{ width: `${Math.max(availability, 8)}%` }}
+                        className="w-full rounded-full overflow-hidden"
+                        style={{
+                          height: compact ? "5px" : "6px",
+                          backgroundColor: trackBg,
+                        }}
                       >
-                        {availability >= 20 && (
-                          <span className={cn("text-white text-[10px] font-black px-2 leading-none", compact && "text-[9px] px-1.5")}>
-                            {availability}%
-                          </span>
-                        )}
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{
+                            width: `${Math.max(availability, availability > 0 ? 3 : 0)}%`,
+                            backgroundColor: barColor,
+                          }}
+                        />
                       </div>
-                      {availability < 20 && (
-                        <span className={cn("absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-black", compact && "text-[9px] right-1.5", textColor)}>
-                          {availability}%
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 );
               })}
@@ -448,3 +475,4 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
     );
   },
 );
+

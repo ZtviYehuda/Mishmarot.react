@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Gift, Sparkles } from "lucide-react";
+import { Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEmployeeContext } from "@/context/EmployeeContext";
 

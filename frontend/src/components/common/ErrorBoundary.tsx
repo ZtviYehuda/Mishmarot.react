@@ -46,7 +46,16 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             {/* Error Message */}
-            <h1 className="text-4xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 tracking-tight">
+            <h1
+              className="text-4xl font-black mb-3 tracking-tight"
+              style={{
+                backgroundImage: "linear-gradient(to bottom, var(--foreground), color-mix(in srgb, var(--foreground) 60%, transparent))",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                color: "transparent",
+              }}
+            >
               וואופס! משהו השתבש
             </h1>
 

@@ -6,7 +6,6 @@ import {
   Bell,
   Shield,
   Info,
-  Sparkles,
   Save,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -182,7 +181,7 @@ export function NotificationSettings({
 
               <div className="pt-4 sm:pt-8 border-t border-primary/5 text-center px-4">
                 <div className="inline-flex p-2.5 sm:p-4 bg-primary/5 rounded-2xl sm:rounded-3xl mb-2 sm:mb-4">
-                  <Sparkles className="w-4.5 h-4.5 sm:w-6 sm:h-6 text-primary" />
+                  <Info className="w-4.5 h-4.5 sm:w-6 sm:h-6 text-primary" />
                 </div>
                 <p className="text-[10px] sm:text-xs font-bold text-muted-foreground leading-relaxed">
                   אנחנו עובדים על הוספת התראות SMS וואטסאפ בגרסה הבאה של המערכת.

@@ -1,5 +1,7 @@
 {
     "enabled": true,
     "interval_days": 1,
-    "last_backup": "2026-07-02T12:28:54.875491"
+    "max_backups": 15,
+    "locked_backups": [],
+    "last_backup": "2026-07-08T09:26:36.812407"
 }

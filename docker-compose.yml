@@ -13,6 +13,8 @@ services:
       - "5435:5432"
     volumes:
       - mishmarot_postgres_data:/var/lib/postgresql/data
+    networks:
+      - toren_network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -25,6 +27,59 @@ services:
       - "8080:80"
     depends_on:
       - db
+    networks:
+      - toren_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: toren_backend
+    restart: always
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASS=8245
+      - DB_PORT=5432
+      - JWT_SECRET_KEY=mishmarot_prod_secure_secret_key_111
+    volumes:
+      - toren_uploads:/app/app/uploads
+    depends_on:
+      - db
+    networks:
+      - toren_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: toren_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - toren_network
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: toren_cloudflare_tunnel
+    restart: always
+    # Standard Cloudflare Tunnel execution block.
+    # Note: For production with static domains, we run with service token or tunnel run configuration.
+    # Here we default to a self-healing quick tunnel unless configured otherwise by the user.
+    command: tunnel --no-autoupdate run --url http://frontend:80
+    depends_on:
+      - frontend
+    networks:
+      - toren_network
 
 volumes:
   mishmarot_postgres_data:
+  toren_uploads:
+
+networks:
+  toren_network:
+    driver: bridge

@@ -1,4 +1,4 @@
-import { Palette, Moon, Sun, Type, Monitor, Pipette, Check, Sparkles } from "lucide-react";
+import { Palette, Moon, Sun, Type, Monitor, Pipette, Check, HelpCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -342,7 +342,7 @@ export function AppearanceSettings({
 
       {/* AI Support Toggle Section */}
       <div id="ai-support-setting-container">
-        <SectionCard icon={Sparkles} title="עוזר תמיכה AI">
+        <SectionCard icon={HelpCircle} title="עוזר תמיכה AI">
           <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-border/40 backdrop-blur-md">
             <div className="space-y-1 pr-1">
               <h4 className="text-sm font-black text-foreground">
@@ -367,7 +367,7 @@ export function AppearanceSettings({
               onClick={() => window.dispatchEvent(new Event('open-ai-support'))}
               className="rounded-xl border-primary/20 text-primary font-black text-xs gap-2 hover:bg-primary/10 transition-all h-10 px-5"
             >
-              <Sparkles className="w-4 h-4" />
+              <HelpCircle className="w-4 h-4" />
               פתח עוזר AI כעת
             </Button>
           </div>

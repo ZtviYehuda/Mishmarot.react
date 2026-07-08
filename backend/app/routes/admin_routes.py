@@ -40,6 +40,7 @@ def update_backup_config():
     new_config = {
         "enabled": data.get("enabled"),
         "interval_days": data.get("interval_days"),
+        "max_backups": data.get("max_backups"),
     }
     backup_service.save_config(new_config)
     return jsonify({"success": True, "config": backup_service.get_config()})
@@ -64,6 +65,60 @@ def trigger_backup_now():
         )
     else:
         return jsonify({"success": False, "error": result}), 500
+
+
+@admin_bp.route("/backup/list", methods=["GET"])
+@jwt_required()
+def list_backups():
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    return jsonify(backup_service.list_backups())
+
+
+@admin_bp.route("/backup/download/<filename>", methods=["GET"])
+@jwt_required()
+def download_backup_file(filename):
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    filepath = backup_service.get_backup_filepath(filename)
+    if not filepath:
+        return jsonify({"error": "File not found"}), 404
+
+    return send_file(
+        filepath,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/sql"
+    )
+
+
+@admin_bp.route("/backup/delete/<filename>", methods=["DELETE"])
+@jwt_required()
+def delete_backup_file(filename):
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    # Protect locked backups from direct deletion as well
+    locked_list = backup_service.get_config().get("locked_backups", [])
+    if filename in locked_list:
+        return jsonify({"error": "Cannot delete a locked backup file"}), 400
+
+    if backup_service.delete_backup(filename):
+        return jsonify({"success": True, "message": "Backup file deleted successfully"})
+    return jsonify({"error": "File not found"}), 404
+
+
+@admin_bp.route("/backup/lock/<filename>", methods=["POST"])
+@jwt_required()
+def toggle_lock_backup_file(filename):
+    if not is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    success, action = backup_service.toggle_lock_backup(filename)
+    if success:
+        return jsonify({"success": True, "action": action, "message": f"Backup file has been {action}"})
+    return jsonify({"error": "Failed to update backup lock status"}), 500
 
 
 @admin_bp.route("/settings", methods=["GET"])
@@ -199,61 +254,66 @@ def backup_database():
         return jsonify({"error": "Unauthorized"}), 403
 
     user_id = _get_user_id_from_jwt()
-    conn = get_db_connection()
-    cur = conn.cursor()
 
-    backup_data = {
-        "metadata": {"version": "1.0", "date": datetime.datetime.now().isoformat()},
-        "data": {},
-    }
+    # Gather environment variables for pg_dump
+    db_host = os.environ.get("DB_HOST", "localhost")
+    db_name = os.environ.get("DB_NAME", "postgres")
+    db_user = os.environ.get("DB_USER", "postgres")
+    db_pass = os.environ.get("DB_PASS", "8245")
+    db_port = os.environ.get("DB_PORT", "5432")
 
-    # רשימת הטבלאות לגיבוי לפי סדר תלויות (חשוב לשחזור)
-    tables = [
-        "system_settings",
-        "roles",
-        "status_types",
-        "service_types",
-        "departments",
-        "sections",
-        "teams",
-        "employees",
-        "attendance_logs",
-        "transfer_requests",
+    # Resolve executable path for pg_dump
+    pg_dump_path = "pg_dump"
+    if os.name == "nt":
+        # Search common Windows PostgreSQL installations
+        possible_paths = [
+            r"C:\Program Files\PostgreSQL\18\bin\pg_dump.exe",
+            r"C:\Program Files\PostgreSQL\17\bin\pg_dump.exe",
+            r"C:\Program Files\PostgreSQL\16\bin\pg_dump.exe",
+            r"C:\Program Files\PostgreSQL\15\bin\pg_dump.exe",
+            r"C:\Program Files\PostgreSQL\18\pgAdmin 4\runtime\pg_dump.exe"
+        ]
+        for p in possible_paths:
+            if os.path.exists(p):
+                pg_dump_path = p
+                break
+
+    import subprocess
+    env = os.environ.copy()
+    env["PGPASSWORD"] = db_pass
+
+    cmd = [
+        pg_dump_path,
+        "-h", db_host,
+        "-p", db_port,
+        "-U", db_user,
+        "-d", db_name,
+        "--clean",
+        "--if-exists"
     ]
 
     try:
-        for table in tables:
-            cur.execute(f"SELECT * FROM {table}")
-            columns = [desc[0] for desc in cur.description]
-            rows = cur.fetchall()
-
-            # המרת נתונים לפורמט JSON-serializable
-            table_data = []
-            for row in rows:
-                item = {}
-                for i, col in enumerate(columns):
-                    val = row[i]
-                    if isinstance(val, (datetime.date, datetime.datetime)):
-                        val = val.isoformat()
-                    item[col] = val
-                table_data.append(item)
-
-            backup_data["data"][table] = table_data
-
-        # יצירת הקובץ בזיכרון
-        mem_file = io.BytesIO()
-        mem_file.write(
-            json.dumps(backup_data, indent=4, ensure_ascii=False).encode("utf-8")
+        process = subprocess.Popen(
+            cmd,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
+        stdout, stderr = process.communicate()
+
+        if process.returncode != 0:
+            raise Exception(f"pg_dump failed: {stderr.decode('utf-8', errors='ignore')}")
+
+        mem_file = io.BytesIO(stdout)
         mem_file.seek(0)
 
-        filename = f"toren_backup_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filename = f"toren_backup_{datetime.datetime.now().strftime('%d_%m_%Y__%H_%M')}.sql"
 
         # Log Backup
         AuditLogModel.log_action(
             user_id=user_id,
             action_type="DATABASE_BACKUP",
-            description="Manual database backup triggered and downloaded",
+            description="Manual database backup triggered and downloaded as SQL",
             ip_address=request.remote_addr,
             metadata={"filename": filename},
         )
@@ -262,13 +322,11 @@ def backup_database():
             mem_file,
             as_attachment=True,
             download_name=filename,
-            mimetype="application/json",
+            mimetype="application/sql",
         )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
 
 
 @admin_bp.route("/restore", methods=["POST"])
@@ -285,93 +343,72 @@ def restore_database():
     if file.filename == "":
         return jsonify({"error": "No file selected"}), 400
 
+    # Read uploaded file content
+    sql_content = file.read()
+
+    # Gather environment variables for psql
+    db_host = os.environ.get("DB_HOST", "localhost")
+    db_name = os.environ.get("DB_NAME", "postgres")
+    db_user = os.environ.get("DB_USER", "postgres")
+    db_pass = os.environ.get("DB_PASS", "8245")
+    db_port = os.environ.get("DB_PORT", "5432")
+
+    # Resolve executable path for psql
+    psql_path = "psql"
+    if os.name == "nt":
+        # Search common Windows PostgreSQL installations
+        possible_paths = [
+            r"C:\Program Files\PostgreSQL\18\bin\psql.exe",
+            r"C:\Program Files\PostgreSQL\17\bin\psql.exe",
+            r"C:\Program Files\PostgreSQL\16\bin\psql.exe",
+            r"C:\Program Files\PostgreSQL\15\bin\psql.exe",
+            r"C:\Program Files\PostgreSQL\18\pgAdmin 4\runtime\psql.exe"
+        ]
+        for p in possible_paths:
+            if os.path.exists(p):
+                psql_path = p
+                break
+
+    import subprocess
+    env = os.environ.copy()
+    env["PGPASSWORD"] = db_pass
+
+    cmd = [
+        psql_path,
+        "-h", db_host,
+        "-p", db_port,
+        "-U", db_user,
+        "-d", db_name
+    ]
+
     try:
-        content = json.load(file)
-        data = content.get("data", {})
+        # Run psql and pass the SQL contents to its standard input
+        process = subprocess.Popen(
+            cmd,
+            env=env,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        stdout, stderr = process.communicate(input=sql_content)
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        # התחלת טרנזקציה
-
-        # סדר טבלאות הפוך למחיקה (כדי למנוע בעיות Foreign Key)
-        tables_reversed = [
-            "transfer_requests",
-            "attendance_logs",
-            "employees",
-            "teams",
-            "sections",
-            "departments",
-            "service_types",
-            "status_types",
-            "roles",
-            "system_settings",
-        ]
-
-        # ניקוי טבלאות
-        for table in tables_reversed:
-            cur.execute(f"TRUNCATE TABLE {table} CASCADE")
-
-        # סדר טבלאות רגיל להוספה
-        tables = [
-            "system_settings",
-            "roles",
-            "status_types",
-            "service_types",
-            "departments",
-            "sections",
-            "teams",
-            "employees",
-            "attendance_logs",
-            "transfer_requests",
-        ]
-
-        for table in tables:
-            if table not in data:
-                continue
-
-            rows = data[table]
-            if not rows:
-                continue
-
-            columns = rows[0].keys()
-            cols_str = ", ".join(columns)
-            vals_str = ", ".join(["%s"] * len(columns))
-
-            query = f"INSERT INTO {table} ({cols_str}) VALUES ({vals_str})"
-
-            for row in rows:
-                values = [row[col] for col in columns]
-                cur.execute(query, values)
-
-            # עדכון ה-Sequence כדי למנוע שגיאות ID בעתיד
-            if "id" in columns:
-                cur.execute(
-                    f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), COALESCE(MAX(id), 1) ) FROM {table}"
-                )
-
-        conn.commit()
+        if process.returncode != 0:
+            raise Exception(f"psql restore failed: {stderr.decode('utf-8')}")
 
         # Log Restore
         AuditLogModel.log_action(
             user_id=user_id,
             action_type="DATABASE_RESTORE",
-            description=f"Database restoration completed from file: {file.filename}",
+            description=f"Database SQL restoration completed from file: {file.filename}",
             ip_address=request.remote_addr,
             metadata={"filename": file.filename},
         )
-        return jsonify({"success": True, "message": "Database restored successfully"})
+        return jsonify({"success": True, "message": "Database restored successfully from SQL dump"})
 
     except Exception as e:
         import traceback
-
         traceback.print_exc()
-        if conn:
-            conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        if conn:
-            conn.close()
 
 
 @admin_bp.route("/reports/birthday/trigger", methods=["POST"])

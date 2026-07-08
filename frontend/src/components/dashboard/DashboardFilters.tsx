@@ -254,65 +254,146 @@ export const DashboardFilters = ({
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar max-h-[60vh]">
         {activeTab === "org" && (
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest text-right block">מחלקה</Label>
-              <Select
-                value={stagedFilters.deptId || "all"}
-                onValueChange={(val) => setStagedFilters({ ...stagedFilters, deptId: val === "all" ? undefined : val, sectionId: undefined, teamId: undefined })}
-                disabled={!canSelectDept && !!stagedFilters.deptId}
-              >
-                <SelectTrigger className="h-12 px-4 rounded-xl border border-border/40 font-bold bg-muted/30">
-                  <SelectValue placeholder="בחר מחלקה" />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  {user?.is_admin && <SelectItem value="all">כל המחלקות</SelectItem>}
-                  {structure.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-3" dir="rtl">
+            {/* Dept */}
+            <div className={cn(
+              "flex items-center gap-3 p-3 rounded-xl border transition-all",
+              stagedFilters.deptId && stagedFilters.deptId !== "all"
+                ? "border-primary/30 bg-primary/5"
+                : "border-border/40 bg-muted/20"
+            )}>
+              <div className={cn(
+                "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-base",
+                stagedFilters.deptId && stagedFilters.deptId !== "all"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              )}>
+                🏢
+              </div>
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">מחלקה</span>
+                <Select
+                  value={stagedFilters.deptId || "all"}
+                  onValueChange={(val) =>
+                    setStagedFilters({ ...stagedFilters, deptId: val === "all" ? undefined : val, sectionId: undefined, teamId: undefined })
+                  }
+                  disabled={!canSelectDept && !!stagedFilters.deptId}
+                >
+                  <SelectTrigger className="h-8 px-3 rounded-lg border border-border/40 font-bold text-sm bg-background/60 focus:ring-0 focus:ring-offset-0">
+                    <SelectValue placeholder="בחר מחלקה..." />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    {user?.is_admin && <SelectItem value="all">כל המחלקות</SelectItem>}
+                    {structure.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest text-right block">מדור</Label>
-              <Select
-                value={stagedFilters.sectionId || "all"}
-                onValueChange={(val) => setStagedFilters({ ...stagedFilters, sectionId: val === "all" ? undefined : val, teamId: undefined })}
-                disabled={!stagedFilters.deptId || (!canSelectSection && !!stagedFilters.sectionId)}
-              >
-                <SelectTrigger className="h-12 px-4 rounded-xl border border-border/40 font-bold bg-muted/30">
-                  <SelectValue placeholder="בחר מדור" />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  {(user?.is_admin || user?.commands_department_id) && <SelectItem value="all">כל המדורים</SelectItem>}
-                  {sections.map((sec) => (
-                    <SelectItem key={sec.id} value={sec.id.toString()}>{sec.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Connector line */}
+            <div className="flex items-center gap-3 pr-4 pl-0">
+              <div className="flex flex-col items-center" style={{ width: 36 }}>
+                <div className={cn("w-px flex-1 h-4", stagedFilters.deptId ? "bg-primary/30" : "bg-border/30")} />
+              </div>
+              <span className={cn("text-[10px] font-bold", stagedFilters.deptId ? "text-primary/60" : "text-muted-foreground/40")}>
+                {stagedFilters.deptId ? "↓ בחר מדור" : "בחר קודם מחלקה"}
+              </span>
             </div>
 
-            <div className="space-y-4">
-              <Label className="text-xs font-black text-muted-foreground uppercase tracking-widest text-right block">חוליה</Label>
-              <Select
-                value={stagedFilters.teamId || "all"}
-                onValueChange={(val) => setStagedFilters({ ...stagedFilters, teamId: val === "all" ? undefined : val })}
-                disabled={!stagedFilters.sectionId || (!canSelectTeam && !!stagedFilters.teamId)}
-              >
-                <SelectTrigger className="h-12 px-4 rounded-xl border border-border/40 font-bold bg-muted/30">
-                  <SelectValue placeholder="בחר חוליה" />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  {(user?.is_admin || user?.commands_department_id || user?.commands_section_id) && <SelectItem value="all">כל החוליות</SelectItem>}
-                  {teams.map((team) => (
-                    <SelectItem key={team.id} value={team.id.toString()}>{team.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Section */}
+            <div className={cn(
+              "flex items-center gap-3 p-3 rounded-xl border transition-all",
+              !stagedFilters.deptId && "opacity-40 pointer-events-none",
+              stagedFilters.sectionId && stagedFilters.sectionId !== "all"
+                ? "border-primary/30 bg-primary/5"
+                : "border-border/40 bg-muted/20"
+            )}>
+              <div className={cn(
+                "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-base",
+                stagedFilters.sectionId && stagedFilters.sectionId !== "all"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              )}>
+                🏬
+              </div>
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">מדור</span>
+                <Select
+                  value={stagedFilters.sectionId || "all"}
+                  onValueChange={(val) =>
+                    setStagedFilters({ ...stagedFilters, sectionId: val === "all" ? undefined : val, teamId: undefined })
+                  }
+                  disabled={!stagedFilters.deptId || (!canSelectSection && !!stagedFilters.sectionId)}
+                >
+                  <SelectTrigger className="h-8 px-3 rounded-lg border border-border/40 font-bold text-sm bg-background/60 focus:ring-0 focus:ring-offset-0">
+                    <SelectValue placeholder="בחר מדור..." />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    {(user?.is_admin || user?.commands_department_id) && (
+                      <SelectItem value="all">כל המדורים</SelectItem>
+                    )}
+                    {sections.map((sec) => (
+                      <SelectItem key={sec.id} value={sec.id.toString()}>{sec.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Connector line */}
+            <div className="flex items-center gap-3 pr-4 pl-0">
+              <div className="flex flex-col items-center" style={{ width: 36 }}>
+                <div className={cn("w-px flex-1 h-4", stagedFilters.sectionId ? "bg-primary/30" : "bg-border/30")} />
+              </div>
+              <span className={cn("text-[10px] font-bold", stagedFilters.sectionId ? "text-primary/60" : "text-muted-foreground/40")}>
+                {stagedFilters.sectionId ? "↓ בחר חוליה" : "בחר קודם מדור"}
+              </span>
+            </div>
+
+            {/* Team */}
+            <div className={cn(
+              "flex items-center gap-3 p-3 rounded-xl border transition-all",
+              !stagedFilters.sectionId && "opacity-40 pointer-events-none",
+              stagedFilters.teamId && stagedFilters.teamId !== "all"
+                ? "border-primary/30 bg-primary/5"
+                : "border-border/40 bg-muted/20"
+            )}>
+              <div className={cn(
+                "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-base",
+                stagedFilters.teamId && stagedFilters.teamId !== "all"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              )}>
+                👥
+              </div>
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">חוליה</span>
+                <Select
+                  value={stagedFilters.teamId || "all"}
+                  onValueChange={(val) =>
+                    setStagedFilters({ ...stagedFilters, teamId: val === "all" ? undefined : val })
+                  }
+                  disabled={!stagedFilters.sectionId || (!canSelectTeam && !!stagedFilters.teamId)}
+                >
+                  <SelectTrigger className="h-8 px-3 rounded-lg border border-border/40 font-bold text-sm bg-background/60 focus:ring-0 focus:ring-offset-0">
+                    <SelectValue placeholder="בחר חוליה..." />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    {(user?.is_admin || user?.commands_department_id || user?.commands_section_id) && (
+                      <SelectItem value="all">כל החוליות</SelectItem>
+                    )}
+                    {teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id.toString()}>{team.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         )}
+
 
         {activeTab === "status" && (
           <div className="space-y-4">

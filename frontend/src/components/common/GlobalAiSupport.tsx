@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   X, 
   Send, 
-  Sparkles, 
   History, 
   ExternalLink,
   Square,
   Minus,
   CalendarDays,
   RotateCcw,
-  Trash2
+  Trash2,
+  HelpCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { TourGuideOverlay } from "./TourGuideOverlay";
 import type { TourStep } from "./TourGuideOverlay";
 import { useChat } from "@/context/ChatContext";
+import { useAuthContext } from "@/context/AuthContext";
+import { Cog } from "lucide-react";
 
 const TOUR_STEPS: TourStep[] = [
   // --- CHAT & STATUS (first in tour) ---
@@ -82,10 +84,18 @@ const KNOWLEDGE_BASE = [
   { 
     id: 'add_employee', 
     title: 'הוספת עובד חדש', 
-    keywords: ['להוסיף', 'חדש', 'קליטה', 'להקים', 'רישום', 'הוספה', 'נוסיף', 'לשים', 'עוד', 'מינוי', 'גיוס', 'מצטרף', 'פרופיל'], 
+    keywords: ['להוסיף', 'חדש', 'קליטה', 'להקים', 'רישום', 'הוספה', 'נוסיף', 'לשים', 'עוד', 'מינוי', 'גיוס', 'מצטרף'], 
     context: ['עובד', 'שוטר', 'עובדים', 'מישהו', 'אדם', 'איש'], 
     description: 'כדי להוסיף עובד חדש ליחידה, עליך לעבור לדף ניהול עובדים וללחוץ על כפתור הוספה (סימן הפלוס).', 
     stepId: 'add_employee_btn' 
+  },
+  {
+    id: 'personal_profile_kb',
+    title: 'עדכון פרופיל אישי ופרטים',
+    keywords: ['פרטים', 'פרופיל', 'אישי', 'לעדכן פרטים', 'לשנות סיסמא', 'פין', 'PIN', 'עדכון פרופיל', 'הגדרות שלי', 'עריכת פרופיל'],
+    context: ['פרופיל', 'משתמש', 'אישי', 'הגדרות'],
+    description: 'כדי לעדכן את הפרטים האישיים שלך, להגדיר קוד PIN או לשנות סיסמה, לחץ על שמך או תמונת הפרופיל שלך בתחתית תפריט הצד.',
+    stepId: 'personal_profile'
   },
   { 
     id: 'attendance', 
@@ -238,15 +248,46 @@ export function GlobalAiSupport() {
   const location = useLocation();
   const { isChatOpen, openChat, closeChat } = useChat();
   const { showAiSupport, setShowAiSupport } = useTheme();
+  const { user } = useAuthContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [isNearDrop, setIsNearDrop] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(() => {
-    const saved = localStorage.getItem('ai_support_messages');
-    return saved ? JSON.parse(saved) : [];
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+
+  const getWelcomeMessage = () => ({
+    id: "welcome",
+    isBot: true,
+    text: `שלום ${user?.username || 'משתמש'}!
+      אני עוזר הניווט והתמיכה של מערכת תורן.
+
+      שימו לב: אני עוזר מונחה כללים לחיפוש עזרה, ולא צ'אט בינה מלאכותית (AI) חופשי.
+
+איך אוכל לעזור? הקלידו שאלה פשוטה:
+• "איך מייצאים לאקסל?"
+• "איך משבצים משמרת?"
+• "איך מפיקים דוח נוכחות?"
+• "איך מעדכנים פרופיל?"`,
+    timestamp: new Date().toISOString()
   });
+
+  const getStorageKey = () => user?.id ? `ai_support_messages_${user.id}` : 'ai_support_messages';
+
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  // Load user specific messages
+  useEffect(() => {
+    if (isOpen) {
+      const saved = localStorage.getItem(getStorageKey());
+      if (saved) {
+        setMessages(JSON.parse(saved));
+      } else {
+        setMessages([getWelcomeMessage()]);
+      }
+    }
+  }, [isOpen, user?.id]);
+
   const [isSingleStep, setIsSingleStep] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [hasMoved, setHasMoved] = useState(false);
@@ -296,16 +337,25 @@ export function GlobalAiSupport() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    if (messages.length > 0) localStorage.setItem('ai_support_messages', JSON.stringify(messages));
+    if (messages.length > 0) {
+      localStorage.setItem(getStorageKey(), JSON.stringify(messages));
+    }
   }, [messages]);
 
   const handleResetChat = () => {
-    setMessages([]);
-    setCurrentTourIndex(-1);
-    setIsSingleStep(false);
-    localStorage.removeItem('active_tour_index');
-    localStorage.removeItem('ai_support_messages');
+    localStorage.removeItem(getStorageKey());
+    setMessages([getWelcomeMessage()]);
+    setShowSettingsMenu(false);
     toast.info("השיחה אופסה");
+  };
+
+  const handleShowWelcomeMessage = () => {
+    setMessages(prev => [...prev, {
+      ...getWelcomeMessage(),
+      id: `welcome-${Date.now()}`
+    }]);
+    setShowSettingsMenu(false);
+    setShowHistory(false);
   };
 
   // Auto open/close chat sidebar during guided tour if a step requires it
@@ -597,7 +647,7 @@ export function GlobalAiSupport() {
               className="w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing pointer-events-auto"
               title="גרור לקצה המסך כדי להסתיר"
             >
-              <Sparkles className="w-6 h-6" />
+              <HelpCircle className="w-6 h-6" />
             </motion.button>
           </motion.div>
         </>
@@ -620,18 +670,57 @@ export function GlobalAiSupport() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed inset-x-4 bottom-4 sm:bottom-6 sm:left-6 sm:right-auto sm:inset-x-auto w-auto sm:w-[380px] h-[calc(100dvh-32px)] sm:h-[600px] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl z-[200] flex flex-col border border-border overflow-hidden"
+              className="fixed inset-x-4 bottom-4 sm:bottom-6 sm:left-6 sm:right-auto sm:inset-x-auto w-auto sm:w-[380px] h-[calc(100dvh-32px)] sm:h-[600px] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl z-[200] flex flex-col border border-border overflow-hidden text-right"
+              style={{ direction: "rtl" }}
             >
-            <div onDoubleClick={() => setIsMinimized(true)} className="p-5 bg-primary text-primary-foreground flex items-center justify-between shadow-lg cursor-pointer">
+            <div onDoubleClick={() => setIsMinimized(true)} className="p-5 bg-primary text-primary-foreground flex items-center justify-between shadow-lg cursor-pointer relative">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><Sparkles className="w-4 h-4 text-white" /></div>
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><HelpCircle className="w-4 h-4 text-white" /></div>
                 <h3 className="font-black text-xs uppercase">צ'אט תמיכה</h3>
               </div>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setShowHistory(!showHistory)} className="p-2 rounded-xl text-white/80"><History className="w-4 h-4" /></button>
-                <button onClick={() => setIsMinimized(true)} className="p-2 rounded-xl text-white/80"><Minus className="w-4 h-4" /></button>
-                <button onClick={handleResetChat} className="p-2 rounded-xl text-white/80"><Square className="w-4 h-4 fill-current" /></button>
-                <button onClick={() => setIsOpen(false)} className="p-2 rounded-xl"><X className="w-5 h-5" /></button>
+              <div className="flex items-center gap-1.5">
+                <button 
+                  onClick={handleShowWelcomeMessage} 
+                  className="p-2 rounded-xl text-white/80 hover:bg-white/10 transition-colors"
+                  title="הצג הודעת הסבר"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowSettingsMenu(!showSettingsMenu)} 
+                    className="p-2 rounded-xl text-white/80 hover:bg-white/10 transition-colors"
+                    title="הגדרות צ'אט"
+                  >
+                    <Cog className="w-4 h-4" />
+                  </button>
+                  
+                  {showSettingsMenu && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setShowSettingsMenu(false)} />
+                      <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-border p-1.5 z-50 flex flex-col gap-1">
+                        <button 
+                          onClick={() => {
+                            setShowHistory(!showHistory);
+                            setShowSettingsMenu(false);
+                          }} 
+                          className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl transition-colors text-right w-full"
+                        >
+                          <History className="w-4 h-4 text-slate-400" />
+                          <span>{showHistory ? "חזור לצ'אט" : "היסטוריית חיפושים"}</span>
+                        </button>
+                        <button 
+                          onClick={handleResetChat} 
+                          className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-colors text-right w-full"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span>איפוס שיחה</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <button onClick={() => setIsOpen(false)} className="p-2 rounded-xl text-white/80 hover:bg-white/10 transition-colors"><X className="w-5 h-5" /></button>
               </div>
             </div>
 
@@ -664,28 +753,27 @@ export function GlobalAiSupport() {
                   )}
                 </div>
               ) : (
-                <div className="h-full overflow-y-auto p-5 space-y-4 no-scrollbar">
-                  {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full opacity-40 text-center space-y-4">
-                      <CalendarDays className="w-12 h-12 text-primary" />
-                      <p className="text-sm font-black">במה אוכל לעזור היום?</p>
-                    </div>
-                  )}
+                <div className="h-full overflow-y-auto p-5 space-y-4 no-scrollbar text-right">
                   {messages.map((msg) => (
                     <div key={msg.id} className="flex flex-col gap-2">
-                      <div className={cn("p-4 rounded-[1.5rem] text-[12px] font-bold shadow-sm", msg.isBot ? "bg-white dark:bg-slate-800 text-slate-700 ml-8 rounded-tl-none border border-border/50" : "bg-primary text-primary-foreground mr-8 rounded-tr-none text-left shadow-md shadow-primary/20")}>
+                      <div className={cn(
+                        "p-4 rounded-[1.5rem] text-[12px] font-bold shadow-sm text-right whitespace-pre-line leading-relaxed", 
+                        msg.isBot 
+                          ? "bg-white dark:bg-slate-800 text-slate-700 ml-8 mr-0 rounded-tl-none border border-border/50" 
+                          : "bg-primary text-primary-foreground mr-8 ml-0 rounded-tr-none shadow-md shadow-primary/20 text-left"
+                      )} style={msg.isBot ? {} : { direction: "ltr" }}>
                         {msg.text}
                       </div>
                       {msg.isBot && msg.action && (
-                        <Button variant="outline" size="sm" className="ml-8 self-start rounded-xl border-emerald-200 text-emerald-600 font-black text-[11px] h-9 gap-2 hover:bg-emerald-50 dark:hover:bg-emerald-950" onClick={() => handleAction(msg.action!.stepId)}>
+                        <Button variant="outline" size="sm" className="mr-8 ml-0 self-start rounded-xl border-emerald-200 text-emerald-600 font-black text-[11px] h-9 gap-2 hover:bg-emerald-50 dark:hover:bg-emerald-950" onClick={() => handleAction(msg.action!.stepId)}>
                           <ExternalLink className="w-3.5 h-3.5" />{msg.action.label}
                         </Button>
                       )}
                       {msg.isBot && msg.suggestions && (
-                        <div className="ml-8 flex flex-col gap-2">
+                        <div className="mr-8 ml-0 flex flex-col gap-2">
                           {msg.suggestions.map((s, idx) => (
                             <Button key={idx} variant="outline" size="sm" className="rounded-xl border-primary/20 text-primary font-black text-[11px] h-9 justify-start gap-2 hover:bg-primary/10 dark:hover:bg-primary/20" onClick={() => handleAction(s.stepId)}>
-                              <Sparkles className="w-3.5 h-3.5" />{s.label}
+                              <HelpCircle className="w-3.5 h-3.5" />{s.label}
                             </Button>
                           ))}
                         </div>
@@ -699,8 +787,8 @@ export function GlobalAiSupport() {
 
             <div className="p-5 border-t border-border bg-white dark:bg-slate-900">
               <form onSubmit={handleSend} className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl">
-                <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="שאל אותי משהו..." className="flex-grow bg-transparent border-none text-xs font-bold px-3 focus:ring-0" />
-                <button type="submit" className="w-10 h-10 bg-primary text-primary-foreground rounded-xl flex items-center justify-center shadow-lg"><Send className="w-4 h-4" /></button>
+                <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="שאל אותי משהו..." className="flex-grow bg-transparent border-none text-xs font-bold px-3 focus:ring-0 text-right" style={{ direction: "rtl" }} />
+                <button type="submit" className="w-10 h-10 bg-primary text-primary-foreground rounded-xl flex items-center justify-center shadow-lg"><Send className="w-4 h-4 transform rotate-180" /></button>
               </form>
             </div>
           </motion.div>

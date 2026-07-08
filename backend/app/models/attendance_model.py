@@ -92,6 +92,11 @@ class AttendanceModel:
                     current_date += timedelta(days=1)
             else:
                 # Single day or open-ended
+                calculated_end = end_date
+                if not calculated_end:
+                    start_date_val = start_date_obj if start_date_obj else now.date()
+                    calculated_end = datetime.combine(start_date_val, datetime.max.time())
+
                 # Close previous status at the new status start time
                 cur.execute(
                     """
@@ -112,7 +117,7 @@ class AttendanceModel:
                         employee_id,
                         status_type_id,
                         start,
-                        end_date,
+                        calculated_end,
                         note,
                         reported_by,
                         True,
