@@ -1082,7 +1082,7 @@ export default function TransfersPage() {
                                     {emp.first_name} {emp.last_name}
                                   </span>
                                   <span className="text-[10px] sm:text-xs text-muted-foreground">
-                                    שם משתמש: {emp.username} •{" "}
+                                    {(emp.is_commander || emp.is_admin) && `שם משתמש: ${emp.username} • `}
                                     {emp.department_name}
                                   </span>
                                 </div>
@@ -1340,9 +1340,11 @@ export default function TransfersPage() {
                           {viewingEmployee?.first_name}{" "}
                           {viewingEmployee?.last_name}
                         </h2>
-                        <span className="text-[11px] font-bold text-muted-foreground mt-1">
-                          שם משתמש: {viewingEmployee?.username}
-                        </span>
+                        {(viewingEmployee?.is_commander || viewingEmployee?.is_admin) && (
+                          <span className="text-[11px] font-bold text-muted-foreground mt-1">
+                            שם משתמש: {viewingEmployee?.username}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <Badge

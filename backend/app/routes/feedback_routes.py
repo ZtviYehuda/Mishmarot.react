@@ -189,6 +189,11 @@ def add_system_update():
     except:
         identity = identity_raw
         
+    with open('debug.log', 'a', encoding='utf-8') as f:
+        f.write(f"\n--- Release Update Request ---\n")
+        f.write(f"Identity Raw: {identity_raw}\n")
+        f.write(f"Identity Decoded: {identity} (Type: {type(identity)})\n")
+
     # Check admin privileges
     if not (isinstance(identity, dict) and identity.get('is_admin')):
         return jsonify({"error": "Unauthorized"}), 403

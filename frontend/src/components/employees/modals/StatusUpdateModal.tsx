@@ -400,9 +400,11 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                     {employee.first_name} {employee.last_name}
                   </DialogTitle>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono text-muted-foreground">
-                      {employee.username}
-                    </span>
+                    {(employee.is_commander || employee.is_admin) && (
+                      <span className="text-[10px] font-mono text-muted-foreground">
+                        {employee.username}
+                      </span>
+                    )}
                     {employee.status_name && (
                       <>
                         <span className="text-muted-foreground/30">·</span>

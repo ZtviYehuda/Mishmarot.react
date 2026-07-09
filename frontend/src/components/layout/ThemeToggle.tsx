@@ -8,18 +8,60 @@ interface ThemeToggleProps {
   className?: string;
   theme?: string;
   setTheme?: (theme: any) => void;
+  variant?: "default" | "minimal";
 }
 
 export function ThemeToggle({
   className,
   theme: propTheme,
   setTheme: propSetTheme,
+  variant = "default",
 }: ThemeToggleProps) {
   const context = useTheme();
   const theme = propTheme || context.theme;
   const setTheme = propSetTheme || context.setTheme;
 
   const isDark = theme === "dark";
+
+  if (variant === "minimal") {
+    return (
+      <button
+        type="button"
+        onClick={() => setTheme(isDark ? "light" : "dark")}
+        className={cn(
+          "w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all active:scale-90 shrink-0 outline-none",
+          className
+        )}
+        title={isDark ? "מעבר למצב בהיר" : "מעבר למצב כהה"}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          {isDark ? (
+            <motion.div
+              key="moon"
+              initial={{ rotate: -90, scale: 0.5, opacity: 0 }}
+              animate={{ rotate: 0, scale: 1, opacity: 1 }}
+              exit={{ rotate: 90, scale: 0.5, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="flex items-center justify-center"
+            >
+              <Sun className="w-5 h-5 text-amber-500 fill-amber-500/10" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="sun"
+              initial={{ rotate: 90, scale: 0.5, opacity: 0 }}
+              animate={{ rotate: 0, scale: 1, opacity: 1 }}
+              exit={{ rotate: -90, scale: 0.5, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="flex items-center justify-center"
+            >
+              <Moon className="w-4.5 h-4.5 text-slate-700 fill-slate-700/5" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </button>
+    );
+  }
 
   return (
     <div
@@ -122,4 +164,3 @@ export function ThemeToggle({
     </div>
   );
 }
-

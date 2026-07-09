@@ -373,14 +373,6 @@ export function AppearanceSettings({
           </div>
         </SectionCard>
       </div>
-
-      {/* Preview Info Mini-Header */}
-      <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary mt-4 max-w-xl">
-        <Monitor className="w-5 h-5 shrink-0 mt-0.5 opacity-80" />
-        <p className="text-xs font-bold leading-relaxed opacity-90">
-          שינויי התצוגה מיושמים אוטומטית ברחבי המערכת ונשמרים בחשבונך. המערכת תתאים את צבעי הרקע והטקסט בהתאם לבחירתך.
-        </p>
-      </div>
     </div>
   );
 }

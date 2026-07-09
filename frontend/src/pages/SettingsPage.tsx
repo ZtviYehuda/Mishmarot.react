@@ -414,8 +414,8 @@ export default function SettingsPage() {
   };
 
   const handleChangePassword = async () => {
-    if (!passwordData.new_password || passwordData.new_password.length < 6) {
-      toast.error("הסיסמה חייבת להכיל לפחות 6 תווים");
+    if (!passwordData.new_password || passwordData.new_password.length < 4) {
+      toast.error("הסיסמה חייבת להכיל לפחות 4 תווים");
       return;
     }
     if (passwordData.new_password !== passwordData.confirm_password) {
@@ -447,8 +447,9 @@ export default function SettingsPage() {
   };
 
   const handleResetImpersonatedPassword = async () => {
-    !confirm("האם אתה בטוח שברצונך לאפס את הסיסמה של המשתמש לשם המשתמש שלו?");
-    return;
+    if (!confirm("האם אתה בטוח שברצונך לאפס את סיסמת המשתמש לסיסמת ברירת המחדל (123456)?")) {
+      return;
+    }
 
     try {
       setIsResetting(true);

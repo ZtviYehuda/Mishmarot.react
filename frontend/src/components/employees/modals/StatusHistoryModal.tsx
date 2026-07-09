@@ -45,10 +45,14 @@ export default function StatusHistoryModal({
                   employee={employee}
                   className="text-sm font-black text-muted-foreground italic h-auto p-0 hover:no-underline"
                 />
-                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-                <span className="text-[10px] font-bold text-muted-foreground font-mono tracking-widest">
-                  {employee.username}
-                </span>
+                {(employee.is_commander || employee.is_admin) && (
+                  <>
+                    <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                    <span className="text-[10px] font-bold text-muted-foreground font-mono tracking-widest">
+                      {employee.username}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>

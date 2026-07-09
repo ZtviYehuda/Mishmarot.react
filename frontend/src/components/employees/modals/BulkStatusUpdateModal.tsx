@@ -781,9 +781,11 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                       : `${emp.first_name} ${emp.last_name}`}
                                   </button>
                                   <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
-                                    <span className="bg-muted/50 px-1.5 py-0.5 rounded-md tracking-wider font-mono">
-                                      {emp.username}
-                                    </span>
+                                    {(emp.is_commander || emp.is_admin) && (
+                                      <span className="bg-muted/50 px-1.5 py-0.5 rounded-md tracking-wider font-mono">
+                                        {emp.username}
+                                      </span>
+                                    )}
                                     {emp.service_type_name && (
                                       <>
                                         <span className="w-1 h-1 rounded-full bg-border" />
@@ -1088,9 +1090,11 @@ export const BulkStatusUpdateModal: React.FC<BulkStatusUpdateModalProps> = ({
                                   : `${emp.first_name} ${emp.last_name}`}
                               </button>
                               <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[10px] font-bold text-muted-foreground/60 tracking-tighter">
-                                  {emp.username}
-                                </span>
+                                {(emp.is_commander || emp.is_admin) && (
+                                  <span className="text-[10px] font-bold text-muted-foreground/60 tracking-tighter">
+                                    {emp.username}
+                                  </span>
+                                )}
                                 {hasStatus && (
                                   <div
                                     className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest"

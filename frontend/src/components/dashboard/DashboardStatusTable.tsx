@@ -106,9 +106,7 @@ export const DashboardStatusTable = ({
                     <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
                       שם מלא (פרטי ומשפחה)
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
-                      שם משתמש
-                    </th>
+
                     <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase text-right">
                       מחלקה
                     </th>
@@ -138,9 +136,7 @@ export const DashboardStatusTable = ({
                           />
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-muted-foreground">
-                        {emp.username}
-                      </td>
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-xs font-bold text-muted-foreground">
                           {emp.department_name}
@@ -193,9 +189,7 @@ export const DashboardStatusTable = ({
                         employee={emp}
                         className="font-bold text-sm text-foreground truncate h-auto p-0 hover:no-underline"
                       />
-                      <span className="text-[10px] font-mono bg-muted px-1.5 rounded text-muted-foreground">
-                        {emp.username}
-                      </span>
+
                     </div>
                     <div className="flex flex-col text-xs text-muted-foreground mt-0.5">
                       <span className="truncate">

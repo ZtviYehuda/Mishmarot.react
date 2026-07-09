@@ -1395,9 +1395,11 @@ export default function AttendancePage() {
                                       ? `${emp.dominant_name} ${emp.last_name}`
                                       : `${emp.first_name} ${emp.last_name}`}
                                   </button>
-                                  <span className="text-[10px] text-muted-foreground/50 font-bold tracking-[0.1em]">
-                                    #{emp.username}
-                                  </span>
+                                  {(emp.is_commander || emp.is_admin) && (
+                                     <span className="text-[10px] text-muted-foreground/50 font-bold tracking-[0.1em]">
+                                       #{emp.username}
+                                     </span>
+                                   )}
                                 </div>
                               </div>
                             </TableCell>
@@ -1696,9 +1698,11 @@ export default function AttendancePage() {
                                   ? `${emp.dominant_name} ${emp.last_name}`
                                   : `${emp.first_name} ${emp.last_name}`}
                               </button>
-                              <span className="text-[10px] text-gray-500 font-medium leading-none mt-0.5">
-                                #{emp.username}
-                              </span>
+                              {(emp.is_commander || emp.is_admin) && (
+                                <span className="text-[10px] text-gray-500 font-medium leading-none mt-0.5">
+                                  #{emp.username}
+                                </span>
+                              )}
                             </div>
                           </div>
 
@@ -1779,6 +1783,7 @@ export default function AttendancePage() {
                 onOpenChange={setStatusModalOpen}
                 employee={selectedEmployee}
                 onSuccess={refreshData}
+                selectedDate={selectedDate}
               />
             )}
 

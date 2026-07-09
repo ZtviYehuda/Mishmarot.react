@@ -193,7 +193,7 @@ export function FeedbackCenter({ isOpen, onClose, contextPage = "" }: FeedbackCe
             {/* TAB: SEND FEEDBACK */}
             <TabsContent value="send" className="mt-0 space-y-8 animate-in fade-in duration-400">
               <div className="space-y-4">
-                <label className="text-[11px] font-black text-slate-400 block text-right uppercase tracking-widest">סוג הפנייה</label>
+                <label className="text-xs sm:text-sm font-black uppercase text-slate-700 dark:text-slate-300 block text-right tracking-wide">סוג הפנייה</label>
                 <div className="flex gap-2">
                   {["באג", "הצעה לשיפור", "פיצ'ר חדש"].map((cat) => (
                     <button
@@ -214,7 +214,7 @@ export function FeedbackCenter({ isOpen, onClose, contextPage = "" }: FeedbackCe
               </div>
 
               <div className="space-y-4">
-                <label className="text-[11px] font-black text-slate-400 block text-right uppercase tracking-widest">תיאור הפנייה</label>
+                <label className="text-xs sm:text-sm font-black uppercase text-slate-700 dark:text-slate-300 block text-right tracking-wide">תיאור הפנייה</label>
                 <Textarea
                   placeholder="ספרו לנו מה אפשר לשפר..."
                   value={description}

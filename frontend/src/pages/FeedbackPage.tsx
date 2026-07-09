@@ -1979,7 +1979,7 @@ const FeedbackPage = () => {
                             className="space-y-6"
                           >
                             <div className="space-y-3">
-                              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest block text-right">
+                              <label className="text-xs sm:text-sm font-black uppercase text-slate-700 dark:text-slate-300 block text-right tracking-wide">
                                 סוג הפנייה
                               </label>
                               <div className="flex gap-2">
@@ -2004,7 +2004,7 @@ const FeedbackPage = () => {
                             </div>
 
                             <div className="space-y-3">
-                              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest block text-right">
+                              <label className="text-xs sm:text-sm font-black uppercase text-slate-700 dark:text-slate-300 block text-right tracking-wide">
                                 תיאור הפנייה
                               </label>
                               <textarea
@@ -2020,7 +2020,7 @@ const FeedbackPage = () => {
 
                             {/* Screenshot Attachment Field */}
                             <div className="space-y-3">
-                              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest block text-right">צרף צילום מסך (אופציונלי)</label>
+                              <label className="text-xs sm:text-sm font-black uppercase text-slate-700 dark:text-slate-300 block text-right tracking-wide">צרף צילום מסך (אופציונלי)</label>
                               <div className="flex flex-col gap-3">
                                 <input 
                                   type="file"
@@ -2084,7 +2084,7 @@ const FeedbackPage = () => {
                         </Card>
 
                         {/* Left Column: Guidelines & Information Card (lg:col-span-4) */}
-                        <Card className="lg:col-span-4 bg-card/45 border border-border/40 backdrop-blur-xl rounded-3xl p-6 sm:p-8 space-y-6 text-right flex flex-col justify-between self-stretch">
+                        <Card className="lg:col-span-4 bg-card/45 border border-border/40 backdrop-blur-xl rounded-3xl p-6 sm:p-8 space-y-6 text-right flex flex-col justify-start self-stretch">
                           <div className="space-y-6">
                             <div className="space-y-1">
                               <h3 className="text-base font-black text-primary">
@@ -2133,15 +2133,15 @@ const FeedbackPage = () => {
                             </div>
                           </div>
 
-                          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 mt-6 lg:mt-0">
-                            <p className="text-[11px] font-black text-primary mb-1 flex items-center gap-1.5 justify-end">
-                              <span>טיפ מועיל</span>
-                              <AlertCircle className="w-3.5 h-3.5" />
-                            </p>
-                            <p className="text-[10px] font-bold text-muted-foreground leading-relaxed">
-                              תוכלו לעקוב אחר סטטוס הטיפול בפנייתכם תחת הלשונית "הפניות שלי" בכל עת.
-                            </p>
-                          </div>
+                           <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 mt-6 lg:mt-0">
+                             <p className="text-[11px] font-black text-primary mb-1 flex items-center gap-1.5 justify-start">
+                               <AlertCircle className="w-3.5 h-3.5" />
+                               <span>טיפ מועיל</span>
+                             </p>
+                             <p className="text-[10px] font-bold text-muted-foreground leading-relaxed text-right">
+                               תוכלו לעקוב אחר סטטוס הטיפול בפנייתכם תחת הלשונית "הפניות שלי" בכל עת.
+                             </p>
+                           </div>
                         </Card>
                       </div>
                     </motion.div>

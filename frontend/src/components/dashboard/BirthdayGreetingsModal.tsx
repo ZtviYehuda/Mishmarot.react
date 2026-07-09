@@ -68,6 +68,16 @@ export const BirthdayGreetingsModal: React.FC<BirthdayGreetingsModalProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [viewMode, setViewMode] = useState<"today" | "week">("today");
 
+  useEffect(() => {
+    if (open && weeklyBirthdays && weeklyBirthdays.length > 0 && !targetEmployee) {
+      const today = new Date();
+      const hasToday = weeklyBirthdays.some(
+        (emp) => emp.day === today.getDate() && emp.month === today.getMonth() + 1
+      );
+      setViewMode(hasToday ? "today" : "week");
+    }
+  }, [open, weeklyBirthdays, targetEmployee]);
+
   // Determine employees to display
   let employeesToday: BirthdayEmployee[] = [];
   let displayedEmployees: BirthdayEmployee[] = [];

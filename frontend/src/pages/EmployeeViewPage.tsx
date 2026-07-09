@@ -29,6 +29,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Copy, Check } from "lucide-react";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -418,6 +426,8 @@ export default function EmployeeViewPage() {
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
   const [selectedDeptId, setSelectedDeptId] = useState<string>("");
   const [selectedSectionId, setSelectedSectionId] = useState<string>("");
+  const [createdCredentials, setCreatedCredentials] = useState<{name: string, user: string, pass: string} | null>(null);
+  const [copiedField, setCopiedField] = useState("");
 
   const fetchData = async () => {
     if (!id) return;
@@ -477,21 +487,52 @@ export default function EmployeeViewPage() {
   };
 
   const handleSubmit = async () => {
+    if (!employee) return;
     setSaving(true);
+    
+    const isNowCmd = formData.is_commander || formData.is_admin;
+    const wasCmd = employee.is_commander || employee.is_admin;
+    const hasDummyUsername = employee.username?.startsWith('emp_');
+
+    const needsNewCredentials = isNowCmd && (!wasCmd || hasDummyUsername);
+    let generatedCreds = null;
+    let payload = { ...formData };
+
+    if (needsNewCredentials) {
+      generatedCreds = {
+        user: Math.floor(100000 + Math.random() * 900000).toString(),
+        pass: Math.floor(100000 + Math.random() * 900000).toString()
+      };
+      payload.username = generatedCreds.user;
+      payload.password = generatedCreds.pass;
+      payload.must_change_password = true;
+    }
+
     try {
       await apiClient.put(
         endpoints.updateEmployeeEndpoint(parseInt(id!)),
-        formData,
+        payload,
       );
-      toast.success("כרטיס שוטר עודכן בהצלחה");
-      await fetchData();
-      setEditMode(false);
-      navigate(`/employees/${id}`); // Back to non-edit URL
+      
+      if (generatedCreds) {
+        setCreatedCredentials({
+          name: employee.dominant_name || `${employee.first_name || ''} ${employee.last_name || ''}`,
+          user: generatedCreds.user,
+          pass: generatedCreds.pass
+        });
+      } else {
+        toast.success("כרטיס שוטר עודכן בהצלחה");
+        await fetchData();
+        setEditMode(false);
+        navigate(`/employees/${id}`); // Back to non-edit URL
+      }
     } catch {
       toast.error("שגיאה בעדכון כרטיס שוטר");
     } finally {
       setSaving(false);
     }
+  };
+
   const toggleActiveStatus = async () => {
     if (!employee) return;
     const nextActive = !employee.is_active;
@@ -558,6 +599,95 @@ export default function EmployeeViewPage() {
             : undefined
         }
       />
+
+      <Dialog open={!!createdCredentials} onOpenChange={async () => {
+        setCreatedCredentials(null);
+        await fetchData();
+        setEditMode(false);
+        navigate(`/employees/${id}`);
+      }}>
+        <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-xl border-border/50 text-right p-0 overflow-hidden" dir="rtl">
+          <DialogHeader className="p-6 bg-primary/5 pb-4 border-b border-primary/10">
+            <div className="w-12 h-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+              <Check className="w-6 h-6" />
+            </div>
+            <DialogTitle className="text-2xl font-black text-center text-primary mb-1">
+              מינוי המפקד הושלם!
+            </DialogTitle>
+            <DialogDescription className="text-center font-bold text-muted-foreground">
+              פרטי הגישה החדשים נוצרו בהצלחה
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-6 space-y-6">
+            <div className="bg-muted/50 rounded-2xl p-5 border border-border/50 space-y-4">
+              <div>
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">שם משתמש</Label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-background border border-border/50 rounded-xl px-4 py-2.5 font-mono text-center font-black text-lg text-foreground tracking-widest select-all">
+                    {createdCredentials?.user}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-[46px] w-[46px] rounded-xl border-border/50 shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdCredentials?.user || "");
+                      setCopiedField("user");
+                      setTimeout(() => setCopiedField(""), 2000);
+                    }}
+                  >
+                    {copiedField === "user" ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">סיסמה זמנית</Label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-background border border-border/50 rounded-xl px-4 py-2.5 font-mono text-center font-black text-lg text-foreground tracking-widest select-all">
+                    {createdCredentials?.pass}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-[46px] w-[46px] rounded-xl border-border/50 shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdCredentials?.pass || "");
+                      setCopiedField("pass");
+                      setTimeout(() => setCopiedField(""), 2000);
+                    }}
+                  >
+                    {copiedField === "pass" ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-4 flex gap-3 text-right">
+              <div className="p-2 bg-amber-500/10 rounded-xl h-fit">
+                <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-amber-900 leading-tight">דרישת החלפת סיסמה הופעלה</p>
+                <p className="text-[10px] font-bold text-amber-600/80 mt-0.5 leading-tight">בחיבורו הראשון של המפקד למערכת, הוא יידרש להחליף סיסמה זו לסיסמה אישית משלו.</p>
+              </div>
+            </div>
+
+            <Button 
+              className="w-full h-12 text-sm font-black rounded-xl"
+              onClick={async () => {
+                setCreatedCredentials(null);
+                await fetchData();
+                setEditMode(false);
+                navigate(`/employees/${id}`);
+              }}
+            >
+              המשך
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="w-full max-w-full mx-auto pt-6 pb-4 px-4 sm:px-6 transition-all pb-32 lg:pb-12">
         {/* Top bar with back button */}

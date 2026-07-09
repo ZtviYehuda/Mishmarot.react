@@ -361,9 +361,7 @@ export const EmployeeTable = ({
                 <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-16 px-6 tracking-widest">
                   שוטר
                 </TableHead>
-                <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-16 px-6 tracking-widest">
-                  שם משתמש
-                </TableHead>
+
                 <TableHead className="text-right font-black text-muted-foreground uppercase text-[10px] h-16 px-6 tracking-widest">
                   טלפון
                 </TableHead>
@@ -388,7 +386,7 @@ export const EmployeeTable = ({
               {loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={7}
                     className="h-32 text-center text-muted-foreground"
                   >
                     טוען נתונים...
@@ -397,7 +395,7 @@ export const EmployeeTable = ({
               ) : paginatedEmployees.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={7}
                     className="h-32 text-center text-muted-foreground"
                   >
                     לא נמצאו שוטרים התואמים את החיפוש והסינון
@@ -439,14 +437,15 @@ export const EmployeeTable = ({
                                 : "text-muted-foreground",
                             )}
                           />
-                          {!emp.is_active ? (
+                          {!emp.is_active && (
                             <Badge
                               variant="destructive"
                               className="w-fit h-4 text-[8px] px-1.5 font-black uppercase leading-none bg-destructive/10 text-destructive border-destructive/20 mt-1"
                             >
                               לא פעיל
                             </Badge>
-                          ) : (
+                          )}
+                          {emp.is_active && (emp.is_commander || emp.is_admin) && (
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className="text-[10px] font-black text-muted-foreground/50 tracking-[0.1em]">
                                 #{emp.username}
@@ -456,9 +455,7 @@ export const EmployeeTable = ({
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 py-4 text-right font-mono text-xs text-muted-foreground">
-                      {emp.username}
-                    </TableCell>
+
                     <TableCell className="px-6 py-4 text-right">
                       {emp.phone_number ? (
                         <a
@@ -720,9 +717,11 @@ export const EmployeeTable = ({
                           ? `${emp.first_name.split(" ")[0]} ${emp.last_name}`
                           : `${emp.first_name} ${emp.last_name}`}
                     </h4>
-                    <span className="text-[9px] sm:text-[10px] font-mono font-bold text-muted-foreground/50 shrink-0">
-                      {emp.username}
-                    </span>
+                    {(emp.is_commander || emp.is_admin) && (
+                      <span className="text-[9px] sm:text-[10px] font-mono font-bold text-muted-foreground/50 shrink-0">
+                        {emp.username}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />

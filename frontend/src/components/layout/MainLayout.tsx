@@ -38,6 +38,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { DateHeader } from "@/components/common/DateHeader";
 import { InternalMessageDialog } from "@/components/dashboard/InternalMessageDialog";
 import { SickLeaveDetailsDialog } from "@/components/dashboard/SickLeaveDetailsDialog";
+import { BirthdayGreetingsModal } from "@/components/dashboard/BirthdayGreetingsModal";
 import { toast } from "sonner";
 import { Send, Eye, Mail } from "lucide-react";
 import {
@@ -159,6 +160,8 @@ export default function MainLayout() {
 
   const [sickModalOpen, setSickModalOpen] = React.useState(false);
   const [sickEmployees, setSickEmployees] = React.useState<any[]>([]);
+  const [bdayModalOpen, setBdayModalOpen] = React.useState(false);
+  const [bdayEmployees, setBdayEmployees] = React.useState<any[]>([]);
   const [pendingRequestsCount, setPendingRequestsCount] = React.useState(0);
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 640);
 
@@ -306,13 +309,18 @@ export default function MainLayout() {
             />
           </button>
 
-          {/* Close button for mobile sidebar */}
-          <button
-            className="lg:hidden p-1 text-muted-foreground hover:text-foreground"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {/* Left Side Actions (Theme Toggle & Mobile Close Button) */}
+          {isSidebarOpen && (
+            <div className="flex items-center gap-1.5">
+              <ThemeToggle variant="minimal" />
+              <button
+                className="lg:hidden p-1 text-muted-foreground hover:text-foreground"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Navigation Links */}
@@ -443,15 +451,9 @@ export default function MainLayout() {
           )}
 
           {/* Action Area below profile */}
-          {isSidebarOpen ? (
-            /* Theme Toggle Full-width when open */
-            <div className="w-full">
-              <ThemeToggle collapsed={false} />
-            </div>
-          ) : (
-            /* Actions stacked when collapsed */
+          {!isSidebarOpen && (
             <div className="flex flex-col items-center gap-2.5 w-full">
-              <ThemeToggle collapsed={true} />
+              <ThemeToggle variant="minimal" />
               <button
                 onClick={() => logout()}
                 title="התנתק"
@@ -866,6 +868,10 @@ export default function MainLayout() {
                                     );
                                     setSickModalOpen(true);
                                     // Do not mark as read - keep active until resolved
+                                  } else if (alert.id?.startsWith("missed-birthdays")) {
+                                    setBdayEmployees((alert as any).data?.missed_birthdays || []);
+                                    setBdayModalOpen(true);
+                                    if (!isRead) toggleRead(alert.id);
                                   } else {
                                     navigate(alert.link);
                                     // Auto-mark as read for navigation alerts
@@ -1225,43 +1231,59 @@ export default function MainLayout() {
                   </Button>
                 )}
               {selectedAlert?.link && (
-                <Button
-                  className="w-full sm:flex-1 h-12 sm:h-11 rounded-2xl font-black shadow-lg shadow-primary/20"
-                  onClick={() => {
-                    navigate(selectedAlert.link);
-                    setSelectedAlert(null);
-                    if (selectedAlert.link.includes("#")) {
-                      const id = selectedAlert.link.split("#")[1];
-                      setTimeout(() => {
-                        document
-                          .getElementById(id)
-                          ?.scrollIntoView({ behavior: "smooth" });
-                        // Add a highlight effect
-                        const el = document.getElementById(id);
-                        if (el) {
-                          el.classList.add(
-                            "ring-4",
-                            "ring-primary",
-                            "ring-offset-4",
-                            "transition-all",
-                            "duration-1000",
-                          );
-                          setTimeout(
-                            () =>
-                              el.classList.remove(
-                                "ring-4",
-                                "ring-primary",
-                                "ring-offset-4",
-                              ),
-                            2000,
-                          );
-                        }
-                      }, 300);
-                    }
-                  }}
-                >
-                  למעבר לעמוד
-                </Button>
+                selectedAlert.id?.startsWith("missed-birthdays") ? (
+                  <Button
+                    className="w-full sm:flex-1 h-12 sm:h-11 rounded-2xl font-black shadow-lg shadow-primary/20 bg-gradient-to-l from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0"
+                    onClick={() => {
+                      setBdayEmployees(selectedAlert.data?.missed_birthdays || []);
+                      setBdayModalOpen(true);
+                      setSelectedAlert(null);
+                      if (!readIds.includes(selectedAlert.id)) {
+                        toggleRead(selectedAlert.id);
+                      }
+                    }}
+                  >
+                    שליחת ברכת יום הולדת
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full sm:flex-1 h-12 sm:h-11 rounded-2xl font-black shadow-lg shadow-primary/20"
+                    onClick={() => {
+                      navigate(selectedAlert.link);
+                      setSelectedAlert(null);
+                      if (selectedAlert.link.includes("#")) {
+                        const id = selectedAlert.link.split("#")[1];
+                        setTimeout(() => {
+                          document
+                            .getElementById(id)
+                            ?.scrollIntoView({ behavior: "smooth" });
+                          // Add a highlight effect
+                          const el = document.getElementById(id);
+                          if (el) {
+                            el.classList.add(
+                              "ring-4",
+                              "ring-primary",
+                              "ring-offset-4",
+                              "transition-all",
+                              "duration-1000",
+                            );
+                            setTimeout(
+                              () =>
+                                el.classList.remove(
+                                  "ring-4",
+                                  "ring-primary",
+                                  "ring-offset-4",
+                                ),
+                              2000,
+                            );
+                          }
+                        }, 300);
+                      }
+                    }}
+                  >
+                    למעבר לעמוד
+                  </Button>
+                )
               )}
             </DialogFooter>
           </DialogContent>
@@ -1270,6 +1292,11 @@ export default function MainLayout() {
         <ChatSidebar />
         <PwaInstallPrompt />
         <GroupMessageModal open={isGroupModalOpen} onClose={closeGroupModal} />
+        <BirthdayGreetingsModal
+          open={bdayModalOpen}
+          onOpenChange={setBdayModalOpen}
+          weeklyBirthdays={bdayEmployees}
+        />
       </div>
     </div>
   );

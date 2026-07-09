@@ -774,7 +774,6 @@ class EmployeeModel:
                 "team_id": "team_id",
                 "section_id": "section_id",
                 "department_id": "department_id",
-                "department_id": "department_id",
                 "service_type_id": "service_type_id",
                 "security_clearance": "security_clearance",
                 "police_license": "police_license",
@@ -784,10 +783,14 @@ class EmployeeModel:
                 "is_admin": "is_admin",
                 "is_active": "is_active",
                 "must_change_password": "must_change_password",
+                "password_hash": "password_hash",
                 "notif_sick_leave": "notif_sick_leave",
                 "notif_transfers": "notif_transfers",
                 "notif_morning_report": "notif_morning_report",
             }
+
+            if "password" in data and data["password"]:
+                data["password_hash"] = generate_password_hash(str(data["password"]))
 
             # Business Rule: If commander status changes, sync must_change_password
             if "is_commander" in data:

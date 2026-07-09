@@ -1094,10 +1094,14 @@ export default function RosterPage() {
                                 className="text-sm font-black text-foreground truncate tracking-tight group-hover/row:text-primary transition-colors text-right"
                               />
                               <div className="flex items-center gap-1.5 mt-1">
-                                <span className="text-[9px] font-black text-muted-foreground/60 tracking-widest">
-                                  {emp.username}
-                                </span>
-                                <span className="w-1 h-1 rounded-full bg-border/60" />
+                                {(emp.is_commander || emp.is_admin) && (
+                                  <>
+                                    <span className="text-[9px] font-black text-muted-foreground/60 tracking-widest">
+                                      {emp.username}
+                                    </span>
+                                    <span className="w-1 h-1 rounded-full bg-border/60" />
+                                  </>
+                                )}
                                 <span className="text-[9px] font-black text-primary/70 truncate bg-primary/5 px-1.5 py-0.5 rounded-md">
                                   {emp.team_name || emp.section_name || "כללי"}
                                 </span>
@@ -1251,9 +1255,11 @@ export default function RosterPage() {
                               <span className="text-[9px] font-black text-primary/80 bg-primary/5 px-1 py-0.5 rounded-md">
                                 {emp.team_name || emp.section_name || "כללי"}
                               </span>
-                              <span className="text-[9px] font-bold text-muted-foreground/50">
-                                • {emp.username}
-                              </span>
+                              {(emp.is_commander || emp.is_admin) && (
+                                <span className="text-[9px] font-bold text-muted-foreground/50">
+                                  • {emp.username}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>

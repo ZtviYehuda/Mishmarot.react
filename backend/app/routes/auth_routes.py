@@ -477,7 +477,7 @@ def change_password():
 
     must_change = user.get("must_change_password", False)
 
-    if not new_pass or len(new_pass) < 6:
+    if not new_pass or len(new_pass) < 4:
         return jsonify({"success": False, "error": "Password too short"}), 400
 
     if not must_change and not old_pass:
