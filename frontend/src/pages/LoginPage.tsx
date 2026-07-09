@@ -43,21 +43,20 @@ const HexagonPatrolGrid = ({ theme, accentColor }: { theme: string; accentColor:
 
     const isDark = theme === "dark";
     
-    // Retrieve computed custom primary/accent color variables from the DOM
-    const computedStyle = getComputedStyle(document.documentElement);
-    const primaryRgb = computedStyle.getPropertyValue("--primary-rgb").trim() || "59, 130, 246";
+    // Hardcoded to always be cyber blue (59, 130, 246) and red
+    const blueRgb = "59, 130, 246";
 
     const colors = isDark
       ? {
           bg: "#020617", // slate-950
-          hexOutline: `rgba(${primaryRgb}, 0.12)`, 
-          hexActiveBlue: `rgba(${primaryRgb}, 0.4)`, 
+          hexOutline: `rgba(${blueRgb}, 0.12)`, 
+          hexActiveBlue: `rgba(${blueRgb}, 0.4)`, 
           hexActiveRed: "rgba(220, 38, 38, 0.4)", 
         }
       : {
           bg: "#f8fafc", // slate-50
-          hexOutline: `rgba(${primaryRgb}, 0.08)`, 
-          hexActiveBlue: `rgba(${primaryRgb}, 0.2)`, 
+          hexOutline: `rgba(${blueRgb}, 0.08)`, 
+          hexActiveBlue: `rgba(${blueRgb}, 0.2)`, 
           hexActiveRed: "rgba(220, 38, 38, 0.2)", 
         };
 
@@ -593,7 +592,10 @@ export default function LoginPage() {
 
       {/* Cybernetic Theme Toggle Panel */}
       <div className="fixed top-4 left-4 md:top-6 md:left-6 z-50">
-        <ThemeToggle />
+        <ThemeToggle 
+          variant="minimal" 
+          className="w-10 h-10 bg-white/80 dark:bg-slate-900/65 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl shadow-sm hover:bg-white/95 dark:hover:bg-slate-800/80 text-foreground hover:text-foreground transition-all duration-300 backdrop-blur-md"
+        />
       </div>
 
       {/* Decorative Overlays - Theme Adaptive */}
@@ -765,7 +767,7 @@ export default function LoginPage() {
                           type="button"
                           variant="outline"
                           onClick={handleBiometricLogin}
-                          className="h-13 w-14 min-w-[56px] rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 hover:bg-[var(--primary)]/10 shrink-0 flex items-center justify-center transition-all"
+                          className="h-13 w-14 min-w-[56px] rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 hover:bg-[var(--primary)]/10 shrink-0 flex md:hidden items-center justify-center transition-all"
                           title="כניסה מהירה עם PIN"
                         >
                           <Fingerprint className="w-6 h-6 text-[var(--primary)]" />
@@ -959,7 +961,7 @@ export default function LoginPage() {
                           type="button"
                           variant="outline"
                           onClick={handleBiometricLogin}
-                          className="h-13 w-14 min-w-[56px] rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 hover:bg-[var(--primary)]/10 shrink-0 flex items-center justify-center transition-all"
+                          className="h-13 w-14 min-w-[56px] rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 hover:bg-[var(--primary)]/10 shrink-0 flex md:hidden items-center justify-center transition-all"
                           title="כניסה מהירה עם PIN"
                         >
                           <Fingerprint className="w-7 h-7 text-[var(--primary)]" />

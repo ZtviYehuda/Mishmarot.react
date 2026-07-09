@@ -265,7 +265,7 @@ export function GlobalAiSupport() {
       שימו לב: אני עוזר מונחה כללים לחיפוש עזרה, ולא צ'אט בינה מלאכותית (AI) חופשי.
 
 איך אוכל לעזור? הקלידו שאלה פשוטה:
-• "איך מייצאים לאקסל?"
+• "איך מייצאים דו"חות לאקסל?"
 • "איך משבצים משמרת?"
 • "איך מפיקים דוח נוכחות?"
 • "איך מעדכנים פרופיל?"`,
@@ -673,15 +673,20 @@ export function GlobalAiSupport() {
               className="fixed inset-x-4 bottom-4 sm:bottom-6 sm:left-6 sm:right-auto sm:inset-x-auto w-auto sm:w-[380px] h-[calc(100dvh-32px)] sm:h-[600px] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl z-[200] flex flex-col border border-border overflow-hidden text-right"
               style={{ direction: "rtl" }}
             >
-            <div onDoubleClick={() => setIsMinimized(true)} className="p-5 bg-primary text-primary-foreground flex items-center justify-between shadow-lg cursor-pointer relative">
+            <div 
+              onDoubleClick={() => setIsMinimized(true)} 
+              className="p-5 bg-white dark:bg-slate-900 border-b border-border/40 text-foreground flex items-center justify-between cursor-pointer relative z-10"
+            >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><HelpCircle className="w-4 h-4 text-white" /></div>
-                <h3 className="font-black text-xs uppercase">צ'אט תמיכה</h3>
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <HelpCircle className="w-4 h-4 text-primary" />
+                </div>
+                <h3 className="font-black text-xs uppercase text-slate-800 dark:text-slate-100">צ'אט תמיכה</h3>
               </div>
               <div className="flex items-center gap-1.5">
                 <button 
                   onClick={handleShowWelcomeMessage} 
-                  className="p-2 rounded-xl text-white/80 hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   title="הצג הודעת הסבר"
                 >
                   <HelpCircle className="w-4 h-4" />
@@ -689,7 +694,7 @@ export function GlobalAiSupport() {
                 <div className="relative">
                   <button 
                     onClick={() => setShowSettingsMenu(!showSettingsMenu)} 
-                    className="p-2 rounded-xl text-white/80 hover:bg-white/10 transition-colors"
+                    className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     title="הגדרות צ'אט"
                   >
                     <Cog className="w-4 h-4" />
@@ -720,7 +725,7 @@ export function GlobalAiSupport() {
                     </>
                   )}
                 </div>
-                <button onClick={() => setIsOpen(false)} className="p-2 rounded-xl text-white/80 hover:bg-white/10 transition-colors"><X className="w-5 h-5" /></button>
+                <button onClick={() => setIsOpen(false)} className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><X className="w-5 h-5" /></button>
               </div>
             </div>
 
@@ -759,8 +764,8 @@ export function GlobalAiSupport() {
                       <div className={cn(
                         "p-4 rounded-[1.5rem] text-[12px] font-bold shadow-sm text-right whitespace-pre-line leading-relaxed", 
                         msg.isBot 
-                          ? "bg-white dark:bg-slate-800 text-slate-700 ml-8 mr-0 rounded-tl-none border border-border/50" 
-                          : "bg-primary text-primary-foreground mr-8 ml-0 rounded-tr-none shadow-md shadow-primary/20 text-left"
+                          ? "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 ml-8 mr-0 rounded-tl-none border border-border/50" 
+                          : "bg-primary/15 dark:bg-primary/25 border border-primary/30 text-slate-800 dark:text-slate-100 mr-8 ml-0 rounded-tr-none shadow-sm text-left"
                       )} style={msg.isBot ? {} : { direction: "ltr" }}>
                         {msg.text}
                       </div>
@@ -787,8 +792,8 @@ export function GlobalAiSupport() {
 
             <div className="p-5 border-t border-border bg-white dark:bg-slate-900">
               <form onSubmit={handleSend} className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl">
-                <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="שאל אותי משהו..." className="flex-grow bg-transparent border-none text-xs font-bold px-3 focus:ring-0 text-right" style={{ direction: "rtl" }} />
-                <button type="submit" className="w-10 h-10 bg-primary text-primary-foreground rounded-xl flex items-center justify-center shadow-lg"><Send className="w-4 h-4 transform rotate-180" /></button>
+                <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="שאל אותי משהו..." className="flex-grow bg-transparent border-none text-slate-800 dark:text-slate-100 text-xs font-bold px-3 focus:ring-0 text-right" style={{ direction: "rtl" }} />
+                <button type="submit" className="w-10 h-10 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 rounded-xl flex items-center justify-center shadow-sm transition-all"><Send className="w-4 h-4 transform rotate-180" /></button>
               </form>
             </div>
           </motion.div>

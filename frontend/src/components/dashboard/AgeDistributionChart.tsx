@@ -173,15 +173,13 @@ export const AgeDistributionChart = ({
           </div>
         </div>
         
-        {/* Glowing Average Age Badge */}
-        <div className="relative group shrink-0">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-indigo-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+        {/* Average Age Badge */}
+        <div className="relative shrink-0">
           <div className="relative bg-card/75 dark:bg-slate-950/75 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-border/40 flex flex-col items-end min-w-[70px] sm:min-w-[80px]">
             <span className="text-[7px] sm:text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1">
               גיל ממוצע
             </span>
             <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-xs sm:text-base font-black text-foreground tabular-nums leading-none tracking-tight">
                 {averageAge}
               </span>
@@ -199,12 +197,12 @@ export const AgeDistributionChart = ({
           >
             <defs>
               <linearGradient id="ageBarGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.85} />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.25} />
+                <stop offset="0%" stopColor="rgb(148, 163, 184)" stopOpacity={0.6} />
+                <stop offset="100%" stopColor="rgb(148, 163, 184)" stopOpacity={0.2} />
               </linearGradient>
               <linearGradient id="activeAgeBarGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="rgb(168, 85, 247)" stopOpacity={1} />
-                <stop offset="100%" stopColor="rgb(59, 130, 246)" stopOpacity={0.4} />
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.9} />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.4} />
               </linearGradient>
             </defs>
 
@@ -265,9 +263,28 @@ export const AgeDistributionChart = ({
               animationDuration={800}
               animationEasing="ease-out"
             >
-              {chartData.map((entry, index) => {
+               {chartData.map((entry, index) => {
                 const isSelected = isSelectedRange(entry.range);
                 const isAnyFilterActive = selectedRange !== "all";
+
+                let fill = "var(--primary)";
+                let fillOpacity = 0.38;
+                let stroke = "none";
+                let strokeWidth = 0;
+
+                if (isAnyFilterActive) {
+                  if (isSelected) {
+                    fill = "var(--primary)";
+                    fillOpacity = 0.95;
+                  } else {
+                    fill = "var(--primary)";
+                    fillOpacity = 0.12;
+                  }
+                } else {
+                  fill = "var(--primary)";
+                  fillOpacity = 0.38;
+                }
+
                 return (
                   <Cell 
                     key={`cell-${index}`} 
@@ -280,8 +297,10 @@ export const AgeDistributionChart = ({
                         onRangeSelect?.(entry.range);
                       }
                     }}
-                    fill={isSelected && isAnyFilterActive ? "url(#activeAgeBarGradient)" : "url(#ageBarGradient)"}
-                    fillOpacity={isAnyFilterActive ? (isSelected ? 1 : 0.15) : 0.85}
+                    fill={fill}
+                    fillOpacity={fillOpacity}
+                    stroke={stroke}
+                    strokeWidth={strokeWidth}
                   />
                 );
               })}

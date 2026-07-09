@@ -106,7 +106,10 @@ export default function ChangePasswordPage() {
 
       {/* Floating Theme Toggle */}
       <div className="fixed top-6 left-6 z-50">
-        <ThemeToggle />
+        <ThemeToggle 
+          variant="minimal" 
+          className="w-10 h-10 bg-white/80 dark:bg-slate-900/65 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl shadow-sm hover:bg-white/95 dark:hover:bg-slate-800/80 text-foreground hover:text-foreground transition-all duration-300 backdrop-blur-md"
+        />
       </div>
 
       {/* Standalone Header/Branding */}

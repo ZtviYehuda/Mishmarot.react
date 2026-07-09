@@ -496,9 +496,9 @@ class EmployeeModel:
                     if str(filters["status_id"]) == "missing":
                         query += " AND st.id IS NULL"
                     elif str(filters["status_id"]) == "unavailable":
-                        query += " AND (st.name ILIKE '%%חופשה%%' OR st.name ILIKE '%%חולה%%' OR st.name ILIKE '%%מושעה%%' OR st.name ILIKE '%%גימל%%' OR st.name ILIKE '%%בלתי מורשה%%' OR st.name ILIKE '%%נפקק%%' OR st.name ILIKE '%%נפקד%%')"
+                        query += " AND st.id IS NOT NULL AND st.is_presence = FALSE"
                     elif str(filters["status_id"]) == "available":
-                        query += " AND (st.name ILIKE '%%נוכח%%' OR st.name ILIKE '%%משרד%%' OR st.name ILIKE '%%תגבור%%' OR st.name ILIKE '%%קורס%%')"
+                        query += " AND st.id IS NOT NULL AND st.is_presence = TRUE"
                     elif str(filters["status_id"]) == "all":
                         pass
                     else:

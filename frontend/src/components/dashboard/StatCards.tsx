@@ -18,17 +18,25 @@ export const StatCards = ({
   // Find specific stats
   const notReported = stats.find(s => s.status_name === "לא דווח")?.count || 0;
   
-  // Unavailable keywords logic matching other components
-  const unavailableKeywords = ["חופשה", "חולה", "מושעה", "גימל", "בלתי מורשה", "נפקד"];
+  // Use is_presence flag from database (with fallback to keywords for safety)
   const unavailableCount = stats
-    .filter(s => unavailableKeywords.some(kw => s.status_name?.includes(kw)))
+    .filter(s => {
+      if (s.is_presence !== undefined && s.is_presence !== null) {
+        return s.is_presence === false && s.status_name !== "לא דווח" && s.status_id !== null;
+      }
+      const unavailableKeywords = ["חופשה", "חולה", "מושעה", "גימל", "בלתי מורשה", "נפקד"];
+      return unavailableKeywords.some(kw => s.status_name?.includes(kw));
+    })
     .reduce((acc, curr) => acc + curr.count, 0);
-
-  // Operational availability = (Total - Missing - Unavailable) / Total
   
-  const presentKeywords = ["נוכח", "משרד", "תגבור", "קורס"];
   const presentCount = stats
-    .filter(s => presentKeywords.some(kw => s.status_name?.includes(kw)))
+    .filter(s => {
+      if (s.is_presence !== undefined && s.is_presence !== null) {
+        return s.is_presence === true;
+      }
+      const presentKeywords = ["נוכח", "משרד", "תגבור", "קורס"];
+      return presentKeywords.some(kw => s.status_name?.includes(kw));
+    })
     .reduce((acc, curr) => acc + curr.count, 0);
 
   const availabilityPct = totalEmployees > 0 

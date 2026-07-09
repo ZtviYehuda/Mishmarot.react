@@ -242,10 +242,10 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
         ref={cardRef}
         id="stats-comparison-card"
         className={cn(
-          "bg-card/60 dark:bg-slate-900/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border-0 shadow-sm py-3 flex flex-col overflow-hidden h-full relative transition-all",
-          className,
-          hideHeader && "border-none bg-transparent backdrop-blur-none py-0",
-          compact && "bg-transparent backdrop-blur-none border-0 shadow-none py-0"
+          compact
+            ? "bg-transparent border-0 shadow-none p-0 flex flex-col h-auto w-full relative"
+            : "bg-card/60 dark:bg-slate-900/60 backdrop-blur-2xl text-card-foreground gap-2 rounded-[1.5rem] border border-border/40 shadow-sm py-3 flex flex-col overflow-hidden h-full relative transition-all",
+          className
         )}
       >
         {!hideHeader && (
@@ -360,7 +360,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
               </p>
             </div>
           ) : (
-            <div className={cn("space-y-5 sm:space-y-7 py-4", compact && "grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-7 py-2")}>
+            <div className={compact ? "flex flex-col gap-3 max-w-xl mx-auto w-full py-2" : "space-y-5 sm:space-y-7 py-4"}>
               {data.map((item) => {
                 const availability =
                   item.total_count > 0
@@ -401,12 +401,18 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                   <div
                     key={item.unit_id}
                     className={cn(
-                      "px-5 py-4 sm:py-5 rounded-2xl transition-all duration-300 border shadow-sm",
-                      compact && "px-3.5 py-3",
-                      onUnitClick ? "cursor-pointer" : "",
-                      isSelected
-                        ? "border-primary/30 bg-primary/5 dark:border-primary/30 dark:bg-primary/10"
-                        : "border-border/40 bg-card hover:border-slate-200 hover:shadow-md hover:scale-[1.01] dark:hover:border-slate-700/60 dark:hover:bg-slate-800/40"
+                      compact
+                        ? cn(
+                            "py-3 px-2.5 flex flex-col gap-1.5 transition-all w-full border-b border-border/10 last:border-0 hover:bg-slate-500/5 dark:hover:bg-white/5 rounded-lg",
+                            isSelected && "bg-primary/5 dark:bg-primary/10 border-r-2 border-primary rounded-r-none"
+                          )
+                        : cn(
+                            "px-5 py-4 sm:py-5 rounded-2xl transition-all duration-300 border shadow-sm",
+                            isSelected
+                              ? "border-primary/30 bg-primary/5 dark:border-primary/30 dark:bg-primary/10"
+                              : "border-border/40 bg-card hover:border-slate-200 hover:shadow-md hover:scale-[1.01] dark:hover:border-slate-700/60 dark:hover:bg-slate-800/40"
+                          ),
+                      onUnitClick ? "cursor-pointer" : ""
                     )}
                     onClick={() => {
                       if (item.level === "employee") {
@@ -417,9 +423,9 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                     }}
                   >
                     {/* Row: name / count / percentage */}
-                    <div className="flex items-center justify-between mb-2.5 gap-3">
+                    <div className="flex items-center justify-between mb-1.5 gap-3">
                       <span
-                        className="text-xs sm:text-[14.5px] font-black text-foreground truncate flex-1 min-w-0"
+                        className="text-xs sm:text-[13.5px] font-bold text-foreground truncate flex-1 min-w-0"
                         title={item.unit_name}
                         dir="rtl"
                       >
@@ -428,15 +434,15 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
 
                       <div className="flex items-center gap-3 shrink-0">
                         {item.level !== "employee" && (
-                          <span className="text-[11px] sm:text-xs font-bold text-muted-foreground tabular-nums">
-                            <span className="font-black" style={{ color: barColor }}>
+                          <span className="text-[10px] sm:text-xs font-bold text-muted-foreground/60 tabular-nums">
+                            <span className="font-extrabold" style={{ color: barColor }}>
                               {Math.round(item.present_count)}
                             </span>
-                            <span className="text-muted-foreground/50 mx-0.5">/</span>
+                            <span className="text-muted-foreground/30 mx-0.5">/</span>
                             <span>{Math.round(item.total_count)}</span>
                           </span>
                         )}
-                        <span className={cn("text-xs sm:text-[14px] font-black tabular-nums min-w-9 text-left", pctTextColor)}>
+                        <span className={cn("text-xs sm:text-[13px] font-black tabular-nums min-w-9 text-left", pctTextColor)}>
                           {item.level === "employee"
                             ? (item.present_count > 0 ? "נוכח/ת" : "חסר/ת")
                             : `${availability}%`}
@@ -449,7 +455,7 @@ export const StatsComparisonCard = forwardRef<any, StatsComparisonCardProps>(
                       <div
                         className="w-full rounded-full overflow-hidden"
                         style={{
-                          height: compact ? "6px" : "9px",
+                          height: compact ? "4px" : "9px",
                           backgroundColor: trackBg,
                         }}
                       >

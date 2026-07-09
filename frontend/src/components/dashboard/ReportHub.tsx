@@ -432,7 +432,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                           </div>
                         )}
                         {previewType === 'comparison' && (
-                          <div className="w-full h-[380px] sm:h-[450px] flex flex-col mt-2">
+                          <div className="w-full h-auto flex flex-col mt-2">
                             <StatsComparisonCard data={comparisonStats} days={activeDaysRange} unitName={filters.unitName} hideHeader={true} selectedDate={localDate} compact={true} />
                           </div>
                         )}

@@ -846,6 +846,12 @@ class AttendanceModel:
                     count_condition = "(st.id = 1 OR st.parent_status_id = 1 OR st.name IN ('משרד', 'מהבית', 'מתקן חיצוני', 'שטח', 'בשטח'))"
                 elif status_id == -1: # Unreported
                     count_condition = "st.id IS NULL"
+                elif status_id == -2: # Not Available
+                    count_condition = "st.id IS NOT NULL AND st.is_presence = FALSE"
+                elif status_id == -3: # Operational Availability
+                    count_condition = "st.id IS NOT NULL AND st.is_presence = TRUE"
+                elif status_id == -4: # Total
+                    count_condition = "TRUE"
                 else:
                     count_condition = (
                         f"(st.id = {status_id} OR st.parent_status_id = {status_id})"
@@ -1035,6 +1041,12 @@ class AttendanceModel:
                     count_condition = "(st.id = 1 OR st.parent_status_id = 1 OR st.status_name IN ('משרד', 'מהבית', 'מתקן חיצוני', 'שטח', 'בשטח'))"
                 elif status_id == -1: # Unreported
                     count_condition = "st.id IS NULL"
+                elif status_id == -2: # Not Available
+                    count_condition = "st.id IS NOT NULL AND st.is_presence = FALSE"
+                elif status_id == -3: # Operational Availability
+                    count_condition = "st.id IS NOT NULL AND st.is_presence = TRUE"
+                elif status_id == -4: # Total
+                    count_condition = "TRUE"
                 else:
                     count_condition = (
                         f"(st.id = {status_id} OR st.parent_status_id = {status_id})"
@@ -1203,17 +1215,19 @@ class AttendanceModel:
                     (CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF(es.note, ''), 'אחר') ELSE st.name END) as status_name,
                     COUNT(es.emp_id) as count,
                     COUNT(CASE WHEN es.is_verified = FALSE THEN 1 END) as unverified_count,
-                    st.color as color
+                    st.color as color,
+                    st.is_presence as is_presence
                 FROM employee_status es
                 JOIN status_types st ON es.status_type_id = st.id
-                GROUP BY st.id, (CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF(es.note, ''), 'אחר') ELSE st.name END), st.color
+                GROUP BY st.id, (CASE WHEN st.name = 'אחר' THEN COALESCE(NULLIF(es.note, ''), 'אחר') ELSE st.name END), st.color, st.is_presence
                 UNION ALL
                 SELECT
                     NULL as status_id,
                     'לא דווח' as status_name,
                     COUNT(es.emp_id) as count,
                     0 as unverified_count,
-                    '#94a3b8' as color
+                    '#94a3b8' as color,
+                    false as is_presence
                 FROM employee_status es
                 WHERE es.status_type_id IS NULL
                 HAVING COUNT(es.emp_id) > 0
@@ -1243,6 +1257,12 @@ class AttendanceModel:
                     status_filter_clause = "AND (es.status_type_id = 1 OR es.status_type_id IN (SELECT id FROM status_types WHERE parent_status_id = 1 OR name IN ('משרד', 'מהבית', 'מתקן חיצוני', 'שטח', 'בשטח')))"
                 elif status_id == -1: # Unreported
                     status_filter_clause = "AND es.status_type_id IS NULL"
+                elif status_id == -2: # Not available
+                    status_filter_clause = "AND es.status_type_id IS NOT NULL AND es.status_type_id IN (SELECT id FROM status_types WHERE is_presence = FALSE)"
+                elif status_id == -3: # Operational availability
+                    status_filter_clause = "AND es.status_type_id IS NOT NULL AND es.status_type_id IN (SELECT id FROM status_types WHERE is_presence = TRUE)"
+                elif status_id == -4: # Total
+                    status_filter_clause = ""
                 else:
                     status_filter_clause = f"AND (es.status_type_id = {status_id} OR es.status_type_id IN (SELECT id FROM status_types WHERE parent_status_id = {status_id}))"
 
