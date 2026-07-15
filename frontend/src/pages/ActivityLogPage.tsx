@@ -249,7 +249,7 @@ export default function ActivityLogPage() {
 
   return (
     <div className="flex flex-col h-full bg-background/50 overflow-hidden" dir="rtl">
-      <div className="pt-6 pb-4 px-4 sm:px-6 shrink-0 transition-all">
+      <div className="pt-5 pb-3 px-4 sm:px-6 shrink-0 transition-all">
         <PageHeader 
           id="activity-log-header"
           title="מרכז ניטור וביקורת"
@@ -263,23 +263,23 @@ export default function ActivityLogPage() {
             <div className="flex items-center gap-3">
               <Button 
                 variant="outline" 
-                className="rounded-2xl h-11 border-border/40 bg-card hover:bg-muted/50 font-bold"
+                className="rounded-xl h-10 border-border/40 bg-card hover:bg-muted/50 font-bold text-xs"
                 onClick={fetchData}
                 disabled={isLoading}
               >
-                <RefreshCw className={cn("w-4 h-4 ml-2", isLoading && "animate-spin")} />
+                <RefreshCw className={cn("w-3.5 h-3.5 ml-2", isLoading && "animate-spin")} />
                 רענן
               </Button>
               {user?.is_admin && (
                 <Button 
                   onClick={handleExport}
                   disabled={isExporting}
-                  className="rounded-2xl h-11 font-black"
+                  className="rounded-xl h-10 font-black text-xs"
                 >
                   {isExporting ? (
-                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 ml-2 animate-spin" />
                   ) : (
-                    <Download className="w-4 h-4 ml-2" />
+                    <Download className="w-3.5 h-3.5 ml-2" />
                   )}
                   ייצוא דוח ביקורת מלא
                 </Button>
@@ -289,58 +289,23 @@ export default function ActivityLogPage() {
         />
       </div>
 
-      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 space-y-8">
-        {/* Stats Grid - Compact Grid (No Scroll) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 mb-4 sm:mb-8 pb-2 lg:pb-0">
-          <StatItem 
-            label={activeTab === "my" ? "פעולות שלי" : "פעולות"} 
-            value={activity.length} 
-            color="bg-blue-500/10 text-blue-600"
-            className="p-3 sm:p-4"
-          />
-          {user?.is_admin ? (
-            <>
-              <StatItem 
-                label="התראות" 
-                value={suspicious.length} 
-                color="bg-red-500/10 text-red-600"
-                className="p-3 sm:p-4"
-              />
-              <StatItem 
-                label="ארכיון" 
-                value={archives.length} 
-                color="bg-purple-500/10 text-purple-600"
-                className="p-3 sm:p-4"
-              />
-            </>
-          ) : (
-            <>
-              <div className="col-span-2" />
-            </>
-          )}
-          <StatItem 
-            label="מערכת" 
-            value="פעיל" 
-            color="bg-emerald-500/10 text-emerald-600"
-            className="p-3 sm:p-4"
-          />
-        </div>
+      <main className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6">
 
         {/* Main Content Card */}
-        <Card className="rounded-[2.5rem] border-border/40 overflow-hidden flex flex-col min-h-[650px] bg-card/60 backdrop-blur-xl">
+        <Card className="rounded-2xl border-border/40 overflow-hidden flex flex-col min-h-[600px] bg-card/60 backdrop-blur-xl">
           {/* Custom Tabs */}
-          <div className="flex bg-background/20 px-6 pt-6 border-b border-border/40 gap-2 overflow-x-auto no-scrollbar">
-             <button onClick={() => setActiveTab("my")} className={cn("px-6 py-3 text-xs font-black rounded-t-2xl transition-all border-t border-x", activeTab === "my" ? "bg-card text-primary border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
-               <div className="flex items-center gap-2">
-                 <UserCheck className="w-4 h-4" />
+          <div className="flex bg-background/20 px-4 pt-4 border-b border-border/40 gap-1.5 overflow-x-auto no-scrollbar">
+             <button onClick={() => setActiveTab("my")} className={cn("px-4 py-2.5 text-xs font-black rounded-t-xl transition-all border-t border-x", activeTab === "my" ? "bg-card text-primary border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
+               <div className="flex items-center gap-1.5">
+                 <UserCheck className="w-3.5 h-3.5" />
                  הפעילות שלי
                </div>
              </button>
 
              {(user?.is_admin || user?.is_commander) && (
-               <button onClick={() => setActiveTab("all")} className={cn("px-6 py-3 text-xs font-black rounded-t-2xl transition-all border-t border-x", activeTab === "all" ? "bg-card text-primary border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
-                 <div className="flex items-center gap-2">
-                   <FileText className="w-4 h-4" />
+               <button onClick={() => setActiveTab("all")} className={cn("px-4 py-2.5 text-xs font-black rounded-t-xl transition-all border-t border-x", activeTab === "all" ? "bg-card text-primary border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
+                 <div className="flex items-center gap-1.5">
+                   <FileText className="w-3.5 h-3.5" />
                    כל פעילות המערכת
                  </div>
                </button>
@@ -348,15 +313,15 @@ export default function ActivityLogPage() {
 
              {user?.is_admin && (
                <>
-                 <button onClick={() => setActiveTab("suspicious")} className={cn("px-6 py-3 text-xs font-black rounded-t-2xl transition-all border-t border-x", activeTab === "suspicious" ? "bg-card text-red-600 border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
-                   <div className="flex items-center gap-2">
-                     <AlertTriangle className="w-4 h-4" />
+                 <button onClick={() => setActiveTab("suspicious")} className={cn("px-4 py-2.5 text-xs font-black rounded-t-xl transition-all border-t border-x", activeTab === "suspicious" ? "bg-card text-red-600 border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
+                   <div className="flex items-center gap-1.5">
+                     <AlertTriangle className="w-3.5 h-3.5" />
                      התראות ואנומליות
                    </div>
                  </button>
-                 <button onClick={() => setActiveTab("archives")} className={cn("px-6 py-3 text-xs font-black rounded-t-2xl transition-all border-t border-x", activeTab === "archives" ? "bg-card text-purple-600 border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
-                   <div className="flex items-center gap-2">
-                     <Archive className="w-4 h-4" />
+                 <button onClick={() => setActiveTab("archives")} className={cn("px-4 py-2.5 text-xs font-black rounded-t-xl transition-all border-t border-x", activeTab === "archives" ? "bg-card text-purple-600 border-border/40" : "text-muted-foreground hover:bg-card/50 border-transparent")}>
+                   <div className="flex items-center gap-1.5">
+                     <Archive className="w-3.5 h-3.5" />
                      ארכיון קבצים
                    </div>
                  </button>
@@ -365,15 +330,15 @@ export default function ActivityLogPage() {
           </div>
 
           {/* Toolbar & Advanced Filters */}
-          <div className="p-6 border-b border-border/40 space-y-4 bg-background/20">
-            <div className="flex flex-col lg:flex-row items-center gap-4">
+          <div className="p-4 border-b border-border/40 space-y-3 bg-background/20">
+            <div className="flex flex-col lg:flex-row items-center gap-3">
                 <div className="relative w-full lg:flex-1">
-                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                    <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
                     <Input 
                         placeholder={activeTab === "archives" ? "חפש לפי תאריך ארכיון..." : "חיפוש חופשי (משתמש, IP, תיאור)..."} 
                         value={activeTab === "archives" ? archiveSearch : searchTerm}
                         onChange={(e) => activeTab === "archives" ? setArchiveSearch(e.target.value) : setSearchTerm(e.target.value)}
-                        className="pr-11 h-12 rounded-2xl bg-background border-border/40 focus:ring-primary/20 transition-all font-bold"
+                        className="pr-10 h-10 rounded-xl bg-background border-border/40 focus:ring-primary/20 transition-all font-bold text-sm"
                     />
                 </div>
                 
@@ -382,23 +347,23 @@ export default function ActivityLogPage() {
                         variant="outline" 
                         onClick={() => setShowFilters(!showFilters)}
                         className={cn(
-                            "rounded-2xl h-12 px-6 font-bold flex-1 lg:flex-none border-border/40",
+                            "rounded-xl h-10 px-4 text-xs font-bold flex-1 lg:flex-none border-border/40",
                             showFilters || hasActiveFilters ? "bg-primary/5 text-primary border-primary/20" : "bg-background"
                         )}
                     >
-                        <FilterIcon className="w-4 h-4 ml-2" />
+                        <FilterIcon className="w-3.5 h-3.5 ml-2" />
                         מסננים מתקדמים
-                        {hasActiveFilters && <div className="mr-2 w-2 h-2 rounded-full bg-primary animate-pulse" />}
+                        {hasActiveFilters && <div className="mr-1.5 w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
                     </Button>
                     
                     {activeTab === "all" && (
-                        <div className="hidden sm:flex items-center bg-background border border-border/40 rounded-2xl p-1">
+                        <div className="hidden sm:flex items-center bg-background border border-border/40 rounded-xl p-0.5">
                             {[50, 100, 250].map((v) => (
                                 <button
                                     key={v}
                                     onClick={() => setLimit(v)}
                                     className={cn(
-                                        "px-4 py-1.5 rounded-xl text-[10px] font-black transition-all",
+                                        "px-3 py-1 rounded-lg text-[9px] font-black transition-all",
                                         limit === v ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted"
                                     )}
                                 >
@@ -419,15 +384,15 @@ export default function ActivityLogPage() {
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
                     >
-                        <Card className="bg-background/60 border-border/20 p-5 rounded-[2rem] mt-2 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <Card className="bg-background/60 border-border/20 p-4 rounded-2xl mt-1.5 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {/* User Filter */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">משתמש מבצע</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest px-0.5">משתמש מבצע</label>
                                     <select 
                                         value={selectedUser}
                                         onChange={(e) => setSelectedUser(e.target.value)}
-                                        className="w-full h-11 rounded-xl bg-background border border-border/40 px-3 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none appearance-none cursor-pointer transition-all hover:border-primary/20"
+                                        className="w-full h-9 rounded-lg bg-background border border-border/40 px-3 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none appearance-none cursor-pointer transition-all hover:border-primary/20"
                                         style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: "left 0.75rem center", backgroundRepeat: "no-repeat", backgroundSize: "1em" }}
                                     >
                                         <option value="">כל המשתמשים</option>
@@ -436,12 +401,12 @@ export default function ActivityLogPage() {
                                 </div>
 
                                 {/* Action Type Filter */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">סוג פעולה</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest px-0.5">סוג פעולה</label>
                                     <select 
                                         value={selectedAction}
                                         onChange={(e) => setSelectedAction(e.target.value)}
-                                        className="w-full h-11 rounded-xl bg-background border border-border/40 px-3 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none appearance-none cursor-pointer transition-all hover:border-primary/20"
+                                        className="w-full h-9 rounded-lg bg-background border border-border/40 px-3 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none appearance-none cursor-pointer transition-all hover:border-primary/20"
                                         style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: "left 0.75rem center", backgroundRepeat: "no-repeat", backgroundSize: "1em" }}
                                     >
                                         <option value="">כל הסוגים</option>
@@ -452,9 +417,9 @@ export default function ActivityLogPage() {
                                 </div>
 
                                 {/* Status Filter (Radio-like) */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">סטטוס פעולה</label>
-                                    <div className="flex bg-card p-1 rounded-xl gap-1 border border-border/40">
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest px-0.5">סטטוס פעולה</label>
+                                    <div className="flex bg-card p-1 rounded-lg gap-1 border border-border/40 h-9 items-center">
                                         {[
                                             { id: "all", label: "הכל", icon: Activity },
                                             { id: "success", label: "תקין", icon: UserCheck },
@@ -464,8 +429,8 @@ export default function ActivityLogPage() {
                                                 key={s.id}
                                                 onClick={() => setStatusFilter(s.id as any)}
                                                 className={cn(
-                                                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-black transition-all",
-                                                    statusFilter === s.id ? "bg-background text-primary" : "text-muted-foreground hover:bg-background/40"
+                                                    "flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[9px] font-black transition-all h-7",
+                                                    statusFilter === s.id ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:bg-background/40"
                                                 )}
                                             >
                                                 <s.icon className="w-3 h-3" />
@@ -476,48 +441,48 @@ export default function ActivityLogPage() {
                                 </div>
 
                                 {/* Date Range */}
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">טווח תאריכים</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest px-0.5">טווח תאריכים</label>
                                     <div className="flex items-center gap-2">
                                         <Input 
                                             type="date" 
                                             value={dateFrom} 
                                             onChange={(e) => setDateFrom(e.target.value)}
-                                            className="h-11 rounded-xl bg-background border-border/40 text-[10px] font-bold py-0" 
+                                            className="h-9 rounded-lg bg-background border-border/40 text-[10px] font-bold py-0" 
                                         />
-                                        <span className="text-muted-foreground">עד</span>
+                                        <span className="text-muted-foreground text-xs">עד</span>
                                         <Input 
                                             type="date" 
                                             value={dateTo} 
                                             onChange={(e) => setDateTo(e.target.value)}
-                                            className="h-11 rounded-xl bg-background border-border/40 text-[10px] font-bold py-0" 
+                                            className="h-9 rounded-lg bg-background border-border/40 text-[10px] font-bold py-0" 
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between pt-4 border-t border-border/10">
+                            <div className="flex items-center justify-between pt-3 border-t border-border/10">
                                 <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-background/50 border border-border/40 px-3 py-1.5 rounded-full">
+                                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-background/50 border border-border/40 px-2.5 py-1 rounded-full">
                                         <Zap className="w-3 h-3 text-amber-500" />
                                         נמצאו <span className="font-black text-foreground">{filteredLogs.length}</span> תוצאות מתאימות
                                     </div>
                                     {hasActiveFilters && (
                                         <button 
                                             onClick={clearFilters}
-                                            className="text-xs font-black text-destructive hover:underline flex items-center gap-1.5"
+                                            className="text-[10px] font-black text-destructive hover:underline flex items-center gap-1"
                                         >
                                             <X className="w-3 h-3" />
-                                            נקה את כל המסננים
+                                            נקה מסננים
                                         </button>
                                     )}
                                 </div>
                                 <Button 
                                     size="sm" 
-                                    className="rounded-xl h-10 px-6 font-black"
+                                    className="rounded-lg h-8 px-4 font-black text-[10px]"
                                     onClick={() => setShowFilters(false)}
                                 >
-                                    החל סגור
+                                    החל וסגור
                                 </Button>
                             </div>
                         </Card>
@@ -527,14 +492,14 @@ export default function ActivityLogPage() {
           </div>
 
           {/* List Content */}
-          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
+          <div className="flex-1 p-0 overflow-y-auto custom-scrollbar">
             {isLoading ? (
-              <div className="h-full flex flex-col items-center justify-center py-32 gap-4 opacity-40">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                <span className="text-sm font-bold tracking-widest uppercase">מעבד נתונים מהשרת...</span>
+              <div className="h-full flex flex-col items-center justify-center py-24 gap-3 opacity-40">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                <span className="text-xs font-bold tracking-widest uppercase">מעבד נתונים מהשרת...</span>
               </div>
             ) : activeTab === "archives" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                 {filteredLogs.map((archive, idx) => (
                   <ArchiveCard 
                     key={archive.filename} 
@@ -544,30 +509,30 @@ export default function ActivityLogPage() {
                   />
                 ))}
                 {filteredLogs.length === 0 && (
-                   <div className="col-span-full py-32 text-center opacity-40">
-                      <Archive className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                      <p className="font-black">לא נמצאו ארכיונים תואמים</p>
+                   <div className="col-span-full py-24 text-center opacity-40">
+                      <Archive className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                      <p className="font-black text-sm">לא נמצאו ארכיונים תואמים</p>
                    </div>
                 )}
               </div>
             ) : filteredLogs.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center py-32 text-center space-y-4">
-                <div className="w-20 h-20 bg-background/50 border border-border/20 rounded-[2rem] flex items-center justify-center text-muted-foreground/20">
-                  <Search className="w-10 h-10" />
+              <div className="h-full flex flex-col items-center justify-center py-24 text-center space-y-3">
+                <div className="w-16 h-16 bg-background/50 border border-border/20 rounded-2xl flex items-center justify-center text-muted-foreground/20">
+                  <Search className="w-8 h-8" />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-lg font-black">לא נמצאו תוצאות</p>
-                  <p className="text-sm text-muted-foreground font-medium max-w-xs mx-auto">
+                <div className="space-y-0.5">
+                  <p className="text-base font-black">לא נמצאו תוצאות</p>
+                  <p className="text-xs text-muted-foreground font-medium max-w-xs mx-auto">
                     {activeTab === "my" ? "אין לך פעילות מתועדת במערכת עדיין." : "נסה לשנות את מונחי החיפוש או לבחור קטגוריה אחרת."}
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="flex flex-col divider-y divide-border/20">
                 {activeTab === "my" && (
-                  <div className="flex items-center gap-2 mb-6 px-1">
-                    <div className="w-1 h-4 bg-primary rounded-full" />
-                    <h3 className="text-sm font-black text-foreground/70 uppercase tracking-tighter">
+                  <div className="flex items-center gap-2 px-5 py-4 border-b border-border/20 bg-muted/5">
+                    <div className="w-1 h-3.5 bg-primary rounded-full" />
+                    <h3 className="text-xs font-black text-foreground/75 uppercase tracking-tighter">
                       10 כניסות אחרונות למערכת ופעילות בחשבון
                     </h3>
                   </div>
@@ -580,9 +545,9 @@ export default function ActivityLogPage() {
           </div>
 
           {/* Footer Info */}
-          <div className="p-4 border-t border-border/40 bg-background/20 flex items-center justify-center gap-3">
-              <Info className="w-4 h-4 text-primary/50" />
-              <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+          <div className="p-3 border-t border-border/40 bg-background/20 flex items-center justify-center gap-2 shrink-0">
+              <Info className="w-3.5 h-3.5 text-primary/50" />
+              <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">
                 {activeTab === "archives" 
                   ? "קבצי ארכיון נוצרים באופן אוטומטי עבור לוגים ישנים מ-7 ימים."
                   : "יומן המערכת מספק תיעוד מלא של 90 הימים האחרונים."}
@@ -596,17 +561,17 @@ export default function ActivityLogPage() {
 
 function StatItem({ label, value, sub, color, className }: any) {
   return (
-    <Card className={cn("group relative overflow-hidden p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all flex items-center justify-between bg-card/80 border-border/40 hover:bg-accent/30 hover:border-primary/20", className)}>
+    <Card className={cn("group relative overflow-hidden p-3 rounded-xl transition-all flex items-center justify-between bg-card border-border/40 hover:border-primary/20 shadow-sm", className)}>
       <div className="flex items-center justify-between w-full gap-2">
         <div className="space-y-0.5 text-right min-w-0 flex-1">
-          <p className="text-[9px] sm:text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wide leading-none truncate">
+          <p className="text-[9px] sm:text-[10px] font-black text-muted-foreground/70 uppercase tracking-wider leading-none">
             {label}
           </p>
-          <p className={cn("text-base sm:text-xl font-black tracking-tight leading-none mt-1", color.split(" ")[1])}>
+          <p className={cn("text-sm sm:text-base font-black tracking-tight leading-none mt-1.5", color.split(" ")[1])}>
             {value}
           </p>
           {sub && (
-            <p className="text-[8px] sm:text-[9px] font-semibold text-muted-foreground/50 leading-none mt-1">
+            <p className="text-[8px] font-bold text-muted-foreground/50 leading-none mt-1">
               {sub}
             </p>
           )}
@@ -637,40 +602,40 @@ function ArchiveCard({ archive, onDownload, index }: any) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: index * 0.03 }}
     >
-        <Card className="group relative overflow-hidden rounded-[2rem] border-border/40 bg-card hover:border-primary/40 hover: hover: transition-all p-6">
+        <Card className="group relative overflow-hidden rounded-2xl border-border/40 bg-card hover:border-primary/40 hover: transition-all p-4">
             {/* Background Accent */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[4rem] -mr-10 -mt-10 group-hover:bg-primary/10 transition-colors" />
+            <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-[2.5rem] -mr-6 -mt-6 group-hover:bg-primary/10 transition-colors" />
             
-            <div className="relative flex flex-col gap-5">
+            <div className="relative flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Archive className="w-7 h-7" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <Archive className="w-5 h-5" />
                     </div>
                     <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">סוג דוח</span>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">סוג דוח</span>
                         <span className="text-xs font-black text-primary">ארכיון פעילות</span>
                     </div>
                 </div>
 
-                <div className="space-y-1">
-                    <h4 className="text-lg font-black tracking-tight leading-none">{readableName}</h4>
-                    <p className="text-[11px] font-bold text-muted-foreground/60 font-mono ltr" dir="ltr">{archive.filename}</p>
+                <div className="space-y-0.5">
+                    <h4 className="text-sm font-black tracking-tight leading-none">{readableName}</h4>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 font-mono ltr" dir="ltr">{archive.filename}</p>
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-border/10">
                     <div className="flex flex-col">
-                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">גודל קובץ</span>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">גודל קובץ</span>
                         <span className="text-xs font-bold">{archive.size_kb} KB</span>
                     </div>
                     <div className="flex flex-col items-center">
-                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">נוצר ב-</span>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">נוצר ב-</span>
                         <span className="text-xs font-bold">{format(new Date(archive.created_at), "HH:mm")}</span>
                     </div>
                     <Button 
                         onClick={() => onDownload(archive.filename)}
-                        className="rounded-2xl h-11 w-11 p-0 hover:scale-105 transition-transform"
+                        className="rounded-xl h-9 w-9 p-0 hover:scale-105 transition-transform"
                     >
-                        <Download className="w-5 h-5" />
+                        <Download className="w-4 h-4" />
                     </Button>
                 </div>
             </div>
@@ -705,70 +670,74 @@ function ActivityEntry({ log, index, isSuspicious }: { log: any, index: number, 
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.02, 0.4) }}
       className={cn(
-        "group flex flex-col rounded-[1.5rem] border transition-all cursor-pointer overflow-hidden",
+        "group flex flex-col border-b border-border/20 transition-all cursor-pointer overflow-hidden",
         isError 
-          ? "bg-red-500/[0.02] hover:bg-red-500/[0.05] border-red-500/10" 
-          : "bg-card hover:bg-background border-border/40",
-        expanded && "bg-background/80 ring-1 ring-primary/20 border-primary/20"
+          ? "bg-red-500/[0.01] hover:bg-red-500/[0.03]" 
+          : "bg-card hover:bg-muted/10",
+        expanded && "bg-muted/20 border-primary/20"
       )}
       onClick={() => setExpanded(!expanded)}
     >
-      <div className="p-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-5 min-w-0">
+      <div className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
+        <div className="flex items-center gap-4 min-w-0 flex-1">
+          {/* Icon (small and sleek) */}
           <div className={cn(
-            "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105",
-            isError ? "bg-red-500 text-white border-transparent" : cn("bg-background border-border/40", config.color)
+            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105",
+            isError ? "bg-red-500/10 text-red-500 border-red-500/20" : cn("bg-background border-border/30", config.color)
           )}>
-            <Icon className="w-6 h-6" />
+            <Icon className="w-5 h-5" />
           </div>
-          
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+
+          <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center">
+            {/* Col 1: Action Tag & Time */}
+            <div className="md:col-span-4 flex items-center gap-2.5">
               <span className={cn(
-                "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border",
-                isError ? "bg-red-500 text-white border-transparent" : "bg-primary/5 border-primary/20 text-primary"
+                "text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border shrink-0",
+                isError ? "bg-red-500/15 border-red-500/30 text-red-500" : "bg-primary/10 border-primary/20 text-primary"
               )}>
                 {config.label}
               </span>
-              <span className="text-[11px] font-bold text-muted-foreground bg-background/60 border border-border/20 px-2 py-0.5 rounded-full flex items-center gap-1.5">
-                <Calendar className="w-3 h-3" />
+              <span className="text-[11px] font-bold text-muted-foreground/80 shrink-0 flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-muted-foreground/45" />
                 {log.created_at ? format(new Date(log.created_at), "HH:mm, dd/MM/yyyy", { locale: he }) : "זמן לא ידוע"}
               </span>
             </div>
-            <p className="text-sm font-black text-foreground/90 truncate max-w-2xl leading-relaxed">
-              {log.description}
-            </p>
-            {(log.user_name || log.target_name) && (
-              <div className="flex items-center gap-4 mt-1">
-                {log.user_name && (
-                  <div className="flex items-center gap-1.5">
-                    <User className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-[11px] font-bold text-muted-foreground">בוצע ע״י: <span className="text-foreground/70 font-black">{log.user_name}</span></span>
-                  </div>
-                )}
-                {log.target_name && (
-                  <div className="flex items-center gap-1.5">
-                    <ArrowLeftRight className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-[11px] font-bold text-muted-foreground">עבור: <span className="text-foreground/70 font-black">{log.target_name}</span></span>
-                  </div>
-                )}
-              </div>
-            )}
+
+            {/* Col 2: Log Description */}
+            <div className="md:col-span-5 min-w-0">
+              <p className="text-xs sm:text-sm font-black text-foreground/80 truncate leading-relaxed">
+                {log.description}
+              </p>
+            </div>
+
+            {/* Col 3: Actors (User / Target) */}
+            <div className="md:col-span-3 min-w-0 flex flex-wrap items-center gap-1.5">
+              {log.user_name && (
+                <span className="text-[10px] font-bold text-muted-foreground/80 flex items-center gap-1 bg-background/50 border border-border/20 px-2 py-0.5 rounded-lg">
+                  <User className="w-3 h-3 text-muted-foreground/55" />
+                  <span>בוצע ע״י: <span className="font-black text-foreground/75">{log.user_name}</span></span>
+                </span>
+              )}
+              {log.target_name && (
+                <span className="text-[10px] font-bold text-muted-foreground/80 flex items-center gap-1 bg-background/50 border border-border/20 px-2 py-0.5 rounded-lg">
+                  <ArrowLeftRight className="w-3 h-3 text-muted-foreground/55" />
+                  <span>עבור: <span className="font-black text-foreground/75">{log.target_name}</span></span>
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-8 shrink-0">
-          <div className="hidden md:flex flex-col items-end opacity-70">
-            <span className="text-[12px] font-mono font-black tracking-tight text-primary/80">{ip}</span>
-            <div className="flex items-center gap-1.5 mt-0.5">
-               <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                 {isWindows ? "Windows Desktop" : isMobile ? "Mobile Device" : "System Agent"}
-               </span>
-               <div className={cn("w-1.5 h-1.5 rounded-full", isMobile ? "bg-blue-500" : "bg-emerald-500")} />
-            </div>
+        {/* Left-end row metadata */}
+        <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-border/10">
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-mono font-bold text-muted-foreground/70">{ip}</span>
+            <span className="text-[10px] font-black text-muted-foreground/50 hidden md:inline">
+              {isWindows ? "מחשב" : isMobile ? "נייד" : "שרת"}
+            </span>
           </div>
-          <div className="p-2 rounded-xl bg-background/50 border border-border/20 group-hover:bg-primary/10 transition-colors">
-            <ChevronDown className={cn("w-5 h-5 text-muted-foreground transition-transform duration-300", expanded && "rotate-180")} />
+          <div className="p-1.5 rounded-lg bg-background/50 border border-border/20 group-hover:bg-primary/10 transition-colors">
+            <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform duration-300", expanded && "rotate-180")} />
           </div>
         </div>
       </div>
@@ -779,64 +748,14 @@ function ActivityEntry({ log, index, isSuspicious }: { log: any, index: number, 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t border-border/20 bg-background/30"
+            className="border-t border-border/20 bg-muted/5"
           >
-            <div className="p-8 space-y-10">
-              {/* Device and Environment Header */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Device Info Panel */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                     <Laptop2 className="w-4 h-4 text-primary" />
-                     <span className="font-black text-foreground text-xs uppercase tracking-widest">זיהוי מכשיר וסביבה</span>
-                  </div>
-                  <div className="bg-background/80 p-5 rounded-[2rem] border border-border/20 relative overflow-hidden group/browser">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
-                        {isMobile ? <Cpu className="w-5 h-5" /> : <Laptop2 className="w-5 h-5" />}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[11px] font-mono text-muted-foreground leading-relaxed break-all ltr" dir="ltr">
-                          {browser || "מידע דפדפן אינו זמין"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Technical Events Grid */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                     <Terminal className="w-4 h-4 text-amber-500" />
-                     <span className="font-black text-foreground text-xs uppercase tracking-widest">פרטי אירוע טכניים</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <TechCard icon={Wifi} label="IP מקור" value={ip} color="text-primary" />
-                    <TechCard icon={Clock} label="זמן מדויק" value={log.created_at ? format(new Date(log.created_at), "HH:mm:ss.SSS") : "N/A"} color="text-emerald-600" />
-                    <TechCard icon={Fingerprint} label="מזהה פעולה" value={`#${log.id}`} color="text-amber-600" />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Metadata Panel */}
-              {log.metadata && Object.keys(log.metadata).length > 0 && (
-                <div className="space-y-4">
-                   <div className="flex items-center gap-2 px-1">
-                     <Settings className="w-4 h-4 text-indigo-500" />
-                     <span className="font-black text-foreground text-xs uppercase tracking-widest">מידע גולמי (METADATA)</span>
-                  </div>
-                  <div className="bg-[#0c0e14] p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden">
-                    {/* Syntax Highlight Decoration */}
-                    <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/50" />
-                    <div className="absolute top-4 left-8 text-[10px] font-mono text-white/20 uppercase tracking-[0.3em]">raw_data_view</div>
-                    
-                    <div className="relative z-10 ltr" dir="ltr">
-                      <pre className="text-indigo-300 font-mono text-[12px] leading-loose custom-scrollbar overflow-x-auto max-h-[400px]">
-                        {JSON.stringify(log.metadata, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                </div>
+            <div className="px-4 py-3 flex flex-wrap items-center gap-2.5">
+              <DetailPill icon={Wifi} label="כתובת IP" value={ip} />
+              <DetailPill icon={Clock} label="שעה מדויקת" value={log.created_at ? format(new Date(log.created_at), "HH:mm:ss") : "N/A"} />
+              <DetailPill icon={Fingerprint} label="מזהה פעולה" value={`#${log.id}`} />
+              {log.metadata?.success !== undefined && (
+                <DetailPill icon={Activity} label="סטטוס" value={log.metadata.success ? "הצליח ✓" : "נכשל ✗"} />
               )}
             </div>
           </motion.div>
@@ -846,15 +765,29 @@ function ActivityEntry({ log, index, isSuspicious }: { log: any, index: number, 
   );
 }
 
+function DetailPill({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-background/60 border border-border/20 min-w-0">
+      <div className="p-1.5 rounded-lg bg-muted/60 shrink-0">
+        <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider truncate">{label}</p>
+        <p className="text-[11px] font-mono font-bold text-foreground/80 truncate ltr" dir="ltr">{value || "—"}</p>
+      </div>
+    </div>
+  );
+}
+
 function TechCard({ icon: Icon, label, value, color }: any) {
   return (
-    <div className="bg-background/80 p-4 rounded-3xl border border-border/20 flex flex-col items-center justify-center text-center gap-2 group hover:border-primary/20 transition-all">
-      <div className={cn("p-2 rounded-xl bg-muted/50 group-hover:bg-muted transition-colors", color)}>
-        <Icon className="w-4 h-4" />
+    <div className="bg-background/80 p-3 rounded-xl border border-border/20 flex flex-col items-center justify-center text-center gap-1.5 group hover:border-primary/20 transition-all">
+      <div className={cn("p-1.5 rounded-lg bg-muted/50 group-hover:bg-muted transition-colors", color)}>
+        <Icon className="w-3.5 h-3.5" />
       </div>
       <div className="space-y-0.5">
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>
-        <p className={cn("text-xs font-mono font-black", color)}>{value}</p>
+        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>
+        <p className={cn("text-[10px] font-mono font-black truncate max-w-full", color)}>{value}</p>
       </div>
     </div>
   );

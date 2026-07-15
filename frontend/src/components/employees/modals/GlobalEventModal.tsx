@@ -246,7 +246,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                   <span className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-widest pr-0.5">
                     בחר יחידה
                   </span>
-                  <div className="grid grid-cols-3 gap-2.5">
+                  <div className="grid grid-cols-3 gap-2.5 w-full min-w-0">
                     {/* Department */}
                     <Select
                       value={scope === "department" && targetId ? targetId : undefined}
@@ -260,7 +260,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                     >
                       <SelectTrigger
                         className={cn(
-                          "h-24 flex flex-col items-center justify-center gap-2 rounded-2xl border text-center font-bold text-xs transition-all duration-300",
+                          "h-24 w-full min-w-0 overflow-hidden flex flex-col items-center justify-center gap-2 rounded-2xl border text-center font-bold text-xs transition-all duration-300",
                           "hover:scale-[1.02] hover:shadow-md cursor-pointer",
                           scope === "department" && targetId
                             ? "border-primary bg-primary/5 text-primary"
@@ -268,12 +268,15 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                           (isScopeDisabled("department") || departments.length === 0) && "opacity-40 pointer-events-none",
                         )}
                       >
-                        <Building2 className={cn("w-6 h-6", scope === "department" && targetId ? "text-primary" : "text-muted-foreground")} />
-                        <div className="truncate max-w-full text-center px-1 font-black">
-                          <SelectValue placeholder="מחלקה" />
+                        <Building2 className={cn("w-6 h-6 shrink-0", scope === "department" && targetId ? "text-primary" : "text-muted-foreground")} />
+                        <div className="w-full truncate text-center px-1 font-black leading-tight text-[11px]">
+                          <div className="hidden"><SelectValue /></div>
+                          {scope === "department" && targetId 
+                            ? (departments.find((d: any) => d.id.toString() === targetId)?.name || "מחלקה") 
+                            : "מחלקה"}
                         </div>
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
+                      <SelectContent position="popper" className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
                         {departments.map((d: any) => (
                           <SelectItem key={d.id} value={d.id.toString()} className="font-bold cursor-pointer">
                             {d.name}
@@ -296,7 +299,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                     >
                       <SelectTrigger
                         className={cn(
-                          "h-24 flex flex-col items-center justify-center gap-2 rounded-2xl border text-center font-bold text-xs transition-all duration-300",
+                          "h-24 w-full min-w-0 overflow-hidden flex flex-col items-center justify-center gap-2 rounded-2xl border text-center font-bold text-xs transition-all duration-300",
                           "hover:scale-[1.02] hover:shadow-md cursor-pointer",
                           scope === "section" && targetId
                             ? "border-primary bg-primary/5 text-primary"
@@ -304,12 +307,15 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                           (isScopeDisabled("section") || availableSections.length === 0) && "opacity-40 pointer-events-none",
                         )}
                       >
-                        <LayoutPanelLeft className={cn("w-6 h-6", scope === "section" && targetId ? "text-primary" : "text-muted-foreground")} />
-                        <div className="truncate max-w-full text-center px-1 font-black">
-                          <SelectValue placeholder="מדור" />
+                        <LayoutPanelLeft className={cn("w-6 h-6 shrink-0", scope === "section" && targetId ? "text-primary" : "text-muted-foreground")} />
+                        <div className="w-full truncate text-center px-1 font-black leading-tight text-[11px]">
+                          <div className="hidden"><SelectValue /></div>
+                          {scope === "section" && targetId 
+                            ? (allSections.find((s: any) => s.id.toString() === targetId)?.name || "מדור") 
+                            : "מדור"}
                         </div>
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
+                      <SelectContent position="popper" className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
                         {availableSections.map((s: any) => (
                           <SelectItem key={s.id} value={s.id.toString()} className="font-bold cursor-pointer">
                             {s.name} <span className="text-[9px] text-muted-foreground mr-1">({s.dept_name})</span>
@@ -335,7 +341,7 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                     >
                       <SelectTrigger
                         className={cn(
-                          "h-24 flex flex-col items-center justify-center gap-2 rounded-2xl border text-center font-bold text-xs transition-all duration-300",
+                          "h-24 w-full min-w-0 overflow-hidden flex flex-col items-center justify-center gap-2 rounded-2xl border text-center font-bold text-xs transition-all duration-300",
                           "hover:scale-[1.02] hover:shadow-md cursor-pointer",
                           scope === "team" && targetId
                             ? "border-primary bg-primary/5 text-primary"
@@ -343,12 +349,15 @@ export const GlobalEventModal: React.FC<GlobalEventModalProps> = ({
                           (isScopeDisabled("team") || availableTeams.length === 0) && "opacity-40 pointer-events-none",
                         )}
                       >
-                        <Users className={cn("w-6 h-6", scope === "team" && targetId ? "text-primary" : "text-muted-foreground")} />
-                        <div className="truncate max-w-full text-center px-1 font-black">
-                          <SelectValue placeholder="חוליה" />
+                        <Users className={cn("w-6 h-6 shrink-0", scope === "team" && targetId ? "text-primary" : "text-muted-foreground")} />
+                        <div className="w-full truncate text-center px-1 font-black leading-tight text-[11px]">
+                          <div className="hidden"><SelectValue /></div>
+                          {scope === "team" && targetId 
+                            ? (allTeams.find((t: any) => t.id.toString() === targetId)?.name || "חוליה") 
+                            : "חוליה"}
                         </div>
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
+                      <SelectContent position="popper" className="rounded-xl border-border/40 max-h-48 custom-scrollbar relative z-[100]">
                         {availableTeams.map((t: any) => (
                           <SelectItem key={t.id} value={t.id.toString()} className="font-bold cursor-pointer">
                             {t.name} <span className="text-[9px] text-muted-foreground mr-1">({t.section_name})</span>
