@@ -193,7 +193,7 @@ export default function TransfersPage() {
     fetchHistory();
     fetchEmployees();
     const loadStructure = async () => {
-      const data = await getStructure();
+      const data = await getStructure(true);
       if (data) setStructure(data);
     };
     loadStructure();

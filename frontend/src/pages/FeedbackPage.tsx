@@ -1960,122 +1960,110 @@ const FeedbackPage = () => {
                       key="send-tab"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="space-y-6 w-full"
+                      className="space-y-4 w-full"
                     >
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
                         {/* Right Column: The Form Card (lg:col-span-8) */}
-                        <Card className="lg:col-span-8 bg-card/45 border border-border/40 backdrop-blur-xl rounded-3xl p-6 sm:p-8 space-y-6 text-right">
-                          <div className="space-y-1">
-                            <h3 className="text-base font-black text-foreground">
-                              שליחת פנייה לצוות
-                            </h3>
-                            <p className="text-xs text-muted-foreground">
+                        <Card className="lg:col-span-8 bg-card/50 border border-border/30 backdrop-blur-xl rounded-2xl p-4 sm:p-6 space-y-4 text-right">
+                          <div className="space-y-0.5 pb-1 border-b border-border/20">
+                            <h3 className="text-sm font-black text-foreground">שליחת פנייה לצוות</h3>
+                            <p className="text-[11px] text-muted-foreground">
                               אנחנו כאן כדי לשמוע אותך. הפידבק שלך בונה את המערכת.
                             </p>
                           </div>
 
-                          <form
-                            onSubmit={handleSubmitTicket}
-                            className="space-y-6"
-                          >
-                            <div className="space-y-3">
-                              <label className="text-xs sm:text-sm font-black uppercase text-slate-700 dark:text-slate-300 block text-right tracking-wide">
+                          <form onSubmit={handleSubmitTicket} className="space-y-4">
+                            {/* Category */}
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest block">
                                 סוג הפנייה
                               </label>
                               <div className="flex gap-2">
-                                {["באג", "הצעה לשיפור", "פיצ'ר חדש"].map(
-                                  (cat) => (
-                                    <button
-                                      type="button"
-                                      key={cat}
-                                      onClick={() => setTicketCategory(cat)}
-                                      className={cn(
-                                        "flex-1 py-3 px-2 rounded-2xl text-[12px] font-black transition-all duration-200 border",
-                                        ticketCategory === cat
-                                          ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/10"
-                                          : "bg-card/40 border-border/20 text-muted-foreground hover:bg-card/60",
-                                      )}
-                                    >
-                                      {cat}
-                                    </button>
-                                  ),
-                                )}
+                                {["באג", "הצעה לשיפור", "פיצ'ר חדש"].map((cat) => (
+                                  <button
+                                    type="button"
+                                    key={cat}
+                                    onClick={() => setTicketCategory(cat)}
+                                    className={cn(
+                                      "flex-1 py-2 px-2 rounded-xl text-[11px] font-black transition-all duration-200 border",
+                                      ticketCategory === cat
+                                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                        : "bg-card/40 border-border/20 text-muted-foreground hover:bg-muted/50",
+                                    )}
+                                  >
+                                    {cat}
+                                  </button>
+                                ))}
                               </div>
                             </div>
 
-                            <div className="space-y-3">
-                              <label className="text-xs sm:text-sm font-black uppercase text-slate-700 dark:text-slate-300 block text-right tracking-wide">
+                            {/* Description */}
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest block">
                                 תיאור הפנייה
                               </label>
                               <textarea
                                 placeholder="ספרו לנו מה אפשר לשפר..."
                                 value={ticketDescription}
-                                onChange={(e) =>
-                                  setTicketDescription(e.target.value)
-                                }
-                                className="w-full min-h-[160px] resize-none rounded-3xl border border-border/30 bg-background/30 text-sm text-right p-5 leading-relaxed focus:bg-background focus:border-primary/20 transition-all font-bold placeholder:text-muted-foreground/30 outline-none focus:ring-2 focus:ring-primary/10"
+                                onChange={(e) => setTicketDescription(e.target.value)}
+                                className="w-full min-h-[110px] resize-none rounded-xl border border-border/30 bg-background/40 text-sm text-right p-3 leading-relaxed focus:bg-background focus:border-primary/30 transition-all font-medium placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-primary/10"
                                 required
                               />
                             </div>
 
-                            {/* Screenshot Attachment Field */}
-                            <div className="space-y-3">
-                              <label className="text-xs sm:text-sm font-black uppercase text-slate-700 dark:text-slate-300 block text-right tracking-wide">צרף צילום מסך (אופציונלי)</label>
-                              <div className="flex flex-col gap-3">
-                                <input 
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      setScreenshotFile(file);
-                                      setScreenshotPreview(URL.createObjectURL(file));
-                                    }
-                                  }}
-                                  className="hidden"
-                                  id="screenshot-upload"
-                                />
-                                <label 
-                                  htmlFor="screenshot-upload"
-                                  className="flex items-center justify-center gap-2 h-11 px-4 border border-dashed border-border/40 hover:border-primary/30 rounded-2xl cursor-pointer bg-background/20 hover:bg-primary/5 transition-all text-xs font-bold text-muted-foreground hover:text-primary"
-                                >
-                                  <span>📎 לחץ להעלאת תמונה / צילום מסך</span>
-                                </label>
+                            {/* Screenshot */}
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest block">
+                                צרף צילום מסך (אופציונלי)
+                              </label>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    setScreenshotFile(file);
+                                    setScreenshotPreview(URL.createObjectURL(file));
+                                  }
+                                }}
+                                className="hidden"
+                                id="screenshot-upload"
+                              />
+                              <label
+                                htmlFor="screenshot-upload"
+                                className="flex items-center justify-center gap-2 h-9 px-3 border border-dashed border-border/40 hover:border-primary/30 rounded-xl cursor-pointer bg-background/20 hover:bg-primary/5 transition-all text-[11px] font-bold text-muted-foreground hover:text-primary"
+                              >
+                                <span>📎 לחץ להעלאת תמונה / צילום מסך</span>
+                              </label>
 
-                                {screenshotPreview && (
-                                  <div className="relative rounded-2xl overflow-hidden border border-border/50 max-h-40 flex items-center justify-center bg-black/5 p-1">
-                                    <img 
-                                      src={screenshotPreview} 
-                                      alt="תצוגה מקדימה" 
-                                      className="max-h-36 object-contain rounded-xl"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setScreenshotFile(null);
-                                        setScreenshotPreview(null);
-                                      }}
-                                      className="absolute top-2 right-2 w-7 h-7 bg-destructive/95 text-destructive-foreground hover:bg-destructive rounded-xl flex items-center justify-center transition-all active:scale-90 shadow"
-                                    >
-                                      <X className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
+                              {screenshotPreview && (
+                                <div className="relative rounded-xl overflow-hidden border border-border/50 max-h-36 flex items-center justify-center bg-muted/10 p-1">
+                                  <img
+                                    src={screenshotPreview}
+                                    alt="תצוגה מקדימה"
+                                    className="max-h-32 object-contain rounded-lg"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => { setScreenshotFile(null); setScreenshotPreview(null); }}
+                                    className="absolute top-1.5 right-1.5 w-6 h-6 bg-destructive text-destructive-foreground rounded-lg flex items-center justify-center transition-all active:scale-90 shadow"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
 
                             <Button
                               type="submit"
-                              disabled={
-                                isSendingTicket || !ticketDescription.trim()
-                              }
-                              className="w-full h-12 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-base shadow-lg shadow-primary/25 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2"
+                              disabled={isSendingTicket || !ticketDescription.trim()}
+                              className="w-full h-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm shadow-md shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                             >
                               {isSendingTicket ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <Loader2 className="w-4 h-4 animate-spin" />
                               ) : (
                                 <>
-                                  <Send className="w-4 h-4 transform rotate-180 shrink-0" />
+                                  <Send className="w-3.5 h-3.5 transform rotate-180 shrink-0" />
                                   שליחת פנייה לצוות
                                 </>
                               )}
@@ -2083,65 +2071,57 @@ const FeedbackPage = () => {
                           </form>
                         </Card>
 
-                        {/* Left Column: Guidelines & Information Card (lg:col-span-4) */}
-                        <Card className="lg:col-span-4 bg-card/45 border border-border/40 backdrop-blur-xl rounded-3xl p-6 sm:p-8 space-y-6 text-right flex flex-col justify-start self-stretch">
-                          <div className="space-y-6">
-                            <div className="space-y-1">
-                              <h3 className="text-base font-black text-primary">
-                                מדריך לפנייה יעילה לצוות
-                              </h3>
-                              <p className="text-xs text-muted-foreground">
-                                עקבו אחר הדגשים כדי שנוכל לטפל בפנייתכם בצורה המהירה והטובה ביותר.
-                              </p>
-                            </div>
-
-                            <div className="space-y-5 pt-2">
-                              {[
-                                {
-                                  title: "פירוט שלבי התקלה",
-                                  desc: "כתבו מה ניסיתם לעשות, מה קרה בפועל, ומה הציפייה שלכם מהמערכת.",
-                                  icon: MessageSquare,
-                                },
-                                {
-                                  title: "צירוף צילום מסך",
-                                  desc: "צילום מסך ברור מקצר משמעותית את זמן איתור הבאג ופתרונו על ידי המפתחים.",
-                                  icon: Eye,
-                                },
-                                {
-                                  title: "פנייה ישירה למפתחים",
-                                  desc: "המשוב מגיע ישירות לצוות הפיתוח הטכנולוגי ואינו מיועד להודעות פיקודיות.",
-                                  icon: ShieldCheck,
-                                },
-                              ].map((item, idx) => {
-                                const IconComp = item.icon;
-                                return (
-                                  <div key={idx} className="flex gap-4 items-start">
-                                    <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                                      <IconComp className="w-4 h-4" />
-                                    </div>
-                                    <div className="space-y-0.5">
-                                      <h4 className="text-xs font-black text-foreground">
-                                        {item.title}
-                                      </h4>
-                                      <p className="text-[11px] font-bold text-muted-foreground leading-relaxed">
-                                        {item.desc}
-                                      </p>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
+                        {/* Left Column: Guidelines Card (lg:col-span-4) */}
+                        <Card className="lg:col-span-4 bg-card/50 border border-border/30 backdrop-blur-xl rounded-2xl p-4 sm:p-5 space-y-4 text-right">
+                          <div className="space-y-0.5 pb-1 border-b border-border/20">
+                            <h3 className="text-sm font-black text-primary">מדריך לפנייה יעילה</h3>
+                            <p className="text-[11px] text-muted-foreground">
+                              עקבו אחר הדגשים לטיפול מהיר יותר.
+                            </p>
                           </div>
 
-                           <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 mt-6 lg:mt-0">
-                             <p className="text-[11px] font-black text-primary mb-1 flex items-center gap-1.5 justify-start">
-                               <AlertCircle className="w-3.5 h-3.5" />
-                               <span>טיפ מועיל</span>
-                             </p>
-                             <p className="text-[10px] font-bold text-muted-foreground leading-relaxed text-right">
-                               תוכלו לעקוב אחר סטטוס הטיפול בפנייתכם תחת הלשונית "הפניות שלי" בכל עת.
-                             </p>
-                           </div>
+                          <div className="space-y-3">
+                            {[
+                              {
+                                title: "פירוט שלבי התקלה",
+                                desc: "מה ניסיתם, מה קרה, ומה הציפייה.",
+                                icon: MessageSquare,
+                              },
+                              {
+                                title: "צירוף צילום מסך",
+                                desc: "מקצר את זמן איתור הבאג משמעותית.",
+                                icon: Eye,
+                              },
+                              {
+                                title: "פנייה ישירה למפתחים",
+                                desc: "אינו מיועד להודעות פיקודיות.",
+                                icon: ShieldCheck,
+                              },
+                            ].map((item, idx) => {
+                              const IconComp = item.icon;
+                              return (
+                                <div key={idx} className="flex gap-3 items-start">
+                                  <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                                    <IconComp className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div className="space-y-0.5">
+                                    <h4 className="text-[11px] font-black text-foreground">{item.title}</h4>
+                                    <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">{item.desc}</p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-primary/5 border border-primary/10">
+                            <p className="text-[10px] font-black text-primary mb-0.5 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              <span>טיפ מועיל</span>
+                            </p>
+                            <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">
+                              עקבו אחר הסטטוס תחת "הפניות שלי".
+                            </p>
+                          </div>
                         </Card>
                       </div>
                     </motion.div>

@@ -156,12 +156,16 @@ export const useEmployees = () => {
   };
 
   // Get Organization Structure (cached 30s)
-  const getStructure = useCallback(async () => {
-    const cached = getCached("structure");
+  const getStructure = useCallback(async (full = false) => {
+    const cacheKey = full ? "structure_full" : "structure";
+    const cached = getCached(cacheKey);
     if (cached) return cached;
     try {
-      const { data } = await apiClient.get(endpoints.EMPLOYEES_STRUCTURE_ENDPOINT);
-      setCache("structure", data);
+      const url = full
+        ? `${endpoints.EMPLOYEES_STRUCTURE_ENDPOINT}?full=true`
+        : endpoints.EMPLOYEES_STRUCTURE_ENDPOINT;
+      const { data } = await apiClient.get(url);
+      setCache(cacheKey, data);
       return data;
     } catch (err: any) {
       console.error("Failed to fetch structure", err);

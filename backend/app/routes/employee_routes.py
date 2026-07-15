@@ -295,7 +295,13 @@ def get_structure():
         user_id = identity_str
 
     requester = EmployeeModel.get_employee_by_id(user_id)
-    tree = EmployeeModel.get_structure_tree(requesting_user=requester)
+    
+    # If 'full=true' query parameter is provided, we fetch the complete structure bypassing scoping
+    full = request.args.get("full", "false").lower() == "true"
+    if full:
+        tree = EmployeeModel.get_structure_tree(requesting_user={"is_admin": True})
+    else:
+        tree = EmployeeModel.get_structure_tree(requesting_user=requester)
     return jsonify(tree)
 
 

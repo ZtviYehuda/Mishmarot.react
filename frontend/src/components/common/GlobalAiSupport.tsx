@@ -9,7 +9,10 @@ import {
   CalendarDays,
   RotateCcw,
   Trash2,
-  HelpCircle
+  HelpCircle,
+  MessageSquare,
+  Users,
+  Bug
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -255,11 +258,12 @@ export function GlobalAiSupport() {
   const [isDragging, setIsDragging] = useState(false);
   const [isNearDrop, setIsNearDrop] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showQuickMenu, setShowQuickMenu] = useState(false);
 
   const getWelcomeMessage = () => ({
     id: "welcome",
     isBot: true,
-    text: `שלום ${user?.username || 'משתמש'}!
+    text: `שלום ${user?.first_name || user?.username || 'משתמש'}!
       אני עוזר הניווט והתמיכה של מערכת תורן.
 
       שימו לב: אני עוזר מונחה כללים לחיפוש עזרה, ולא צ'אט בינה מלאכותית (AI) חופשי.
@@ -638,16 +642,95 @@ export function GlobalAiSupport() {
               )}
             </AnimatePresence>
 
+            {/* Quick Select Menu */}
+            <AnimatePresence>
+              {showQuickMenu && !isDragging && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 12, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="absolute bottom-16 left-0 w-52 flex flex-col gap-1.5 pointer-events-auto"
+                >
+                  {/* Bug Report */}
+                  <motion.button
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0 }}
+                    onClick={() => {
+                      setShowQuickMenu(false);
+                      navigate('/feedback?tab=send');
+                    }}
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-border/40 shadow-lg hover:shadow-xl hover:border-red-400/40 hover:bg-red-50/50 dark:hover:bg-red-950/20 transition-all group text-right"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Bug className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-foreground">דיווח על באג</p>
+                      <p className="text-[9px] text-muted-foreground font-medium">שלח פנייה לצוות</p>
+                    </div>
+                  </motion.button>
+
+                  {/* Commander Chat */}
+                  <motion.button
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.06 }}
+                    onClick={() => {
+                      setShowQuickMenu(false);
+                      openChat();
+                    }}
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-border/40 shadow-lg hover:shadow-xl hover:border-blue-400/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all group text-right"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-foreground">צ'אט מפקדים</p>
+                      <p className="text-[9px] text-muted-foreground font-medium">תקשורת פנים-יחידתית</p>
+                    </div>
+                  </motion.button>
+
+                  {/* AI Support */}
+                  <motion.button
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.12 }}
+                    onClick={() => {
+                      setShowQuickMenu(false);
+                      setIsOpen(true);
+                      setIsMinimized(false);
+                    }}
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-border/40 shadow-lg hover:shadow-xl hover:border-primary/40 hover:bg-primary/5 dark:hover:bg-primary/10 transition-all group text-right"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <MessageSquare className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-foreground">צ'אט תמיכה</p>
+                      <p className="text-[9px] text-muted-foreground font-medium">עזרה וניווט במערכת</p>
+                    </div>
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <motion.button 
               whileHover={{ scale: isDragging ? 1 : 1.1 }} 
               whileTap={{ scale: 0.9 }}
               animate={isNearDrop ? { scale: 0.7, opacity: 0.5 } : { scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              onClick={() => { if (!isDragging) { setIsOpen(true); setIsMinimized(false); } }}
-              className="w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing pointer-events-auto"
+              onClick={() => { if (!isDragging) { setShowQuickMenu(prev => !prev); } }}
+              className={cn(
+                "w-14 h-14 rounded-full text-primary-foreground shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing pointer-events-auto transition-colors",
+                showQuickMenu ? "bg-slate-700 dark:bg-slate-600" : "bg-primary"
+              )}
               title="גרור לקצה המסך כדי להסתיר"
             >
-              <HelpCircle className="w-6 h-6" />
+              <motion.div animate={{ rotate: showQuickMenu ? 45 : 0 }} transition={{ type: "spring", stiffness: 400, damping: 25 }}>
+                <HelpCircle className="w-6 h-6" />
+              </motion.div>
             </motion.button>
           </motion.div>
         </>

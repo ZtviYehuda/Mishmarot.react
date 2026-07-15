@@ -73,7 +73,12 @@ function WeekColumnCell({ stats, selectedDate, onClick }: {
         </div>
       </div>
 
-      {!isWeekend && total > 0 ? (
+      {isWeekend ? (
+        <div className="flex-1 flex flex-col items-center justify-center opacity-40">
+          <ShabbatIcon width={32} height={32} />
+          <span className="text-xs font-bold mt-2">סופ"ש</span>
+        </div>
+      ) : total > 0 ? (
         <div className="flex-1 flex flex-col items-center gap-6">
           <div className="relative group">
             <MiniDonut stats={stats} size={80} />
@@ -105,9 +110,8 @@ function WeekColumnCell({ stats, selectedDate, onClick }: {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center opacity-40">
-          <ShabbatIcon width={32} height={32} />
-          <span className="text-xs font-bold mt-2">סופ"ש</span>
+        <div className="flex-1 flex flex-col items-center justify-center opacity-25">
+          <span className="text-[11px] font-bold text-muted-foreground">אין נתונים</span>
         </div>
       )}
 
@@ -789,6 +793,18 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
     return format(currentDate, "MMMM yyyy", { locale: he });
   }, [currentDate, viewMode]);
 
+  // Hide the "go to today" button when the current period already contains today
+  const isOnCurrentPeriod = useMemo(() => {
+    const today = new Date();
+    if (viewMode === "week") {
+      const s = startOfWeek(currentDate, { weekStartsOn: 0 });
+      const e = endOfWeek(currentDate, { weekStartsOn: 0 });
+      return today >= s && today <= e;
+    }
+    return today.getFullYear() === currentDate.getFullYear() &&
+           today.getMonth() === currentDate.getMonth();
+  }, [currentDate, viewMode]);
+
   // Calendar image export
   const handleExport = async () => {
     const target = exportRef.current;
@@ -837,181 +853,165 @@ export function AttendanceCalendarView({ statusTypes, scopeEmployees, onClose, d
       className="flex flex-col gap-3"
       dir="rtl"
     >
-      {/* ══ ROW 1: Navigation, Filter & View toggle (Minimalist Unified Toolbar) ══ */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-card/40 p-3 rounded-2xl border border-border/40 sticky top-0 md:static z-30 backdrop-blur-md md:backdrop-blur-none">
-        
-        {/* Navigation and Period title */}
-        <div className="flex items-center gap-2">
+      {/* ══ RESPONSIVE TOOLBAR — 1 row on desktop, 2 rows on mobile ══ */}
+      <div className="flex flex-col md:flex-row md:items-center gap-1.5 bg-card/40 px-3 py-2.5 rounded-2xl border border-border/40 sticky top-0 md:static z-30 backdrop-blur-md md:backdrop-blur-none">
+
+        {/* DATE NAVIGATION — always visible */}
+        <div className="flex items-center gap-2 w-full md:w-auto">
           <button onClick={() => navigate(-1)}
             className="w-8 h-8 rounded-xl border border-border/40 flex items-center justify-center hover:bg-muted active:scale-95 transition-all shrink-0">
             <ChevronRight className="w-4 h-4" />
           </button>
-          
-          <div className="flex items-center gap-2 px-1">
-            <span className="text-xs sm:text-sm font-black text-foreground tracking-tight">{periodLabel}</span>
-            <button onClick={goToday} className="text-[10px] font-black text-primary hover:underline bg-primary/10 px-2 py-0.5 rounded-lg transition-all">
-              היום
-            </button>
+
+          <div className="flex-1 md:flex-none flex items-center justify-center gap-2 min-w-0 md:min-w-[200px]">
+            <span className="text-sm font-black text-foreground tracking-tight truncate">{periodLabel}</span>
           </div>
 
           <button onClick={() => navigate(1)}
             className="w-8 h-8 rounded-xl border border-border/40 flex items-center justify-center hover:bg-muted active:scale-95 transition-all shrink-0">
             <ChevronLeft className="w-4 h-4" />
           </button>
+
+          {/* Today button — only shown when not on current period */}
+          {!isOnCurrentPeriod && (
+            <button onClick={goToday}
+              title="חזור לתאריך היום"
+              className="flex items-center gap-1 h-7 px-2.5 rounded-xl border border-primary/30 bg-primary/8 text-primary hover:bg-primary/15 transition-all text-[10px] font-black shrink-0">
+              <CalendarDays className="w-3 h-3" />
+              <span>חזור להיום</span>
+            </button>
+          )}
         </div>
 
-        {/* View toggle + filters */}
-        <div className="flex items-center justify-between sm:justify-end gap-2">
-          <div className="flex items-center gap-0.5 bg-muted/50 rounded-xl p-1 border border-border/40 shrink-0">
+        {/* SPACER on desktop */}
+        <div className="hidden md:block flex-1" />
+
+        {/* CONTROLS ROW */}
+        <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex items-center gap-0.5 bg-muted/50 rounded-xl p-0.5 border border-border/40 shrink-0">
             <button onClick={() => setViewMode("week")}
-              className={cn("flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all",
+              className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black transition-all",
                 viewMode === "week" ? "bg-card text-primary border border-border/40 shadow-sm" : "text-muted-foreground hover:text-foreground")}>
               <CalendarDays className="w-3.5 h-3.5" /><span>שבועי</span>
             </button>
             <button onClick={() => setViewMode("month")}
-              className={cn("flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all",
+              className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black transition-all",
                 viewMode === "month" ? "bg-card text-primary border border-border/40 shadow-sm" : "text-muted-foreground hover:text-foreground")}>
               <CalendarRange className="w-3.5 h-3.5" /><span>חודשי</span>
             </button>
           </div>
 
-          <div className="h-5 w-px bg-border/40 mx-1" />
+          <div className="h-5 w-px bg-border/30" />
 
-          {/* Consolidated Filter Button + Reset Button */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("h-8 sm:h-9 rounded-xl gap-2 font-black text-xs transition-all border-border/40 px-2 sm:px-4", 
-                  (deptFilters.length > 0 || srvFilters.length > 0 || ageFilters.length > 0) ? "bg-primary/5 text-primary border-primary/20" : "bg-card/40 text-muted-foreground hover:bg-primary/5")}>
-                  <Filter className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">סינון נתונים</span>
+          {/* Filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("h-8 rounded-xl gap-1.5 font-black text-xs transition-all border-border/40 px-2.5",
+                (deptFilters.length > 0 || srvFilters.length > 0 || ageFilters.length > 0) ? "bg-primary/5 text-primary border-primary/20" : "bg-card/40 text-muted-foreground hover:bg-primary/5")}>
+                <Filter className="w-3.5 h-3.5" />
+                {(deptFilters.length > 0 || srvFilters.length > 0 || ageFilters.length > 0) && (
+                  <Badge variant="secondary" className="h-4 px-1 min-w-[16px] rounded-full bg-primary text-white text-[9px] border-none">
+                    {deptFilters.length + srvFilters.length + ageFilters.length}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" side="bottom" className="w-[300px] sm:w-[450px] p-5 rounded-3xl backdrop-blur-3xl border-primary/10 bg-card/95 z-50">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                  <h4 className="text-sm font-black flex items-center gap-2">
+                     <Filter className="w-4 h-4 text-primary" /> אפשרויות סינון
+                  </h4>
                   {(deptFilters.length > 0 || srvFilters.length > 0 || ageFilters.length > 0) && (
-                    <Badge variant="secondary" className="h-5 px-1 min-w-[18px] sm:min-w-[20px] rounded-full bg-primary text-white text-[10px] border-none">
-                      {deptFilters.length + srvFilters.length + ageFilters.length}
-                    </Badge>
+                    <Button variant="ghost" size="sm" onClick={() => { setDeptFilters([]); setSrvFilters([]); setAgeFilters([]); }}
+                      className="h-7 text-[10px] font-black text-muted-foreground hover:text-destructive">
+                      <RotateCcw className="w-3 h-3 ml-1.5" /> נקה הכל
+                    </Button>
                   )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" side="bottom" className="w-[300px] sm:w-[450px] p-5 rounded-3xl backdrop-blur-3xl border-primary/10 bg-card/95 z-50">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between border-b border-border/40 pb-3">
-                    <h4 className="text-sm font-black flex items-center gap-2">
-                       <Filter className="w-4 h-4 text-primary" /> אפשרויות סינון
-                    </h4>
-                    {(deptFilters.length > 0 || srvFilters.length > 0 || ageFilters.length > 0) && (
-                      <Button variant="ghost" size="sm" onClick={() => { setDeptFilters([]); setSrvFilters([]); setAgeFilters([]); }}
-                        className="h-7 text-[10px] font-black text-muted-foreground hover:text-destructive">
-                        <RotateCcw className="w-3 h-3 ml-1.5" /> נקה הכל
-                      </Button>
-                    )}
-                  </div>
+                </div>
 
-                  {/* Departments */}
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
-                       <Briefcase className="w-3 h-3" /> מחלקות
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {departments.map(d => (
-                        <label key={d.id} className="flex items-center gap-2 p-2 rounded-xl hover:bg-primary/5 cursor-pointer border border-transparent hover:border-primary/10 transition-all">
-                          <input type="checkbox" checked={deptFilters.includes(d.id)} onChange={() => setDeptFilters(prev => deptFilters.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id])}
-                            className="w-4 h-4 rounded border-border/40 text-primary focus:ring-primary" />
-                          <span className="text-xs font-bold truncate">{d.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Service Types */}
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
-                       <Users className="w-3 h-3" /> מעמד
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {serviceTypes.map(s => {
-                        const active = srvFilters.includes(s.name);
-                        return (
-                          <button key={s.id} onClick={() => setSrvFilters(prev => active ? prev.filter(v => v !== s.name) : [...prev, s.name])}
-                            className={cn("px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all",
-                              active ? "bg-emerald-500 text-white border-emerald-600" : "bg-muted/40 text-muted-foreground border-border/40 hover:border-emerald-300")}>
-                            {s.name}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Age Ranges */}
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
-                       <Cake className="w-3 h-3" /> קבוצות גיל
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {AGE_RANGES.map(range => {
-                        const active = ageFilters.includes(range.label);
-                        return (
-                          <button key={range.label} onClick={() => setAgeFilters(prev => active ? prev.filter(v => v !== range.label) : [...prev, range.label])}
-                            className={cn("px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all",
-                              active ? "bg-amber-500 text-white border-amber-600" : "bg-muted/40 text-muted-foreground border-border/40 hover:border-amber-300")}>
-                            {range.label}
-                          </button>
-                        )
-                      })}
-                    </div>
+                {/* Departments */}
+                <div className="space-y-3">
+                  <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
+                     <Briefcase className="w-3 h-3" /> מחלקות
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {departments.map(d => (
+                      <label key={d.id} className="flex items-center gap-2 p-2 rounded-xl hover:bg-primary/5 cursor-pointer border border-transparent hover:border-primary/10 transition-all">
+                        <input type="checkbox" checked={deptFilters.includes(d.id)} onChange={() => setDeptFilters(prev => deptFilters.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id])}
+                          className="w-4 h-4 rounded border-border/40 text-primary focus:ring-primary" />
+                        <span className="text-xs font-bold truncate">{d.name}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
-              </PopoverContent>
-            </Popover>
 
-            <AnimatePresence>
-              {(deptFilters.length > 0 || srvFilters.length > 0 || ageFilters.length > 0) && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.92 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <Button
-                    variant="ghost"
-                    onClick={() => { setDeptFilters([]); setSrvFilters([]); setAgeFilters([]); }}
-                    className="h-8 sm:h-9 px-2.5 rounded-xl text-xs font-black text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all gap-1.5 shrink-0"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>נקה סינון</span>
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                {/* Service Types */}
+                <div className="space-y-3">
+                  <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
+                     <Users className="w-3 h-3" /> מעמד
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {serviceTypes.map(s => {
+                      const active = srvFilters.includes(s.name);
+                      return (
+                        <button key={s.id} onClick={() => setSrvFilters(prev => active ? prev.filter(v => v !== s.name) : [...prev, s.name])}
+                          className={cn("px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all",
+                            active ? "bg-emerald-500 text-white border-emerald-600" : "bg-muted/40 text-muted-foreground border-border/40 hover:border-emerald-300")}>
+                          {s.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
 
-            {/* Active Filters Display — Desktop only for pills to avoid overflow */}
-            <div className="hidden lg:flex items-center gap-1.5 border-r border-border/40 pr-3 mr-1">
-               <AnimatePresence>
-                 {deptFilters.length > 0 && <Badge variant="outline" className="h-7 gap-1 rounded-full pl-1.5 pr-2.5 bg-primary/5 text-[10px] font-bold border-primary/20 text-primary uppercase">מחלקה ({deptFilters.length}) <button onClick={() => setDeptFilters([])}><X className="w-3 h-3" /></button></Badge>}
-                 {srvFilters.length > 0 && <Badge variant="outline" className="h-7 gap-1 rounded-full pl-1.5 pr-2.5 bg-emerald-50 text-[10px] font-bold border-emerald-200 text-emerald-700 uppercase">מעמד ({srvFilters.length}) <button onClick={() => setSrvFilters([])}><X className="w-3 h-3" /></button></Badge>}
-                 {ageFilters.length > 0 && <Badge variant="outline" className="h-7 gap-1 rounded-full pl-1.5 pr-2.5 bg-amber-50 text-[10px] font-bold border-amber-200 text-amber-700 uppercase">גיל ({ageFilters.length}) <button onClick={() => setAgeFilters([])}><X className="w-3 h-3" /></button></Badge>}
-               </AnimatePresence>
-            </div>
-          </div>
-        </div>
+                {/* Age Ranges */}
+                <div className="space-y-3">
+                  <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
+                     <Cake className="w-3 h-3" /> קבוצות גיל
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {AGE_RANGES.map(range => {
+                      const active = ageFilters.includes(range.label);
+                      return (
+                        <button key={range.label} onClick={() => setAgeFilters(prev => active ? prev.filter(v => v !== range.label) : [...prev, range.label])}
+                          className={cn("px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all",
+                            active ? "bg-amber-500 text-white border-amber-600" : "bg-muted/40 text-muted-foreground border-border/40 hover:border-amber-300")}>
+                          {range.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Export */}
           <Button variant="ghost" size="sm" onClick={handleExport} disabled={isExporting}
-            className="h-8 gap-1.5 text-xs font-bold border border-border/40 rounded-xl hover:bg-primary/5 hover:text-primary disabled:opacity-60">
+            className="h-8 w-8 p-0 rounded-xl border border-border/40 hover:bg-primary/5 hover:text-primary disabled:opacity-60 shrink-0">
             {isExporting ? (
-              <><svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+              <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-              </svg><span className="hidden sm:inline">מייצא...</span></>
+              </svg>
             ) : (
-              <><Download className="w-3.5 h-3.5" /><span className="hidden sm:inline">ייצוא תמונה</span></>
+              <Download className="w-3.5 h-3.5" />
             )}
           </Button>
+
+          <div className="h-5 w-px bg-border/30" />
+
+          {/* Close */}
           <button onClick={onClose}
-            className="w-8 h-8 rounded-xl border border-border/40 flex items-center justify-center hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors text-muted-foreground">
+            className="w-8 h-8 rounded-xl border border-border/40 flex items-center justify-center hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors text-muted-foreground shrink-0">
             <X className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+
 
       {/* ══ Calendar grid (export target) ══ */}
       <div ref={exportRef} className="flex flex-col gap-3">
